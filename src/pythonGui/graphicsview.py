@@ -54,7 +54,23 @@ class MetaAction(type):
         if "text" in dict:
             Action.actions.append(self)
         if "xmltag" in dict:
-            Shape.xmltags[self.xmltag] = self
+            Loadable.xmltags[self.xmltag] = self
+        if hasattr(self, 'subclasses') and 'subclasses' not in dict:
+            self.subclasses[name] = self
+
+
+class Loadable(object):
+    __metaclass__ = MetaAction
+    xmltags = { }
+
+
+    @staticmethod
+    def load(element, layout):
+        try:
+            return Loadable.xmltags[element.tag].load(element, layout)
+        except KeyError:
+            return
+
 
 class Action(object):
     __metaclass__ = MetaAction
@@ -102,9 +118,9 @@ class Select(CheckableAction):
 
 
     def mousePressEvent(self, parent, event):
-        item = parent.layout.itemAtPosition(event.pos())
+        item = parent.ilayout.itemAtPosition(event.pos())
         if item is None:
-            for s in parent.layout.shapes:
+            for s in parent.ilayout.shapes:
                 if s.contains(event.pos()):
                     item = s
                     break
@@ -139,7 +155,7 @@ class Select(CheckableAction):
             rect = QRect(self.selection_start, self.selection_stop)
             if not event.modifiers() & Qt.ShiftModifier:
                 parent.clear_selection()
-            for c in parent.layout:
+            for c in parent.ilayout:
                 if rect.contains(c.geometry()):
                     c.selected = True
             self.selection_start = None
@@ -166,15 +182,15 @@ class Group(SimpleAction):
         i = 0
         g = BoxLayout(BoxLayout.TopToBottom)
         rect = None
-        while i < len(self.parent.layout):
-            c = self.parent.layout[i]
+        while i < len(self.parent.ilayout):
+            c = self.parent.ilayout[i]
             if c.selected:
                 c.selected = False
                 if isinstance(c, ProxyWidget):
                     g.addWidget(c)
                 else:
                     g.addItem(c)
-                    del self.parent.layout[i]
+                    del self.parent.ilayout[i]
                 if rect is None:
                     rect = c.geometry()
                 else:
@@ -183,13 +199,13 @@ class Group(SimpleAction):
                 i += 1
         if rect is None:
             return
-        shapes = self.parent.layout.shapes
+        shapes = self.parent.ilayout.shapes
         g.shapes = [s for s in shapes if s.selected]
-        self.parent.layout.shapes = [s for s in shapes if not s.selected]
+        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
         for s in g.shapes:
             s.selected = False
         g.fixed_geometry = QRect(rect.topLeft(), g.sizeHint())
-        self.parent.layout.add_item(g)
+        self.parent.ilayout.add_item(g)
 
 
 class Ungroup(SimpleAction):
@@ -200,21 +216,20 @@ class Ungroup(SimpleAction):
 
     def run(self):
         i = 0
-        while i < len(self.parent.layout):
-            child = self.parent.layout[i]
+        while i < len(self.parent.ilayout):
+            child = self.parent.ilayout[i]
             if child.selected and isinstance(child, Layout):
                 cl = list(child)
                 for c in cl:
                     c.fixed_geometry = c.geometry()
-                self.parent.layout[i:i + 1] = cl
-                self.parent.layout.shapes.extend(child.shapes)
+                self.parent.ilayout[i:i + 1] = cl
+                self.parent.ilayout.shapes.extend(child.shapes)
                 i += len(cl)
             else:
                 i += 1
 
 
-class Shape(CheckableAction):
-    xmltags = { }
+class Shape(CheckableAction, Loadable):
     fuzzy = 3
 
     def __init__(self):
@@ -237,7 +252,7 @@ class Shape(CheckableAction):
     def mouseReleaseEvent(self, parent, event):
         if self.ready:
             parent.set_current_action(None)
-            parent.layout.shapes.append(self)
+            parent.ilayout.shapes.append(self)
 
 
     @property
@@ -304,12 +319,6 @@ class Shape(CheckableAction):
         d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
         d["stroke-width"] = unicode(self.pen.widthF())
 
-    @staticmethod
-    def load(element):
-        try:
-            return Shape.xmltags[element.tag].load(element)
-        except KeyError:
-            return
 
     def draw(self, painter):
         if self.selected:
@@ -352,7 +361,7 @@ class Line(Shape):
         return ret
 
     @staticmethod
-    def load(e):
+    def load(e, layout):
         ret = Line()
         ret.line = QLine(float(e.get("x1")), float(e.get("y1")),
                          float(e.get("x2")), float(e.get("y2")))
@@ -396,7 +405,9 @@ class Rectangle(Shape):
         self.rect.moveTo(p)
 
     @staticmethod
-    def load(e):
+    def load(e, layout):
+        if e.get(ns_karabo + 'class') is not None:
+            return ProxyWidget.load(e, layout)
         ret = Rectangle()
         ret.rect = QRect(float(e.get("x")), float(e.get("y")),
                          float(e.get("width")), float(e.get("height")))
@@ -411,17 +422,17 @@ def _parse_rect(elem):
     return QRect(float(elem.get(ns + "x")), float(elem.get(ns + "y")),
                  float(elem.get(ns + "width")), float(elem.get(ns + "height")))
 
-class Label(object):
-    """ Fake class to make a QLabel loadable """
-    @staticmethod
-    def load(elem, parent):
-        label = QLabel(elem.get(ns_karabo + "text"), parent)
-        ret = ProxyWidget(parent)
-        ret.set_child(label, None)
-        ret.show()
-        return ret
 
-class Layout(object):
+class MetaLayout(MetaAction, QLayout.__class__):
+    pass
+
+
+class Layout(Loadable):
+    __metaclass__ = MetaLayout
+    xmltag = ns_svg + "g"
+    subclasses = { }
+
+
     def __init__(self):
         self.shapes = [ ]
         self.shape_geometry = None
@@ -450,29 +461,24 @@ class Layout(object):
                 self.takeAt(i)
 
 
-    def load(self, element):
+    @staticmethod
+    def load(element, layout):
         i = 0
+        cls = element.get(ns_karabo + "class", "FixedLayout")
+        self = Layout.subclasses[cls].load(element, layout)
         while i < len(element):
             elem = element[i]
-            cls = elem.get(ns_karabo + "class")
-            if cls is None:
+            r = Loadable.load(elem, self)
+            if r is None:
                 i += 1
+            elif isinstance(r, Shape):
+                self.shapes.append(r)
+                del element[i]
             else:
-                obj = globals()[cls].load(elem, self.parentWidget())
-                obj.fixed_geometry = _parse_rect(elem)
-                self.add_item(obj)
-                del root[i]
-
-        shapes = [ ]
-        for e in element[::-1]:
-            s = Shape.load(e)
-            if s is None:
-                break
-            else:
-                shapes.append(s)
-        if len(shapes) > 0:
-            del root[-len(shapes):]
-        self.shapes = shapes[::-1]
+                self.load_item(element[i], r)
+                r.fixed_geometry = _parse_rect(elem)
+                del element[i]
+        return self
 
 
     def draw(self, painter):
@@ -495,9 +501,8 @@ class Layout(object):
 
         e = ElementTree.Element(ns_svg + "g",
                                 {k: unicode(v) for k, v in d.iteritems()})
-        e.extend(l.widget().element() if isinstance(l, QWidgetItem) else
-                 l.element() for l in (self.itemAt(i)
-                                       for i in range(self.count())))
+        e.extend(e.element() for e in self)
+        e.extend(s.element() for s in self.shapes)
         return e
 
 
@@ -516,8 +521,8 @@ class Layout(object):
 
 
 class FixedLayout(Layout, QLayout):
-    def __init__(self, parent):
-        QLayout.__init__(self, parent)
+    def __init__(self):
+        QLayout.__init__(self)
         Layout.__init__(self)
         self._children = [ ] # contains only QLayoutItems
 
@@ -538,46 +543,13 @@ class FixedLayout(Layout, QLayout):
         self.update()
 
 
-    def addItem(self, item):
-        "only to be used by Qt, don't use directly!"
-        self._item = item
-
-
     def add_item(self, item):
         """add ProxyWidgets or Layouts"""
         self[len(self):len(self)] = [item]
 
 
-    def itemAt(self, index):
-        "only to be used by Qt, don't use directly!"
-        try:
-            return self._children[index]
-        except IndexError:
-            return
-
-
-    def takeAt(self, index):
-        "only to be used by Qt, don't use directly!"
-        try:
-            ret = self._children.pop(index)
-        except IndexError:
-            return
-        
-
-    def count(self):
-        "only to be used by Qt, don't use directly!"
-        return len(self._children)
-
-
-    def setGeometry(self, geometry):
-        "only to be used by Qt, don't use directly!"
-        for item in self._children:
-            i = item.widget() if item.widget() else item
-            i.setGeometry(i.fixed_geometry)
-
-
-    def sizeHint(self):
-        return QSize(10, 10)
+    def load_item(self, element, item):
+        self.add_item(item)
 
 
     def itemAtPosition(self, pos):
@@ -587,7 +559,7 @@ class FixedLayout(Layout, QLayout):
                     return item.widget()
                 else:
                     return item
-            
+
 
     def relayout(self, widget):
         for c in self.children:
@@ -613,6 +585,48 @@ class FixedLayout(Layout, QLayout):
         return { }
 
 
+    @staticmethod
+    def load(elem, layout):
+        return FixedLayout()
+
+
+    def addItem(self, item):
+        "only to be used by Qt, don't use directly!"
+        self._item = item
+
+
+    def itemAt(self, index):
+        "only to be used by Qt, don't use directly!"
+        try:
+            return self._children[index]
+        except IndexError:
+            return
+
+
+    def takeAt(self, index):
+        "only to be used by Qt, don't use directly!"
+        try:
+            ret = self._children.pop(index)
+        except IndexError:
+            return
+
+
+    def count(self):
+        "only to be used by Qt, don't use directly!"
+        return len(self._children)
+
+
+    def setGeometry(self, geometry):
+        "only to be used by Qt, don't use directly!"
+        for item in self._children:
+            i = item.widget() if item.widget() else item
+            i.setGeometry(i.fixed_geometry)
+
+
+    def sizeHint(self):
+        return QSize(10, 10)
+
+
 class BoxLayout(QBoxLayout, Layout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
@@ -620,17 +634,6 @@ class BoxLayout(QBoxLayout, Layout):
         self.selected = False
         self.setContentsMargins(5, 5, 5, 5)
 
-    @staticmethod
-    def load(elem, parent):
-        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
-        for i in range(len(elem)):
-            cls = elem[i].get(ns_karabo + "class")
-            item = globals()[cls].load(elem[i], parent)
-            if isinstance(item, QWidget):
-                ret.addWidget(item)
-            else:
-                ret.addLayout(item)
-        return ret
 
     def save(self):
         return {ns_karabo + "Direction": self.direction()}
@@ -639,6 +642,18 @@ class BoxLayout(QBoxLayout, Layout):
     def setGeometry(self, rect):
         QBoxLayout.setGeometry(self, rect)
         self.update_shapes(rect)
+
+
+    @staticmethod
+    def load(element, layout):
+        return BoxLayout(int(element.get(ns_karabo + "Direction")))
+
+
+    def load_item(self, element, item):
+        if isinstance(item, ProxyWidget):
+            self.addWidget(item)
+        else:
+            self.addLayout(item)
 
 
 class ProxyWidget(QStackedWidget):
@@ -708,8 +723,14 @@ class ProxyWidget(QStackedWidget):
         return ElementTree.Element(ns_svg + "rect",
                                    {k: unicode(v) for k, v in d.iteritems()})
 
+
     @staticmethod
-    def load(elem, parent):
+    def load(elem, layout):
+        if elem.get(ns_karabo + "class") == "Label":
+            ret = ProxyWidget(layout.widget())
+            ret.set_child(QLabel(elem.get(ns_karabo + "text"), ret), None)
+            ret.show()
+            return ret
         ks = "classAlias", "key", "widgetFactory"
         if elem.get(ns_karabo + "classAlias") == "Command":
             ks += "command", "allowedStates", "commandText"
@@ -717,10 +738,11 @@ class ProxyWidget(QStackedWidget):
         d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
         component = globals()[elem.get(ns_karabo + "componentType")](**d)
         component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        ret = ProxyWidget(parent)
+        ret = ProxyWidget(layout.widget())
         ret.set_child(component.widget, component)
         ret.show()
         return ret
+
 
     def set_position(self, pos):
         self.fixed_geometry.moveTo(pos)
@@ -732,8 +754,8 @@ class GraphicsView(QSvgWidget):
         super(GraphicsView, self).__init__(parent)
         
         self.inner = QWidget(self)
-        self.layout = FixedLayout(self.inner)
-        self.inner.setLayout(self.layout)
+        self.ilayout = FixedLayout()
+        self.inner.setLayout(self.ilayout)
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
@@ -842,7 +864,12 @@ class GraphicsView(QSvgWidget):
     def openScene(self, filename):
         self.tree = ElementTree.parse(filename)
         root = self.tree.getroot()
-        self.layout.load(root)
+        self.inner.setParent(None)
+        self.inner = QWidget(self)
+        self.ilayout = Layout.load(root, None)
+        self.inner.setLayout(self.ilayout)
+        self.layout().addWidget(self.inner)
+        self.designMode = True
 
         ar = QByteArray()
         buf = QBuffer(ar)
@@ -870,8 +897,7 @@ class GraphicsView(QSvgWidget):
 
         root = self.tree.getroot().copy()
         tree = ElementTree.ElementTree(root)
-        e = self.layout.element()
-        root.extend(s.element() for s in self.shapes)
+        e = self.ilayout.element()
         root.extend(ee for ee in e)
         tree.write(filename)
 
@@ -1252,14 +1278,14 @@ class GraphicsView(QSvgWidget):
             proxy.show()
 
         layout.fixed_geometry = QRect(pos, layout.sizeHint())
-        self.layout.add_item(layout)
+        self.ilayout.add_item(layout)
         layout.selected = True
         return layout
 
     def clear_selection(self):
-        for s in self.layout.shapes:
+        for s in self.ilayout.shapes:
             s.selected = False
-        for c in self.layout:
+        for c in self.ilayout:
             c.selected = False
 
     def mousePressEvent(self, event):
@@ -1532,11 +1558,11 @@ class GraphicsView(QSvgWidget):
         painter = QPainter(self)
         try:
             self.renderer().render(painter, self.renderer().viewBoxF())
-            self.layout.draw(painter)
+            self.ilayout.draw(painter)
             painter.save()
             if self.designMode:
                 painter.setPen(Qt.DashLine)
-                for item in self.layout:
+                for item in self.ilayout:
                     if item.selected:
                         painter.drawRect(item.geometry())
             painter.restore()
