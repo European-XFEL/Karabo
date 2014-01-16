@@ -124,15 +124,6 @@ class MainWindow(QMainWindow):
         self.__acEditRedo = QAction(QIcon(":redo"), "Redo", self)
         self.__acEditRedo.setShortcuts(QKeySequence.Redo)
 
-        self.__acEditCut = QAction(QIcon(":cut"), "Cut", self)
-        self.__acEditCut.setShortcuts(QKeySequence.Cut)
-
-        self.__acEditCopy = QAction(QIcon(":copy"), "Copy", self)
-        self.__acEditCopy.setShortcuts(QKeySequence.Copy)
-
-        self.__acEditPaste = QAction(QIcon(":paste"), "Paste", self)
-        self.__acEditPaste.setShortcuts(QKeySequence.Cut)
-
         self.__acHelpAbout = QAction("About", self);
         self.__acHelpAbout.triggered.connect(self.onHelpAbout)
         
@@ -147,10 +138,6 @@ class MainWindow(QMainWindow):
         mEditMenu = self.menuBar().addMenu("&Edit")
         mEditMenu.addAction(self.__acEditUndo)
         mEditMenu.addAction(self.__acEditRedo)
-        mEditMenu.addSeparator()
-        mEditMenu.addAction(self.__acEditCut)
-        mEditMenu.addAction(self.__acEditCopy)
-        mEditMenu.addAction(self.__acEditPaste)
 
         mHelpMenu = self.menuBar().addMenu("&Help")
         mHelpMenu.addAction(self.__acHelpAbout)
