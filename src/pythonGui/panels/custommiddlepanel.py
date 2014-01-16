@@ -267,6 +267,8 @@ class CustomMiddlePanel(QWidget):
 
         toolBar = ToolBar('Drawing')
         parent.addToolBar(toolBar)
+        self.graphicsview.setFocusProxy(toolBar)
+        toolBar.setFocusPolicy(Qt.StrongFocus)
         
         toolBar.addSeparator()
         toolBar.addWidget(self.__tbOpen)

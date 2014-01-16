@@ -80,6 +80,9 @@ class Action(object):
         action = QAction(QIcon(cls.icon), cls.text, source)
         action.setStatusTip(cls.text)
         action.setToolTip(cls.text)
+        if hasattr(cls, "shortcut"):
+            action.setShortcut(cls.shortcut)
+            action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         cls.action = action
         return action
 
@@ -445,6 +448,7 @@ Action.separator()
 class Cut(SimpleAction):
     text = "Cut"
     icon = ":edit-cut"
+    shortcut = QKeySequence.Cut
 
 
     def run(self):
@@ -456,6 +460,7 @@ class Cut(SimpleAction):
 class Copy(SimpleAction):
     text = "Copy"
     icon = ":edit-copy"
+    shortcut = QKeySequence.Copy
 
 
     def run(self):
@@ -465,6 +470,7 @@ class Copy(SimpleAction):
 class Paste(SimpleAction):
     text = "Paste"
     icon = ":edit-paste"
+    shortcut = QKeySequence.Paste
 
 
     def run(self):
@@ -838,6 +844,7 @@ class GraphicsView(QSvgWidget):
         # Describes most recent item to be cut or copied inside the application
         self.__copiedItem = QByteArray()
 
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
 
     def add_actions(self, source):
