@@ -45,10 +45,6 @@ class EditableCheckBox(EditableWidget):
         return self.__checkBox
 
 
-    def addParameters(self, **params):
-        print "addParameters", params
-
-
     @property
     def value(self):
         return self.__checkBox.checkState() == Qt.Checked

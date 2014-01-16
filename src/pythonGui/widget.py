@@ -105,14 +105,19 @@ class VacuumWidget(DisplayWidget):
 class EditableWidget(Widget):
     menu = "Change widget"
     factories = { }
+    signalEditingFinished = pyqtSignal(str, object)
 
+    
     def __init__(self, key=None, **kwargs):
         Widget.__init__(self, **kwargs)
         self.valueType = None
         if key is not None:
             self.keys = [key]
+            
+    
+    def addParameters(self, **params):
+        pass
 
-    signalEditingFinished = pyqtSignal(str, object)
-
+    
     def valueEditingFinished(self, key, value):
         self.signalEditingFinished.emit(key, value)
