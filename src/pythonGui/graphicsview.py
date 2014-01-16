@@ -16,7 +16,6 @@ from displaycomponent import DisplayComponent
 
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from enums import CompositionMode
 
 from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
@@ -834,9 +833,6 @@ class GraphicsView(QSvgWidget):
 
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
-        # Composition mode is either ON/OFFLINE, once set not changeable
-        self.__compositionMode = CompositionMode.UNDEFINED
-
         self.designMode = True
 
         # Describes most recent item to be cut or copied inside the application
@@ -1046,298 +1042,6 @@ class GraphicsView(QSvgWidget):
                 Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(classId), str(item.internalKey()))
 
 
-    # A new instance of a text is created and passed to the _setupItem function
-    # to position and select
-    def addText(self):
-        textDialog = TextDialog(self)
-        if textDialog.exec_() == QDialog.Rejected:
-            return
-
-        textItem = Text(self.__isDesignMode)
-        textItem.setText(textDialog.text())
-        textItem.setFont(textDialog.font())
-        textItem.setTextColor(textDialog.textColor())
-        textItem.setBackgroundColor(textDialog.backgroundColor())
-        textItem.setOutlineColor(textDialog.outlineColor())
-
-        self._setupItem(textItem)
-
-
-    # Add a link, if exactely 2 items are selected
-    def addLink(self):
-        items = self.selectedItemPair()
-        if items is None:
-            return
-
-        link = Link(items[0], items[1])
-        self.__scene.addItem(link)
-
-
-    # Add an arrow, if exactely 2 items are selected
-    def addArrowLink(self):
-        items = self.selectedItemPair()
-        if items is None:
-            return
-
-        arrowLink = Arrow(items[0], items[1])
-        self.__scene.addItem(arrowLink)
-
-
-    # Cut is two-part process: copy selected items and remove item from scene
-    def cut(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Copy items
-        self.copy()
-        # Remove items from scene
-        for item in items:
-            self.__scene.removeItem(item)
-            del item
-
-
-    # The selected items are stored as binary data inside the application
-    def copy(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Copy data into DataStream
-        self.__copiedItem.clear()
-        stream = QDataStream(self.__copiedItem, QIODevice.WriteOnly)
-        for item in items:
-            if isinstance(item, Text):
-                stream << "Text" << item.text() \
-                                          << item.font().toString() \
-                                          << item.textColor().name() \
-                                          << item.outlineColor().name() \
-                                          << item.backgroundColor().name() \
-                                          << "\n"
-            elif isinstance(item, Link):
-                print "Link"
-            elif isinstance(item, Arrow):
-                print "Arrow"
-            elif isinstance(item, Line):
-                line = item.line()
-                stream << "Line" << "{},{},{},{}".format(
-                        line.x1(), line.y1(), line.x2(), line.y2()) \
-                    << "{}".format(item.length()) \
-                    << "{}".format(item.widthF()) \
-                    << "{}".format(item.style()) \
-                    << item.color().name() \
-                    << "\n"
-            elif isinstance(item, Rectangle):
-                rect = item.rect()
-                topLeft = rect.topLeft()
-                stream << "Rectangle" << "{},{},{},{}".format(
-                    topLeft.x(), topLeft.y(), rect.width(), rect.height()) \
-                    << "\n"
-            elif isinstance(item, GraphicsProxyWidgetContainer):
-                print "GraphicsProxyWidgetContainer"
-            elif isinstance(item, GraphicsProxyWidget):
-                print "GraphicsProxyWidget"
-                embeddedWidget = item.widget()
-
-
-
-    # The copied item data is extracted and the items are instantiated with the
-    # refered binary data
-    def paste(self):
-        if len(self.__copiedItem) < 1:
-            return
-
-        stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)
-
-        itemData = [ ]
-        while not stream.atEnd():
-            input = stream.readString()
-
-            if input == "\n":
-                # Create item
-                type = itemData[0]
-                if type == "Text" and len(itemData) == 6:
-                    textItem = Text(self.__isDesignMode)
-                    textItem.setText(itemData[1])
-                    font = QFont()
-                    font.fromString(itemData[2])
-                    textItem.setFont(font)
-                    textItem.setTextColor(QColor(itemData[3]))
-                    textItem.setOutlineColor(QColor(itemData[4]))
-                    textItem.setBackgroundColor(QColor(itemData[5]))
-                    self._setupItem(textItem)
-                elif type == "Link":
-                    print "Link"
-                elif type == "Arrow":
-                    print "Arrow"
-                elif type == "Line" and len(itemData) == 6:
-                    lineItem = Line(self.__isDesignMode)
-                    # Get line coordinates
-                    lineCoords = itemData[1].split(",")
-                    if len(lineCoords) == 4:
-                        line = QLineF(lineCoords[0].toFloat()[0], lineCoords[1].toFloat()[0], \
-                                      lineCoords[2].toFloat()[0], lineCoords[3].toFloat()[0])
-                        lineItem.setLine(line)
-                    # Get line length
-                    length = float(itemData[2])
-                    lineItem.setLength(length[0])
-                    # Get line width
-                    widthF = float(itemData[3])
-                    lineItem.setWidthF(widthF[0])
-                    # Get line style
-                    style = int(itemData[4])
-                    lineItem.setStyle(style[0])
-                    # Get line color
-                    lineItem.setColor(QColor(itemData[5]))
-
-                    self._setupItem(lineItem)
-                    lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
-                elif type == "Rectangle" and len(itemData) == 2:
-                    rectItem = Rectangle(self.__isDesignMode)
-                    rectData = itemData[1].split(",")
-                    if len(rectData) == 4:
-                        rect = QRectF(rectData[0].toFloat()[0], rectData[1].toFloat()[0], \
-                                      rectData[2].toFloat()[0], rectData[3].toFloat()[0])
-                        rectItem.setRect(rect)
-                    self._setupItem(rectItem)
-                    rectItem.setTransformOriginPoint(rectItem.boundingRect().center())
-                elif type == "GraphicsProxyWidgetContainer":
-                    print "GraphicsProxyWidgetContainer"
-                elif type == "GraphicsProxyWidget":
-                    print "GraphicsProxyWidget"
-
-                itemData = [ ]
-                continue
-
-            itemData.append(input)
-
-
-    # All selected items are removed; when an item (not type Link) is removed its
-    # destructor deletes any links that are associated with it
-    # To avoid double-deleting links, the Link-items are removed before deleting the other items
-    def remove(self):
-        items = self.selectedItems()
-        if (len(items) and QMessageBox.question(self, "Remove selected items",
-                                                "Remove {0} item{1}?".format(len(items),
-                                                "s" if len(items) != 1 else ""),
-                                                QMessageBox.Yes|QMessageBox.No) ==
-                                                QMessageBox.No):
-            return
-
-        self.removeItems(items)
-
-
-    def removeItems(self, items):
-        while items:
-            item = items.pop()
-            if isinstance(item, Text) or isinstance(item, Rectangle):
-                for link in item.links():
-                    if link in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(link)
-            elif isinstance(item, Link) or isinstance(item, Arrow):
-                print "Link or Arrow removed"
-            elif isinstance(item, Line):
-                print "Line removed"
-            elif isinstance(item, GraphicsProxyWidgetContainer):
-                layout = item.layout()
-                while layout.count() > 0:
-                    proxyItem = layout.itemAt(layout.count()-1)
-                    if not proxyItem:
-                        continue
-                    
-                    keys = proxyItem.keys
-                    if keys:
-                        for key in keys:
-                            Manager().removeVisibleDevice(key)
-                    # Destroy and unregister
-                    proxyItem.destroy()
-                    if proxyItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(proxyItem)
-                    
-                    self.__scene.removeItem(proxyItem)
-                    layout.removeItem(proxyItem)
-                    
-                item.destroy()
-            elif isinstance(item, GraphicsProxyWidget):
-                keys = item.keys
-                if keys:
-                    for key in keys:
-                        Manager().removeVisibleDevice(key)
-                # Destroy and unregister
-                item.destroy()
-            elif isinstance(item, GraphicsCustomItem):
-                for inputItem in item.inputChannelItems():
-                    if inputItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(inputItem)
-                    self.__scene.removeItem(inputItem)
-                for outputItem in item.outputChannelItems():
-                    if outputItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(outputItem)
-                    self.__scene.removeItem(outputItem)
-                Manager().removeVisibleDevice(item.internalKey())
-                Manager().unregisterEditableComponent(item.deviceIdKey, item)
-
-            self.__scene.removeItem(item)
-            del item
-
-
-    def groupItems(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Unselect all selected items
-        for item in items:
-            item.setSelected(False)
-
-        itemGroup = self.__scene.createItemGroup(items)
-        itemGroup.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
-        itemGroup.setSelected(True)
-        self.bringToFront()
-
-
-    def horizontalLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        self.createGraphicsItemContainer(Qt.Horizontal, items)
-
-
-    def verticalLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        self.createGraphicsItemContainer(Qt.Vertical, items)
-
-
-    def breakLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        for item in items:
-            self.__scene.breakLayout(item)
-
-
-    def unGroupItems(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        childItems = []
-        for item in items:
-            if isinstance(item, QGraphicsItemGroup):
-                childItems = item.childItems()
-                self.__scene.destroyItemGroup(item)
-        # Select all items again
-		for childItem in childItems:
-		    childItem.setSelected(True)
-
-
-
     # Positions a newly added or pasted item in the scene
     # The sequence number ensures that new items are added in different positions
     # rather than on top of each other
@@ -1365,11 +1069,13 @@ class GraphicsView(QSvgWidget):
         layout.selected = True
         return layout
 
+
     def clear_selection(self):
         for s in self.ilayout.shapes:
             s.selected = False
         for c in self.ilayout:
             c.selected = False
+
 
     def mousePressEvent(self, event):
         if not self.designMode:
@@ -1385,6 +1091,7 @@ class GraphicsView(QSvgWidget):
 
         QWidget.mousePressEvent(self, event)
 
+
     def contextMenuEvent(self, event):
         if not self.designMode:
             return
@@ -1393,6 +1100,7 @@ class GraphicsView(QSvgWidget):
             while not isinstance(child, ProxyWidget):
                 child = child.parent()
             child.event(event)
+
 
     def mouseMoveEvent(self, event):
         self.current_action.mouseMoveEvent(self, event)
@@ -1404,21 +1112,11 @@ class GraphicsView(QSvgWidget):
         QWidget.mouseReleaseEvent(self, event)
 
 
-# Drag & Drop events
     def dragEnterEvent(self, event):
-        #print "GraphicsView.dragEnterEvent"
-
         source = event.source()
         if source is not None and source is not self and self.designMode:
             event.accept()
-
         QWidget.dragEnterEvent(self, event)
-
-
-    def dragMoveEvent(self, event):
-        #print "GraphicsView.dragMoveEvent"
-        event.accept()
-        #QGraphicsView.dragMoveEvent(self, event)
 
 
     def dropEvent(self, event):
@@ -1606,36 +1304,6 @@ class GraphicsView(QSvgWidget):
         
         return None
 
-
-### slots ###
-    def onRemoveUserCustomFrame(self, userCustomFrame):
-        print "onRemoveUserCustomFrame", userCustomFrame
-        if userCustomFrame is None:
-            return
-        userCustomFrame.deleteLater()
-
-
-    # Called whenever an item of the scene is un-/selected
-    def onSceneSelectionChanged(self):
-        self.sceneSelectionChanged.emit()
-
-        if (len(self.__scene.selectedItems()) == 1):
-            selectedItem = self.__scene.selectedItems()[0]
-            if isinstance(selectedItem, GraphicsCustomItem):
-                Manager().selectNavigationItemByKey(selectedItem.internalKey())
-            elif isinstance(selectedItem, GraphicsProxyWidget):
-                keys = selectedItem.keys
-                if keys:
-                    for key in keys:
-                        Manager().selectNavigationItemByKey(key)
-            elif isinstance(selectedItem, GraphicsProxyWidgetContainer):
-                layout = selectedItem.layout()
-                for i in xrange(layout.count()):
-                    proxyItem = layout.itemAt(i)
-                    keys = proxyItem.keys
-                    if keys:
-                        for key in keys:
-                            Manager().selectNavigationItemByKey(key)
 
     def paintEvent(self, event):
         painter = QPainter(self)
