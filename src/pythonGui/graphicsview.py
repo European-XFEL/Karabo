@@ -564,23 +564,19 @@ class FixedLayout(Layout, QLayout):
 
 
     def relayout(self, widget):
-        for c in self.children:
+        for c in self:
             ll = [c]
             ret = None
-            while ll:
+            while ll and ret is None:
                 l = ll.pop()
-                if isinstance(l, QLayout):
-                    for i in range(l.count()):
-                        ll.append(l.itemAt(i))
+                if isinstance(l, Layout):
+                    ll.extend(l)
                 else:
-                    if l.widget() is widget:
+                    if l is widget:
                         ret = l
-                        break
-            if ret is not None:
-                break
         if ret is None:
             return
-        c.setGeormetry(QRect(self.positions[c], c.sizeHint()))
+        c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
 
 
     def save(self):
@@ -695,6 +691,7 @@ class ProxyWidget(QStackedWidget):
     @pyqtSlot()
     def on_changeWidget(self, factory, alias):
         self.component.changeWidget(factory, alias)
+        self.parent().layout().relayout(self)
         self.adjustSize()
         
     def contextMenuEvent(self, event):
