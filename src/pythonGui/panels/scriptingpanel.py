@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the scripting panel of the bottom
    middle of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["ScriptingPanel"]
@@ -39,6 +27,19 @@ from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
 class ScriptingPanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    #
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
 
 
     def __init__(self):
@@ -61,7 +62,7 @@ class ScriptingPanel(QWidget):
         self.__acStartIPython.triggered.connect(self.onStartIPython)
 
 
-    def setupToolBar(self, toolBar):
+    def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acStartIPython)
 
 
