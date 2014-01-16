@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the documentation panel inside of
    the configuration panel on the right of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["DocumentationPanel"]
@@ -26,13 +14,26 @@ __all__ = ["DocumentationPanel"]
 
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtWebKit import *
-from PyQt4.QtNetwork import *
+from PyQt4.QtCore import QByteArray, QUrl
+from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
+from PyQt4.QtWebKit import QWebPage, QWebView
+from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 
 class DocumentationPanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    #
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
 
 
     def __init__(self):
@@ -100,7 +101,7 @@ class DocumentationPanel(QWidget):
         pass
 
 
-    def setupToolBar(self, toolBar):
+    def setupToolBars(self, toolBar, parent):
         self.__acBackWiki = self.__wikiView.pageAction(QWebPage.Back)
         self.__acForwardWiki = self.__wikiView.pageAction(QWebPage.Forward)
         self.__acReloadWiki = self.__wikiView.pageAction(QWebPage.Reload)

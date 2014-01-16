@@ -7,30 +7,34 @@
 
 """This module contains a class which represents the custom view panel in the middle
    of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["CustomMiddlePanel"]
 
 
 from customwidget import CustomWidget
+from toolbar import ToolBar
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAction, QIcon, QKeySequence, QMenu, QSizePolicy,
+                         QToolButton, QVBoxLayout, QWidget)
 
 
 class CustomMiddlePanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    #
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
+
 
     def __init__(self):
         super(CustomMiddlePanel, self).__init__()
@@ -271,8 +275,11 @@ class CustomMiddlePanel(QWidget):
         self.__acSendToBack.triggered.connect(self.onSendToBack)
 
 
-    def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acDesignMode)
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acDesignMode)
+
+        toolBar = ToolBar('Drawing')
+        parent.addToolBar(toolBar)
         
         toolBar.addSeparator()
         toolBar.addWidget(self.__tbOpen)
@@ -280,9 +287,9 @@ class CustomMiddlePanel(QWidget):
         
         toolBar.addSeparator()
         #toolBar.addWidget(self.__tbAddShape)
-        toolBar.addAction(self.__acAddText)
-        toolBar.addAction(self.__acAddLine)
-        toolBar.addAction(self.__acAddRect)
+        for a in self.graphicsactions:
+            toolBar.addAction(a)
+        self.drawingToolBar = toolBar
         
         toolBar.addSeparator()
         toolBar.addAction(self.__acAddLink)
@@ -386,15 +393,11 @@ class CustomMiddlePanel(QWidget):
 
 ### slots ###
     def onDesignModeChanged(self, isChecked):
+        self.drawingToolBar.setVisible(isChecked)
         if isChecked:
             text = "Change to control mode"
-            # Enable/update actions
-            self.updateActions()
         else:
             text = "Change to design mode"
-            # Disable actions
-            self.enableActions(False)
-
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
         self.__customWidget.setDesignMode(isChecked)

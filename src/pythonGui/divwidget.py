@@ -9,9 +9,11 @@
 
 __all__ = ["DivWidget"]
 
+from toolbar import ToolBar
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 
 class DivWidget(QFrame):
     # define signals...
@@ -33,15 +35,21 @@ class DivWidget(QFrame):
         self.setupActions()
         self.setupToolBar()
 
-        # Add custom actions to toolbar
-        dockableWidget.setupToolBar(self.__toolBar)
-        self.docked.connect(dockableWidget.onDock)
-        self.undocked.connect(dockableWidget.onUndock)
+        self.toolBarLayout = QHBoxLayout()
+        self.toolBarLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolBarLayout.setSpacing(0)
+        self.addToolBar(self.toolBar)
         
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0,0,0,0)
-        vLayout.addWidget(self.__toolBar)
+        vLayout.addLayout(self.toolBarLayout)
         vLayout.addWidget(dockableWidget)
+
+        # Add custom actions to toolbar
+        dockableWidget.setupToolBars(self.toolBar, self)
+
+        self.docked.connect(dockableWidget.onDock)
+        self.undocked.connect(dockableWidget.onUndock)
 
 #        self.setStyleSheet("QWidget {border-style: solid;"
 #                                    "border: 1px solid gray;"
@@ -64,20 +72,13 @@ class DivWidget(QFrame):
 
 
     def setupToolBar(self):
-        self.__toolBar = QToolBar("Standard")
-        self.__toolBar.setStyleSheet("QToolBar {"
-                                   "background-color: rgb(180,180,180);"
-                                   "margin-bottom: 0px;"
-                                   "}")
-        self.__toolBar.setIconSize(QSize(32,32))
+        self.toolBar = ToolBar("Standard")
+        self.toolBar.addAction(self.__acUndock)
+        self.toolBar.addAction(self.__acDock)
 
-        self.__toolBar.setObjectName("DivWidgetToolBar")
-        self.__toolBar.addAction(self.__acUndock)
-        self.__toolBar.addAction(self.__acDock)
 
-        iconSize = self.__toolBar.iconSize()
-        iconSize *= 0.6
-        self.__toolBar.setIconSize(iconSize)
+    def addToolBar(self, toolBar):
+        self.toolBarLayout.addWidget(toolBar)
 
 
     def onUndock(self):
