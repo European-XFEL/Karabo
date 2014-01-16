@@ -9,9 +9,11 @@
 
 __all__ = ["DivWidget"]
 
+from toolbar import ToolBar
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 
 class DivWidget(QFrame):
     # define signals...
@@ -30,25 +32,32 @@ class DivWidget(QFrame):
 
         self.__icon = icon
 
-        self.setupActions()
-        self.setupToolBar()
-
-        # Add custom actions to toolbar
-        dockableWidget.setupToolBar(self.__toolBar)
-        self.docked.connect(dockableWidget.onDock)
-        self.undocked.connect(dockableWidget.onUndock)
+        # Setup default actions and toolbar
+        self._setupActions()
+        self._setupToolBar()
+        
+        self.__toolBarLayout = QHBoxLayout()
+        self.__toolBarLayout.setContentsMargins(0,0,0,0)
+        self.__toolBarLayout.setSpacing(0)
+        self.addToolBar(self.__toolBar)
         
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0,0,0,0)
-        vLayout.addWidget(self.__toolBar)
+        vLayout.addLayout(self.__toolBarLayout)
         vLayout.addWidget(dockableWidget)
+
+        # Add custom actions to toolbar
+        dockableWidget.setupToolBars(self.__toolBar, self)
+        
+        self.docked.connect(dockableWidget.onDock)
+        self.undocked.connect(dockableWidget.onUndock)
 
 #        self.setStyleSheet("QWidget {border-style: solid;"
 #                                    "border: 1px solid gray;"
 #                                    "}")
 
 
-    def setupActions(self):
+    def _setupActions(self):
         text = "Unpin as individual window"
         self.__acUndock = QAction(QIcon(":undock"), "&Undock", self)
         self.__acUndock.setToolTip(text)
@@ -63,21 +72,11 @@ class DivWidget(QFrame):
         self.__acDock.setVisible(False)
 
 
-    def setupToolBar(self):
-        self.__toolBar = QToolBar("Standard")
-        self.__toolBar.setStyleSheet("QToolBar {"
-                                   "background-color: rgb(180,180,180);"
-                                   "margin-bottom: 0px;"
-                                   "}")
-        self.__toolBar.setIconSize(QSize(32,32))
-
-        self.__toolBar.setObjectName("DivWidgetToolBar")
+    def _setupToolBar(self):
+        self.__toolBar = ToolBar("Standard")
+        self.__toolBar.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
         self.__toolBar.addAction(self.__acUndock)
         self.__toolBar.addAction(self.__acDock)
-
-        iconSize = self.__toolBar.iconSize()
-        iconSize *= 0.6
-        self.__toolBar.setIconSize(iconSize)
 
 
     def onUndock(self):
@@ -127,4 +126,8 @@ class DivWidget(QFrame):
         if self.__icon:
             return True
         return False
+
+
+    def addToolBar(self, toolBar):
+        self.__toolBarLayout.addWidget(toolBar)
 
