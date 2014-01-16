@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the configuration panel on the
    right of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["ConfigurationPanel"]
@@ -37,12 +25,27 @@ from navigationtreeview import NavigationTreeView
 from schemareader import SchemaReader 
 
 from karabo.karathon import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtXmlPatterns import *
+from PyQt4.QtCore import SIGNAL, Qt, QTimer
+from PyQt4.QtGui import QAction, QHBoxLayout, QIcon, QMenu, QPushButton, QSplitter, \
+                        QStackedWidget, QVBoxLayout, QWidget
+
 
 class ConfigurationPanel(QWidget):
-    
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
+
+
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
         
@@ -240,9 +243,9 @@ class ConfigurationPanel(QWidget):
         self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
 
 
-    def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acFileOpen)
-        toolBar.addAction(self.__acFileSaveAs)
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acFileOpen)
+        standardToolBar.addAction(self.__acFileSaveAs)
         
 
     def applyAllAsHash(self, key, config):

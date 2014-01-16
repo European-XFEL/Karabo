@@ -98,6 +98,7 @@ class GraphicsView(QGraphicsView):
             self.scene().setBackgroundBrush(QBrush(QPixmap(':grid-edit')))
         else:
             self.scene().setBackgroundBrush(QBrush())
+        
         for item in self.items():
             if isinstance(item, NodeBase):
                 item.isDesignMode = isDesignMode
@@ -782,8 +783,6 @@ class GraphicsView(QGraphicsView):
 
 # Drag & Drop events
     def dragEnterEvent(self, event):
-        #print "GraphicsView.dragEnterEvent"
-
         source = event.source()
         if (source is not None) and (source is not self):
             event.accept()
@@ -792,14 +791,15 @@ class GraphicsView(QGraphicsView):
 
 
     def dragMoveEvent(self, event):
-        #print "GraphicsView.dragMoveEvent"
+        # Drop event only in design mode possible
+        if not self.__isDesignMode:
+            event.ignore()
+            return
+        
         event.accept()
-        #QGraphicsView.dragMoveEvent(self, event)
 
 
     def dropEvent(self, event):
-        #print "GraphicsView.dropEvent"
-
         source = event.source()
         if source is not None:
             customItem = None
