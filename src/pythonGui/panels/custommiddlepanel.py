@@ -7,30 +7,33 @@
 
 """This module contains a class which represents the custom view panel in the middle
    of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["CustomMiddlePanel"]
 
 
 from customwidget import CustomWidget
+from toolbar import ToolBar
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QAction, QIcon, QKeySequence, QMenu, QSizePolicy, \
+                        QToolButton, QVBoxLayout, QWidget
 
 
 class CustomMiddlePanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
+
 
     def __init__(self):
         super(CustomMiddlePanel, self).__init__()
@@ -271,40 +274,50 @@ class CustomMiddlePanel(QWidget):
         self.__acSendToBack.triggered.connect(self.onSendToBack)
 
 
-    def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acDesignMode)
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acDesignMode)
         
-        toolBar.addSeparator()
-        toolBar.addWidget(self.__tbOpen)
-        toolBar.addWidget(self.__tbSaveAs)
+        # Add another toolBar
+        self.__drawingToolBar = ToolBar("Drawing")
+        # Add toolBar to DivWidget
+        parent.addToolBar(self.__drawingToolBar)
         
-        toolBar.addSeparator()
-        #toolBar.addWidget(self.__tbAddShape)
-        toolBar.addAction(self.__acAddText)
-        toolBar.addAction(self.__acAddLine)
-        toolBar.addAction(self.__acAddRect)
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addWidget(self.__tbOpen)
+        self.__drawingToolBar.addWidget(self.__tbSaveAs)
         
-        toolBar.addSeparator()
-        toolBar.addAction(self.__acAddLink)
-        #toolBar.addAction(self.__acAddArrow)
+        self.__drawingToolBar.addSeparator()
+        #self.__drawingToolBar.addWidget(self.__tbAddShape)
+        self.__drawingToolBar.addAction(self.__acAddText)
+        self.__drawingToolBar.addAction(self.__acAddLine)
+        self.__drawingToolBar.addAction(self.__acAddRect)
         
-        toolBar.addSeparator()
-        toolBar.addAction(self.__acCut)
-        toolBar.addAction(self.__acCopy)
-        toolBar.addAction(self.__acPaste)
-        toolBar.addAction(self.__acRemove)
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addAction(self.__acAddLink)
+        #self.__drawingToolBar.addAction(self.__acAddArrow)
         
-        toolBar.addSeparator()
-        toolBar.addAction(self.__acRotate)
-        toolBar.addAction(self.__acScaleUp)
-        toolBar.addAction(self.__acScaleDown)
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addAction(self.__acCut)
+        self.__drawingToolBar.addAction(self.__acCopy)
+        self.__drawingToolBar.addAction(self.__acPaste)
+        self.__drawingToolBar.addAction(self.__acRemove)
         
-        toolBar.addSeparator()
-        toolBar.addWidget(self.__tbGroup)
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addAction(self.__acRotate)
+        self.__drawingToolBar.addAction(self.__acScaleUp)
+        self.__drawingToolBar.addAction(self.__acScaleDown)
         
-        toolBar.addSeparator()
-        toolBar.addAction(self.__acBringToFront)
-        toolBar.addAction(self.__acSendToBack)
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addWidget(self.__tbGroup)
+        
+        self.__drawingToolBar.addSeparator()
+        self.__drawingToolBar.addAction(self.__acBringToFront)
+        self.__drawingToolBar.addAction(self.__acSendToBack)
+        
+        # Add placeholder widget to toolbar
+        widget = QWidget()
+        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.__drawingToolBar.addWidget(widget)
 
 
     # Depending on the (non-)selected items the actions are enabled/disabled
@@ -354,28 +367,6 @@ class CustomMiddlePanel(QWidget):
         self.__acUnGroupItems.setDisabled(not isItemGroup)
 
 
-    def enableActions(self, enable):
-        self.__acAddText.setEnabled(enable)
-        self.__acAddLine.setEnabled(enable)
-        self.__acAddRect.setEnabled(enable)
-
-        self.__acAddLink.setEnabled(enable)
-
-        self.__acCut.setEnabled(enable)
-        self.__acCopy.setEnabled(enable)
-        self.__acPaste.setEnabled(enable)
-        self.__acRemove.setEnabled(enable)
-
-        self.__acRotate.setEnabled(enable)
-        self.__acScaleUp.setEnabled(enable)
-        self.__acScaleDown.setEnabled(enable)
-
-        self.__tbGroup.setEnabled(enable)
-
-        self.__acBringToFront.setEnabled(enable)
-        self.__acSendToBack.setEnabled(enable)
-
-
     def onLineInserted(self):
         self.__acAddLine.setChecked(False)
 
@@ -388,16 +379,18 @@ class CustomMiddlePanel(QWidget):
     def onDesignModeChanged(self, isChecked):
         if isChecked:
             text = "Change to control mode"
-            # Enable/update actions
-            self.updateActions()
+            # Show actions and enable drag/drop in customWidget
+            self.__drawingToolBar.show()
         else:
             text = "Change to design mode"
-            # Disable actions
-            self.enableActions(False)
+            # Hide actions and disable drag/drop in customWidget
+            self.__drawingToolBar.hide()
 
+        # Set design mode in customWidget which affects drag/drop behaviour
+        self.__customWidget.setDesignMode(isChecked)
+        
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
-        self.__customWidget.setDesignMode(isChecked)
 
 
     def onOpenLayout(self):
