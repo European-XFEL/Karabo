@@ -15,8 +15,8 @@ __all__ = ["CustomMiddlePanel"]
 from customwidget import CustomWidget
 from toolbar import ToolBar
 
-from PyQt4.QtGui import QAction, QIcon, QMenu, QSizePolicy, QToolButton, \
-                        QVBoxLayout, QWidget
+from PyQt4.QtGui import QAction, QIcon, QKeySequence, QMenu, QSizePolicy, \
+                        QToolButton, QVBoxLayout, QWidget
 
 
 class CustomMiddlePanel(QWidget):
