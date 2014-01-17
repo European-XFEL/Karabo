@@ -42,6 +42,8 @@ class EditableComboBox(EditableWidget):
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
         
+        self.valueType = valueType
+        
         self.valueChanged(self.keys[0], value)
 
 
@@ -57,11 +59,14 @@ class EditableComboBox(EditableWidget):
 
     @property
     def value(self):
-        if self.__valueType == "int":
-            return int(self.__comboBox.currentText())
-        elif (self.__valueType == "float") or (self.__valueType == "double"):
-            return float(self.__comboBox.currentText())
-        return str(self.__comboBox.currentText())
+        try:
+            if self.valueType == "int":
+                return int(self.__comboBox.currentText())
+            elif self.valueType in ("float", "double"):
+                return float(self.__comboBox.currentText())
+            return str(self.__comboBox.currentText())
+        except Exception, e:
+            print e
 
 
     def addItems(self, texts):
