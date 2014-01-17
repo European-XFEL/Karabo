@@ -80,22 +80,22 @@ class Network(QObject):
         @param connect: \True, connect to server
                         \False, disconnect from server
         """
-        connectionEstablished = False
+        isConnected = False
         if connect:
             dialog = LoginDialog()
             if dialog.exec_() == QDialog.Accepted:
                 self.startServerConnection(dialog.username, dialog.password,
                                            dialog.provider, dialog.hostname,
                                            dialog.port)
-                connectionEstablished = True
+                isConnected = True
             else:
-                connectionEstablished = False
+                isConnected = False
         else:
             self.endServerConnection()
-            connectionEstablished = False
+            isConnected = False
         
         # Update mainwindow toolbar
-        self.signalServerConnectionChanged.emit(connectionEstablished)
+        self.signalServerConnectionChanged.emit(isConnected)
 
 
     def startServerConnection(self, username, password, provider, hostname, port):
@@ -174,7 +174,9 @@ class Network(QObject):
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
             else:
                 print "Login failed"
-                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                self.onSocketError(QAbstractSocket.ConnectionRefusedError)
+                #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                return
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
@@ -302,13 +304,14 @@ class Network(QObject):
 
 
     def onSocketError(self, socketError):
-        print "onSocketError", self.__tcpSocket.errorString()
+        print "onSocketError", self.__tcpSocket.errorString(), socketError
         
         self.connectToServer(False)
         
         if socketError == QAbstractSocket.ConnectionRefusedError:
             reply = QMessageBox.question(None, 'Server connection refused',
-                "The connection to the server was refused <BR> by the peer (or timed out).",
+                "The connection to the server was refused <BR> by the peer "
+                "(or timed out).",
                 QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
 
             if reply == QMessageBox.Cancel:
