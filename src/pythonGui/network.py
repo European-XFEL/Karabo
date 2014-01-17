@@ -17,9 +17,9 @@ from logindialog import LoginDialog
 from manager import Manager
 from struct import *
 
-from PyQt4.QtNetwork import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
+from PyQt4.QtCore import pyqtSignal, QByteArray, QDataStream, QObject
+from PyQt4.QtGui import QDialog, QMessageBox
 
 import globals
 import socket
@@ -129,7 +129,7 @@ class Network(QObject):
 
     def _login(self):
         """
-        
+        Authentification login.
         """
         # System variables definition
         ipAddress = socket.gethostname() # Machine Name
@@ -183,6 +183,9 @@ class Network(QObject):
             
     
     def _logout(self):
+        """
+        Authentification logout.
+        """
         # Execute Logout
         if self.__auth is None: return False
         
@@ -300,15 +303,40 @@ class Network(QObject):
 
     def onSocketError(self, socketError):
         print "onSocketError", self.__tcpSocket.errorString()
-        if socketError is QAbstractSocket.ConnectionRefusedError:
-            print "The connection was refused by the peer (or timed out)."
-        elif socketError is QAbstractSocket.RemoteHostClosedError:
-            print "The remote host closed the connection."
-            # Do reconnect
-        elif socketError is QAbstractSocket.HostNotFoundError:
-            print "The host address was not found."
-        elif socketError is QAbstractSocket.NetworkError:
-            print "An error occurred with the network (e.g., the network cable was accidentally plugged out)"
+        
+        self.connectToServer(False)
+        
+        if socketError == QAbstractSocket.ConnectionRefusedError:
+            reply = QMessageBox.question(None, 'Server connection refused',
+                "The connection to the server was refused <BR> by the peer (or timed out).",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.RemoteHostClosedError:
+            reply = QMessageBox.question(None, 'Connection closed',
+                "The remote host closed the connection.",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.HostNotFoundError:
+            reply = QMessageBox.question(None, 'Host address error',
+                "The host address was not found.",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.NetworkError:
+            reply = QMessageBox.question(None, 'Network error',
+                "An error occurred with the network (e.g., <BR> "
+                "the network cable was accidentally plugged out).",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        
+        self.connectToServer(True)
 
 
     def onConnected(self):
