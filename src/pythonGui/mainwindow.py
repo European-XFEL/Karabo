@@ -16,7 +16,6 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
-from logindialog import LoginDialog
 from karabo.karathon import *
 from manager import Manager
 from network import Network
@@ -106,11 +105,11 @@ class MainWindow(QMainWindow):
         self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
         text = "Connect to server"
-        self.__acRemote = QAction(QIcon(":remote"), "&Connect to server", self)
-        self.__acRemote.setStatusTip(text)
-        self.__acRemote.setToolTip(text)
-        self.__acRemote.setCheckable(True)
-        self.__acRemote.triggered.connect(self.onConnectionChanged)
+        self.__acServerConnect = QAction(QIcon(":remote"), "&Connect to server", self)
+        self.__acServerConnect.setStatusTip(text)
+        self.__acServerConnect.setToolTip(text)
+        self.__acServerConnect.setCheckable(True)
+        self.__acServerConnect.triggered.connect(self.onConnectToServer)
 
         text = "Exit application"
         self.__acExit = QAction(QIcon(':exit'), '&Exit', self)
@@ -164,7 +163,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.__acExit)
 
         toolbar.addSeparator()
-        toolbar.addAction(self.__acRemote)
+        toolbar.addAction(self.__acServerConnect)
         
         toolbar.addWidget(self.__tbAccessLevel)
 
@@ -174,7 +173,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Ready...')
 
 
-    def _setupPanels(self) :
+    def _setupPanels(self):
 
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
@@ -227,6 +226,7 @@ class MainWindow(QMainWindow):
 
     def _setupNetwork(self):
         self.__network = Network()
+        self.__network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
@@ -237,37 +237,19 @@ class MainWindow(QMainWindow):
             QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
-            self.__network.onEndConnection()
+            self.__network.endServerConnection()
             event.accept()
         else:
             event.ignore()
 
 
 ### slots ###
-    def onConnectionChanged(self, checked):
-        if checked:
-            dialog = LoginDialog()
-            if dialog.exec_() == QDialog.Accepted:
-                self.__network.onStartConnection(str(dialog.username), str(dialog.password),
-                                                 str(dialog.provider), dialog.hostname, dialog.port)
-            else:
-                checked = False
-                self.__acRemote.blockSignals(True)
-                self.__acRemote.setChecked(False)
-                self.__acRemote.blockSignals(False)
-                return
-        else:
-            self.__network.onEndConnection()
-            self.__configurationPanel.clearParameterEditorContent()
-            # Reset manager settings to start configuration
-            Manager().reset()
-            Manager().handleSystemTopology(Hash())
-        
-        self.__tbAccessLevel.setEnabled(checked)
+    def onConnectToServer(self, checked):
+        self.__network.connectToServer(checked)
 
 
     def onExit(self):
-        self.__network.onEndConnection()
+        self.__network.endServerConnection()
         qApp.quit()
 
     
@@ -295,6 +277,22 @@ class MainWindow(QMainWindow):
         
         # Emit signal that globals.GLOBAL_ACCESS_LEVEL has changed
         Manager().notifier.signalGlobalAccessLevelChanged.emit()
+
+
+    def onServerConnectionChanged(self, isConnected):
+        if isConnected:
+            text = "Disconnect from server"
+        else:
+            text = "Connect to server"
+        
+        self.__acServerConnect.setStatusTip(text)
+        self.__acServerConnect.setToolTip(text)
+        
+        self.__acServerConnect.blockSignals(True)
+        self.__acServerConnect.setChecked(isConnected)
+        self.__acServerConnect.blockSignals(False)
+        
+        self.__tbAccessLevel.setEnabled(isConnected)
 
 
     def onUpdateAccessLevel(self):

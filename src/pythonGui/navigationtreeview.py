@@ -130,6 +130,7 @@ class NavigationTreeView(QTreeView):
 
     def selectIndex(self, index):
         if not index:
+            Manager().onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
             return
         
         path = index.internalPointer().path
@@ -139,8 +140,6 @@ class NavigationTreeView(QTreeView):
         
         if index.isValid():
             self.setCurrentIndex(index)
-            #self.clearSelection()
-            #self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         else:
             self.clearSelection()
 

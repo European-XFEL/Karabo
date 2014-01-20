@@ -77,7 +77,7 @@ class SqlDatabase(object):
 
 
     def closeConnection(self):
-        # Called from network.onEndConnection method
+        # Called from network.endServerConnection method
         #print self.__dbName, "connection closed."
         # Clear database
         #query = QSqlQuery(self.__database)
