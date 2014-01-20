@@ -83,7 +83,6 @@ class Action(object):
         if hasattr(cls, "shortcut"):
             action.setShortcut(cls.shortcut)
             action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        cls.action = action
         return action
 
     @staticmethod
@@ -96,15 +95,6 @@ class Separator(Action):
     def add_action(cls, source, parent):
         action = QAction(source)
         action.setSeparator(True)
-        return action
-
-
-class CheckableAction(Action):
-    @classmethod
-    def add_action(cls, source, parent):
-        action = super(CheckableAction, cls).add_action(source, parent)
-        action.setCheckable(True)
-        action.triggered.connect(partial(parent.set_current_action, cls))
         return action
 
 
@@ -122,41 +112,60 @@ class SimpleAction(Action):
         return action
 
 
+class ShapeAction(Action):
+    def __init__(self):
+        super(ShapeAction, self).__init__()
 
 
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(ShapeAction, cls).add_action(source, parent)
+        action.setCheckable(True)
+        obj = ShapeAction()
+        obj.action = action
+        obj.Shape = cls
+        action.triggered.connect(partial(parent.set_current_action, obj))
+        return action
 
 
+    def mousePressEvent(self, parent, event):
+        self.start_pos = event.pos()
+        self.shape = self.Shape()
+        self.shape.set_points(self.start_pos, self.start_pos)
+        event.accept()
 
-class Shape(CheckableAction, Loadable):
+
+    def mouseMoveEvent(self, parent, event):
+        if hasattr(self, 'shape'):
+            self.shape.set_points(self.start_pos, event.pos())
+            event.accept()
+            parent.update()
+
+
+    def mouseReleaseEvent(self, parent, event):
+        if hasattr(self, 'shape'):
+            parent.set_current_action(None)
+            parent.ilayout.shapes.append(self.shape)
+
+
+    def draw(self, painter):
+        if hasattr(self, 'shape'):
+            self.shape.draw(painter)
+
+
+class Shape(ShapeAction, Loadable):
     fuzzy = 3
 
     def __init__(self):
-        Action.__init__(self)
+        super(Shape, self).__init__()
         self.selected = False
         self.pen = QPen()
         self.brush = QBrush()
 
-    def mousePressEvent(self, parent, event):
-        self.start_pos = event.pos()
-        self.set_points(self.start_pos, self.start_pos)
-        event.accept()
 
-    def mouseMoveEvent(self, parent, event):
-        if self.ready:
-            self.set_points(self.start_pos, event.pos())
-            event.accept()
-            parent.update()
-
-    def mouseReleaseEvent(self, parent, event):
-        if self.ready:
-            parent.set_current_action(None)
-            parent.ilayout.shapes.append(self)
-
-
-    @property
-    def ready(self):
-        "returns whether this shape is already well-defined"
-        return hasattr(self, "start_pos")
+    @classmethod
+    def add_action(cls, source, parent):
+        return super(Shape, cls).add_action(source, parent)
 
 
     def loadpen(self, e):
@@ -223,7 +232,7 @@ class Shape(CheckableAction, Loadable):
             painter.setPen(Qt.DashLine)
             painter.drawRect(self.geometry())
 
-class Select(CheckableAction):
+class Select(Action):
     """ This is the default action. It has no icon nor text since
     it is selected if nothing else is selected. """
 
@@ -273,8 +282,6 @@ class Select(CheckableAction):
             self.selection_start = None
             event.accept()
             parent.update()
-
-    ready = True # selections can always be drawn
 
     def draw(self, painter):
         if self.selection_start is not None:
@@ -852,12 +859,12 @@ class GraphicsView(QSvgWidget):
             action = v.add_action(source, self)
             yield action
 
-    def set_current_action(self, Action):
+    def set_current_action(self, action):
         self.current_action.action.setChecked(False)
         if Action is None:
             self.current_action = self.default_action
         else:
-            self.current_action = Action()
+            self.current_action = action
         if self.current_action is None:
             self.current_action = self.default_action
         self.current_action.action.setChecked(True)
@@ -1324,7 +1331,6 @@ class GraphicsView(QSvgWidget):
                     if item.selected:
                         painter.drawRect(item.geometry())
             painter.restore()
-            if self.current_action.ready:
-                self.current_action.draw(painter)
+            self.current_action.draw(painter)
         finally:
             painter.end()
