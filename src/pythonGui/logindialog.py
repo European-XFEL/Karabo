@@ -49,7 +49,7 @@ class LoginDialog(QDialog):
         formLayout.addRow("Password:", self.__lePassword)
         
         # I was getting this error: QSpiAccessible::accessibleEvent not handled: "8008" obj: QObject(0x0) " invalid interface!"
-        #    when making mouse-over different options in the ComboBox.
+        # when making mouse-over different options in the ComboBox.
         # I solve it as documented here: http://code.google.com/p/clementine-player/issues/detail?id=1706
         # Current open bug: https://bugs.launchpad.net/ubuntu/+source/qtcreator/+bug/959722
         # Running "sudo apt-get remove qt-at-spi"
@@ -80,30 +80,29 @@ class LoginDialog(QDialog):
         vLayout.addLayout(formLayout)
         vLayout.addLayout(btnLayout)
 
+    @property
+    def username(self):
+        return str(self.__leUsername.text().lower())
 
-    def _getUsername(self):
-        return self.__leUsername.text().lower()
-    username = property(fget=_getUsername)
 
-
-    def _getPassword(self):
-        return self.__lePassword.text()
-    password = property(fget=_getPassword)
-
-    
-    def _getProvider(self):
-        return self.__leProvider.currentText()
-    provider = property(fget=_getProvider)
+    @property
+    def password(self):
+        return str(self.__lePassword.text())
 
     
-    def _getHostname(self):
-        return self.__leHostname.text()
-    hostname = property(fget=_getHostname)
+    @property
+    def provider(self):
+        return str(self.__leProvider.currentText())
 
 
-    def _getPort(self):
+    @property
+    def hostname(self):
+        return str(self.__leHostname.text())
+
+
+    @property
+    def port(self):
         return int(self.__lePort.text())
-    port = property(fget=_getPort)
 
 
     def _showConnectionSelection(self, show):
