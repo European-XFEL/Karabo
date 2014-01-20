@@ -130,7 +130,6 @@ class NavigationTreeView(QTreeView):
 
     def selectIndex(self, index):
         if not index:
-            Manager().onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
             return
         
         path = index.internalPointer().path
