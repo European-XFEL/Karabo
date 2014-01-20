@@ -13,12 +13,13 @@ __all__ = ["Network"]
 
 
 from karabo.karathon import *
+from logindialog import LoginDialog
 from manager import Manager
 from struct import *
 
-from PyQt4.QtNetwork import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
+from PyQt4.QtCore import pyqtSignal, QByteArray, QDataStream, QObject
+from PyQt4.QtGui import QDialog, QMessageBox
 
 import globals
 import socket
@@ -29,6 +30,7 @@ BYTES_MESSAGE_SIZE_TAG = 4
 
 class Network(QObject):
     # signals
+    signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
            
     def __init__(self):
@@ -49,7 +51,7 @@ class Network(QObject):
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
         self.__tcpSocket.readyRead.connect(self.onReadServerData)
-        self.__tcpSocket.error.connect(self.onDisplayServerError)
+        self.__tcpSocket.error.connect(self.onSocketError)
         
         Manager().notifier.signalKillDevice.connect(self.onKillDevice)
         Manager().notifier.signalKillServer.connect(self.onKillServer)
@@ -71,11 +73,72 @@ class Network(QObject):
         self.__bodyBytes = bytearray()
 
 
+    def connectToServer(self, connect):
+        """
+        Connection to server via LoginDialog.
+        
+        @param connect: \True, connect to server
+                        \False, disconnect from server
+        """
+        isConnected = False
+        if connect:
+            dialog = LoginDialog()
+            if dialog.exec_() == QDialog.Accepted:
+                self.startServerConnection(dialog.username,
+                                           dialog.password,
+                                           dialog.provider,
+                                           dialog.hostname,
+                                           dialog.port)
+                if self.__tcpSocket.waitForConnected(1000):
+                    isConnected = True
+                else:
+                    isConnected = False
+            else:
+                isConnected = False
+        else:
+            self.endServerConnection()
+            isConnected = False
+        
+        # Update mainwindow toolbar
+        self.signalServerConnectionChanged.emit(isConnected)
+
+
+    def startServerConnection(self, username, password, provider, hostname, port):
+        """
+        Attempt to connect to host on given port and save user specific data for
+        later authentification.
+        """
+        self.__username = username
+        self.__password = password
+        self.__provider = provider
+        self.__headerSize = 0
+        self.__bodySize = 0
+        
+        self.__tcpSocket.abort()
+        self.__tcpSocket.connectToHost(hostname, port)
+
+
+    def endServerConnection(self):
+        """
+        End connection to server and database.
+        """
+        if self._logout():
+            Manager().disconnectedFromServer()
+            
+            self.__tcpSocket.disconnectFromHost()
+            if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
+                self.__tcpSocket.waitForDisconnected(1000):
+                print "Disconnected from server"
+            else:
+                print "Disconnect failed:", self.__tcpSocket.errorString()
+
+
     def _login(self):
-       
+        """
+        Authentification login.
+        """
         # System variables definition
-        #ipAddress = socket.gethostbyname(socket.gethostname()); #IP
-        ipAddress = socket.gethostname(); #Machine Name
+        ipAddress = socket.gethostname() # Machine Name
         
         # Easteregg
         if self.__username == "god":
@@ -89,7 +152,12 @@ class Network(QObject):
         else:
             # Construct Authenticator class
             try:
-                self.__auth = Authenticator(self.__username, self.__password, self.__provider, ipAddress, self.__brokerHost, self.__brokerPort, self.__brokerTopic)
+                # TODO: adapt Authenticator constructor for unicode parameters
+                # instead of string
+                self.__auth = Authenticator(self.__username, self.__password, \
+                                            self.__provider, ipAddress, \
+                                            self.__brokerHost, self.__brokerPort, \
+                                            self.__brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
@@ -104,23 +172,30 @@ class Network(QObject):
                 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
-                self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+                self._sendLoginInformation(self.__username, self.__password, \
+                                           self.__provider, self.__sessionToken)
                 return
             
             if ok:
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
             else:
                 print "Login failed"
-                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                self.onSocketError(QAbstractSocket.ConnectionRefusedError)
+                #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
+                return
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
-        self._sendLoginInformation(self.__username, self.__password, self.__provider, self.__sessionToken)
+        self._sendLoginInformation(self.__username, self.__password, self.__provider, \
+                                   self.__sessionToken)
             
     
     def _logout(self):
+        """
+        Authentification logout.
+        """
         # Execute Logout
-        if self.__auth is None: return
+        if self.__auth is None: return False
         
         try:
             return self.__auth.logout()
@@ -129,27 +204,6 @@ class Network(QObject):
 
 
 ### Slots ###
-    def onStartConnection(self, username, password, provider, hostname, port):
-        
-        self.__username = username
-        self.__password = password
-        self.__provider = provider
-        self.__headerSize = 0
-        self.__bodySize = 0
-        self.__tcpSocket.abort()
-        self.__tcpSocket.connectToHost(hostname, port)
-
-
-    def onEndConnection(self):
-        if self._logout():
-            Manager().closeDatabaseConnection()
-            self.__tcpSocket.disconnectFromHost()
-            if self.__tcpSocket.state() == QAbstractSocket.UnconnectedState or self.__tcpSocket.waitForDisconnected(1000):
-                print "Disconnected from server"
-            else:
-                print "Disconnect failed:", self.__tcpSocket.errorString()
-
-                
     def onReadServerData(self):
         input = QDataStream(self.__tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
@@ -255,8 +309,43 @@ class Network(QObject):
             self.__headerBytes = self.__bodyBytes = bytearray()
 
 
-    def onDisplayServerError(self, socketError):
-        print "onDisplayServerError", self.__tcpSocket.errorString()
+    def onSocketError(self, socketError):
+        print "onSocketError", self.__tcpSocket.errorString(), socketError
+        
+        self.connectToServer(False)
+        
+        if socketError == QAbstractSocket.ConnectionRefusedError:
+            reply = QMessageBox.question(None, 'Server connection refused',
+                "The connection to the server was refused <BR> by the peer "
+                "(or timed out).",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.RemoteHostClosedError:
+            reply = QMessageBox.question(None, 'Connection closed',
+                "The remote host closed the connection.",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.HostNotFoundError:
+            reply = QMessageBox.question(None, 'Host address error',
+                "The host address was not found.",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        elif socketError == QAbstractSocket.NetworkError:
+            reply = QMessageBox.question(None, 'Network error',
+                "An error occurred with the network (e.g., <BR> "
+                "the network cable was accidentally plugged out).",
+                QMessageBox.Retry | QMessageBox.Cancel, QMessageBox.Retry)
+
+            if reply == QMessageBox.Cancel:
+                return
+        
+        self.connectToServer(True)
 
 
     def onConnected(self):
@@ -369,10 +458,10 @@ class Network(QObject):
     def _sendLoginInformation(self, username, password, provider, sessionToken):
         header = Hash("type", "login")
         body = Hash()
-        body.set("username", str(username))
-        body.set("password", str(password))
-        body.set("provider", str(provider))
-        body.set("sessionToken", str(sessionToken))
+        body.set("username", username)
+        body.set("password", password)
+        body.set("provider", provider)
+        body.set("sessionToken", sessionToken)
         
         self._tcpWriteHashHash(header, body)
 
