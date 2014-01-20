@@ -219,6 +219,13 @@ class Manager(Singleton):
         #print ""
 
 
+    def disconnectedFromServer(self):
+        self.closeDatabaseConnection()
+        # Reset manager settings
+        self.reset()
+        self.handleSystemTopology(Hash())
+
+
     def registerEditableComponent(self, key, component):
         key = str(key)
         dataNotifier = self._getDataNotifierEditableValue(key)
