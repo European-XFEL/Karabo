@@ -160,6 +160,7 @@ class Shape(ShapeAction, Loadable):
         super(Shape, self).__init__()
         self.selected = False
         self.pen = QPen()
+        self.pen.setWidth(1)
         self.brush = QBrush()
 
 
