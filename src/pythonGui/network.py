@@ -84,10 +84,15 @@ class Network(QObject):
         if connect:
             dialog = LoginDialog()
             if dialog.exec_() == QDialog.Accepted:
-                self.startServerConnection(dialog.username, dialog.password,
-                                           dialog.provider, dialog.hostname,
+                self.startServerConnection(dialog.username,
+                                           dialog.password,
+                                           dialog.provider,
+                                           dialog.hostname,
                                            dialog.port)
-                isConnected = True
+                if self.__tcpSocket.waitForConnected(1000):
+                    isConnected = True
+                else:
+                    isConnected = False
             else:
                 isConnected = False
         else:
@@ -121,7 +126,8 @@ class Network(QObject):
             Manager().disconnectedFromServer()
             
             self.__tcpSocket.disconnectFromHost()
-            if self.__tcpSocket.state() == QAbstractSocket.UnconnectedState or self.__tcpSocket.waitForDisconnected(1000):
+            if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
+                self.__tcpSocket.waitForDisconnected(1000):
                 print "Disconnected from server"
             else:
                 print "Disconnect failed:", self.__tcpSocket.errorString()
