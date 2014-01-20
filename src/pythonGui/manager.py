@@ -224,6 +224,7 @@ class Manager(Singleton):
         # Reset manager settings
         self.reset()
         self.handleSystemTopology(Hash())
+        self.onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
 
 
     def registerEditableComponent(self, key, component):
