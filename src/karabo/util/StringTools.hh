@@ -100,6 +100,10 @@ namespace karabo {
             return toString(value.c_str());
         }
 
+        inline std::string toString(const karabo::util::CppNone& value) {
+            return std::string("None");
+        }
+        
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
@@ -133,7 +137,7 @@ namespace karabo {
          inline std::string toString(const std::vector<char>& value) {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
         }
-
+         
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
@@ -179,6 +183,15 @@ namespace karabo {
             return boost::lexical_cast<T > (value);
         }
 
+        template<>
+        inline karabo::util::CppNone fromString(const std::string& value) {
+            std::string tmp(value);
+            boost::trim(tmp);
+            if (tmp != "None")
+                throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + value + "\" as None.");
+            return karabo::util::CppNone();
+        }
+        
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
