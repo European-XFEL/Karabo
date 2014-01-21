@@ -366,48 +366,79 @@ def _parse_rect(elem):
 
 Separator()
 
-
-class Group(SimpleAction):
+class GroupAction(SimpleAction):
     "Group several items into one group"
 
-    text = "Group"
-    icon = ":line"
-
-    def run(self):
+    def gather_widgets(self):
         i = 0
-        g = BoxLayout(BoxLayout.TopToBottom)
         rect = None
+        l = [ ]
         while i < len(self.parent.ilayout):
             c = self.parent.ilayout[i]
             if c.selected:
                 c.selected = False
-                if isinstance(c, ProxyWidget):
-                    g.addWidget(c)
-                else:
-                    g.addItem(c)
+                l.append(c)
+                if isinstance(c, Layout):
                     del self.parent.ilayout[i]
+                    i -= 1
                 if rect is None:
                     rect = c.geometry()
                 else:
                     rect = rect.united(c.geometry())
-            else:
-                i += 1
+            i += 1
+        return rect, l
+
+
+    def gather_shapes(self):
+        shapes = self.parent.ilayout.shapes
+        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
+        shapes = [s for s in shapes if s.selected]
+        for s in shapes:
+            s.selected = False
+        return shapes
+
+
+class BoxGroup(GroupAction):
+    def doit(self, group, cmp):
+        rect, widgets = self.gather_widgets()
         if rect is None:
             return
-        shapes = self.parent.ilayout.shapes
-        g.shapes = [s for s in shapes if s.selected]
-        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
-        for s in g.shapes:
-            s.selected = False
-        g.fixed_geometry = QRect(rect.topLeft(), g.sizeHint())
-        self.parent.ilayout.add_item(g)
+        widgets.sort(cmp)
+        for w in widgets:
+            if isinstance(w, Layout):
+                group.addItem(w)
+            else:
+                group.addWidget(w)
+        group.shapes = self.gather_shapes()
+        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        self.parent.ilayout.add_item(group)
+
+
+class VerticalGroup(BoxGroup):
+    text = "Group Vertically"
+    icon = "icons/group-vertical.svg"
+
+
+    def run(self):
+        self.doit(BoxLayout(BoxLayout.TopToBottom),
+                  lambda x, y: x.geometry().y() - y.geometry().y())
+
+
+class HorizontalGroup(BoxGroup):
+    text = "Group Horizontally"
+    icon = "icons/group-horizontal.svg"
+
+
+    def run(self):
+        self.doit(BoxLayout(BoxLayout.LeftToRight),
+                  lambda x, y: x.geometry().x() - y.geometry().x())
 
 
 class Ungroup(SimpleAction):
     "Ungroup items"
-
     text = "Ungroup"
-    icon = ":line"
+    icon = "icons/ungroup.svg"
+
 
     def run(self):
         i = 0
