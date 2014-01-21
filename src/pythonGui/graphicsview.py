@@ -9,8 +9,6 @@
 
 __all__ = ["GraphicsView"]
     
-from customxmlreader import CustomXmlReader
-from customxmlwriter import CustomXmlWriter
 
 from displaycomponent import DisplayComponent
 
