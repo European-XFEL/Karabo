@@ -57,6 +57,8 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, VECTOR_COMPLEX_FLOAT, "xs:string")
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, COMPLEX_DOUBLE, "xs:double")
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, VECTOR_COMPLEX_DOUBLE, "xs:string")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, NONE, "xs:string")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, VECTOR_NONE, "xs:string")
         KARABO_MAP_TO_REFERENCE_TYPE(ToXsd, UNKNOWN, "undefined")
     }
 }

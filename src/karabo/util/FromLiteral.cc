@@ -70,7 +70,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(PTR_COMPLEX_FLOAT)
                     _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE)
                     _KARABO_HELPER_MACRO(PTR_STRING)
-
+                    _KARABO_HELPER_MACRO(NONE)
+                    _KARABO_HELPER_MACRO(VECTOR_NONE)
                     ;
             #undef _KARABO_HELPER_MACRO
 
