@@ -13,11 +13,11 @@ __all__ = ["EditablePathNoApplyComponent"]
 
 
 from basecomponent import BaseComponent
-from widget import EditableWidget
 from manager import Manager
+from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QHBoxLayout, QIcon, QToolButton, QWidget
 
 
 class EditablePathNoApplyComponent(BaseComponent):

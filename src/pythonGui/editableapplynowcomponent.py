@@ -13,11 +13,11 @@ __all__ = ["EditableApplyNowComponent"]
 
 
 from basecomponent import BaseComponent
-from editablewidget import EditableWidget
 from manager import Manager
+from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
+from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 
 
 class EditableApplyNowComponent(BaseComponent):
@@ -30,11 +30,11 @@ class EditableApplyNowComponent(BaseComponent):
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
-        hlayout.setContentsMargins(0,0,0,0)
+        hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.create(classAlias, **params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
-        hlayout.addWidget(self.__editableWidget.widget)
+        hLayout.addWidget(self.__editableWidget.widget)
         
         metricPrefixSymbol = params.get('metricPrefixSymbol')
         unitSymbol = params.get('unitSymbol')
@@ -46,7 +46,7 @@ class EditableApplyNowComponent(BaseComponent):
         if unitSymbol:
             unitLabel += unitSymbol
         if len(unitLabel) > 0:
-            hlayout.addWidget(QLabel(unitLabel))
+            hLayout.addWidget(QLabel(unitLabel))
         
         self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
 
