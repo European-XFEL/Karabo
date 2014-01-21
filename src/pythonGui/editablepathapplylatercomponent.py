@@ -13,12 +13,12 @@ __all__ = ["EditablePathApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from widget import EditableWidget
 from manager import Manager
 from messagebox import MessageBox
+from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal
+#from PyQt4.QtGui import *
 
 
 class EditablePathApplyLaterComponent(BaseComponent):

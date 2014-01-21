@@ -19,8 +19,8 @@ import globals
 
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QTreeWidgetItem
 
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
