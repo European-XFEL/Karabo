@@ -19,8 +19,8 @@ import choicecomponent
 from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt, QSize
+from PyQt4.QtGui import QAction, QIcon, QMenu
 
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 

@@ -13,12 +13,13 @@ __all__ = ["EditableApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from widget import EditableWidget
 from manager import Manager
 from messagebox import MessageBox
+from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal, QSize, QTimer
+from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
+                        QToolButton, QWidget
 
 
 class EditableApplyLaterComponent(BaseComponent):
