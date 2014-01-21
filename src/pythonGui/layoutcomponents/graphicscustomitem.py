@@ -18,11 +18,17 @@ from graphicsoutputchannelitem import GraphicsOutputChannelItem
 
 from layoutcomponents.nodebase import NodeBase
 
+from manager import Manager
+
+from registry import Loadable, ns_karabo, ns_svg
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from xml.etree import ElementTree
 
-class GraphicsCustomItem(NodeBase, QObject):
+
+class GraphicsCustomItem(NodeBase, Loadable, QObject):
     # signals
     signalValueChanged = pyqtSignal(str, object) # key, value
 
@@ -254,6 +260,48 @@ class GraphicsCustomItem(NodeBase, QObject):
     def onValueChanged(self, key, value):
         if self.deviceIdKey == key:
             self.value = value
+
+
+    def element(self):
+        g = self.geometry()
+        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height(),
+              "style": "fill:#e0f0ff;stroke:#000000",
+              ns_karabo + "class": self.__class__.__name__,
+              ns_karabo + "internalKey": self.internalKey(),
+              ns_karabo + "text": self.text(),
+              ns_karabo + "devInstId": self.value}
+        return ElementTree.Element(ns_svg + 'rect',
+                                   {k: unicode(v) for k, v in d.iteritems()})
+
+
+    @staticmethod
+    def load(element, layout):
+        internalKey = element.get("internalKey")
+        Manager().newVisibleDevice(internalKey)
+        Manager().selectNavigationItemByKey(internalKey)
+        schema = Manager().getSchemaByInternalKey(internalKey)
+
+        if len(schema) == 0:
+            # TODO: Remove dirty hack for scientific computing again!!!
+            croppedClassId = text.split("-")
+            newClassId = croppedClassId[0]
+
+            newInternalKey = internalKey
+            keys = internalKey.split('+', 1)
+            if len(keys) == 2:
+                serverId = keys[0]
+                newInternalKey = keys[0] + "+" + newClassId
+                schema = Manager().getSchemaByInternalKey(newInternalKey)
+                Manager().createNewDeviceClassPlugin(serverId, newClassId, text)
+        customItem = GraphicsCustomItem(internalKey,
+                                        layout.widget().parent().isDesignMode,
+                                        text, schema)
+
+        customItem.signalValueChanged.connect(
+            Manager().onDeviceClassValueChanged)
+        Manager().registerEditableComponent(customItem.deviceId, customItem)
+        customItem.value = deviceId
+        return customItem
 
 
 ####################################################################################
