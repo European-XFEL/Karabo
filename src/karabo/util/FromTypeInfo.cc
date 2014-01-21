@@ -46,6 +46,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(STRING, std::string)
                     _KARABO_HELPER_MACRO1(HASH, Hash)
                     _KARABO_HELPER_MACRO1(SCHEMA, Schema)
+                    _KARABO_HELPER_MACRO1(NONE, CppNone)
 
                     ;
         }

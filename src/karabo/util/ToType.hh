@@ -89,6 +89,8 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(PTR_COMPLEX_FLOAT)
                         _KARABO_HELPER_MACRO(PTR_COMPLEX_DOUBLE)
                         _KARABO_HELPER_MACRO(PTR_STRING)
+                        _KARABO_HELPER_MACRO(NONE)
+                        _KARABO_HELPER_MACRO(VECTOR_NONE)
 
                     default:
                         throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Requested datatype conversion not implemented");

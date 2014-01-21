@@ -29,6 +29,8 @@ namespace karabo {
         // Forward FromType
         template<class To>
         class FromType;
+        
+        class CppNone {};
 
         class Types {
 
@@ -99,6 +101,8 @@ namespace karabo {
                 VECTOR_SCHEMA, // std::vector<Schema>
 
                 ANY, // unspecified type
+                NONE,  // CppNone type used during serialization/de-serialization
+                VECTOR_NONE,
 
                 UNKNOWN, // unknown type
                 SIMPLE,
@@ -144,6 +148,7 @@ namespace karabo {
                     case Types::STRING:
                     case Types::COMPLEX_FLOAT:
                     case Types::COMPLEX_DOUBLE:
+                    case Types::NONE:
                         return SIMPLE;
                     case Types::VECTOR_STRING:
                     case Types::VECTOR_CHAR:
@@ -160,6 +165,7 @@ namespace karabo {
                     case Types::VECTOR_BOOL:
                     case Types::VECTOR_COMPLEX_FLOAT:
                     case Types::VECTOR_COMPLEX_DOUBLE:
+                    case Types::VECTOR_NONE:
                     case Types::PTR_STRING:
                     case Types::PTR_CHAR:
                     case Types::PTR_INT8:
@@ -234,6 +240,7 @@ namespace karabo {
                     case Types::VECTOR_COMPLEX_FLOAT:
                     case Types::VECTOR_COMPLEX_DOUBLE:
                     case Types::VECTOR_HASH:
+                    case Types::VECTOR_NONE:
                         return true;
                     default:
                         return false;
@@ -257,6 +264,7 @@ namespace karabo {
                     case Types::STRING:
                     case Types::COMPLEX_FLOAT:
                     case Types::COMPLEX_DOUBLE:
+                    case Types::NONE:
                         return true;
                     default:
                         return false;
@@ -286,6 +294,7 @@ namespace karabo {
         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
         _KARABO_HELPER_MACRO(STRING, std::string)
+        _KARABO_HELPER_MACRO(NONE, karabo::util::CppNone)
 
         #undef _KARABO_HELPER_MACRO
 
