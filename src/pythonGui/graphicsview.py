@@ -132,6 +132,7 @@ class ShapeAction(Action):
 class Shape(ShapeAction, Loadable):
     fuzzy = 3
 
+
     def __init__(self):
         super(Shape, self).__init__()
         self.selected = False
@@ -182,6 +183,7 @@ class Shape(ShapeAction, Loadable):
         pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
         pen.setWidthF(ununit(d.get("stroke-width", "1")))
         self.pen = pen
+
 
     def savepen(self, e):
         d = e.attrib
@@ -499,7 +501,7 @@ class Layout(Loadable):
             for j in range(i.start, i.stop, i.step):
                 self.takeAt(j)
         else:
-                self.takeAt(i)
+            self.takeAt(i)
 
 
     def load_element(self, element):
@@ -1044,8 +1046,8 @@ class GraphicsView(QSvgWidget):
     def createGraphicsItemContainer(self, orientation, items, pos):
         # Initialize layout
         layout = BoxLayout(QBoxLayout.LeftToRight if
-                            orientation == Qt.Horizontal else 
-                            QBoxLayout.TopToBottom)
+                           orientation == Qt.Horizontal else
+                           QBoxLayout.TopToBottom)
 
         for item, component in items:
             proxy = ProxyWidget(self.inner)
