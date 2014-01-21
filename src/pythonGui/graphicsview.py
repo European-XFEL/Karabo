@@ -626,7 +626,16 @@ class FixedLayout(Layout, QLayout):
         i = 0
         while i < len(self):
             if self[i].selected:
+                stack = [self[i]]
+                while stack:
+                    p = stack.pop()
+                    if isinstance(p, Layout):
+                        stack.extend(p)
+                    else:
+                        p.setParent(None)
                 del self[i]
+            else:
+                i += 1
         self.shapes = [s for s in self.shapes if not s.selected]
 
 
