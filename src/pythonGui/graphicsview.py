@@ -21,16 +21,14 @@ from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
-from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
-from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.linkbase import LinkBase
 from layoutcomponents.nodebase import NodeBase
-from layoutcomponents.rectangle import Rectangle
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
+from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
 
 from widget import DisplayWidget, EditableWidget
@@ -41,39 +39,19 @@ from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
 from functools import partial
-
-ns_svg = "{http://www.w3.org/2000/svg}"
-ns_karabo = "{http://karabo.eu/scene}"
-ElementTree.register_namespace("svg", ns_svg[1:-1])
-ElementTree.register_namespace("krb", ns_karabo[1:-1])
-
-class MetaAction(type):
-    def __init__(self, name, bases, dict):
-        super(MetaAction, self).__init__(name, bases, dict)
-        if "text" in dict:
-            Action.actions.append(self)
-        if "xmltag" in dict:
-            Loadable.xmltags[self.xmltag] = self
-        if hasattr(self, 'subclasses') and 'subclasses' not in dict:
-            self.subclasses[name] = self
+import os.path
 
 
-class Loadable(object):
-    __metaclass__ = MetaAction
-    xmltags = { }
-
-
-    @staticmethod
-    def load(element, layout):
-        try:
-            return Loadable.xmltags[element.tag].load(element, layout)
-        except KeyError:
-            return
-
-
-class Action(object):
-    __metaclass__ = MetaAction
+class Action(Registry):
     actions = [ ]
+
+
+    @classmethod
+    def register(cls, name, dict):
+        super(Action, cls).register(name, dict)
+        if "text" in dict:
+            Action.actions.append(cls)
+
 
     @classmethod
     def add_action(cls, source, parent):
@@ -85,12 +63,12 @@ class Action(object):
             action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         return action
 
-    @staticmethod
-    def separator():
-        Action.actions.append(Separator())
-
 
 class Separator(Action):
+    def __init__(self):
+        Action.actions.append(self)
+
+
     @classmethod
     def add_action(cls, source, parent):
         action = QAction(source)
@@ -371,8 +349,6 @@ class Rectangle(Shape):
 
     @staticmethod
     def load(e, layout):
-        if e.get(ns_karabo + 'class') is not None:
-            return ProxyWidget.load(e, layout)
         ret = Rectangle()
         ret.rect = QRect(float(e.get("x")), float(e.get("y")),
                          float(e.get("width")), float(e.get("height")))
@@ -388,7 +364,7 @@ def _parse_rect(elem):
                  float(elem.get(ns + "width")), float(elem.get(ns + "height")))
 
 
-Action.separator()
+Separator()
 
 
 class Group(SimpleAction):
@@ -450,7 +426,7 @@ class Ungroup(SimpleAction):
                 i += 1
 
 
-Action.separator()
+Separator()
 
 
 class Cut(SimpleAction):
@@ -495,12 +471,7 @@ class Paste(SimpleAction):
         self.parent.update()
 
 
-class MetaLayout(MetaAction, QLayout.__class__):
-    pass
-
-
 class Layout(Loadable):
-    __metaclass__ = MetaLayout
     xmltag = ns_svg + "g"
     subclasses = { }
 
@@ -533,13 +504,6 @@ class Layout(Loadable):
                 self.takeAt(i)
 
 
-    @staticmethod
-    def load(element, layout):
-        cls = element.get(ns_karabo + "class", "FixedLayout")
-        self = Layout.subclasses[cls].load(element, layout)
-        self.load_element(element)
-        return self
-
     def load_element(self, element):
         i = 0
         while i < len(element):
@@ -551,7 +515,13 @@ class Layout(Loadable):
                 self.shapes.append(r)
                 del element[i]
             else:
-                self.load_item(element[i], r)
+                if not isinstance(r, Layout):
+                    w = ProxyWidget(self.widget())
+                    if isinstance(r, QLabel):
+                        w.set_child(r, None)
+                    else:
+                        w.set_child(r.widget, r)
+                    self.load_item(elem, w)
                 r.fixed_geometry = _parse_rect(elem)
                 del element[i]
 
@@ -668,7 +638,11 @@ class FixedLayout(Layout, QLayout):
 
     @staticmethod
     def load(elem, layout):
-        return FixedLayout()
+        ret = FixedLayout()
+        if layout is not None:
+            layout.load_item(elem, ret)
+        ret.load_element(elem)
+        return ret
 
 
     def addItem(self, item):
@@ -726,8 +700,11 @@ class BoxLayout(QBoxLayout, Layout):
 
 
     @staticmethod
-    def load(element, layout):
-        return BoxLayout(int(element.get(ns_karabo + "Direction")))
+    def load(elem, layout):
+        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
+        layout.load_item(elem, ret)
+        ret.load_element(elem)
+        return ret
 
 
     def load_item(self, element, item):
@@ -735,6 +712,13 @@ class BoxLayout(QBoxLayout, Layout):
             self.addWidget(item)
         else:
             self.addLayout(item)
+
+
+class Label(Loadable):
+    """ Fake class to make a QLabel loadable """
+    @staticmethod
+    def load(elem, layout):
+        return QLabel(elem.get(ns_karabo + "text"))
 
 
 class ProxyWidget(QStackedWidget):
@@ -789,19 +773,7 @@ class ProxyWidget(QStackedWidget):
             d[ns_karabo + "class"] = "Label"
             d[ns_karabo + "text"] = self.widget(0).text()
         else:
-            widgetFactory = self.component.widgetFactory
-            d[ns_karabo + "class"] = "ProxyWidget"
-            d[ns_karabo + "componentType"] = self.component.__class__.__name__
-            d[ns_karabo + "widgetFactory"] = "DisplayWidget"
-            d[ns_karabo + "classAlias"] = self.component.classAlias
-            if self.component.classAlias == "Command":
-                d[ns_karabo + "commandText"] = widgetFactory.widget.text()
-                d[ns_karabo + "commandEnabled"] = "{}".format(
-                    widgetFactory.widget.isEnabled())
-                d[ns_karabo + "allowedStates"] = ",".join(
-                    widgetFactory.allowedStates)
-                d[ns_karabo + "command"] = widgetFactory.command
-            d[ns_karabo + "key"] = ",".join(self.component.keys)
+            d.update(self.component.attributes())
         return ElementTree.Element(ns_svg + "rect",
                                    {k: unicode(v) for k, v in d.iteritems()})
 
@@ -946,7 +918,7 @@ class GraphicsView(QSvgWidget):
         root = self.tree.getroot()
         self.inner.setParent(None)
         self.inner = QWidget(self)
-        self.ilayout = Layout.load(root, None)
+        self.ilayout = FixedLayout.load(root, None)
         self.inner.setLayout(self.ilayout)
         self.layout().addWidget(self.inner)
         self.designMode = True
@@ -964,13 +936,15 @@ class GraphicsView(QSvgWidget):
         print "openConfiguration", filename
 
 
-    # Save active view to file
     def saveSceneLayoutToFile(self):
+        """ Save active view to file """
         filename = QFileDialog.getSaveFileName(None, "Save file as",
                                                filter="SVG (*.svg)")
         if len(filename) < 1:
             return
+        self.saveScene(filename)
 
+    def saveScene(self, filename):
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".svg"
@@ -1010,22 +984,16 @@ class GraphicsView(QSvgWidget):
         self.saveSceneConfigurations(dirPath)
 
 
-    # Save active view and configurations to folder/files
     def saveSceneLayoutConfigurationsToFile(self):
-        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
-                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-
-        if len(dirPath) < 1:
+        """ Save active view and configurations to folder/files """
+        dir = QFileDialog.getExistingDirectory(
+            self, "Select directory to save layout and configuration files",
+            options=QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if not dir:
             return
-
-        # Check, if directory is empty
-        self.checkDirectoryBeforeSave(dirPath)
-
-        # Save layout to directory
-        CustomXmlWriter(self.__scene).write(dirPath + "/" + QDir(dirPath).dirName() + ".scene")
-
-        # Save configurations of navigation related items
-        self.saveSceneConfigurations(dirPath)
+        self.checkDirectoryBeforeSave(dir)
+        self.saveScene(os.path.join(dir, os.path.basename(dir) + ".svg"))
+        self.saveSceneConfigurations(dir)
 
 
     # Helper function checks whether the directory to save to is empty
@@ -1048,8 +1016,7 @@ class GraphicsView(QSvgWidget):
 
     # Helper function to save all configurations for scene items
     def saveSceneConfigurations(self, dirPath):
-        items = self.items()
-        for item in items:
+        for item in self.ilayout.shapes:
             if isinstance(item, GraphicsCustomItem):
                 # TODO: Remove dirty hack for scientific computing again!!!
                 croppedClassId = item.text().split("-")
@@ -1169,7 +1136,7 @@ class GraphicsView(QSvgWidget):
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
                 customItem.position = event.pos()
-                self.layout.shapes.append(customItem)
+                self.ilayout.shapes.append(customItem)
                 self.update()
 
                 # Register as visible device - TODO?
