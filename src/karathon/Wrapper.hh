@@ -87,7 +87,9 @@ namespace karathon {
             SCHEMA = karabo::util::Types::SCHEMA, // Schema
 
             ANY = karabo::util::Types::ANY, // unspecified type
-
+            NONE = karabo::util::Types::NONE, // CppNone type used during serialization/de-serialization
+            VECTOR_NONE = karabo::util::Types::VECTOR_NONE,
+            
             UNKNOWN = karabo::util::Types::UNKNOWN, // unknown type
             SIMPLE = karabo::util::Types::SIMPLE,
             SEQUENCE = karabo::util::Types::SEQUENCE,
@@ -159,6 +161,8 @@ namespace karathon {
                 case karabo::util::Types::PTR_STRING: return PTR_STRING;
                 case karabo::util::Types::SCHEMA: return SCHEMA;
                 case karabo::util::Types::ANY: return ANY;
+                case karabo::util::Types::NONE: return NONE;
+                case karabo::util::Types::VECTOR_NONE: return VECTOR_NONE;
                 case karabo::util::Types::UNKNOWN: return UNKNOWN;
                 case karabo::util::Types::SIMPLE: return SIMPLE;
                 case karabo::util::Types::SEQUENCE: return SEQUENCE;
@@ -218,6 +222,8 @@ namespace karathon {
                 case PTR_STRING: return karabo::util::Types::PTR_STRING;
                 case SCHEMA: return karabo::util::Types::SCHEMA;
                 case ANY: return karabo::util::Types::ANY;
+                case NONE: return karabo::util::Types::NONE;
+                case VECTOR_NONE: return karabo::util::Types::VECTOR_NONE;
                 case UNKNOWN: return karabo::util::Types::UNKNOWN;
                 case SIMPLE: return karabo::util::Types::SIMPLE;
                 case SEQUENCE: return karabo::util::Types::SEQUENCE;
@@ -321,6 +327,12 @@ namespace karathon {
         
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
         static void toAny(const bp::object& operand, boost::any& any);
+
+        static bp::object fromStdVectorToPyListNone(const std::vector<karabo::util::CppNone>& v) {
+                bp::list pylist;
+                for (size_t i = 0; i < v.size(); i++) pylist.append(bp::object());
+                return pylist;
+        }
     };
 }
 
