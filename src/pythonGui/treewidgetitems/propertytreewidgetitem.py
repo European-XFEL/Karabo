@@ -20,7 +20,7 @@ from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
 from PyQt4.QtCore import Qt, QSize
-from PyQt4.QtGui import QAction, QIcon, QMenu
+from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
 
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
@@ -30,9 +30,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         
         # Popup widget for tooltip info
         self.__popupWidget = None
-        
-        # Value type
-        self.__valueType = None
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
@@ -69,12 +66,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     displayText = property(fset=_setText)
 
 
-    #def _setValueType(self, valueType):
-    #    self.__valueType = valueType
-    #    self.displayComponent.displayWidget.valueType = valueType
-    #valueType = property(fset=_setValueType)
-
-
     def _defaultValue(self):
         return self.data(0, const.DEFAULT_VALUE)
     def _setDefaultValue(self, default):
@@ -99,8 +90,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.description:
                 info["Description"] = self.description
             info["Key"] = paramKey[1]
-            if self.__valueType:
-                info["Value Type"] = self.__valueType
+            if self.valueType:
+                info["Value Type"] = self.valueType
             if self.defaultValue:
                 info["Default Value"] = self.defaultValue
             if self.alias:
