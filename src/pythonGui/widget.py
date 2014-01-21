@@ -14,37 +14,40 @@ __all__ = ["DisplayWidget"]
 
 from PyQt4.QtCore import QObject, pyqtSignal
 from PyQt4.QtGui import QLabel
+from registry import Loadable, Registry
 
-class MetaWidget(QObject.__class__):
-    def __init__(self, name, bases, dict):
-        super(MetaWidget, self).__init__(name, bases, dict)
-        if "menu" in dict:
-            self.factories[name] = self
-            self.factory = self
-            self.categoryToAliases = { } # <category, [alias1,alias2,..]>
-            self.aliasToCategory = { } # <alias, category>
-            self.aliasConcreteClass = { } # dict of actual classes
-        elif "alias" in dict:
-            if self.category in self.categoryToAliases:
-                self.categoryToAliases[self.category].append(self.alias)
-            else:
-                self.categoryToAliases[self.category] = [self.alias]
-            self.aliasToCategory[self.alias] = self.category
-            self.aliasConcreteClass[self.alias] = self
 
-class Widget(QObject):
-    __metaclass__ = MetaWidget
-
+class Widget(QObject, Registry):
     def __init__(self, **kwargs):
         # This method should not be necessary. It is, because we
         # get kwargs which are not empty.
         QObject.__init__(self)
 
+
+    @classmethod
+    def register(cls, name, dict):
+        super(Widget, cls).register(name, dict)
+        if "menu" in dict:
+            cls.factories[name] = cls
+            cls.factory = cls
+            cls.categoryToAliases = { } # <category, [alias1,alias2,..]>
+            cls.aliasToCategory = { } # <alias, category>
+            cls.aliasConcreteClass = { } # dict of actual classes
+        elif "alias" in dict:
+            if cls.category in cls.categoryToAliases:
+                cls.categoryToAliases[cls.category].append(cls.alias)
+            else:
+                cls.categoryToAliases[cls.category] = [cls.alias]
+            cls.aliasToCategory[cls.alias] = cls.category
+            cls.aliasConcreteClass[cls.alias] = cls
+
+
     @classmethod
     def get_class(cls, alias):
         # Get module and class name as tuple (moduleName,className)
         return cls.aliasConcreteClass[alias]
-    
+
+
     @classmethod
     def getAliasesViaCategory(cls, category):
         return cls.categoryToAliases.get(category, [ ])
