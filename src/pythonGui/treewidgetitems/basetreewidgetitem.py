@@ -134,8 +134,8 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
     def _valueType(self):
         return self.data(0, const.VALUE_TYPE)
-    def _setValueType(self, index):
-        self.setData(0, const.VALUE_TYPE, index)
+    def _setValueType(self, valueType):
+        self.setData(0, const.VALUE_TYPE, valueType)
     valueType = property(fget=_valueType, fset=_setValueType)
 
 
