@@ -15,7 +15,7 @@
 #include "RawImageDataWrap.hh"
 
 using namespace std;
-using namespace karabo::util;
+//using namespace karabo::util;
 
 namespace karathon {
 
@@ -53,6 +53,8 @@ namespace karathon {
                 return bp::object(boost::any_cast<std::string>(operand));
             } else if (operand.type() == typeid (boost::filesystem::path)) {
                 return bp::object(boost::any_cast<boost::filesystem::path>(operand).string());
+            } else if (operand.type() == typeid (karabo::util::CppNone)) {
+                return bp::object();
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
 //            } else if (operand.type() == typeid (karabo::xip::CpuImage<double>)) {
@@ -91,6 +93,8 @@ namespace karathon {
                 return fromStdVectorToPyArray(boost::any_cast<std::vector<double> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<std::string>)) {
                 return fromStdVectorToPyList(boost::any_cast < std::vector<std::string> >(operand));
+            } else if (operand.type() == typeid (std::vector<karabo::util::CppNone>)) {
+                return fromStdVectorToPyListNone(boost::any_cast < std::vector<karabo::util::CppNone> >(operand));
             } else if (operand.type() == typeid (karabo::xip::RawImageData)) {
                 karabo::xip::RawImageData raw = boost::any_cast<karabo::xip::RawImageData>(operand);
                 return bp::object(boost::shared_ptr<RawImageDataWrap>(new RawImageDataWrap(raw)));
@@ -110,6 +114,10 @@ namespace karathon {
     }
 
     void Wrapper::toAny(const bp::object& obj, boost::any& any) {
+        if (obj.ptr() == Py_None) {
+            any = karabo::util::CppNone();
+            return;
+        }
         if (PyBool_Check(obj.ptr())) {
             bool b = bp::extract<bool>(obj);
             any = b;
@@ -169,17 +177,17 @@ namespace karathon {
             return;
         }
         if (bp::extract<karabo::util::Hash>(obj).check()) {
-            Hash h = bp::extract<Hash>(obj);
+            karabo::util::Hash h = bp::extract<karabo::util::Hash>(obj);
             any = h;
             return;
         }
         if (bp::extract<karabo::util::Schema>(obj).check()) {
-            Schema s = bp::extract<Schema>(obj);
+            karabo::util::Schema s = bp::extract<karabo::util::Schema>(obj);
             any = s;
             return;
         }
         if (bp::extract<std::vector<karabo::util::Hash> >(obj).check()) {
-            std::vector<Hash> vhash = bp::extract<std::vector<Hash> >(obj);
+            std::vector<karabo::util::Hash> vhash = bp::extract<std::vector<karabo::util::Hash> >(obj);
             any = vhash;
             return;
         }
@@ -280,6 +288,12 @@ namespace karathon {
                 return;
             }
             bp::object list0 = obj[0];
+            if (list0.ptr() == Py_None) {
+                std::vector<karabo::util::CppNone> v;
+                for (bp::ssize_t i = 0; i < size; ++i) v.push_back(karabo::util::CppNone());
+                any = v;
+                return;
+            }
             if (PyBool_Check(list0.ptr())) {
                 std::vector<bool> v(size); // Special case here
                 for (bp::ssize_t i = 0; i < size; ++i) {
@@ -320,18 +334,18 @@ namespace karathon {
                 any = v;
                 return;
             }
-            if (bp::extract<Hash>(list0).check()) {
-                std::vector<Hash> v(size);
+            if (bp::extract<karabo::util::Hash>(list0).check()) {
+                std::vector<karabo::util::Hash> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    v[i] = bp::extract<Hash>(obj[i]);
+                    v[i] = bp::extract<karabo::util::Hash>(obj[i]);
                 }
                 any = v;
                 return;
             }
-            if (bp::extract<Schema>(list0).check()) {
-                std::vector<Schema> v(size);
+            if (bp::extract<karabo::util::Schema>(list0).check()) {
+                std::vector<karabo::util::Schema> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    v[i] = bp::extract<Schema>(obj[i]);
+                    v[i] = bp::extract<karabo::util::Schema>(obj[i]);
                 }
                 any = v;
                 return;
