@@ -24,19 +24,44 @@ import globals
 
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from karabo.karathon import Types
+
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QSpinBox
 
 
 class DisplaySpinBox(DisplayWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, **params):
+    def __init__(self, valueType=None, **params):
         super(DisplaySpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
-        self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+
+        # TODO: valueType access
+        print "valueType", valueType
+
+        if valueType == Types.INT8:
+            self.__spinBox.setRange(globals.MIN_INT8, globals.MAX_INT8)
+        elif valueType == Types.UINT8:
+            self.__spinBox.setRange(0, globals.MAX_UINT8)
+        elif valueType == Types.INT16:
+            self.__spinBox.setRange(globals.MIN_INT16, globals.MAX_INT16)
+        elif valueType == Types.UINT16:
+            self.__spinBox.setRange(0, globals.MAX_UINT16)
+        elif valueType == Types.INT32:
+            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        elif valueType == Types.UINT32:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(0, globals.MAX_INT32)
+        elif valueType == Types.INT64:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        elif valueType == Types.UINT64:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(0, globals.MAX_INT32)
+
         self.__spinBox.setReadOnly(True)
         
         #metricPrefixSymbol = params.get('metricPrefixSymbol')

@@ -69,10 +69,10 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     displayText = property(fset=_setText)
 
 
-    def _setValueType(self, valueType):
-        self.__valueType = valueType
-        self.displayComponent.displayWidget.valueType = valueType
-    valueType = property(fset=_setValueType)
+    #def _setValueType(self, valueType):
+    #    self.__valueType = valueType
+    #    self.displayComponent.displayWidget.valueType = valueType
+    #valueType = property(fset=_setValueType)
 
 
     def _defaultValue(self):
