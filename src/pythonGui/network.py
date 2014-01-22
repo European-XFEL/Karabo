@@ -20,6 +20,7 @@ from struct import *
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import pyqtSignal, QByteArray, QDataStream, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
+from PyQt4.QtCore import QCryptographicHash
 
 import globals
 import socket
@@ -47,11 +48,7 @@ class Network(QObject):
         self.__brokerPort = str()
         self.__brokerTopic = str()
         
-        self.__tcpSocket = QTcpSocket(self)
-        self.__tcpSocket.connected.connect(self.onConnected)
-        self.__tcpSocket.disconnected.connect(self.onDisconnected)
-        self.__tcpSocket.readyRead.connect(self.onReadServerData)
-        self.__tcpSocket.error.connect(self.onSocketError)
+        self.__tcpSocket = None        
         
         Manager().notifier.signalKillDevice.connect(self.onKillDevice)
         Manager().notifier.signalKillServer.connect(self.onKillServer)
@@ -89,10 +86,7 @@ class Network(QObject):
                                            dialog.provider,
                                            dialog.hostname,
                                            dialog.port)
-                if self.__tcpSocket.waitForConnected(1000):
-                    isConnected = True
-                else:
-                    isConnected = False
+                isConnected = True
             else:
                 isConnected = False
         else:
@@ -114,7 +108,12 @@ class Network(QObject):
         self.__headerSize = 0
         self.__bodySize = 0
         
-        self.__tcpSocket.abort()
+        
+        self.__tcpSocket = QTcpSocket(self)
+        self.__tcpSocket.connected.connect(self.onConnected)
+        self.__tcpSocket.disconnected.connect(self.onDisconnected)
+        self.__tcpSocket.readyRead.connect(self.onReadServerData)
+        self.__tcpSocket.error.connect(self.onSocketError)        
         self.__tcpSocket.connectToHost(hostname, port)
 
 
@@ -127,7 +126,7 @@ class Network(QObject):
             
             self.__tcpSocket.disconnectFromHost()
             if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
-                self.__tcpSocket.waitForDisconnected(1000):
+                self.__tcpSocket.waitForDisconnected(5000):
                 print "Disconnected from server"
             else:
                 print "Disconnect failed:", self.__tcpSocket.errorString()
@@ -503,8 +502,9 @@ class Network(QObject):
         Manager().handleDeviceSchema(deviceId, bodyHash)
 
 
-    def _handleConfigurationChanged(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")        
+    def _handleConfigurationChanged(self, headerHash, bodyHash):        
+        deviceId = headerHash.get("deviceId")
+        #print "handling configuration changed on device " + deviceId
         Manager().handleConfigurationChanged(deviceId, bodyHash)
         
         
