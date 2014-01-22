@@ -346,11 +346,6 @@ class CustomMiddlePanel(QWidget):
 
         self.__acAddLink.setEnabled(enable)
 
-        self.__acCut.setEnabled(enable)
-        self.__acCopy.setEnabled(enable)
-        self.__acPaste.setEnabled(enable)
-        self.__acRemove.setEnabled(enable)
-
         self.__acRotate.setEnabled(enable)
         self.__acScaleUp.setEnabled(enable)
         self.__acScaleDown.setEnabled(enable)
