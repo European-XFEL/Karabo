@@ -52,6 +52,8 @@ class  Serializer_TestCase(unittest.TestCase):
         try:
             ser = BinarySerializerHash.create("Bin")
             hash = Hash('a.b.c',1,'x.y.z',[1,2,3,4,5,6,7], 'e.f.e', None, 'e.g.h', [None, None, None, None, None])
+            hash.setAttribute('e.g.h', 'attr1', None)
+            hash.setAttribute('e.f.e', 'attrList', [None, None])
             archive = ser.save(hash)      # serialize hash
             self.assertEqual(archive.__class__.__name__, 'bytearray')
             hash2 = ser.load(archive)
