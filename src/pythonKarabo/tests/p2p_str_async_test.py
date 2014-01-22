@@ -28,28 +28,31 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            #register connect handler for incoming connections
+            #register connect handler for new incoming connections
             self.connection.startAsync(self.onConnect)
             channel.setErrorHandler(self.onError);
             #register read Hash handler for this channel (client)
             channel.readAsyncStr(self.onReadStr)
         except RuntimeError as e:
             print "TCP Async server onConnect:",str(e)
+        print "TCP Async server onConnect exit."
     
     def onReadStr(self, channel, s):
         try:
             # Use id(channel) or channel.__id__.  Don't use channel directly -- this is local variable! It can be reused or garbage collected
-            self.store[id(channel)] = s
-            channel.writeAsyncStr(self.store[id(channel)], self.onWriteComplete)
+            self.store[channel.__id__] = s
+            channel.writeAsyncStr(s, self.onWriteComplete)
         except RuntimeError as e:
-            print "TCP Async server onReadHash:",str(e)
+            print "TCP Async server onReadStr:",str(e)
+        print "TCP Async server onReadStr exit."
     
     def onWriteComplete(self, channel):
         try:
-            del self.store[id(channel)]
+            del self.store[channel.__id__]
             channel.readAsyncStr(self.onReadStr)
         except RuntimeError as e:
-            print "TCP Async server onReadHash:",str(e)
+            print "TCP Async server onWriteComplete:",str(e)
+        print "TCP Async server onWriteComplete exit."
         
     def run(self):
         try:
@@ -64,14 +67,17 @@ class Server(threading.Thread):
 
 class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
-        #start server listening on port 32123
+        #start server listening on port 32124
         self.server = Server(32124)
         self.server.start()
-        time.sleep(0.5)
+        time.sleep(1.5)
 
     def tearDown(self):
+        print "Server will be stopped"
         self.server.stop() # stop server io service
+        print "Server will be joined"
         self.server.join() # join server thread
+        print "Server joined"
 
     def test_p2p_async(self):
         #define store for Hash written asynchronously
@@ -96,6 +102,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 channel.readAsyncStr(onReadStr)
             except RuntimeError as e:
                 print "ASync client onWriteComplete:",str(e)
+            print "ASync client onWriteComplete exit"
             
         def onReadStr(channel, s):
             print "ASync client onReadStr: id is", channel.__id__
@@ -104,10 +111,12 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 channel.waitAsync(100, onTimeout)
             except Exception as e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
+            print "ASync client onReadStr exit"
 
         def onTimeout(channel):
             print "ASync client onTimeout: stop further communication: id is", channel.__id__
             channel.close()
+            print "ASync client onTimeout exit"
 
         # Asynchronous TCP client
         try:
