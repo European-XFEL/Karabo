@@ -124,8 +124,19 @@ namespace karathon {
             return;
         }
         if (PyInt_Check(obj.ptr())) {
-            int b = bp::extract<int>(obj);
-            any = b;
+            try {
+                any = static_cast<int>(bp::extract<int>(obj));
+            } catch (...) {
+                try {
+                    any = static_cast<unsigned int>(bp::extract<unsigned int>(obj));
+                } catch (...) {
+                    try {
+                        any = static_cast<long long>(bp::extract<long long>(obj));
+                    } catch (...) {
+                        any = static_cast<unsigned long long>(bp::extract<unsigned long long>(obj));
+                    }
+                }
+            }
             return;
         }
         if (PyFloat_Check(obj.ptr())) {
@@ -150,8 +161,11 @@ namespace karathon {
 	}
         if (PyLong_Check(obj.ptr())) {
             //return PyLong_AsLongLong(obj.ptr());
-            long long b = bp::extract<long>(obj);
-            any = b;
+            try {
+                any = static_cast<long long>(bp::extract<long long>(obj));
+            } catch (...) {
+                any = static_cast<unsigned long long>(bp::extract<unsigned long long>(obj));
+            }
             return;
         }
         if (PyByteArray_Check(obj.ptr())) {
