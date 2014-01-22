@@ -26,7 +26,6 @@ from widget import DisplayWidget
 
 from karabo.karathon import Types
 
-#from PyQt4.QtCore import *
 from PyQt4.QtGui import QSpinBox
 
 
@@ -38,9 +37,6 @@ class DisplaySpinBox(DisplayWidget):
         super(DisplaySpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
-
-        # TODO: valueType access
-        print "valueType", valueType
 
         if valueType == Types.INT8:
             self.__spinBox.setRange(globals.MIN_INT8, globals.MAX_INT8)

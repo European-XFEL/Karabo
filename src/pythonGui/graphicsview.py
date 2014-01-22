@@ -34,6 +34,8 @@ from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
 from manager import Manager
+from navigationtreeview import NavigationTreeView
+from parametertreewidget import ParameterTreeWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -801,76 +803,28 @@ class GraphicsView(QGraphicsView):
 
     def dropEvent(self, event):
         source = event.source()
-        if source is not None:
-            customItem = None
-            mimeData = event.mimeData()
-            # Source type
-            sourceType = mimeData.data("sourceType")
-            # Drop from NavigationTreeView or ParameterTreeWidget?
-            if sourceType == "NavigationTreeView":
-                # Navigation item type
-                navItemType = int(mimeData.data("navigationItemType"))
-                # Device server instance id
-                serverId = mimeData.data("serverId").data()
-                # Internal key
-                #key = mimeData.data("key").data()
-                # Display name
-                displayName = mimeData.data("displayName").data()
+        
+        customItem = None
+        if isinstance(source, ParameterTreeWidget):
+            selectedItems = source.selectedItems()
+            
+            for item in selectedItems:
+                # Get internal key
+                internalKey = item.internalKey
+                # Get display name
+                displayName = item.text(0)
+                # Use DeviceClass/DeviceInstance-Key if no displayName is set
+                if len(displayName) == 0:
+                    keys = internalKey.split('.')
+                    displayName = keys[1]
                 
-                # Get schema
-                schema = None
-                path = str("server." + serverId + ".classes." + displayName + ".description")
-                if Manager().hash.has(path):
-                    schema = Manager().hash.get(path)
-                
-                configKey, configCount = Manager().createNewConfigKeyAndCount(displayName)
-                
-                # Create graphical item
-                customItem = GraphicsCustomItem(configKey, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
-                tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
-                customItem.setToolTip(tooltipText)
-                offset = QPointF()
-                # Add created item to scene
-                self._addItem(customItem)
-
-                # Register as visible device - TODO?
-                #Manager().newVisibleDevice(configKey)
-
-                if navItemType and (navItemType == NavigationItemTypes.CLASS):
-                    Manager().createNewProjectConfig(customItem, configKey, configCount, displayName, schema)
-
-                    # Connect customItem signal to Manager, DEVICE_CLASS
-                    customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
-                    # Register for value changes of deviceId
-                    Manager().registerEditableComponent(customItem.deviceIdKey, customItem)
-
-            elif sourceType == "ParameterTreeWidget":                
-                # Internal key
-                internalKey = mimeData.data("internalKey").data()
-                # Display name
-                displayName = mimeData.data("displayName").data()
-                # Display component?
-                hasDisplayComponent = mimeData.data(
-                    "hasDisplayComponent") == "True"
-                # Editable component?
-                hasEditableComponent = mimeData.data(
-                    "hasEditableComponent") == "True"
-                
-                # TODO: HACK to get apply button disabled
-                currentValue = None
-                if hasEditableComponent:
-                    currentValue = str(mimeData.data("currentValue"))
-                
-                metricPrefixSymbol = mimeData.data("metricPrefixSymbol").data()
-                unitSymbol = mimeData.data("unitSymbol").data()
-                
-                enumeration = mimeData.data("enumeration").data()
-                if enumeration:
-                    enumeration = enumeration.split(",")
-                # Navigation item type
-                navItemType = int(mimeData.data("navigationItemType"))
-                # Class alias
-                classAlias = mimeData.data("classAlias").data()
+                # Display component
+                if source.isColumnHidden(1):
+                    configDisplayComponent = None
+                else:
+                    configDisplayComponent = item.displayComponent
+                # Editable component
+                configEditableComponent = item.editableComponent
 
                 # List stored all items for layout
                 items = []
@@ -881,35 +835,19 @@ class GraphicsView(QGraphicsView):
                     items.append(displayNameProxyWidget)
 
                 # Does key concern state of device?
-                keys = str(internalKey).split('.configuration.')
+                keys = internalKey.split('.configuration.')
                 isStateToDisplay = keys[1] == "state"
-
-                # Display widget
-                if hasDisplayComponent:
-                    # Special treatment for command
-                    if classAlias == "Command":
-                        allowedStates = []
-                        displayText = str()
-                        commandEnabled = False
-                        command = str()
-                        parameterItem = source.getParameterTreeWidgetItemByKey(internalKey)
-                        if parameterItem:
-                            allowedStates = parameterItem.allowedStates
-                            displayText = parameterItem.displayText
-                            commandEnabled = parameterItem.enabled
-                            command = parameterItem.command
-                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
-                                                            allowedStates=allowedStates, \
-                                                            commandText=displayText, \
-                                                            commandEnabled=commandEnabled, \
-                                                            command=command)
-                    else:
-                        displayComponent = DisplayComponent(classAlias, key=internalKey, \
-                                                            enumeration = enumeration, \
-                                                            metricPrefixSymbol=metricPrefixSymbol, \
-                                                            unitSymbol=unitSymbol)
+                
+                # Display component
+                if configDisplayComponent:
+                    displayComponent = DisplayComponent(item.classAlias, key=internalKey,
+                                                        enumeration=item.enumeration,
+                                                        metricPrefixSymbol=item.metricPrefixSymbol,
+                                                        unitSymbol=item.unitSymbol,
+                                                        valueType=item.valueType)
                     
                     displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+                    # Create proxy widget
                     displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
                     displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
                     tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
@@ -918,25 +856,27 @@ class GraphicsView(QGraphicsView):
                     items.append(displayProxyWidget)
                     
                     # Add proxyWidget for unit label, if available
-                    unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
+                    unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
                     if unitProxyWidget:
                         items.append(unitProxyWidget)
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
 
-                # Editable widget
-                if hasEditableComponent:
-                    if navItemType is NavigationItemTypes.CLASS:
-                        editableComponent = EditableNoApplyComponent(classAlias, key=internalKey, \
-                                                                     enumeration = enumeration, \
-                                                                     metricPrefixSymbol=metricPrefixSymbol, \
-                                                                     unitSymbol=unitSymbol)
-                    elif navItemType is NavigationItemTypes.DEVICE:
-                        editableComponent = EditableApplyLaterComponent(classAlias, key=internalKey, \
-                                                                        enumeration = enumeration, \
-                                                                        metricPrefixSymbol=metricPrefixSymbol, \
-                                                                        unitSymbol=unitSymbol)
+                # Editable component
+                if configEditableComponent:
+                    if not configDisplayComponent:
+                        editableComponent = EditableNoApplyComponent(item.classAlias, key=internalKey,
+                                                                     enumeration=item.enumeration,
+                                                                     metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                     unitSymbol=item.unitSymbol,
+                                                                     valueType=item.valueType)
+                    else:
+                        editableComponent = EditableApplyLaterComponent(item.classAlias, key=internalKey,
+                                                                        enumeration=item.enumeration,
+                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                        unitSymbol=item.unitSymbol,
+                                                                        valueType=item.valueType)
                         editableComponent.isEditableValueInit = False
                     
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
@@ -948,19 +888,22 @@ class GraphicsView(QGraphicsView):
                     items.append(editableProxyWidget)
                     
                     # Register as visible device
-                    Manager().newVisibleDevice(internalKey)                   
-
+                    Manager().newVisibleDevice(internalKey)
+                    
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
                 offset = customTuple[1]
+        elif isinstance(source, NavigationTreeView):
+            print "NavigationTreeView"
+            return
+        
+        if customItem is None: return
 
-            if customItem is None: return
-
-            pos = event.pos()
-            scenePos = self.mapToScene(pos)
-            scenePos = scenePos-offset
-            customItem.setPos(scenePos)
-
+        pos = event.pos()
+        scenePos = self.mapToScene(pos)
+        scenePos = scenePos-offset
+        customItem.setPos(scenePos)
+        
         event.accept()
 
         QGraphicsView.dropEvent(self, event)
@@ -986,13 +929,13 @@ class GraphicsView(QGraphicsView):
 
 
     def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
-        # If metricPrefix &| unitSymbo are set a QLabel is returned,
+        # If metricPrefix &| unitSymbol are set a QLabel is returned,
         # otherwise None
         unitLabel = str()
         
-        if len(metricPrefixSymbol) > 0:
+        if metricPrefixSymbol and len(metricPrefixSymbol) > 0:
             unitLabel += metricPrefixSymbol
-        if len(unitSymbol) > 0:
+        if unitSymbol and len(unitSymbol) > 0:
             unitLabel += unitSymbol
         
         if len(unitLabel) > 0:
