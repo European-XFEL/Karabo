@@ -48,7 +48,7 @@ class Action(Registry):
     def register(cls, name, dict):
         super(Action, cls).register(name, dict)
         if "text" in dict:
-            Action.actions.append(cls)
+            cls.actions.append(cls)
 
 
     @classmethod
@@ -85,6 +85,27 @@ class SimpleAction(Action):
         o = cls(parent)
         parent.simple_actions.append(o)
         action.triggered.connect(o.run)
+        return action
+
+
+class ActionGroup(Action):
+    actions = [ ]
+
+
+    @classmethod
+    def register(cls, name, dict):
+        if ActionGroup in cls.__bases__:
+            Action.actions.append(cls)
+        else:
+            super(ActionGroup, cls).register(name, dict)
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(ActionGroup, cls).add_action(source, parent)
+        menu = QMenu(parent)
+        for a in cls.actions:
+            menu.addAction(super(ActionGroup, a).add_action(source, parent))
+        action.setMenu(menu)
         return action
 
 
