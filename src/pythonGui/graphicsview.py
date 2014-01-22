@@ -38,7 +38,7 @@ from PyQt4.QtSvg import QSvgWidget
 from xml.etree import ElementTree
 from functools import partial
 import os.path
-
+from bisect import bisect
 
 class Action(Registry):
     actions = [ ]
@@ -434,6 +434,22 @@ class HorizontalGroup(BoxGroup):
                   lambda x, y: x.geometry().x() - y.geometry().x())
 
 
+class GridGroup(BoxGroup):
+    text = "Group in a Grid"
+    icon = "icons/group-grid.svg"
+
+
+    def run(self):
+        rect, widgets = self.gather_widgets()
+        if rect is None:
+            return
+        group = GridLayout()
+        group.set_children(widgets)
+        group.shapes = self.gather_shapes()
+        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        self.parent.ilayout.add_item(group)
+
+
 class Ungroup(SimpleAction):
     "Ungroup items"
     text = "Ungroup"
@@ -510,6 +526,7 @@ class Layout(Loadable):
     def __init__(self):
         self.shapes = [ ]
         self.shape_geometry = None
+        self.selected = False
 
 
     def __len__(self):
@@ -579,9 +596,16 @@ class Layout(Loadable):
 
         e = ElementTree.Element(ns_svg + "g",
                                 {k: unicode(v) for k, v in d.iteritems()})
+        if selected:
+            self.add_children(e, True)
+        else:
+            self.add_children(e)
+        return e
+
+
+    def add_children(self, e, selected=False):
         e.extend(e.element() for e in self if not selected or e.selected)
         e.extend(s.element() for s in self.shapes if not selected or s.selected)
-        return e
 
 
     def set_position(self, pos):
@@ -726,7 +750,6 @@ class BoxLayout(QBoxLayout, Layout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
         Layout.__init__(self)
-        self.selected = False
         self.setContentsMargins(5, 5, 5, 5)
 
 
@@ -752,6 +775,73 @@ class BoxLayout(QBoxLayout, Layout):
             self.addWidget(item)
         else:
             self.addLayout(item)
+
+
+def _reduce(xs):
+    xs.sort()
+    i = 1
+    while i < len(xs):
+        if xs[i] - xs[i - 1] > 10:
+            i += 1
+        else:
+            del xs[i]
+
+
+class GridLayout(QGridLayout, Layout):
+    def __init__(self):
+        QGridLayout.__init__(self)
+        Layout.__init__(self)
+
+    def set_children(self, children):
+        xs = [c.geometry().x() for c in children]
+        ys = [c.geometry().y() for c in children]
+        _reduce(xs)
+        _reduce(ys)
+        for c in children:
+            col = bisect(xs, c.geometry().x())
+            row = bisect(ys, c.geometry().y())
+            colspan = bisect(xs, c.geometry().right()) - col + 1
+            rowspan = bisect(ys, c.geometry().bottom()) - row + 1
+            if isinstance(c, ProxyWidget):
+                self.addWidget(c, row, col, rowspan, colspan)
+            else:
+                self.addLayout(c, row, col, rowspan, colspan)
+
+
+    def save(self):
+        return { }
+
+
+    def add_children(self, e):
+        e.extend(s.element() for s in self.shapes)
+        for i in range(len(self)):
+            c = self[i].element()
+            for n, v in zip(("row", "col", "rowspan", "colspan"),
+                            self.getItemPosition(i)):
+                c.set(ns_karabo + n, unicode(v))
+            e.append(c)
+
+
+    def load_item(self, element, item):
+        p = (int(element.get(ns_karabo + s)) for s in
+             ("row", "col", "rowspan", "colspan"))
+        if isinstance(item, ProxyWidget):
+            self.addWidget(item, *p)
+        else:
+            self.addLayout(item, *p)
+
+
+    @staticmethod
+    def load(elem, layout):
+        ret = GridLayout()
+        layout.load_item(elem, ret)
+        ret.load_element(elem)
+        return ret
+
+
+    def setGeometry(self, rect):
+        QGridLayout.setGeometry(self, rect)
+        self.update_shapes(rect)
 
 
 class Label(Loadable):
