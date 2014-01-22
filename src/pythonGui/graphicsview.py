@@ -31,8 +31,12 @@ from manager import Manager
 
 from widget import DisplayWidget, EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import (Qt, QByteArray, QDir, QSize, QRect, QLine, QFileInfo,
+    QBuffer, QIODevice, pyqtSlot, QMimeData)
+from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
+                         QGridLayout, QFileDialog, QIcon, QLabel, QLayout,
+                         QKeySequence, QMenu, QPainter, QPen,
+                         QStackedWidget, QStackedLayout, QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
