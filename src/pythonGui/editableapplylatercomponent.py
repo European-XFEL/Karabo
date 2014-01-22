@@ -330,6 +330,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
+        if self.__currentDisplayValue is None:
+            return
+
         # Update apply and reset buttons...
         if value == self.__currentDisplayValue:
             self.applyEnabled = False
