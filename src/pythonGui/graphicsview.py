@@ -225,6 +225,22 @@ class Select(Action):
                 if s.contains(event.pos()):
                     item = s
                     break
+        elif item.selected:
+            g = item.geometry()
+            p = event.pos()
+            if p.x() - g.left() < 10:
+                self.resize = "left"
+            elif g.right() - p.x() < 10:
+                self.resize = "right"
+            elif p.y() - g.top() < 10:
+                self.resize = "top"
+            elif g.bottom() - p.y() < 10:
+                self.resize = "bottom"
+            else:
+                self.resize = None
+            if self.resize is not None:
+                self.resize_item = item
+                return
         if item is None:
             self.selection_stop = self.selection_start = event.pos()
             parent.update()
@@ -247,10 +263,28 @@ class Select(Action):
         elif self.selection_start is not None:
             self.selection_stop = event.pos()
             event.accept()
+        elif self.resize is not None:
+            g = QRect(self.resize_item.fixed_geometry)
+            if self.resize == "top":
+                g.setTop(event.pos().y())
+            elif self.resize == "bottom":
+                g.setBottom(event.pos().y())
+            elif self.resize == "left":
+                g.setLeft(event.pos().x())
+            elif self.resize == "right":
+                g.setRight(event.pos().x())
+            min = self.resize_item.minimumSize()
+            max = self.resize_item.maximumSize()
+            if (not min.width() < g.size().width() < max.width() or
+                not min.height() < g.size().height() < max.height()):
+                return
+            self.resize_item.fixed_geometry = g
+            parent.ilayout.update()
         parent.update()
 
     def mouseReleaseEvent(self, parent, event):
         self.moving_item = None
+        self.resize = self.resize_item = None
         if self.selection_start is not None:
             rect = QRect(self.selection_start, self.selection_stop)
             if not event.modifiers() & Qt.ShiftModifier:
