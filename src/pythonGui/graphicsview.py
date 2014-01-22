@@ -780,7 +780,7 @@ class FixedLayout(Layout, QLayout):
     def takeAt(self, index):
         "only to be used by Qt, don't use directly!"
         try:
-            ret = self._children.pop(index)
+            return self._children.pop(index)
         except IndexError:
             return
 
