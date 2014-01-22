@@ -175,6 +175,7 @@ namespace karabo {
         void GuiServerDevice::sendSystemTopology(karabo::net::Channel::Pointer channel) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
+                KARABO_LOG_FRAMEWORK_DEBUG << remote().getSystemTopology();
                 channel->write(Hash("type", "systemTopology"), remote().getSystemTopology());
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in sendSystemTopology(): " << e.userFriendlyMsg();
@@ -266,8 +267,7 @@ namespace karabo {
 
         void GuiServerDevice::onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             try {
-                string deviceId = header.get<string > ("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onNewVisibleDevice " << deviceId;
+                string deviceId = header.get<string > ("deviceId");                
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                 if (it != m_channels.end()) {
@@ -276,7 +276,7 @@ namespace karabo {
                 
                 // Increase count of device in visible devices map
                 m_visibleDevices[deviceId]++;
-                
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNewVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
                  
                 if (m_visibleDevices[deviceId] == 1) { // Fresh device on the shelf
                     remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
@@ -295,14 +295,15 @@ namespace karabo {
         void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
             try {                
                 string deviceId = header.get<string > ("deviceId");
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRemoveVisibleDevice " << deviceId;
+                
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                 if (it != m_channels.end()) it->second.erase(deviceId);
                 
                 m_visibleDevices[deviceId]--;
+                KARABO_LOG_FRAMEWORK_DEBUG << "onRemoveVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
                 
-                if (m_visibleDevices[deviceId] < 1) {
+                if (m_visibleDevices[deviceId] == 0) {
                     // Disconnect signal/slot from broker
                     remote().unregisterDeviceMonitor(deviceId);
                 }
@@ -419,6 +420,7 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string & deviceId, const karabo::util::Hash& what) {
             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting change on device " << deviceId;
                 Hash modified(what);
                 preprocessImageData(modified);
 
@@ -498,7 +500,19 @@ namespace karabo {
             std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
             if (it != m_channels.end()) {
                 it->first->close(); // This closes socket and unregisters channel from connection
-                m_channels.erase(it);
+                // Remove all previously visible devices
+                const std::set<std::string>& deviceIds = it->second;
+                for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); jt++) {
+                    const std::string& deviceId = *jt;
+                    m_visibleDevices[deviceId]--;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "removeVisibleDevice (GUI gone) " << deviceId << " " << m_visibleDevices[deviceId];
+                    if (m_visibleDevices[deviceId] == 0) {
+                        // Disconnect signal/slot from broker
+                        remote().unregisterDeviceMonitor(deviceId);
+                    }
+                }
+                // Remove channel as such
+                m_channels.erase(it);                
             }
         }
     }
