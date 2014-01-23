@@ -204,8 +204,10 @@ namespace karabo {
              */
             void stopEventLoop();
 
+            // TODO make this functions private and allow SLOT to access them
             void setSenderInfo(const karabo::util::Hash& senderInfo);
 
+            // TODO make this functions private and allow SLOT to access them
             const karabo::util::Hash& getSenderInfo() const;
 
             /**
@@ -836,7 +838,7 @@ namespace karabo {
 
             void slotGetAvailableFunctions(const std::string& type);
 
-            void connectionLost(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
+            void connectionLost(const std::string& instanceId, std::vector<karabo::util::Hash>& connections);
 
             // IO channel related
 
