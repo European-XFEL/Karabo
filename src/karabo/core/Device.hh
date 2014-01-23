@@ -289,6 +289,7 @@ namespace karabo {
             }
             
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+                // TODO Care about timestamps!!
                 if (!hash.empty()) {
                     m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                     emit("signalChanged", hash, getInstanceId());
@@ -530,7 +531,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
-                    static const boost::regex e("error", boost::regex::icase);
+                    static const boost::regex e(".*error.*", boost::regex::icase);
                     if (boost::regex_match(currentState, e)) {
                         updateInstanceInfo(karabo::util::Hash("status", "error"));
                     } else {
@@ -632,9 +633,10 @@ namespace karabo {
 
                 // TODO Make heartbeat configurable
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, info));
-                // Give the broker communication some time
+                
+                // Give the broker communication some time to come up
                 boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-                this->startFsm();
+                
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
                 // Repair classId
@@ -649,6 +651,10 @@ namespace karabo {
                 if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 m_objectStateChangeMutex.unlock();
+                
+                // Start the state machine
+                this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
+                
                 t.join(); // Blocks 
             }
 
