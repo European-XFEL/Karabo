@@ -210,9 +210,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
     def setReadOnly(self, readOnly):
-        #if self.editableComponent:
-        #    self.editableComponent.setEnabled(not readOnly)
-        
         if readOnly is True:
             self.setFlags(self.flags() & ~Qt.ItemIsEnabled)
         else:

@@ -18,7 +18,8 @@ from manager import Manager
 from struct import *
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QDataStream, QObject
+from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QDataStream, \
+                         QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 
 import globals
@@ -515,7 +516,6 @@ class Network(QObject):
 
     def _handleConfigurationChanged(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
-        print "handling configuration changed on device " + deviceId
         Manager().handleConfigurationChanged(deviceId, bodyHash)
 
 

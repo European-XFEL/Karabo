@@ -40,7 +40,9 @@ class Notifier(QObject):
     signalSystemTopologyChanged = pyqtSignal(object)
     
     signalGlobalAccessLevelChanged = pyqtSignal()
-    
+
+    signalReset = pyqtSignal()
+
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
@@ -225,6 +227,8 @@ class Manager(Singleton):
         self.reset()
         self.handleSystemTopology(Hash())
         self.onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
+        # Send reset signal to configurator to clear stacked widget
+        self.__notifier.signalReset.emit()
 
 
     def registerEditableComponent(self, key, component):
