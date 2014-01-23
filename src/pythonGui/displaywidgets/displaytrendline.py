@@ -22,18 +22,18 @@ __all__ = ["DisplayTrendline"]
 
 
 import datetime
-import sys
-import time
 
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QColor
+
+import numpy
 
 useGuiQwt = True
 try:
-    from PyQt4 import Qwt5
-    from guiqwt.plot import CurveDialog, CurvePlot, PlotManager
+    from PyQt4.Qwt5 import Qwt
+    from guiqwt.plot import CurveDialog, PlotManager
     from guiqwt.tools import SelectPointTool
     from guiqwt.builder import make
 except:
@@ -43,102 +43,83 @@ except:
 from karabo.karathon import Timestamp
 
 
-class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
-        '''Class used to draw a datetime axis on our plot.
-        '''
-        def __init__( self, *args ):
-            Qwt5.Qwt.QwtScaleDraw.__init__( self, *args )
+class DateTimeScaleDraw(Qwt.QwtScaleDraw):
+        '''Class used to draw a datetime axis on our plot. '''
+        def __init__(self, *args):
+            Qwt.QwtScaleDraw.__init__( self, *args )
 
 
-        def label( self, value ):
-            '''Function used to create the text of each label
-            used to draw the axis.
-            '''
+        def label(self, value):
+            '''create the text of each label to draw the axis. '''
             try:
-                dt = datetime.datetime.fromtimestamp( value )
+                dt = datetime.datetime.fromtimestamp(value)
             except:
-                dt = datetime.datetime.fromtimestamp( 0 )
-            #return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%d/%m%Y %H:%M:%S' ) )
-            return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%H:%M:%S' ) )
+                dt = datetime.datetime.fromtimestamp(0)
+            return Qwt.QwtText('%s' % dt.strftime( '%H:%M:%S' ))
         
 
 class DisplayTrendline(DisplayWidget):
     category = "Digit"
     alias = "Trendline"
+
  
-    def __init__(self, **params):
-        super(DisplayTrendline, self).__init__(**params)
+    def __init__(self, **kwargs):
+        super(DisplayTrendline, self).__init__(**kwargs)
         
-        if useGuiQwt == False:
-            self.__dialog = None
+        if not useGuiQwt:
+            self.dialog = None
             return
 
-        self.__data = []
+        self.data = [ ]
         
-        self.__dialog = CurveDialog(edit=False, toolbar=True, wintitle="Trendline")
-        self.__plot = self.__dialog.get_plot()
-        self.__plot.set_antialiasing(True)
+        self.dialog = CurveDialog(edit=False, toolbar=True,
+                                  wintitle="Trendline")
+        self.plot = self.dialog.get_plot()
+        self.plot.set_antialiasing(True)
         
-        # Set axis's labels
-        self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.xBottom, 'Time' )
-        self.__plot.setAxisTitle( Qwt5.Qwt.QwtPlot.yLeft, 'Value' )
+        self.plot.setAxisTitle(Qwt.QwtPlot.xBottom, 'Time')
+        self.plot.setAxisTitle(Qwt.QwtPlot.yLeft, 'Value')
         
-        # Create the curves
-        self.__curve = make.curve( [ ], [ ], 'Random values', QColor( 255, 0, 0 ) )
-        self.__plot.add_item( self.__curve )
+        self.curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
+        self.plot.add_item(self.curve)
 
-        # Create the PlotManager
-        self.__manager = PlotManager( self )
-        self.__manager.add_plot( self.__plot )
+        self.manager = PlotManager(self)
+        self.manager.add_plot(self.plot)
 
-        # Create Toolbar
-        #toolbar = self.addToolBar( 'tools' )
-        #self.__manager.add_toolbar( toolbar, id( toolbar ) )
-
-        # Register the ToolBar's type
-        self.__manager.register_all_curve_tools( )
-        self.__manager.register_other_tools()
-
-        # Register a custom tool
-        self.__manager.add_tool( SelectPointTool, title = 'Test', on_active_item = True, mode = 'create' )
+        self.manager.register_all_curve_tools( )
+        self.manager.register_other_tools()
+        self.manager.add_tool(SelectPointTool, title='Test',
+                              on_active_item=True, mode='create')
         
-        # Create the Legend
-        legend = make.legend( 'TL' )
-        #self.__plot.add_item( legend )
+        make.legend('TL')
 
-        # Setup the plot's scale
-        self.__plot.setAxisScaleDraw( Qwt5.Qwt.QwtPlot.xBottom, DateTimeScaleDraw() )
-        self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.yLeft )
-        
-        key = params.get('key')
-        # Stores key/value pair
-        self.__keys = {str(key):None}
+        self.plot.setAxisScaleDraw(Qwt.QwtPlot.xBottom, DateTimeScaleDraw())
+        self.plot.setAxisAutoScale(Qwt.QwtPlot.yLeft)
 
 
     @property
     def widget(self):
-        return self.__dialog
+        return self.dialog
+
 
     value = None
 
 
     def valueChanged(self, key, value, timestamp=None):
-        if value is None or useGuiQwt is False:
+        if value is None or not useGuiQwt:
             return
         
         if timestamp is None:
             # Generate timestamp here...
             timestamp = Timestamp()
             
-        self.__data.append( (value, timestamp.getSeconds()) )
+        self.data.append((value, timestamp.getSeconds()))
+        data = numpy.array(self.data)
 
-        key = str(key)
-        
-         # Set x-axis's label rotation
-        self.__plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0 )
-        self.__plot.setAxisLabelAlignment( Qwt5.Qwt.QwtPlot.xBottom, Qt.AlignLeft | Qt.AlignBottom )
+        self.plot.setAxisLabelRotation(Qwt.QwtPlot.xBottom, -45.0)
+        self.plot.setAxisLabelAlignment(Qwt.QwtPlot.xBottom,
+                                        Qt.AlignLeft | Qt.AlignBottom)
                 
-        # Set the data to the curve and update the plot
-        self.__curve.set_data( map( lambda x: x[ 1 ], self.__data ), map( lambda x: x[ 0 ], self.__data ) )
-        self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.xBottom )
-        self.__plot.replot()        
+        self.curve.set_data(data[:, 1], data[:, 0])
+        self.plot.setAxisAutoScale(Qwt.QwtPlot.xBottom)
+        self.plot.replot()
