@@ -18,7 +18,8 @@ from PyQt4.QtGui import *
 
 class LoginDialog(QDialog):
 
-    def __init__(self):
+    def __init__(self, username=None, password=None, provider=None, hostname=None,
+                 port=None):
         super(LoginDialog, self).__init__()
 
         self.setWindowTitle("Login")
@@ -40,11 +41,15 @@ class LoginDialog(QDialog):
         self.__hLine.setFrameShadow(QFrame.Sunken)
         
         formLayout = QFormLayout()
-        self.__leUsername = QLineEdit("operator") #("username")
+        if not username:
+            username = "operator"
+        self.__leUsername = QLineEdit(username)
         formLayout.addRow("Username:", self.__leUsername)
         self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
-        self.__lePassword = QLineEdit("karabo") #("default")
+        if not password:
+            password = "karabo"
+        self.__lePassword = QLineEdit(password)
         self.__lePassword.setEchoMode(QLineEdit.Password)
         formLayout.addRow("Password:", self.__lePassword)
         
@@ -53,15 +58,24 @@ class LoginDialog(QDialog):
         # I solve it as documented here: http://code.google.com/p/clementine-player/issues/detail?id=1706
         # Current open bug: https://bugs.launchpad.net/ubuntu/+source/qtcreator/+bug/959722
         # Running "sudo apt-get remove qt-at-spi"
-        self.__leProvider = QComboBox()
-        self.__leProvider.setEditable(False)
-        self.__leProvider.addItems(["LOCAL", "KERBEROS"])
-        formLayout.addRow("Provider:", self.__leProvider)
+        self.__cbProvider = QComboBox()
+        self.__cbProvider.setEditable(False)
+        self.__cbProvider.addItems(["LOCAL", "KERBEROS"])
+        if provider:
+            index  = self.__cbProvider.findText(provider)
+            self.__cbProvider.setCurrentIndex(index)
+        formLayout.addRow("Provider:", self.__cbProvider)
         
-        self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
+        if not hostname:
+            hostname = "localhost"
+        self.__leHostname = QLineEdit(hostname)
         formLayout.addRow("Hostname:", self.__leHostname)
         
-        self.__lePort = QLineEdit("44444")
+        if not port:
+            port = "44444"
+        else:
+            port = str(port)
+        self.__lePort = QLineEdit(port)
         self.__lePort.setValidator(QIntValidator(None))
         formLayout.addRow("Port:", self.__lePort)
         
@@ -92,7 +106,7 @@ class LoginDialog(QDialog):
     
     @property
     def provider(self):
-        return str(self.__leProvider.currentText())
+        return str(self.__cbProvider.currentText())
 
 
     @property

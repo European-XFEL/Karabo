@@ -44,10 +44,6 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
 
 
 ### public functions ###
-    def setReadOnly(self, readOnly):
-        BaseTreeWidgetItem.setReadOnly(self, readOnly)
-
-
     def setToolTipDialogVisible(self, show):
         pass
 
