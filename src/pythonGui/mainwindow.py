@@ -245,7 +245,10 @@ class MainWindow(QMainWindow):
 
 ### slots ###
     def onConnectToServer(self, checked):
-        self.__network.connectToServer(checked)
+        if checked:
+            self.__network.connectToServer()
+        else:
+            self.__network.disconnectFromServer()
 
 
     def onExit(self):

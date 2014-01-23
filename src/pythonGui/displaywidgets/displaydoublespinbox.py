@@ -39,7 +39,8 @@ class DisplayDoubleSpinBox(DisplayWidget):
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
         self.__leDblValue.setReadOnly(True)
-        
+
+
     @property
     def widget(self):
         return self.__leDblValue
@@ -50,7 +51,7 @@ class DisplayDoubleSpinBox(DisplayWidget):
         try:
             return float(self.__leDblValue.text())
         except ValueError:
-            return 0
+            return None
 
 
     def valueChanged(self, key, value, timestamp=None):
