@@ -65,7 +65,6 @@ class DisplayTrendline(DisplayWidget):
  
     def __init__(self, **kwargs):
         super(DisplayTrendline, self).__init__(**kwargs)
-        self.__keys = { }
         
         if not useGuiQwt:
             self.dialog = None
