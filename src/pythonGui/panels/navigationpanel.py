@@ -63,6 +63,8 @@ class NavigationPanel(QWidget):
         
         Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
+        Manager().notifier.signalReset.connect(self.onResetPanel)
+        
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__twNavigation)
@@ -86,6 +88,10 @@ class NavigationPanel(QWidget):
 
 
 ### slots ###
+    def onResetPanel(self):
+        self.__twNavigation.lastSelectionPath = str()
+
+
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
         self.__twNavigation.createNewItem(itemInfo, True)
@@ -140,21 +146,14 @@ class NavigationPanel(QWidget):
             index = self.__twNavigation.findIndex(path)
         
         if index and index.isValid():
-            self.__twNavigation.lastSelectionPath = str()
-            self.__twNavigation.selectItem(path)
-        else:
-            self.__twNavigation.selectItem(str(parentPath))
+            return
+
+        self.__twNavigation.selectItem(parentPath)
 
 
     def updateNavigationTreeView(self, config):
         self.__twNavigation.updateTreeModel(config)
         self.__twNavigation.expandAll()
-        
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            return
-        self.__twNavigation.lastSelectionPath = str()
-        self.__twNavigation.selectItem(path)
 
         
     def onSystemTopologyChanged(self, config):
