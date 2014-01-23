@@ -50,6 +50,31 @@ class NavigationTreeView(QTreeView):
     lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
 
 
+    def saveSelectionState(self):
+        """
+        Saves the current selected index path to restore the selection later.
+        """
+        selectedIndexes = self.selectedIndexes()
+        if len(selectedIndexes) < 1:
+            return
+
+        self.__lastSelectionPath = selectedIndexes[0].internalPointer().path
+
+
+    def restoreSelectionState(self):
+        """
+        Restores the selected index with the saved last path.
+        """
+        if (self.__lastSelectionPath is None) or (self.__lastSelectionPath == ""):
+            return
+
+        index = self.findIndex(self.__lastSelectionPath)
+        if index and index.isValid():
+            self.selectionModel().blockSignals(True)
+            self.setCurrentIndex(index)
+            self.selectionModel().blockSignals(False)
+
+
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         # Device server instance menu
@@ -144,7 +169,9 @@ class NavigationTreeView(QTreeView):
 
 
     def updateTreeModel(self, config):
+        self.saveSelectionState()
         self.model().updateData(config)
+        self.restoreSelectionState()
 
 
     def itemClicked(self):
