@@ -105,7 +105,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
         Manager().notifier.signalErrorState.connect(self.onErrorState)
-        Manager().notifier.signalReset.connect(self.onReset)
+        Manager().notifier.signalReset.connect(self.onResetPanel)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
@@ -541,7 +541,6 @@ class ConfigurationPanel(QWidget):
             if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
                 # Visible deviceId has changed
                 Manager().newVisibleDevice(path)
-                                            
                 self.__prevDevicePath = path
         else:
             self._setParameterEditorIndex(0)
@@ -554,10 +553,11 @@ class ConfigurationPanel(QWidget):
 
 
 ### slots ###
-    def onReset(self):
+    def onResetPanel(self):
         self._setParameterEditorIndex(0)
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
+        self.__twNavigation.lastSelectionPath = str()
 
         while self.__swParameterEditor.count() > 1:
             twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
@@ -627,8 +627,8 @@ class ConfigurationPanel(QWidget):
             self.updateButtonsVisibility = True
         elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
             self.updateButtonsVisibility = False
-        
-        if self.__prevDevicePath != "":
+
+        if (self.__prevDevicePath != "") and (self.__prevDevicePath != path):
             Manager().removeVisibleDevice(self.__prevDevicePath)
             self.__prevDevicePath = str()
         
@@ -649,14 +649,13 @@ class ConfigurationPanel(QWidget):
 
 
     def onInstanceGone(self, path, parentPath):
-        path = str(path)
         # New schema can be in plugins of instance
         keys = self.__internalKeySchemaLoadedMap.keys()
         for key in keys:
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        # Check whether path of the gone instance were selected
+        # Check whether path of the gone instance was selected
         path = self.__twNavigation.lastSelectionPath
         if len(path) < 1:
             index = None
@@ -664,13 +663,12 @@ class ConfigurationPanel(QWidget):
             index = self.__twNavigation.findIndex(path)
         
         if index and index.isValid():
-            self.__twNavigation.lastSelectionPath = str()
-            self.__twNavigation.selectItem(path)
-        else:
-            self._setParameterEditorIndex(0)
-            self.__twNavigation.selectItem(str(parentPath))
-            # Hide buttons and actions
-            self._hideAllButtons()
+            return
+        
+        self._setParameterEditorIndex(0)
+        self.__twNavigation.selectItem(parentPath)
+        # Hide buttons and actions
+        self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -723,11 +721,9 @@ class ConfigurationPanel(QWidget):
         for i in xrange(len(mapValues)):
             if timer == mapValues[i]:
                 deviceId = self.__changingTimerDeviceIdMap.keys()[i]
-                print "deviceId", deviceId
                 
                 parameterEditor = self._getParameterEditorByDeviceId(deviceId)
                 if parameterEditor:
-                    print "readOnly TRUE"
                     parameterEditor.setReadOnly(True)
                 break
 
@@ -799,14 +795,10 @@ class ConfigurationPanel(QWidget):
 
     def onSystemTopologyChanged(self, config):
         # Already done in NavigationPanel which uses the same model
-        #self.__twNavigation.updateTreeModel(config) 
+        #self.__twNavigation.updateTreeModel(config)
+        self.__twNavigation.saveSelectionState()
         self.__twNavigation.expandAll()
-        
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            return
-        self.__twNavigation.lastSelectionPath = str()
-        self.__twNavigation.selectItem(path)
+        self.__twNavigation.restoreSelectionState()
 
 
     def onGlobalAccessLevelChanged(self):
