@@ -332,7 +332,7 @@ namespace karabo {
                 m_connectMutex.lock();
                 m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
                 m_connectMutex.unlock();
-                trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
+                //trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
             }
         }
 
@@ -581,7 +581,7 @@ namespace karabo {
                 if (connectionType != NO_TRACK) {
                     // Equip own heartbeat with slot information
                     m_signalInstances["signalHeartbeat"]->registerSlot(slotInstanceId, "slotHeartbeat");
-                    trackExistenceOfConnection(m_instanceId, signalFunction, slotInstanceId, slotFunction, connectionType);
+                    //trackExistenceOfConnection(m_instanceId, signalFunction, slotInstanceId, slotFunction, connectionType);
                 }
                 //cout << "LOW-LEVEL-DEBUG: Established remote connection of signal \"" << signalFunction << "\" to slot \"" << slotFunction << "\"." << endl;
                 reply(true);
@@ -699,6 +699,9 @@ namespace karabo {
                         boost::mutex::scoped_lock lock(m_heartbeatMutex);
                         if (!m_trackedComponents.has(signalInstanceId)) addTrackedComponent(signalInstanceId);
                         m_trackedComponents.get<vector<Hash> >(signalInstanceId + ".connections").push_back(connection);
+                        // TODO Refresh time-to live here
+                        
+                        
                         // Connect remote signalHeartbeat to local slotHeartbeat
                         //connect(signalInstanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
                     }
@@ -873,7 +876,10 @@ namespace karabo {
                 if (oldCountDown <= 0) {
                     if (entry.get<bool>("isExplicitlyTracked") == true) {
                         m_heartbeatMutex.unlock();
-                        instanceAvailableAgain(instanceId);
+                        // Polymorphic call DEPRECATE
+                        instanceAvailableAgain(instanceId); 
+                        // Regular callback
+                        if (m_instanceAvailableAgainHandler) m_instanceAvailableAgainHandler(instanceId);                        
                         m_heartbeatMutex.lock();
                     }
                     const vector<Hash >& connections = entry.get<vector<Hash> > ("connections");
@@ -913,18 +919,23 @@ namespace karabo {
             while (m_doTracking) {
 
                 m_heartbeatMutex.lock();
-
+                
                 for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
                     Hash& entry = it->getValue<Hash>();
                     int& countDown = entry.get<int>("countDown");
-                    if (countDown > 0) countDown--;
-                    else if (countDown == 0) {
+                    
+                    if (countDown > 0) countDown--; // Regular count down
+                    
+                    else if (countDown == 0) { // Connection lost
                         countDown--;
-                        if (entry.get<bool>("isExplicitlyTracked") == true) instanceNotAvailable(it->getKey());
-                        if (entry.get<vector<Hash> >("connections").size() > 0) connectionLost(it->getKey(), entry.get<vector<Hash> >("connections"));
-                    } else {
+                        if (entry.get<bool>("isExplicitlyTracked") == true) instanceNotAvailable(it->getKey()); // Just inform, do nothing else
+                        if (entry.get<vector<Hash> >("connections").size() > 0) {
+                            connectionLost(it->getKey(), entry.get<vector<Hash> >("connections")); // This cleans signals, removes dead connections tracking and informs the user
+                            if (entry.get<vector<Hash> >("connections").empty()) m_trackedComponents.erase(it->getKey());
+                        }
+                        
+                    } else { // Negative count for tracked connections
                         countDown--;
-                        // TODO Implement removal of tracked component if no RECONNECT is activated
                         // Here we can try to reconnect
                         if (m_reconnectIntervals.find(countDown) != m_reconnectIntervals.end()) {
                             const vector<Hash >& connections = entry.get<vector<Hash> > ("connections");
@@ -932,16 +943,17 @@ namespace karabo {
                                 const Hash& connection = connections[i];
                                 if (connection.get<int>("connectionType") == RECONNECT) {
                                     m_heartbeatMutex.unlock();
-                                    connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+                                    // If that worked will trigger refreshTimeToLiveForConnectedSlot that re-connects the rest
+                                    connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false); 
                                     m_heartbeatMutex.lock();
                                     break;
                                 }
                             }
-                            if (entry.get<bool>("isExplicitlyTracked") == true) {
-                                m_heartbeatMutex.unlock();
-                                connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
-                                m_heartbeatMutex.lock();
-                            }
+//                            if (entry.get<bool>("isExplicitlyTracked") == true) {
+//                                m_heartbeatMutex.unlock();
+//                                connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+//                                m_heartbeatMutex.lock();
+//                            }
                         }
                     }
                 }
@@ -953,21 +965,37 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectionLost(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections) {
+        void SignalSlotable::connectionLost(const std::string& instanceId, std::vector<karabo::util::Hash>& connections) {
             //std::cout << "Instance \"" << instanceId << "\" is not available, the following connection will thus not work: " << std::endl;
+            std::vector<Hash> deadConnections;
             for (size_t i = 0; i < connections.size(); ++i) {
                 const Hash& connection = connections[i];
                 const string& signalInstanceId = connection.get<string > ("signalInstanceId");
                 const string& signalFunction = connection.get<string > ("signalFunction");
                 const string& slotInstanceId = connection.get<string > ("slotInstanceId");
                 const string& slotFunction = connection.get<string > ("slotFunction");
+                int connectionType = connection.get<int>("connectionType");
                 //cout << "\"" << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")" << endl;
-                if (signalInstanceId == m_instanceId) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting: " << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")";
-                    tryToDisconnectFromSignal(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
+                
+                if (connectionType == NO_TRACK) { // Everything that does not track is deleted
+                    
+                    if (signalInstanceId == m_instanceId) {
+                        // This connection did not make it, will be deleted and signals cleared from dead slots
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting: " << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")";
+                        tryToDisconnectFromSignal(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
+                    }
+                    
+                } else { // Tracked connections are kept
+                    // This connection survived
+                    deadConnections.push_back(connection);
                 }
             }
-            connectionNotAvailable(instanceId, connections);
+            // Update the connection list
+            connections = deadConnections;
+            
+            // Polymorphic callback for the user to react DEPRECATE
+            connectionNotAvailable(instanceId, deadConnections);            
+            
         }
 
 
