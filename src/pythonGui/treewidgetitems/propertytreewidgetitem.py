@@ -88,6 +88,12 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     enabled = property(fset=_setEnabled)
 
 
+### public functions ###
+    def setReadOnly(self, readOnly):
+        self._setEnabled(not readOnly)
+        BaseTreeWidgetItem.setReadOnly(self, readOnly)
+
+
     def setToolTipDialogVisible(self, show):
         if not self.__popupWidget:
             self.__popupWidget = PopupWidget(self.treeWidget())
