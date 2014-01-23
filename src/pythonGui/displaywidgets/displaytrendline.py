@@ -140,4 +140,5 @@ class DisplayTrendline(DisplayWidget):
                 
         # Set the data to the curve and update the plot
         self.__curve.set_data( map( lambda x: x[ 1 ], self.__data ), map( lambda x: x[ 0 ], self.__data ) )
+        self.__plot.setAxisAutoScale( Qwt5.Qwt.QwtPlot.xBottom )
         self.__plot.replot()        
