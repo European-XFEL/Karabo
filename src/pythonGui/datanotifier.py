@@ -34,7 +34,7 @@ class DataNotifier(QObject):
         
         if len(self.__components) > 0:
             value = self.__components[0].value
-            if value:
+            if value is not None:
                 self.signalUpdateComponent.emit(key, value)
         
         # Add widget to list
