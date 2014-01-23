@@ -40,7 +40,9 @@ class Notifier(QObject):
     signalSystemTopologyChanged = pyqtSignal(object)
     
     signalGlobalAccessLevelChanged = pyqtSignal()
-    
+
+    signalReset = pyqtSignal()
+
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
@@ -60,7 +62,7 @@ class Notifier(QObject):
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(bool) # isBusy
     signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(bool) # inErrorState
+    signalErrorState = pyqtSignal(str, bool) # deviceId, inErrorState
     
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
     
@@ -225,6 +227,8 @@ class Manager(Singleton):
         self.reset()
         self.handleSystemTopology(Hash())
         self.onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
+        # Send reset signal to configurator to clear stacked widget
+        self.__notifier.signalReset.emit()
 
 
     def registerEditableComponent(self, key, component):
@@ -366,9 +370,9 @@ class Manager(Singleton):
             self.__notifier.signalChangingState.emit(deviceId, True)
         else:
             if ("Error" in value) or ("error" in value):
-                self.__notifier.signalErrorState.emit(True)
+                self.__notifier.signalErrorState.emit(deviceId, True)
             else:
-                self.__notifier.signalErrorState.emit(False)
+                self.__notifier.signalErrorState.emit(deviceId, False)
             
             self.__notifier.signalChangingState.emit(deviceId, False)
             self.__notifier.signalDeviceStateChanged.emit(deviceId, value)

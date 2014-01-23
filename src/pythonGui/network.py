@@ -18,9 +18,9 @@ from manager import Manager
 from struct import *
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import pyqtSignal, QByteArray, QDataStream, QObject
+from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QDataStream, \
+                         QObject
 from PyQt4.QtGui import QDialog, QMessageBox
-from PyQt4.QtCore import QCryptographicHash
 
 import globals
 import socket
@@ -33,23 +33,26 @@ class Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
-           
+
     def __init__(self):
         super(Network, self).__init__()
-        
+
         self.__serializer = BinarySerializerHash.create("Bin")
-                
+
         self.__auth = None
-        self.__username = str()
-        self.__password = str()
-        self.__provider = str()
-        self.__sessionToken = str()
+        self.__username = None
+        self.__password = None
+        self.__provider = None
+        self.__hostname = None
+        self.__port = None
+
         self.__brokerHost = str()
         self.__brokerPort = str()
         self.__brokerTopic = str()
-        
-        self.__tcpSocket = None        
-        
+        self.__sessionToken = str()
+
+        self.__tcpSocket = None
+
         Manager().notifier.signalKillDevice.connect(self.onKillDevice)
         Manager().notifier.signalKillServer.connect(self.onKillServer)
         Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
@@ -57,44 +60,51 @@ class Network(QObject):
         Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().notifier.signalInitDevice.connect(self.onInitDevice)
         Manager().notifier.signalExecute.connect(self.onExecute)
-        
+
         Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
         Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
-        
+
         Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().notifier.signalGetDeviceSchema.connect(self.onGetDeviceSchema)
-        
+
         self.__headerSize = 0
         self.__bodySize = 0
         self.__headerBytes = bytearray()
         self.__bodyBytes = bytearray()
 
 
-    def connectToServer(self, connect):
+    def connectToServer(self):
         """
         Connection to server via LoginDialog.
-        
-        @param connect: \True, connect to server
-                        \False, disconnect from server
         """
         isConnected = False
-        if connect:
-            dialog = LoginDialog()
-            if dialog.exec_() == QDialog.Accepted:
-                self.startServerConnection(dialog.username,
-                                           dialog.password,
-                                           dialog.provider,
-                                           dialog.hostname,
-                                           dialog.port)
-                isConnected = True
-            else:
-                isConnected = False
+
+        dialog = LoginDialog(username=self.__username,
+                             password=self.__password,
+                             provider=self.__provider,
+                             hostname=self.__hostname,
+                             port=self.__port)
+        if dialog.exec_() == QDialog.Accepted:
+            self.startServerConnection(dialog.username,
+                                       dialog.password,
+                                       dialog.provider,
+                                       dialog.hostname,
+                                       dialog.port)
+            isConnected = True
         else:
-            self.endServerConnection()
             isConnected = False
-        
+
         # Update mainwindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
+
+
+    def disconnectFromServer(self):
+        """
+        Disconnect from server.
+        """
+        self.endServerConnection()
+        # Update mainwindow toolbar
+        self.signalServerConnectionChanged.emit(False)
 
 
     def startServerConnection(self, username, password, provider, hostname, port):
@@ -105,15 +115,17 @@ class Network(QObject):
         self.__username = username
         self.__password = password
         self.__provider = provider
+        self.__hostname = hostname
+        self.__port = port
         self.__headerSize = 0
         self.__bodySize = 0
-        
-        
+
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
         self.__tcpSocket.readyRead.connect(self.onReadServerData)
-        self.__tcpSocket.error.connect(self.onSocketError)        
+        self.__tcpSocket.error.connect(self.onSocketError)
+
         self.__tcpSocket.connectToHost(hostname, port)
 
 
@@ -123,7 +135,7 @@ class Network(QObject):
         """
         if self._logout():
             Manager().disconnectedFromServer()
-            
+
             self.__tcpSocket.disconnectFromHost()
             if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
                 self.__tcpSocket.waitForDisconnected(5000):
@@ -138,7 +150,7 @@ class Network(QObject):
         """
         # System variables definition
         ipAddress = socket.gethostname() # Machine Name
-        
+
         # Easteregg
         if self.__username == "god":
             md5 = QCryptographicHash.hash(str(self.__password), QCryptographicHash.Md5).toHex()
@@ -147,7 +159,7 @@ class Network(QObject):
                 globals.GLOBAL_ACCESS_LEVEL = 1000
             else:
                 globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-                
+
         else:
             # Construct Authenticator class
             try:
@@ -168,13 +180,13 @@ class Network(QObject):
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
                 raise RuntimeError("Login exception. Please verify, if service is running. " + str(e))
-                
+
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
                 self._sendLoginInformation(self.__username, self.__password, \
                                            self.__provider, self.__sessionToken)
                 return
-            
+
             if ok:
                 globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
             else:
@@ -187,15 +199,15 @@ class Network(QObject):
         self.signalUserChanged.emit()
         self._sendLoginInformation(self.__username, self.__password, self.__provider, \
                                    self.__sessionToken)
-            
-    
+
+
     def _logout(self):
         """
         Authentification logout.
         """
         # Execute Logout
         if self.__auth is None: return False
-        
+
         try:
             return self.__auth.logout()
         except Exception, e:
@@ -211,47 +223,47 @@ class Network(QObject):
         while True:
 
             if self.__headerSize == 0:
-            
+
                 if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
                     break
 
                 self.__headerSize = input.readUInt32()
-                          
+
             if len(self.__headerBytes) == 0:
-            
+
                 if self.__tcpSocket.bytesAvailable() < self.__headerSize :
                     break
-                
+
                 self.__headerBytes = bytearray(self.__headerSize)
                 self.__headerBytes = input.readRawData(self.__headerSize)
                 # TODO How to do this nicely?
                 self.__headerBytes = bytearray(self.__headerBytes)
-                
+
             if self.__bodySize == 0:
-            
+
                 if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
                     break
 
                 self.__bodySize = input.readUInt32()
-                          
+
             if len(self.__bodyBytes) == 0:
-            
+
                 if self.__tcpSocket.bytesAvailable() < self.__bodySize:
                     break
-                
+
                 self.__bodyBytes = bytearray(self.__bodySize)
                 self.__bodyBytes = input.readRawData(self.__bodySize)
                 # TODO How to do this nicely?
                 self.__bodyBytes = bytearray(self.__bodyBytes)
-                
-                    
+
+
             # Fork on responseType
             headerHash = self.__serializer.load(self.__headerBytes)
             #bodyHash = self.__serializer.load(self.__bodyBytes)
-            
+
             type = headerHash.get("type")
             #print "Request: ", type
-            
+
             # "instanceNew" (instanceId, instanceInfo)
             # "instanceUpdated" (instanceId, instanceInfo)
             # "instanceGone" (instanceId)
@@ -259,14 +271,14 @@ class Network(QObject):
             # "log" (logMessage)
             # "notification" (type, shortMsg, detailedMsg, instanceId)
             # "invalidateCache" (instanceId)
-            
+
             if type == "systemTopology":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
-                
+
                 deviceKey = "device"
                 if bodyHash.has(deviceKey):
                     deviceConfig = bodyHash.get(deviceKey)
@@ -303,16 +315,16 @@ class Network(QObject):
                 print "invalidateCache"
             else:
                 print "WARN : Got unknown communication token \"", type, "\" from server"
-            # Invalidate variables            
+            # Invalidate variables
             self.__bodySize = self.__headerSize = 0
             self.__headerBytes = self.__bodyBytes = bytearray()
 
 
     def onSocketError(self, socketError):
         print "onSocketError", self.__tcpSocket.errorString(), socketError
-        
-        self.connectToServer(False)
-        
+
+        self.disconnectFromServer()
+
         if socketError == QAbstractSocket.ConnectionRefusedError:
             reply = QMessageBox.question(None, 'Server connection refused',
                 "The connection to the server was refused <BR> by the peer "
@@ -343,14 +355,14 @@ class Network(QObject):
 
             if reply == QMessageBox.Cancel:
                 return
-        
-        self.connectToServer(True)
+
+        self.connectToServer()
 
 
     def onConnected(self):
         pass
-        
-        
+
+
     def onDisconnected(self):
         pass
 
@@ -374,8 +386,8 @@ class Network(QObject):
         header.set("type", "refreshInstance")
         header.set("deviceId", str(instanceId))
         self._tcpWriteHashHash(header, Hash())
-        
-        
+
+
     def onReconfigure(self, deviceId, parameterId, value):
         header = Hash()
         header.set("type", "reconfigure")
@@ -412,10 +424,10 @@ class Network(QObject):
         header = Hash()
         header.set("type", "execute")
         header.set("deviceId", str(deviceId))
-        
+
         command = info.get('command')
         body = Hash("command", str(command))
-        
+
         args = info.get('args')
         if args:
             i = 0
@@ -461,7 +473,7 @@ class Network(QObject):
         body.set("password", password)
         body.set("provider", provider)
         body.set("sessionToken", sessionToken)
-        
+
         self._tcpWriteHashHash(header, body)
 
 
@@ -471,21 +483,21 @@ class Network(QObject):
         bodyString = QByteArray(self.__serializer.save(bodyHash))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
-                
+
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
         stream.push_back(headerString)
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
-        
-        
+
+
     def _tcpWriteHashString(self, headerHash, body):
         stream = QByteArray()
         headerString = QByteArray(self.__serializer.save(headerHash))
         bodyString = QByteArray(str(body))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
-                
+
         stream.push_back(QByteArray(pack('I', nBytesHeader)))
         stream.push_back(headerString)
         stream.push_back(QByteArray(pack('I', nBytesBody)))
@@ -502,12 +514,11 @@ class Network(QObject):
         Manager().handleDeviceSchema(deviceId, bodyHash)
 
 
-    def _handleConfigurationChanged(self, headerHash, bodyHash):        
+    def _handleConfigurationChanged(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
-        #print "handling configuration changed on device " + deviceId
         Manager().handleConfigurationChanged(deviceId, bodyHash)
-        
-        
+
+
     def _handleSchemaUpdated(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
         Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)

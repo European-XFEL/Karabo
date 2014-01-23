@@ -105,6 +105,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
         Manager().notifier.signalErrorState.connect(self.onErrorState)
+        Manager().notifier.signalReset.connect(self.onReset)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
@@ -334,22 +335,6 @@ class ConfigurationPanel(QWidget):
         self.__acResetAll.setToolTip(text)
 
 
-    def clearParameterEditorContent(self):
-        self._setParameterEditorIndex(0)
-        # Reset map
-        self.__navItemInternalKeyIndexMap = dict()
-        
-        while self.__swParameterEditor.count() > 1:
-            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
-            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-            self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
-            twParameterEditorPage.clear()
-            
-            # Remove widget completely
-            self.__swParameterEditor.removeWidget(twParameterEditorPage)
-            del twParameterEditorPage
-
-
     def _parseSchema(self, itemInfo, twParameterEditorPage):
         path = itemInfo.get('key')
         schema = itemInfo.get('schema')
@@ -472,6 +457,18 @@ class ConfigurationPanel(QWidget):
 
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
+    
+    
+    def _getParameterEditorByDeviceId(self, deviceId):
+        """
+        Returns the parameterEditor-Treewidget with the given deviceId.
+        If not found, return None.
+        """
+        for index in range(self.__swParameterEditor.count()):
+            parameterEditor = self.__swParameterEditor.widget(index)
+            if deviceId == parameterEditor.instanceKey:
+                return parameterEditor
+        return None
 
 
     def _updateButtonsVisibility(self, visible):
@@ -526,13 +523,13 @@ class ConfigurationPanel(QWidget):
             self._getCurrentParameterEditor().applyRemoteChanges(item)
 
 
-    def _r_unregisterEditableComponent(self, item):
+    def _r_unregisterComponents(self, item):
         # Go recursively through tree and unregister Widgets in Manager
         for i in range(item.childCount()):
             childItem = item.child(i)
             childItem.unregisterEditableComponent()
             childItem.unregisterDisplayComponent()
-            self._r_unregisterEditableComponent(childItem)
+            self._r_unregisterComponents(childItem)
 
 
     def showParameterPage(self, type, path):
@@ -540,7 +537,7 @@ class ConfigurationPanel(QWidget):
         index = self.__navItemInternalKeyIndexMap.get(path)
         if index:
             self._setParameterEditorIndex(index)
-            
+
             if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
                 # Visible deviceId has changed
                 Manager().newVisibleDevice(path)
@@ -557,6 +554,21 @@ class ConfigurationPanel(QWidget):
 
 
 ### slots ###
+    def onReset(self):
+        self._setParameterEditorIndex(0)
+        # Reset map
+        self.__navItemInternalKeyIndexMap = dict()
+
+        while self.__swParameterEditor.count() > 1:
+            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
+            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
+            self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
+            twParameterEditorPage.clear()
+
+            # Remove widget completely
+            self.__swParameterEditor.removeWidget(twParameterEditorPage)
+
+
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
         self.__twNavigation.createNewItem(itemInfo)
@@ -578,7 +590,7 @@ class ConfigurationPanel(QWidget):
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-                    self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
+                    self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
                     twParameterEditorPage.clear()
 
                     if self._parseSchema(itemInfo, twParameterEditorPage):
@@ -608,7 +620,6 @@ class ConfigurationPanel(QWidget):
 
 
     def onNavigationItemChanged(self, itemInfo):
-        #print "ConfigurationPanel.itemChanged", itemInfo
         type = itemInfo.get('type')
         path = itemInfo.get('key')
         
@@ -686,18 +697,21 @@ class ConfigurationPanel(QWidget):
             self.__changingTimerDeviceIdMap[deviceId] = timer
         
         if isChanging is True:
-            if timer.isActive() is False:
+            if not timer.isActive():
                 timer.start(200)
         else:
             timer.stop()
             
-            parameterWidget = self._getCurrentParameterEditor()
-            if deviceId == parameterWidget.instanceKey:
-                self._getCurrentParameterEditor().setReadOnly(False)
+            parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+            if parameterEditor:
+                parameterEditor.setReadOnly(False)
 
  
-    def onErrorState(self, inErrorState):
-        self._getCurrentParameterEditor().setErrorState(inErrorState)
+    def onErrorState(self, deviceId, inErrorState):
+        # Get corresponding parameterEditor-Treewidget to update state
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor:
+            parameterEditor.setErrorState(inErrorState)
 
 
     def onTimeOut(self):
@@ -709,10 +723,12 @@ class ConfigurationPanel(QWidget):
         for i in xrange(len(mapValues)):
             if timer == mapValues[i]:
                 deviceId = self.__changingTimerDeviceIdMap.keys()[i]
+                print "deviceId", deviceId
                 
-                parameterWidget = self._getCurrentParameterEditor()
-                if deviceId == parameterWidget.instanceKey:
-                    parameterWidget.setReadOnly(True)
+                parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+                if parameterEditor:
+                    print "readOnly TRUE"
+                    parameterEditor.setReadOnly(True)
                 break
 
 
