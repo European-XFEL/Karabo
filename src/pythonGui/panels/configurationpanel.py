@@ -472,6 +472,18 @@ class ConfigurationPanel(QWidget):
 
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
+    
+    
+    def _getParameterEditorByDeviceId(self, deviceId):
+        """
+        Returns the parameterEditor-Treewidget with the given deviceId.
+        If not found, return None.
+        """
+        for index in range(self.__swParameterEditor.count()):
+            parameterEditor = self.__swParameterEditor.widget(index)
+            if deviceId == parameterEditor.instanceKey:
+                return parameterEditor
+        return None
 
 
     def _updateButtonsVisibility(self, visible):
@@ -678,6 +690,8 @@ class ConfigurationPanel(QWidget):
 
 
     def onChangingState(self, deviceId, isChanging):
+        print ""
+        print "+++ onChangingState", deviceId, isChanging
         if deviceId in self.__changingTimerDeviceIdMap:
             timer = self.__changingTimerDeviceIdMap[deviceId]
         else:
@@ -686,22 +700,30 @@ class ConfigurationPanel(QWidget):
             self.__changingTimerDeviceIdMap[deviceId] = timer
         
         if isChanging is True:
-            if timer.isActive() is False:
+            if not timer.isActive():
                 timer.start(200)
         else:
+            #if not timer.isActive():
+            #    return
+            print "timer.isActive", timer.isActive()
             timer.stop()
             
-            parameterWidget = self._getCurrentParameterEditor()
-            if deviceId == parameterWidget.instanceKey:
-                self._getCurrentParameterEditor().setReadOnly(False)
+            parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+            if parameterEditor:
+                print "readOnly FALSE"
+                parameterEditor.setReadOnly(False)
 
  
-    def onErrorState(self, inErrorState):
-        self._getCurrentParameterEditor().setErrorState(inErrorState)
+    def onErrorState(self, deviceId, inErrorState):
+        # Get corresponding parameterEditor-Treewidget to update state
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor:
+            parameterEditor.setErrorState(inErrorState)
 
 
     def onTimeOut(self):
         timer = self.sender()
+        print "onTimeOut", timer.isActive()
         timer.stop()
         
         # Check deviceId against deviceId of current parameter editor
@@ -709,10 +731,12 @@ class ConfigurationPanel(QWidget):
         for i in xrange(len(mapValues)):
             if timer == mapValues[i]:
                 deviceId = self.__changingTimerDeviceIdMap.keys()[i]
+                print "deviceId", deviceId
                 
-                parameterWidget = self._getCurrentParameterEditor()
-                if deviceId == parameterWidget.instanceKey:
-                    parameterWidget.setReadOnly(True)
+                parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+                if parameterEditor:
+                    print "readOnly TRUE"
+                    parameterEditor.setReadOnly(True)
                 break
 
 
