@@ -941,8 +941,8 @@ if (nodeData) {\
 
                     it->second++; // Others just age
                     if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
-                        cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
-                        m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", true);
+                        //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
+                        m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", false);
                         std::string path("device." + it->first + ".configuration");
                         boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                         if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
