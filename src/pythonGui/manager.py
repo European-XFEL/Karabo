@@ -502,6 +502,7 @@ class _Manager(QObject):
 
 
     def selectNavigationItemByKey(self, path):
+        print "selectNavigationItemByKey", path
         self.signalNavigationItemSelectionChanged.emit(path)
 
 
