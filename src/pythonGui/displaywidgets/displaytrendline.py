@@ -122,4 +122,5 @@ class DisplayTrendline(DisplayWidget):
                 
         self.curve.set_data(data[:, 1], data[:, 0])
         self.plot.setAxisAutoScale(Qwt.QwtPlot.xBottom)
+        self.plot.setAxisAutoScale(Qwt.QwtPlot.yLeft)
         self.plot.replot()
