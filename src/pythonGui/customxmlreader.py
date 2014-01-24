@@ -354,10 +354,15 @@ class CustomXmlReader(QXmlStreamReader):
             editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
-        
+
         if internalKey:
+            if proxyItem:
+                tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                proxyItem.setToolTip(tooltipText)
+
             # Simulated NavigationItem click event to load schema
-            Manager().selectNavigationItemByKey(internalKey)
+            navItemPath = internalKey.split('.configuration.')
+            Manager().selectNavigationItemByKey(navItemPath[0])
             # Register as visible device
             Manager().newVisibleDevice(internalKey)
                     
