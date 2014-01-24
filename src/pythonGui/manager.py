@@ -59,7 +59,7 @@ class _Manager(QObject):
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
-    signalConflictStateChanged = pyqtSignal(bool) # isBusy
+    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
     signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(str, bool) # deviceId, inErrorState
 
@@ -418,8 +418,8 @@ class _Manager(QObject):
         self.signalReconfigureAsHash.emit(instanceId, config.get(instanceKey + ".configuration"))
 
 
-    def onConflictStateChanged(self, hasConflict):
-        self.signalConflictStateChanged.emit(hasConflict)
+    def onConflictStateChanged(self, key, hasConflict):
+        self.signalConflictStateChanged.emit(key, hasConflict)
 
 
     def initDevice(self, serverId, classId, path):
@@ -502,7 +502,6 @@ class _Manager(QObject):
 
 
     def selectNavigationItemByKey(self, path):
-        print "selectNavigationItemByKey", path
         self.signalNavigationItemSelectionChanged.emit(path)
 
 

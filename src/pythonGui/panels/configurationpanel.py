@@ -271,13 +271,12 @@ class ConfigurationPanel(QWidget):
         self.__toolBar.removeAction(action)
 
 
-    def updateButtonActions(self):
-        self.updateApplyAllActions()
-        self.updateResetAllActions()
+    def updateApplyAllActions(self, deviceId):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
 
-
-    def updateApplyAllActions(self):
-        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
+        nbSelected = parameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Apply selected"
@@ -316,8 +315,12 @@ class ConfigurationPanel(QWidget):
             self.__acApplyAll.setMenu(None)
 
 
-    def updateResetAllActions(self):
-        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
+    def updateResetAllActions(self, deviceId):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
+
+        nbSelected = parameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Reset selected"
@@ -420,17 +423,17 @@ class ConfigurationPanel(QWidget):
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
-    def _setApplyAllEnabled(self, enable):
+    def _setApplyAllEnabled(self, deviceId, enable):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
-        self.updateApplyAllActions()
-        self.updateResetAllActions()
+        self.updateApplyAllActions(deviceId)
+        self.updateResetAllActions(deviceId)
 
 
-    def _setResetAllEnabled(self, enable):
+    def _setResetAllEnabled(self, deviceId, enable):
         self.__pbResetAll.setEnabled(enable)
         self.__acResetAll.setEnabled(enable)
-        self.updateResetAllActions()
+        self.updateResetAllActions(deviceId)
 
 
     def _setParameterEditorIndex(self, index):
@@ -498,19 +501,21 @@ class ConfigurationPanel(QWidget):
 
     def _applyAllChanges(self):
         config = Hash()
-        self._getCurrentParameterEditor().onApplyAll(config)
-        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
-        self._setApplyAllEnabled(False)
+        parameterEditor = self._getCurrentParameterEditor()
+        parameterEditor.onApplyAll(config)
+        self.applyAllAsHash(parameterEditor.instanceKey, config)
+        self._setApplyAllEnabled(parameterEditor.instanceKey, False)
 
 
     def _applySelectedChanges(self):
-        selectedItems = self._getCurrentParameterEditor().selectedItems()
+        parameterEditor = self._getCurrentParameterEditor()
+        selectedItems = parameterEditor.selectedItems()
         config = Hash()
         for item in selectedItems:
-            self._getCurrentParameterEditor().addItemDataToHash(item, config)
+            parameterEditor.addItemDataToHash(item, config)
         
-        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
-        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
+        self.applyAllAsHash(parameterEditor.instanceKey, config)
+        self._setApplyAllEnabled(parameterEditor.instanceKey, parameterEditor.checkApplyButtonsEnabled()[0])
 
 
     def _applyAllRemoteChanges(self):
@@ -518,9 +523,10 @@ class ConfigurationPanel(QWidget):
 
 
     def _applySelectedRemoteChanges(self):
-        selectedItems = self._getCurrentParameterEditor().selectedItems()
+        parameterEditor = self._getCurrentParameterEditor()
+        selectedItems = parameterEditor.selectedItems()
         for item in selectedItems:
-            self._getCurrentParameterEditor().applyRemoteChanges(item)
+            parameterEditor.applyRemoteChanges(item)
 
 
     def _r_unregisterComponents(self, item):
@@ -680,8 +686,13 @@ class ConfigurationPanel(QWidget):
             twParameterEditorPage.stateUpdated(state)
 
 
-    def onConflictStateChanged(self, hasConflict):
-        result = self._getCurrentParameterEditor().checkApplyButtonsEnabled()
+    def onConflictStateChanged(self, deviceId, hasConflict):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
+
+        result = parameterEditor.checkApplyButtonsEnabled()
+        self.__pbApplyAll.setEnabled(result[0])
         if result[1] == hasConflict:
             self.hasConflicts = hasConflict
 
@@ -728,10 +739,10 @@ class ConfigurationPanel(QWidget):
                 break
 
 
-    def onApplyChanged(self, enable, hasConflicts=False):
+    def onApplyChanged(self, deviceId, enable, hasConflicts=False):
         # called when apply button of attributewidget changed
-        self._setApplyAllEnabled(enable)
-        self._setResetAllEnabled(enable)
+        self._setApplyAllEnabled(deviceId, enable)
+        self._setResetAllEnabled(deviceId, enable)
         self.hasConflicts = hasConflicts
 
 
@@ -744,7 +755,7 @@ class ConfigurationPanel(QWidget):
 
     def onApplyAllRemoteChanges(self):
         self._applyAllRemoteChanges()
-        self._setApplyAllEnabled(False)
+        self._setApplyAllEnabled(self._getCurrentParameterEditor().instanceKey, False)
 
 
     def onApplySelected(self):
@@ -753,7 +764,8 @@ class ConfigurationPanel(QWidget):
 
     def onApplySelectedRemoteChanges(self):
         self._applySelectedRemoteChanges()
-        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
+        parameterEditor = self._getCurrentParameterEditor()
+        self._setApplyAllEnabled(parameterEditor.instanceKey, parameterEditor.checkApplyButtonsEnabled()[0])
 
 
     def onResetAll(self):
