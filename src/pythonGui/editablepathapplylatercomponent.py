@@ -23,8 +23,8 @@ from PyQt4.QtGui import *
 
 class EditablePathApplyLaterComponent(BaseComponent):
     # signals
-    signalConflictStateChanged = pyqtSignal(bool) # hasConflict
-    signalApplyChanged = pyqtSignal(bool) # enabled state of apply button
+    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
+    signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
 
 
     def __init__(self, classAlias, **params):
@@ -211,7 +211,7 @@ class EditablePathApplyLaterComponent(BaseComponent):
             self.hasConflict = False
         
         # Broadcast to ConfigurationPanel
-        self.signalApplyChanged.emit(enable)
+        self.signalApplyChanged.emit(self.keys[0], enable)
     applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
 
 
@@ -247,7 +247,9 @@ class EditablePathApplyLaterComponent(BaseComponent):
             self.__acApply.setMenu(None)
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
-        self.signalConflictStateChanged.emit(hasConflict)
+
+        deviceId = self.keys[0].split('.configuration.')
+        self.signalConflictStateChanged.emit(deviceId[0], hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
 
@@ -335,7 +337,6 @@ class EditablePathApplyLaterComponent(BaseComponent):
 
 
     def onDisplayValueChanged(self, key, value):
-        #print "onDisplayValueChanged", key, value
         if self.__isEditableValueInit:
             self.__editableWidget.valueChanged(key, value)
             self.__isEditableValueInit = False
