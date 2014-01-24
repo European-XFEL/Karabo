@@ -290,11 +290,11 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onApplyChanged(self, enable):
+    def onApplyChanged(self, key, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
         result = self.checkApplyButtonsEnabled()
-        self.__configPanel.onApplyChanged(result[0], result[1])
+        self.__configPanel.onApplyChanged(key, result[0], result[1])
 
 
     def onApplyAll(self, config):
