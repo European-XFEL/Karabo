@@ -42,7 +42,7 @@ class NotificationPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().notifier.signalNotificationAvailable.connect(self.onNotificationAvailable)
+        Manager().signalNotificationAvailable.connect(self.onNotificationAvailable)
 
 
     def setupActions(self):

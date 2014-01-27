@@ -71,7 +71,7 @@ class DocumentationPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__tabWidget)
         
-        Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
+        Manager().signalNavigationItemChanged.connect(self.onNavigationItemChanged)
 
 
     def _setWikiActionsVisible(self, visible):
