@@ -16,7 +16,7 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
-from karabo.karathon import *
+from karabo.karathon import AccessLevel
 from manager import Manager
 from network import Network
 
@@ -25,12 +25,12 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
-#from panels.projectpanel import ProjectPanel
+from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QAction, qApp, QActionGroup, QIcon, QKeySequence, \
+                        QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton
 
 
 class MainWindow(QMainWindow):
@@ -184,10 +184,10 @@ class MainWindow(QMainWindow):
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        #self.__projectPanel = ProjectPanel()
-        #self.__projectTab = DockTabWindow("Projects", leftArea)
-        #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        #leftArea.setStretchFactor(1,1)
+        self.__projectPanel = ProjectPanel()
+        self.__projectTab = DockTabWindow("Projects", leftArea)
+        self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = CustomMiddlePanel()
