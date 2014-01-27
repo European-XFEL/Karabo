@@ -84,28 +84,27 @@ class ConfigurationPanel(QWidget):
 
         splitTopPanes.setStretchFactor(0, 1)
         
-        # Make connects
-        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
+        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
-        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
+        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
-        Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
-        Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().notifier.signalSchemaAvailable.connect(self.onSchemaAvailable)
-        Manager().notifier.signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
+        Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
+        Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
+        Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
+        Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
         
-        Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
+        Manager().signalNavigationItemChanged.connect(self.onNavigationItemChanged)
+        Manager().signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
 
-        Manager().notifier.signalProjectItemChanged.connect(self.onProjectItemChanged)
+        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
-        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
+        Manager().signalInstanceGone.connect(self.onInstanceGone)
         
-        Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
-        Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
-        Manager().notifier.signalChangingState.connect(self.onChangingState)
-        Manager().notifier.signalErrorState.connect(self.onErrorState)
-        Manager().notifier.signalReset.connect(self.onResetPanel)
+        Manager().signalDeviceStateChanged.connect(self.onDeviceStateChanged)
+        Manager().signalConflictStateChanged.connect(self.onConflictStateChanged)
+        Manager().signalChangingState.connect(self.onChangingState)
+        Manager().signalErrorState.connect(self.onErrorState)
+        Manager().signalReset.connect(self.onResetPanel)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)

@@ -8,13 +8,9 @@
 """This module contains the manager class which works a man in the middle of the
    star structure. All relevant signals go over here.
    
-   The manager class is a singleton and has a notifier object due to problems with
-   the definition of signals inside of a singleton class.
+   The manager class is a singleton.
    
    All relevant configuration data is stored in a member hash variable.
-   
-   This notifier class contains only the signals needed to spread to all relevant
-   places.
 """
 
 __all__ = ["Manager"]
@@ -131,11 +127,6 @@ class _Manager(QObject):
     def _hash(self):
         return self.__hash
     hash = property(fget=_hash)
-
-
-    @property
-    def notifier(self):
-        return self
 
 
     def _sqlDatabase(self):

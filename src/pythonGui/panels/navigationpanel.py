@@ -51,19 +51,18 @@ class NavigationPanel(QWidget):
                     SIGNAL('selectionChanged(const QItemSelection &, const QItemSelection &)'),
                     self.onNavigationItemClicked)
         
-        # Make connects
-        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
+        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
-        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
+        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
-        Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
-        Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
+        Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
+        Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
+        Manager().signalNavigationItemChanged.connect(self.onNavigationItemChanged)
+        Manager().signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
         
-        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
+        Manager().signalInstanceGone.connect(self.onInstanceGone)
         
-        Manager().notifier.signalReset.connect(self.onResetPanel)
+        Manager().signalReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)

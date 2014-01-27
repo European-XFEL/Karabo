@@ -53,19 +53,19 @@ class Network(QObject):
 
         self.__tcpSocket = None
 
-        Manager().notifier.signalKillDevice.connect(self.onKillDevice)
-        Manager().notifier.signalKillServer.connect(self.onKillServer)
-        Manager().notifier.signalRefreshInstance.connect(self.onRefreshInstance)
-        Manager().notifier.signalReconfigure.connect(self.onReconfigure)
-        Manager().notifier.signalReconfigureAsHash.connect(self.onReconfigureAsHash)
-        Manager().notifier.signalInitDevice.connect(self.onInitDevice)
-        Manager().notifier.signalExecute.connect(self.onExecute)
+        Manager().signalKillDevice.connect(self.onKillDevice)
+        Manager().signalKillServer.connect(self.onKillServer)
+        Manager().signalRefreshInstance.connect(self.onRefreshInstance)
+        Manager().signalReconfigure.connect(self.onReconfigure)
+        Manager().signalReconfigureAsHash.connect(self.onReconfigureAsHash)
+        Manager().signalInitDevice.connect(self.onInitDevice)
+        Manager().signalExecute.connect(self.onExecute)
 
-        Manager().notifier.signalNewVisibleDevice.connect(self.onNewVisibleDevice)
-        Manager().notifier.signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
+        Manager().signalNewVisibleDevice.connect(self.onNewVisibleDevice)
+        Manager().signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
 
-        Manager().notifier.signalGetClassSchema.connect(self.onGetClassSchema)
-        Manager().notifier.signalGetDeviceSchema.connect(self.onGetDeviceSchema)
+        Manager().signalGetClassSchema.connect(self.onGetClassSchema)
+        Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
 
         self.__headerSize = 0
         self.__bodySize = 0
