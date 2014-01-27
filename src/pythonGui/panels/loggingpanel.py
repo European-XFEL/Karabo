@@ -44,7 +44,7 @@ class LoggingPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().notifier.signalLogDataAvailable.connect(self.onLogDataAvailable)
+        Manager().signalLogDataAvailable.connect(self.onLogDataAvailable)
         
         self.setupActions()
 
