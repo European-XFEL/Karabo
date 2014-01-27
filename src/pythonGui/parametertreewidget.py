@@ -14,13 +14,12 @@ __all__ = ["ParameterTreeWidget"]
 
 import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
-from enums import *
+from enums import NavigationItemTypes
 import globals
-from karabo.karathon import *
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QMimeData, QRect, Qt
+from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):

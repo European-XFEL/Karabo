@@ -19,8 +19,8 @@ import choicecomponent
 from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QSize, Qt
+from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
 
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
@@ -97,7 +97,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     def setToolTipDialogVisible(self, show):
         if not self.__popupWidget:
             self.__popupWidget = PopupWidget(self.treeWidget())
-        
+
         if show:
             info = OrderedDict()
             info["Property"] = self.text(0)
