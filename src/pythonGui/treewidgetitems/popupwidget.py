@@ -12,8 +12,8 @@
 __all__ = ["PopupWidget"]
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QSize, Qt
+from PyQt4.QtGui import QHBoxLayout, QTextEdit, QWidget
 
 
 class PopupWidget(QWidget):

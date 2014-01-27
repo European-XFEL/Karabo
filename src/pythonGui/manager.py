@@ -23,12 +23,12 @@ __all__ = ["Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from karabo.karathon import *
+from karabo.karathon import Hash, HashMergePolicy
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal, QObject, QTime, QTimer
+from PyQt4.QtGui import QMessageBox
 
 import time
 
