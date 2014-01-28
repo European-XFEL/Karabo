@@ -20,7 +20,6 @@
 __all__ = ["Manager"]
 
 
-from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
@@ -32,6 +31,33 @@ from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 import time
+
+
+class DataNotifier(QObject):
+    signalUpdateComponent = pyqtSignal(str, object) # internalKey, value, timestamp (TODO)
+    signalUpdateDisplayValue = pyqtSignal(str, object)
+
+
+    def __init__(self, key, component):
+        super(DataNotifier, self).__init__()
+
+        self.signalUpdateComponent.connect(self.onValueChanged)
+        self.addComponent(key, component)
+
+
+    def onValueChanged(self, key, value):
+        self.value = value
+
+
+    def addComponent(self, key, component):
+        self.signalUpdateComponent.connect(component.onValueChanged)
+        self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
+        if hasattr(self, "value"):
+            self.signalUpdateComponent.emit(key, self.value)
+
+
+    def updateDisplayValue(self, key, value):
+        self.signalUpdateDisplayValue.emit(key, value)
 
 
 class _Manager(QObject):
@@ -229,10 +255,7 @@ class _Manager(QObject):
 
 
     def unregisterEditableComponent(self, key, component):
-        key = str(key)
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier:
-            dataNotifier.removeComponent(key, component)
+        pass
 
 
     def registerDisplayComponent(self, key, component):
@@ -245,10 +268,7 @@ class _Manager(QObject):
 
 
     def unregisterDisplayComponent(self, key, component):
-        key = str(key)
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        if dataNotifier:
-            dataNotifier.removeComponent(key, component)
+        pass
         
 
     def _getDeviceIdFromPath(self, path):
