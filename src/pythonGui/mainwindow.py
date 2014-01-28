@@ -37,9 +37,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        
-        self._setupPanels()
+
         self._setupNetwork()
+        self._setupPanels()
         
         self._setupActions()
         self._setupMenuBar()
@@ -187,6 +187,8 @@ class MainWindow(QMainWindow):
         self.__projectPanel = ProjectPanel()
         self.__projectTab = DockTabWindow("Projects", leftArea)
         self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
+        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
