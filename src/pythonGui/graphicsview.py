@@ -430,6 +430,10 @@ def _parse_rect(elem):
 
 Separator()
 
+class GroupActions(ActionGroup):
+    icon = ":group"
+    text = "Group"
+
 class GroupAction(SimpleAction):
     "Group several items into one group"
 
@@ -478,7 +482,7 @@ class BoxGroup(GroupAction):
         self.parent.ilayout.add_item(group)
 
 
-class VerticalGroup(BoxGroup):
+class VerticalGroup(GroupActions, BoxGroup):
     text = "Group Vertically"
     icon = "icons/group-vertical.svg"
 
@@ -488,7 +492,7 @@ class VerticalGroup(BoxGroup):
                   lambda x, y: x.geometry().y() - y.geometry().y())
 
 
-class HorizontalGroup(BoxGroup):
+class HorizontalGroup(GroupActions, BoxGroup):
     text = "Group Horizontally"
     icon = "icons/group-horizontal.svg"
 
@@ -498,7 +502,7 @@ class HorizontalGroup(BoxGroup):
                   lambda x, y: x.geometry().x() - y.geometry().x())
 
 
-class GridGroup(BoxGroup):
+class GridGroup(GroupActions, BoxGroup):
     text = "Group in a Grid"
     icon = "icons/group-grid.svg"
 
@@ -514,7 +518,7 @@ class GridGroup(BoxGroup):
         self.parent.ilayout.add_item(group)
 
 
-class Ungroup(SimpleAction):
+class Ungroup(GroupActions, SimpleAction):
     "Ungroup items"
     text = "Ungroup"
     icon = "icons/ungroup.svg"
