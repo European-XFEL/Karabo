@@ -19,6 +19,127 @@ using namespace std;
 
 namespace karathon {
 
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_BOOL);
+            bool* data = reinterpret_cast<bool*>(PyArray_DATA(arr));
+            for (int i = 0; i < PyArray_SIZE(arr); i++) {
+                data[i] = v[i];
+            }
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<short>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_SHORT);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned short>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_USHORT);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<int>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_INT);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned int>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_UINT);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<long long>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_LONGLONG);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
+        std::cout << "fromStdVectorToPyArray -- unsigned long long -- numpyFlag is " << numpyFlag << std::endl;
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_ULONGLONG);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_FLOAT);
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr)); // 
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
+    template<>
+    bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag) {
+        if (numpyFlag) {
+            int nd = 1;
+            npy_intp dims[1];
+            dims[0] = v.size();
+            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_DOUBLE); // reinterpret_cast<void*> (&v[0]));
+            memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
+            return bp::object(bp::handle<>(arr));
+        }
+        return Wrapper::fromStdVectorToPyList(v);
+    }
+
     bp::object Wrapper::toObject(const boost::any& operand, bool numpyFlag) {
         try {
             if (operand.type() == typeid (bool)) {
@@ -57,16 +178,6 @@ namespace karathon {
                 return bp::object();
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
-//            } else if (operand.type() == typeid (karabo::xip::CpuImage<double>)) {
-//                return bp::object(boost::any_cast<karabo::xip::CpuImage<double> >(operand));
-//            } else if (operand.type() == typeid (karabo::xip::CpuImage<float>)) {
-//                return bp::object(boost::any_cast<karabo::xip::CpuImage<float> >(operand));
-//            } else if (operand.type() == typeid (karabo::xip::CpuImage<int>)) {
-//                return bp::object(boost::any_cast<karabo::xip::CpuImage<int> >(operand));
-//            } else if (operand.type() == typeid (karabo::xip::CpuImage<short>)) {
-//                return bp::object(boost::any_cast<karabo::xip::CpuImage<short> >(operand));
-//            } else if (operand.type() == typeid (karabo::xip::CpuImage<char>)) {
-//                return bp::object(boost::any_cast<karabo::xip::CpuImage<char> >(operand));
             } else if (operand.type() == typeid (std::vector<bool>)) {
                 return fromStdVectorToPyArray(boost::any_cast < std::vector<bool> >(operand), numpyFlag);
             } else if (operand.type() == typeid (std::vector<char>)) {
@@ -125,15 +236,15 @@ namespace karathon {
         }
         if (PyInt_Check(obj.ptr())) {
             try {
-                any = static_cast<int>(bp::extract<int>(obj));
+                any = static_cast<int> (bp::extract<int>(obj));
             } catch (...) {
                 try {
-                    any = static_cast<unsigned int>(bp::extract<unsigned int>(obj));
+                    any = static_cast<unsigned int> (bp::extract<unsigned int>(obj));
                 } catch (...) {
                     try {
-                        any = static_cast<long long>(bp::extract<long long>(obj));
+                        any = static_cast<long long> (bp::extract<long long>(obj));
                     } catch (...) {
-                        any = static_cast<unsigned long long>(bp::extract<unsigned long long>(obj));
+                        any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
                     }
                 }
             }
@@ -147,24 +258,24 @@ namespace karathon {
         if (PyString_Check(obj.ptr())) {
             size_t size = PyString_Size(obj.ptr());
             const char* data = PyString_AsString(obj.ptr());
-            string b(data,size);
+            string b(data, size);
             any = b;
             return;
         }
-	if (PyUnicode_Check(obj.ptr())) {
-	    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(obj.ptr())));
+        if (PyUnicode_Check(obj.ptr())) {
+            bp::object str(bp::handle<>(PyUnicode_AsUTF8String(obj.ptr())));
             size_t size = PyString_Size(str.ptr());
             const char* data = PyString_AsString(str.ptr());
-            string b(data,size);
+            string b(data, size);
             any = b;
             return;
-	}
+        }
         if (PyLong_Check(obj.ptr())) {
             //return PyLong_AsLongLong(obj.ptr());
             try {
-                any = static_cast<long long>(bp::extract<long long>(obj));
+                any = static_cast<long long> (bp::extract<long long>(obj));
             } catch (...) {
-                any = static_cast<unsigned long long>(bp::extract<unsigned long long>(obj));
+                any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
             }
             return;
         }
@@ -205,96 +316,107 @@ namespace karathon {
             any = vhash;
             return;
         }
-//        if (bp::extract<karabo::xip::CpuImage<double> >(obj).check()) {
-//            karabo::xip::CpuImage<double> img = bp::extract<karabo::xip::CpuImage<double> >(obj);
-//            any = img;
-//            return;
-//        }
-//        if (bp::extract<karabo::xip::CpuImage<float> >(obj).check()) {
-//            karabo::xip::CpuImage<float> img = bp::extract<karabo::xip::CpuImage<float> >(obj);
-//            any = img;
-//            return;
-//        }
-//        if (bp::extract<karabo::xip::CpuImage<int> >(obj).check()) {
-//            karabo::xip::CpuImage<int> img = bp::extract<karabo::xip::CpuImage<int> >(obj);
-//            any = img;
-//            return;
-//        }
-//        if (bp::extract<karabo::xip::CpuImage<short> >(obj).check()) {
-//            karabo::xip::CpuImage<short> img = bp::extract<karabo::xip::CpuImage<short> >(obj);
-//            any = img;
-//            return;
-//        }
-//        if (bp::extract<karabo::xip::CpuImage<char> >(obj).check()) {
-//            karabo::xip::CpuImage<char> img = bp::extract<karabo::xip::CpuImage<char> >(obj);
-//            any = img;
-//            return;
-//        }
-
-        #ifdef WITH_BOOST_NUMPY
-        if (bp::extract<bn::ndarray>(obj).check()) {
-            const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
-            int nd = a.get_nd();
-            Py_intptr_t const * shapes = a.get_shape();
+        if (PyArray_Check(obj.ptr())) {
+            int nd = PyArray_NDIM(obj.ptr());
+            npy_intp* shapes = PyArray_DIMS(obj.ptr());
             int nelems = 1;
             for (int i = 0; i < nd; i++) nelems *= shapes[i];
-            if (a.get_dtype() == bn::dtype::get_builtin<bool>()) {
-                bool* data = reinterpret_cast<bool*> (a.get_data());
-                std::vector<bool> v(data, data + nelems);
-                any = v;
-                return;
+            PyArray_Descr* dtype = PyArray_DESCR(obj.ptr());
+            switch (dtype->type_num) {
+                case NPY_BOOL:
+                {
+                    bool* data = reinterpret_cast<bool*> (PyArray_DATA(obj.ptr()));
+                    std::vector<bool> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_SHORT:
+                {
+                    short* data = reinterpret_cast<short*> (PyArray_DATA(obj.ptr()));
+                    std::vector<short> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_USHORT:
+                {
+                    unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(obj.ptr()));
+                    std::vector<unsigned short> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_INT:
+                {
+                    int* data = reinterpret_cast<int*> (PyArray_DATA(obj.ptr()));
+                    std::vector<int> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_UINT:
+                {
+                    unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(obj.ptr()));
+                    std::vector<unsigned int> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_LONG:
+                {
+                    long* data = reinterpret_cast<long*> (PyArray_DATA(obj.ptr()));
+                    if (sizeof (long) == sizeof (int)) {
+                        std::vector<int> v(data, data + nelems);
+                        any = v;
+                    } else if (sizeof (long) == sizeof (long long)) {
+                        std::vector<long long> v(data, data + nelems);
+                        any = v;
+                    }
+                    break;
+                }
+                case NPY_ULONG:
+                {
+                    unsigned long* data = reinterpret_cast<unsigned long*> (PyArray_DATA(obj.ptr()));
+                    if (sizeof (unsigned long) == sizeof (unsigned int)) {
+                        std::vector<unsigned int> v(data, data + nelems);
+                        any = v;
+                    } else if (sizeof (unsigned long) == sizeof (unsigned long long)) {
+                        std::vector<unsigned long long> v(data, data + nelems);
+                        any = v;
+                    }
+                    std::vector<unsigned long long> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_LONGLONG:
+                {
+                    long long* data = reinterpret_cast<long long*> (PyArray_DATA(obj.ptr()));
+                    std::vector<long long> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_ULONGLONG:
+                {
+                    unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(obj.ptr()));
+                    std::vector<unsigned long long> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_FLOAT:
+                {
+                    float* data = reinterpret_cast<float*> (PyArray_DATA(obj.ptr()));
+                    std::vector<float> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                case NPY_DOUBLE:
+                {
+                    double* data = reinterpret_cast<double*> (PyArray_DATA(obj.ptr()));
+                    std::vector<double> v(data, data + nelems);
+                    any = v;
+                    break;
+                }
+                default:
+                    break;
             }
-            if (a.get_dtype() == bn::dtype::get_builtin<double>()) {
-                double* data = reinterpret_cast<double*> (a.get_data());
-                std::vector<double> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<float>()) {
-                float* data = reinterpret_cast<float*> (a.get_data());
-                std::vector<float> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<short>()) {
-                short* data = reinterpret_cast<short*> (a.get_data());
-                std::vector<short> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<unsigned short>()) {
-                unsigned short* data = reinterpret_cast<unsigned short*> (a.get_data());
-                std::vector<unsigned short> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<int>()) {
-                int* data = reinterpret_cast<int*> (a.get_data());
-                std::vector<int> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<unsigned int>()) {
-                unsigned int* data = reinterpret_cast<unsigned int*> (a.get_data());
-                std::vector<unsigned int> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<long long>()) {
-                long long* data = reinterpret_cast<long long*> (a.get_data());
-                std::vector<long long> v(data, data + nelems);
-                any = v;
-                return;
-            }
-            if (a.get_dtype() == bn::dtype::get_builtin<unsigned long long>()) {
-                unsigned long long* data = reinterpret_cast<unsigned long long*> (a.get_data());
-                std::vector<unsigned long long> v(data, data + nelems);
-                any = v;
-                return;
-            }
+            return;
         }
-        #endif
-
         if (PyList_Check(obj.ptr())) {
             bp::ssize_t size = bp::len(obj);
             if (size == 0) {
