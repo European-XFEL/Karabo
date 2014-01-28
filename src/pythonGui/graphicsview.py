@@ -233,7 +233,12 @@ class Shape(ShapeAction, Loadable):
 
     def draw(self, painter):
         if self.selected:
-            painter.setPen(Qt.DashLine)
+            black = QPen(Qt.black)
+            black.setStyle(Qt.DashLine)
+            white = QPen(Qt.white)
+            painter.setPen(white)
+            painter.drawRect(self.geometry())
+            painter.setPen(black)
             painter.drawRect(self.geometry())
 
 class Select(Action):
@@ -1494,13 +1499,6 @@ class GraphicsView(QSvgWidget):
         try:
             self.renderer().render(painter, self.renderer().viewBoxF())
             self.ilayout.draw(painter)
-            painter.save()
-            if self.designMode:
-                painter.setPen(Qt.DashLine)
-                for item in self.ilayout:
-                    if item.selected:
-                        painter.drawRect(item.geometry())
-            painter.restore()
             self.current_action.draw(painter)
         finally:
             painter.end()
