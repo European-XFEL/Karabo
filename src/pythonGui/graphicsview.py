@@ -31,8 +31,8 @@ from manager import Manager
 
 from widget import DisplayWidget, EditableWidget
 
-from PyQt4.QtCore import (Qt, QByteArray, QDir, QSize, QRect, QLine, QFileInfo,
-    QBuffer, QIODevice, pyqtSlot, QMimeData)
+from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
+    QFileInfo, QBuffer, QIODevice, pyqtSlot, QMimeData)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QGridLayout, QFileDialog, QIcon, QLabel, QLayout,
                          QKeySequence, QMenu, QPainter, QPen,
@@ -1405,6 +1405,7 @@ class GraphicsView(QSvgWidget):
                                                             enumeration = enumeration, \
                                                             metricPrefixSymbol=metricPrefixSymbol, \
                                                             unitSymbol=unitSymbol)
+                    displayComponent.widget.setToolTip(internalKey)
                     
                     items.append((displayComponent.widget, displayComponent))
                     
@@ -1444,6 +1445,16 @@ class GraphicsView(QSvgWidget):
         event.accept()
 
         QWidget.dropEvent(self, event)
+
+
+    def event(self, event):
+        ret = QWidget.event(self, event)
+        if event.type() == QEvent.ToolTip:
+            item = self.inner.childAt(event.pos())
+            if item is not None:
+                item.event(event)
+                return True
+        return ret
 
 
     def _getWidgetCenterPosition(self, pos, centerX, centerY):
