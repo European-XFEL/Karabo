@@ -49,13 +49,15 @@ class ProjectPanel(QWidget):
         self.setWindowTitle(title)
 
         # Hash contains server/plugin topology
-        self.__serverPluginConfig = None
+        self.__serverTopology = None
+
+        self.__pluginDialog = None
 
         self.__twProject = QTreeWidget(self)
         self.__twProject.setHeaderLabels(["Projects"])
         self.__twProject.setContextMenuPolicy(Qt.CustomContextMenu)
         self.__twProject.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
-        #self.__twProject.itemSelectionChanged.connect(self.projectItemSelectionChanged)
+        self.__twProject.itemSelectionChanged.connect(self.onItemSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -93,18 +95,22 @@ class ProjectPanel(QWidget):
         standardToolBar.addAction(self.__acProjectSave)
 
 
-    #def projectItemSelectionChanged(self):
-    #    item = self.__twProject.currentItem()
-    #    if not item: return
-    #    Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
+    def onItemSelectionChanged(self):
+        print "onItemSelectionChanged"
+        item = self.__twProject.currentItem()
+        if not item: return
+
+        # Get schema
+        #Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
 
 
     def onUpdate(self, projectHash):
+        print projectHash
         self.__twProject.clear()
 
         # Add child items
         for k in projectHash.keys():
-            # toplevel keys - project name
+            # toplevel keys - project names
             item = QTreeWidgetItem(self.__twProject)
             item.setText(0, k)
             font = item.font(0)
@@ -115,9 +121,16 @@ class ProjectPanel(QWidget):
 
             config = projectHash.get(k)
             for c in config.keys():
-                # child keys -  categories
+                # sub keys -  categories
                 childItem = QTreeWidgetItem(item, [c])
                 childItem.setIcon(0, QIcon(":folder"))
+                childItem.setExpanded(True)
+                
+                leafKey = k + "." + c
+                subConfig = projectHash.get(leafKey)
+                for l in subConfig.keys():
+                    leafItem = QTreeWidgetItem(childItem, [l])
+                    leafItem.setIcon(0, QIcon(":device-instance"))
 
 
     def onSystemTopologyChanged(self, config):
@@ -125,12 +138,14 @@ class ProjectPanel(QWidget):
         if not config.has(serverKey):
             return
 
-        self.__serverPluginConfig = config.get(serverKey)
+        self.__serverTopology = config.get(serverKey)
+        if self.__pluginDialog:
+            self.__pluginDialog.updateServerTopology(self.__serverTopology)
 
 
     def onServerConnectionChanged(self, isConnected):
         if not isConnected:
-            self.__serverPluginConfig = None
+            self.__serverTopology = None
 
 
     def _createNewProject(self, projectName):
@@ -184,7 +199,6 @@ class ProjectPanel(QWidget):
     def onCustomContextMenuRequested(self, pos):
         item = self.__twProject.itemAt(pos)
         if item is None:
-            # Show standard context menu
             return
 
         if item.text(0) == "Devices":
@@ -201,7 +215,7 @@ class ProjectPanel(QWidget):
 
 
     def onImportPlugin(self):
-        if not self.__serverPluginConfig or self.__serverPluginConfig.empty():
+        if not self.__serverTopology or self.__serverTopology.empty():
             reply = QMessageBox.question(self, "No server connection",
                                          "Do you want to establish a server connection?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -209,20 +223,23 @@ class ProjectPanel(QWidget):
             if reply == QMessageBox.No:
                 return
             self.signalConnectToServer.emit()
-            return
 
         # Show dialog to select plugin
-        dialog = PluginDialog(self.__serverPluginConfig)
-        if dialog.exec_() == QDialog.Rejected:
+        self.__pluginDialog = PluginDialog(self.__serverTopology)
+        if self.__pluginDialog.exec_() == QDialog.Rejected:
             return
 
-        # Check all values are set
+        currentItem = self.__twProject.currentItem()
+        if currentItem:
+            projectItem = currentItem.parent()
+            if projectItem:
+                # Add device to project hash
+                Manager().addDeviceToProject(projectItem.text(0),
+                                             self.__pluginDialog.deviceId,
+                                             self.__pluginDialog.plugin,
+                                             self.__pluginDialog.server)
 
-        print "dialog accepted"
-        print "deviceId", dialog.deviceId
-        print "plugin", dialog.plugin
-        print "server", dialog.server
-        #currentItem = self.__twProject.currentItem()
+        self.__pluginDialog = None
 
 
     # virtual function

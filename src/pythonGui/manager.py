@@ -491,6 +491,16 @@ class _Manager(QObject):
         self.signalProjectHashChanged.emit(self.__projectHash)
 
 
+    def addDeviceToProject(self, projectName, deviceId, classId, serverId):
+        path = str(projectName + ".Devices." + deviceId + "." + classId)
+        config = Hash()
+        config.set(path + ".deviceId", deviceId)
+        config.set(path + ".serverId", serverId)
+        
+        self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.signalProjectHashChanged.emit(self.__projectHash)
+
+
     # project hash:
     # project name="test" +
     #   devices +

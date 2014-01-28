@@ -51,8 +51,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         serverKey = "server"
         if config.has(serverKey):
             serverConfig = config.get(serverKey)
-            serverIds = list()
-            serverConfig.getKeys(serverIds)
+            serverIds = serverConfig.keys()
             for serverId in serverIds:
                 # Get attributes
                 #serverAttributes = serverConfig.getAttributes(serverId)
@@ -91,8 +90,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         deviceKey = "device"
         if config.has(deviceKey):
             deviceConfig = config.get(deviceKey)
-            deviceIds = list()
-            deviceConfig.getKeys(deviceIds)
+            deviceIds = deviceConfig.keys()
             for deviceId in deviceIds:
                 # Get attributes
                 visibility = deviceConfig.getAttribute(deviceId, "visibility")
