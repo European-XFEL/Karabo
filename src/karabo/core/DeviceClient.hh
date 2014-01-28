@@ -527,9 +527,9 @@ namespace karabo {
 
 
 
-            void onInstanceNotAvailable(const std::string& instanceId);
+            void onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void onInstanceAvailableAgain(const std::string& instanceId);
+            void onInstanceAvailableAgain(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             static std::string generateOwnInstanceId();
 
