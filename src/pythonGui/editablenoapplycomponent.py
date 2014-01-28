@@ -126,13 +126,9 @@ class EditableNoApplyComponent(BaseComponent):
             Manager().onRefreshInstance(key)
 
 
-### slots ###
+    @pyqtSlot(str, object)
     def onValueChanged(self, key, value, timestamp=None):
         self.__editableWidget.valueChanged(key, value, timestamp)
-
-
-    def onDisplayValueChanged(self, key, value):
-        pass
 
 
     # Triggered from self.__editableWidget when value was edited
