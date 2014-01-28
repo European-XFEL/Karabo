@@ -15,49 +15,35 @@ __all__ = ["DataNotifier"]
 from PyQt4.QtCore import *
 
 class DataNotifier(QObject):
-    # signal
     signalUpdateComponent = pyqtSignal(str, object) # internalKey, value, timestamp (TODO)
-    #signalAddKey = pyqtSignal(str) # internalKey
-    #signalRemoveKey = pyqtSignal(str) # internalKey
+    signalUpdateDisplayValue = pyqtSignal(str, object)
 
 
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
         
-        self.__components = [] # list of components
+        self.signalUpdateComponent.connect(self.onValueChanged)
         self.addComponent(key, component)
 
 
+    def onValueChanged(self, key, value):
+        self.value = value
+
+
     def addComponent(self, key, component):
-        # Connect signals
         self.signalUpdateComponent.connect(component.onValueChanged)
-        
-        if len(self.__components) > 0:
-            value = self.__components[0].value
-            if value is not None:
-                self.signalUpdateComponent.emit(key, value)
-        
-        # Add widget to list
-        self.__components.append(component)
+        self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
+        if hasattr(self, "value"):
+            self.signalUpdateComponent.emit(key, self.value)
 
 
     def removeComponent(self, key, component):
-        # Remove widget from set
-        if component in self.__components:
-            self.__components.remove(component)
-        
-        # Disconnect signals
-        self.signalUpdateComponent.disconnect(component.onValueChanged)
+        pass
 
     
     def removeComponents(self, key):
-        print "removeComponents", key
-        for component in self.__components:
-            self.removeComponent(key, component)
+        pass
 
 
     def updateDisplayValue(self, key, value):
-        #print "updateDisplayValue", key, value
-        for component in self.__components:
-            component.onDisplayValueChanged(key, value)
-
+        self.signalUpdateDisplayValue.emit(key, value)
