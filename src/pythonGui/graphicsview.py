@@ -924,6 +924,8 @@ class ProxyWidget(QStackedWidget):
         if component is None:
             return
 
+        component.setParent(self)
+
         if isinstance(component, DisplayComponent):
             Widget = DisplayWidget
         else:
