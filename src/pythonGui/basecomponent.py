@@ -77,11 +77,6 @@ class BaseComponent(Loadable, QObject):
     value = property(fget=_getValue, fset=_setValue)
 
 
-    # Triggered by DataNotifier signalUpdateComponent
-    def onValueChanged(self, key, value):
-        raise NotImplementedError, "BaseComponent.onValueChanged"
-
-
     def addKeyValue(self, key, value):
         raise NotImplementedError, "BaseComponent.addKeyValue"
 
@@ -96,6 +91,11 @@ class BaseComponent(Loadable, QObject):
 
     def changeWidget(self, classAlias):
         raise NotImplementedError, "BaseComponent.changeWidget"
+
+
+    @pyqtSlot(str, object)
+    def onDisplayValueChanged(self, key, value):
+        pass
 
 
     def attributes(self):
