@@ -77,6 +77,8 @@ class _Manager(QObject):
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
 
+    signalProjectHashChanged = pyqtSignal(object) # projectHash
+
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
         
@@ -116,8 +118,7 @@ class _Manager(QObject):
         # Central hash
         self.__hash = Hash()
         # Project hash
-        self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
-        self.__projectHash.setAttribute("project", "name", "xfelTest")
+        self.__projectHash = Hash()
         self.__projectArrayIndices = []
         
         # Unregister all editable DataNotifiers, if available
@@ -466,28 +467,29 @@ class _Manager(QObject):
         self.signalKillServer.emit(serverId)
 
 
-### TODO: Temporary functions for scientific computing START ###
-    def createNewProjectConfig(self, customItem, path, configCount, classId, schema):
-        
-        configName = "{}-{}-<>".format(configCount, classId)
-        
-        self.signalCreateNewProjectConfig.emit(customItem, path, configName)
-        self.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
-        self.signalProjectItemChanged.emit(dict(key=path))
-        
-        print self.__projectHash
-        print "-----"
+    def projectExists(self, projectName):
+        """
+        This functions checks whether a project with the \projectName already exists.
+        """
+        return self.__projectHash.has(projectName)
 
 
-    def createNewConfigKeyAndCount(self, classId):
-        nbConfigs = len(self.__projectArrayIndices)
+    def addNewProject(self, projectName, projectConfig):
+        # Check whether project already exists
+        alreadyExists = self.projectExists(projectName)
+        if alreadyExists:
+            # Overwrite?
+            reply = QMessageBox.question(None, "Project already exists",
+                "A project with the same name already exists.<br>"
+                "Do you want to overwrite it?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return
         
-        path = "project.devices.[" + str(nbConfigs) + "]." + str(classId)
-        self.__projectHash.set(path, Hash())
-        
-        self.__projectArrayIndices.append(nbConfigs+1)
-        
-        return (path, nbConfigs)
+        self.__projectHash.set(projectName, projectConfig)
+        self.signalProjectHashChanged.emit(self.__projectHash)
+
 
     # project hash:
     # project name="test" +
@@ -655,7 +657,7 @@ class _Manager(QObject):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         
-        # Send full internal hash to navigation
+        # Send full internal hash to all panels who need it
         self.signalSystemTopologyChanged.emit(self.__hash)
 
 
