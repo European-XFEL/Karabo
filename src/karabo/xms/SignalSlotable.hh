@@ -73,8 +73,8 @@ namespace karabo {
             typedef std::set<AssocEntry> AssocType;
             typedef AssocType::const_iterator AssocTypeConstIterator;
 
-            typedef boost::function<void (const std::string&) > InstanceNotAvailableHandler;
-            typedef boost::function<void (const std::string&) > InstanceAvailableAgainHandler;
+            typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNotAvailableHandler;
+            typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
 
         protected: // Members
             
@@ -818,9 +818,9 @@ namespace karabo {
 
             void slotDisconnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
-            void slotHeartbeat(const std::string& networkId, const int& timeToLive);
+            void slotHeartbeat(const std::string& networkId, const int& timeToLive, const karabo::util::Hash& instanceInfo);
 
-            void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int timeToLive);
+            void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int timeToLive, const karabo::util::Hash& instanceInfo);
 
             void letConnectionSlowlyDieWithoutHeartbeat();
 
