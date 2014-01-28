@@ -1056,7 +1056,7 @@ class GraphicsView(QSvgWidget):
     # Open saved view from file
     def openSceneLayoutFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved view",
-                                               filter="SVG (*.svg)")
+                                               QDir.tempPath(), "SVG (*.svg)")
         if len(filename) < 1:
             return
 
@@ -1135,7 +1135,7 @@ class GraphicsView(QSvgWidget):
     def saveSceneLayoutToFile(self):
         """ Save active view to file """
         filename = QFileDialog.getSaveFileName(None, "Save file as",
-                                               filter="SVG (*.svg)")
+                                               QDir.tempPath(), "SVG (*.svg)")
         if len(filename) < 1:
             return
         self.saveScene(filename)
