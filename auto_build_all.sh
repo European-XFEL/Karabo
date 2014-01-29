@@ -51,11 +51,11 @@ elif [[ $1 = "Clean" ]]; then
     safeRunCommand "make bundle-clean CONF=Release"
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/karathon/nbproject"
+    safeRunCommand "cd $scriptDir/build/netbeans/karathon"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/deviceServer/nbproject"
+    safeRunCommand "cd $scriptDir/build/netbeans/deviceServer"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
-    safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger/nbproject"
+    safeRunCommand "cd $scriptDir/build/netbeans/brokerMessageLogger"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
     safeRunCommand "cd $scriptDir"
     rm -rf package
