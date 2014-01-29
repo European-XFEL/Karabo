@@ -25,12 +25,13 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_BOOL);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_BOOL);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             bool* data = reinterpret_cast<bool*>(PyArray_DATA(arr));
             for (int i = 0; i < PyArray_SIZE(arr); i++) {
                 data[i] = v[i];
             }
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -41,9 +42,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_SHORT);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_SHORT);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -54,9 +56,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_USHORT);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_USHORT);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -67,9 +70,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_INT);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_INT);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -80,9 +84,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_UINT);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_UINT);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -93,9 +98,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_LONGLONG);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_LONGLONG);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -107,9 +113,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_ULONGLONG);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_ULONGLONG);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -120,9 +127,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_FLOAT);
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_FLOAT);
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr)); // 
+            return bp::object(bp::handle<>(pyobj)); // 
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -133,9 +141,10 @@ namespace karathon {
             int nd = 1;
             npy_intp dims[1];
             dims[0] = v.size();
-            PyObject* arr = PyArray_SimpleNew(nd, dims, NPY_DOUBLE); // reinterpret_cast<void*> (&v[0]));
+            PyObject* pyobj = PyArray_SimpleNew(nd, dims, NPY_DOUBLE); // reinterpret_cast<void*> (&v[0]));
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
             memcpy(PyArray_DATA(arr), &v[0], PyArray_NBYTES(arr));
-            return bp::object(bp::handle<>(arr));
+            return bp::object(bp::handle<>(pyobj));
         }
         return Wrapper::fromStdVectorToPyList(v);
     }
@@ -317,50 +326,51 @@ namespace karathon {
             return;
         }
         if (PyArray_Check(obj.ptr())) {
-            int nd = PyArray_NDIM(obj.ptr());
-            npy_intp* shapes = PyArray_DIMS(obj.ptr());
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
+            int nd = PyArray_NDIM(arr);
+            npy_intp* shapes = PyArray_DIMS(arr);
             int nelems = 1;
             for (int i = 0; i < nd; i++) nelems *= shapes[i];
-            PyArray_Descr* dtype = PyArray_DESCR(obj.ptr());
+            PyArray_Descr* dtype = PyArray_DESCR(arr);
             switch (dtype->type_num) {
                 case NPY_BOOL:
                 {
-                    bool* data = reinterpret_cast<bool*> (PyArray_DATA(obj.ptr()));
+                    bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
                     std::vector<bool> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_SHORT:
                 {
-                    short* data = reinterpret_cast<short*> (PyArray_DATA(obj.ptr()));
+                    short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
                     std::vector<short> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_USHORT:
                 {
-                    unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(obj.ptr()));
+                    unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
                     std::vector<unsigned short> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_INT:
                 {
-                    int* data = reinterpret_cast<int*> (PyArray_DATA(obj.ptr()));
+                    int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
                     std::vector<int> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_UINT:
                 {
-                    unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(obj.ptr()));
+                    unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
                     std::vector<unsigned int> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_LONG:
                 {
-                    long* data = reinterpret_cast<long*> (PyArray_DATA(obj.ptr()));
+                    long* data = reinterpret_cast<long*> (PyArray_DATA(arr));
                     if (sizeof (long) == sizeof (int)) {
                         std::vector<int> v(data, data + nelems);
                         any = v;
@@ -372,7 +382,7 @@ namespace karathon {
                 }
                 case NPY_ULONG:
                 {
-                    unsigned long* data = reinterpret_cast<unsigned long*> (PyArray_DATA(obj.ptr()));
+                    unsigned long* data = reinterpret_cast<unsigned long*> (PyArray_DATA(arr));
                     if (sizeof (unsigned long) == sizeof (unsigned int)) {
                         std::vector<unsigned int> v(data, data + nelems);
                         any = v;
@@ -386,28 +396,28 @@ namespace karathon {
                 }
                 case NPY_LONGLONG:
                 {
-                    long long* data = reinterpret_cast<long long*> (PyArray_DATA(obj.ptr()));
+                    long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
                     std::vector<long long> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_ULONGLONG:
                 {
-                    unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(obj.ptr()));
+                    unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
                     std::vector<unsigned long long> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_FLOAT:
                 {
-                    float* data = reinterpret_cast<float*> (PyArray_DATA(obj.ptr()));
+                    float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
                     std::vector<float> v(data, data + nelems);
                     any = v;
                     break;
                 }
                 case NPY_DOUBLE:
                 {
-                    double* data = reinterpret_cast<double*> (PyArray_DATA(obj.ptr()));
+                    double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
                     std::vector<double> v(data, data + nelems);
                     any = v;
                     break;
