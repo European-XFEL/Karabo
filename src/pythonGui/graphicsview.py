@@ -439,7 +439,7 @@ class GroupAction(SimpleAction):
 
     def gather_widgets(self):
         i = 0
-        rect = None
+        rect = QRect()
         l = [ ]
         while i < len(self.parent.ilayout):
             c = self.parent.ilayout[i]
@@ -449,10 +449,7 @@ class GroupAction(SimpleAction):
                 if isinstance(c, Layout):
                     del self.parent.ilayout[i]
                     i -= 1
-                if rect is None:
-                    rect = c.geometry()
-                else:
-                    rect = rect.united(c.geometry())
+                rect = rect.united(c.geometry())
             i += 1
         return rect, l
 
@@ -477,12 +474,10 @@ class FixedGroup(GroupActions, GroupAction):
         for w in widgets:
             group.add_item(w)
         group.shapes = self.gather_shapes()
-        if rect is None:
-            if not group.shapes:
-                return
-            rect = QRect()
         for s in group.shapes:
             rect = rect.united(s.geometry())
+        if rect.isNull():
+            return
         group.fixed_geometry = rect
         self.parent.ilayout.add_item(group)
         group.selected = True
@@ -491,7 +486,7 @@ class FixedGroup(GroupActions, GroupAction):
 class BoxGroup(GroupAction):
     def doit(self, group, cmp):
         rect, widgets = self.gather_widgets()
-        if rect is None:
+        if rect.isNull():
             return
         widgets.sort(cmp)
         for w in widgets:
@@ -531,7 +526,7 @@ class GridGroup(GroupActions, BoxGroup):
 
     def run(self):
         rect, widgets = self.gather_widgets()
-        if rect is None:
+        if rect.isNull():
             return
         group = GridLayout()
         group.set_children(widgets)
