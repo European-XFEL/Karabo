@@ -117,16 +117,16 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             info = OrderedDict()
             info["Property"] = self.text(0)
             paramKey = str(self.internalKey).split(".configuration.")
-            if self.description:
+            if self.description is not None:
                 info["Description"] = self.description
             info["Key"] = paramKey[1]
-            if self.__valueType:
+            if self.__valueType is not None:
                 info["Value Type"] = self.__valueType
-            if self.defaultValue:
+            if self.defaultValue is not None:
                 info["Default Value"] = self.defaultValue
-            if self.alias:
+            if self.alias is not None:
                 info["Alias"] = self.alias
-            if self.tags:
+            if self.tags is not None:
                 tagString = str()
                 nbTags = len(self.tags)
                 for i in xrange(nbTags):
@@ -134,10 +134,10 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                     if i < (nbTags-1):
                         tagString += ", "
                 info["Tags"] = tagString
-            if self.timestamp:
+            if self.timestamp is not None:
                 info["Timestamp"] = self.timestamp
-            if self.__currentValueOnDevice:
-                info["Current value on device"] = self.__currentValueOnDevice
+            if self.__currentValueOnDevice is not None:
+                info["Value on device"] = self.__currentValueOnDevice
 
             self.__popupWidget.setInfo(info)
 
