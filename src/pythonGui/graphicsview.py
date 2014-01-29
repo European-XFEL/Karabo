@@ -250,12 +250,7 @@ class Select(Action):
 
     def mousePressEvent(self, parent, event):
         item = parent.ilayout.itemAtPosition(event.pos())
-        if item is None:
-            for s in parent.ilayout.shapes:
-                if s.contains(event.pos()):
-                    item = s
-                    break
-        elif item.selected:
+        if isinstance(item, ProxyWidget) and item.selected:
             g = item.geometry()
             p = event.pos()
             if p.x() - g.left() < 10:
@@ -414,6 +409,10 @@ class Line(Shape):
         return ret
 
 
+    def edit(self):
+        pass
+
+
 class Rectangle(Shape):
     xmltag = ns_svg + "rect"
     text = "Add rectangle"
@@ -456,6 +455,10 @@ class Rectangle(Shape):
                          float(e.get("width")), float(e.get("height")))
         ret.loadpen(e)
         return ret
+
+    def edit(self):
+        pass
+
 
 def _parse_rect(elem):
     if elem.get(ns_karabo + "x") is not None:
@@ -744,6 +747,10 @@ class Layout(Loadable):
         self.shape_geometry = QRect(rect)
 
 
+    def edit(self):
+        pass
+
+
 class FixedLayout(Layout, QLayout):
     def __init__(self):
         QLayout.__init__(self)
@@ -783,6 +790,9 @@ class FixedLayout(Layout, QLayout):
                     return item.widget()
                 else:
                     return item
+        for s in self.shapes:
+            if s.contains(pos):
+                return s
 
 
     def relayout(self, widget):
@@ -1063,6 +1073,15 @@ class ProxyWidget(QStackedWidget):
     def translate(self, pos):
         self.fixed_geometry.translate(pos)
         self.parent().layout().update()
+
+
+    def edit(self):
+        if isinstance(self.currentWidget(), QLabel):
+            text, ok = QInputDialog.getText(self.parent(), "Edit text",
+                                            "Enter text:",
+                                            text=self.currentWidget().text())
+            if ok:
+                self.currentWidget().setText(text)
 
 
 class GraphicsView(QSvgWidget):
@@ -1354,6 +1373,21 @@ class GraphicsView(QSvgWidget):
     def mouseReleaseEvent(self, event):
         self.current_action.mouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
+
+
+    def mouseDoubleClickEvent(self, event):
+        if not self.designMode:
+            return
+        w = self.inner.childAt(event.pos())
+        if w is not None:
+            while not isinstance(w, ProxyWidget):
+                w = w.parent()
+            w.edit()
+            return
+        item = self.ilayout.itemAtPosition(event.pos())
+        if item is None:
+            return
+        item.edit()
 
 
     def dragEnterEvent(self, event):
