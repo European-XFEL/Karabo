@@ -71,7 +71,7 @@ class DisplayLabel(DisplayWidget):
         
         if value is None:
             return
-        
+
         # Store original value with type
         self.value = value
         
@@ -105,7 +105,8 @@ class DisplayLabel(DisplayWidget):
             value = float(decimal.Decimal(str(value)))
 
         self.__label.setText(str(value))
-        
+
+
     def toScientificNotation(self, value):
         strvalue = str(value)
         if re.match('^[^\.]*?\d{6,}\.0+$', strvalue):
