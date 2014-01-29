@@ -474,7 +474,7 @@ class _Manager(QObject):
         return self.__projectHash.has(projectName)
 
 
-    def addNewProject(self, projectName, projectConfig):
+    def addNewProject(self, projectName, directory, projectConfig):
         # Check whether project already exists
         alreadyExists = self.projectExists(projectName)
         if alreadyExists:
@@ -488,11 +488,12 @@ class _Manager(QObject):
                 return
         
         self.__projectHash.set(projectName, projectConfig)
+        self.__projectHash.setAttribute(projectName, "directory", directory)
         self.signalProjectHashChanged.emit(self.__projectHash)
 
 
     def addDeviceToProject(self, projectName, deviceId, classId, serverId):
-        path = str(projectName + ".Devices." + deviceId + "." + classId)
+        path = str(projectName + ".project.devices." + deviceId + "." + classId)
         config = Hash()
         config.set(path + ".deviceId", deviceId)
         config.set(path + ".serverId", serverId)
@@ -688,10 +689,6 @@ class _Manager(QObject):
 
 
     def handleClassSchema(self, config):
-        print "handleClassSchema"
-        print config
-        print ""
-
         path = str(config.paths()[0])
         schema = config.get(path)
         # Merge new configuration data into central hash

@@ -22,7 +22,7 @@ class PluginDialog(QDialog):
     def __init__(self, serverTopology):
         super(PluginDialog, self).__init__()
 
-        self.setWindowTitle("Import plugin")
+        self.setWindowTitle("Add device")
 
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
@@ -35,21 +35,34 @@ class PluginDialog(QDialog):
         fLayout.addRow("Device ID:", self.__leDeviceId)
         vLayout.addWidget(self.__gbSelectDeviceId)
 
-        self.__gbSelectPlugin = QGroupBox("Select plugin", self)
-        fLayout = QFormLayout(self.__gbSelectPlugin)
-        fLayout.setContentsMargins(5,5,5,5)
-        self.__cbPlugin = QComboBox()
-        self.__cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
-        fLayout.addRow("Plugin:      ", self.__cbPlugin)
-        vLayout.addWidget(self.__gbSelectPlugin)
-
         self.__gbSelectServer = QGroupBox("Select server", self)
         fLayout = QFormLayout(self.__gbSelectServer)
         fLayout.setContentsMargins(5,5,5,5)
         self.__cbServer = QComboBox()
+        self.__cbServer.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.__cbServer.currentIndexChanged[int].connect(self.onServerChanged)
         fLayout.addRow("Server:     ", self.__cbServer)
         vLayout.addWidget(self.__gbSelectServer)
+
+        self.__gbSelectPlugin = QGroupBox("Select device type", self)
+        fLayout = QFormLayout(self.__gbSelectPlugin)
+        fLayout.setContentsMargins(5,5,5,5)
+        self.__cbPlugin = QComboBox()
+        self.__cbPlugin.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.__cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
+        fLayout.addRow("Device:    ", self.__cbPlugin)
+        vLayout.addWidget(self.__gbSelectPlugin)
+
+        self.__gbStartUp = QGroupBox("Select startup behaviour", self)
+        fLayout = QFormLayout(self.__gbStartUp)
+        fLayout.setContentsMargins(5,5,5,5)
+        self.__cbStartUp = QComboBox()
+        self.__cbStartUp.addItems(["Instantiate, if not exists",
+                                   "Restart, if exists", "Never instantiate"])
+        self.__cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.__cbStartUp.currentIndexChanged[int].connect(self.onStartUpBehaviourChanged)
+        fLayout.addRow("Startup behaviour:", self.__cbStartUp)
+        vLayout.addWidget(self.__gbStartUp)
 
         self.__buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -81,8 +94,17 @@ class PluginDialog(QDialog):
             if not deviceClasses:
                 return
 
+            visibleClasses = []
+            visibilities = self.__serverTopology.getAttribute(serverId, "visibilities")
+            i = -1
+            for classId in deviceClasses:
+                i = i + 1
+                if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
+                    visibleClasses.append(classId)
+
+
             #self.__cbServer.blockSignals(True)
-            self.__cbServer.addItem(serverId, deviceClasses)
+            self.__cbServer.addItem(serverId, visibleClasses)
             #self.__cbServer.blockSignals(False)
 
             #for plugin in deviceClasses:
@@ -121,13 +143,6 @@ class PluginDialog(QDialog):
         self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
 
 
-    def onPluginChanged(self, index):
-        # Get servers where plugin exists
-        pass
-        #data = self.__cbPlugin.itemData(index)
-        #print "onPluginChanged", data
-
-
     def onServerChanged(self, index):
         # Get plugins which exist on server
         data = self.__cbServer.itemData(index)
@@ -136,4 +151,15 @@ class PluginDialog(QDialog):
             self.__cbPlugin.blockSignals(True)
             self.__cbPlugin.addItem(d)
             self.__cbPlugin.blockSignals(False)
+
+
+    def onPluginChanged(self, index):
+        # Get servers where plugin exists
+        pass
+        #data = self.__cbPlugin.itemData(index)
+        #print "onPluginChanged", data
+
+
+    def onStartUpBehaviourChanged(self, index):
+        print "onStartUpBehaviourChanged", index
 
