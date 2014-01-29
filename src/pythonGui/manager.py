@@ -501,18 +501,6 @@ class _Manager(QObject):
         self.signalProjectHashChanged.emit(self.__projectHash)
 
 
-    # project hash:
-    # project name="test" +
-    #   devices +
-    #     0 +
-    #       classId1 +
-    #         deviceId = s1
-    #     1 +
-    #       classId2 +
-
-### TODO: Temporary functions for scientific computing END ###
-
-
     def selectNavigationItemByKey(self, path):
         self.signalNavigationItemSelectionChanged.emit(path)
 
@@ -700,6 +688,10 @@ class _Manager(QObject):
 
 
     def handleClassSchema(self, config):
+        print "handleClassSchema"
+        print config
+        print ""
+
         path = str(config.paths()[0])
         schema = config.get(path)
         # Merge new configuration data into central hash

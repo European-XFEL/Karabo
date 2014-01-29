@@ -587,6 +587,7 @@ class ConfigurationPanel(QWidget):
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
         key = itemInfo.get('key')
+        print "ConfigurationPanel.onSchemaAvailable", key
         
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)

@@ -11,8 +11,6 @@
 
 __all__ = ["ProjectPanel"]
 
-import const
-
 from enums import NavigationItemTypes
 from karabo.karathon import Hash
 from manager import Manager
@@ -38,6 +36,10 @@ class ProjectPanel(QWidget):
     #def onDock(self):
     #    pass
     ##########################################
+
+    ITEM_KEY = Qt.UserRole
+    ITEM_SERVER_ID = Qt.UserRole + 1
+    ITEM_CLASS_ID = Qt.UserRole + 2
 
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
@@ -96,16 +98,27 @@ class ProjectPanel(QWidget):
 
 
     def onItemSelectionChanged(self):
-        print "onItemSelectionChanged"
         item = self.__twProject.currentItem()
         if not item: return
 
+        print "onItemSelectionChanged", item.text(0)
+        
+        path = item.data(0, ProjectPanel.ITEM_KEY)
+        if not path:
+            return
+
+        print "path", path
+        serverId = item.data(0, ProjectPanel.ITEM_SERVER_ID)
+        classId = item.data(0, ProjectPanel.ITEM_CLASS_ID)
         # Get schema
-        #Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
+        schema = Manager().getClassSchema(serverId, classId)
+        Manager().onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
 
 
     def onUpdate(self, projectHash):
+        print "###################"
         print projectHash
+        print ""
         self.__twProject.clear()
 
         # Add child items
@@ -119,18 +132,34 @@ class ProjectPanel(QWidget):
             item.setIcon(0, QIcon(":folder"))
             item.setExpanded(True)
 
-            config = projectHash.get(k)
-            for c in config.keys():
+            categoryConfig = projectHash.get(k)
+            for l in categoryConfig.keys():
                 # sub keys -  categories
-                childItem = QTreeWidgetItem(item, [c])
+                childItem = QTreeWidgetItem(item, [l])
                 childItem.setIcon(0, QIcon(":folder"))
                 childItem.setExpanded(True)
                 
-                leafKey = k + "." + c
-                subConfig = projectHash.get(leafKey)
-                for l in subConfig.keys():
-                    leafItem = QTreeWidgetItem(childItem, [l])
+                subConfig = categoryConfig.get(l)
+                if subConfig.empty():
+                    continue
+                
+                for m in subConfig.keys():
+                    leafItem = QTreeWidgetItem(childItem, [m])
+                    # TODO: update icon on availability of device
                     leafItem.setIcon(0, QIcon(":device-instance"))
+
+                    deviceId = k + "." + l + "." + m
+                    leafItem.setData(0, ProjectPanel.ITEM_KEY, deviceId)
+
+                    classConfig = subConfig.get(m)
+                    for n in classConfig.keys():
+                        # Get serverId
+                        serverId = deviceId + "." + n + ".serverId"
+                        # Get classId
+                        classId = deviceId + "." + n + ".classId"
+
+                        leafItem.setData(0, ProjectPanel.ITEM_SERVER_ID, serverId)
+                        leafItem.setData(0, ProjectPanel.ITEM_CLASS_ID, classId)
 
 
     def onSystemTopologyChanged(self, config):
