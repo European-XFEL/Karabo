@@ -34,8 +34,8 @@ from widget import DisplayWidget, EditableWidget
 from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
     QFileInfo, QBuffer, QIODevice, pyqtSlot, QMimeData)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QGridLayout, QFileDialog, QIcon, QLabel, QLayout,
-                         QKeySequence, QMenu, QPainter, QPen,
+                         QGridLayout, QFileDialog, QIcon, QInputDialog,
+                         QLabel, QLayout, QKeySequence, QMenu, QPainter, QPen,
                          QStackedWidget, QStackedLayout, QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
@@ -330,6 +330,44 @@ class Select(Action):
         if self.selection_start is not None:
             painter.setPen(Qt.black)
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
+
+
+class Label(Action, Loadable):
+    text = "Add text"
+    icon = ":text"
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(Label, cls).add_action(source, parent)
+        c = Label()
+        c.action = action
+        action.triggered.connect(partial(parent.set_current_action, c))
+        return action
+
+
+    def mousePressEvent(self, parent, event):
+        text, ok = QInputDialog.getText(parent, "Add new label", "Enter text:")
+        if not ok:
+            return
+        p = ProxyWidget(parent)
+        p.addWidget(QLabel(text))
+        p.fixed_geometry = QRect(event.pos(), p.sizeHint())
+        parent.ilayout.add_item(p)
+        parent.set_current_action(None)
+
+
+    def mouseReleaseEvent(self, *args):
+        pass
+
+
+    mouseMoveEvent = mouseReleaseEvent
+    draw = mouseReleaseEvent
+
+
+    @staticmethod
+    def load(elem, layout):
+        return QLabel(elem.get(ns_karabo + "text"))
 
 
 class Line(Shape):
@@ -941,13 +979,6 @@ class GridLayout(QGridLayout, Layout):
     def setGeometry(self, rect):
         QGridLayout.setGeometry(self, rect)
         self.update_shapes(rect)
-
-
-class Label(Loadable):
-    """ Fake class to make a QLabel loadable """
-    @staticmethod
-    def load(elem, layout):
-        return QLabel(elem.get(ns_karabo + "text"))
 
 
 class ProxyWidget(QStackedWidget):
