@@ -434,6 +434,7 @@ namespace karabo {
                         _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                         _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                         _KARABO_HELPER_MACRO(STRING, std::string)
+                        _KARABO_HELPER_MACRO(NONE, CppNone)
                     default:
                         throw KARABO_CAST_EXCEPTION("Casting of is not supported for target type");
                 }
@@ -467,6 +468,7 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
+                    _KARABO_HELPER_MACRO(NONE, CppNone)        
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }

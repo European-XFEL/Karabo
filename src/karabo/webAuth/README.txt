@@ -14,8 +14,8 @@
 #
 # Current Web Service Server location
 #
-# HTTP  => http://exfl-tb04:8080/XFELWebAuth/Authentication?WSDL
-# HTTPS => https://exfl-tb04:8181/XFELWebAuth/Authentication?WSDL
+# HTTP  => http://exfl-tb04.desy.de:8080/XFELWebAuth/Authentication?WSDL
+# HTTPS => https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication?WSDL
 ######################################################################################
 
 
@@ -25,7 +25,7 @@
 #
 ######################################################################################
 
-$> wsdl2h -o ClientAuthentication.h https://exfl-tb04:8181/XFELWebAuth/Authentication?WSDL
+$> wsdl2h -o ClientAuthentication.h https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication?WSDL
 
 $> soapcpp2 -j -I/usr/share/gsoap/import ClientAuthentication.h
 

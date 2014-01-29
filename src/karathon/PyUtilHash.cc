@@ -31,9 +31,9 @@ void translator(const karabo::util::Exception& e) {
 
 void exportPyUtilHash() {
 
-    #ifdef WITH_BOOST_NUMPY
-    bn::initialize();
-    #endif
+//    #ifdef WITH_BOOST_NUMPY
+//    bn::initialize();
+//    #endif
  
     bp::docstring_options docs(true, true, false);
     

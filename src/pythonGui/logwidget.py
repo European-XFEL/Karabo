@@ -464,14 +464,16 @@ class LogWidget(QWidget):
         model.setQuery(queryText);
         
         for i in xrange(model.rowCount()):
-            id = model.record(i).value("id").toString();
-            dateTime = model.record(i).value("dateTime").toString();
-            messageType = model.record(i).value("messageType").toString();
-            instanceId = model.record(i).value("instanceId").toString();
-            description = model.record(i).value("description").toString();
-            additionalDescription = model.record(i).value("additionalDescription").toString();
+            id = model.record(i).value("id")
+            dateTime = model.record(i).value("dateTime")
+            messageType = model.record(i).value("messageType")
+            instanceId = model.record(i).value("instanceId")
+            description = model.record(i).value("description")
+            additionalDescription = model.record(i).value("additionalDescription")
             
-            logMessage = id + " | " + dateTime + " | " + messageType + " | " + instanceId + " | " + description + " | " + additionalDescription + "#"
+            logMessage = str(id) + " | " + str(dateTime) + " | " + str(messageType) \
+                               + " | " + str(instanceId) + " | " + str(description) \
+                               + " | " + str(additionalDescription) + "#"
             out << logMessage
         logFile.close()
 
@@ -492,9 +494,9 @@ class LogTableView(QTableView):
     # TODO: not working right now due to model-view in navigation
     def mouseDoubleClickEvent(self, event):
         index = self.model().index(self.currentIndex().row(), 3)
-        value = index.data().toString()
-        # Emit signal with instanceId to select device instance
-        Manager().notifier.signalSelectNewNavigationItem.emit(value)
+        value = index.data()
+        # Emit signal with deviceId to select device instance
+        Manager().notifier.signalSelectNewNavigationItem.emit("device." + value)
         QTableView.mouseDoubleClickEvent(self, event)
 
 
@@ -612,7 +614,7 @@ class LogSqlQueryModel(QSqlQueryModel):
             return value
         elif role == Qt.ToolTipRole:
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return modelIndex.data(Qt.DisplayRole).toString()
+            return modelIndex.data(Qt.DisplayRole)
         return None
 
 

@@ -6,3 +6,9 @@
 
 # define package displaywidgets
 
+__all__ = [
+    "displaycheckbox", "displaychoiceelement", "displaycombobox",
+    "displaycommand", "displaydoublespinbox", "displayfilepath",
+    "displayhistogram", "displayimageelement", "displayimage", "displaylabel",
+    "displaylineedit", "displaypycodeHist", "displaypycode", "displayspinbox",
+    "displaytrendline", "tauruslabel", "taurusplot"]

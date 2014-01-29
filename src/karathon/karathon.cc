@@ -14,6 +14,9 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Schema.hh>
 
+#define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
+#include <numpy/arrayobject.h>
+
 namespace bp = boost::python;
 // util
 void exportPyUtilHash();
@@ -57,6 +60,9 @@ template <class T> void exportPyXipCpuImage();
 void exportPyXipRawImageData();
 
 BOOST_PYTHON_MODULE(karathon) {
+    
+    // init Array C-API
+    import_array();
     
     // util
     exportPyUtilHash();

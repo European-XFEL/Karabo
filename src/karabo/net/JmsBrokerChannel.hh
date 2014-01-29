@@ -80,7 +80,9 @@ namespace karabo {
 
             // Save for synchronous communication
             MQConsumerHandle m_syncConsumerHandle;
-
+            
+            MQProducerHandle m_producerHandle;
+            
             // User supplied filtering on broker
             std::string m_filterCondition;
 
@@ -94,7 +96,7 @@ namespace karabo {
 
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
-
+            
 
         public:
 

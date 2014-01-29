@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the navigation panel on the
    left of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["NavigationPanel"]
@@ -30,10 +18,24 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal, SIGNAL
+from PyQt4.QtGui import QVBoxLayout, QWidget
 
 class NavigationPanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
+
     # signals
     signalNavigationItemChanged = pyqtSignal(dict) # type, key
 
@@ -61,6 +63,8 @@ class NavigationPanel(QWidget):
         
         Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
+        Manager().notifier.signalReset.connect(self.onResetPanel)
+        
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__twNavigation)
@@ -77,20 +81,17 @@ class NavigationPanel(QWidget):
 ### initializations ###
     def setupActions(self):
         pass
-        #text = "Load master configuration (*.xsd)"
-        #self.__acLoadExpectedParameters = QAction(QIcon(":configure"), "&Open XSD", self)
-        #self.__acLoadExpectedParameters.setToolTip(text)
-        #self.__acLoadExpectedParameters.setStatusTip(text)
-        #self.__acLoadExpectedParameters.setShortcuts(QKeySequence.New)
-        #self.__acLoadExpectedParameters.triggered.connect(self.onSchemaFromFileAvailable)
 
 
-    def setupToolBar(self, toolBar):
+    def setupToolBars(self, standardToolBar, parent):
         pass
-        #toolBar.addAction(self.__acLoadExpectedParameters)
 
 
 ### slots ###
+    def onResetPanel(self):
+        self.__twNavigation.lastSelectionPath = str()
+
+
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
         self.__twNavigation.createNewItem(itemInfo, True)
@@ -145,25 +146,22 @@ class NavigationPanel(QWidget):
             index = self.__twNavigation.findIndex(path)
         
         if index and index.isValid():
-            self.__twNavigation.lastSelectionPath = str()
-            self.__twNavigation.selectItem(path)
-        else:
-            self.__twNavigation.selectItem(str(parentPath))
-        
-        
-    def onSystemTopologyChanged(self, config):
+            return
+
+        self.__twNavigation.selectItem(parentPath)
+
+
+    def updateNavigationTreeView(self, config):
         self.__twNavigation.updateTreeModel(config)
         self.__twNavigation.expandAll()
+
         
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            return
-        self.__twNavigation.lastSelectionPath = str()
-        self.__twNavigation.selectItem(path)
+    def onSystemTopologyChanged(self, config):
+        self.updateNavigationTreeView(config)
 
 
     def onGlobalAccessLevelChanged(self):
-        self.__twNavigation.updateView(Manager().treemodel.currentConfig)
+        self.updateNavigationTreeView(Manager().treemodel.currentConfig)
 
 
     # virtual function

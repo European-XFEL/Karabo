@@ -21,66 +21,32 @@
 __all__ = ["DisplayLineEdit"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["String","Text Field","DisplayLineEdit"]
-
-
 class DisplayLineEdit(DisplayWidget):
-  
+    category = "String"
+    alias = "Text Field"
+
     def __init__(self, **params):
         super(DisplayLineEdit, self).__init__(**params)
-        
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         self.__lineEdit = QLineEdit()
         self.__lineEdit.setMinimumSize(160, 24)
         self.__lineEdit.setReadOnly(True)
         
-        self.__key = params.get('key')
 
-
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__lineEdit
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return str(self.__lineEdit.text())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
+    @property
+    def value(self):
+        return self.__lineEdit.text()
 
 
     def valueChanged(self, key, value, timestamp=None):
@@ -91,9 +57,3 @@ class DisplayLineEdit(DisplayWidget):
             self.__lineEdit.blockSignals(True)
             self.__lineEdit.setText(value)
             self.__lineEdit.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayLineEdit(**params)
-

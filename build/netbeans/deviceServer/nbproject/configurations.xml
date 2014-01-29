@@ -24,6 +24,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -47,6 +49,7 @@
           <linkerDynSerch>
             <pElem>\$$ORIGIN/../lib</pElem>
             <pElem>\$$ORIGIN/../extern/lib</pElem>
+            <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
           <linkerLibItems>
@@ -93,6 +96,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>

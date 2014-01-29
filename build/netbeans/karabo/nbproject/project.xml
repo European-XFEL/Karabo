@@ -26,10 +26,7 @@
         <preferences xmlns="http://www.netbeans.org/ns/auxiliary-configuration-preferences/1">
             <module name="org-netbeans-modules-editor-indent">
                 <node name="CodeStyle"/>
-            </module>
-            <module name="org-netbeans-modules-hudson">
-                <property name="builder" value="http://exflpcx18295:8080/job/karabo-framework%20on%20Ubuntu12.04/"/>
-            </module>
+            </module>            
         </preferences>
         <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
             <word>std</word>

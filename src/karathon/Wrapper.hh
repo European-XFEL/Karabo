@@ -11,62 +11,61 @@
 #include <boost/python.hpp>
 #include <boost/any.hpp>
 #include <karabo/util/Hash.hh>
-#ifdef WITH_BOOST_NUMPY
-#include <boost/numpy.hpp>
-namespace bn = boost::numpy;
-#endif
+
+#define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
+#define NO_IMPORT_ARRAY
+#include <numpy/arrayobject.h>
+
 namespace bp = boost::python;
 
 namespace karathon {
 
     class PyTypes {
-
     public:
 
         enum ReferenceType {
+            BOOL = karabo::util::Types::BOOL,                   // boolean
+            VECTOR_BOOL = karabo::util::Types::VECTOR_BOOL,     // std::vector<std::bool>
 
-            BOOL = karabo::util::Types::BOOL, // bool
-            VECTOR_BOOL = karabo::util::Types::VECTOR_BOOL, // std::vector<std::bool>
+            CHAR = karabo::util::Types::CHAR,                   // char
+            VECTOR_CHAR = karabo::util::Types::VECTOR_CHAR,     // std::vector<char>
+            INT8 = karabo::util::Types::INT8,                   // signed char
+            VECTOR_INT8 = karabo::util::Types::VECTOR_INT8,     // std::vector<std::signed char>
+            UINT8 = karabo::util::Types::UINT8,                 // unsigned char
+            VECTOR_UINT8 = karabo::util::Types::VECTOR_UINT8,   // std::vector<std::unsigned char>
 
-            CHAR = karabo::util::Types::CHAR, // char
-            VECTOR_CHAR = karabo::util::Types::VECTOR_CHAR, // std::vector<char>
-            INT8 = karabo::util::Types::INT8, // signed char
-            VECTOR_INT8 = karabo::util::Types::VECTOR_INT8, // std::vector<std::signed char>
-            UINT8 = karabo::util::Types::UINT8, // unsigned char
-            VECTOR_UINT8 = karabo::util::Types::VECTOR_UINT8, // std::vector<std::unsigned char>
-
-            INT16 = karabo::util::Types::INT16, // signed short
-            VECTOR_INT16 = karabo::util::Types::VECTOR_INT16, // std::vector<std::signed short>
-            UINT16 = karabo::util::Types::UINT16, // unsigned short
+            INT16 = karabo::util::Types::INT16,                 // signed short
+            VECTOR_INT16 = karabo::util::Types::VECTOR_INT16,   // std::vector<std::signed short>
+            UINT16 = karabo::util::Types::UINT16,               // unsigned short
             VECTOR_UINT16 = karabo::util::Types::VECTOR_UINT16, // std::vector<std::unsigned short>
 
-            INT32 = karabo::util::Types::INT32, // signed int
-            VECTOR_INT32 = karabo::util::Types::VECTOR_INT32, // std::vector<std::int>
-            UINT32 = karabo::util::Types::UINT32, // unsigned int
+            INT32 = karabo::util::Types::INT32,                 // signed int
+            VECTOR_INT32 = karabo::util::Types::VECTOR_INT32,   // std::vector<std::int>
+            UINT32 = karabo::util::Types::UINT32,               // unsigned int
             VECTOR_UINT32 = karabo::util::Types::VECTOR_UINT32, // std::vector<std::unsigned int>
 
-            INT64 = karabo::util::Types::INT64, // signed long long
-            VECTOR_INT64 = karabo::util::Types::VECTOR_INT64, // std::vector<std::signed long long>
-            UINT64 = karabo::util::Types::UINT64, // unsigned long long
+            INT64 = karabo::util::Types::INT64,                 // signed long long
+            VECTOR_INT64 = karabo::util::Types::VECTOR_INT64,   // std::vector<std::signed long long>
+            UINT64 = karabo::util::Types::UINT64,               // unsigned long long
             VECTOR_UINT64 = karabo::util::Types::VECTOR_UINT64, // std::vector<std::unsigned long long>
 
-            FLOAT = karabo::util::Types::FLOAT, // float
-            VECTOR_FLOAT = karabo::util::Types::VECTOR_FLOAT, // std::vector<std::float>
+            FLOAT = karabo::util::Types::FLOAT,                 // float
+            VECTOR_FLOAT = karabo::util::Types::VECTOR_FLOAT,   // std::vector<std::float>
 
-            DOUBLE = karabo::util::Types::DOUBLE, // double
+            DOUBLE = karabo::util::Types::DOUBLE,               // double
             VECTOR_DOUBLE = karabo::util::Types::VECTOR_DOUBLE, // std::vector<std::double>
 
             COMPLEX_FLOAT = karabo::util::Types::COMPLEX_FLOAT, // std::complex<float>
-            VECTOR_COMPLEX_FLOAT = karabo::util::Types::VECTOR_COMPLEX_FLOAT, // std::vector<std::complex<float>
+            VECTOR_COMPLEX_FLOAT = karabo::util::Types::VECTOR_COMPLEX_FLOAT,   // std::vector<std::complex<float>
 
-            COMPLEX_DOUBLE = karabo::util::Types::COMPLEX_DOUBLE, // std::complex<double>
+            COMPLEX_DOUBLE = karabo::util::Types::COMPLEX_DOUBLE,               // std::complex<double>
             VECTOR_COMPLEX_DOUBLE = karabo::util::Types::VECTOR_COMPLEX_DOUBLE, // std::vector<std::complex<double>
 
-            STRING = karabo::util::Types::STRING, // std::string
+            STRING = karabo::util::Types::STRING,               // std::string
             VECTOR_STRING = karabo::util::Types::VECTOR_STRING, // std::vector<std::string>
 
-            HASH = karabo::util::Types::HASH, // Hash
-            VECTOR_HASH = karabo::util::Types::VECTOR_HASH, // std::vector<Hash>
+            HASH = karabo::util::Types::HASH,                   // Hash
+            VECTOR_HASH = karabo::util::Types::VECTOR_HASH,     // std::vector<Hash>
 
             PTR_BOOL = karabo::util::Types::PTR_BOOL,
             PTR_CHAR = karabo::util::Types::PTR_CHAR,
@@ -84,21 +83,23 @@ namespace karathon {
             PTR_COMPLEX_DOUBLE = karabo::util::Types::PTR_COMPLEX_DOUBLE,
             PTR_STRING = karabo::util::Types::PTR_STRING,
 
-            SCHEMA = karabo::util::Types::SCHEMA, // Schema
+            SCHEMA = karabo::util::Types::SCHEMA,               // Schema
 
-            ANY = karabo::util::Types::ANY, // unspecified type
+            ANY = karabo::util::Types::ANY,                     // unspecified type
+            NONE = karabo::util::Types::NONE,                   // CppNone type used during serialization/de-serialization
+            VECTOR_NONE = karabo::util::Types::VECTOR_NONE,
 
-            UNKNOWN = karabo::util::Types::UNKNOWN, // unknown type
+            UNKNOWN = karabo::util::Types::UNKNOWN,             // unknown type
             SIMPLE = karabo::util::Types::SIMPLE,
             SEQUENCE = karabo::util::Types::SEQUENCE,
             POINTER = karabo::util::Types::POINTER,
             LAST_CPP_TYPE = karabo::util::Types::POINTER + 1,
-            PYTHON_DEFAULT, // global switch: treat std::vector as bp::list
-            NUMPY_DEFAULT, // global switch: treat std::vector as numpy ndarray
-            NDARRAY_BOOL, // numpy ndarray of booleans
-            NDARRAY_INT16, // numpy ndarray of shorts
-            NDARRAY_UINT16, // numpy ndarray of unsigned shorts        
-            NDARRAY_INT32, // numpy ndarray of ints
+            PYTHON_DEFAULT,                                     // global switch: treat std::vector as bp::list
+            NUMPY_DEFAULT,                                      // global switch: treat std::vector as numpy ndarray
+            NDARRAY_BOOL,                                       // numpy ndarray of booleans
+            NDARRAY_INT16,                                      // numpy ndarray of shorts
+            NDARRAY_UINT16,                                     // numpy ndarray of unsigned shorts        
+            NDARRAY_INT32,                                      // numpy ndarray of ints
             NDARRAY_UINT32,
             NDARRAY_INT64,
             NDARRAY_UINT64,
@@ -159,6 +160,8 @@ namespace karathon {
                 case karabo::util::Types::PTR_STRING: return PTR_STRING;
                 case karabo::util::Types::SCHEMA: return SCHEMA;
                 case karabo::util::Types::ANY: return ANY;
+                case karabo::util::Types::NONE: return NONE;
+                case karabo::util::Types::VECTOR_NONE: return VECTOR_NONE;
                 case karabo::util::Types::UNKNOWN: return UNKNOWN;
                 case karabo::util::Types::SIMPLE: return SIMPLE;
                 case karabo::util::Types::SEQUENCE: return SEQUENCE;
@@ -167,6 +170,7 @@ namespace karathon {
                     throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting from Types to PyTypes.");
             }
         }
+
         static const karabo::util::Types::ReferenceType to(const ReferenceType& input) {
             switch (input) {
                 case BOOL: return karabo::util::Types::BOOL;
@@ -218,6 +222,8 @@ namespace karathon {
                 case PTR_STRING: return karabo::util::Types::PTR_STRING;
                 case SCHEMA: return karabo::util::Types::SCHEMA;
                 case ANY: return karabo::util::Types::ANY;
+                case NONE: return karabo::util::Types::NONE;
+                case VECTOR_NONE: return karabo::util::Types::VECTOR_NONE;
                 case UNKNOWN: return karabo::util::Types::UNKNOWN;
                 case SIMPLE: return karabo::util::Types::SIMPLE;
                 case SEQUENCE: return karabo::util::Types::SEQUENCE;
@@ -239,21 +245,6 @@ namespace karathon {
         template <class T, class U>
         static bp::tuple fromStdPairToPyTuple(const std::pair<T, U>& p) {
             return bp::make_tuple(p.first, p.second);
-        }
-
-        template<class ValueType>
-        static bp::object fromStdVectorToPyArray(const std::vector<ValueType>& v, bool numpyFlag = false) {
-            if (numpyFlag) {
-                #ifdef WITH_BOOST_NUMPY
-                Py_intptr_t shape[1] = {v.size()};
-                bn::ndarray result = bn::zeros(1, shape, bn::dtype::get_builtin<ValueType>());
-                std::copy(v.begin(), v.end(), reinterpret_cast<ValueType*> (result.get_data()));
-                return result;
-                #else
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("NumPy bindings are currently not supported on this platform");
-                #endif
-            }
-            return fromStdVectorToPyList(v);
         }
 
         template<class ValueType>
@@ -306,7 +297,7 @@ namespace karathon {
         static bp::str fromStdVectorToPyStr(const std::vector<unsigned char>& v) {
             return bp::str(reinterpret_cast<const char*> (&v[0]), v.size());
         }
-        
+
         template<class T>
         static std::vector<T> fromPyListToStdVector(const bp::object & obj) {
             const bp::list& l = bp::extract<bp::list > (obj);
@@ -318,10 +309,32 @@ namespace karathon {
             }
             return v;
         }
-        
+
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
         static void toAny(const bp::object& operand, boost::any& any);
+
+        static bp::object fromStdVectorToPyListNone(const std::vector<karabo::util::CppNone>& v) {
+            bp::list pylist;
+            for (size_t i = 0; i < v.size(); i++) pylist.append(bp::object());
+            return pylist;
+        }
+
+        template<class ValueType>
+        static bp::object fromStdVectorToPyArray(const std::vector<ValueType>& v, bool numpyFlag = false) {
+            return fromStdVectorToPyList(v);
+        }
     };
+    
+    // Specializations
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<bool>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<short>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned short>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<int>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned int>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<long long>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<float>& v, bool numpyFlag);
+    template<> bp::object Wrapper::fromStdVectorToPyArray(const std::vector<double>& v, bool numpyFlag);
 }
 
 #endif	/* WRAPPER_HH */

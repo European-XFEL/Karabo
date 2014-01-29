@@ -21,7 +21,7 @@
 __all__ = ["EditableListElement"]
 
 
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from karabo.karathon import *
 from manager import Manager
 from stringlistedit import StringListEdit
@@ -30,15 +30,12 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["SelectionList","List Element Field","EditableListElement"]
-
-
 class EditableListElement(EditableWidget):
-    # signals
+    category = "SelectionList"
+    alias = "List Element Field"
     signalValueChanged = pyqtSignal(str, object) # key, value
     
-    def __init__(self, **params):
+    def __init__(self, value=None, isDevIns=None, **params):
         super(EditableListElement, self).__init__(**params)
         
         self.__pushButton = QPushButton("Edit list")
@@ -51,67 +48,31 @@ class EditableListElement(EditableWidget):
         
         self.__isInit = False
         
-        isDeviceInstance = params.get('isDevIns')
-        if isDeviceInstance:
+        if isDevIns:
             self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
         else:
             self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         self.__pushButton.clicked.connect(self.onClicked)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        # Set key
-        self.__key = params.get('key')
-        # Set value
-        value = params.get('value')
-        self.valueChanged(self.__key, value)
+        self.valueChanged(self.keys[0], value)
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__pushButton
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
+    def addParameters(self, itemToBeAdded=None, **params):
+        if itemToBeAdded is not None:
+            itemToBeAdded.needsUpdate = False
+            self.__choiceItemList.append(itemToBeAdded)
+            self.__choiceStringList.append(itemToBeAdded.text(0))
 
 
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def addParameters(self, **params):
-        item = params.get('itemToBeAdded')
-        if item is not None:
-            item.needsUpdate = False
-            self.__choiceItemList.append(item)
-            self.__choiceStringList.append(item.text(0))
-
-
-    def _value(self):
+    @property
+    def value(self):
         return self.__selectedStringList # TODO: Hash(value) compare with EditableChoiceElement
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def copyListItem(self, values, arrayIndex=0):
@@ -177,9 +138,3 @@ class EditableListElement(EditableWidget):
 
                 # TODO: don't copy already existing item..
                 self.copyListItem(listEdit.getListElementAt(i), i)
-
-
-    class Maker:
-        def make(self, **params):
-            return EditableListElement(**params)
-

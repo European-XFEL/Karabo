@@ -77,25 +77,20 @@ class SchemaReader(object):
         item = None
         
         if self.__schema.isLeaf(key):
-            #print "isLeaf", key
             item = self._createPropertyItem(key, parentItem)
             self._handleLeaf(key, item)
         elif self.__schema.isCommand(key):
-            #print "isCommand", key
             item = self._createCommandItem(key, parentItem)
         elif self.__schema.isNode(key):
-            #print "isNode", key
             if (self.__schema.hasDisplayType(key) and (self.__schema.getDisplayType(key) == "Image")):
                 item = self._createImageItem(key, parentItem)              
             else:
                 item = self._createPropertyItem(key, parentItem)
                 self._handleNode(key, item)
         elif self.__schema.isChoiceOfNodes(key):
-            #print "isChoiceOfNodes", key
             item = self._createPropertyItem(key, parentItem)
             self._handleChoiceOfNodes(key, item)
         elif self.__schema.isListOfNodes(key):
-            print "isListOfNodes", key
             item = self._createPropertyItem(key, parentItem)
             self._handleListOfNodes(key, item)
         
@@ -165,7 +160,6 @@ class SchemaReader(object):
 
 
     def _handleLeaf(self, key, item):
-        #print "_handleLeaf"
         self._setAssignment(key, item)
         
         self._setAlias(key, item)
@@ -190,7 +184,6 @@ class SchemaReader(object):
 
 
     def _handleChoiceOfNodes(self, key, parentItem):
-        #print "_handleChoiceOfNodes"
         self._setAssignment(key, parentItem)
         self._setDefaultValue(key, parentItem)
         
@@ -245,91 +238,62 @@ class SchemaReader(object):
         item.valueType = valueType
         
         if valueType == Types.STRING:
-            #print "STRING"
             self._handleString(key, item)
         elif valueType == Types.CHAR:
-            #print "CHAR"
             self._handleString(key, item)
         elif valueType == Types.BOOL:
-            #print "BOOL"
             self._handleBool(key, item)
         elif valueType == Types.FLOAT:
-            #print "FLOAT"
             self._handleFloat(key, item)
         elif valueType == Types.COMPLEX_FLOAT:
-            #print "COMPLEX_FLOAT"
             self._handleFloat(key, item)
         elif valueType == Types.DOUBLE:
-            #print "DOUBLE"
             self._handleFloat(key, item)
         elif valueType == Types.COMPLEX_DOUBLE:
-            #print "COMPLEX_DOUBLE"
             self._handleFloat(key, item)
         elif valueType == Types.UINT8:
-            #print "UINT8"
             self._handleInteger(key, item)
         elif valueType == Types.INT16:
-            #print "INT16"
             self._handleInteger(key, item)
         elif valueType == Types.UINT16:
-            #print "UINT16"
             self._handleInteger(key, item)
         elif valueType == Types.INT32:
-            #print "INT32"
             self._handleInteger(key, item)
         elif valueType == Types.UINT32:
-            #print "UINT32"
             self._handleInteger(key, item)
         elif valueType == Types.INT64:
-            #print "INT64"
             self._handleInteger(key, item)
         elif valueType == Types.UINT64:
-            #print "UINT64"
             self._handleInteger(key, item)
         elif valueType == Types.VECTOR_STRING:
-            print "VECTOR_STRING"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_CHAR:
-            print "VECTOR_CHAR"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT8:
-            print "VECTOR_INT8"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT8:
-            print "VECTOR_UINT8"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT16:
-            print "VECTOR_INT16"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT16:
-            print "VECTOR_UINT16"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT32:
-            print "VECTOR_INT32"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT32:
-            print "VECTOR_UINT32"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_INT64:
-            print "VECTOR_INT64"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_UINT64:
-            print "VECTOR_UINT64"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_FLOAT:
-            print "VECTOR_FLOAT"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_DOUBLE:
-            print "VECTOR_DOUBLE"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_COMPLEX_FLOAT:
-            print "VECTOR_COMPLEX_FLOAT"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_COMPLEX_DOUBLE:
-            print "VECTOR_COMPLEX_DOUBLE"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_BOOL:
-            print "VECTOR_BOOL"
             self._handleVector(key, item)
         elif valueType == Types.VECTOR_HASH:
             print "VECTOR_HASH"
@@ -421,26 +385,20 @@ class SchemaReader(object):
             f.setBold(True)
             item.setFont(0, f)
         elif self.__schema.isAssignmentInternal(key):
-            #print "assignmentInternal"
             pass
         elif self.__schema.isAssignmentOptional(key):
-            #print "assignmentOptional"
             pass
 
 
     def _getAccessMode(self, key):
         if not self.__schema.hasAccessMode(key):
-            #print "AccessMode.UNDEFINEhasWarnLowD"
             return AccessMode.UNDEFINED
         
         if self.__schema.isAccessInitOnly(key):
-            #print "AccessMode.INITONLY"
             return AccessMode.INITONLY
         elif self.__schema.isAccessReconfigurable(key):
-            #print "AccessMode.RECONFIGURABLE"
             return AccessMode.RECONFIGURABLE
         elif self.__schema.isAccessReadOnly(key):
-            #print "AccessMode.READONLY"
             return AccessMode.READONLY
         
         return AccessMode.UNDEFINED
@@ -574,7 +532,6 @@ class SchemaReader(object):
 
             if self.__schema.hasArchivePolicy(key):
                 value = self.__schema.getArchivePolicy(key)
-                print "ArchivePolicy", value
                 #EVERY_EVENT,
                 #EVERY_100MS,
                 #EVERY_1S,
@@ -662,7 +619,6 @@ class SchemaReader(object):
 
 ### functions for setting editable components depending on value type ###
     def _handleBool(self, key, item):
-        #print "_handleBool"
         item.classAlias = "Toggle Field"
         item.setIcon(0, QIcon(":boolean"))
         
@@ -689,7 +645,6 @@ class SchemaReader(object):
 
 
     def _handleString(self, key, item):
-        #print "_handleString"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -760,7 +715,6 @@ class SchemaReader(object):
 
 
     def _handleInteger(self, key, item):
-        #print "_handleInteger"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -798,7 +752,6 @@ class SchemaReader(object):
 
 
     def _handleFloat(self, key, item):
-        #print "_handleFloat"
         hasOptions = self.__schema.hasOptions(key)
         if hasOptions:
             item.classAlias = "Selection Field"
@@ -836,7 +789,6 @@ class SchemaReader(object):
 
 
     def _handleVector(self, key, item):
-        #print "_handleVector"
 
         item.classAlias = "Histogram"
 

@@ -21,7 +21,7 @@
 __all__ = ["DisplayImage"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 import copy
 
 try:
@@ -37,73 +37,35 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Image","Image View","DisplayImage"]
-
-
 class DisplayImage(DisplayWidget):
-  
+    category = "Image"
+    alias = "Image View"
+
     def __init__(self, **params):
         super(DisplayImage, self).__init__(**params)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
+        self.value = None
         
-        self.__value = None
-        
-        self.__key = params.get('key')
-            
         if useGuiQwt:           
-            self.__imageWidget = ImageDialog(edit=False, toolbar=True, wintitle=self.__key)
+            self.__imageWidget = ImageDialog(edit=False, toolbar=True,
+                wintitle=self.keys[0])
             self.__image = None
             self.__plot = self.__imageWidget.get_plot()
         else:
             self.__imageWidget = QLabel()
 
     
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__imageWidget
-    widget = property(fget=_getWidget)
-
-
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return self.__value
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
 
 
     def valueChanged(self, key, value, timestamp=None):
         if value is None: return
 
-        if self.__value is None or value is not self.__value:
+        if self.value is None or value is not self.value:
             # Store original value with type
-            self.__value = copy.copy(value)
+            self.value = copy.copy(value)
             
             if value.has('dims')==False: return
             if value.has('data')==False: return
@@ -134,10 +96,3 @@ class DisplayImage(DisplayWidget):
             else:
                 pixmap = QPixmap.fromImage(image)
                 self.__imageWidget.setPixmap(pixmap)
-
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayImage(**params)
-

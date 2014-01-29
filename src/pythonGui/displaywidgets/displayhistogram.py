@@ -22,7 +22,7 @@ __all__ = ["DisplayHistogram", "HistogramItem"]
 
 
 import sys
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 from randomcolor import RandomColor
 
 from PyQt4.QtCore import *
@@ -39,17 +39,13 @@ except:
     useGuiQwt = False
 
 
-def getCategoryAliasClassName():
-    return ["List","Histogram","DisplayHistogram"]
-
-
 class DisplayHistogram(DisplayWidget):
-    
-    def __init__(self, **params):
+    category = "List"
+    alias = "Histogram"
+    minMaxAssociatedKeys = 1, 10
+
+    def __init__(self, key, **params):
         super(DisplayHistogram, self).__init__(**params)
-        
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,10) # tuple<min,max>
         
         if useGuiQwt:
             self.__histogramWidget = CurveDialog(edit=False, toolbar=True, wintitle="Histogram")
@@ -70,38 +66,21 @@ class DisplayHistogram(DisplayWidget):
         # Default colors
         self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
             
-        key = params.get('key')
         # Stores key/value pair
-        self.__keys = {str(key):None}
+        self.__keys = {key: None}
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__histogramWidget
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
+    @property
+    def keys(self):
         return self.__keys.keys()
-    keys = property(fget=_getKeys)
 
 
-    def _value(self):
-        return None
-    value = property(fget=_value)
-
+    value = None
 
     def addKeyValue(self, key, value):
         self.valueChanged(key, value)
@@ -171,11 +150,6 @@ class DisplayHistogram(DisplayWidget):
                 self.__plotCurves.append(histogram)
             
             self.__histogramWidget.replot()
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplayHistogram(**params)
 
 
 class HistogramItem(QwtPlotItem):
