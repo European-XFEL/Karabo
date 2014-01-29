@@ -466,6 +466,28 @@ class GroupAction(SimpleAction):
         return shapes
 
 
+class FixedGroup(GroupActions, GroupAction):
+    text = "Group without layout"
+    icon = "icons/group-grid.svg"
+
+
+    def run(self):
+        rect, widgets = self.gather_widgets()
+        group = FixedLayout()
+        for w in widgets:
+            group.add_item(w)
+        group.shapes = self.gather_shapes()
+        if rect is None:
+            if not group.shapes:
+                return
+            rect = QRect()
+        for s in group.shapes:
+            rect = rect.united(s.geometry())
+        group.fixed_geometry = rect
+        self.parent.ilayout.add_item(group)
+        group.selected = True
+
+
 class BoxGroup(GroupAction):
     def doit(self, group, cmp):
         rect, widgets = self.gather_widgets()
@@ -761,6 +783,21 @@ class FixedLayout(Layout, QLayout):
             else:
                 i += 1
         self.shapes = [s for s in self.shapes if not s.selected]
+
+
+    def geometry(self):
+        try:
+            return self.fixed_geometry
+        except AttributeError:
+            return self.parentWidget().geometry()
+
+
+    def translate(self, pos):
+        for c in self:
+            c.fixed_geometry.translate(pos)
+        for s in self.shapes:
+            s.translate(pos)
+        Layout.translate(self, pos)
 
 
     def save(self):
