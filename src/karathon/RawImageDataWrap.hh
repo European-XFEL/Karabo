@@ -13,12 +13,7 @@
 #include <boost/function.hpp>
 #include <karabo/xip/RawImageData.hh>
 #include "Wrapper.hh"
-#ifdef WITH_BOOST_NUMPY
-#include <boost/numpy.hpp>
-namespace bn = boost::numpy;
-#endif
 namespace bp = boost::python;
-namespace bn = boost::numpy;
 
 namespace karathon {
 
@@ -35,7 +30,7 @@ namespace karathon {
             m_raw->swap(other);
         }
         
-        RawImageDataWrap(const bp::object& obj,
+        RawImageDataWrap(bp::object& obj,
                          const karabo::util::Dims& dimensions,
                          const karabo::xip::EncodingType encoding,
                          const karabo::xip::ChannelSpaceType channelSpace,
@@ -51,16 +46,15 @@ namespace karathon {
                                                   boost::ref(header), isBigEndian));
         }
 
-#ifdef WITH_BOOST_NUMPY
-        RawImageDataWrap(const bp::object& obj,
+        RawImageDataWrap(bp::object& obj,
                          const karabo::xip::EncodingType encoding,
                          const karabo::util::Hash& header, const bool isBigEndian) {
-            if (!bp::extract<bn::ndarray>(obj).check()) {
+            if (!PyArray_Check(obj.ptr())) {
                 throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'numpy array'");
             }
-            const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
-            int nd = a.get_nd();
-            Py_intptr_t const * shapes = a.get_shape();
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
+            int nd = PyArray_NDIM(arr);
+            npy_intp* shapes = PyArray_DIMS(arr);
             unsigned long long x, y, z;
             if (nd >= 3) {
                 x = shapes[0];
@@ -82,8 +76,9 @@ namespace karathon {
             karabo::util::Dims dimensions(x, y, z);
             int nelems = 1;
             for (int i = 0; i < nd; i++) nelems *= shapes[i];
-            if (a.get_dtype() == bn::dtype::get_builtin<char>()) {
-                char* data = reinterpret_cast<char*> (a.get_data());
+            PyArray_Descr* dtype = PyArray_DESCR(arr);
+            if (dtype->type_num == NPY_BYTE) {
+                char* data = reinterpret_cast<char*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_8_1;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -93,8 +88,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned char>()) {
-                unsigned char* data = reinterpret_cast<unsigned char*> (a.get_data());
+            } else if (dtype->type_num == NPY_UBYTE) {
+                unsigned char* data = reinterpret_cast<unsigned char*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_8_1;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -104,8 +99,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<short>()) {
-                short* data = reinterpret_cast<short*> (a.get_data());
+            } else if (dtype->type_num == NPY_SHORT) {
+                short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_16_2;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -115,8 +110,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned short>()) {
-                unsigned short* data = reinterpret_cast<unsigned short*> (a.get_data());
+            } else if (dtype->type_num == NPY_USHORT) {
+                unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_16_2;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -126,8 +121,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<int>()) {
-                int* data = reinterpret_cast<int*> (a.get_data());
+            } else if (dtype->type_num == NPY_INT) {
+                int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_32_4;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -137,8 +132,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned int>()) {
-                unsigned int* data = reinterpret_cast<unsigned int*> (a.get_data());
+            } else if (dtype->type_num == NPY_UINT) {
+                unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_32_4;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -148,8 +143,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<float>()) {
-                float* data = reinterpret_cast<float*> (a.get_data());
+            } else if (dtype->type_num == NPY_FLOAT) {
+                float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::f_32_4;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -159,8 +154,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<double>()) {
-                double* data = reinterpret_cast<double*> (a.get_data());
+            } else if (dtype->type_num == NPY_DOUBLE) {
+                double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::f_64_8;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -170,8 +165,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<long long>()) {
-                long long* data = reinterpret_cast<long long*> (a.get_data());
+            } else if (dtype->type_num == NPY_LONGLONG) {
+                long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_64_8;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -181,8 +176,8 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
-            } else if (a.get_dtype() == bn::dtype::get_builtin<unsigned long long>()) {
-                unsigned long long* data = reinterpret_cast<unsigned long long*> (a.get_data());
+            } else if (dtype->type_num == NPY_ULONGLONG) {
+                unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_64_8;
                 m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
                         new karabo::xip::RawImageData(data,
@@ -196,7 +191,6 @@ namespace karathon {
                 throw KARABO_PYTHON_EXCEPTION("Unsupported numpy array type.");
             }
         }
-#endif
         
         RawImageDataWrap(karabo::util::Hash & imageHash, bool sharesData = false)
         : m_raw(new karabo::xip::RawImageData(boost::ref(imageHash), sharesData)) {
@@ -215,66 +209,65 @@ namespace karathon {
         }
 
         void setData(const bp::object & obj) {
-#ifdef WITH_BOOST_NUMPY
-            if (bp::extract<bn::ndarray>(obj).check()) {
-                const bn::ndarray& a = bp::extract<bn::ndarray>(obj);
-                int nd = a.get_nd();
-                Py_intptr_t const * shapes = a.get_shape();
+            if (PyArray_Check(obj.ptr())) {
+                PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
+                int nd = PyArray_NDIM(arr);
+                npy_intp* shapes = PyArray_DIMS(arr);
                 int nelems = 1;
                 for (int i = 0; i < nd; i++) nelems *= shapes[i];
-                if (a.get_dtype() == bn::dtype::get_builtin<char>()) {
-                    const char* data = reinterpret_cast<const char*> (a.get_data());
+                PyArray_Descr* dtype = PyArray_DESCR(arr);
+                if (dtype->type_num == NPY_BYTE) {
+                    const char* data = reinterpret_cast<const char*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems);
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<unsigned char>()) {
-                    const unsigned char* data = reinterpret_cast<const unsigned char*> (a.get_data());
+                if (dtype->type_num == NPY_UBYTE) {
+                    const unsigned char* data = reinterpret_cast<const unsigned char*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems);
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<short>()) {
-                    short* data = reinterpret_cast<short*> (a.get_data());
+                if (dtype->type_num == NPY_SHORT) {
+                    short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (short));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<unsigned short>()) {
-                    const unsigned short* data = reinterpret_cast<const unsigned short*> (a.get_data());
+                if (dtype->type_num == NPY_USHORT) {
+                    const unsigned short* data = reinterpret_cast<const unsigned short*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (unsigned short));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<int>()) {
-                    const int* data = reinterpret_cast<const int*> (a.get_data());
+                if (dtype->type_num == NPY_INT) {
+                    const int* data = reinterpret_cast<const int*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (int));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<unsigned int>()) {
-                    const unsigned int* data = reinterpret_cast<const unsigned int*> (a.get_data());
+                if (dtype->type_num == NPY_UINT) {
+                    const unsigned int* data = reinterpret_cast<const unsigned int*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (unsigned int));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<float>()) {
-                    const float* data = reinterpret_cast<const float*> (a.get_data());
+                if (dtype->type_num == NPY_FLOAT) {
+                    const float* data = reinterpret_cast<const float*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (float));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<double>()) {
-                    const double* data = reinterpret_cast<const double*> (a.get_data());
+                if (dtype->type_num == NPY_DOUBLE) {
+                    const double* data = reinterpret_cast<const double*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (double));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<long long>()) {
-                    const long long* data = reinterpret_cast<const long long*> (a.get_data());
+                if (dtype->type_num == NPY_LONGLONG) {
+                    const long long* data = reinterpret_cast<const long long*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (long long));
                     return;
                 }
-                if (a.get_dtype() == bn::dtype::get_builtin<unsigned long long>()) {
-                    const unsigned long long* data = reinterpret_cast<const unsigned long long*> (a.get_data());
+                if (dtype->type_num == NPY_ULONGLONG) {
+                    const unsigned long long* data = reinterpret_cast<const unsigned long long*> (PyArray_DATA(arr));
                     m_raw->setData(data, nelems * sizeof (unsigned long long));
                     return;
                 }
                 throw KARABO_PYTHON_EXCEPTION("This ndarray type is not supported");
             }
-#endif
             if (PyByteArray_Check(obj.ptr())) {
                 size_t size = PyByteArray_Size(obj.ptr());
                 char* data = PyByteArray_AsString(obj.ptr());
