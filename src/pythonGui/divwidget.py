@@ -9,9 +9,11 @@
 
 __all__ = ["DivWidget"]
 
+from toolbar import ToolBar
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+
 
 class DivWidget(QFrame):
     # define signals...
@@ -24,84 +26,80 @@ class DivWidget(QFrame):
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)
 
-        self.dockableWidget  = dockableWidget
-        self.index           = -1
-        self.label           = label
-        self.doesDockOnClose = True
+        self.__index = -1
+        self.__label = label
+        self.__doesDockOnClose = True
 
-        self.icon = icon
+        self.__icon = icon
 
-        self.setupActions()
-        self.setupToolBar()
+        # Setup default actions and toolbar
+        self._setupActions()
+        self._setupToolBar()
+        
+        self.__toolBarLayout = QHBoxLayout()
+        self.__toolBarLayout.setContentsMargins(0,0,0,0)
+        self.__toolBarLayout.setSpacing(0)
+        self.addToolBar(self.__toolBar)
+        
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(0,0,0,0)
+        vLayout.addLayout(self.__toolBarLayout)
+        vLayout.addWidget(dockableWidget)
 
         # Add custom actions to toolbar
-        self.dockableWidget.setupToolBar(self.toolBar)
+        dockableWidget.setupToolBars(self.__toolBar, self)
+        
         self.docked.connect(dockableWidget.onDock)
         self.undocked.connect(dockableWidget.onUndock)
-        
-        self.vLayout = QVBoxLayout(self)
-        self.vLayout.setContentsMargins(0,0,0,0)
-        self.vLayout.addWidget(self.toolBar)
-        self.vLayout.addWidget(self.dockableWidget)
 
 #        self.setStyleSheet("QWidget {border-style: solid;"
 #                                    "border: 1px solid gray;"
 #                                    "}")
 
 
-    def setupActions(self):
+    def _setupActions(self):
         text = "Unpin as individual window"
-        self.acUndock = QAction(QIcon(":undock"), "&Undock", self)
-        self.acUndock.setToolTip(text)
-        self.acUndock.setStatusTip(text)
-        self.acUndock.triggered.connect(self.onUndock)
+        self.__acUndock = QAction(QIcon(":undock"), "&Undock", self)
+        self.__acUndock.setToolTip(text)
+        self.__acUndock.setStatusTip(text)
+        self.__acUndock.triggered.connect(self.onUndock)
 
         text = "Pin this window to main program"
-        self.acDock = QAction(QIcon(":dock"), "&Dock", self)
-        self.acDock.setToolTip(text)
-        self.acDock.setStatusTip(text)
-        self.acDock.triggered.connect(self.onDock)
-        self.acDock.setVisible(False)
+        self.__acDock = QAction(QIcon(":dock"), "&Dock", self)
+        self.__acDock.setToolTip(text)
+        self.__acDock.setStatusTip(text)
+        self.__acDock.triggered.connect(self.onDock)
+        self.__acDock.setVisible(False)
 
 
-    def setupToolBar(self):
-        self.toolBar = QToolBar("Standard")
-        self.toolBar.setStyleSheet("QToolBar {"
-                                   "background-color: rgb(180,180,180);"
-                                   "margin-bottom: 0px;"
-                                   "}")
-        self.toolBar.setIconSize(QSize(32,32))
-
-        self.toolBar.setObjectName("DivWidgetToolBar")
-        self.toolBar.addAction(self.acUndock)
-        self.toolBar.addAction(self.acDock)
-
-        iconSize = self.toolBar.iconSize()
-        iconSize *= 0.6
-        self.toolBar.setIconSize(iconSize)
+    def _setupToolBar(self):
+        self.__toolBar = ToolBar("Standard")
+        self.__toolBar.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
+        self.__toolBar.addAction(self.__acUndock)
+        self.__toolBar.addAction(self.__acDock)
 
 
     def onUndock(self):
-        self.acDock.setVisible(True)
-        self.acUndock.setVisible(False)
-        if self.icon is not None:
-            self.setWindowIcon(self.icon)
-        self.setWindowTitle(self.label)
+        self.__acDock.setVisible(True)
+        self.__acUndock.setVisible(False)
+        if self.__icon is not None:
+            self.setWindowIcon(self.__icon)
+        self.setWindowTitle(self.__label)
         self.undocked.emit()
 
 
     def onDock(self):
-        self.acDock.setVisible(False)
-        self.acUndock.setVisible(True)
+        self.__acDock.setVisible(False)
+        self.__acUndock.setVisible(True)
         self.docked.emit()
 
 
     def onIndexChanged(self, index):
-        self.index = index
+        self.__index = index
 
 
     def closeEvent(self, event):
-        if self.doesDockOnClose:
+        if self.__doesDockOnClose:
             self.onDock()
             event.ignore()
         else:
@@ -109,24 +107,27 @@ class DivWidget(QFrame):
 
 
     def getIndex(self):
-        return self.index
+        return self.__index
 
 
     def setIndex(self, index):
-        self.index = index
+        self.__index = index
 
 
     def getLabel(self):
-        return self.label
+        return self.__label
 
 
     def setLabel(self, label):
-        self.label = label
+        self.__label = label
 
 
     def hasIcon(self):
-        if self.icon is None :
-            return False
-        else :
+        if self.__icon:
             return True
+        return False
+
+
+    def addToolBar(self, toolBar):
+        self.__toolBarLayout.addWidget(toolBar)
 

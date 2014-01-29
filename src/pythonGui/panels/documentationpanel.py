@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the documentation panel inside of
    the configuration panel on the right of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["DocumentationPanel"]
@@ -26,13 +14,26 @@ __all__ = ["DocumentationPanel"]
 
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtWebKit import *
-from PyQt4.QtNetwork import *
+from PyQt4.QtCore import QByteArray, QUrl
+from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
+from PyQt4.QtWebKit import QWebPage, QWebView
+from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 
 class DocumentationPanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
 
 
     def __init__(self):
@@ -100,28 +101,26 @@ class DocumentationPanel(QWidget):
         pass
 
 
-    def setupToolBar(self, toolBar):
-        self.__toolBar = toolBar
-        
+    def setupToolBars(self, standardToolBar, parent):
         self.__acBackWiki = self.__wikiView.pageAction(QWebPage.Back)
         self.__acForwardWiki = self.__wikiView.pageAction(QWebPage.Forward)
         self.__acReloadWiki = self.__wikiView.pageAction(QWebPage.Reload)
         self.__acStopWiki = self.__wikiView.pageAction(QWebPage.Stop)
         
-        self.__toolBar.addAction(self.__acBackWiki)
-        self.__toolBar.addAction(self.__acForwardWiki)
-        self.__toolBar.addAction(self.__acReloadWiki)
-        self.__toolBar.addAction(self.__acStopWiki)
+        standardToolBar.addAction(self.__acBackWiki)
+        standardToolBar.addAction(self.__acForwardWiki)
+        standardToolBar.addAction(self.__acReloadWiki)
+        standardToolBar.addAction(self.__acStopWiki)
         
         self.__acBackReport = self.__reportView.pageAction(QWebPage.Back)
         self.__acForwardReport = self.__reportView.pageAction(QWebPage.Forward)
         self.__acReloadReport = self.__reportView.pageAction(QWebPage.Reload)
         self.__acStopReport = self.__reportView.pageAction(QWebPage.Stop)
         
-        self.__toolBar.addAction(self.__acBackReport)
-        self.__toolBar.addAction(self.__acForwardReport)
-        self.__toolBar.addAction(self.__acReloadReport)
-        self.__toolBar.addAction(self.__acStopReport)
+        standardToolBar.addAction(self.__acBackReport)
+        standardToolBar.addAction(self.__acForwardReport)
+        standardToolBar.addAction(self.__acReloadReport)
+        standardToolBar.addAction(self.__acStopReport)
         
         self._setWikiActionsVisible(True)
         self._setReportActionsVisible(False)

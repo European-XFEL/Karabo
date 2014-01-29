@@ -117,8 +117,8 @@ class CustomXmlReader(QXmlStreamReader):
 
 
     def _processItemAttributes(self):
-        type = self.attributes().value("type").toString()
-        
+        type = self.attributes().value("type")
+
         posX = float(self.attributes().value("posX"))
         posY = float(self.attributes().value("posY"))
         posZ = float(self.attributes().value("posZ"))
@@ -141,21 +141,21 @@ class CustomXmlReader(QXmlStreamReader):
                         item.setTransform(transform)
                     elif tagName == "text":
                         self.readNext()
-                        item.setText(self.text().toString())
+                        item.setText(self.text())
                     elif tagName == "font":
                         self.readNext()
                         font = QFont()
-                        font.fromString(self.text().toString())
+                        font.fromString(self.text())
                         item.setFont(font)
                     elif tagName == "textColor":
                         self.readNext()
-                        item.setTextColor(QColor(self.text().toString()))
+                        item.setTextColor(QColor(self.text()))
                     elif tagName == "outlineColor":
                         self.readNext()
-                        item.setOutlineColor(QColor(self.text().toString()))
+                        item.setOutlineColor(QColor(self.text()))
                     elif tagName == "backgroundColor":
                         self.readNext()
-                        item.setBackgroundColor(QColor(self.text().toString()))
+                        item.setBackgroundColor(QColor(self.text()))
                 elif isinstance(item, Link):
                     pass
                 elif isinstance(item, Arrow):
@@ -167,27 +167,23 @@ class CustomXmlReader(QXmlStreamReader):
                         item.setTransform(transform)
                     elif tagName == "lineCoords":
                         self.readNext()
-                        linePositions = self.text().toString().split(",")
+                        linePositions = self.text().split(",")
                         if len(linePositions) == 4:
-                            line = QLineF(linePositions[0].toFloat()[0], linePositions[1].toFloat()[0], \
-                                          linePositions[2].toFloat()[0], linePositions[3].toFloat()[0])
+                            line = QLineF(float(linePositions[0]), float(linePositions[1]), \
+                                          float(linePositions[2]), float(linePositions[3]))
                             item.setLine(line)
                     elif tagName == "length":
                         self.readNext()
-                        length = self.text().toString().toFloat()
-                        if length[1]:
-                            item.setLength(length[0])
+                        item.setLength(float(self.text()))
                     elif tagName == "width":
                         self.readNext()
-                        widthF = self.text().toString().toFloat()
-                        if widthF[1]:
-                            item.setWidthF(widthF[0])
+                        item.setWidthF(float(self.text()))
                     elif tagName == "style":
                         self.readNext()
                         style = int(self.text())
                     elif tagName == "color":
                         self.readNext()
-                        item.setColor(QColor(self.text().toString()))
+                        item.setColor(QColor(self.text()))
                 elif isinstance(item, Rectangle):
                     if tagName == "sceneTransformation":
                         transform = self._processSceneTransformation()
@@ -195,10 +191,10 @@ class CustomXmlReader(QXmlStreamReader):
                         item.setTransform(transform)
                     elif tagName == "rectCoords":
                         self.readNext()
-                        rectData = self.text().toString().split(",")
+                        rectData = self.text().split(",")
                         if len(rectData) == 4:
-                            rect = QRectF(rectData[0].toFloat()[0], rectData[1].toFloat()[0], \
-                                          rectData[2].toFloat()[0], rectData[3].toFloat()[0])
+                            rect = QRectF(float(rectData[0]), float(rectData[1]), \
+                                          float(rectData[2]), float(rectData[3]))
                             item.setRect(rect)
 
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
@@ -219,8 +215,6 @@ class CustomXmlReader(QXmlStreamReader):
                 elif tagName == "layoutOrientation":
                     self.readNext()
                     layoutOrientation = int(self.text())
-                    if layoutOrientation[1]:
-                        layoutOrientation = layoutOrientation[0]
                 elif tagName == "GraphicsProxyItems":
                     self._processGraphicsProxyItemList(transform, layoutOrientation, posX, posY, posZ)
                     
@@ -234,10 +228,8 @@ class CustomXmlReader(QXmlStreamReader):
         while self.atEnd() == False:
             tokenType = self.readNext()
             tagName = self.name()
-            
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "GraphicsItem":
-                    self.readNext()
                     type, itemPosX, itemPosY, itemPosZ = self._processItemAttributes()
                     proxyItems.append(self._processGraphicsProxyWidget(itemPosX, itemPosY, itemPosZ))
             
@@ -282,31 +274,31 @@ class CustomXmlReader(QXmlStreamReader):
                     transform = self._processSceneTransformation()
                 elif tagName == "componentType":
                     self.readNext()
-                    componentType = self.text().toString()
+                    componentType = self.text()
                 elif tagName == "widgetFactory":
                     self.readNext()
-                    widgetFactory = self.text().toString()
+                    widgetFactory = self.text()
                 elif tagName == "Text":
                     self.readNext()
-                    text = self.text().toString()
+                    text = self.text()
                 elif tagName == "classAlias":
                     self.readNext()
-                    classAlias = self.text().toString()
+                    classAlias = self.text()
                 elif tagName == "internalKeys":
                     self.readNext()
-                    internalKeys = self.text().toString()
+                    internalKeys = self.text()
                 elif tagName == "commandEnabled":
                     self.readNext()
-                    commandEnabledS = self.text().toString()
+                    commandEnabledS = self.text()
                 elif tagName == "allowedStates":
                     self.readNext()
-                    allowedStatesS = self.text().toString()
+                    allowedStatesS = self.text()
                 elif tagName == "command":
                     self.readNext()
-                    command = self.text().toString()
+                    command = self.text()
                 elif tagName == "commandText":
                     self.readNext()
-                    commandText = self.text().toString()
+                    commandText = self.text()
             
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
                 break
@@ -324,9 +316,7 @@ class CustomXmlReader(QXmlStreamReader):
                 internalKey = internalKey[0]
 
             # Does key concern state of device?
-            print internalKey
             keys = str(internalKey).split('.configuration.')
-            print keys
             isStateToDisplay = (keys[1] == "state")
         
         allowedStates = []
@@ -364,15 +354,18 @@ class CustomXmlReader(QXmlStreamReader):
             editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
             proxyItem = GraphicsProxyWidget(self.__view.isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
             proxyItem.setTransformOriginPoint(proxyItem.boundingRect().center())
-        
+
         if internalKey:
+            if proxyItem:
+                tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
+                proxyItem.setToolTip(tooltipText)
+
             # Simulated NavigationItem click event to load schema
-            Manager().selectNavigationItemByKey(internalKey)
+            navItemPath = internalKey.split('.configuration.')
+            Manager().selectNavigationItemByKey(navItemPath[0])
             # Register as visible device
             Manager().newVisibleDevice(internalKey)
-            # Refresh over network needed
-            Manager().onRefreshInstance(internalKey)
-        
+                    
         #proxyItem.setPos(QPointF(posX, posY))
         if transform:
             # Set transformation matrix for this item
@@ -386,7 +379,7 @@ class CustomXmlReader(QXmlStreamReader):
         transform = None
         internalKey = None
         text = None
-        devInstId = None
+        deviceId = None
         
         while self.atEnd() == False:
             tokenType = self.readNext()
@@ -397,13 +390,13 @@ class CustomXmlReader(QXmlStreamReader):
                     transform = self._processSceneTransformation()
                 elif tagName == "internalKey":
                     self.readNext()
-                    internalKey = self.text().toString()
+                    internalKey = self.text()
                 elif tagName == "text":
                     self.readNext()
-                    text = self.text().toString()
+                    text = self.text()
                 elif tagName == "devInstId":
                     self.readNext()
-                    devInstId = self.text().toString()
+                    deviceId = self.text()
             
             elif tokenType == QXmlStreamReader.EndElement and tagName == "GraphicsItem":
                 break
@@ -428,12 +421,12 @@ class CustomXmlReader(QXmlStreamReader):
             newInternalKey = internalKey
             keys = internalKey.split('+', 1)
             if len(keys) is 2:
-                devSrvInsId = str(keys[0])
+                serverId = str(keys[0])
                 newInternalKey = str(keys[0]) + "+" + newClassId
                 # Try to get schema again with new internalKey
                 schema = Manager().getSchemaByInternalKey(newInternalKey)
                 # Create new device class plugin
-                Manager().createNewDeviceClassPlugin(devSrvInsId, newClassId, text)
+                Manager().createNewDeviceClassPlugin(serverId, newClassId, text)
         
         customItem = GraphicsCustomItem(internalKey, self.__view.isDesignMode, text, schema)
         
@@ -443,11 +436,11 @@ class CustomXmlReader(QXmlStreamReader):
         
         # Connect customItem signal to Manager, DEVICE_CLASS
         customItem.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
-        # Register for value changes of devInstId
+        # Register for value changes of deviceId
         Manager().registerEditableComponent(customItem.deviceId, customItem)
         
-        # Important: set devInstId after connecting necessary signals/slots
-        customItem.value = devInstId
+        # Important: set deviceId after connecting necessary signals/slots
+        customItem.value = deviceId
         
         return customItem
 
@@ -473,36 +466,36 @@ class CustomXmlReader(QXmlStreamReader):
             if tokenType == QXmlStreamReader.StartElement:
                 if tagName == "m11":
                     self.readNext()
-                    m11 = self.text().toString().toFloat()
+                    m11 = float(self.text())
                 elif tagName == "m12":
                     self.readNext()
-                    m12 = self.text().toString().toFloat()
+                    m12 = float(self.text())
                 elif tagName == "m13":
                     self.readNext()
-                    m13 = self.text().toString().toFloat()
+                    m13 = float(self.text())
                 if tagName == "m21":
                     self.readNext()
-                    m21 = self.text().toString().toFloat()
+                    m21 = float(self.text())
                 elif tagName == "m22":
                     self.readNext()
-                    m22 = self.text().toString().toFloat()
+                    m22 = float(self.text())
                 elif tagName == "m23":
                     self.readNext()
-                    m23 = self.text().toString().toFloat()
+                    m23 = float(self.text())
                 if tagName == "m31":
                     self.readNext()
-                    m31 = self.text().toString().toFloat()
+                    m31 = float(self.text())
                 elif tagName == "m32":
                     self.readNext()
-                    m32 = self.text().toString().toFloat()
+                    m32 = float(self.text())
                 elif tagName == "m33":
                     self.readNext()
-                    m33 = self.text().toString().toFloat()
+                    m33 = float(self.text())
             
             elif tokenType == QXmlStreamReader.EndElement and tagName == "sceneTransformation":
                 break
 
-        return QTransform(m11[0], m12[0], m13[0],
-                          m21[0], m22[0], m23[0],
-                          m31[0], m32[0], m33[0])
+        return QTransform(m11, m12, m13,
+                          m21, m22, m23,
+                          m31, m32, m33)
 

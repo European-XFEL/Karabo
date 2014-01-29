@@ -30,7 +30,7 @@ namespace karabo {
         void JmsBrokerConnection::expectedParameters(Schema& expected) {
 
             // Some tricks with environment here
-            string defaultHostname = "exflserv01.desy.de";
+            string defaultHostname = "exfl-broker.desy.de";
             char* env = getenv("KARABO_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
 
@@ -116,14 +116,14 @@ namespace karabo {
                     .key("acknowledgeSent")
                     .displayedName("Acknowledge Message Sent")
                     .description("Should senders be blocked until the broker acknowledges message receipt?")
-                    .assignmentOptional().defaultValue(true)
+                    .assignmentOptional().defaultValue(false)
                     .expertAccess()
                     .commit();
 
             BOOL_ELEMENT(expected)
                     .key("deliveryInhibition")
                     .displayedName("Message Self Delivery Inhibition")
-                    .description("Should be inhibited delivery of messages published on the topic by this consumer own connection?")
+                    .description("If true, messages delivered to the broker on the same topic and connection will not be consumed.")
                     .assignmentOptional().defaultValue(false)
                     .expertAccess()
                     .commit();
@@ -141,7 +141,7 @@ namespace karabo {
                     .displayedName("Acknowledge Mode")
                     .description("General Acknowledge Mode")
                     .assignmentOptional().defaultValue("explicit")
-                    .options("auto,explicit,transacted")
+                    .options("dupsOk,auto,explicit,transacted")
                     .expertAccess()
                     .commit();
 
@@ -187,6 +187,7 @@ namespace karabo {
             if (acknowledgeMode == "auto") m_acknowledgeMode = MQ_AUTO_ACKNOWLEDGE;
             else if (acknowledgeMode == "explicit") m_acknowledgeMode = MQ_CLIENT_ACKNOWLEDGE;
             else if (acknowledgeMode == "transacted") m_acknowledgeMode = MQ_SESSION_TRANSACTED;
+            else if (acknowledgeMode == "dupsOk") m_acknowledgeMode = MQ_DUPS_OK_ACKNOWLEDGE;
 
             // Establish the Jms connection (in stopped mode)
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;

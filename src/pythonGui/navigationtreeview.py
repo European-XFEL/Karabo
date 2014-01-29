@@ -40,6 +40,7 @@ class NavigationTreeView(QTreeView):
         
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        self.setDragEnabled(True)
 
 
     def _lastSelectionPath(self):
@@ -49,50 +50,29 @@ class NavigationTreeView(QTreeView):
     lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
 
 
-### protected ###
-    def mouseMoveEvent(self, event):
-        QTreeView.mouseMoveEvent(self, event)
-        
-        if event.buttons() != Qt.LeftButton:
+    def saveSelectionState(self):
+        """
+        Saves the current selected index path to restore the selection later.
+        """
+        selectedIndexes = self.selectedIndexes()
+        if len(selectedIndexes) < 1:
             return
-        
-        # Disabled for now
-        self._performDrag()
-        
 
-### private ###
-    def _performDrag(self):
-        itemInfo = self.currentIndexInfo()
-        if len(itemInfo) == 0:
+        self.__lastSelectionPath = selectedIndexes[0].internalPointer().path
+
+
+    def restoreSelectionState(self):
+        """
+        Restores the selected index with the saved last path.
+        """
+        if (self.__lastSelectionPath is None) or (self.__lastSelectionPath == ""):
             return
-        
-        serverId  = itemInfo.get('serverId')
-        
-        navigationItemType = itemInfo.get('type')
-        
-        displayName = str()
-        if navigationItemType is NavigationItemTypes.CLASS:
-            displayName = itemInfo.get('classId')
-        
-        mimeData = QMimeData()
 
-        # Put necessary data in MimeData:
-        # Source type
-        mimeData.setData("sourceType", "NavigationTreeView")
-        if navigationItemType:
-            # Item type
-            mimeData.setData("navigationItemType", QByteArray.number(navigationItemType))
-        if serverId:
-            # Device server instance id
-            mimeData.setData("serverId", serverId)
-        if displayName:
-            # Display name
-            mimeData.setData("displayName", displayName)
-
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
-            pass
+        index = self.findIndex(self.__lastSelectionPath)
+        if index and index.isValid():
+            self.selectionModel().blockSignals(True)
+            self.setCurrentIndex(index)
+            self.selectionModel().blockSignals(False)
 
 
     def _setupContextMenu(self):
@@ -159,39 +139,13 @@ class NavigationTreeView(QTreeView):
         return NavigationItemTypes.UNDEFINED
 
 
-    def currentIndexInfo(self):
-        index = self.currentIndex()
-        if not index.isValid():
-            return dict()
-        
-        level = self.model().getHierarchyLevel(index)
-        
-        if level == 0:
-            type = NavigationItemTypes.HOST
-            
-            return dict()
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            serverId = index.data()
-            path = "server." + serverId
-            
-            return dict(key=path, type=type, serverId=serverId)
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            path = str("server." + serverId + ".classes." + classId)
-            
-            return dict(key=path + ".configuration", type=type, serverId=serverId, classId=classId)
-        elif level == 3:
-            type = NavigationItemTypes.DEVICE
-            parentIndex = index.parent()
-            classId = parentIndex.data()
-            deviceId = index.data()
-            path = str("device." + deviceId)
-            
-            return dict(key=path + ".configuration", type=type, classId=classId, deviceId=deviceId)
+    def indexInfo(self, index=None):
+        """ return the info about the index.
+
+        Defaults to the current index if index is None."""
+        if index is None:
+            index = self.currentIndex()
+        return self.model().indexInfo(index)
 
 
     def findIndex(self, path):
@@ -210,14 +164,14 @@ class NavigationTreeView(QTreeView):
         
         if index.isValid():
             self.setCurrentIndex(index)
-            #self.clearSelection()
-            #self.selectionModel().select(index, QItemSelectionModel.Select | QItemSelectionModel.Rows)
         else:
             self.clearSelection()
 
 
     def updateTreeModel(self, config):
+        self.saveSelectionState()
         self.model().updateData(config)
+        self.restoreSelectionState()
 
 
     def itemClicked(self):
@@ -280,7 +234,7 @@ class NavigationTreeView(QTreeView):
 
 
     def onKillServer(self):
-        itemInfo = self.currentIndexInfo()
+        itemInfo = self.indexInfo()
 
         serverId = itemInfo.get('serverId')
         
@@ -288,7 +242,7 @@ class NavigationTreeView(QTreeView):
 
 
     def onKillDevice(self):
-        itemInfo = self.currentIndexInfo()
+        itemInfo = self.indexInfo()
 
         deviceId = itemInfo.get('deviceId')
         
@@ -296,7 +250,7 @@ class NavigationTreeView(QTreeView):
 
 
     def onFileSaveAs(self):
-        itemInfo = self.currentIndexInfo()
+        itemInfo = self.indexInfo()
         
         classId = itemInfo.get('classId')
         path = itemInfo.get('key')

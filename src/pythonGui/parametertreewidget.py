@@ -14,13 +14,12 @@ __all__ = ["ParameterTreeWidget"]
 
 import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
-from enums import *
+from enums import NavigationItemTypes
 import globals
-from karabo.karathon import *
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QMimeData, QRect, Qt
+from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
@@ -46,6 +45,9 @@ class ParameterTreeWidget(QTreeWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.__mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+
+        self.model().setSupportedDragActions(Qt.CopyAction)
+        self.setDragEnabled(True)
 
 
 ### protected ###
@@ -84,20 +86,9 @@ class ParameterTreeWidget(QTreeWidget):
         QTreeWidget.mousePressEvent(self, event)
 
 
-    def mouseMoveEvent(self, event):
-        QTreeWidget.mouseMoveEvent(self, event)
-        
-        if event.buttons() != Qt.LeftButton:
-            return
-        
-        self._performDrag()
+    def mimeData(self, items):
+        item = items[0]
 
-
-    def _performDrag(self):
-        item = self.currentItem()
-        if item is None:
-            return
-        
         # Attributes can not be dropped
         if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
             return
@@ -151,10 +142,7 @@ class ParameterTreeWidget(QTreeWidget):
         if item.classAlias:
             mimeData.setData("classAlias", "{}".format(item.classAlias))
 
-        drag = QDrag(self)
-        drag.setMimeData(mimeData)
-        if drag.exec_(Qt.MoveAction) == Qt.MoveAction:
-            pass
+        return mimeData
 
 
 ### getter & setter functions ###
@@ -301,11 +289,11 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onApplyChanged(self, enable):
+    def onApplyChanged(self, key, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
         result = self.checkApplyButtonsEnabled()
-        self.__configPanel.onApplyChanged(result[0], result[1])
+        self.__configPanel.onApplyChanged(key, result[0], result[1])
 
 
     def onApplyAll(self, config):

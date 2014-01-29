@@ -100,6 +100,10 @@ namespace karabo {
             return toString(value.c_str());
         }
 
+        inline std::string toString(const karabo::util::CppNone& value) {
+            return std::string("None");
+        }
+        
         template <typename T>
         inline std::string toString(const std::vector<T>& value) {
             if (value.empty()) return "";
@@ -133,7 +137,7 @@ namespace karabo {
          inline std::string toString(const std::vector<char>& value) {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
         }
-
+         
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
@@ -179,6 +183,15 @@ namespace karabo {
             return boost::lexical_cast<T > (value);
         }
 
+        template<>
+        inline karabo::util::CppNone fromString(const std::string& value) {
+            std::string tmp(value);
+            boost::trim(tmp);
+            if (tmp != "None")
+                throw KARABO_CAST_EXCEPTION("Cannot interprete \"" + value + "\" as None.");
+            return karabo::util::CppNone();
+        }
+        
         template<typename T,
         template <typename ELEM, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
@@ -343,7 +356,7 @@ namespace karabo {
             bool in_token = false;
             for (std::string::const_iterator it = inputString.begin(), end = inputString.end();
                     it != end; ++it) {
-                if (delims[*it]) {
+                if (delims[*it & 0xff]) {
                     if (in_token) {
                         output.push_back(typename container::value_type(beg, it));
                         in_token = false;
@@ -372,7 +385,7 @@ namespace karabo {
 
             union {
 
-                uint32_t i;
+                unsigned int i;
                 char c[4];
             } bint = {0x01020304};
             return bint.c[0] == 1;

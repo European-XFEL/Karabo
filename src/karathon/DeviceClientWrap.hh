@@ -131,6 +131,7 @@ namespace karathon {
                 m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
             }
             if (!userData.is_none()) m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+            immortalize(instanceId);
         }
 
         bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
@@ -147,6 +148,7 @@ namespace karathon {
                     m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction.ptr());
                 }
                 if (!userData.is_none()) m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                immortalize(instanceId);
                 return true;
             } else {
                 return false;

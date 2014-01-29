@@ -76,6 +76,8 @@ namespace karabo {
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, PTR_COMPLEX_DOUBLE, "complex<double>*")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, PTR_STRING, "string*")
         KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, UNKNOWN, "unknown")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, NONE, "None")
+        KARABO_MAP_TO_REFERENCE_TYPE(ToCppString, VECTOR_NONE, "vector<None>")
     }
 }
 

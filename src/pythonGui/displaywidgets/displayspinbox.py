@@ -22,57 +22,43 @@ __all__ = ["DisplaySpinBox"]
 
 import globals
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 
-def getCategoryAliasClassName():
-    return ["Digit","Integer Field","DisplaySpinBox"]
-
-
 class DisplaySpinBox(DisplayWidget):
-    
+    category = "Digit"
+    alias = "Integer Field"
+
     def __init__(self, **params):
         super(DisplaySpinBox, self).__init__(**params)
-
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
 
         self.__spinBox = QSpinBox()
         self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
         self.__spinBox.setReadOnly(True)
         
-        self.__key = params.get('key')
+        #metricPrefixSymbol = params.get('metricPrefixSymbol')
+        #unitSymbol = params.get('unitSymbol')
+        # Append unit label, if available
+        #unitLabel = str()
+        #if metricPrefixSymbol:
+        #    unitLabel += metricPrefixSymbol
+        #if unitSymbol:
+        #    unitLabel += unitSymbol
+        #if len(unitLabel) > 0:
+        #    self.__spinBox.setSuffix(" %s" %unitLabel)
 
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__spinBox
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
-
-
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
+    @property
+    def value(self):
         return self.__spinBox.value()
-    value = property(fget=_value)
 
 
     def _setMinimum(self, min):
@@ -89,15 +75,6 @@ class DisplaySpinBox(DisplayWidget):
     maximum = property(fset=_setMaximum)
 
 
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
-
-
     def valueChanged(self, key, value, timestamp=None):
         if value is None:
             return
@@ -106,9 +83,3 @@ class DisplaySpinBox(DisplayWidget):
             self.__spinBox.blockSignals(True)
             self.__spinBox.setValue(value)
             self.__spinBox.blockSignals(False)
-
-
-    class Maker:
-        def make(self, **params):
-            return DisplaySpinBox(**params)
-
