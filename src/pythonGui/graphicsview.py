@@ -276,8 +276,7 @@ class Select(Action):
             parent.update()
         else:
             self.moving_item = item
-            self.moving_pos = (
-                event.pos() - self.moving_item.geometry().topLeft())
+            self.moving_pos = event.pos()
             if event.modifiers() & Qt.ShiftModifier:
                 item.selected = not item.selected
             else:
@@ -288,7 +287,8 @@ class Select(Action):
 
     def mouseMoveEvent(self, parent, event):
         if self.moving_item is not None:
-            self.moving_item.set_position(event.pos() - self.moving_pos)
+            self.moving_item.translate(event.pos() - self.moving_pos)
+            self.moving_pos = event.pos()
             event.accept()
         elif self.selection_start is not None:
             self.selection_stop = event.pos()
@@ -356,8 +356,8 @@ class Line(Shape):
     def geometry(self):
         return QRect(self.line.p1(), self.line.p2())
 
-    def set_position(self, p):
-        self.line.translate(p - self.geometry().topLeft())
+    def translate(self, p):
+        self.line.translate(p)
 
     def element(self):
         ret = ElementTree.Element(
@@ -408,8 +408,8 @@ class Rectangle(Shape):
     def geometry(self):
         return self.rect
 
-    def set_position(self, p):
-        self.rect.moveTo(p)
+    def translate(self, p):
+        self.rect.translate(p)
 
     @staticmethod
     def load(e, layout):
@@ -676,8 +676,8 @@ class Layout(Loadable):
         e.extend(s.element() for s in self.shapes if not selected or s.selected)
 
 
-    def set_position(self, pos):
-        self.fixed_geometry.moveTo(pos)
+    def translate(self, pos):
+        self.fixed_geometry.translate(pos)
         self.update()
 
 
@@ -685,8 +685,7 @@ class Layout(Loadable):
         if self.shape_geometry is None:
             self.shape_geometry = QRect(self.fixed_geometry)
         for s in self.shapes:
-            s.set_position(s.geometry().topLeft() + rect.topLeft() -
-                           self.shape_geometry.topLeft())
+            s.translate(rect.topLeft() - self.shape_geometry.topLeft())
         self.shape_geometry = QRect(rect)
 
 
@@ -998,8 +997,8 @@ class ProxyWidget(QStackedWidget):
         return ret
 
 
-    def set_position(self, pos):
-        self.fixed_geometry.moveTo(pos)
+    def translate(self, pos):
+        self.fixed_geometry.translate(pos)
         self.parent().layout().update()
 
 

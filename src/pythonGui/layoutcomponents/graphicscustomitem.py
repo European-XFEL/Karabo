@@ -70,8 +70,10 @@ class GraphicsCustomItem(NodeBase, Loadable, QObject):
     def setToolTip(self, tip):
         pass
 
-    def set_position(self, pos):
-        self.position = pos - self.geometry().topLeft() + self.position
+
+    def translate(self, pos):
+        self.position += pos
+
 
     def _getValue(self):
         return self.__deviceId
