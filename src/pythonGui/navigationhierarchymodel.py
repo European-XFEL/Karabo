@@ -17,6 +17,7 @@ from karabo.karathon import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
 
@@ -26,6 +27,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
         self.__currentConfig = None
+        self.setSupportedDragActions(Qt.CopyAction)
 
 
     def _currentConfig(self):
@@ -201,7 +203,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if hierarchyLevel == 0:
                 return QIcon(":host")
             elif hierarchyLevel == 1:
-                #status = self.rawData(level, row, 3).toString()
+                #status = self.rawData(level, row, 3)
                 #if status == "offline":
                 #    return QIcon(":no")
                 #elif status == "starting" or status == "online":
@@ -216,11 +218,13 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     return QIcon(":device-instance")
 
 
-    #def flags(self, index):
-    #    if not index.isValid():
-    #        return None
-
-    #    return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+    def flags(self, index):
+        if not index.isValid():
+            return None
+        ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
+        if self.getHierarchyLevel(index) > 0:
+            ret |= Qt.ItemIsDragEnabled
+        return ret
 
 
     def headerData(self, section, orientation, role):
@@ -263,3 +267,58 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         return self.createIndex(parentItem.row(), 0, parentItem)
 
+
+    def indexInfo(self, index):
+        if not index.isValid():
+            return { }
+
+        level = self.getHierarchyLevel(index)
+
+        if level == 0:
+            type = NavigationItemTypes.HOST
+            return { }
+        elif level == 1:
+            type = NavigationItemTypes.SERVER
+            serverId = index.data()
+            path = "server." + serverId
+            return dict(key=path, type=type, serverId=serverId)
+        elif level == 2:
+            type = NavigationItemTypes.CLASS
+            parentIndex = index.parent()
+            serverId = parentIndex.data()
+            classId = index.data()
+            path = "server." + serverId + ".classes." + classId
+            return dict(key=path + ".configuration", type=type,
+                        serverId=serverId, classId=classId)
+        elif level == 3:
+            type = NavigationItemTypes.DEVICE
+            parentIndex = index.parent()
+            classId = parentIndex.data()
+            deviceId = index.data()
+            path = "device." + deviceId
+            return dict(key=path + ".configuration", type=type,
+                        classId=classId, deviceId=deviceId)
+
+
+    def mimeData(self, items):
+        itemInfo = self.indexInfo(items[0])
+
+        serverId  = itemInfo.get("serverId")
+        navigationItemType = itemInfo.get("type")
+        displayName = ""
+
+        if navigationItemType == NavigationItemTypes.CLASS:
+            displayName = itemInfo.get("classId")
+
+        mimeData = QMimeData()
+
+        mimeData.setData("sourceType", "NavigationTreeView")
+        if navigationItemType:
+            mimeData.setData("navigationItemType",
+                             QByteArray.number(navigationItemType))
+        if serverId:
+            mimeData.setData("serverId", serverId)
+        if displayName:
+            mimeData.setData("displayName", displayName)
+
+        return mimeData

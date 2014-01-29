@@ -24,7 +24,7 @@ class DockTabWindow(QTabWidget):
         
         self.setParent(parent)
         self.setWindowTitle(title)
-        self.divWidgetList = []
+        self.__divWidgetList = []
 
 #        self.setStyleSheet("QTabWidget {border-style: solid;"
 #                                       "border: 1px solid gray;"
@@ -42,7 +42,7 @@ class DockTabWindow(QTabWidget):
         divWidget.setIndex(index)
 
         # store divWidget in list to keep it alive for un/dock event!!!
-        self.divWidgetList.append(divWidget)
+        self.__divWidgetList.append(divWidget)
 
 
     def addCornerWidget(self, tbNewTab):
@@ -81,15 +81,15 @@ class DockTabWindow(QTabWidget):
 
     def onDock(self):
         divWidget = self.sender()
-        if (divWidget is not None) and (divWidget.parent() is None) :
+        if (divWidget is not None) and (divWidget.parent() is None):
             index = divWidget.getIndex()
-            if divWidget.hasIcon() == True :
+            if divWidget.hasIcon() == True:
                 index = self.insertTab(index, divWidget, divWidget.getIcon(), divWidget.getLabel())
-            else :
+            else:
                 index = self.insertTab(index, divWidget, divWidget.getLabel())
 
-            for i in range(self.count()) :
-                if self.widget(i) is not None :
+            for i in range(self.count()):
+                if self.widget(i) is not None:
                     self.widget(i).setIndex(i)
 
             self.setCurrentIndex(index)

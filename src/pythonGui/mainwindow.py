@@ -16,7 +16,6 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
-from logindialog import LoginDialog
 from karabo.karathon import *
 from manager import Manager
 from network import Network
@@ -106,11 +105,11 @@ class MainWindow(QMainWindow):
         self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
         text = "Connect to server"
-        self.__acRemote = QAction(QIcon(":remote"), "&Connect to server", self)
-        self.__acRemote.setStatusTip(text)
-        self.__acRemote.setToolTip(text)
-        self.__acRemote.setCheckable(True)
-        self.__acRemote.triggered.connect(self.onConnectionChanged)
+        self.__acServerConnect = QAction(QIcon(":remote"), "&Connect to server", self)
+        self.__acServerConnect.setStatusTip(text)
+        self.__acServerConnect.setToolTip(text)
+        self.__acServerConnect.setCheckable(True)
+        self.__acServerConnect.triggered.connect(self.onConnectToServer)
 
         text = "Exit application"
         self.__acExit = QAction(QIcon(':exit'), '&Exit', self)
@@ -164,7 +163,7 @@ class MainWindow(QMainWindow):
         toolbar.addAction(self.__acExit)
 
         toolbar.addSeparator()
-        toolbar.addAction(self.__acRemote)
+        toolbar.addAction(self.__acServerConnect)
         
         toolbar.addWidget(self.__tbAccessLevel)
 
@@ -174,7 +173,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage('Ready...')
 
 
-    def _setupPanels(self) :
+    def _setupPanels(self):
 
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
@@ -189,12 +188,6 @@ class MainWindow(QMainWindow):
         #self.__projectTab = DockTabWindow("Projects", leftArea)
         #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
         #leftArea.setStretchFactor(1,1)
-
-        self.__notificationPanel = NotificationPanel()
-        self.__monitorTab = DockTabWindow("Notifications", leftArea)
-        self.__monitorTab.addDockableTab(self.__notificationPanel, "Notifications")
-        #leftArea.setStretchFactor(2,1)
-        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = CustomMiddlePanel()
@@ -212,9 +205,11 @@ class MainWindow(QMainWindow):
 
         self.__loggingPanel = LoggingPanel()
         self.__scriptingPanel = ScriptingPanel()
+        self.__notificationPanel = NotificationPanel()
         self.__outputTab = DockTabWindow("Update", middleArea)
         self.__outputTab.addDockableTab(self.__loggingPanel, "Log")
         self.__outputTab.addDockableTab(self.__scriptingPanel, "Console")
+        self.__outputTab.addDockableTab(self.__notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
         self.__configurationPanel = ConfigurationPanel(Manager().treemodel)
@@ -231,6 +226,7 @@ class MainWindow(QMainWindow):
 
     def _setupNetwork(self):
         self.__network = Network()
+        self.__network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
@@ -241,34 +237,22 @@ class MainWindow(QMainWindow):
             QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
-            self.__network.onEndConnection()
+            self.__network.endServerConnection()
             event.accept()
         else:
             event.ignore()
 
 
 ### slots ###
-    def onConnectionChanged(self, checked):
+    def onConnectToServer(self, checked):
         if checked:
-            dialog = LoginDialog()
-            if dialog.exec_() == QDialog.Accepted:
-                self.__network.onStartConnection(str(dialog.username), str(dialog.password),
-                                                 str(dialog.provider), dialog.hostname, dialog.port)
-            else:
-                checked = False
-                self.__acRemote.setChecked(False)
+            self.__network.connectToServer()
         else:
-            self.__network.onEndConnection()
-            self.__configurationPanel.clearParameterEditorContent()
-            # Reset manager settings to start configuration
-            Manager().reset()
-            Manager().handleSystemTopology(Hash())
-        
-        self.__tbAccessLevel.setEnabled(checked)
+            self.__network.disconnectFromServer()
 
 
     def onExit(self):
-        self.__network.onEndConnection()
+        self.__network.endServerConnection()
         qApp.quit()
 
     
@@ -296,6 +280,22 @@ class MainWindow(QMainWindow):
         
         # Emit signal that globals.GLOBAL_ACCESS_LEVEL has changed
         Manager().notifier.signalGlobalAccessLevelChanged.emit()
+
+
+    def onServerConnectionChanged(self, isConnected):
+        if isConnected:
+            text = "Disconnect from server"
+        else:
+            text = "Connect to server"
+        
+        self.__acServerConnect.setStatusTip(text)
+        self.__acServerConnect.setToolTip(text)
+        
+        self.__acServerConnect.blockSignals(True)
+        self.__acServerConnect.setChecked(isConnected)
+        self.__acServerConnect.blockSignals(False)
+        
+        self.__tbAccessLevel.setEnabled(isConnected)
 
 
     def onUpdateAccessLevel(self):

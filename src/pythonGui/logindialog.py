@@ -18,7 +18,8 @@ from PyQt4.QtGui import *
 
 class LoginDialog(QDialog):
 
-    def __init__(self):
+    def __init__(self, username=None, password=None, provider=None, hostname=None,
+                 port=None):
         super(LoginDialog, self).__init__()
 
         self.setWindowTitle("Login")
@@ -32,8 +33,6 @@ class LoginDialog(QDialog):
         self.__cbSelectConnection.addItem("Direct broker connection")
         hLayout.addWidget(self.__leSelectConnection)
         hLayout.addWidget(self.__cbSelectConnection)
-        self.__cbSelectConnection.currentIndexChanged[str].connect(
-            self.onSelectConnectionChanged)
         
         self.__hLine = QFrame(self)
         #self.__hLine.setGeometry(QRect(320, 150, 118, 3))
@@ -42,30 +41,41 @@ class LoginDialog(QDialog):
         self.__hLine.setFrameShadow(QFrame.Sunken)
         
         formLayout = QFormLayout()
-        self.__leUsername = QLineEdit("operator") #("username")
+        if not username:
+            username = "operator"
+        self.__leUsername = QLineEdit(username)
         formLayout.addRow("Username:", self.__leUsername)
         self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
-        self.__lePassword = QLineEdit("karabo") #("default")
+        if not password:
+            password = "karabo"
+        self.__lePassword = QLineEdit(password)
         self.__lePassword.setEchoMode(QLineEdit.Password)
         formLayout.addRow("Password:", self.__lePassword)
         
         # I was getting this error: QSpiAccessible::accessibleEvent not handled: "8008" obj: QObject(0x0) " invalid interface!"
-        #    when making mouse-over different options in the ComboBox.
+        # when making mouse-over different options in the ComboBox.
         # I solve it as documented here: http://code.google.com/p/clementine-player/issues/detail?id=1706
         # Current open bug: https://bugs.launchpad.net/ubuntu/+source/qtcreator/+bug/959722
         # Running "sudo apt-get remove qt-at-spi"
-        self.__leProvider = QComboBox()
-        self.__leProvider.setEditable(False)
-        self.__leProvider.addItems(["LOCAL", "KERBEROS"])
-        formLayout.addRow("Provider:", self.__leProvider)
-        self.__leProvider.currentIndexChanged[str].connect(
-            self.onSelectConnectionChanged)
+        self.__cbProvider = QComboBox()
+        self.__cbProvider.setEditable(False)
+        self.__cbProvider.addItems(["LOCAL", "KERBEROS"])
+        if provider:
+            index  = self.__cbProvider.findText(provider)
+            self.__cbProvider.setCurrentIndex(index)
+        formLayout.addRow("Provider:", self.__cbProvider)
         
-        self.__leHostname = QLineEdit("localhost")#("131.169.212.42")
+        if not hostname:
+            hostname = "localhost"
+        self.__leHostname = QLineEdit(hostname)
         formLayout.addRow("Hostname:", self.__leHostname)
         
-        self.__lePort = QLineEdit("44444")
+        if not port:
+            port = "44444"
+        else:
+            port = str(port)
+        self.__lePort = QLineEdit(port)
         self.__lePort.setValidator(QIntValidator(None))
         formLayout.addRow("Port:", self.__lePort)
         
@@ -84,33 +94,32 @@ class LoginDialog(QDialog):
         vLayout.addLayout(formLayout)
         vLayout.addLayout(btnLayout)
 
+    @property
+    def username(self):
+        return str(self.__leUsername.text().lower())
 
-    def _getUsername(self):
-        return self.__leUsername.text().lower()
-    username = property(fget=_getUsername)
 
-
-    def _getPassword(self):
-        return self.__lePassword.text()
-    password = property(fget=_getPassword)
-
-    
-    def _getProvider(self):
-        return self.__leProvider.currentText()
-    provider = property(fget=_getProvider)
+    @property
+    def password(self):
+        return str(self.__lePassword.text())
 
     
-    def _getHostname(self):
-        return self.__leHostname.text()
-    hostname = property(fget=_getHostname)
+    @property
+    def provider(self):
+        return str(self.__cbProvider.currentText())
 
 
-    def _getPort(self):
+    @property
+    def hostname(self):
+        return str(self.__leHostname.text())
+
+
+    @property
+    def port(self):
         return int(self.__lePort.text())
-    port = property(fget=_getPort)
 
 
-    def _showEasterEgg(self, show):
+    def _showConnectionSelection(self, show):
         self.__leSelectConnection.setVisible(show)
         self.__cbSelectConnection.setVisible(show)
         self.__hLine.setVisible(show)
@@ -121,16 +130,8 @@ class LoginDialog(QDialog):
         # Here comes the easter egg...
         text = text.lower()
         if text == "admin":
-            self._showEasterEgg(True)
+            self._showConnectionSelection(True)
         else:
-            self._showEasterEgg(False)
-
-
-    def onSelectConnectionChanged(self, value):
-        print "onSelectConnectionChanged", value
-    
-    
-    def onSelectProviderChanged(self, value):
-        print "onSelectProviderChanged", value
+            self._showConnectionSelection(False)
     
     

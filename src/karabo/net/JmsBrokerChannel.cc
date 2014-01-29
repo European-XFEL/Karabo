@@ -42,11 +42,15 @@ namespace karabo {
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
             
+            m_producerHandle.handle =(MQInt32)0xFEEEFEEE;
         }
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
             // Close everything
+            if (m_producerHandle.handle != (MQInt32)0xFEEEFEEE) {
+                MQCloseMessageProducer(m_producerHandle);
+            }
             MQFreeDestination(m_destinationHandle);
             MQCloseSession(m_sessionHandle);
         }
@@ -447,7 +451,7 @@ namespace karabo {
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
             } catch (...) {
-                m_signalError(shared_from_this(), "Unknown expection was raised whilst reading asynchronously");
+                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
             }
             return false;
         }
@@ -457,11 +461,13 @@ namespace karabo {
 
             try {
 
-                MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &producerHandle))
+                if (m_producerHandle.handle == (MQInt32)0xFEEEFEEE) {
+                    MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
+                }
+                            
                 MQ_SAFE_CALL(MQCreateTextMessage(&messageHandle))
                 MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
 
@@ -478,12 +484,12 @@ namespace karabo {
 
                 //cout << " Sending message: " << endl << messageBody << endl;
 
-                MQ_SAFE_CALL(MQSendMessageExt(producerHandle, messageHandle, MQ_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle))
-                MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
+                
 
             } catch (...) {
                 KARABO_RETHROW
@@ -495,11 +501,14 @@ namespace karabo {
 
             try {
 
-                MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
+                //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &producerHandle))
+                if (m_producerHandle.handle == (MQInt32)0xFEEEFEEE) {
+                    MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
+                }                
+                
                 MQ_SAFE_CALL(MQCreateBytesMessage(&messageHandle))
                 MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
 
@@ -515,13 +524,12 @@ namespace karabo {
                     MQ_SAFE_CALL(MQSetBytesMessageBytes(messageHandle, reinterpret_cast<MQInt8*> (const_cast<char*> (messageBody)), size));
                 }
 
-                MQ_SAFE_CALL(MQSendMessageExt(producerHandle, messageHandle, MQ_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle))
 
-                MQ_SAFE_CALL(MQCloseMessageProducer(producerHandle))
             } catch (...) {
                 KARABO_RETHROW
             }

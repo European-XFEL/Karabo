@@ -6,3 +6,7 @@
 
 # define package editablewidgets
 
+__all__ = ["editablecheckbox", "editablechoiceelement", "editablecombobox",
+           "editabledoublespinbox", "editablefilepath", "editablelineedit",
+           "editablelistelement", "editablelist", "editablespinbox",
+           "editabletauruswheeledit"]

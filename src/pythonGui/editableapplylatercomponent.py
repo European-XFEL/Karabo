@@ -13,7 +13,7 @@ __all__ = ["EditableApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from editablewidget import EditableWidget
+from widget import EditableWidget
 from manager import Manager
 from messagebox import MessageBox
 
@@ -23,8 +23,8 @@ from PyQt4.QtGui import *
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
-    signalConflictStateChanged = pyqtSignal(bool) # hasConflict
-    signalApplyChanged = pyqtSignal(bool) # enabled state of apply button
+    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
+    signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
 
 
     def __init__(self, classAlias, **params):
@@ -40,7 +40,7 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.create(classAlias, **params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
@@ -184,7 +184,7 @@ class EditableApplyLaterComponent(BaseComponent):
             self.hasConflict = False
         
         # Broadcast to ConfigurationPanel
-        self.signalApplyChanged.emit(enable)
+        self.signalApplyChanged.emit(self.keys[0], enable)
     applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
 
 
@@ -220,7 +220,9 @@ class EditableApplyLaterComponent(BaseComponent):
             self.__acApply.setMenu(None)
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
-        self.signalConflictStateChanged.emit(hasConflict)
+
+        deviceId = self.keys[0].split('.configuration.')
+        self.signalConflictStateChanged.emit(deviceId[0], hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
 
@@ -272,7 +274,8 @@ class EditableApplyLaterComponent(BaseComponent):
         
         # Disconnect signal from old widget
         self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
-        self.__editableWidget = EditableWidget.create(classAlias, **self.__initParams)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            **self.__initParams)
         # Connect signal to new widget
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         layout.insertWidget(index, self.__editableWidget.widget)
@@ -308,7 +311,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onDisplayValueChanged(self, key, value):
-        #print "onDisplayValueChanged", key, value
         if self.__isEditableValueInit:
             self.__editableWidget.valueChanged(key, value)
             self.__isEditableValueInit = False
@@ -329,6 +331,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
+        if self.__currentDisplayValue is None:
+            return
+
         # Update apply and reset buttons...
         if value == self.__currentDisplayValue:
             self.applyEnabled = False

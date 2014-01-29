@@ -21,7 +21,7 @@
 __all__ = ["DisplayPyCodeHist"]
 
 
-from displaywidget import DisplayWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -37,17 +37,13 @@ import time
 import thread
 import datetime
 
-def getCategoryAliasClassName():
-    return ["Digit","Matplotlib Plot","DisplayPyCodeHist"]
-
 
 class DisplayPyCodeHist(DisplayWidget):
-  
+    category = "Digit"
+    alias = "Matplotlib Plot"
+
     def __init__(self, **params):
         super(DisplayPyCodeHist, self).__init__(**params)
-        
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
         
         self.__compositeWidget = QWidget()
         vLayout = QVBoxLayout(self.__compositeWidget)
@@ -255,8 +251,6 @@ class DisplayPyCodeHist(DisplayWidget):
         
         vLayout.addWidget(self.__codeToolWidget);
         
-        self.__key = params.get('key')
-            
         #init kernel managment class
         self.__kernel_manager_class = QtKernelManager
         self.__kernel_initiated = False
@@ -535,42 +529,16 @@ class DisplayPyCodeHist(DisplayWidget):
         format.setName(name)
         return format
 
-    def _getCategory(self):
-        category, alias, className = getCategoryAliasClassName()
-        return category
-    category = property(fget=_getCategory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
+    @property
+    def widget(self):
         return self.__compositeWidget
-    widget = property(fget=_getWidget)
 
 
-    # Returns a tuple of min and max number of associated keys with this component
-    def _getMinMaxAssociatedKeys(self):
-        return self.__minMaxAssociatedKeys
-    minMaxAssociatedKeys = property(fget=_getMinMaxAssociatedKeys)
+    @property
+    def value(self):
+        return self.__lineEdit.toPlainText()
 
 
-    def _getKeys(self):
-        return [self.__key]
-    keys = property(fget=_getKeys)
-
-
-    def _value(self):
-        return str(self.__lineEdit.toPlainText())
-    value = property(fget=_value)
-
-
-    def addKeyValue(self, key, value):
-        self.__key = key # TODO: Overwritten - unregistering in Manager...
-        self.valueChanged(key, value)
-
-
-    def removeKey(self, key):
-        self.__key = None
-        
     def addInitCode(self, code, key):
         code.append("#-----do not remove the following lines-------")
         code.append("import matplotlib.pyplot as plt")
@@ -678,15 +646,4 @@ class DisplayPyCodeHist(DisplayWidget):
         print center
         print self.__minTimeBound
         print self.__maxTimeBound
-        
-
-    class Maker:
-        def make(self, **params):
-            return DisplayPyCodeHist(**params)
-
-
-
-
-    
-   
         

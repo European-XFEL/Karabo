@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the configuration panel on the
    right of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["ConfigurationPanel"]
@@ -37,12 +25,27 @@ from navigationtreeview import NavigationTreeView
 from schemareader import SchemaReader 
 
 from karabo.karathon import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from PyQt4.QtXmlPatterns import *
+from PyQt4.QtCore import SIGNAL, Qt, QTimer
+from PyQt4.QtGui import QAction, QHBoxLayout, QIcon, QMenu, QPushButton, QSplitter, \
+                        QStackedWidget, QVBoxLayout, QWidget
+
 
 class ConfigurationPanel(QWidget):
-    
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
+
+
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
         
@@ -102,6 +105,7 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().notifier.signalChangingState.connect(self.onChangingState)
         Manager().notifier.signalErrorState.connect(self.onErrorState)
+        Manager().notifier.signalReset.connect(self.onResetPanel)
 
         self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
@@ -240,9 +244,9 @@ class ConfigurationPanel(QWidget):
         self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
 
 
-    def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acFileOpen)
-        toolBar.addAction(self.__acFileSaveAs)
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acFileOpen)
+        standardToolBar.addAction(self.__acFileSaveAs)
         
 
     def applyAllAsHash(self, key, config):
@@ -267,13 +271,12 @@ class ConfigurationPanel(QWidget):
         self.__toolBar.removeAction(action)
 
 
-    def updateButtonActions(self):
-        self.updateApplyAllActions()
-        self.updateResetAllActions()
+    def updateApplyAllActions(self, deviceId):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
 
-
-    def updateApplyAllActions(self):
-        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
+        nbSelected = parameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Apply selected"
@@ -312,8 +315,12 @@ class ConfigurationPanel(QWidget):
             self.__acApplyAll.setMenu(None)
 
 
-    def updateResetAllActions(self):
-        nbSelected = self._getCurrentParameterEditor().nbSelectedApplyEnabledItems()
+    def updateResetAllActions(self, deviceId):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
+
+        nbSelected = parameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Reset selected"
@@ -329,22 +336,6 @@ class ConfigurationPanel(QWidget):
         self.__acResetAll.setText(text)
         self.__acResetAll.setStatusTip(text)
         self.__acResetAll.setToolTip(text)
-
-
-    def clearParameterEditorContent(self):
-        self._setParameterEditorIndex(0)
-        # Reset map
-        self.__navItemInternalKeyIndexMap = dict()
-        
-        while self.__swParameterEditor.count() > 1:
-            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
-            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-            self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
-            twParameterEditorPage.clear()
-            
-            # Remove widget completely
-            self.__swParameterEditor.removeWidget(twParameterEditorPage)
-            del twParameterEditorPage
 
 
     def _parseSchema(self, itemInfo, twParameterEditorPage):
@@ -432,17 +423,17 @@ class ConfigurationPanel(QWidget):
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
-    def _setApplyAllEnabled(self, enable):
+    def _setApplyAllEnabled(self, deviceId, enable):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
-        self.updateApplyAllActions()
-        self.updateResetAllActions()
+        self.updateApplyAllActions(deviceId)
+        self.updateResetAllActions(deviceId)
 
 
-    def _setResetAllEnabled(self, enable):
+    def _setResetAllEnabled(self, deviceId, enable):
         self.__pbResetAll.setEnabled(enable)
         self.__acResetAll.setEnabled(enable)
-        self.updateResetAllActions()
+        self.updateResetAllActions(deviceId)
 
 
     def _setParameterEditorIndex(self, index):
@@ -469,6 +460,18 @@ class ConfigurationPanel(QWidget):
 
     def _getCurrentParameterEditor(self):
         return self.__swParameterEditor.currentWidget()
+    
+    
+    def _getParameterEditorByDeviceId(self, deviceId):
+        """
+        Returns the parameterEditor-Treewidget with the given deviceId.
+        If not found, return None.
+        """
+        for index in range(self.__swParameterEditor.count()):
+            parameterEditor = self.__swParameterEditor.widget(index)
+            if deviceId == parameterEditor.instanceKey:
+                return parameterEditor
+        return None
 
 
     def _updateButtonsVisibility(self, visible):
@@ -498,19 +501,21 @@ class ConfigurationPanel(QWidget):
 
     def _applyAllChanges(self):
         config = Hash()
-        self._getCurrentParameterEditor().onApplyAll(config)
-        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
-        self._setApplyAllEnabled(False)
+        parameterEditor = self._getCurrentParameterEditor()
+        parameterEditor.onApplyAll(config)
+        self.applyAllAsHash(parameterEditor.instanceKey, config)
+        self._setApplyAllEnabled(parameterEditor.instanceKey, False)
 
 
     def _applySelectedChanges(self):
-        selectedItems = self._getCurrentParameterEditor().selectedItems()
+        parameterEditor = self._getCurrentParameterEditor()
+        selectedItems = parameterEditor.selectedItems()
         config = Hash()
         for item in selectedItems:
-            self._getCurrentParameterEditor().addItemDataToHash(item, config)
+            parameterEditor.addItemDataToHash(item, config)
         
-        self.applyAllAsHash(self._getCurrentParameterEditor().instanceKey, config)
-        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
+        self.applyAllAsHash(parameterEditor.instanceKey, config)
+        self._setApplyAllEnabled(parameterEditor.instanceKey, parameterEditor.checkApplyButtonsEnabled()[0])
 
 
     def _applyAllRemoteChanges(self):
@@ -518,18 +523,19 @@ class ConfigurationPanel(QWidget):
 
 
     def _applySelectedRemoteChanges(self):
-        selectedItems = self._getCurrentParameterEditor().selectedItems()
+        parameterEditor = self._getCurrentParameterEditor()
+        selectedItems = parameterEditor.selectedItems()
         for item in selectedItems:
-            self._getCurrentParameterEditor().applyRemoteChanges(item)
+            parameterEditor.applyRemoteChanges(item)
 
 
-    def _r_unregisterEditableComponent(self, item):
+    def _r_unregisterComponents(self, item):
         # Go recursively through tree and unregister Widgets in Manager
         for i in range(item.childCount()):
             childItem = item.child(i)
             childItem.unregisterEditableComponent()
             childItem.unregisterDisplayComponent()
-            self._r_unregisterEditableComponent(childItem)
+            self._r_unregisterComponents(childItem)
 
 
     def showParameterPage(self, type, path):
@@ -537,12 +543,10 @@ class ConfigurationPanel(QWidget):
         index = self.__navItemInternalKeyIndexMap.get(path)
         if index:
             self._setParameterEditorIndex(index)
-            
+
             if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
                 # Visible deviceId has changed
                 Manager().newVisibleDevice(path)
-                # Refresh over network needed
-                Manager().onRefreshInstance(path)               
                 self.__prevDevicePath = path
         else:
             self._setParameterEditorIndex(0)
@@ -555,6 +559,22 @@ class ConfigurationPanel(QWidget):
 
 
 ### slots ###
+    def onResetPanel(self):
+        self._setParameterEditorIndex(0)
+        # Reset map
+        self.__navItemInternalKeyIndexMap = dict()
+        self.__twNavigation.lastSelectionPath = str()
+
+        while self.__swParameterEditor.count() > 1:
+            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
+            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
+            self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
+            twParameterEditorPage.clear()
+
+            # Remove widget completely
+            self.__swParameterEditor.removeWidget(twParameterEditorPage)
+
+
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
         self.__twNavigation.createNewItem(itemInfo)
@@ -576,7 +596,7 @@ class ConfigurationPanel(QWidget):
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-                    self._r_unregisterEditableComponent(twParameterEditorPage.invisibleRootItem())
+                    self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
                     twParameterEditorPage.clear()
 
                     if self._parseSchema(itemInfo, twParameterEditorPage):
@@ -606,7 +626,6 @@ class ConfigurationPanel(QWidget):
 
 
     def onNavigationItemChanged(self, itemInfo):
-        #print "ConfigurationPanel.itemChanged", itemInfo
         type = itemInfo.get('type')
         path = itemInfo.get('key')
         
@@ -614,8 +633,8 @@ class ConfigurationPanel(QWidget):
             self.updateButtonsVisibility = True
         elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
             self.updateButtonsVisibility = False
-        
-        if self.__prevDevicePath != "":
+
+        if (self.__prevDevicePath != "") and (self.__prevDevicePath != path):
             Manager().removeVisibleDevice(self.__prevDevicePath)
             self.__prevDevicePath = str()
         
@@ -636,14 +655,13 @@ class ConfigurationPanel(QWidget):
 
 
     def onInstanceGone(self, path, parentPath):
-        path = str(path)
         # New schema can be in plugins of instance
         keys = self.__internalKeySchemaLoadedMap.keys()
         for key in keys:
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        # Check whether path of the gone instance were selected
+        # Check whether path of the gone instance was selected
         path = self.__twNavigation.lastSelectionPath
         if len(path) < 1:
             index = None
@@ -651,13 +669,12 @@ class ConfigurationPanel(QWidget):
             index = self.__twNavigation.findIndex(path)
         
         if index and index.isValid():
-            self.__twNavigation.lastSelectionPath = str()
-            self.__twNavigation.selectItem(path)
-        else:
-            self._setParameterEditorIndex(0)
-            self.__twNavigation.selectItem(str(parentPath))
-            # Hide buttons and actions
-            self._hideAllButtons()
+            return
+        
+        self._setParameterEditorIndex(0)
+        self.__twNavigation.selectItem(parentPath)
+        # Hide buttons and actions
+        self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -669,8 +686,13 @@ class ConfigurationPanel(QWidget):
             twParameterEditorPage.stateUpdated(state)
 
 
-    def onConflictStateChanged(self, hasConflict):
-        result = self._getCurrentParameterEditor().checkApplyButtonsEnabled()
+    def onConflictStateChanged(self, deviceId, hasConflict):
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor is None:
+            return
+
+        result = parameterEditor.checkApplyButtonsEnabled()
+        self.__pbApplyAll.setEnabled(result[0])
         if result[1] == hasConflict:
             self.hasConflicts = hasConflict
 
@@ -684,18 +706,21 @@ class ConfigurationPanel(QWidget):
             self.__changingTimerDeviceIdMap[deviceId] = timer
         
         if isChanging is True:
-            if timer.isActive() is False:
+            if not timer.isActive():
                 timer.start(200)
         else:
             timer.stop()
             
-            parameterWidget = self._getCurrentParameterEditor()
-            if deviceId == parameterWidget.instanceKey:
-                self._getCurrentParameterEditor().setReadOnly(False)
+            parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+            if parameterEditor:
+                parameterEditor.setReadOnly(False)
 
  
-    def onErrorState(self, inErrorState):
-        self._getCurrentParameterEditor().setErrorState(inErrorState)
+    def onErrorState(self, deviceId, inErrorState):
+        # Get corresponding parameterEditor-Treewidget to update state
+        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        if parameterEditor:
+            parameterEditor.setErrorState(inErrorState)
 
 
     def onTimeOut(self):
@@ -708,16 +733,16 @@ class ConfigurationPanel(QWidget):
             if timer == mapValues[i]:
                 deviceId = self.__changingTimerDeviceIdMap.keys()[i]
                 
-                parameterWidget = self._getCurrentParameterEditor()
-                if deviceId == parameterWidget.instanceKey:
-                    parameterWidget.setReadOnly(True)
+                parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+                if parameterEditor:
+                    parameterEditor.setReadOnly(True)
                 break
 
 
-    def onApplyChanged(self, enable, hasConflicts=False):
+    def onApplyChanged(self, deviceId, enable, hasConflicts=False):
         # called when apply button of attributewidget changed
-        self._setApplyAllEnabled(enable)
-        self._setResetAllEnabled(enable)
+        self._setApplyAllEnabled(deviceId, enable)
+        self._setResetAllEnabled(deviceId, enable)
         self.hasConflicts = hasConflicts
 
 
@@ -730,7 +755,7 @@ class ConfigurationPanel(QWidget):
 
     def onApplyAllRemoteChanges(self):
         self._applyAllRemoteChanges()
-        self._setApplyAllEnabled(False)
+        self._setApplyAllEnabled(self._getCurrentParameterEditor().instanceKey, False)
 
 
     def onApplySelected(self):
@@ -739,7 +764,8 @@ class ConfigurationPanel(QWidget):
 
     def onApplySelectedRemoteChanges(self):
         self._applySelectedRemoteChanges()
-        self._setApplyAllEnabled(self._getCurrentParameterEditor().checkApplyButtonsEnabled()[0])
+        parameterEditor = self._getCurrentParameterEditor()
+        self._setApplyAllEnabled(parameterEditor.instanceKey, parameterEditor.checkApplyButtonsEnabled()[0])
 
 
     def onResetAll(self):
@@ -750,7 +776,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onKillInstance(self):
-        itemInfo = self.__twNavigation.currentIndexInfo()
+        itemInfo = self.__twNavigation.indexInfo()
         
         type = itemInfo.get('type')
         
@@ -763,7 +789,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onInitDevice(self):
-        itemInfo = self.__twNavigation.currentIndexInfo()
+        itemInfo = self.__twNavigation.indexInfo()
         if len(itemInfo) == 0:
             return
         
@@ -781,14 +807,10 @@ class ConfigurationPanel(QWidget):
 
     def onSystemTopologyChanged(self, config):
         # Already done in NavigationPanel which uses the same model
-        #self.__twNavigation.updateTreeModel(config) 
+        #self.__twNavigation.updateTreeModel(config)
+        self.__twNavigation.saveSelectionState()
         self.__twNavigation.expandAll()
-        
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            return
-        self.__twNavigation.lastSelectionPath = str()
-        self.__twNavigation.selectItem(path)
+        self.__twNavigation.restoreSelectionState()
 
 
     def onGlobalAccessLevelChanged(self):
@@ -798,7 +820,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileOpen(self):
-        info = self.__twNavigation.currentIndexInfo()
+        info = self.__twNavigation.indexInfo()
         
         path = info.get('key')
         type = info.get('type')
@@ -822,7 +844,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileSaveAs(self):
-        info = self.__twNavigation.currentIndexInfo()
+        info = self.__twNavigation.indexInfo()
         
         path = info.get('key')
         type = info.get('type')

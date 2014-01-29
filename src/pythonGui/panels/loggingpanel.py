@@ -7,18 +7,6 @@
 
 """This module contains a class which represents the logging panel of the bottom
    middle of the MainWindow which is un/dockable.
-   
-   As a dockable widget class used in DivWidget, it needs the following interfaces
-   implemented:
-   
-    def setupActions(self):
-        pass
-    def setupToolBar(self, toolBar):
-        pass
-    def onUndock(self):
-        pass
-    def onDock(self):
-        pass
 """
 
 __all__ = ["LoggingPanel"]
@@ -27,10 +15,24 @@ __all__ = ["LoggingPanel"]
 from manager import Manager
 from logwidget import LogWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QAction, QIcon, QVBoxLayout, QWidget
+
 
 class LoggingPanel(QWidget):
+    ##########################################
+    # Dockable widget class used in DivWidget
+    # Requires following interface:
+    # 
+    #def setupActions(self):
+    #    pass
+    #def setupToolBars(self, standardToolBar, parent):
+    #    pass
+    #def onUndock(self):
+    #    pass
+    #def onDock(self):
+    #    pass
+    ##########################################
 
 
     def __init__(self):
@@ -55,8 +57,8 @@ class LoggingPanel(QWidget):
         self.__acSaveLog.triggered.connect(self.onSaveLogDataToFile)
 
 
-    def setupToolBar(self, toolBar):
-        toolBar.addAction(self.__acSaveLog)
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acSaveLog)
 
 
     def onLogDataAvailable(self, logData):
