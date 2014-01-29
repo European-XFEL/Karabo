@@ -30,6 +30,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         
         # Popup widget for tooltip info
         self.__popupWidget = None
+        self.__currentValueOnDevice = None
         
         # Value type
         self.__valueType = None
@@ -40,6 +41,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
+        # Connect to DisplayComponent to get current value on device for tooltip update
+        self.displayComponent.signalValueChanged.connect(self.onDisplayValueChanged)
 
 
     def setupContextMenu(self):
@@ -99,6 +102,18 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.__popupWidget = PopupWidget(self.treeWidget())
 
         if show:
+            info = self._updateToolTipDialog()
+            
+            pos = QCursor.pos()
+            pos.setX(pos.x() + 10)
+            pos.setY(pos.y() + 10)
+            self.__popupWidget.move(pos)
+            self.__popupWidget.show()
+        else:
+            self.__popupWidget.hide()
+
+
+    def _updateToolTipDialog(self):
             info = OrderedDict()
             info["Property"] = self.text(0)
             paramKey = str(self.internalKey).split(".configuration.")
@@ -121,16 +136,10 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                 info["Tags"] = tagString
             if self.timestamp:
                 info["Timestamp"] = self.timestamp
-            
+            if self.__currentValueOnDevice:
+                info["Current value on device"] = self.__currentValueOnDevice
+
             self.__popupWidget.setInfo(info)
-            
-            pos = QCursor.pos()
-            pos.setX(pos.x() + 10)
-            pos.setY(pos.y() + 10)
-            self.__popupWidget.move(pos)
-            self.__popupWidget.show()
-        else:
-            self.__popupWidget.hide()
 
 
 ### slots ###
@@ -140,4 +149,11 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
             if type(self.editableComponent) is not choicecomponent.ChoiceComponent:
                 self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
+
+
+    def onDisplayValueChanged(self, key, value):
+        self.__currentValueOnDevice = value
+        # Update tooltip dialog, if visible
+        if self.__popupWidget and self.__popupWidget.isVisible():
+            self._updateToolTipDialog()
 

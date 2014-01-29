@@ -13,9 +13,8 @@ __all__ = ["DisplayComponent"]
 
 
 from basecomponent import BaseComponent
-from widget import DisplayWidget
 from manager import Manager
-from widget import Widget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -111,6 +110,8 @@ class DisplayComponent(BaseComponent):
 ### slots ###
     def onValueChanged(self, key, value, timestamp=None):
         self.__displayWidget.valueChanged(key, value, timestamp)
+        # Emit signal to update possible tooltips in ParameterTreeWidget
+        self.signalValueChanged.emit(key, value)
 
 
     def onDisplayValueChanged(self, key, value):
