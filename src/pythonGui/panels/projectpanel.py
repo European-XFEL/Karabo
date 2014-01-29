@@ -16,10 +16,10 @@ from karabo.karathon import Hash
 from manager import Manager
 from plugindialog import PluginDialog
 
-from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAction, QCursor, QDialog, QIcon, QInputDialog, QLineEdit,
-                         QMenu, QMessageBox, QTreeWidget, QTreeWidgetItem,
-                         QVBoxLayout, QWidget)
+from PyQt4.QtCore import pyqtSignal, QDir, Qt
+from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
+                         QInputDialog, QLineEdit, QMenu, QMessageBox, QTreeWidget,
+                         QTreeWidgetItem, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -97,6 +97,71 @@ class ProjectPanel(QWidget):
         standardToolBar.addAction(self.__acProjectSave)
 
 
+    def _createNewProject(self, projectName, directory):
+        """
+        This function creates a new project in the panel.
+        """
+        # Project name to lower case
+        projectName = str(projectName).lower()
+
+        projectConfig = Hash("project")
+        projectConfig.setAttribute("project", "name", projectName)
+
+        deviceLabel = "Devices"
+        projectConfig.set("project.devices", Hash())
+        projectConfig.setAttribute("project.devices", "label", deviceLabel)
+        sceneLabel = "Scenes"
+        projectConfig.set("project.scenes", Hash())
+        projectConfig.setAttribute("project.scenes", "label", sceneLabel)
+        macroLabel = "Macros"
+        projectConfig.set("project.macros", Hash())
+        projectConfig.setAttribute("project.macros", "label", macroLabel)
+        monitorLabel = "Monitors"
+        projectConfig.set("project.monitors", Hash())
+        projectConfig.setAttribute("project.monitors", "label", monitorLabel)
+        resourceLabel = "Resources"
+        projectConfig.set("project.resources", Hash())
+        projectConfig.setAttribute("project.resources", "label", resourceLabel)
+
+        absoluteProjectPath = directory + "/" + projectName
+        dir = QDir()
+        if not QDir(absoluteProjectPath).exists():
+            dir.mkpath(absoluteProjectPath)
+        else:
+            self._clearProjectDir(absoluteProjectPath)
+
+        # Add subfolders
+        dir.mkpath(absoluteProjectPath + "/" + deviceLabel)
+        dir.mkpath(absoluteProjectPath + "/" + sceneLabel)
+        dir.mkpath(absoluteProjectPath + "/" + macroLabel)
+        dir.mkpath(absoluteProjectPath + "/" + monitorLabel)
+        dir.mkpath(absoluteProjectPath + "/" + resourceLabel)
+
+        # Send changes to manager
+        Manager().addNewProject(projectName, directory, projectConfig)
+
+
+    def _clearProjectDir(self, absolutePath):
+        if len(absolutePath) < 1:
+            return
+
+        dirToDelete = QDir(absolutePath)
+        # Remove all files from directory
+        fileEntries = dirToDelete.entryList(QDir.Files | QDir.CaseSensitive)
+        while len(fileEntries) > 0:
+            dirToDelete.remove(fileEntries.pop())
+
+        # Remove all sub directories
+        dirEntries = dirToDelete.entryList(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.CaseSensitive)
+        while len(dirEntries) > 0:
+            subDirPath = absolutePath + "/" + dirEntries.pop()
+            subDirToDelete = QDir(subDirPath)
+            if len(subDirToDelete.entryList()) > 0:
+                self._clearProjectDir(subDirPath)
+            subDirToDelete.rmpath(subDirPath)
+
+
+### slots ###
     def onItemSelectionChanged(self):
         item = self.__twProject.currentItem()
         if not item: return
@@ -107,11 +172,13 @@ class ProjectPanel(QWidget):
         if not path:
             return
 
-        print "path", path
         serverId = item.data(0, ProjectPanel.ITEM_SERVER_ID)
         classId = item.data(0, ProjectPanel.ITEM_CLASS_ID)
+        print "serverId, classId", serverId, classId
         # Get schema
         schema = Manager().getClassSchema(serverId, classId)
+        print "path", path
+        print ""
         Manager().onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
 
 
@@ -121,9 +188,18 @@ class ProjectPanel(QWidget):
         print ""
         self.__twProject.clear()
 
+        # Project hash structure
+        #projectName directory="directory" +
+        #  project name="projectName" +
+        #    devices label="Devices" +
+        #    scenes label="Scenes" +
+        #    macros label="Macros" +
+        #    monitors label="Monitors" +
+        #    resources label="Resources" +
+
         # Add child items
         for k in projectHash.keys():
-            # toplevel keys - project names
+            # Project names - toplevel items
             item = QTreeWidgetItem(self.__twProject)
             item.setText(0, k)
             font = item.font(0)
@@ -132,34 +208,36 @@ class ProjectPanel(QWidget):
             item.setIcon(0, QIcon(":folder"))
             item.setExpanded(True)
 
-            categoryConfig = projectHash.get(k)
-            for l in categoryConfig.keys():
-                # sub keys -  categories
-                childItem = QTreeWidgetItem(item, [l])
-                childItem.setIcon(0, QIcon(":folder"))
-                childItem.setExpanded(True)
-                
-                subConfig = categoryConfig.get(l)
-                if subConfig.empty():
-                    continue
-                
-                for m in subConfig.keys():
-                    leafItem = QTreeWidgetItem(childItem, [m])
-                    # TODO: update icon on availability of device
-                    leafItem.setIcon(0, QIcon(":device-instance"))
+            projectConfig = projectHash.get(k)
+            for l in projectConfig.keys():
+                # Project tag
 
-                    deviceId = k + "." + l + "." + m
-                    leafItem.setData(0, ProjectPanel.ITEM_KEY, deviceId)
+                # Get children
+                categoryConfig = projectConfig.get(l)
+                for m in categoryConfig.keys():
+                    # Categories - sub items
+                    childItem = QTreeWidgetItem(item, [categoryConfig.getAttribute(m, "label")])
+                    childItem.setIcon(0, QIcon(":folder"))
+                    childItem.setExpanded(True)
 
-                    classConfig = subConfig.get(m)
-                    for n in classConfig.keys():
-                        # Get serverId
-                        serverId = deviceId + "." + n + ".serverId"
-                        # Get classId
-                        classId = deviceId + "." + n + ".classId"
+                    subConfig = categoryConfig.get(m)
+                    if subConfig.empty():
+                        continue
 
-                        leafItem.setData(0, ProjectPanel.ITEM_SERVER_ID, serverId)
-                        leafItem.setData(0, ProjectPanel.ITEM_CLASS_ID, classId)
+                    for n in subConfig.keys():
+                        leafItem = QTreeWidgetItem(childItem, [n])
+                        # TODO: update icon on availability of device
+                        leafItem.setIcon(0, QIcon(":device-instance"))
+
+                        deviceId = k + "." + l + "." + m + "." + n
+                        leafItem.setData(0, ProjectPanel.ITEM_KEY, deviceId)
+
+                        classConfig = subConfig.get(n)
+                        for classId in classConfig.keys():
+                            serverId = classConfig.get(classId + ".serverId")
+                            # Set server and class ID
+                            leafItem.setData(0, ProjectPanel.ITEM_SERVER_ID, serverId)
+                            leafItem.setData(0, ProjectPanel.ITEM_CLASS_ID, classId)
 
 
     def onSystemTopologyChanged(self, config):
@@ -177,25 +255,6 @@ class ProjectPanel(QWidget):
             self.__serverTopology = None
 
 
-    def _createNewProject(self, projectName):
-        """
-        This function creates a new project in the panel.
-        """
-        # Project name to lower case
-        projectName = str(projectName).lower()
-
-        projectConfig = Hash()
-        projectConfig.set("Devices", Hash())
-        projectConfig.set("Scenes", Hash())
-        projectConfig.set("Macros", Hash())
-        projectConfig.set("Monitors", Hash())
-        projectConfig.set("Resources", Hash())
-
-        # Send changes to manager
-        Manager().addNewProject(projectName, projectConfig)
-
-
-### Slots ###
     def onProjectNew(self):
         projectName = QInputDialog.getText(self, "New project", \
                                            "Enter project name:", QLineEdit.Normal, "")
@@ -214,7 +273,12 @@ class ProjectPanel(QWidget):
             self.onProjectNew()
             return
 
-        self._createNewProject(projectName[0])
+        directory = QFileDialog.getExistingDirectory(self, "Saving location of project", \
+                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if not directory:
+            return
+
+        self._createNewProject(projectName[0], directory)
 
 
     def onProjectOpen(self):
@@ -233,17 +297,17 @@ class ProjectPanel(QWidget):
         if item.text(0) == "Devices":
             # Show devices menu
             menu = QMenu()
-            text = "Import plugin"
+            text = "Add device"
             acImportPlugin = QAction(QIcon(":device-class"), text, None)
             acImportPlugin.setStatusTip(text)
             acImportPlugin.setToolTip(text)
-            acImportPlugin.triggered.connect(self.onImportPlugin)
+            acImportPlugin.triggered.connect(self.onAddDevice)
 
             menu.addAction(acImportPlugin)
             menu.exec_(QCursor.pos())
 
 
-    def onImportPlugin(self):
+    def onAddDevice(self):
         if not self.__serverTopology or self.__serverTopology.empty():
             reply = QMessageBox.question(self, "No server connection",
                                          "Do you want to establish a server connection?",
