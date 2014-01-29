@@ -664,7 +664,7 @@ class Layout(Loadable):
         r = self.itemAt(i)
         if r is None:
             raise IndexError("index out of range")
-        return r.widget() if r.widget() else r
+        return r.widget() if r.widget() is not None else r
 
 
     def __delitem__(self, i):
@@ -779,7 +779,7 @@ class FixedLayout(Layout, QLayout):
     def itemAtPosition(self, pos):
         for item in self._children:
             if item.geometry().contains(pos):
-                if item.widget():
+                if item.widget() is not None:
                     return item.widget()
                 else:
                     return item
@@ -875,7 +875,7 @@ class FixedLayout(Layout, QLayout):
     def setGeometry(self, geometry):
         "only to be used by Qt, don't use directly!"
         for item in self._children:
-            i = item.widget() if item.widget() else item
+            i = item.widget() if item.widget() is not None else item
             i.setGeometry(i.fixed_geometry)
 
 
