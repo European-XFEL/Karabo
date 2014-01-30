@@ -480,6 +480,17 @@ namespace karathon {
                 any = v;
                 return;
             }
+            if (PyUnicode_Check(list0.ptr())) {
+                std::vector<std::string> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    size_t size = PyString_Size(str.ptr());
+                    const char* data = PyString_AsString(str.ptr());
+                    v[i] = string(data, size);
+                }
+                any = v;
+                return;
+            }
             if (bp::extract<karabo::util::Hash>(list0).check()) {
                 std::vector<karabo::util::Hash> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
