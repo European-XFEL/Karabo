@@ -185,12 +185,26 @@ class Shape(ShapeAction, Loadable):
         if "style" in d:
             d.update(s.split(":") for s in d["style"].split(";"))
         pen = QPen()
-        c = QColor(d.get("stroke", "black"))
-        c.setAlphaF(float(d.get("stroke-opacity", 1)))
-        pen.setColor(c)
-        pen.setCapStyle(dict(
-            butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
-            [d.get("stroke-linecap", "butt")])
+        if d.get("stroke", "none") == "none" or d.get("stroke-width") == "0":
+            pen.setStyle(Qt.NoPen)
+        else:
+            c = QColor(d["stroke"])
+            c.setAlphaF(float(d.get("stroke-opacity", 1)))
+            pen.setColor(c)
+            pen.setCapStyle(dict(
+                butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
+                [d.get("stroke-linecap", "butt")])
+            pen.setWidthF(ununit(d.get("stroke-width", "1")))
+            pen.setDashOffset(ununit(d.get("stroke-dashoffset", "0")))
+            s = d.get("stroke-dasharray", "none")
+            if s != "none":
+                v = s.split(",") if "," in s else s.split()
+                pen.setDashPattern([ununit(s) / pen.width() for s in v])
+            pen.setJoinStyle(dict(
+                miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
+                [d.get("storke-linejoin", "miter")])
+            pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
+        self.pen = pen
         s = d.get("fill", "black")
         if s == "none":
             self.brush = QBrush()
@@ -198,35 +212,27 @@ class Shape(ShapeAction, Loadable):
             c = QColor(s)
             c.setAlphaF(float(d.get("fill-opacity", 1)))
             self.brush = QBrush(c)
-        pen.setWidthF(ununit(d.get("stroke-width", "1")))
-        pen.setDashOffset(ununit(d.get("stroke-dashoffset", "0")))
-        s = d.get("stroke-dasharray", "none")
-        if s != "none":
-            v = s.split(",") if "," in s else s.split()
-            pen.setDashPattern([ununit(s) / pen.width() for s in v])
-        pen.setJoinStyle(dict(
-            miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
-            [d.get("storke-linejoin", "miter")])
-        pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
-        self.pen = pen
 
 
     def savepen(self, e):
         d = e.attrib
-        d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
-        d["stroke-opacity"] = unicode(self.pen.color().alphaF())
-        d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
+        if self.pen.style() == Qt.NoPen:
+            d["stroke"] = "none"
+        else:
+            d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
+            d["stroke-opacity"] = unicode(self.pen.color().alphaF())
+            d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
+            d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
+            d["stroke-width"] = unicode(self.pen.widthF())
+            d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
+                                             for x in self.pen.dashPattern())
+            d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
+            d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
         if self.brush.style() == Qt.SolidPattern:
             d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
             d["fill-opacity"] = unicode(self.brush.color().alphaF())
         else:
             d["fill"] = "none"
-        d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
-        d["stroke-width"] = unicode(self.pen.widthF())
-        d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
-                                         for x in self.pen.dashPattern())
-        d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
-        d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
 
 
     def draw(self, painter):
@@ -456,7 +462,8 @@ class Rectangle(Shape):
         return ret
 
     def edit(self):
-        pass
+        pendialog = PenDialog(self.pen, self.brush)
+        pendialog.exec_()
 
 
 def _parse_rect(elem):
