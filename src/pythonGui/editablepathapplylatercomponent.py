@@ -380,20 +380,20 @@ class EditablePathApplyLaterComponent(BaseComponent):
         directory = QFileDialog.getExistingDirectory(None, "Select directory")
         if len(directory) > 0:
             for key in self.__editableWidget.keys:
-                self.onEditingFinished(key, directory)
+                self.__editableWidget.valueChanged(key, directory)
 
 
     def onFileInClicked(self):
         fileIn = QFileDialog.getOpenFileName(None, "Select input file")
         if len(fileIn) > 0:
             for key in self.__editableWidget.keys:
-                self.onEditingFinished(key, fileIn)
+                self.__editableWidget.valueChanged(key, fileIn)
 
 
     def onFileOutClicked(self):
         fileOut = QFileDialog.getSaveFileName(None, "Select output file")
         if len(fileOut) > 0:
             for key in self.__editableWidget.keys:
-                self.onEditingFinished(key, fileOut)
+                self.__editableWidget.valueChanged(key, fileOut)
 
 
