@@ -143,6 +143,54 @@ namespace karathon {
                                                       channelSpace,
                                                       boost::ref(header),
                                                       isBigEndian));
+            } else if (dtype->type_num == NPY_LONG) {
+                if (sizeof(long) == sizeof(int)) {                      // 32 bit CPU
+                int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
+                    karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_32_4;
+                    m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
+                            new karabo::xip::RawImageData(data,
+                                                          nelems * sizeof (int),
+                                                          boost::ref(dimensions),
+                                                          encoding,
+                                                          channelSpace,
+                                                          boost::ref(header),
+                                                          isBigEndian));
+                } else {                                                // 64 bit CPU
+                    long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
+                    karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::s_64_8;
+                    m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
+                            new karabo::xip::RawImageData(data,
+                                                          nelems * sizeof (long long),
+                                                          boost::ref(dimensions),
+                                                          encoding,
+                                                          channelSpace,
+                                                          boost::ref(header),
+                                                          isBigEndian));
+                }
+            } else if (dtype->type_num == NPY_ULONG) {
+                if (sizeof(unsigned long) == sizeof(unsigned int)) {   // 32 bit CPU
+                    unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
+                    karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_32_4;
+                    m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
+                            new karabo::xip::RawImageData(data,
+                                                          nelems * sizeof (unsigned int),
+                                                          boost::ref(dimensions),
+                                                          encoding,
+                                                          channelSpace,
+                                                          boost::ref(header),
+                                                          isBigEndian));
+                } else {                                                // 64 bit CPU
+                    unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
+                    karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::u_64_8;
+                    m_raw = boost::shared_ptr<karabo::xip::RawImageData>(   
+                            new karabo::xip::RawImageData(data,
+                                                          nelems * sizeof (unsigned long long),
+                                                          boost::ref(dimensions),
+                                                          encoding,
+                                                          channelSpace,
+                                                          boost::ref(header),
+                                                          isBigEndian));
+                }
             } else if (dtype->type_num == NPY_FLOAT) {
                 float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
                 karabo::xip::ChannelSpace::ChannelSpaceType channelSpace = karabo::xip::ChannelSpace::f_32_4;

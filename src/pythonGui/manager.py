@@ -23,12 +23,13 @@ __all__ = ["Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from karabo.karathon import Hash, HashMergePolicy
+from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
-from PyQt4.QtCore import pyqtSignal, QObject, QTime, QTimer
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject,
+                          QTime, QTimer)
+from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 import time
 
@@ -747,6 +748,67 @@ class _Manager(QObject):
 
     def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
         self.signalNotificationAvailable.emit(timestamp, type, shortMessage, detailedMessage, deviceId)
+
+
+    def removeExistingInstances(self, config):
+        """
+        This function checks whether instances already exist in the central
+        hash.
+        if \True, these instance is erased from the central hash
+        if \False, nothing happens
+        A list with removed instances is returned.
+        """
+        removedInstanceIds = []
+        serverKey = "server"
+
+        # Check servers
+        if config.has(serverKey):
+            serverIds = config.get(serverKey).keys()
+            for serverId in serverIds:
+                # Check, if serverId is already in central hash
+                path = serverKey + "." + serverId
+                if self.__hash.has(path):
+                    # Remove path from central hash
+                    self.__hash.erase(path)
+                    removedInstanceIds.append(serverId)
+                    # Check for running instances on server
+                    self._removeExistingDevices(self.__hash, removedInstanceIds, serverId)
+
+        # Check devices
+        self._removeExistingDevices(config, removedInstanceIds)
+        
+        return removedInstanceIds
+
+
+    def _removeExistingDevices(self, config, removedInstanceIds, serverId=None):
+        """
+        This function checks whether device instances or device instances with"
+        "\serverId already exist in the central hash.
+        if \True, these instance is erased from the central hash
+        if \False, nothing happens
+        
+        A list with removed instances is filled.
+        """
+        deviceKey = "device"
+
+        if config.has(deviceKey):
+            deviceIds = config.get(deviceKey).keys()
+            for deviceId in deviceIds:
+                path = deviceKey + "." + deviceId
+                if serverId:
+                    # Check, if there is a device running on server
+                    if config.hasAttribute(path, "serverId"):
+                        id = config.getAttribute(path, "serverId")
+                        if serverId == id:
+                            config.erase(path)
+                            removedInstanceIds.append(deviceId)
+                else:
+                    # Check, if deviceId is already in central hash
+                    if self.__hash.has(path):
+                        # Remove path from central hash
+                        self.__hash.erase(path)
+                        removedInstanceIds.append(deviceId)
+
 
 manager = _Manager()
 
