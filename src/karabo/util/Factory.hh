@@ -198,9 +198,9 @@ namespace karabo {
         #endif
         #else
         #ifdef __SO__
-        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) extern template class karabo::util::Factory< className >;
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) 
         #else
-        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className)
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) extern template class karabo::util::Factory< className >;
         #endif
         #endif
 
