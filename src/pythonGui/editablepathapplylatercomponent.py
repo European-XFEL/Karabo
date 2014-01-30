@@ -33,7 +33,7 @@ class EditablePathApplyLaterComponent(BaseComponent):
         self.__initParams = params
 
         self.__isEditableValueInit = True
-        self.__currentDisplayValue = str()
+        self.__currentDisplayValue = None
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -341,14 +341,23 @@ class EditablePathApplyLaterComponent(BaseComponent):
             self.__editableWidget.valueChanged(key, value)
             self.__isEditableValueInit = False
         self.__currentDisplayValue = value
-        
+
         EPSILON = 1e-4
-        if type(value) is float:
+        if isinstance(value, float):
             diff = abs(value - self.__editableWidget.value)
             isEqualEditable = diff < EPSILON
+        elif isinstance(value, list):
+            if len(value) != len(self.__editableWidget.value):
+                isEqualEditable = False
+            else:
+                for i in xrange(len(value)):
+                    if value[i] != self.__editableWidget.value[i]:
+                        isEqualEditable = False
+                        break
+                isEqualEditable = True
         else:
-            isEqualEditable = str(value) == str(self.__editableWidget.value) # string comparison, problems with float values...
-        
+            isEqualEditable = (str(value) == str(self.__editableWidget.value)) # string comparison, problems with float values...
+
         if isEqualEditable is False:
             self.changeApplyToBusy(True, False)
         else:
@@ -357,6 +366,9 @@ class EditablePathApplyLaterComponent(BaseComponent):
 
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
+        if self.__currentDisplayValue is None:
+            return
+
         # Update apply and reset buttons...
         if value == self.__currentDisplayValue:
             self.applyEnabled = False
