@@ -18,6 +18,7 @@ from enums import NavigationItemTypes
 import globals
 from manager import Manager
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
+from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 
 from PyQt4.QtCore import QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
@@ -91,7 +92,7 @@ class ParameterTreeWidget(QTreeWidget):
         item = items[0]
 
         # Attributes can not be dropped
-        if isinstance(item, treewidgetitems.attributetreewidgetitem.AttributeTreeWidgetItem):
+        if isinstance(item, AttributeTreeWidgetItem):
             return
         
         mimeData = QMimeData()        
