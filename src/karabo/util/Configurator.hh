@@ -397,12 +397,16 @@ namespace karabo {
          */
         #ifdef _WIN32
         #ifdef __DLL__
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS template class __declspec(dllexport) karabo::util::Configurator< Self >;
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) template class __declspec(dllexport) karabo::util::Configurator< className >;
         #else
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS extern template class __declspec(dllimport) karabo::util::Configurator< Self >;
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class __declspec(dllimport) karabo::util::Configurator< className >;
         #endif
         #else
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS
+        #ifdef __SO__
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class karabo::util::Configurator< className >;
+        #else
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className)
+        #endif
         #endif
 
         #define KARABO_CONFIGURATION_BASE_CLASS \
