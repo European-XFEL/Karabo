@@ -19,6 +19,7 @@ class Authenticate_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST_SUITE(Authenticate_Test);
     CPPUNIT_TEST(testCorrectLogin);
+    CPPUNIT_TEST(testCorrectLoginAccessLevelZero);
     CPPUNIT_TEST(testIncorrectLogin);
     CPPUNIT_TEST(testIncorrectUsername);
     CPPUNIT_TEST(testSingleSignOn);
@@ -41,6 +42,7 @@ private:
                                      const long long expectedUserId, const int expectedRoleId);
     //
     void testCorrectLogin();
+    void testCorrectLoginAccessLevelZero();
     void testIncorrectLogin();
     void testIncorrectUsername();
     void testSingleSignOn();
