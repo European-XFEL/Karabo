@@ -12,11 +12,12 @@
 __all__ = ["ParameterTreeWidget"]
 
 
-import treewidgetitems.attributetreewidgetitem
 from editableapplylatercomponent import EditableApplyLaterComponent
+from editablepathapplylatercomponent import EditablePathApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
 from manager import Manager
+from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 from PyQt4.QtCore import QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
@@ -277,14 +278,19 @@ class ParameterTreeWidget(QTreeWidget):
     def _r_applyButtonsEnabled(self, item):
         for i in range(item.childCount()):
             childItem = item.child(i)
-            if type(childItem) == treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem:
+            if isinstance(childItem, PropertyTreeWidgetItem):
                 result = self._r_applyButtonsEnabled(childItem)
                 if result[0] is True: # Bug: returns but
                     return result
 
-        if (type(item) != treewidgetitems.propertytreewidgetitem.PropertyTreeWidgetItem) or (item.editableComponent is None) or \
-           (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
+        if not isinstance(item, PropertyTreeWidgetItem):
+            return (False, False)
+
+        if item.editableComponent is None or \
+           (not isinstance(item.editableComponent, EditableApplyLaterComponent) \
+            and (not isinstance(item.editableComponent, EditablePathApplyLaterComponent))):
             return (False,False)
+
         return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
 
 
