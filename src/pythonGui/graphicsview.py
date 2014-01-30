@@ -28,6 +28,7 @@ from layoutcomponents.textdialog import TextDialog
 
 from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
+from pendialog import PenDialog
 
 from widget import DisplayWidget, EditableWidget
 
@@ -197,16 +198,16 @@ class Shape(ShapeAction, Loadable):
             c = QColor(s)
             c.setAlphaF(float(d.get("fill-opacity", 1)))
             self.brush = QBrush(c)
+        pen.setWidthF(ununit(d.get("stroke-width", "1")))
         pen.setDashOffset(ununit(d.get("stroke-dashoffset", "0")))
         s = d.get("stroke-dasharray", "none")
         if s != "none":
             v = s.split(",") if "," in s else s.split()
-            pen.setDashPattern([ununit(s) for s in v])
+            pen.setDashPattern([ununit(s) / pen.width() for s in v])
         pen.setJoinStyle(dict(
             miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
             [d.get("storke-linejoin", "miter")])
         pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
-        pen.setWidthF(ununit(d.get("stroke-width", "1")))
         self.pen = pen
 
 
@@ -214,21 +215,18 @@ class Shape(ShapeAction, Loadable):
         d = e.attrib
         d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
         d["stroke-opacity"] = unicode(self.pen.color().alphaF())
-        d["stroke-linecap"] = {Qt.FlatCap: "butt", Qt.SquareCap: "square",
-                               Qt.RoundCap: "round"}[self.pen.capStyle()]
+        d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
         if self.brush.style() == Qt.SolidPattern:
             d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
             d["fill-opacity"] = unicode(self.brush.color().alphaF())
         else:
             d["fill"] = "none"
         d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
-        d["stroke-dasharray"] = " ".join(unicode(x)
-                                         for x in self.pen.dashPattern())
-        d["stroke-linejoin"] = {
-            Qt.SvgMiterJoin: "miter", Qt.MiterJoin: "miter",
-            Qt.BevelJoin: "bevel", Qt.RoundJoin: "round"}[self.pen.joinStyle()]
-        d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
         d["stroke-width"] = unicode(self.pen.widthF())
+        d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
+                                         for x in self.pen.dashPattern())
+        d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
+        d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
 
 
     def draw(self, painter):
@@ -410,7 +408,8 @@ class Line(Shape):
 
 
     def edit(self):
-        pass
+        pendialog = PenDialog(self.pen)
+        pendialog.exec_()
 
 
 class Rectangle(Shape):
