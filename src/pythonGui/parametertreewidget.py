@@ -171,20 +171,28 @@ class ParameterTreeWidget(QTreeWidget):
 
     def addItemDataToHash(self, item, config):
         editableComponent = item.editableComponent
-        if not isinstance(editableComponent, EditableApplyLaterComponent):
+        if editableComponent is None:
+            return
+
+        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
+           not isinstance(editableComponent, EditablePathApplyLaterComponent):
             return
         
-        if (editableComponent is not None) and (editableComponent.applyEnabled is True):
+        if editableComponent.applyEnabled:
             config.set(str(item.internalKey), editableComponent.value)
             editableComponent.changeApplyToBusy(True)
 
 
     def applyRemoteChanges(self, item):
         editableComponent = item.editableComponent
-        if not isinstance(editableComponent, EditableApplyLaterComponent):
+        if editableComponent is None:
+            return
+
+        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
+           not isinstance(editableComponent, EditablePathApplyLaterComponent):
             return
         
-        if (editableComponent is not None) and (editableComponent.applyEnabled is True):
+        if editableComponent.applyEnabled:
             editableComponent.onApplyRemoteChanges(item.internalKey)
 
 
@@ -193,7 +201,10 @@ class ParameterTreeWidget(QTreeWidget):
         counter = 0
         for item in self.selectedItems():
             editableComponent = item.editableComponent
-            if (editableComponent is None) or (not isinstance(editableComponent, EditableApplyLaterComponent)):
+            if editableComponent is None:
+                continue
+            if not isinstance(editableComponent, EditableApplyLaterComponent) and \
+               not isinstance(editableComponent, EditablePathApplyLaterComponent):
                 continue
             
             if editableComponent.applyEnabled is True:
@@ -287,7 +298,7 @@ class ParameterTreeWidget(QTreeWidget):
         if not isinstance(item, PropertyTreeWidgetItem):
             return (False, False)
 
-        if item.editableComponent is None or \
+        if (item.editableComponent is None) or \
            (not isinstance(item.editableComponent, EditableApplyLaterComponent) \
             and (not isinstance(item.editableComponent, EditablePathApplyLaterComponent))):
             return (False,False)
