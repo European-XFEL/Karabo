@@ -456,10 +456,7 @@ namespace karabo {
 
 
         void Authenticator::setDefaultAccessLevelId(const int defaultAccessLevelId) {
-            if (defaultAccessLevelId)
-                m_defaultAccessLevelId = defaultAccessLevelId;
-            else
-                m_defaultAccessLevelId = KARABO_INVALID_ID;
+            m_defaultAccessLevelId = defaultAccessLevelId;
         }
 
 
@@ -504,18 +501,12 @@ namespace karabo {
 
 
         void Authenticator::setSoftwareId(const long long softwareId) {
-            if (softwareId)
-                m_softwareId = softwareId;
-            else
-                m_softwareId = KARABO_INVALID_ID;
+            m_softwareId = softwareId;
         }
 
 
         void Authenticator::setUserId(const long long userId) {
-            if (userId)
-                m_userId = userId;
-            else
-                m_userId = KARABO_INVALID_ID;
+            m_userId = userId;
         }
 
 
