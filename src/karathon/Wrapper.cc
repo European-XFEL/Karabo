@@ -108,7 +108,6 @@ namespace karathon {
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
-        std::cout << "fromStdVectorToPyArray -- unsigned long long -- numpyFlag is " << numpyFlag << std::endl;
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
