@@ -306,7 +306,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onValueChanged(self, key, value, timestamp=None):
-        #print "onValueChanged ", key, value
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
@@ -315,14 +314,23 @@ class EditableApplyLaterComponent(BaseComponent):
             self.__editableWidget.valueChanged(key, value)
             self.__isEditableValueInit = False
         self.__currentDisplayValue = value
-        
+
         EPSILON = 1e-4
-        if type(value) is float:
+        if isinstance(value, float):
             diff = abs(value - self.__editableWidget.value)
             isEqualEditable = diff < EPSILON
+        elif isinstance(value, list):
+            if len(value) != len(self.__editableWidget.value):
+                isEqualEditable = False
+            else:
+                for i in xrange(len(value)):
+                    if value[i] != self.__editableWidget.value[i]:
+                        isEqualEditable = False
+                        break
+                isEqualEditable = True
         else:
             isEqualEditable = (str(value) == str(self.__editableWidget.value)) # string comparison, problems with float values...
-        
+
         if isEqualEditable is False:
             self.changeApplyToBusy(True, False)
         else:
