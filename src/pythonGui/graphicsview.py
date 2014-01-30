@@ -245,6 +245,15 @@ class Shape(ShapeAction, Loadable):
             painter.setPen(black)
             painter.drawRect(self.geometry())
 
+
+    def minimumSize(self):
+        return QSize(0, 0)
+
+
+    def maximumSize(self):
+        return QSize(10000, 10000)
+
+
 class Select(Action):
     """ This is the default action. It has no icon nor text since
     it is selected if nothing else is selected. """
@@ -254,7 +263,7 @@ class Select(Action):
 
     def mousePressEvent(self, parent, event):
         item = parent.ilayout.itemAtPosition(event.pos())
-        if isinstance(item, ProxyWidget) and item.selected:
+        if item is not None and item.selected:
             g = item.geometry()
             p = event.pos()
             if p.x() - g.left() < 10:
@@ -293,7 +302,7 @@ class Select(Action):
             self.selection_stop = event.pos()
             event.accept()
         elif self.resize is not None:
-            g = QRect(self.resize_item.fixed_geometry)
+            g = QRect(self.resize_item.geometry())
             if self.resize == "top":
                 g.setTop(event.pos().y())
             elif self.resize == "bottom":
@@ -307,7 +316,7 @@ class Select(Action):
             if (not min.width() < g.size().width() < max.width() or
                 not min.height() < g.size().height() < max.height()):
                 return
-            self.resize_item.fixed_geometry = g
+            self.resize_item.set_geometry(g)
             parent.ilayout.update()
         parent.update()
 
@@ -393,6 +402,11 @@ class Line(Shape):
     def geometry(self):
         return QRect(self.line.p1(), self.line.p2())
 
+
+    def set_geometry(self, rect):
+        self.line = QLine(rect.topLeft(), rect.bottomRight())
+
+
     def translate(self, p):
         self.line.translate(p)
 
@@ -449,6 +463,10 @@ class Rectangle(Shape):
 
     def geometry(self):
         return self.rect
+
+    def set_geometry(self, rect):
+        self.rect = rect
+
 
     def translate(self, p):
         self.rect.translate(p)
@@ -745,6 +763,10 @@ class Layout(Loadable):
         self.update()
 
 
+    def set_geometry(self, rect):
+        self.fixed_geometry = rect
+
+
     def update_shapes(self, rect):
         if self.shape_geometry is None:
             self.shape_geometry = QRect(self.fixed_geometry)
@@ -797,7 +819,7 @@ class FixedLayout(Layout, QLayout):
                 else:
                     return item
         for s in self.shapes:
-            if s.contains(pos):
+            if s.contains(pos) or s.selected and s.geometry().contains(pos):
                 return s
 
 
@@ -1079,6 +1101,10 @@ class ProxyWidget(QStackedWidget):
     def translate(self, pos):
         self.fixed_geometry.translate(pos)
         self.parent().layout().update()
+
+
+    def set_geometry(self, rect):
+        self.fixed_geometry = rect
 
 
     def edit(self):
