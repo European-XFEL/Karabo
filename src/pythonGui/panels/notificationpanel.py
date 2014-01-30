@@ -7,6 +7,18 @@
 
 """This module contains a class which represents the notification panel on the
    bottom left of the MainWindow which is un/dockable.
+   
+   As a dockable widget class used in DivWidget, it needs the following interfaces
+   implemented:
+   
+    def setupActions(self):
+        pass
+    def setupToolBar(self, toolBar):
+        pass
+    def onUndock(self):
+        pass
+    def onDock(self):
+        pass
 """
 
 __all__ = ["NotificationPanel"]
@@ -15,8 +27,8 @@ __all__ = ["NotificationPanel"]
 from manager import Manager
 from logwidget import LogWidget
 
-from PyQt4.QtGui import QVBoxLayout, QWidget
-
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 class NotificationPanel(QWidget):
     ##########################################
@@ -25,7 +37,7 @@ class NotificationPanel(QWidget):
     # 
     #def setupActions(self):
     #    pass
-    #def setupToolBars(self, standardToolBar, parent):
+    #def setupToolBar(self, toolBar):
     #    pass
     #def onUndock(self):
     #    pass
@@ -47,9 +59,8 @@ class NotificationPanel(QWidget):
 
     def setupActions(self):
         pass
-
-
-    def setupToolBars(self, standardToolBar, parent):
+    
+    def setupToolBar(self, toolBar):
         pass
 
 
@@ -66,4 +77,3 @@ class NotificationPanel(QWidget):
     # virtual function
     def onDock(self):
         pass
-

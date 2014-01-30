@@ -7,6 +7,18 @@
 
 """This module contains a class which represents the project panel on the
    middle left of the MainWindow which is un/dockable.
+   
+   As a dockable widget class used in DivWidget, it needs the following interfaces
+   implemented:
+   
+    def setupActions(self):
+        pass
+    def setupToolBar(self, toolBar):
+        pass
+    def onUndock(self):
+        pass
+    def onDock(self):
+        pass
 """
 
 __all__ = ["ProjectPanel"]
@@ -16,8 +28,8 @@ import const
 from enums import NavigationItemTypes
 from manager import Manager
 
-#from PyQt4.QtCore import *
-from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 
 class ProjectPanel(QWidget):
@@ -27,7 +39,7 @@ class ProjectPanel(QWidget):
     # 
     #def setupActions(self):
     #    pass
-    #def setupToolBars(self, standardToolBar, parent):
+    #def setupToolBar(self, toolBar):
     #    pass
     #def onUndock(self):
     #    pass
@@ -56,7 +68,7 @@ class ProjectPanel(QWidget):
         pass
 
 
-    def setupToolBars(self, standardToolBar, parent):
+    def setupToolBar(self, toolBar):
         pass
 
 
