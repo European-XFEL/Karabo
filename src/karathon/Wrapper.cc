@@ -108,7 +108,6 @@ namespace karathon {
 
     template<>
     bp::object Wrapper::fromStdVectorToPyArray(const std::vector<unsigned long long>& v, bool numpyFlag) {
-        std::cout << "fromStdVectorToPyArray -- unsigned long long -- numpyFlag is " << numpyFlag << std::endl;
         if (numpyFlag) {
             int nd = 1;
             npy_intp dims[1];
@@ -476,6 +475,17 @@ namespace karathon {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<std::string > (obj[i]);
+                }
+                any = v;
+                return;
+            }
+            if (PyUnicode_Check(list0.ptr())) {
+                std::vector<std::string> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    size_t size = PyString_Size(str.ptr());
+                    const char* data = PyString_AsString(str.ptr());
+                    v[i] = string(data, size);
                 }
                 any = v;
                 return;

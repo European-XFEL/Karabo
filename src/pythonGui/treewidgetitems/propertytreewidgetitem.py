@@ -15,7 +15,7 @@ import const
 
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
-import choicecomponent
+from choicecomponent import ChoiceComponent
 from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
@@ -147,7 +147,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         if self.editableComponent:
             #self.editableComponent.value = self.defaultValue
             self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
-            if type(self.editableComponent) is not choicecomponent.ChoiceComponent:
+            if not isinstance(self.editableComponent, ChoiceComponent):
                 self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
 
 
