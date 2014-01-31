@@ -215,6 +215,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>__SO__</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyLogLogger.cc"
             ex="false"
