@@ -403,7 +403,7 @@ namespace karabo {
         #endif
         #else
         #ifdef __SO__
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className)
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) template class karabo::util::Configurator< className >;
         #else
         #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class karabo::util::Configurator< className >;
         #endif
