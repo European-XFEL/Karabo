@@ -79,6 +79,7 @@ class VacuumWidget(DisplayWidget):
         self.setErrorState(False)
         if value is not None:
             self.valueChanged(self.keys[0], value)
+            self.value = value
 
 
     @property
