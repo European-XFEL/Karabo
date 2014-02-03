@@ -668,6 +668,43 @@ class Paste(SimpleAction):
         self.parent.update()
 
 
+Separator()
+
+
+class Raise(SimpleAction):
+    text = "Bring to front"
+    icon = ":bringtofront"
+
+
+    def run(self):
+        shapes = self.parent.ilayout.shapes
+        for i in range(len(shapes)):
+            if shapes[i].selected:
+                for j in range(i + 1, len(shapes)):
+                    if not shapes[j].geometry().intersects(
+                            shapes[i].geometry()):
+                        break
+                shapes[j], shapes[i:j] = shapes[i], shapes[i + 1:j + 1]
+        self.parent.update()
+
+
+class Lower(SimpleAction):
+    text = "Send to back"
+    icon = ":sendtoback"
+
+
+    def run(self):
+        shapes = self.parent.ilayout.shapes
+        for i in range(len(shapes) - 1, 0, -1):
+            if shapes[i].selected:
+                for j in range(i - 1, -1, -1):
+                    if not shapes[j].geometry().intersects(
+                            shapes[i].geometry()):
+                        break
+                shapes[j], shapes[j + 1:i + 1] = shapes[i], shapes[j:i]
+        self.parent.update()
+
+
 class Layout(Loadable):
     xmltag = ns_svg + "g"
     subclasses = { }
