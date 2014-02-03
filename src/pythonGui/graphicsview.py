@@ -458,8 +458,11 @@ class Rectangle(Shape):
         l, r = self.rect.left(), self.rect.right()
         t, b = self.rect.top(), self.rect.bottom()
         x, y = p.x(), p.y()
-        return (l < x < r and min(abs(t - y), abs(b - y)) < self.fuzzy or
-                t < y < b and min(abs(l - x), abs(r - x)) < self.fuzzy)
+        if self.brush.style() == Qt.SolidPattern:
+            return l < x < r and t < y < b
+        else:
+            return (l < x < r and min(abs(t - y), abs(b - y)) < self.fuzzy or
+                    t < y < b and min(abs(l - x), abs(r - x)) < self.fuzzy)
 
     def geometry(self):
         return self.rect
@@ -855,7 +858,7 @@ class FixedLayout(Layout, QLayout):
                     return item.widget()
                 else:
                     return item
-        for s in self.shapes:
+        for s in self.shapes[::-1]:
             if s.contains(pos) or s.selected and s.geometry().contains(pos):
                 return s
 
