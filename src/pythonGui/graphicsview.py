@@ -743,7 +743,7 @@ class Layout(Loadable):
         i = 0
         while i < len(element):
             elem = element[i]
-            r = Loadable.load(elem, self)
+            w = r = Loadable.load(elem, self)
             if r is None:
                 i += 1
             elif isinstance(r, Shape):
@@ -757,7 +757,7 @@ class Layout(Loadable):
                     else:
                         w.set_child(r.widget, r)
                     self.load_item(elem, w)
-                r.fixed_geometry = _parse_rect(elem)
+                w.fixed_geometry = _parse_rect(elem)
                 del element[i]
 
 
