@@ -302,7 +302,8 @@ class Select(Action):
             self.selection_stop = event.pos()
             event.accept()
         elif self.resize is not None:
-            g = QRect(self.resize_item.geometry())
+            og = self.resize_item.geometry()
+            g = QRect(og)
             if self.resize == "top":
                 g.setTop(event.pos().y())
             elif self.resize == "bottom":
@@ -313,8 +314,10 @@ class Select(Action):
                 g.setRight(event.pos().x())
             min = self.resize_item.minimumSize()
             max = self.resize_item.maximumSize()
-            if (not min.width() < g.size().width() < max.width() or
-                not min.height() < g.size().height() < max.height()):
+            if (not min.width() <= g.size().width() <= max.width() or
+                not min.height() <= g.size().height() <= max.height()) and (
+                min.width() <= og.size().width() <= max.width() and
+                min.height() <= og.size().height() <= max.height()):
                 return
             self.resize_item.set_geometry(g)
             parent.ilayout.update()
