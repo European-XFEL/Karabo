@@ -48,8 +48,7 @@ class Loadable(Registry):
         super(Loadable, cls).register(name, dict)
         if "xmltag" in dict:
             Loadable.xmltags[cls.xmltag] = cls
-        else:
-            cls.krbclasses[name] = cls
+        cls.krbclasses[name] = cls
 
 
     @staticmethod
