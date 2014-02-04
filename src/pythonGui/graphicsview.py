@@ -686,6 +686,7 @@ class Raise(SimpleAction):
         shapes = self.parent.ilayout.shapes
         for i in range(len(shapes)):
             if shapes[i].selected:
+                j = len(shapes) - 1
                 for j in range(i + 1, len(shapes)):
                     if not shapes[j].geometry().intersects(
                             shapes[i].geometry()):
@@ -703,6 +704,7 @@ class Lower(SimpleAction):
         shapes = self.parent.ilayout.shapes
         for i in range(len(shapes) - 1, 0, -1):
             if shapes[i].selected:
+                j = 0
                 for j in range(i - 1, -1, -1):
                     if not shapes[j].geometry().intersects(
                             shapes[i].geometry()):
