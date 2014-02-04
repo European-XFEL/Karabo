@@ -11,7 +11,7 @@
 __all__ = ["SqlDatabase"]
 
 
-from PyQt4.QtCore import *
+from PyQt4.QtCore import QCoreApplication, QDir, QFile
 try:
     from PyQt4.QtSql import QSqlDatabase, QSqlDriver, QSqlQuery, QSqlQueryModel
 except:
