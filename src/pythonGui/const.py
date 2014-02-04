@@ -10,38 +10,25 @@
 """
 
 
-class _const:
-    class ConstError(TypeError): pass
-    def __setattr__(self,name,value):
-        if self.__dict__.has_key(name):
-            raise self.ConstError, "Can't rebind const(%s)"%name
-        self.__dict__[name]=value
-        
-import sys
-sys.modules[__name__]=_const()
-
-
-import const
-from PyQt4.QtCore import *
+from PyQt4.QtCore import Qt
 
 # Parameter item properties
-const.INTERNAL_KEY           = Qt.UserRole
-const.VALUE_TYPE             = Qt.UserRole + 1
-const.DEFAULT_VALUE          = Qt.UserRole + 2
-const.CURRENT_INSTANCE_VALUE = Qt.UserRole + 3
-const.CURRENT_EDITABLE_VALUE = Qt.UserRole + 4
-const.ALIAS                  = Qt.UserRole + 5
-const.TAGS                   = Qt.UserRole + 6
-const.DESCRIPTION            = Qt.UserRole + 7
-const.TIMESTAMP              = Qt.UserRole + 8
-const.REQUIRED_ACCESS_LEVEL  = Qt.UserRole + 9
-const.IS_CHOICE_ELEMENT      = Qt.UserRole + 10
-const.IS_LIST_ELEMENT        = Qt.UserRole + 11
-const.UPDATE_NEEDED          = Qt.UserRole + 12
-const.ACCESS_TYPE            = Qt.UserRole + 13
-const.CLASS_ALIAS            = Qt.UserRole + 14
-const.ALLOWED_STATE          = Qt.UserRole + 15
-const.UNIT_SYMBOL            = Qt.UserRole + 16
-const.METRIC_PREFIX_SYMBOL   = Qt.UserRole + 17
-const.ENUMERATION            = Qt.UserRole + 18
-
+INTERNAL_KEY           = Qt.UserRole
+VALUE_TYPE             = Qt.UserRole + 1
+DEFAULT_VALUE          = Qt.UserRole + 2
+CURRENT_INSTANCE_VALUE = Qt.UserRole + 3
+CURRENT_EDITABLE_VALUE = Qt.UserRole + 4
+ALIAS                  = Qt.UserRole + 5
+TAGS                   = Qt.UserRole + 6
+DESCRIPTION            = Qt.UserRole + 7
+TIMESTAMP              = Qt.UserRole + 8
+REQUIRED_ACCESS_LEVEL  = Qt.UserRole + 9
+IS_CHOICE_ELEMENT      = Qt.UserRole + 10
+IS_LIST_ELEMENT        = Qt.UserRole + 11
+UPDATE_NEEDED          = Qt.UserRole + 12
+ACCESS_TYPE            = Qt.UserRole + 13
+CLASS_ALIAS            = Qt.UserRole + 14
+ALLOWED_STATE          = Qt.UserRole + 15
+UNIT_SYMBOL            = Qt.UserRole + 16
+METRIC_PREFIX_SYMBOL   = Qt.UserRole + 17
+ENUMERATION            = Qt.UserRole + 18
