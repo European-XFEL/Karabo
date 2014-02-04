@@ -861,6 +861,8 @@ class FixedLayout(Layout, QLayout):
             item.fixed_geometry = _parse_rect(element)
         except TypeError:
             rect = QRect()
+            for c in item:
+                rect.united(c.geometry())
             for s in item.shapes:
                 rect = rect.united(s.geometry())
             item.fixed_geometry = rect
@@ -933,9 +935,9 @@ class FixedLayout(Layout, QLayout):
     @staticmethod
     def load(elem, layout):
         ret = FixedLayout()
+        ret.load_element(elem)
         if layout is not None:
             layout.load_item(elem, ret)
-        ret.load_element(elem)
         return ret
 
 
