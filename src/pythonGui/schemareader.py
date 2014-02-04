@@ -658,58 +658,35 @@ class SchemaReader(object):
         accessMode = self._getAccessMode(key)
         editableComponent = None
         
-        # PATH_ELEMENT
+        # Check for PATH_ELEMENT
         if self.__schema.hasDisplayType(key):
-            pathType = None
             if self.__schema.getDisplayType(key) == "directory":
-                pathType = "directory"
-            elif self.__schema.getDisplayType(key) == "fileIn":
-                pathType = "fileIn"
-            elif self.__schema.getDisplayType(key) == "fileOut":
-                pathType = "fileOut"
-            
-            if pathType:
+                item.classAlias = "Directory"
                 item.setIcon(0, QIcon(":path"))
-                
-                if self.__deviceType is NavigationItemTypes.CLASS:
-                    if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                        editableComponent = EditablePathNoApplyComponent(classAlias=item.classAlias,
-                                                                        key=item.internalKey,
-                                                                        value=item.defaultValue,
-                                                                        enumeration=item.enumeration,
-                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                        unitSymbol=item.unitSymbol,
-                                                                        pathType=pathType)
-                else:
-                    if accessMode is AccessMode.RECONFIGURABLE:
-                        editableComponent = EditablePathApplyLaterComponent(classAlias=item.classAlias,
-                                                                            key=item.internalKey,
-                                                                            value=item.defaultValue,
-                                                                            enumeration=item.enumeration, 
-                                                                            metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                            unitSymbol=item.unitSymbol,
-                                                                            pathType=pathType)
-                        editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+            elif self.__schema.getDisplayType(key) == "fileIn":
+                item.classAlias = "File In"
+                item.setIcon(0, QIcon(":path"))
+            elif self.__schema.getDisplayType(key) == "fileOut":
+                item.classAlias = "File Out"
+            item.setIcon(0, QIcon(":path"))
         
-        if not editableComponent:
-            # Not yet set as PATH_ELEMENT...
-            if self.__deviceType is NavigationItemTypes.CLASS:
-                if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
-                    editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
-                                                                 key=item.internalKey,
-                                                                 value=item.defaultValue,
-                                                                 enumeration=item.enumeration,
-                                                                 metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                 unitSymbol=item.unitSymbol)
-            else:
-                if accessMode is AccessMode.RECONFIGURABLE:
-                    editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
-                                                                    key=item.internalKey,
-                                                                    value=item.defaultValue,
-                                                                    enumeration=item.enumeration, 
-                                                                    metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                    unitSymbol=item.unitSymbol)
-                    editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
+        if self.__deviceType is NavigationItemTypes.CLASS:
+            if (accessMode is AccessMode.INITONLY) or (accessMode is AccessMode.RECONFIGURABLE):
+                editableComponent = EditableNoApplyComponent(classAlias=item.classAlias,
+                                                             key=item.internalKey,
+                                                             value=item.defaultValue,
+                                                             enumeration=item.enumeration,
+                                                             metricPrefixSymbol=item.metricPrefixSymbol,
+                                                             unitSymbol=item.unitSymbol)
+        else:
+            if accessMode is AccessMode.RECONFIGURABLE:
+                editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
+                                                                key=item.internalKey,
+                                                                value=item.defaultValue,
+                                                                enumeration=item.enumeration, 
+                                                                metricPrefixSymbol=item.metricPrefixSymbol,
+                                                                unitSymbol=item.unitSymbol)
+                editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
 
         item.editableComponent = editableComponent
 
