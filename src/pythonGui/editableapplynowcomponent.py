@@ -108,24 +108,21 @@ class EditableApplyNowComponent(BaseComponent):
             Manager().unregisterEditableComponent(key, self)
 
 
-    def changeWidget(self, classAlias):
-        self.classAlias = classAlias
+    def changeWidget(self, factory, proxyWidget, alias):
+        self.classAlias = alias
         self.__initParams['value'] = self.value
         
-        layout = self.__compositeWidget.layout()
-        
         oldWidget = self.__editableWidget.widget
-        index = layout.indexOf(oldWidget)
         oldWidget.deleteLater()
-        layout.removeWidget(oldWidget)
+        self.__editableWidget = factory.get_class(alias)(**self.__initParams)
+        self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
+        self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        proxyWidget.setWidget(self.__editableWidget.widget)
+        self.__editableWidget.widget.show()
         
-        # Disconnect signal from old widget
-        self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
-        self.__editableWidget = EditableWidget.create(classAlias, **self.__initParams)
-        # Connect signal to new widget
-        self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
-        layout.insertWidget(index, self.__editableWidget.widget)
-        self.__compositeWidget.adjustSize()
+        # Refresh new widget...
+        for key in self.__editableWidget.keys:
+            Manager().onRefreshInstance(key)
 
 
 ### slots ###
