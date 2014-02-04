@@ -102,6 +102,8 @@ class _Manager(QObject):
         
         # Initiate database connection
         self.__sqlDatabase = SqlDatabase()
+        self.__sqlDatabase.openConnection()
+        
         self.__treemodel = NavigationHierarchyModel()
         
         # Sets all parameters to start configuration
@@ -142,8 +144,6 @@ class _Manager(QObject):
         
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
-        
-        self.__sqlDatabase.openConnection()
 
 
     def _hash(self):
@@ -211,7 +211,6 @@ class _Manager(QObject):
 
 
     def disconnectedFromServer(self):
-        self.closeDatabaseConnection()
         # Reset manager settings
         self.reset()
         self.handleSystemTopology(Hash())
