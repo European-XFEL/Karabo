@@ -712,7 +712,6 @@ class Lower(SimpleAction):
 
 
 class Layout(Loadable):
-    xmltag = ns_svg + "g"
     subclasses = { }
 
 
@@ -763,8 +762,10 @@ class Layout(Loadable):
                     else:
                         w.set_child(r.widget, r)
                     self.load_item(elem, w)
-                w.fixed_geometry = _parse_rect(elem)
-                del element[i]
+                if len(element[i]):
+                    i += 1
+                else:
+                    del element[i]
 
 
     def draw(self, painter):
@@ -823,6 +824,8 @@ class Layout(Loadable):
 
 
 class FixedLayout(Layout, QLayout):
+    xmltag = ns_svg + "g"
+
     def __init__(self):
         QLayout.__init__(self)
         Layout.__init__(self)
@@ -852,6 +855,13 @@ class FixedLayout(Layout, QLayout):
 
     def load_item(self, element, item):
         self.add_item(item)
+        try:
+            item.fixed_geometry = _parse_rect(element)
+        except TypeError:
+            rect = QRect()
+            for s in item.shapes:
+                rect = rect.united(s.geometry())
+            item.fixed_geometry = rect
 
 
     def itemAtPosition(self, pos):
