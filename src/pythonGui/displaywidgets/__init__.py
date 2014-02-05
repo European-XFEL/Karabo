@@ -8,7 +8,8 @@
 
 __all__ = [
     "displaycheckbox", "displaychoiceelement", "displaycombobox",
-    "displaycommand", "displaydoublespinbox", "displayfilepath",
-    "displayhistogram", "displayimageelement", "displayimage", "displaylabel",
+    "displaycommand", "displaydirectory", "displaydoublespinbox",
+    "displayfilein", "displayfileout", "displayhistogram",
+    "displayimageelement", "displayimage", "displaylabel",
     "displaylineedit", "displaypycodeHist", "displaypycode", "displayspinbox",
     "displaytrendline", "tauruslabel", "taurusplot"]
