@@ -58,8 +58,8 @@ namespace karabo {
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1), "slotInstanceGone", SignalSlotable::GLOBAL);
-            m_signalSlotable->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1));
-            m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1));
+            m_signalSlotable->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
+            m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
         }
 
 
@@ -175,28 +175,28 @@ namespace karabo {
         }
 
 
-        void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId) {
+        void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId, const Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
-            Hash instanceInfo;
-            // TODO The request below never works, check why!!
-            //            try {
-            //                m_signalSlotable->request(instanceId, "slotPing", instanceId, true, false).timeout(m_internalTimeout).receive(instanceInfo);
-            //            } catch (const karabo::util::TimeoutException&) {
-            //                karabo::util::Exception::clearTrace();
-            //                KARABO_LOG_FRAMEWORK_ERROR << "Bad timeout exception on instance that pretended to just being available again (consult BH if you see this)";
-            //            }
-            string path(prepareTopologyPath(instanceId, instanceInfo));
+            
+            // Create a fake instanceInfo object here as we assume we are dealing with devices
+            
+            string path = prepareTopologyPath(instanceId, instanceInfo);
+            
             m_runtimeSystemDescriptionMutex.lock();
             bool hasInstance = m_runtimeSystemDescription.has(path);
-            m_runtimeSystemDescriptionMutex.unlock();
-
-            if (!hasInstance) {
-                KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
-                //if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceNew", instanceId, instanceInfo);
-                //else if (m_masterMode == NO_MASTER) slotInstanceNew(instanceId, instanceInfo);
-            } else {
+            
+            if (hasInstance) {
                 KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";
+                m_runtimeSystemDescription.erase(path); // Clear out-of-sync information
+            } else {
+                KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
+                Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+                m_runtimeSystemDescription.merge(entry);
+                if (m_instanceNewHandler) m_instanceNewHandler(entry);
             }
+            m_runtimeSystemDescriptionMutex.unlock();
+            //if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceNew", instanceId, instanceInfo);
+            //else if (m_masterMode == NO_MASTER) slotInstanceNew(instanceId, instanceInfo);           
         }
 
 
@@ -230,7 +230,7 @@ namespace karabo {
         }
 
 
-        void DeviceClient::onInstanceNotAvailable(const std::string& instanceId) {
+        void DeviceClient::onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared";
             removeFromSystemTopology(instanceId);
             if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
@@ -258,7 +258,7 @@ namespace karabo {
             string path("device." + deviceId + ".fullSchema");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
             if (node) node->setValue(schema);
-
+            
             path = "device." + deviceId + ".activeSchema";
             if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
 

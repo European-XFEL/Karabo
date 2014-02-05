@@ -5,8 +5,6 @@
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
         <itemPath>../../../src/karabo/core/ComputeDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/ComputeDevice.hh</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/core/DataLoggerDevice.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.cc</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.hh</itemPath>
@@ -432,6 +430,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -447,6 +447,9 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__SO__</Elem>
+          </preprocessorList>
           <warningLevel>0</warningLevel>
         </ccTool>
         <linkerTool>
@@ -486,16 +489,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerDevice.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2058,6 +2051,8 @@
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -2071,6 +2066,9 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__SO__</Elem>
+          </preprocessorList>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
@@ -2113,16 +2111,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/DataLoggerDevice.hh"
             ex="false"
             tool="3"
             flavor2="0">

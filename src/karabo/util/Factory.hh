@@ -182,6 +182,27 @@ namespace karabo {
         #define KARABO_REGISTER_IN_FACTORY_1(abstractClass, concreteClass, argType1) \
                 template<> const karabo::util::FactoryMember1<abstractClass, concreteClass, argType1> \
                 karabo::util::Register1<abstractClass, concreteClass, argType1>::registerAs(1);
+        
+        
+        /**
+         * If we are importing symbols from a dll in windows, we have to tell the compiler that he should use a single
+         * "version" of our templated factory only. This happens through KARABO_TEMPLATE_DLL which resolves to "extern"
+         * in case of dll import. If karaboFramework is compiled into a dll, the symbols are exported, if we have an
+         * application linking against the karabo dll, the symbols are imported and templates must be flagged extern!
+         */
+        #ifdef _WIN32
+        #ifdef __DLL__
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) template class __declspec(dllexport) karabo::util::Configurator< className >;
+        #else
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) extern template class __declspec(dllimport) karabo::util::Configurator< className >;
+        #endif
+        #else
+        #ifdef __SO__
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) template class karabo::util::Factory< className >;
+        #else
+        #define KARABO_REGISTER_FACTORY_BASE_CLASS(className) extern template class karabo::util::Factory< className >;
+        #endif
+        #endif
 
     }
 }

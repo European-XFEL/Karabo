@@ -82,4 +82,4 @@ class EditableDoubleSpinBox(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.__lastCursorPos = self.__leDblValue.cursorPosition()
-        self.valueEditingFinished(self.keys[0], value)
+        self.valueEditingFinished(self.keys[0], float(value))

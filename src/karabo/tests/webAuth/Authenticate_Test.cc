@@ -127,6 +127,47 @@ void Authenticate_Test::testCorrectLogin() {
 }
 
 
+void Authenticate_Test::testCorrectLoginAccessLevelZero() {
+    string username = "observer";
+    string password = "karabo";
+    string provider = "LOCAL";
+    string ipAddress = "c++UnitTestsIpAddress";
+    string brokerHostname = "127.0.0.1";
+    string brokerPortNumber = "4444";
+    string brokerTopic = "topic";
+
+
+    // Expected result values
+    const long long expectedSoftwareId = 1;
+    const long long expectedUserId = 0;
+    const long long expectedDefaultAccessLevelId = 0;
+
+
+    Authenticator a(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+
+    /************************
+     * LOGIN
+     ************************/
+    // Successful login
+    CPPUNIT_ASSERT(a.login() == true);
+
+    // Class instance should be with in new information
+    testSuccessfulLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic, expectedSoftwareId, expectedUserId, expectedDefaultAccessLevelId);
+
+    /************************
+     * LOGOUT
+     ************************/
+    // Successful logout
+    CPPUNIT_ASSERT(a.logout() == true);
+
+    // Class instance should be in the initial state
+    testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
+}
+
+
 void Authenticate_Test::testIncorrectLogin() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass222";
