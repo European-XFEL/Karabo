@@ -420,7 +420,6 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string & deviceId, const karabo::util::Hash& what) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting change on device " << deviceId;
                 Hash modified(what);
                 preprocessImageData(modified);
 

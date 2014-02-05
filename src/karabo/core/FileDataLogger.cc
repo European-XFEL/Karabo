@@ -218,8 +218,11 @@ namespace karabo {
 
         void FileDataLogger::persistDataThread() { //
 
+            TimeProfiler profiler("Persist data");
             while (m_persistData) {
-
+                profiler.open();
+                profiler.startPeriod();
+                
                 m_systemHistoryMutex.lock();
                 Hash& tmp = m_systemHistory.get<Hash>("device");
                 for (Hash::iterator it = tmp.begin(); it != tmp.end(); ++it) { // Loops deviceIds
@@ -252,6 +255,9 @@ namespace karabo {
                         it->setValue(Hash("schema", vector<Hash>(), "configuration", Hash()));
                     }
                 }
+                profiler.close();
+                profiler.stopPeriod();
+                KARABO_LOG_FRAMEWORK_DEBUG << profiler.getPeriod().getDuration();                
                 m_systemHistoryMutex.unlock();
                 boost::this_thread::sleep(boost::posix_time::seconds(this->get<int>("flushInterval")));
             }
