@@ -77,9 +77,6 @@ class ConfigurationPanel(QWidget):
         vLayout.addWidget(splitTopPanes)
                 
         self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        self.connect(self.__twNavigation.selectionModel(),
-                    SIGNAL('selectionChanged(const QItemSelection &, const QItemSelection &)'),
-                    self.onNavigationItemClicked)
         self.__twNavigation.hide()
 
         splitTopPanes.setStretchFactor(0, 1)
@@ -93,9 +90,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
         
-        Manager().signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
-
         Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
@@ -611,39 +605,20 @@ class ConfigurationPanel(QWidget):
                 self.__internalKeySchemaLoadedMap[key] = False
 
 
-    # signal from Manager NavigationTreeWidgetItem clicked (NavigationPanel)
-    def onNavigationItemClicked(self):
-        #print "ConfigurationPanel.itemClicked"
-        type = self.__twNavigation.itemClicked()
-        if type is NavigationItemTypes.UNDEFINED:
-            return
-        
-        if type is NavigationItemTypes.CLASS:
-            self.updateButtonsVisibility = True
-        else:
-            self.updateButtonsVisibility = False
-
-
     def onNavigationItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
         
-        if type is NavigationItemTypes.CLASS:
+        if type == NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
-        elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
+        elif type in (NavigationItemTypes.SERVER, NavigationItemTypes.DEVICE):
             self.updateButtonsVisibility = False
 
         if (self.__prevDevicePath != "") and (self.__prevDevicePath != path):
             Manager().removeVisibleDevice(self.__prevDevicePath)
             self.__prevDevicePath = str()
         
-        self.__twNavigation.itemChanged(itemInfo)
-        
         self.showParameterPage(type, path)
-
-
-    def onNavigationItemSelectionChanged(self, path):
-        self.__twNavigation.selectItem(path)
 
 
     def onProjectItemChanged(self, itemInfo):
