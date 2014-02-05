@@ -13,10 +13,13 @@ __all__ = ["ScriptingPanel"]
 
 import atexit
 
-from IPython.zmq.ipkernel import IPKernelApp
+#from IPython.zmq.ipkernel import IPKernelApp
+from IPython.kernel.zmq.kernelapp import IPKernelApp
 from IPython.lib.kernel import find_connection_file
-from IPython.frontend.qt.kernelmanager import QtKernelManager
-from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
+#from IPython.frontend.qt.kernelmanager import QtKernelManager
+from IPython.qt.manager import QtKernelManager
+#from IPython.frontend.qt.console.rich_ipython_widget import RichIPythonWidget
+from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
 from IPython.utils.traitlets import TraitError
 
 from PyQt4.QtCore import QTimer

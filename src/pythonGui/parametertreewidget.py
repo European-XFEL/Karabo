@@ -13,6 +13,7 @@ __all__ = ["ParameterTreeWidget"]
 
 
 from editableapplylatercomponent import EditableApplyLaterComponent
+from editablepathapplylatercomponent import EditablePathApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
 from manager import Manager
@@ -175,6 +176,10 @@ class ParameterTreeWidget(QTreeWidget):
 
         if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
+
+        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
+           not isinstance(editableComponent, EditablePathApplyLaterComponent):
+            return
         
         if editableComponent.applyEnabled:
             config.set(str(item.internalKey), editableComponent.value)
@@ -187,6 +192,10 @@ class ParameterTreeWidget(QTreeWidget):
             return
 
         if not isinstance(editableComponent, EditableApplyLaterComponent):
+            return
+
+        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
+           not isinstance(editableComponent, EditablePathApplyLaterComponent):
             return
         
         if editableComponent.applyEnabled:
