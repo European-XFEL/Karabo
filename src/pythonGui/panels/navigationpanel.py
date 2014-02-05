@@ -47,9 +47,7 @@ class NavigationPanel(QWidget):
         self.setWindowTitle(title)
                 
         self.__twNavigation = NavigationTreeView(self, treemodel)
-        self.connect(self.__twNavigation.selectionModel(),
-                    SIGNAL('selectionChanged(const QItemSelection &, const QItemSelection &)'),
-                    self.onNavigationItemClicked)
+        treemodel.itemChanged.connect(self.signalNavigationItemChanged)
         
         Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
@@ -57,8 +55,6 @@ class NavigationPanel(QWidget):
         
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
         
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -119,22 +115,6 @@ class NavigationPanel(QWidget):
     #    rootItem.fullKey = rootKey
     #    itemInfo = dict(id=-1, name=rootKey, key=rootKey, schema=schema, type=NavigationItemTypes.CLASS)
     #    Manager().onNewNavigationItem(itemInfo)
-
-
-    # NavigationTreeView: selectionChanged(const QItemSelection &, const QItemSelection &)
-    def onNavigationItemClicked(self):
-        #print "NavigationPanel.itemClicked"
-        self.__twNavigation.itemClicked()
-
-
-    # signal from Manager NavigationTreeWidgetItem clicked (ConfigurationPanel)
-    def onNavigationItemChanged(self, itemInfo):
-        #print "NavigationPanel.itemChanged"
-        self.__twNavigation.itemChanged(itemInfo)
-
-
-    def onNavigationItemSelectionChanged(self, path):
-        self.__twNavigation.selectItem(path)
 
 
     def onInstanceGone(self, path, parentPath):

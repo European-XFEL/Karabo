@@ -24,14 +24,13 @@ from PyQt4.QtGui import *
 
 
 class NavigationTreeView(QTreeView):
-
-
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
         # Stores the last selected path of an tree row
         self.__lastSelectionPath = str()
         self.setModel(model)
+        self.setSelectionModel(model.selection_model)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -172,59 +171,6 @@ class NavigationTreeView(QTreeView):
         self.saveSelectionState()
         self.model().updateData(config)
         self.restoreSelectionState()
-
-
-    def itemClicked(self):
-        index = self.currentIndex()
-        
-        if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
-               
-        level = self.model().getHierarchyLevel(index)
-        row = index.row()
-
-        classId = None
-        path = ""
-        
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            path = "server." + index.data()
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            
-            schema = Manager().getClassSchema(serverId, classId)
-            path = str("server." + serverId + ".classes." + classId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
-        elif level == 3:
-            type = NavigationItemTypes.DEVICE
-            deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
-            
-            path = str("device." + deviceId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=None))
-        
-        itemInfo = dict(key=path, classId=classId, type=type, level=level, row=row)
-        Manager().onNavigationItemChanged(itemInfo)
-        
-        return type # Needed in ConfigurationPanel
-
-
-    def itemChanged(self, itemInfo):
-        path = itemInfo.get('key')
-        
-        if len(path) == 0:
-            return
-        
-        index = self.findIndex(path)
-        self.selectIndex(index)
 
 
     def selectItem(self, path):
