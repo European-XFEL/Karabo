@@ -34,7 +34,7 @@ namespace karabo {
             char* env = getenv("KARABO_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
 
-            unsigned int defaultPort = 7676;
+            unsigned int defaultPort = 7777;
             env = getenv("KARABO_BROKER_PORT");
             if (env != 0) defaultPort = fromString<unsigned int>(string(env));
 
