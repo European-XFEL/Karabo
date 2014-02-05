@@ -42,8 +42,6 @@ class _Manager(QObject):
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
-    signalNavigationItemChanged = pyqtSignal(dict) # type, key
-    signalNavigationItemSelectionChanged = pyqtSignal(str) # key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
@@ -187,7 +185,6 @@ class _Manager(QObject):
         # Reset manager settings
         self.reset()
         self.handleSystemTopology(Hash())
-        self.onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
 
@@ -469,10 +466,6 @@ class _Manager(QObject):
 ### TODO: Temporary functions for scientific computing END ###
 
 
-    def selectNavigationItemByKey(self, path):
-        self.signalNavigationItemSelectionChanged.emit(path)
-
-
     def executeCommand(self, itemInfo):
         # instanceId, name, arguments
         path = itemInfo.get('path')
@@ -611,10 +604,6 @@ class _Manager(QObject):
             filename += ".xml"
 
         self.saveAsXml(str(filename), classId, path)
-
-
-    def onNavigationItemChanged(self, itemInfo):
-        self.signalNavigationItemChanged.emit(itemInfo)
 
 
     # TODO: needs to be implemented

@@ -13,13 +13,16 @@ __all__ = ["NavigationHierarchyModel"]
 import globals
 from navigationhierarchynode import *
 from karabo.karathon import *
+import manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt, QMimeData,
+                          pyqtSignal)
+from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
+    itemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -28,6 +31,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
         self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
+        self.selection_model = QItemSelectionModel(self)
+        self.selection_model.selectionChanged.connect(self.selectionChanged)
 
 
     def _currentConfig(self):
@@ -141,6 +146,50 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.endResetModel()
 
 
+    def selectionChanged(self, selected, deselected):
+        index = selected.indexes()[0]
+
+        if not index.isValid():
+            return NavigationItemTypes.UNDEFINED
+
+        level = self.getHierarchyLevel(index)
+        row = index.row()
+
+        classId = None
+        path = ""
+
+        if level == 0:
+            type = NavigationItemTypes.HOST
+        elif level == 1:
+            type = NavigationItemTypes.SERVER
+            path = "server." + index.data()
+        elif level == 2:
+            type = NavigationItemTypes.CLASS
+            parentIndex = index.parent()
+            serverId = parentIndex.data()
+            classId = index.data()
+
+            schema = manager.Manager().getClassSchema(serverId, classId)
+            path = "server.{}.classes.{}".format(serverId, classId)
+            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
+                                                     type=type, schema=schema))
+        elif level == 3:
+            type = NavigationItemTypes.DEVICE
+            deviceId = index.data()
+            classIndex = index.parent()
+            classId = classIndex.data()
+            #serverIndex = classIndex.parent()
+            #serverId = serverIndex.data()
+
+            path = "device." + deviceId
+            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
+                                                     type=type, schema=None))
+
+        itemInfo = dict(key=path, classId=classId,
+                        type=type, level=level, row=row)
+        self.itemChanged.emit(itemInfo)
+
+
     def getHierarchyLevel(self, index):
         # Find out the hierarchy level of the selected item
         hierarchyLevel = 0
@@ -163,9 +212,16 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if resultItem:
                 return resultItem
 
-        if path == item.path:
+        if item.path != "" and path.startswith(item.path):
             return self.createIndex(item.row(), 0, item)
         return None
+
+
+    def selectPath(self, path):
+        index = self.findIndex(path)
+        if index is not None:
+            self.selection_model.select(index,
+                                        QItemSelectionModel.ClearAndSelect)
 
 
     def rowCount(self, parent=QModelIndex()):

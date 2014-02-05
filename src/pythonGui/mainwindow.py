@@ -213,6 +213,8 @@ class MainWindow(QMainWindow):
         middleArea.setStretchFactor(1,1)
 
         self.__configurationPanel = ConfigurationPanel(Manager().treemodel)
+        self.__navigationPanel.signalNavigationItemChanged.connect(
+            self.__configurationPanel.onNavigationItemChanged)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
