@@ -18,8 +18,9 @@ from plugindialog import PluginDialog
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
-                         QInputDialog, QLineEdit, QMenu, QMessageBox, QTreeWidget,
-                         QTreeWidgetItem, QVBoxLayout, QWidget)
+                         QItemSelectionModel, QInputDialog, QLineEdit, QMenu,
+                         QMessageBox, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
+                         QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -161,12 +162,30 @@ class ProjectPanel(QWidget):
             subDirToDelete.rmpath(subDirPath)
 
 
+    def _rFindItem(self, item, path):
+        for i in range(item.childCount()):
+            childItem = item.child(i)
+            result = self._rFindItem(childItem, path)
+            if (result is not None):
+                return result
+
+        itemPath = item.data(0, ProjectPanel.ITEM_KEY)
+        if itemPath == path:
+            return item
+        return None
+
+
+    def _findItem(self, path):
+        return self._rFindItem(self.__twProject.invisibleRootItem(), path)
+
+
 ### slots ###
     def onItemSelectionChanged(self):
         item = self.__twProject.currentItem()
         if not item: return
 
-        print "onItemSelectionChanged", item.text(0)
+        print ""
+        print "++++ onItemSelectionChanged", item.text(0)
         
         path = item.data(0, ProjectPanel.ITEM_KEY)
         if not path:
@@ -183,6 +202,7 @@ class ProjectPanel(QWidget):
 
 
     def onUpdate(self, projectHash):
+        print ""
         print "###################"
         print projectHash
         print ""
@@ -210,7 +230,7 @@ class ProjectPanel(QWidget):
 
             projectConfig = projectHash.get(k)
             for l in projectConfig.keys():
-                # Project tag
+                # Project key
 
                 # Get children
                 categoryConfig = projectConfig.get(l)
@@ -326,11 +346,22 @@ class ProjectPanel(QWidget):
         if currentItem:
             projectItem = currentItem.parent()
             if projectItem:
+                # Path for device in project hash
+                devicePath = projectItem.text(0) + ".project.devices." + \
+                             self.__pluginDialog.deviceId
+                # Path for device configuration
+                configPath = str(devicePath + "." + self.__pluginDialog.plugin)
+                
+                # Put info in Hash
+                config = Hash()
+                config.set(configPath + ".deviceId", self.__pluginDialog.deviceId)
+                config.set(configPath + ".serverId", self.__pluginDialog.server)
                 # Add device to project hash
-                Manager().addDeviceToProject(projectItem.text(0),
-                                             self.__pluginDialog.deviceId,
-                                             self.__pluginDialog.plugin,
-                                             self.__pluginDialog.server)
+                Manager().addDeviceToProject(config)
+
+                # Select added device
+                item = self._findItem(devicePath)
+                self.__twProject.setCurrentItem(item)
 
         self.__pluginDialog = None
 
