@@ -114,7 +114,7 @@ extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)
 clean-extern:
-	rm .marker.txt
+	rm -f .marker.txt
 	rm -rf $(EXTERN_DISTDIR)
 	cd $(EXTERN_DIR)/resources; find . -mindepth 2 -maxdepth 2 -type d -not -path \*.svn\* -exec rm -rf {} \;  
 
