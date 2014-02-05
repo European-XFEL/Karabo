@@ -613,9 +613,8 @@ class ConfigurationPanel(QWidget):
                 self.__internalKeySchemaLoadedMap[key] = False
 
 
-    # signal from Manager NavigationTreeWidgetItem clicked (NavigationPanel)
+    # NavigationTreeView: clicked-signal
     def onNavigationItemClicked(self):
-        #print "ConfigurationPanel.itemClicked"
         type = self.__twNavigation.itemClicked()
         if type is NavigationItemTypes.UNDEFINED:
             return
@@ -626,6 +625,7 @@ class ConfigurationPanel(QWidget):
             self.updateButtonsVisibility = False
 
 
+    # signal from Manager NavigationItem clicked (NavigationPanel)
     def onNavigationItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')

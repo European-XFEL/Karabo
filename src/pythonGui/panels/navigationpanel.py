@@ -36,9 +36,6 @@ class NavigationPanel(QWidget):
     #    pass
     ##########################################
 
-    # signals
-    signalNavigationItemChanged = pyqtSignal(dict) # type, key
-
 
     def __init__(self, treemodel):
         super(NavigationPanel, self).__init__()
@@ -122,15 +119,13 @@ class NavigationPanel(QWidget):
     #    Manager().onNewNavigationItem(itemInfo)
 
 
-    # NavigationTreeView: selectionChanged(const QItemSelection &, const QItemSelection &)
+    # NavigationTreeView: clicked-signal
     def onNavigationItemClicked(self):
-        #print "NavigationPanel.itemClicked"
         self.__twNavigation.itemClicked()
 
 
-    # signal from Manager NavigationTreeWidgetItem clicked (ConfigurationPanel)
+    # signal from Manager NavigationItem clicked (ConfigurationPanel)
     def onNavigationItemChanged(self, itemInfo):
-        #print "NavigationPanel.itemChanged"
         self.__twNavigation.itemChanged(itemInfo)
 
 
