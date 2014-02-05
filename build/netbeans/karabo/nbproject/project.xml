@@ -26,7 +26,7 @@
         <preferences xmlns="http://www.netbeans.org/ns/auxiliary-configuration-preferences/1">
             <module name="org-netbeans-modules-editor-indent">
                 <node name="CodeStyle"/>
-            </module>            
+            </module>
         </preferences>
         <spellchecker-wordlist xmlns="http://www.netbeans.org/ns/spellchecker-wordlist/1">
             <word>std</word>
