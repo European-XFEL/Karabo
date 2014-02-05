@@ -447,6 +447,9 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__SO__</Elem>
+          </preprocessorList>
           <warningLevel>0</warningLevel>
         </ccTool>
         <linkerTool>
@@ -2063,6 +2066,9 @@
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__SO__</Elem>
+          </preprocessorList>
           <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
