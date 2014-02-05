@@ -15,7 +15,7 @@ import const
 
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
-import choicecomponent
+from choicecomponent import ChoiceComponent
 from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
@@ -30,6 +30,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         
         # Popup widget for tooltip info
         self.__popupWidget = None
+        self.__currentValueOnDevice = None
         
         # Value type
         self.__valueType = None
@@ -40,6 +41,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
+        # Connect to DisplayComponent to get current value on device for tooltip update
+        self.displayComponent.signalValueChanged.connect(self.onDisplayValueChanged)
 
 
     def setupContextMenu(self):
@@ -99,30 +102,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.__popupWidget = PopupWidget(self.treeWidget())
 
         if show:
-            info = OrderedDict()
-            info["Property"] = self.text(0)
-            paramKey = str(self.internalKey).split(".configuration.")
-            if self.description:
-                info["Description"] = self.description
-            info["Key"] = paramKey[1]
-            if self.__valueType:
-                info["Value Type"] = self.__valueType
-            if self.defaultValue:
-                info["Default Value"] = self.defaultValue
-            if self.alias:
-                info["Alias"] = self.alias
-            if self.tags:
-                tagString = str()
-                nbTags = len(self.tags)
-                for i in xrange(nbTags):
-                    tagString += self.tags[i]
-                    if i < (nbTags-1):
-                        tagString += ", "
-                info["Tags"] = tagString
-            if self.timestamp:
-                info["Timestamp"] = self.timestamp
-            
-            self.__popupWidget.setInfo(info)
+            info = self._updateToolTipDialog()
             
             pos = QCursor.pos()
             pos.setX(pos.x() + 10)
@@ -133,11 +113,47 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.__popupWidget.hide()
 
 
+    def _updateToolTipDialog(self):
+            info = OrderedDict()
+            info["Property"] = self.text(0)
+            paramKey = str(self.internalKey).split(".configuration.")
+            if self.description is not None:
+                info["Description"] = self.description
+            info["Key"] = paramKey[1]
+            if self.__valueType is not None:
+                info["Value Type"] = self.__valueType
+            if self.defaultValue is not None:
+                info["Default Value"] = self.defaultValue
+            if self.alias is not None:
+                info["Alias"] = self.alias
+            if self.tags is not None:
+                tagString = str()
+                nbTags = len(self.tags)
+                for i in xrange(nbTags):
+                    tagString += self.tags[i]
+                    if i < (nbTags-1):
+                        tagString += ", "
+                info["Tags"] = tagString
+            if self.timestamp is not None:
+                info["Timestamp"] = self.timestamp
+            if self.__currentValueOnDevice is not None:
+                info["Value on device"] = self.__currentValueOnDevice
+
+            self.__popupWidget.setInfo(info)
+
+
 ### slots ###
     def onSetToDefault(self):
         if self.editableComponent:
             #self.editableComponent.value = self.defaultValue
             self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
-            if type(self.editableComponent) is not choicecomponent.ChoiceComponent:
+            if not isinstance(self.editableComponent, ChoiceComponent):
                 self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
+
+
+    def onDisplayValueChanged(self, key, value):
+        self.__currentValueOnDevice = value
+        # Update tooltip dialog, if visible
+        if self.__popupWidget and self.__popupWidget.isVisible():
+            self._updateToolTipDialog()
 

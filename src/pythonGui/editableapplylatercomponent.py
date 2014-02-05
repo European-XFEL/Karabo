@@ -261,25 +261,21 @@ class EditableApplyLaterComponent(BaseComponent):
             Manager().unregisterEditableComponent(key, self)
 
 
-    def changeWidget(self, classAlias):
-        self.classAlias = classAlias
+    def changeWidget(self, factory, proxyWidget, alias):
+        self.classAlias = alias
         self.__initParams['value'] = self.value
-        
-        layout = self.__compositeWidget.layout()
-        
+
         oldWidget = self.__editableWidget.widget
-        index = layout.indexOf(oldWidget)
         oldWidget.deleteLater()
-        layout.removeWidget(oldWidget)
-        
-        # Disconnect signal from old widget
-        self.__editableWidget.signalEditingFinished.disconnect(self.onEditingFinished)
-        self.__editableWidget = EditableWidget.get_class(classAlias)(
-            **self.__initParams)
-        # Connect signal to new widget
-        self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
-        layout.insertWidget(index, self.__editableWidget.widget)
-        self.__compositeWidget.adjustSize()
+        self.__editableWidget = factory.get_class(alias)(**self.__initParams)
+        self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
+        self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        proxyWidget.setWidget(self.__editableWidget.widget)
+        self.__editableWidget.widget.show()
+
+        # Refresh new widget...
+        for key in self.__editableWidget.keys:
+            Manager().onRefreshInstance(key)
 
 
 ### slots ###
@@ -306,7 +302,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onValueChanged(self, key, value, timestamp=None):
-        #print "onValueChanged ", key, value
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
@@ -315,14 +310,23 @@ class EditableApplyLaterComponent(BaseComponent):
             self.__editableWidget.valueChanged(key, value)
             self.__isEditableValueInit = False
         self.__currentDisplayValue = value
-        
+
         EPSILON = 1e-4
-        if type(value) is float:
+        if isinstance(value, float):
             diff = abs(value - self.__editableWidget.value)
             isEqualEditable = diff < EPSILON
+        elif isinstance(value, list):
+            if len(value) != len(self.__editableWidget.value):
+                isEqualEditable = False
+            else:
+                for i in xrange(len(value)):
+                    if value[i] != self.__editableWidget.value[i]:
+                        isEqualEditable = False
+                        break
+                isEqualEditable = True
         else:
             isEqualEditable = (str(value) == str(self.__editableWidget.value)) # string comparison, problems with float values...
-        
+
         if isEqualEditable is False:
             self.changeApplyToBusy(True, False)
         else:

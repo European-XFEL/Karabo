@@ -232,6 +232,11 @@ class MainWindow(QMainWindow):
         self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
+    def _quit(self):
+        self.__network.endServerConnection()
+        Manager().closeDatabaseConnection()
+
+
 ### virtual functions ###
     def closeEvent(self, event):
         reply = QMessageBox.question(self, 'Message',
@@ -239,7 +244,7 @@ class MainWindow(QMainWindow):
             QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:
-            self.__network.endServerConnection()
+            self._quit()
             event.accept()
         else:
             event.ignore()
@@ -254,7 +259,7 @@ class MainWindow(QMainWindow):
 
 
     def onExit(self):
-        self.__network.endServerConnection()
+        self._quit()
         qApp.quit()
 
     

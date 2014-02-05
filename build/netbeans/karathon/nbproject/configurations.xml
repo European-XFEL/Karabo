@@ -120,6 +120,7 @@
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
         </ccTool>
@@ -421,6 +422,7 @@
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
             <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
         </ccTool>
