@@ -92,7 +92,7 @@ namespace karabo {
              */
             karabo::util::Hash m_runtimeSystemDescription;
 
-            boost::mutex m_runtimeSystemDescriptionMutex;
+            mutable boost::mutex m_runtimeSystemDescriptionMutex;
 
             boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
@@ -173,9 +173,18 @@ namespace karabo {
              */
             int getInternalTimeout() const;
 
+            // DEPRECATE
             void enableAdvancedMode();
 
+            // DEPRECATE
             void disableAdvancedMode();
+            
+            /**
+             * Set ageing on or off (on by default)
+             * @return 
+             */
+            void setAgeing(bool toggle);
+            
 
 
             /**
@@ -521,7 +530,7 @@ namespace karabo {
 
             virtual void slotInstanceUpdated(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotInstanceGone(const std::string& instanceId);
+            virtual void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
@@ -570,6 +579,12 @@ namespace karabo {
             void mortalize(const std::string& deviceId);
             
             bool isImmortal(const std::string& deviceId) const;
+            
+            void mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry);
+            
+            bool existsInRuntimeSystemDescription(const std::string& path) const;
+            
+            void eraseFromRuntimeSystemDescription(const std::string& path);
             
         };
     }
