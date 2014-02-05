@@ -635,6 +635,10 @@ class _Manager(QObject):
         self.signalNavigationItemChanged.emit(itemInfo)
 
 
+    def onProjectItemChanged(self, itemInfo):
+        self.signalProjectItemChanged.emit(itemInfo)
+
+
     # TODO: needs to be implemented
     def onReloadXsd(self, deviceServer, deviceId):
         print "Manager, onReloadXsd", deviceServer, deviceId
