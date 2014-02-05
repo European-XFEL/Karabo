@@ -12,8 +12,6 @@ __all__ = ["SchemaReader"]
 from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
-from editablepathapplylatercomponent import EditablePathApplyLaterComponent
-from editablepathnoapplycomponent import EditablePathNoApplyComponent
 
 from enums import *
 

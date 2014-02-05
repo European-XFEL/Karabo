@@ -13,7 +13,6 @@ __all__ = ["ParameterTreeWidget"]
 
 
 from editableapplylatercomponent import EditableApplyLaterComponent
-from editablepathapplylatercomponent import EditablePathApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
 from manager import Manager
@@ -176,8 +175,7 @@ class ParameterTreeWidget(QTreeWidget):
         if editableComponent is None:
             return
 
-        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
-           not isinstance(editableComponent, EditablePathApplyLaterComponent):
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
         
         if editableComponent.applyEnabled:
@@ -190,8 +188,7 @@ class ParameterTreeWidget(QTreeWidget):
         if editableComponent is None:
             return
 
-        if not isinstance(editableComponent, EditableApplyLaterComponent) and \
-           not isinstance(editableComponent, EditablePathApplyLaterComponent):
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
         
         if editableComponent.applyEnabled:
@@ -205,8 +202,7 @@ class ParameterTreeWidget(QTreeWidget):
             editableComponent = item.editableComponent
             if editableComponent is None:
                 continue
-            if not isinstance(editableComponent, EditableApplyLaterComponent) and \
-               not isinstance(editableComponent, EditablePathApplyLaterComponent):
+            if not isinstance(editableComponent, EditableApplyLaterComponent):
                 continue
             
             if editableComponent.applyEnabled is True:
@@ -300,9 +296,7 @@ class ParameterTreeWidget(QTreeWidget):
         if not isinstance(item, PropertyTreeWidgetItem):
             return (False, False)
 
-        if (item.editableComponent is None) or \
-           (not isinstance(item.editableComponent, EditableApplyLaterComponent) \
-            and (not isinstance(item.editableComponent, EditablePathApplyLaterComponent))):
+        if (item.editableComponent is None) or (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
             return (False,False)
 
         return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
