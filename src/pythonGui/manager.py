@@ -81,20 +81,6 @@ class _Manager(QObject):
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
         
-        # Time between state updates
-        self.__stateUpdateTime = QTime()
-        self.__stateUpdateTime.start()
-        
-        # Tuple stores last state
-        self.__lastState = None
-        # Timer for state update, if last incoming state is a while ago
-        self.__stateUpdateTimer = QTimer()
-        self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
-        
-        # Timer for state update, if last incoming state is a while ago
-        self.__stateUpdateTimer = QTimer()
-        self.__stateUpdateTimer.timeout.connect(self.onLastStateUpdateTimeOut)
-        
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
         # Map stores all keys and DataNofiers for display widgets
@@ -112,10 +98,6 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
-        
-        # Tuple stores last state
-        self.__lastState = None
-        
         # Central hash
         self.__hash = Hash()
         # Project hash
@@ -269,7 +251,12 @@ class _Manager(QObject):
         deviceId = self._getDeviceIdFromPath(path)
         if not deviceId:
             return
-        
+
+        # If schema was not seen, request device schema in function
+        # getDeviceSchema will call newVisibleDevice again
+        if self.getDeviceSchema(deviceId) is None:
+            return
+
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] += 1
@@ -283,7 +270,7 @@ class _Manager(QObject):
         deviceId = self._getDeviceIdFromPath(path)
         if not deviceId:
             return
-        
+
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] -= 1
@@ -330,16 +317,7 @@ class _Manager(QObject):
                 
                 # Check state
                 if key == "state":
-                    # Store latest state as tuple
-                    self.__lastState = (path, devicePath, value)
-                    if self.__stateUpdateTime.elapsed() > 250:
-                        # Update state when last state change happened before 250ms
-                        self._triggerStateChange(devicePath, value)
-                    else:
-                        # Start timer for possible state update
-                        self.__stateUpdateTimer.start(300)
-                    # Start update state time again
-                    self.__stateUpdateTime.start()
+                    self._triggerStateChange(devicePath, value)
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
@@ -367,17 +345,6 @@ class _Manager(QObject):
 
 
 ### Slots ###
-    def onLastStateUpdateTimeOut(self):
-        # Gets called when last state is not yet reflected in GUI
-        if self.__stateUpdateTime.elapsed() > 250:
-            if self.__lastState:
-                address = self.__lastState[0]
-                deviceId = self.__lastState[1]
-                value = self.__lastState[2]
-                self._triggerStateChange(deviceId, value)
-        self.__stateUpdateTimer.stop()
-        
-
     def onDeviceClassValueChanged(self, key, value):
         #print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
@@ -711,10 +678,11 @@ class _Manager(QObject):
     def handleDeviceSchema(self, deviceId, config):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        
+
         path = "device." + deviceId
         descriptionPath = path + ".description"
         self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
+        self.newVisibleDevice(path)
 
 
     def getDeviceSchema(self, deviceId):
