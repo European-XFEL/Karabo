@@ -102,4 +102,10 @@ namespace karabo {
     }
 }
 
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<float> >)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<double> >)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned int> >)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned short> >)
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned char> >)
+
 #endif
