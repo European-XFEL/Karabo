@@ -35,5 +35,7 @@ namespace karabo {
     }
 }
 
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::util::Schema>)
+
 #endif	/* SCHEMABINARYSERIALIZER_HH */
 

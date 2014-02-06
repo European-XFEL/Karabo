@@ -15,6 +15,8 @@
 using namespace karabo::util;
 using namespace std;
 
+KARABO_EXPLICIT_TEMPLATE(karabo::io::TextSerializer<karabo::util::Schema>)
+
 namespace karabo {
     namespace io {
 

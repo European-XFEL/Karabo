@@ -86,10 +86,4 @@ namespace karabo {
     }
 }
 
-namespace karabo { namespace util { class Hash; } }
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::util::Hash>)
-        
-namespace karabo { namespace util { class Schema; } }        
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::util::Schema>)
-
 #endif

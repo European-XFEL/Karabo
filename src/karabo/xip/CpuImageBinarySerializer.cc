@@ -13,6 +13,12 @@
 
 #include "CpuImageBinarySerializer.hh"
 
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::xip::CpuImage<double> >)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::xip::CpuImage<float> >)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned int> >)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned short> >)
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::xip::CpuImage<unsigned char> >)
+
 namespace karabo {
     namespace xip {
 
