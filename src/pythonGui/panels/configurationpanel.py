@@ -679,8 +679,6 @@ class ConfigurationPanel(QWidget):
 
     def onDeviceStateChanged(self, internalKey, state):
         index = self.__navItemInternalKeyIndexMap.get(internalKey)
-        if index is None:
-            index = self.__navItemInternalKeyIndexMap.get(str(internalKey))
         if index:
             twParameterEditorPage = self.__swParameterEditor.widget(index)
             twParameterEditorPage.stateUpdated(state)
