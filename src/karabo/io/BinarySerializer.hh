@@ -71,14 +71,4 @@ namespace karabo {
     }
 }
 
-namespace karabo { namespace util { class Hash; } }
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::util::Hash>)
-
-namespace karabo { namespace util { class Schema; } }
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::util::Schema>)
-
-namespace karabo { namespace xip { template <class T> class CpuImage; } }
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<float> >)
-KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::BinarySerializer<karabo::xip::CpuImage<double> >)
-
 #endif

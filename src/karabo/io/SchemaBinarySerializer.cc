@@ -12,6 +12,8 @@
 using namespace std;
 using namespace karabo::util;
 
+KARABO_EXPLICIT_TEMPLATE(karabo::io::BinarySerializer<karabo::util::Schema>)
+
 namespace karabo {
     namespace io {
 

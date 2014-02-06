@@ -403,11 +403,13 @@ namespace karabo {
         #endif
         #else
         #ifdef __SO__
-        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) template class karabo::util::Configurator< className >;
+        #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className)
         #else
         #define KARABO_REGISTER_CONFIGURATION_BASE_CLASS(className) extern template class karabo::util::Configurator< className >;
         #endif
         #endif
+
+        #define KARABO_EXPLICIT_TEMPLATE(className) template class className;
 
         #define KARABO_CONFIGURATION_BASE_CLASS \
                 static boost::shared_ptr<Self> create(const karabo::util::Hash& configuration, const bool validate = true) { \

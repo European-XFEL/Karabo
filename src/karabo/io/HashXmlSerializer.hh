@@ -81,5 +81,8 @@ namespace karabo {
         };
     }
 }
+
+KARABO_REGISTER_CONFIGURATION_BASE_CLASS(karabo::io::TextSerializer<karabo::util::Hash>)
+
 #endif	
 
