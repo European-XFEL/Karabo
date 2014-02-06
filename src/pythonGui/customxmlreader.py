@@ -360,9 +360,6 @@ class CustomXmlReader(QXmlStreamReader):
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
                 proxyItem.setToolTip(tooltipText)
 
-            # Simulated NavigationItem click event to load schema
-            navItemPath = internalKey.split('.configuration.')
-            Manager().selectNavigationItemByKey(navItemPath[0])
             # Register as visible device
             Manager().newVisibleDevice(internalKey)
                     
@@ -406,8 +403,6 @@ class CustomXmlReader(QXmlStreamReader):
         
         # Register as visible device
         Manager().newVisibleDevice(internalKey)
-        # Simulated NavigationItem click event to load schema
-        Manager().selectNavigationItemByKey(internalKey)
         # Get schema
         schema = Manager().getSchemaByInternalKey(internalKey)
         
