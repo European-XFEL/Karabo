@@ -29,6 +29,7 @@ class DivWidget(QFrame):
         self.__index = -1
         self.__label = label
         self.__doesDockOnClose = True
+        self.__dockableWidget = dockableWidget
 
         self.__icon = icon
 
@@ -44,17 +45,37 @@ class DivWidget(QFrame):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addLayout(self.__toolBarLayout)
-        vLayout.addWidget(dockableWidget)
+        vLayout.addWidget(self.__dockableWidget)
 
         # Add custom actions to toolbar
-        dockableWidget.setupToolBars(self.__toolBar, self)
+        self.__dockableWidget.setupToolBars(self.__toolBar, self)
         
-        self.docked.connect(dockableWidget.onDock)
-        self.undocked.connect(dockableWidget.onUndock)
+        self.docked.connect(self.__dockableWidget.onDock)
+        self.undocked.connect(self.__dockableWidget.onUndock)
 
 #        self.setStyleSheet("QWidget {border-style: solid;"
 #                                    "border: 1px solid gray;"
 #                                    "}")
+
+
+    def forceClose(self):
+        """
+        This function makes .
+        """
+        self.__doesDockOnClose = False
+        return self.close()
+
+
+### virtual functions ###
+    def closeEvent(self, event):
+        if self.__doesDockOnClose:
+            self.onDock()
+            event.ignore()
+        else:
+            if self.__dockableWidget.close():
+                event.accept()
+            else:
+                event.ignore()
 
 
     def _setupActions(self):
@@ -96,14 +117,6 @@ class DivWidget(QFrame):
 
     def onIndexChanged(self, index):
         self.__index = index
-
-
-    def closeEvent(self, event):
-        if self.__doesDockOnClose:
-            self.onDock()
-            event.ignore()
-        else:
-            event.accept()
 
 
     def getIndex(self):

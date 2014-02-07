@@ -13,6 +13,7 @@ __all__ = ["CustomMiddlePanel"]
 
 
 from customwidget import CustomWidget
+from manager import Manager
 from toolbar import ToolBar
 
 from PyQt4.QtGui import QAction, QIcon, QKeySequence, QMenu, QSizePolicy, \
@@ -47,8 +48,18 @@ class CustomMiddlePanel(QWidget):
         mainLayout.setContentsMargins(3,3,3,3)
         mainLayout.addWidget(self.__customWidget)
         
+        Manager().notifier.signalReset.connect(self.onResetPanel)
+        
         self.setupActions()
         self.updateActions()
+
+
+### virtual functions ###
+    def closeEvent(self, event):
+        if self.__customWidget.close():
+            event.accept()
+        else:
+            event.ignore()
 
 
     def setupActions(self):
@@ -367,6 +378,11 @@ class CustomMiddlePanel(QWidget):
         self.__acUnGroupItems.setDisabled(not isItemGroup)
 
 
+### slots ###
+    def onResetPanel(self):
+        self.__customWidget.reset()
+
+
     def onLineInserted(self):
         self.__acAddLine.setChecked(False)
 
@@ -375,7 +391,6 @@ class CustomMiddlePanel(QWidget):
         self.__acAddRect.setChecked(False)
 
 
-### slots ###
     def onDesignModeChanged(self, isChecked):
         if isChecked:
             text = "Change to control mode"
