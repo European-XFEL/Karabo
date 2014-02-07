@@ -246,6 +246,7 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+        QMainWindow.closeEvent(self, event)
 
 
 ### slots ###

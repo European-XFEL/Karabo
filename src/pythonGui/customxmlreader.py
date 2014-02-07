@@ -361,7 +361,11 @@ class CustomXmlReader(QXmlStreamReader):
                 proxyItem.setToolTip(tooltipText)
 
             # Register as visible device
-            Manager().newVisibleDevice(internalKey)
+            online = Manager().newVisibleDevice(internalKey)
+            if not online:
+                # TODO:
+                #print "offline"
+                pass
                     
         #proxyItem.setPos(QPointF(posX, posY))
         if transform:
@@ -402,7 +406,12 @@ class CustomXmlReader(QXmlStreamReader):
         self.__internalKeyTextTuples.append((internalKey, text))
         
         # Register as visible device
-        Manager().newVisibleDevice(internalKey)
+        online = Manager().newVisibleDevice(internalKey)
+        if not online:
+            # TODO:
+            #print "offline"
+            pass
+        
         # Get schema
         schema = Manager().getSchemaByInternalKey(internalKey)
         

@@ -234,6 +234,7 @@ class _Manager(QObject):
         
 
     def _getDeviceIdFromPath(self, path):
+        # TODO: try...catch
         splittedPath = str(path).split('device.')
         if len(splittedPath) < 2:
             # no device selected
@@ -249,13 +250,13 @@ class _Manager(QObject):
 
     def newVisibleDevice(self, path):
         deviceId = self._getDeviceIdFromPath(path)
-        if not deviceId:
-            return
 
+        # Check whether deviceId in central hash
+        hasDevice = self.__hash.has("device." + deviceId)
         # If schema was not seen, request device schema in function
         # getDeviceSchema will call newVisibleDevice again
-        if self.getDeviceSchema(deviceId) is None:
-            return
+        if hasDevice and (self.getDeviceSchema(deviceId) is None):
+            return True
 
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
@@ -264,6 +265,8 @@ class _Manager(QObject):
             self.__visibleDevInsKeys[deviceId] = 1
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
+        
+        return hasDevice
 
 
     def removeVisibleDevice(self, path):
@@ -500,10 +503,18 @@ class _Manager(QObject):
         self.signalNewNavigationItem.emit(itemInfo)
 
 
-    def onSelectNewDevice(self, deviceId):
+    def selectDeviceByPath(self, path):
         if self.__isInitDeviceCurrentlyProcessed is True:
-            self.signalSelectNewNavigationItem.emit(deviceId)
+            self.signalSelectNewNavigationItem.emit(path)
             self.__isInitDeviceCurrentlyProcessed = False
+
+
+    def potentiallyRefreshVisibleDevice(self, deviceId):
+        # If deviceId is already visible in scene but was offline, force refresh
+        if (deviceId in self.__visibleDevInsKeys) and \
+           (self.__visibleDevInsKeys[deviceId] > 0):
+            self.signalSelectNewNavigationItem.emit("device." + deviceId)
+            self.signalRefreshInstance.emit(deviceId)
 
 
     def onSchemaAvailable(self, itemInfo):
