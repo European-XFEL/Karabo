@@ -354,6 +354,15 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(header, topologyEntry);
                 }
+                // TODO let device client return also deviceId as first argument
+                if (topologyEntry.has("device")) {
+                    string deviceId = topologyEntry.get<Hash>("device").begin()->getKey();
+                    // Check whether someone already noted interest in this deviceId
+                    if (m_visibleDevices.find(deviceId) != m_visibleDevices.end()) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << deviceId << " which is going to be visible in a GUI client";
+                        remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
+                    }
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in instanceNewHandler(): " << e.userFriendlyMsg();
             }
