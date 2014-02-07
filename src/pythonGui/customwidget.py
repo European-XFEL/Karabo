@@ -47,7 +47,46 @@ class CustomWidget(QWidget):
         vLayout.addLayout(hZoomLayout)
 
 
+### virtual functions ###
+    def closeEvent(self, event):
+        sceneItems = self.__view.items()
+        if len(sceneItems) < 1:
+            return
+        
+        messageBox = QMessageBox(self)
+        messageBox.setWindowTitle("Save scene before closing")
+        messageBox.setText("Do you want to save your scene before closing?")
+        messageBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        messageBox.setDefaultButton(QMessageBox.Save)
+
+        reply = messageBox.exec_()
+        if reply == QMessageBox.Cancel:
+            event.ignore()
+            return
+
+        if reply == QMessageBox.Save:
+            self.saveSceneAsLayout()
+        event.accept()
+
+
 ### public functions ###
+    def reset(self):
+        sceneItems = self.__view.items()
+        if len(sceneItems) < 1:
+            return
+
+        # Check whether scene was saved before reset by clearing it
+        reply = QMessageBox.question(self, "Save scene before closing",
+            "Do you want to save your scene before closing?", QMessageBox.Save |
+            QMessageBox.Discard, QMessageBox.Discard)
+
+        if reply == QMessageBox.Save:
+            self.saveSceneAsLayout()
+        
+        # Remove all items from scene
+        self.__view.removeItems(sceneItems)
+
+
     def setDesignMode(self, isDesignMode):
         self.__view.setDesignMode(isDesignMode)
 

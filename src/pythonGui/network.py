@@ -556,5 +556,6 @@ class Network(QObject):
             deviceIds = list()
             deviceConfig.getKeys(deviceIds)
             for deviceId in deviceIds:
-                Manager().onSelectNewDevice(deviceKey + "." + deviceId)
+                Manager().selectDeviceByPath(deviceKey + "." + deviceId)
+                Manager().potentiallyRefreshVisibleDevice(deviceId)
 

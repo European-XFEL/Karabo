@@ -62,7 +62,13 @@ class DockTabWindow(QTabWidget):
     def onCloseTab(self, index):
         if self.count() == 1:
             return
-        
+
+        # Get widget, which is about to be closed
+        widget = self.widget(index)
+        # Close widget (if possible) before removing it from tab
+        if not widget.forceClose():
+            return
+        # Remove widget from tab
         self.removeTab(index)
         self.updateTabsClosable()
 
