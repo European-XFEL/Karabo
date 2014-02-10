@@ -19,6 +19,14 @@
 
 #include "FsmMacros.hh"
 
+
+// ###################################################
+
+ #define KARABO_FRAMEWORK_VERSION "1.1.2"
+
+// ###################################################
+
+
 /**
  * The main European XFEL namespace
  */
@@ -39,7 +47,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DeviceServer, "DeviceServer", "1.0")
+            KARABO_CLASSINFO(DeviceServer, "DeviceServer", KARABO_FRAMEWORK_VERSION)
             KARABO_CONFIGURATION_BASE_CLASS
 
 
