@@ -25,10 +25,11 @@ class CustomWidget(QWidget):
     rectInserted = pyqtSignal()
     sceneSelectionChanged = pyqtSignal()
     
-    def __init__(self, parent):
+    def __init__(self, parent, isConnectedToServer):
         super(CustomWidget, self).__init__(parent)
         
         self.__view = GraphicsView()
+        self.__view.setDesignMode(isConnectedToServer)
         self.__view.lineInserted.connect(self.onLineInserted)
         self.__view.rectInserted.connect(self.onRectInserted)
         self.__view.sceneSelectionChanged.connect(self.onSceneSelectionChanged)
