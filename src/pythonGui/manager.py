@@ -233,23 +233,30 @@ class _Manager(QObject):
             dataNotifier.removeComponent(key, component)
         
 
-    def _getDeviceIdFromPath(self, path):
-        # TODO: try...catch
-        splittedPath = str(path).split('device.')
+    def _getDeviceIdFromInternalPath(self, internalPath):
+        """
+        This function gets as parameter the \internalPath of a device or a device
+        class.
+        Only if this internal path belongs to a device, the deviceId is return,
+        otherwise return None.
+        """
+        splittedPath = internalPath.split('device.')
         if len(splittedPath) < 2:
             # no device selected
             return None
-        
+
         # Get deviceId
         deviceParameter = splittedPath[1].split('.configuration.')
         if len(deviceParameter) < 1:
             return None
-        
+
         return deviceParameter[0]
 
 
-    def newVisibleDevice(self, path):
-        deviceId = self._getDeviceIdFromPath(path)
+    def newVisibleDevice(self, internalPath):
+        deviceId = self._getDeviceIdFromInternalPath(internalPath)
+        if not deviceId:
+            return
 
         # Check whether deviceId in central hash
         hasDevice = self.__hash.has("device." + deviceId)
@@ -269,8 +276,8 @@ class _Manager(QObject):
         return hasDevice
 
 
-    def removeVisibleDevice(self, path):
-        deviceId = self._getDeviceIdFromPath(path)
+    def removeVisibleDevice(self, internalPath):
+        deviceId = self._getDeviceIdFromInternalPath(internalPath)
         if not deviceId:
             return
 
@@ -492,10 +499,12 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logData)
 
 
-    def onRefreshInstance(self, path):
-        deviceId = self._getDeviceIdFromPath(path)
-        if not deviceId or not self.__hash.has(str(path)):
+    def onRefreshInstance(self, internalPath):
+        print "onRefreshInstance", internalPath
+        deviceId = self._getDeviceIdFromInternalPath(internalPath)
+        if (not deviceId) and (not self.__hash.has(internalPath)):
             return
+        print "signalRefreshInstance", deviceId
         self.signalRefreshInstance.emit(deviceId)
 
    
