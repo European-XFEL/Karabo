@@ -47,7 +47,7 @@ namespace karabo {
                     .reconfigurable()
                     .assignmentOptional().defaultValue(10)
                     .commit();
-            
+
             FLOAT_ELEMENT(expected).key("lastFlushDuration")
                     .displayedName("Last flush duration")
                     .description("Time needed for the last flush")
@@ -62,7 +62,7 @@ namespace karabo {
 
 
         FileDataLogger::FileDataLogger(const Hash& input) : Device<OkErrorFsm>(input) {
-            
+
             // Initialize the memory data structure (currently only devices are supported)
             m_systemHistory.set("device", Hash());
         }
@@ -109,7 +109,7 @@ namespace karabo {
             // Start persisting
             m_persistData = true;
             m_persistDataThread = boost::thread(boost::bind(&karabo::core::FileDataLogger::persistDataThread, this));
-            
+
             // Start slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
@@ -221,7 +221,7 @@ namespace karabo {
                         boost::filesystem::rename(partPath, filePath); // MOVE
                         deviceEntry.set("schema", vector<Hash>());
                         deviceEntry.set("configuration", Hash());
-                        
+
                     } else {
                         if (!configuration.empty() || !schema.empty()) {
                             KARABO_LOG_DEBUG << "Data resides only in memory";
@@ -253,7 +253,7 @@ namespace karabo {
                     if (boost::filesystem::exists(filePath)) { // A file already exists
 
                         if (boost::filesystem::file_size(filePath) > (get<int>("maximumFileSize") * 1E6)) { // File is too large
-                            
+
                             KARABO_LOG_INFO << "File size for " << deviceId << " to too large, log-rotating...";
 
                             // Find the latest used file index
@@ -424,8 +424,8 @@ namespace karabo {
                     // Find the latest used file index
                     int i = 0;
                     while (boost::filesystem::exists(boost::filesystem::path("karaboHistory/" + deviceId + "_" + karabo::util::toString(i) + "." + get<string>("fileFormat")))) i++;
-                    for (int j = i-1; j >= 0 && !done; j-- ) {
-                        
+                    for (int j = i - 1; j >= 0 && !done; j--) {
+
                         vector<Hash> tmp = getData(deviceId, key, j);
                         bool collect = false;
                         bool done = false;
@@ -445,7 +445,7 @@ namespace karabo {
                                 done = true;
                                 break;
                             }
-                        }                        
+                        }
                     }
                 }
                 reply(result);
@@ -460,7 +460,7 @@ namespace karabo {
         vector<Hash> FileDataLogger::getData(const std::string& deviceId, const std::string& key, const int i) {
             vector<Hash> data;
             string memoryPath("device." + deviceId + ".configuration." + key);
-            
+
             boost::filesystem::path filePath;
             if (i == -1) {
                 filePath = boost::filesystem::path("karaboHistory/" + deviceId + "." + get<string>("fileFormat"));
