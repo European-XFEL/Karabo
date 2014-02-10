@@ -46,7 +46,7 @@ class MainWindow(QMainWindow):
         self._setupNetwork()
         self._setupPanels()
 
-        self.setWindowTitle("European XFEL - Karabo GUI (Version " + globals.KARABO_FRAMEWORK_VERSION + ")")
+        self.setWindowTitle("European XFEL - Karabo GUI " + globals.KARABO_FRAMEWORK_VERSION)
         self.resize(1200,800)
         self.show()
 
