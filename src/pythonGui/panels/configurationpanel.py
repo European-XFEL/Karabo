@@ -77,11 +77,10 @@ class ConfigurationPanel(QWidget):
         vLayout.addWidget(splitTopPanes)
                 
         self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
+        treemodel.itemChanged.connect(self.onNavigationItemChanged)
         self.__twNavigation.hide()
 
         splitTopPanes.setStretchFactor(0, 1)
-        
-        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
         
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
@@ -361,6 +360,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditorPage.addContextAction(self.__acKillInstance)
         twParameterEditorPage.addContextAction(self.__acApplyAll)
         twParameterEditorPage.addContextAction(self.__acResetAll)
+        twParameterEditorPage.path = path
         
         if type is NavigationItemTypes.CLASS:
             twParameterEditorPage.hideColumn(1)
@@ -556,7 +556,6 @@ class ConfigurationPanel(QWidget):
         self._setParameterEditorIndex(0)
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
-        self.__twNavigation.lastSelectionPath = str()
 
         while self.__swParameterEditor.count() > 1:
             twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
@@ -635,20 +634,10 @@ class ConfigurationPanel(QWidget):
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        # Check whether path of the gone instance was selected
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            index = None
-        else:
-            index = self.__twNavigation.findIndex(path)
-        
-        if index and index.isValid():
-            return
-        
-        self._setParameterEditorIndex(0)
-        self.__twNavigation.selectItem(parentPath)
-        # Hide buttons and actions
-        self._hideAllButtons()
+        if path == self._getCurrentParameterEditor().path:
+            self._setParameterEditorIndex(0)
+            self.__twNavigation.selectItem(parentPath)
+            self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -775,14 +764,6 @@ class ConfigurationPanel(QWidget):
     def onDeviceSchemaUpdated(self, key):
         key = str(key)
         self.__internalKeySchemaLoadedMap[key] = False
-
-
-    def onSystemTopologyChanged(self, config):
-        # Already done in NavigationPanel which uses the same model
-        #self.__twNavigation.updateTreeModel(config)
-        self.__twNavigation.saveSelectionState()
-        self.__twNavigation.expandAll()
-        self.__twNavigation.restoreSelectionState()
 
 
     def onGlobalAccessLevelChanged(self):
