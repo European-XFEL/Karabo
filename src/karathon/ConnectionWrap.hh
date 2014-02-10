@@ -25,32 +25,49 @@ namespace karathon {
 
     public:
 
-        static bp::object start(karabo::net::Connection& connection) {
+        static bp::object start(const karabo::net::Connection::Pointer& connection) {
             karabo::net::Channel::Pointer channel;
             {
                 ScopedGILRelease nogil;
-                channel = connection.start();
+                channel = connection->start();
             }
             return bp::object(channel);
         }
 
-        static void stop(karabo::net::Connection& connection) {
+        static void stop(const karabo::net::Connection::Pointer& connection) {
             ScopedGILRelease nogil;
-            connection.stop();
+            connection->stop();
         }
 
-        static void setIOService(karabo::net::Connection& connection, const bp::object& obj) {
+        static void setIOService(const karabo::net::Connection::Pointer& connection, const bp::object& obj) {
             using namespace karabo::net;
             if (bp::extract<IOService::Pointer>(obj).check()) {
                 const IOService::Pointer& io = bp::extract<IOService::Pointer>(obj);
-                connection.setIOService(io);
+                ScopedGILRelease nogil;
+                connection->setIOService(io);
                 return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python object in parameters is not IOService::Pointer");
         }
+        
+        static bp::object getIOService(const karabo::net::Connection::Pointer& connection) {
+            ScopedGILRelease nogil;
+            return bp::object(connection->getIOService());
+        }
 
-        static void startAsync(karabo::net::Connection& connection, const bp::object& connectionHandler);
-        static void setErrorHandler(karabo::net::Connection& connection, const bp::object& errorHandler);
+        static void startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
+        static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
+
+        static void clear() {
+            {
+                boost::mutex::scoped_lock lock(m_changedConnectionHandlersMutex);
+                m_connectionHandlers.clear();
+            }
+            {
+                boost::mutex::scoped_lock lock(m_changedErrorHandlersMutex);
+                m_errorHandlers.clear();
+            }
+        }
 
     private:
 

@@ -189,6 +189,11 @@
       <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -208,6 +213,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -215,6 +225,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyLogLogger.cc"
             ex="false"
@@ -230,6 +245,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilEpochstamp.cc"
             ex="false"
@@ -240,11 +260,22 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <developmentMode>1</developmentMode>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
@@ -275,6 +306,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
@@ -285,11 +321,21 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXmsSlotElement.cc"
             ex="false"
@@ -305,6 +351,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PythonInputHandler.hh"
             ex="false"
@@ -320,6 +371,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
@@ -359,10 +415,20 @@
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/p2pbinding.cc"
             ex="false"
@@ -497,6 +563,11 @@
       <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -516,6 +587,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyH5Tools.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -523,6 +599,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyLogLogger.cc"
             ex="false"
@@ -538,6 +619,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilEpochstamp.cc"
             ex="false"
@@ -548,11 +634,21 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilSchema.cc"
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
@@ -583,6 +679,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipStatistics.cc"
             ex="false"
@@ -593,11 +694,21 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXmsSlotElement.cc"
             ex="false"
@@ -613,6 +724,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PythonInputHandler.hh"
             ex="false"
@@ -628,6 +744,11 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PythonOutputHandler.hh"
             ex="false"
@@ -667,10 +788,20 @@
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/Wrapper.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/karathon.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/p2pbinding.cc"
             ex="false"
