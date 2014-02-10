@@ -39,7 +39,7 @@ namespace karabo {
         #define KARABO_LOG_ERROR this->log() << log4cpp::Priority::ERROR 
 
         #define KARABO_NO_SERVER "__none__"
-
+        
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
 
         public:
@@ -599,7 +599,6 @@ namespace karabo {
             // This function will polymorphically be called by the FSM template            
 
             virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
-                std::cout << "errorFoundAction" << std::endl;
                 KARABO_LOG_ERROR << shortMessage;
                 emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_deviceId);
             }
@@ -629,18 +628,18 @@ namespace karabo {
 
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner, lang 
-                karabo::util::Hash info;
-                info.set("type", "device");
-                info.set("classId", m_classId);
-                info.set("serverId", m_serverId);
-                info.set("visibility", this->get<int >("visibility"));
-                info.set("version", Device::classInfo().getVersion());
-                info.set("host", boost::asio::ip::host_name());
-                info.set("status", "ok");
-                info.set("archive", this->get<bool>("archive"));
+                karabo::util::Hash instanceInfo;
+                instanceInfo.set("type", "device");
+                instanceInfo.set("classId", m_classId);
+                instanceInfo.set("serverId", m_serverId);
+                instanceInfo.set("visibility", this->get<int >("visibility"));
+                instanceInfo.set("version", Device::classInfo().getVersion());                
+                instanceInfo.set("host", boost::asio::ip::host_name());
+                instanceInfo.set("status", "ok");
+                instanceInfo.set("archive", this->get<bool>("archive"));
 
                 // TODO Make heartbeat configurable
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, info));
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, instanceInfo));
                 
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
