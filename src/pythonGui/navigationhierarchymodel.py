@@ -15,8 +15,8 @@ from navigationhierarchynode import *
 from karabo.karathon import *
 import manager
 
-from PyQt4.QtCore import (QAbstractItemModel, QModelIndex, Qt, QMimeData,
-                          pyqtSignal)
+from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
+                          QModelIndex, Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 from enums import NavigationItemTypes
@@ -48,6 +48,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
         # Needed for GLOBAL_ACCESS_LEVEL changes
         if self.__currentConfig != config:
             self.__currentConfig = config
+
+        selectedIndexes = self.selection_model.selectedIndexes()
+        if selectedIndexes:
+            lastSelectionPath = selectedIndexes[0].internalPointer().path
+        else:
+            lastSelectionPath = None
         
         self.beginResetModel()
         self.__rootItem.clearChildItems()
@@ -144,6 +150,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 classItem.appendChildItem(deviceItem)
 
         self.endResetModel()
+        if lastSelectionPath is not None:
+            self.selectPath(lastSelectionPath)
 
 
     def selectionChanged(self, selected, deselected):
@@ -188,6 +196,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
         itemInfo = dict(key=path, classId=classId,
                         type=type, level=level, row=row)
         self.itemChanged.emit(itemInfo)
+
+
+    def selectIndex(self, index):
+        if not index:
+            return
+
+        path = index.internalPointer().path
+        self.selection_model.setCurrentIndex(index,
+                                             QItemSelectionModel.ClearAndSelect)
 
 
     def getHierarchyLevel(self, index):

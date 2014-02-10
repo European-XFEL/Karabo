@@ -27,9 +27,9 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.lastSelectionPath = ""
         self.setModel(model)
         self.setSelectionModel(model.selection_model)
+        model.modelReset.connect(self.expandAll)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -39,31 +39,6 @@ class NavigationTreeView(QTreeView):
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
-
-
-    def saveSelectionState(self):
-        """
-        Saves the current selected index path to restore the selection later.
-        """
-        selectedIndexes = self.selectedIndexes()
-        if len(selectedIndexes) < 1:
-            return
-
-        self.lastSelectionPath = selectedIndexes[0].internalPointer().path
-
-
-    def restoreSelectionState(self):
-        """
-        Restores the selected index with the saved last path.
-        """
-        if (self.lastSelectionPath is None) or (self.lastSelectionPath == ""):
-            return
-
-        index = self.findIndex(self.lastSelectionPath)
-        if index and index.isValid():
-            self.selectionModel().blockSignals(True)
-            self.setCurrentIndex(index)
-            self.selectionModel().blockSignals(False)
 
 
     def _setupContextMenu(self):
@@ -144,21 +119,6 @@ class NavigationTreeView(QTreeView):
         return self.model().findIndex(path)
 
 
-    def selectIndex(self, index):
-        if not index:
-            return
-        
-        path = index.internalPointer().path
-        if self.lastSelectionPath == path:
-            return
-        self.lastSelectionPath = path
-        
-        if index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
-
-
     def updateTreeModel(self, config):
         self.saveSelectionState()
         self.model().updateData(config)
@@ -167,7 +127,7 @@ class NavigationTreeView(QTreeView):
 
     def selectItem(self, path):
         index = self.findIndex(path)
-        self.selectIndex(index)
+        self.model().selectIndex(index)
 
 
     def onKillServer(self):
