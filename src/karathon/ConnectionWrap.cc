@@ -21,7 +21,7 @@ namespace karathon {
             boost::mutex::scoped_lock lock(m_changedConnectionHandlersMutex);
             std::map<Connection*, Hash>::iterator it = m_connectionHandlers.find(conn.get());
             if (it == m_connectionHandlers.end())
-                throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
+                return; // throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
             hash += it->second; // merge to hash
             m_connectionHandlers.erase(it);
         }
