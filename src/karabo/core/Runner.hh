@@ -21,6 +21,8 @@
 #include <karabo/io/FileTools.hh>
 #include <karabo/log/Logger.hh>
 
+#include "DeviceServer.hh"
+
 /**
  * The main karabo namespace
  */
@@ -128,14 +130,7 @@ namespace karabo {
                         showUsage(std::string(argv[0]));
                     }
                 } else if (lowerOption == "version" || lowerOption == "v") {
-                    if (argc > 2) {
-                        std::string classId = std::string(argv[2]);
-                        classId.substr(0, classId.find_first_of("."));
-                        // TODO implement
-                    } else {
-                        std::cout << "Runner-Version: " << Runner::classInfo().getVersion() << std::endl;
-                        std::cout << T::classInfo().getClassName() << "-Version: " << T::classInfo().getVersion() << std::endl << std::endl;
-                    }
+                    std::cout << "Karabo-Version: " << KARABO_FRAMEWORK_VERSION << std::endl;
                 } else {
                     showUsage(std::string(argv[0]));
                 }
