@@ -11,6 +11,8 @@
 #include <boost/python.hpp>
 #include <karabo/net/IOService.hh>
 #include "ScopedGILRelease.hh"
+#include "ChannelWrap.hh"
+#include "ConnectionWrap.hh"
 
 namespace bp = boost::python;
 
@@ -21,18 +23,38 @@ namespace karathon {
     public:
 
         static void run(karabo::net::IOService::Pointer ioserv) {
-            ScopedGILRelease nogil;
-            ioserv->run();
+            try {
+                ScopedGILRelease nogil;
+                ioserv->run();
+            } catch (const karabo::util::Exception& e) {
+                ChannelWrap::clear();
+                ConnectionWrap::clear();
+                KARABO_RETHROW
+            }
+            ChannelWrap::clear();
+            ConnectionWrap::clear();
         }
 
         static void work(karabo::net::IOService::Pointer ioserv) {
             ScopedGILRelease nogil;
-            ioserv->work();
+            try {
+                ioserv->work();
+            } catch (const karabo::util::Exception& e) {
+                ChannelWrap::clear();
+                ConnectionWrap::clear();
+                KARABO_RETHROW
+            }
+            ChannelWrap::clear();
+            ConnectionWrap::clear();
         }
 
         static void stop(karabo::net::IOService::Pointer ioserv) {
             ScopedGILRelease nogil;
-            ioserv->stop();
+            try {
+                ioserv->stop();
+            } catch (const karabo::util::Exception& e) {
+                KARABO_RETHROW
+            }
         }
     };
 }

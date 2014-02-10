@@ -21,7 +21,12 @@ namespace karathon {
     public:
 
         static bp::object getConnection(karabo::net::Channel::Pointer channel) {
-            return bp::object(channel->getConnection());
+            karabo::net::Connection::Pointer connection;
+            {
+                ScopedGILRelease nogil;
+                connection = channel->getConnection();
+            }
+            return bp::object(connection);
         }
 
         static size_t readSizeInBytes(karabo::net::Channel::Pointer channel) {
@@ -31,8 +36,8 @@ namespace karathon {
 
         static bp::object readStr(karabo::net::Channel::Pointer channel);
         static bp::object readHash(karabo::net::Channel::Pointer channel);
-        static bp::tuple  readHashStr(karabo::net::Channel::Pointer channel);
-        static bp::tuple  readHashHash(karabo::net::Channel::Pointer channel);
+        static bp::tuple readHashStr(karabo::net::Channel::Pointer channel);
+        static bp::tuple readHashHash(karabo::net::Channel::Pointer channel);
         static void write(karabo::net::Channel::Pointer channel, const bp::object& obj);
         static void write2(karabo::net::Channel::Pointer channel, const bp::object& header, const bp::object& obj);
         static void readAsyncSizeInBytes(karabo::net::Channel::Pointer channel, const bp::object& handler);
@@ -50,11 +55,33 @@ namespace karathon {
         static size_t id(karabo::net::Channel::Pointer channel) {
             return size_t(&(*channel));
         }
+
+        static void clear() {
+            {
+                boost::mutex::scoped_lock lock(m_changedChannelReadHandlersMutex);
+                m_channelReadHandlers.clear();
+            }
+            {
+                boost::mutex::scoped_lock lock(m_changedChannelWriteHandlersMutex);
+                m_channelWriteHandlers.clear();
+            }
+            {
+                boost::mutex::scoped_lock lock(m_changedChannelErrorHandlersMutex);
+                m_channelErrorHandlers.clear();
+            }
+            {
+                boost::mutex::scoped_lock lock(m_changedChannelWaitHandlersMutex);
+                m_channelWaitHandlers.clear();
+            }
+        }
+
     private:
-        static void registerWaitHandler (karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void registerReadHandler (karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void registerWaitHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
+        static void registerReadHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void registerWriteHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
         static void registerErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
+
+        static bp::object getPythonReadHandler(karabo::net::Channel::Pointer channel);
 
         static void proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size);
         static void proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s);
@@ -72,9 +99,9 @@ namespace karathon {
         }
 
     private:
-//        static boost::mutex m_changedChannelHandlersMutex;
-//        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
-        
+        //        static boost::mutex m_changedChannelHandlersMutex;
+        //        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
+
         static boost::mutex m_changedChannelReadHandlersMutex;
         static boost::mutex m_changedChannelWriteHandlersMutex;
         static boost::mutex m_changedChannelErrorHandlersMutex;
