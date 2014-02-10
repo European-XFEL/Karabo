@@ -233,10 +233,13 @@ namespace karabo {
                 // TODO We have now instanceInfo information, could send it on
                 KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared " << instanceInfo;
 
-                if (instanceInfo.empty()) removeFromSystemTopology(instanceId); // Compatibility
-                else {
+                if (instanceInfo.empty()) {
+                    KARABO_LOG_FRAMEWORK_WARN << instanceId << " disappeared without proper instanceInfo.";
+                    removeFromSystemTopology(instanceId); // Compatibility   
+                } else {
                     string path = prepareTopologyPath(instanceId, instanceInfo);
                     eraseFromRuntimeSystemDescription(path);
+                    disconnect(instanceId);
                 }
                 if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
@@ -257,7 +260,7 @@ namespace karabo {
             }
             string path = prepareTopologyPath(instanceId, instanceInfo);
             eraseFromRuntimeSystemDescription(path);
-            //removeFromSystemTopology(instanceId);
+            disconnect(instanceId);            
             if (m_masterMode != HAS_MASTER) m_signalSlotable->stopTrackingExistenceOfInstance(instanceId);
             if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
         }
