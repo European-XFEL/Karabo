@@ -27,8 +27,7 @@ class NavigationTreeView(QTreeView):
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        # Stores the last selected path of an tree row
-        self.__lastSelectionPath = str()
+        self.lastSelectionPath = ""
         self.setModel(model)
         self.setSelectionModel(model.selection_model)
         
@@ -42,13 +41,6 @@ class NavigationTreeView(QTreeView):
         self.setDragEnabled(True)
 
 
-    def _lastSelectionPath(self):
-        return self.__lastSelectionPath
-    def _setLastSelectionPath(self, lastSelectionPath):
-        self.__lastSelectionPath = lastSelectionPath
-    lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
-
-
     def saveSelectionState(self):
         """
         Saves the current selected index path to restore the selection later.
@@ -57,17 +49,17 @@ class NavigationTreeView(QTreeView):
         if len(selectedIndexes) < 1:
             return
 
-        self.__lastSelectionPath = selectedIndexes[0].internalPointer().path
+        self.lastSelectionPath = selectedIndexes[0].internalPointer().path
 
 
     def restoreSelectionState(self):
         """
         Restores the selected index with the saved last path.
         """
-        if (self.__lastSelectionPath is None) or (self.__lastSelectionPath == ""):
+        if (self.lastSelectionPath is None) or (self.lastSelectionPath == ""):
             return
 
-        index = self.findIndex(self.__lastSelectionPath)
+        index = self.findIndex(self.lastSelectionPath)
         if index and index.isValid():
             self.selectionModel().blockSignals(True)
             self.setCurrentIndex(index)
