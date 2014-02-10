@@ -177,13 +177,13 @@ namespace karabo {
 
             registerAndConnectSignalsAndSlots();
 
-            karabo::util::Hash info;
-            info.set("type", "server");
-            info.set("serverId", m_serverId);
-            info.set("version", DeviceServer::classInfo().getVersion());
-            info.set("host", boost::asio::ip::host_name());
-            info.set("visibility", m_visibility);
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, info));
+            karabo::util::Hash instanceInfo;
+            instanceInfo.set("type", "server");
+            instanceInfo.set("serverId", m_serverId);
+            instanceInfo.set("version", KARABO_FRAMEWORK_VERSION);
+            instanceInfo.set("host", boost::asio::ip::host_name());
+            instanceInfo.set("visibility", m_visibility);
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, instanceInfo));
             this->startFsm();
             t.join();
             m_pluginThread.join();
@@ -235,6 +235,7 @@ namespace karabo {
             vector<string> devices = Configurator<BaseDevice>::getRegisteredClasses();
             KARABO_LOG_INFO << "Updated list of devices available: " << karabo::util::toString(devices);
 
+
             BOOST_FOREACH(string device, devices) {
                 if (!m_availableDevices.has(device)) {
                     Schema schema = BaseDevice::getSchema(device, Schema::AssemblyRules(karabo::util::READ | karabo::util::WRITE | karabo::util::INIT));
@@ -245,28 +246,35 @@ namespace karabo {
 
 
         void DeviceServer::scanPlugins() {
-            bool inError = false;
-            m_serverIsRunning = true;
-            while (m_serverIsRunning) {
-                try {
-                    bool hasNewPlugins = m_pluginLoader->update();
-                    if (hasNewPlugins) {
-                        // Update the list of available devices
-                        updateAvailableDevices();
-                        newPluginAvailable();
+            try {
+                bool inError = false;
+                m_serverIsRunning = true;
+                while (m_serverIsRunning) {
+                    try {
+                        bool hasNewPlugins = m_pluginLoader->update();
+                        if (hasNewPlugins) {
+                            // Update the list of available devices
+                            updateAvailableDevices();
+                            newPluginAvailable();
+                        }
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
+                        if (inError) {
+                            endError();
+                            inError = false;
+                        }
+                    } catch (const Exception& e) {
+                        errorFound(e.userFriendlyMsg(), e.detailedMsg());
+                        inError = true;
+                        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
                     }
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
-                    if (inError) {
-                        endError();
-                        inError = false;
-                    }
-                } catch (const Exception& e) {
-                    errorFound(e.userFriendlyMsg(), e.detailedMsg());
-                    inError = true;
-                    boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
                 }
+                stopEventLoop();
+
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
+            } catch (...) {
+                KARABO_LOG_ERROR << "Unknown exception raised in scanPlugins: ";
             }
-            stopEventLoop();
         }
 
 
@@ -286,7 +294,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::startDeviceAction(const karabo::util::Hash& config) {
+        void DeviceServer::startDeviceAction(const karabo::util::Hash & config) {
             try {
                 std::string classId = config.begin()->getKey();
 
@@ -378,7 +386,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotDeviceGone(const std::string& instanceId) {
+        void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
             KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death." << instanceId;
 
@@ -393,13 +401,13 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotGetClassSchema(const std::string& classId) {
+        void DeviceServer::slotGetClassSchema(const std::string & classId) {
             Schema schema = BaseDevice::getSchema(classId);
             reply(schema);
         }
 
 
-        std::string DeviceServer::generateDefaultDeviceId(const std::string& classId) {
+        std::string DeviceServer::generateDefaultDeviceId(const std::string & classId) {
             string index = karabo::util::toString(++m_deviceInstanceCount[classId]);
             // Prepare shortened Device-Server name
             vector<string> tokens;

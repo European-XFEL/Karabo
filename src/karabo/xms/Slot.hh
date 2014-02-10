@@ -153,6 +153,10 @@ namespace karabo {
                     karabo::util::Exception::addToTrace(e);
                     KARABO_LOG_FRAMEWORK_ERROR << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!");
                     invalidateSenderInformation();
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
                 }
             }
 
@@ -196,6 +200,10 @@ namespace karabo {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     invalidateSenderInformation();
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
                 }
             }
 
@@ -240,6 +248,10 @@ namespace karabo {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     invalidateSenderInformation();
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
                 }
             }
 
@@ -285,6 +297,10 @@ namespace karabo {
                     karabo::util::Exception::addToTrace(e);
                     std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     invalidateSenderInformation();
+                } catch (const karabo::util::Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
                 }
             }
             std::vector<SlotHandler> m_slotHandlers;
