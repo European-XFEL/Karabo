@@ -38,15 +38,15 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         
-        self._setupPanels()
-        self._setupNetwork()
-        
         self._setupActions()
         self._setupMenuBar()
         self._setupToolBar()
         self._setupStatusBar()
 
-        self.setWindowTitle('European XFEL - Karabo GUI')
+        self._setupNetwork()
+        self._setupPanels()
+
+        self.setWindowTitle("European XFEL - Karabo GUI (Version " + globals.KARABO_FRAMEWORK_VERSION + ")")
         self.resize(1200,800)
         self.show()
 
@@ -190,7 +190,7 @@ class MainWindow(QMainWindow):
         #leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        customViewPanel = CustomMiddlePanel()
+        customViewPanel = self._createCustomMiddlePanel()
         self.__customTab = DockTabWindow("Custom view", middleArea)
         self.__customTab.addDockableTab(customViewPanel, "Custom view")
         # Add tab
@@ -230,6 +230,16 @@ class MainWindow(QMainWindow):
         self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
+    def _createCustomMiddlePanel(self):
+        """
+        This function creates a new CustomMiddlePanel, establishes its necessary
+        connections and returns it.
+        """
+        customViewPanel = CustomMiddlePanel(self.__acServerConnect.isChecked())
+        self.__network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
+        return customViewPanel
+
+
     def _quit(self):
         self.__network.endServerConnection()
         Manager().closeDatabaseConnection()
@@ -267,7 +277,7 @@ class MainWindow(QMainWindow):
 
 
     def onOpenNewCustomViewTab(self):
-        customViewPanel = CustomMiddlePanel()
+        customViewPanel = self._createCustomMiddlePanel()
         self.__customTab.addDockableTab(customViewPanel, "Custom view")
         self.__customTab.updateTabsClosable()
 

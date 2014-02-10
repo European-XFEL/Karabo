@@ -63,8 +63,6 @@ class GraphicsView(QGraphicsView):
         self.__line = None
         self.__rect = None
 
-        self.setDesignMode(True)
-
         self.__minZ = 0
         self.__maxZ = 0
         self.__seqNumber = 0
@@ -385,37 +383,39 @@ class GraphicsView(QGraphicsView):
         stream = QDataStream(self.__copiedItem, QIODevice.WriteOnly)
         for item in items:
             if isinstance(item, Text):
-                stream << "Text" << item.text() \
-                                          << item.font().toString() \
-                                          << item.textColor().name() \
-                                          << item.outlineColor().name() \
-                                          << item.backgroundColor().name() \
-                                          << "\n"
+                stream.writeString("Text")
+                stream.writeString(item.text())
+                stream.writeString(item.font().toString())
+                stream.writeString(item.textColor().name())
+                stream.writeString(item.outlineColor().name())
+                stream.writeString(item.backgroundColor().name())
+                stream.writeString("\n")
             elif isinstance(item, Link):
                 print "Link"
             elif isinstance(item, Arrow):
                 print "Arrow"
             elif isinstance(item, Line):
                 line = item.line()
-                stream << "Line" << "{},{},{},{}".format(
-                        line.x1(), line.y1(), line.x2(), line.y2()) \
-                    << "{}".format(item.length()) \
-                    << "{}".format(item.widthF()) \
-                    << "{}".format(item.style()) \
-                    << item.color().name() \
-                    << "\n"
+                stream.writeString("Line")
+                stream.writeString("{},{},{},{}".format(line.x1(), line.y1(),
+                                                        line.x2(), line.y2()))
+                stream.writeString("{}".format(item.length()))
+                stream.writeString("{}".format(item.widthF()))
+                stream.writeString("{}".format(item.style()))
+                stream.writeString(item.color().name())
+                stream.writeString("\n")
             elif isinstance(item, Rectangle):
                 rect = item.rect()
                 topLeft = rect.topLeft()
-                stream << "Rectangle" << "{},{},{},{}".format(
-                    topLeft.x(), topLeft.y(), rect.width(), rect.height()) \
-                    << "\n"
+                stream.writeString("Rectangle")
+                stream.writeString("{},{},{},{}".format(topLeft.x(), topLeft.y(),
+                                                        rect.width(), rect.height()))
+                stream.writeString("\n")
             elif isinstance(item, GraphicsProxyWidgetContainer):
                 print "GraphicsProxyWidgetContainer"
             elif isinstance(item, GraphicsProxyWidget):
                 print "GraphicsProxyWidget"
                 embeddedWidget = item.widget()
-
 
 
     # The copied item data is extracted and the items are instantiated with the
@@ -452,18 +452,18 @@ class GraphicsView(QGraphicsView):
                     # Get line coordinates
                     lineCoords = itemData[1].split(",")
                     if len(lineCoords) == 4:
-                        line = QLineF(lineCoords[0].toFloat()[0], lineCoords[1].toFloat()[0], \
-                                      lineCoords[2].toFloat()[0], lineCoords[3].toFloat()[0])
+                        line = QLineF(float(lineCoords[0]), float(lineCoords[1]), \
+                                      float(lineCoords[2]), float(lineCoords[3]))
                         lineItem.setLine(line)
                     # Get line length
                     length = float(itemData[2])
-                    lineItem.setLength(length[0])
+                    lineItem.setLength(length)
                     # Get line width
                     widthF = float(itemData[3])
-                    lineItem.setWidthF(widthF[0])
+                    lineItem.setWidthF(widthF)
                     # Get line style
                     style = int(itemData[4])
-                    lineItem.setStyle(style[0])
+                    lineItem.setStyle(style)
                     # Get line color
                     lineItem.setColor(QColor(itemData[5]))
 
@@ -473,8 +473,8 @@ class GraphicsView(QGraphicsView):
                     rectItem = Rectangle(self.__isDesignMode)
                     rectData = itemData[1].split(",")
                     if len(rectData) == 4:
-                        rect = QRectF(rectData[0].toFloat()[0], rectData[1].toFloat()[0], \
-                                      rectData[2].toFloat()[0], rectData[3].toFloat()[0])
+                        rect = QRectF(float(rectData[0]), float(rectData[1]), \
+                                      float(rectData[2]), float(rectData[3]))
                         rectItem.setRect(rect)
                     self._setupItem(rectItem)
                     rectItem.setTransformOriginPoint(rectItem.boundingRect().center())
@@ -833,9 +833,6 @@ class GraphicsView(QGraphicsView):
                 # Add created item to scene
                 self._addItem(customItem)
 
-                # Register as visible device - TODO?
-                #Manager().newVisibleDevice(configKey)
-
                 if navItemType and (navItemType == NavigationItemTypes.CLASS):
                     Manager().createNewProjectConfig(customItem, configKey, configCount, displayName, schema)
 
@@ -938,6 +935,9 @@ class GraphicsView(QGraphicsView):
                                                                         metricPrefixSymbol=metricPrefixSymbol, \
                                                                         unitSymbol=unitSymbol)
                         editableComponent.isEditableValueInit = False
+
+                        # Register as visible device
+                        Manager().newVisibleDevice(internalKey)
                     
                     editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
                     editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
@@ -945,10 +945,7 @@ class GraphicsView(QGraphicsView):
                     tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
                     editableProxyWidget.setToolTip(tooltipText)
                     # Add item to itemlist
-                    items.append(editableProxyWidget)
-                    
-                    # Register as visible device
-                    Manager().newVisibleDevice(internalKey)                   
+                    items.append(editableProxyWidget)                  
 
                 customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
                 customItem = customTuple[0]
