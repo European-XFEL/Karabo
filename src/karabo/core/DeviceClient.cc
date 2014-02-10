@@ -180,7 +180,7 @@ namespace karabo {
 
             string path = prepareTopologyPath(instanceId, instanceInfo);
             bool hasInstance = existsInRuntimeSystemDescription(path);
-            
+
             if (hasInstance) {
                 KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";
                 eraseFromRuntimeSystemDescription(path);
@@ -207,7 +207,7 @@ namespace karabo {
 
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);
-            
+
             // We should not lock here, the user may use a thread-safe function of us again and we are dead
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
 
@@ -221,7 +221,7 @@ namespace karabo {
 
             Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
             mergeIntoRuntimeSystemDescription(entry);
-            
+
             if (m_instanceUpdatedHandler) m_instanceUpdatedHandler(entry);
 
             KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceUpdated was called";
@@ -229,14 +229,20 @@ namespace karabo {
 
 
         void DeviceClient::onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            // TODO We have now instanceInfo information, could send it on
-            KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared";
-            
-            string path = prepareTopologyPath(instanceId, instanceInfo);
-            eraseFromRuntimeSystemDescription(path);
-            //removeFromSystemTopology(instanceId);
-            if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
-            if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
+            try {
+                // TODO We have now instanceInfo information, could send it on
+                KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared " << instanceInfo;
+
+                if (instanceInfo.empty()) removeFromSystemTopology(instanceId); // Compatibility
+                else {
+                    string path = prepareTopologyPath(instanceId, instanceInfo);
+                    eraseFromRuntimeSystemDescription(path);
+                }
+                if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
+                if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
+            } catch (...) {
+                KARABO_RETHROW;
+            }
         }
 
 
@@ -273,7 +279,7 @@ namespace karabo {
 
         DeviceClient::~DeviceClient() {
             setAgeing(false); // Joins the thread
-            
+
             if (!m_isShared) {
                 m_signalSlotable->stopEventLoop();
                 m_eventThread.join();
@@ -299,7 +305,8 @@ namespace karabo {
         void DeviceClient::disableAdvancedMode() {
             m_isAdvancedMode = false;
         }
-        
+
+
         void DeviceClient::setAgeing(bool on) {
             if (on && !m_getOlder) {
                 m_getOlder = true;
@@ -948,21 +955,27 @@ if (nodeData) {\
 
 
         void DeviceClient::age() {
-            while (m_getOlder) { // Loop forever
-                for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) { // Loop connected instances
+            try {
+                while (m_getOlder) { // Loop forever
+                    for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) { // Loop connected instances
 
-                    if (isImmortal(it->first)) continue; // Immortal, registered monitors will have this status
+                        if (isImmortal(it->first)) continue; // Immortal, registered monitors will have this status
 
-                    it->second++; // Others just age
-                    if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
-                        //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
-                        m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", false);
-                        std::string path("device." + it->first + ".configuration");
-                        boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                        if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+                        it->second++; // Others just age
+                        if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
+                            //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
+                            m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", false);
+                            std::string path("device." + it->first + ".configuration");
+                            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                            if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+                        }
                     }
+                    boost::this_thread::sleep(boost::posix_time::seconds(1));
                 }
-                boost::this_thread::sleep(boost::posix_time::seconds(1));
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
             }
         }
 
@@ -998,8 +1011,12 @@ if (nodeData) {\
 
 
         void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            m_runtimeSystemDescription.erase(path);
+            try {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                m_runtimeSystemDescription.erase(path);
+            } catch (...) {
+                KARABO_RETHROW;
+            }
         }
     }
 }
