@@ -36,10 +36,10 @@ class CustomMiddlePanel(QWidget):
     ##########################################
 
 
-    def __init__(self):
+    def __init__(self, isConnectedToServer):
         super(CustomMiddlePanel, self).__init__()
 
-        self.__customWidget = CustomWidget(self)
+        self.__customWidget = CustomWidget(self, isConnectedToServer)
         self.__customWidget.lineInserted.connect(self.onLineInserted)
         self.__customWidget.rectInserted.connect(self.onRectInserted)
         self.__customWidget.sceneSelectionChanged.connect(self.updateActions)
@@ -50,7 +50,7 @@ class CustomMiddlePanel(QWidget):
         
         Manager().notifier.signalReset.connect(self.onResetPanel)
         
-        self.setupActions()
+        self.setupActions(isConnectedToServer)
         self.updateActions()
 
 
@@ -62,13 +62,14 @@ class CustomMiddlePanel(QWidget):
             event.ignore()
 
 
-    def setupActions(self):
+    def setupActions(self, isConnectedToServer):
         text = "Change to control mode"
         self.__acDesignMode = QAction(QIcon(":transform"), text, self)
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
         self.__acDesignMode.setCheckable(True)
-        self.__acDesignMode.setChecked(True)
+        self.__acDesignMode.setChecked(isConnectedToServer)
+        self.__acDesignMode.setEnabled(isConnectedToServer)
         self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
        
         text = "Open"
@@ -290,6 +291,7 @@ class CustomMiddlePanel(QWidget):
         
         # Add another toolBar
         self.__drawingToolBar = ToolBar("Drawing")
+        self.__drawingToolBar.setVisible(self.__acDesignMode.isChecked())
         # Add toolBar to DivWidget
         parent.addToolBar(self.__drawingToolBar)
         
@@ -389,6 +391,15 @@ class CustomMiddlePanel(QWidget):
 
     def onRectInserted(self):
         self.__acAddRect.setChecked(False)
+
+
+    def onServerConnectionChanged(self, isConnected):
+        """
+        This slot is called when the server connection has changed (connect/disconnect).
+        In this case the design mode functionality of the customMiddlePanel changes.
+        """
+        self.__acDesignMode.setChecked(isConnected)
+        self.__acDesignMode.setEnabled(isConnected)
 
 
     def onDesignModeChanged(self, isChecked):
