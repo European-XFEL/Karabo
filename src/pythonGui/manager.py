@@ -33,8 +33,6 @@ import time
 class _Manager(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
-    signalSystemTopologyChanged = pyqtSignal(object)
-
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
@@ -614,16 +612,9 @@ class _Manager(QObject):
         pass
 
 
-### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
-        #print "handleSystemTopology"
-        #print config
-        #print ""
-        # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        
-        # Send full internal hash to navigation
-        self.signalSystemTopologyChanged.emit(self.__hash)
+        self.treemodel.updateData(self.__hash)
 
 
     def handleInstanceGone(self, instanceId):
@@ -645,12 +636,8 @@ class _Manager(QObject):
             print "Unknown instance \"" + instanceId + "\" gone."
             return
         
-        # Remove instance from central hash
         self.__hash.erase(path)
-        
-        # Send full internal hash to navigation
-        self.signalSystemTopologyChanged.emit(self.__hash)
-        # Update navigation and configuration panel
+        self.treemodel.updateData(self.__hash)
         self.signalInstanceGone.emit(path, parentPath)
 
 

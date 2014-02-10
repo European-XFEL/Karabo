@@ -36,10 +36,6 @@ class NavigationPanel(QWidget):
     #    pass
     ##########################################
 
-    # signals
-    signalNavigationItemChanged = pyqtSignal(dict) # type, key
-
-
     def __init__(self, treemodel):
         super(NavigationPanel, self).__init__()
         
@@ -47,18 +43,11 @@ class NavigationPanel(QWidget):
         self.setWindowTitle(title)
                 
         self.__twNavigation = NavigationTreeView(self, treemodel)
-        treemodel.itemChanged.connect(self.signalNavigationItemChanged)
-        
-        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
-        
+
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        
-        Manager().signalInstanceGone.connect(self.onInstanceGone)
-        
-        Manager().signalReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -80,11 +69,6 @@ class NavigationPanel(QWidget):
 
     def setupToolBars(self, standardToolBar, parent):
         pass
-
-
-### slots ###
-    def onResetPanel(self):
-        self.__twNavigation.lastSelectionPath = str()
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -117,28 +101,11 @@ class NavigationPanel(QWidget):
     #    Manager().onNewNavigationItem(itemInfo)
 
 
-    def onInstanceGone(self, path, parentPath):
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            index = None
-        else:
-            index = self.__twNavigation.findIndex(path)
-        
-        if index and index.isValid():
-            return
-
-        self.__twNavigation.selectItem(parentPath)
-
-
     def updateNavigationTreeView(self, config):
         self.__twNavigation.updateTreeModel(config)
         self.__twNavigation.expandAll()
 
         
-    def onSystemTopologyChanged(self, config):
-        self.updateNavigationTreeView(config)
-
-
     def onGlobalAccessLevelChanged(self):
         self.updateNavigationTreeView(Manager().treemodel.currentConfig)
 
