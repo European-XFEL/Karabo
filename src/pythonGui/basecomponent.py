@@ -15,10 +15,12 @@ __all__ = ["BaseComponent"]
 #from manager import Manager
 #from messagebox import MessageBox
 
+from registry import Loadable, ns_karabo, ns_svg
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-class BaseComponent(QObject):
+class BaseComponent(Loadable, QObject):
     # signals
     signalValueChanged = pyqtSignal(str, object) # key, value
 
@@ -75,11 +77,6 @@ class BaseComponent(QObject):
     value = property(fget=_getValue, fset=_setValue)
 
 
-    # Triggered by DataNotifier signalUpdateComponent
-    def onValueChanged(self, key, value):
-        raise NotImplementedError, "BaseComponent.onValueChanged"
-
-
     def addKeyValue(self, key, value):
         raise NotImplementedError, "BaseComponent.addKeyValue"
 
@@ -94,6 +91,40 @@ class BaseComponent(QObject):
 
     def changeWidget(self, classAlias):
         raise NotImplementedError, "BaseComponent.changeWidget"
+
+
+    @pyqtSlot(str, object)
+    def onDisplayValueChanged(self, key, value):
+        pass
+
+
+    def attributes(self):
+        """ returns a dict of attibutes for saving """
+        d = { }
+        d[ns_karabo + "class"] = self.__class__.__name__
+        d[ns_karabo + "widgetFactory"] = self.widgetFactory.factory.__name__
+        d[ns_karabo + "classAlias"] = self.classAlias
+        if self.classAlias == "Command":
+            d[ns_karabo + "commandText"] = self.widgetFactory.widget.text()
+            d[ns_karabo + "commandEnabled"] = "{}".format(
+                self.widgetFactory.widget.isEnabled())
+            d[ns_karabo + "allowedStates"] = ",".join(
+                self.widgetFactory.allowedStates)
+            d[ns_karabo + "command"] = self.widgetFactory.command
+        d[ns_karabo + "key"] = ",".join(self.keys)
+        return d
+
+
+    @classmethod
+    def load(cls, elem, layout):
+        ks = "classAlias", "key", "widgetFactory"
+        if elem.get(ns_karabo + "classAlias") == "Command":
+            ks += "command", "allowedStates", "commandText"
+        d = {k: elem.get(ns_karabo + k) for k in ks}
+        d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
+        component = cls(**d)
+        component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        return component
 
 
     #def _changeColor(self, color):

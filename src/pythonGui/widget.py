@@ -14,38 +14,40 @@ __all__ = ["DisplayWidget"]
 
 from PyQt4.QtCore import QObject, pyqtSignal
 from PyQt4.QtGui import QLabel
+from registry import Loadable, Registry
 
-class MetaWidget(QObject.__class__):
-    def __new__(self, name, bases, dict):
-        ret = QObject.__class__.__new__(self, name, bases, dict)
-        if "menu" in dict:
-            ret.factories[name] = ret
-            ret.factory = ret
-            ret.categoryToAliases = { } # <category, [alias1,alias2,..]>
-            ret.aliasToCategory = { } # <alias, category>
-            ret.aliasConcreteClass = { } # dict of actual classes
-        elif "alias" in dict:
-            if ret.category in ret.categoryToAliases:
-                ret.categoryToAliases[ret.category].append(ret.alias)
-            else:
-                ret.categoryToAliases[ret.category] = [ret.alias]
-            ret.aliasToCategory[ret.alias] = ret.category
-            ret.aliasConcreteClass[ret.alias] = ret
-        return ret
 
-class Widget(QObject):
-    __metaclass__ = MetaWidget
-
+class Widget(QObject, Registry):
     def __init__(self, **kwargs):
         # This method should not be necessary. It is, because we
         # get kwargs which are not empty.
         QObject.__init__(self)
 
+
+    @classmethod
+    def register(cls, name, dict):
+        super(Widget, cls).register(name, dict)
+        if "menu" in dict:
+            cls.factories[name] = cls
+            cls.factory = cls
+            cls.categoryToAliases = { } # <category, [alias1,alias2,..]>
+            cls.aliasToCategory = { } # <alias, category>
+            cls.aliasConcreteClass = { } # dict of actual classes
+        elif "alias" in dict:
+            if cls.category in cls.categoryToAliases:
+                cls.categoryToAliases[cls.category].append(cls.alias)
+            else:
+                cls.categoryToAliases[cls.category] = [cls.alias]
+            cls.aliasToCategory[cls.alias] = cls.category
+            cls.aliasConcreteClass[cls.alias] = cls
+
+
     @classmethod
     def get_class(cls, alias):
         # Get module and class name as tuple (moduleName,className)
         return cls.aliasConcreteClass[alias]
-    
+
+
     @classmethod
     def getAliasesViaCategory(cls, category):
         return cls.categoryToAliases.get(category, [ ])
@@ -77,6 +79,7 @@ class VacuumWidget(DisplayWidget):
         self.setErrorState(False)
         if value is not None:
             self.valueChanged(self.keys[0], value)
+            self.value = value
 
 
     @property

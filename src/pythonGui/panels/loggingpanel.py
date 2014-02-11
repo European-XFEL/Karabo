@@ -15,7 +15,6 @@ __all__ = ["LoggingPanel"]
 from manager import Manager
 from logwidget import LogWidget
 
-#from PyQt4.QtCore import *
 from PyQt4.QtGui import QAction, QIcon, QVBoxLayout, QWidget
 
 
@@ -23,7 +22,7 @@ class LoggingPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
     # Requires following interface:
-    # 
+    #
     #def setupActions(self):
     #    pass
     #def setupToolBars(self, standardToolBar, parent):
@@ -57,8 +56,8 @@ class LoggingPanel(QWidget):
         self.__acSaveLog.triggered.connect(self.onSaveLogDataToFile)
 
 
-    def setupToolBars(self, standardToolBar, parent):
-        standardToolBar.addAction(self.__acSaveLog)
+    def setupToolBars(self, toolBar, parent):
+        toolBar.addAction(self.__acSaveLog)
 
 
     def onLogDataAvailable(self, logData):
