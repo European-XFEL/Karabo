@@ -24,7 +24,7 @@ class DocumentationPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
     # Requires following interface:
-    # 
+    #
     #def setupActions(self):
     #    pass
     #def setupToolBars(self, standardToolBar, parent):
@@ -99,26 +99,26 @@ class DocumentationPanel(QWidget):
         pass
 
 
-    def setupToolBars(self, standardToolBar, parent):
+    def setupToolBars(self, toolBar, parent):
         self.__acBackWiki = self.__wikiView.pageAction(QWebPage.Back)
         self.__acForwardWiki = self.__wikiView.pageAction(QWebPage.Forward)
         self.__acReloadWiki = self.__wikiView.pageAction(QWebPage.Reload)
         self.__acStopWiki = self.__wikiView.pageAction(QWebPage.Stop)
         
-        standardToolBar.addAction(self.__acBackWiki)
-        standardToolBar.addAction(self.__acForwardWiki)
-        standardToolBar.addAction(self.__acReloadWiki)
-        standardToolBar.addAction(self.__acStopWiki)
+        toolBar.addAction(self.__acBackWiki)
+        toolBar.addAction(self.__acForwardWiki)
+        toolBar.addAction(self.__acReloadWiki)
+        toolBar.addAction(self.__acStopWiki)
         
         self.__acBackReport = self.__reportView.pageAction(QWebPage.Back)
         self.__acForwardReport = self.__reportView.pageAction(QWebPage.Forward)
         self.__acReloadReport = self.__reportView.pageAction(QWebPage.Reload)
         self.__acStopReport = self.__reportView.pageAction(QWebPage.Stop)
         
-        standardToolBar.addAction(self.__acBackReport)
-        standardToolBar.addAction(self.__acForwardReport)
-        standardToolBar.addAction(self.__acReloadReport)
-        standardToolBar.addAction(self.__acStopReport)
+        toolBar.addAction(self.__acBackReport)
+        toolBar.addAction(self.__acForwardReport)
+        toolBar.addAction(self.__acReloadReport)
+        toolBar.addAction(self.__acStopReport)
         
         self._setWikiActionsVisible(True)
         self._setReportActionsVisible(False)

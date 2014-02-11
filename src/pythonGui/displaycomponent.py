@@ -90,16 +90,18 @@ class DisplayComponent(BaseComponent):
             self.removeKey(key)
 
 
-    def changeWidget(self, factory, proxyWidget, alias):
+    def changeWidget(self, factory, alias):
         self.classAlias = alias
         self.__initParams['value'] = self.value
         
         oldWidget = self.__displayWidget.widget
-        oldWidget.deleteLater()
         self.__displayWidget = factory.get_class(alias)(**self.__initParams)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        proxyWidget.setWidget(self.__displayWidget.widget)
+        oldWidget.parent().addWidget(self.__displayWidget.widget)
+        oldWidget.parent().removeWidget(oldWidget)
+        oldWidget.parent().setCurrentWidget(self.__displayWidget.widget)
+        oldWidget.setParent(None)
         self.__displayWidget.widget.show()
         
         # Refresh new widget...
@@ -107,13 +109,8 @@ class DisplayComponent(BaseComponent):
             Manager().onRefreshInstance(key)
 
 
-### slots ###
+    @pyqtSlot(str, object)
     def onValueChanged(self, key, value, timestamp=None):
         self.__displayWidget.valueChanged(key, value, timestamp)
         # Emit signal to update possible tooltips in ParameterTreeWidget
         self.signalValueChanged.emit(key, value)
-
-
-    def onDisplayValueChanged(self, key, value):
-        pass
-

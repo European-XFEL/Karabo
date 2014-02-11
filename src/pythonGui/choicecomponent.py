@@ -85,11 +85,12 @@ class ChoiceComponent(BaseComponent):
         pass
 
 
-### slots ###
+    @pyqtSlot(str, object)
     def onValueChanged(self, key, value, timestamp=None):
         self.__choiceWidget.valueChanged(key, value, timestamp)
 
 
+    @pyqtSlot(str, object)
     def onDisplayValueChanged(self, key, value, timestamp=None):
         self.__choiceWidget.valueChanged(key, value, timestamp)
 

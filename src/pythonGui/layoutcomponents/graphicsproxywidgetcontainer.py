@@ -12,7 +12,6 @@
 __all__ = ["GraphicsProxyWidgetContainer"]
 
 
-from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.nodebase import NodeBase
 
 from PyQt4.QtCore import *

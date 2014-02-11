@@ -25,7 +25,7 @@ class NotificationPanel(QWidget):
     # 
     #def setupActions(self):
     #    pass
-    #def setupToolBars(self, standardToolBar, parent):
+    #def setupToolBar(self, toolBar):
     #    pass
     #def onUndock(self):
     #    pass
@@ -47,9 +47,8 @@ class NotificationPanel(QWidget):
 
     def setupActions(self):
         pass
-
-
-    def setupToolBars(self, standardToolBar, parent):
+    
+    def setupToolBars(self, toolBar, parent):
         pass
 
 
@@ -66,4 +65,3 @@ class NotificationPanel(QWidget):
     # virtual function
     def onDock(self):
         pass
-

@@ -33,23 +33,22 @@ class DivWidget(QFrame):
 
         self.__icon = icon
 
-        # Setup default actions and toolbar
-        self._setupActions()
-        self._setupToolBar()
-        
-        self.__toolBarLayout = QHBoxLayout()
-        self.__toolBarLayout.setContentsMargins(0,0,0,0)
-        self.__toolBarLayout.setSpacing(0)
-        self.addToolBar(self.__toolBar)
+        self.setupActions()
+        self.setupToolBar()
+
+        self.toolBarLayout = QHBoxLayout()
+        self.toolBarLayout.setContentsMargins(0, 0, 0, 0)
+        self.toolBarLayout.setSpacing(0)
+        self.addToolBar(self.toolBar)
         
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0,0,0,0)
-        vLayout.addLayout(self.__toolBarLayout)
+        vLayout.addLayout(self.toolBarLayout)
         vLayout.addWidget(self.__dockableWidget)
 
         # Add custom actions to toolbar
-        self.__dockableWidget.setupToolBars(self.__toolBar, self)
-        
+        self.__dockableWidget.setupToolBars(self.toolBar, self)
+
         self.docked.connect(self.__dockableWidget.onDock)
         self.undocked.connect(self.__dockableWidget.onUndock)
 
@@ -78,7 +77,7 @@ class DivWidget(QFrame):
                 event.ignore()
 
 
-    def _setupActions(self):
+    def setupActions(self):
         text = "Unpin as individual window"
         self.__acUndock = QAction(QIcon(":undock"), "&Undock", self)
         self.__acUndock.setToolTip(text)
@@ -93,11 +92,14 @@ class DivWidget(QFrame):
         self.__acDock.setVisible(False)
 
 
-    def _setupToolBar(self):
-        self.__toolBar = ToolBar("Standard")
-        self.__toolBar.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed))
-        self.__toolBar.addAction(self.__acUndock)
-        self.__toolBar.addAction(self.__acDock)
+    def setupToolBar(self):
+        self.toolBar = ToolBar("Standard")
+        self.toolBar.addAction(self.__acUndock)
+        self.toolBar.addAction(self.__acDock)
+
+
+    def addToolBar(self, toolBar):
+        self.toolBarLayout.addWidget(toolBar)
 
 
     def onUndock(self):
@@ -139,8 +141,4 @@ class DivWidget(QFrame):
         if self.__icon:
             return True
         return False
-
-
-    def addToolBar(self, toolBar):
-        self.__toolBarLayout.addWidget(toolBar)
 

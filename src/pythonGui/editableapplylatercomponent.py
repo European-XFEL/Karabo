@@ -301,10 +301,12 @@ class EditableApplyLaterComponent(BaseComponent):
         self.applyEnabled = True
 
 
+    @pyqtSlot(str, object)
     def onValueChanged(self, key, value, timestamp=None):
         self.__editableWidget.valueChanged(key, value, timestamp, True)
 
 
+    @pyqtSlot(str, object)
     def onDisplayValueChanged(self, key, value):
         if self.__isEditableValueInit:
             self.__editableWidget.valueChanged(key, value)

@@ -30,7 +30,7 @@ class ScriptingPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
     # Requires following interface:
-    # 
+    #
     #def setupActions(self):
     #    pass
     #def setupToolBars(self, standardToolBar, parent):
@@ -62,8 +62,8 @@ class ScriptingPanel(QWidget):
         self.__acStartIPython.triggered.connect(self.onStartIPython)
 
 
-    def setupToolBars(self, standardToolBar, parent):
-        standardToolBar.addAction(self.__acStartIPython)
+    def setupToolBars(self, toolBar, parent):
+        toolBar.addAction(self.__acStartIPython)
 
 
     def _consoleWidget(self, **kwargs):

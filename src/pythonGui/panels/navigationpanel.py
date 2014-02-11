@@ -25,7 +25,7 @@ class NavigationPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
     # Requires following interface:
-    # 
+    #
     #def setupActions(self):
     #    pass
     #def setupToolBars(self, standardToolBar, parent):
@@ -67,7 +67,7 @@ class NavigationPanel(QWidget):
         pass
 
 
-    def setupToolBars(self, standardToolBar, parent):
+    def setupToolBars(self, toolBar, parent):
         pass
 
 

@@ -9,97 +9,1227 @@
 
 __all__ = ["GraphicsView"]
     
-from customxmlreader import CustomXmlReader
-from customxmlwriter import CustomXmlWriter
 
 from displaycomponent import DisplayComponent
 
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from enums import CompositionMode
-from graphicsscene import GraphicsScene
 
 from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
-from layoutcomponents.graphicsproxywidget import GraphicsProxyWidget
 from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
-from layoutcomponents.line import Line
 from layoutcomponents.link import Link
 from layoutcomponents.linkbase import LinkBase
 from layoutcomponents.nodebase import NodeBase
-from layoutcomponents.rectangle import Rectangle
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
+from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
+from pendialog import PenDialog
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from widget import DisplayWidget, EditableWidget
+
+from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
+    QFileInfo, QBuffer, QIODevice, pyqtSlot, QMimeData)
+from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
+                         QGridLayout, QFileDialog, QIcon, QInputDialog,
+                         QLabel, QLayout, QKeySequence, QMenu, QMessageBox,
+                         QPainter, QPen, QStackedWidget, QStackedLayout, QWidget)
+from PyQt4.QtSvg import QSvgWidget
+
+from xml.etree import ElementTree
+from functools import partial
+import os.path
+from bisect import bisect
+
+class Action(Registry):
+    actions = [ ]
 
 
-class GraphicsView(QGraphicsView):
-    # Enums
-    MoveItem, InsertText, InsertLine, InsertRect = range(4)
-    # Signals
-    lineInserted = pyqtSignal()
-    rectInserted = pyqtSignal()
-    sceneSelectionChanged = pyqtSignal()
+    @classmethod
+    def register(cls, name, dict):
+        super(Action, cls).register(name, dict)
+        if "text" in dict:
+            cls.actions.append(cls)
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = QAction(QIcon(cls.icon), cls.text, source)
+        action.setStatusTip(cls.text)
+        action.setToolTip(cls.text)
+        if hasattr(cls, "shortcut"):
+            action.setShortcut(cls.shortcut)
+            action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        return action
+
+
+class Separator(Action):
+    def __init__(self):
+        Action.actions.append(self)
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = QAction(source)
+        action.setSeparator(True)
+        return action
+
+
+class SimpleAction(Action):
+    def __init__(self, parent):
+        self.parent = parent
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(SimpleAction, cls).add_action(source, parent)
+        o = cls(parent)
+        parent.simple_actions.append(o)
+        action.triggered.connect(o.run)
+        return action
+
+
+class ActionGroup(Action):
+    actions = [ ]
+
+
+    @classmethod
+    def register(cls, name, dict):
+        if ActionGroup in cls.__bases__:
+            Action.actions.append(cls)
+        else:
+            super(ActionGroup, cls).register(name, dict)
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(ActionGroup, cls).add_action(source, parent)
+        menu = QMenu(parent)
+        for a in cls.actions:
+            menu.addAction(super(ActionGroup, a).add_action(source, parent))
+        action.setMenu(menu)
+        return action
+
+
+class ShapeAction(Action):
+    def __init__(self):
+        super(ShapeAction, self).__init__()
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(ShapeAction, cls).add_action(source, parent)
+        action.setCheckable(True)
+        obj = ShapeAction()
+        obj.action = action
+        obj.Shape = cls
+        action.triggered.connect(partial(parent.set_current_action, obj))
+        return action
+
+
+    def mousePressEvent(self, parent, event):
+        self.start_pos = event.pos()
+        self.shape = self.Shape()
+        self.shape.set_points(self.start_pos, self.start_pos)
+        event.accept()
+
+
+    def mouseMoveEvent(self, parent, event):
+        if hasattr(self, 'shape'):
+            self.shape.set_points(self.start_pos, event.pos())
+            event.accept()
+            parent.update()
+
+
+    def mouseReleaseEvent(self, parent, event):
+        if hasattr(self, 'shape'):
+            parent.set_current_action(None)
+            parent.ilayout.shapes.append(self.shape)
+
+
+    def draw(self, painter):
+        if hasattr(self, 'shape'):
+            self.shape.draw(painter)
+
+
+class Shape(ShapeAction, Loadable):
+    fuzzy = 3
+
 
     def __init__(self):
-        super(GraphicsView, self).__init__()
+        super(Shape, self).__init__()
+        self.selected = False
+        self.pen = QPen()
+        self.pen.setWidth(1)
+        self.brush = QBrush()
 
-        self.__scene = GraphicsScene(0, 0, 600, 500)
-        self.__scene.selectionChanged.connect(self.onSceneSelectionChanged)
-        self.setScene(self.__scene)
 
-        # Current mode of the view (move, insert)
-        self.__mode = self.MoveItem
+    @classmethod
+    def add_action(cls, source, parent):
+        return super(Shape, cls).add_action(source, parent)
+
+
+    def loadpen(self, e):
+        def ununit(x):
+            try:
+                f = {"px": 1, "pt": 1.25, "pc": 15, "mm": 3.543307,
+                     "cm": 35.43307, "in": 90}[x[-2:]]
+                return f * float(x[:-2])
+            except KeyError:
+                return float(x)
+
+        d = e.attrib.copy()
+        if "style" in d:
+            d.update(s.split(":") for s in d["style"].split(";"))
+        pen = QPen()
+        if d.get("stroke", "none") == "none" or d.get("stroke-width") == "0":
+            pen.setStyle(Qt.NoPen)
+        else:
+            c = QColor(d["stroke"])
+            c.setAlphaF(float(d.get("stroke-opacity", 1)))
+            pen.setColor(c)
+            pen.setCapStyle(dict(
+                butt=Qt.FlatCap, square=Qt.SquareCap, round=Qt.RoundCap)
+                [d.get("stroke-linecap", "butt")])
+            pen.setWidthF(ununit(d.get("stroke-width", "1")))
+            pen.setDashOffset(ununit(d.get("stroke-dashoffset", "0")))
+            s = d.get("stroke-dasharray", "none")
+            if s != "none":
+                v = s.split(",") if "," in s else s.split()
+                pen.setDashPattern([ununit(s) / pen.width() for s in v])
+            pen.setJoinStyle(dict(
+                miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
+                [d.get("storke-linejoin", "miter")])
+            pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
+        self.pen = pen
+        s = d.get("fill", "black")
+        if s == "none":
+            self.brush = QBrush()
+        else:
+            c = QColor(s)
+            c.setAlphaF(float(d.get("fill-opacity", 1)))
+            self.brush = QBrush(c)
+
+
+    def savepen(self, e):
+        d = e.attrib
+        if self.pen.style() == Qt.NoPen:
+            d["stroke"] = "none"
+        else:
+            d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
+            d["stroke-opacity"] = unicode(self.pen.color().alphaF())
+            d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
+            d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
+            d["stroke-width"] = unicode(self.pen.widthF())
+            d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
+                                             for x in self.pen.dashPattern())
+            d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
+            d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
+        if self.brush.style() == Qt.SolidPattern:
+            d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
+            d["fill-opacity"] = unicode(self.brush.color().alphaF())
+        else:
+            d["fill"] = "none"
+
+
+    def draw(self, painter):
+        if self.selected:
+            black = QPen(Qt.black)
+            black.setStyle(Qt.DashLine)
+            white = QPen(Qt.white)
+            painter.setPen(white)
+            painter.drawRect(self.geometry())
+            painter.setPen(black)
+            painter.drawRect(self.geometry())
+
+
+    def minimumSize(self):
+        return QSize(0, 0)
+
+
+    def maximumSize(self):
+        return QSize(10000, 10000)
+
+
+class Select(Action):
+    """ This is the default action. It has no icon nor text since
+    it is selected if nothing else is selected. """
+
+    def __init__(self):
+        self.selection_start = self.moving_item = None
+
+    def mousePressEvent(self, parent, event):
+        item = parent.ilayout.itemAtPosition(event.pos())
+        if item is not None and item.selected:
+            g = item.geometry()
+            p = event.pos()
+            if p.x() - g.left() < 10:
+                self.resize = "left"
+            elif g.right() - p.x() < 10:
+                self.resize = "right"
+            elif p.y() - g.top() < 10:
+                self.resize = "top"
+            elif g.bottom() - p.y() < 10:
+                self.resize = "bottom"
+            else:
+                self.resize = None
+            if self.resize is not None:
+                self.resize_item = item
+                return
+        if item is None:
+            self.selection_stop = self.selection_start = event.pos()
+            parent.update()
+        else:
+            self.moving_item = item
+            self.moving_pos = event.pos()
+            if event.modifiers() & Qt.ShiftModifier:
+                item.selected = not item.selected
+            else:
+                parent.clear_selection()
+                item.selected = True
+            parent.update()
+            event.accept()
+
+    def mouseMoveEvent(self, parent, event):
+        if self.moving_item is not None:
+            self.moving_item.translate(event.pos() - self.moving_pos)
+            self.moving_pos = event.pos()
+            event.accept()
+        elif self.selection_start is not None:
+            self.selection_stop = event.pos()
+            event.accept()
+        elif self.resize is not None:
+            og = self.resize_item.geometry()
+            g = QRect(og)
+            if self.resize == "top":
+                g.setTop(event.pos().y())
+            elif self.resize == "bottom":
+                g.setBottom(event.pos().y())
+            elif self.resize == "left":
+                g.setLeft(event.pos().x())
+            elif self.resize == "right":
+                g.setRight(event.pos().x())
+            min = self.resize_item.minimumSize()
+            max = self.resize_item.maximumSize()
+            if (not min.width() <= g.size().width() <= max.width() or
+                not min.height() <= g.size().height() <= max.height()) and (
+                min.width() <= og.size().width() <= max.width() and
+                min.height() <= og.size().height() <= max.height()):
+                return
+            self.resize_item.set_geometry(g)
+            parent.ilayout.update()
+        parent.update()
+
+    def mouseReleaseEvent(self, parent, event):
+        self.moving_item = None
+        self.resize = self.resize_item = None
+        if self.selection_start is not None:
+            rect = QRect(self.selection_start, self.selection_stop)
+            if not event.modifiers() & Qt.ShiftModifier:
+                parent.clear_selection()
+            for c in parent.ilayout:
+                if rect.contains(c.geometry()):
+                    c.selected = True
+            self.selection_start = None
+            event.accept()
+            parent.update()
+
+    def draw(self, painter):
+        if self.selection_start is not None:
+            painter.setPen(Qt.black)
+            painter.drawRect(QRect(self.selection_start, self.selection_stop))
+
+
+class Label(Action, Loadable):
+    text = "Add text"
+    icon = ":text"
+
+
+    @classmethod
+    def add_action(cls, source, parent):
+        action = super(Label, cls).add_action(source, parent)
+        c = Label()
+        c.action = action
+        action.triggered.connect(partial(parent.set_current_action, c))
+        return action
+
+
+    def mousePressEvent(self, parent, event):
+        text, ok = QInputDialog.getText(parent, "Add new label", "Enter text:")
+        if not ok:
+            return
+        p = ProxyWidget(parent)
+        p.addWidget(QLabel(text))
+        p.fixed_geometry = QRect(event.pos(), p.sizeHint())
+        parent.ilayout.add_item(p)
+        parent.set_current_action(None)
+
+
+    def mouseReleaseEvent(self, *args):
+        pass
+
+
+    mouseMoveEvent = mouseReleaseEvent
+    draw = mouseReleaseEvent
+
+
+    @staticmethod
+    def load(elem, layout):
+        return QLabel(elem.get(ns_karabo + "text"))
+
+
+class Line(Shape):
+    xmltag = ns_svg + "line"
+    text = "Add Line"
+    icon = ":line"
+
+    def set_points(self, start, end):
+        self.line = QLine(start, end)
+
+    def draw(self, painter):
+        painter.setPen(self.pen)
+        painter.drawLine(self.line)
+        Shape.draw(self, painter)
+
+    def contains(self, p):
+        x1, x2 = self.line.x1(), self.line.x2()
+        y1, y2 = self.line.y1(), self.line.y2()
+        return (min(x1, x2) - self.fuzzy < p.x() < max(x1, x2) + self.fuzzy and
+                min(y1, y2) - self.fuzzy < p.y() < max(y1, y2) + self.fuzzy and
+                ((x2 - x1) * (p.y() - y1) - (y2 - y1) * (p.x() - x1)) ** 2 <
+                self.fuzzy ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2))
+
+    def geometry(self):
+        return QRect(self.line.p1(), self.line.p2())
+
+
+    def set_geometry(self, rect):
+        self.line = QLine(rect.topLeft(), rect.bottomRight())
+
+
+    def translate(self, p):
+        self.line.translate(p)
+
+    def element(self):
+        ret = ElementTree.Element(
+            ns_svg + "line", x1=unicode(self.line.x1()),
+            x2=unicode(self.line.x2()), y1=unicode(self.line.y1()),
+            y2=unicode(self.line.y2()))
+        self.savepen(ret)
+        return ret
+
+    @staticmethod
+    def load(e, layout):
+        ret = Line()
+        ret.line = QLine(float(e.get("x1")), float(e.get("y1")),
+                         float(e.get("x2")), float(e.get("y2")))
+        ret.loadpen(e)
+        return ret
+
+
+    def edit(self):
+        pendialog = PenDialog(self.pen)
+        pendialog.exec_()
+
+
+class Rectangle(Shape):
+    xmltag = ns_svg + "rect"
+    text = "Add rectangle"
+    icon = ":rect"
+
+    def set_points(self, start, end):
+        self.rect = QRect(start, end).normalized()
+
+    def draw(self, painter):
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
+        painter.drawRect(self.rect)
+        Shape.draw(self, painter)
+
+    def element(self):
+        ret = ElementTree.Element(
+            ns_svg + "rect", x=unicode(self.rect.x()),
+            y=unicode(self.rect.y()), width=unicode(self.rect.width()),
+            height=unicode(self.rect.height()))
+        self.savepen(ret)
+        return ret
+
+    def contains(self, p):
+        l, r = self.rect.left(), self.rect.right()
+        t, b = self.rect.top(), self.rect.bottom()
+        x, y = p.x(), p.y()
+        if self.brush.style() == Qt.SolidPattern:
+            return l < x < r and t < y < b
+        else:
+            return (l < x < r and min(abs(t - y), abs(b - y)) < self.fuzzy or
+                    t < y < b and min(abs(l - x), abs(r - x)) < self.fuzzy)
+
+    def geometry(self):
+        return self.rect
+
+    def set_geometry(self, rect):
+        self.rect = rect
+
+
+    def translate(self, p):
+        self.rect.translate(p)
+
+    @staticmethod
+    def load(e, layout):
+        ret = Rectangle()
+        ret.rect = QRect(float(e.get("x")), float(e.get("y")),
+                         float(e.get("width")), float(e.get("height")))
+        ret.loadpen(e)
+        return ret
+
+    def edit(self):
+        pendialog = PenDialog(self.pen, self.brush)
+        pendialog.exec_()
+
+
+def _parse_rect(elem):
+    if elem.get(ns_karabo + "x") is not None:
+        ns = ns_karabo
+    else:
+        ns = ""
+    return QRect(float(elem.get(ns + "x")), float(elem.get(ns + "y")),
+                 float(elem.get(ns + "width")), float(elem.get(ns + "height")))
+
+
+Separator()
+
+class GroupActions(ActionGroup):
+    icon = ":group"
+    text = "Group"
+
+class GroupAction(SimpleAction):
+    "Group several items into one group"
+
+    def gather_widgets(self):
+        i = 0
+        rect = QRect()
+        l = [ ]
+        while i < len(self.parent.ilayout):
+            c = self.parent.ilayout[i]
+            if c.selected:
+                c.selected = False
+                l.append(c)
+                if isinstance(c, Layout):
+                    del self.parent.ilayout[i]
+                    i -= 1
+                rect = rect.united(c.geometry())
+            i += 1
+        return rect, l
+
+
+    def gather_shapes(self):
+        shapes = self.parent.ilayout.shapes
+        self.parent.ilayout.shapes = [s for s in shapes if not s.selected]
+        shapes = [s for s in shapes if s.selected]
+        for s in shapes:
+            s.selected = False
+        return shapes
+
+
+class FixedGroup(GroupActions, GroupAction):
+    text = "Group without layout"
+    icon = "icons/group-grid.svg"
+
+
+    def run(self):
+        rect, widgets = self.gather_widgets()
+        group = FixedLayout()
+        for w in widgets:
+            group.add_item(w)
+        group.shapes = self.gather_shapes()
+        for s in group.shapes:
+            rect = rect.united(s.geometry())
+        if rect.isNull():
+            return
+        group.fixed_geometry = rect
+        self.parent.ilayout.add_item(group)
+        group.selected = True
+
+
+class BoxGroup(GroupAction):
+    def doit(self, group, cmp):
+        rect, widgets = self.gather_widgets()
+        if rect.isNull():
+            return
+        widgets.sort(cmp)
+        for w in widgets:
+            if isinstance(w, Layout):
+                group.addItem(w)
+            else:
+                group.addWidget(w)
+        group.shapes = self.gather_shapes()
+        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        self.parent.ilayout.add_item(group)
+
+
+class VerticalGroup(GroupActions, BoxGroup):
+    text = "Group Vertically"
+    icon = "icons/group-vertical.svg"
+
+
+    def run(self):
+        self.doit(BoxLayout(BoxLayout.TopToBottom),
+                  lambda x, y: x.geometry().y() - y.geometry().y())
+
+
+class HorizontalGroup(GroupActions, BoxGroup):
+    text = "Group Horizontally"
+    icon = "icons/group-horizontal.svg"
+
+
+    def run(self):
+        self.doit(BoxLayout(BoxLayout.LeftToRight),
+                  lambda x, y: x.geometry().x() - y.geometry().x())
+
+
+class GridGroup(GroupActions, BoxGroup):
+    text = "Group in a Grid"
+    icon = "icons/group-grid.svg"
+
+
+    def run(self):
+        rect, widgets = self.gather_widgets()
+        if rect.isNull():
+            return
+        group = GridLayout()
+        group.set_children(widgets)
+        group.shapes = self.gather_shapes()
+        group.fixed_geometry = QRect(rect.topLeft(), group.sizeHint())
+        self.parent.ilayout.add_item(group)
+
+
+class Ungroup(GroupActions, SimpleAction):
+    "Ungroup items"
+    text = "Ungroup"
+    icon = "icons/ungroup.svg"
+
+
+    def run(self):
+        i = 0
+        while i < len(self.parent.ilayout):
+            child = self.parent.ilayout[i]
+            if child.selected and isinstance(child, Layout):
+                cl = list(child)
+                for c in cl:
+                    if isinstance(c, QLayout):
+                        c.setParent(None)
+                    c.fixed_geometry = c.geometry()
+                self.parent.ilayout[i:i + 1] = cl
+                self.parent.ilayout.shapes.extend(child.shapes)
+                i += len(cl)
+            else:
+                i += 1
+
+
+Separator()
+
+
+class Cut(SimpleAction):
+    text = "Cut"
+    icon = ":edit-cut"
+    shortcut = QKeySequence.Cut
+
+
+    def run(self):
+        QApplication.clipboard().setMimeData(self.parent.mimeData())
+        self.parent.ilayout.delete_selected()
+        self.parent.update()
+
+
+class Copy(SimpleAction):
+    text = "Copy"
+    icon = ":edit-copy"
+    shortcut = QKeySequence.Copy
+
+
+    def run(self):
+        QApplication.clipboard().setMimeData(self.parent.mimeData())
+
+
+class Paste(SimpleAction):
+    text = "Paste"
+    icon = ":edit-paste"
+    shortcut = QKeySequence.Paste
+
+
+    def run(self):
+        root = ElementTree.fromstring(QApplication.clipboard().mimeData().
+                                      data("image/svg+xml"))
+        self.parent.ilayout.load_element(root)
+        self.parent.tree.getroot().extend(root)
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        self.parent.tree.write(buf)
+        buf.close()
+        self.parent.load(ar)
+        self.parent.update()
+
+
+Separator()
+
+
+class Raise(SimpleAction):
+    text = "Bring to front"
+    icon = ":bringtofront"
+
+
+    def run(self):
+        shapes = self.parent.ilayout.shapes
+        for i in range(len(shapes)):
+            if shapes[i].selected:
+                j = len(shapes) - 1
+                for j in range(i + 1, len(shapes)):
+                    if not shapes[j].geometry().intersects(
+                            shapes[i].geometry()):
+                        break
+                shapes[j], shapes[i:j] = shapes[i], shapes[i + 1:j + 1]
+        self.parent.update()
+
+
+class Lower(SimpleAction):
+    text = "Send to back"
+    icon = ":sendtoback"
+
+
+    def run(self):
+        shapes = self.parent.ilayout.shapes
+        for i in range(len(shapes) - 1, 0, -1):
+            if shapes[i].selected:
+                j = 0
+                for j in range(i - 1, -1, -1):
+                    if not shapes[j].geometry().intersects(
+                            shapes[i].geometry()):
+                        break
+                shapes[j], shapes[j + 1:i + 1] = shapes[i], shapes[j:i]
+        self.parent.update()
+
+
+class Layout(Loadable):
+    subclasses = { }
+
+
+    def __init__(self):
+        self.shapes = [ ]
+        self.shape_geometry = None
+        self.selected = False
+
+
+    def __len__(self):
+        return self.count()
+
+
+    def __getitem__(self, i):
+        if isinstance(i, slice):
+            r = (self.itemAt(j) for j in range(i.start, i.stop, i.step))
+            return [rr.widget() if rr.widget() else rr for rr in r
+                    if rr is not None]
+        r = self.itemAt(i)
+        if r is None:
+            raise IndexError("index out of range")
+        return r.widget() if r.widget() is not None else r
+
+
+    def __delitem__(self, i):
+        if isinstance(i, slice):
+            for j in range(i.start, i.stop, i.step):
+                self.takeAt(j)
+        else:
+            self.takeAt(i)
+
+
+    def load_element(self, element):
+        i = 0
+        while i < len(element):
+            elem = element[i]
+            w = r = Loadable.load(elem, self)
+            if r is None:
+                i += 1
+            elif isinstance(r, Shape):
+                self.shapes.append(r)
+                del element[i]
+            else:
+                if not isinstance(r, Layout):
+                    w = ProxyWidget(self.widget())
+                    if isinstance(r, QLabel):
+                        w.set_child(r, None)
+                    else:
+                        w.set_child(r.widget, r)
+                    self.load_item(elem, w)
+                if len(element[i]):
+                    i += 1
+                else:
+                    del element[i]
+
+
+    def draw(self, painter):
+        for s in self.shapes:
+            painter.save()
+            s.draw(painter)
+            painter.restore()
+        for i in range(self.count()):
+            item = self.itemAt(i)
+            if isinstance(item, Layout):
+                item.draw(painter)
+
+
+    def element(self, selected=False):
+        """ save this layout to an element. if selected is True,
+        only selected elements are saved, for cut&paste support """
+        g = self.geometry()
+        d = { ns_karabo + "x": g.x(), ns_karabo + "y": g.y(),
+              ns_karabo + "width": g.width(), ns_karabo + "height": g.height(),
+              ns_karabo + "class": self.__class__.__name__ }
+        d.update(self.save())
+
+        e = ElementTree.Element(ns_svg + "g",
+                                {k: unicode(v) for k, v in d.iteritems()})
+        if selected:
+            self.add_children(e, True)
+        else:
+            self.add_children(e)
+        return e
+
+
+    def add_children(self, e, selected=False):
+        e.extend(e.element() for e in self if not selected or e.selected)
+        e.extend(s.element() for s in self.shapes if not selected or s.selected)
+
+
+    def translate(self, pos):
+        self.fixed_geometry.translate(pos)
+        self.update()
+
+
+    def set_geometry(self, rect):
+        self.fixed_geometry = rect
+
+
+    def setGeometry(self, rect):
+        super(Layout, self).setGeometry(rect)
+        if self.shape_geometry is None:
+            self.shape_geometry = QRect(self.fixed_geometry)
+        for s in self.shapes:
+            s.translate(rect.topLeft() - self.shape_geometry.topLeft())
+        self.shape_geometry = QRect(rect)
+
+
+    def edit(self):
+        pass
+
+
+class FixedLayout(Layout, QLayout):
+    xmltag = ns_svg + "g"
+
+    def __init__(self):
+        QLayout.__init__(self)
+        Layout.__init__(self)
+        self._children = [ ] # contains only QLayoutItems
+
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, slice):
+            key = slice(key, key + 1)
+            value = [value]
+        values = [ ]
+        for v in value:
+            if isinstance(v, ProxyWidget):
+                self.addWidget(v)
+                values.append(self._item)
+            elif isinstance(v, Layout):
+                self.addChildLayout(v)
+                values.append(v)
+        self._children[key] = values
+        self.update()
+
+
+    def add_item(self, item):
+        """add ProxyWidgets or Layouts"""
+        self[len(self):len(self)] = [item]
+
+
+    def load_item(self, element, item):
+        self.add_item(item)
+        try:
+            item.fixed_geometry = _parse_rect(element)
+        except TypeError:
+            rect = QRect()
+            for c in item:
+                rect.united(c.geometry())
+            for s in item.shapes:
+                rect = rect.united(s.geometry())
+            item.fixed_geometry = rect
+
+
+    def itemAtPosition(self, pos):
+        for item in self._children:
+            if item.geometry().contains(pos):
+                if item.widget() is not None:
+                    return item.widget()
+                else:
+                    return item
+        for s in self.shapes[::-1]:
+            if s.contains(pos) or s.selected and s.geometry().contains(pos):
+                return s
+
+
+    def relayout(self, widget):
+        for c in self:
+            ll = [c]
+            ret = None
+            while ll and ret is None:
+                l = ll.pop()
+                if isinstance(l, Layout):
+                    ll.extend(l)
+                else:
+                    if l is widget:
+                        ret = l
+        if ret is None:
+            return
+        c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
+
+
+    def delete_selected(self):
+        i = 0
+        while i < len(self):
+            if self[i].selected:
+                stack = [self[i]]
+                while stack:
+                    p = stack.pop()
+                    if isinstance(p, Layout):
+                        stack.extend(p)
+                    else:
+                        p.setParent(None)
+                del self[i]
+            else:
+                i += 1
+        self.shapes = [s for s in self.shapes if not s.selected]
+
+
+    def geometry(self):
+        try:
+            return self.fixed_geometry
+        except AttributeError:
+            return self.parentWidget().geometry()
+
+
+    def translate(self, pos):
+        for c in self:
+            c.fixed_geometry.translate(pos)
+        for s in self.shapes:
+            s.translate(pos)
+        Layout.translate(self, pos)
+
+
+    def save(self):
+        return { }
+
+
+    @staticmethod
+    def load(elem, layout):
+        ret = FixedLayout()
+        ret.load_element(elem)
+        if layout is not None:
+            layout.load_item(elem, ret)
+        return ret
+
+
+    def addItem(self, item):
+        "only to be used by Qt, don't use directly!"
+        self._item = item
+
+
+    def itemAt(self, index):
+        "only to be used by Qt, don't use directly!"
+        try:
+            return self._children[index]
+        except IndexError:
+            return
+
+
+    def takeAt(self, index):
+        "only to be used by Qt, don't use directly!"
+        try:
+            return self._children.pop(index)
+        except IndexError:
+            return
+
+
+    def count(self):
+        "only to be used by Qt, don't use directly!"
+        return len(self._children)
+
+
+    def setGeometry(self, geometry):
+        "only to be used by Qt, don't use directly!"
+        for item in self._children:
+            i = item.widget() if item.widget() is not None else item
+            i.setGeometry(i.fixed_geometry)
+
+
+    def sizeHint(self):
+        return QSize(10, 10)
+
+
+class BoxLayout(Layout, QBoxLayout):
+    def __init__(self, dir):
+        QBoxLayout.__init__(self, dir)
+        Layout.__init__(self)
+        self.setContentsMargins(5, 5, 5, 5)
+
+
+    def save(self):
+        return {ns_karabo + "Direction": self.direction()}
+
+
+    @staticmethod
+    def load(elem, layout):
+        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
+        layout.load_item(elem, ret)
+        ret.load_element(elem)
+        return ret
+
+
+    def load_item(self, element, item):
+        if isinstance(item, ProxyWidget):
+            self.addWidget(item)
+        else:
+            self.addLayout(item)
+
+
+def _reduce(xs):
+    xs.sort()
+    i = 1
+    while i < len(xs):
+        if xs[i] - xs[i - 1] > 10:
+            i += 1
+        else:
+            del xs[i]
+
+
+class GridLayout(Layout, QGridLayout):
+    def __init__(self):
+        QGridLayout.__init__(self)
+        Layout.__init__(self)
+
+    def set_children(self, children):
+        xs = [c.geometry().x() for c in children]
+        ys = [c.geometry().y() for c in children]
+        _reduce(xs)
+        _reduce(ys)
+        for c in children:
+            col = bisect(xs, c.geometry().x())
+            row = bisect(ys, c.geometry().y())
+            colspan = bisect(xs, c.geometry().right()) - col + 1
+            rowspan = bisect(ys, c.geometry().bottom()) - row + 1
+            if isinstance(c, ProxyWidget):
+                self.addWidget(c, row, col, rowspan, colspan)
+            else:
+                self.addLayout(c, row, col, rowspan, colspan)
+
+
+    def save(self):
+        return { }
+
+
+    def add_children(self, e):
+        e.extend(s.element() for s in self.shapes)
+        for i in range(len(self)):
+            c = self[i].element()
+            for n, v in zip(("row", "col", "rowspan", "colspan"),
+                            self.getItemPosition(i)):
+                c.set(ns_karabo + n, unicode(v))
+            e.append(c)
+
+
+    def load_item(self, element, item):
+        p = (int(element.get(ns_karabo + s)) for s in
+             ("row", "col", "rowspan", "colspan"))
+        if isinstance(item, ProxyWidget):
+            self.addWidget(item, *p)
+        else:
+            self.addLayout(item, *p)
+
+
+    @staticmethod
+    def load(elem, layout):
+        ret = GridLayout()
+        layout.load_item(elem, ret)
+        ret.load_element(elem)
+        return ret
+
+
+class ProxyWidget(QStackedWidget):
+    def __init__(self, parent):
+        QStackedWidget.__init__(self, parent)
+        #self.setContextMenuPolicy(Qt.ActionsContextMenu)
+        self.selected = False
+
+    def set_child(self, child, component):
+        if self.count() > 0:
+            self.removeWidget(self.widget(0))
+        self.addWidget(child)
+        self.component = component
+        if component is None:
+            return
+
+        component.setParent(self)
+
+        if isinstance(component, DisplayComponent):
+            Widget = DisplayWidget
+        else:
+            Widget = EditableWidget
+
+        for text, factory in Widget.factories.iteritems():
+            aliases = factory.getAliasesViaCategory(
+                component.widgetCategory)
+            keys = component.keys[0].split('.configuration.')
+            if keys[1] == "state":
+                aliases += factory.getAliasesViaCategory("State")
+            if aliases:
+                aa = QAction(text, self)
+                menu = QMenu(self)
+                for a in aliases:
+                    menu.addAction(a).triggered.connect(
+                        partial(self.on_changeWidget, factory, a))
+                aa.setMenu(menu)
+                self.addAction(aa)
+
+    @pyqtSlot()
+    def on_changeWidget(self, factory, alias):
+        self.component.changeWidget(factory, alias)
+        self.parent().layout().relayout(self)
+        self.adjustSize()
         
-        # Composition mode is either ON/OFFLINE, once set not changeable
-        self.__compositionMode = CompositionMode.UNDEFINED
+    def contextMenuEvent(self, event):
+        if not self.parent().parent().designMode:
+            return
+        QMenu.exec_(self.actions(), event.globalPos(), None, self)
 
-        self.__line = None
-        self.__rect = None
+    def element(self):
+        g = self.geometry()
+        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height() }
+        if self.component is None:
+            d[ns_karabo + "class"] = "Label"
+            d[ns_karabo + "text"] = self.widget(0).text()
+        else:
+            d.update(self.component.attributes())
+        return ElementTree.Element(ns_svg + "rect",
+                                   {k: unicode(v) for k, v in d.iteritems()})
 
-        self.__minZ = 0
-        self.__maxZ = 0
-        self.__seqNumber = 0
 
-        self.__rotAngle = 30
+    @staticmethod
+    def load(elem, layout):
+        if elem.get(ns_karabo + "class") == "Label":
+            ret = ProxyWidget(layout.widget())
+            ret.set_child(QLabel(elem.get(ns_karabo + "text"), ret), None)
+            ret.show()
+            return ret
+        ks = "classAlias", "key", "widgetFactory"
+        if elem.get(ns_karabo + "classAlias") == "Command":
+            ks += "command", "allowedStates", "commandText"
+        d = {k: elem.get(ns_karabo + k) for k in ks}
+        d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
+        component = globals()[elem.get(ns_karabo + "componentType")](**d)
+        component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        ret = ProxyWidget(layout.widget())
+        ret.set_child(component.widget, component)
+        ret.show()
+        return ret
+
+
+    def translate(self, pos):
+        self.fixed_geometry.translate(pos)
+        self.parent().layout().update()
+
+
+    def set_geometry(self, rect):
+        self.fixed_geometry = rect
+
+
+    def edit(self):
+        if isinstance(self.currentWidget(), QLabel):
+            text, ok = QInputDialog.getText(self.parent(), "Edit text",
+                                            "Enter text:",
+                                            text=self.currentWidget().text())
+            if ok:
+                self.currentWidget().setText(text)
+
+
+class GraphicsView(QSvgWidget):
+    def __init__(self, parent, designMode=True):
+        super(GraphicsView, self).__init__(parent)
+        
+        self.inner = QWidget(self)
+        self.ilayout = FixedLayout()
+        self.inner.setLayout(self.ilayout)
+        layout = QStackedLayout(self)
+        layout.addWidget(self.inner)
+        
+        self.current_action = self.default_action = Select()
+        self.current_action.action = QAction(self) # never displayed
+        self.simple_actions = [ ]
+
+        self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
+
+        self.designMode = designMode
 
         # Describes most recent item to be cut or copied inside the application
         self.__copiedItem = QByteArray()
 
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
-        self.setDragMode(QGraphicsView.RubberBandDrag)
-        self.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing)
 
+    def add_actions(self, source):
+        for v in Action.actions:
+            action = v.add_action(source, self)
+            yield action
 
-    def _getMode(self):
-        return self.__mode
-    def _setMode(self, mode):
-        self.__mode = mode
-    mode = property(fget=_getMode, fset=_setMode)
-
-
-    def _getDesignMode(self):
-        return self.__isDesignMode
-    isDesignMode = property(fget=_getDesignMode)
-
-
-    # Sets all items in design or control mode
-    def setDesignMode(self, isDesignMode):
-        self.__isDesignMode = isDesignMode
-        if self.__isDesignMode:
-            self.scene().setBackgroundBrush(QBrush(QPixmap(':grid-edit')))
+    def set_current_action(self, action):
+        self.current_action.action.setChecked(False)
+        if Action is None:
+            self.current_action = self.default_action
         else:
-            self.scene().setBackgroundBrush(QBrush())
-        
-        for item in self.items():
-            if isinstance(item, NodeBase):
-                item.isDesignMode = isDesignMode
+            self.current_action = action
+        if self.current_action is None:
+            self.current_action = self.default_action
+        self.current_action.action.setChecked(True)
+
+
+    @property
+    def designMode(self):
+        return self.inner.testAttribute(Qt.WA_TransparentForMouseEvents)
+
+
+    @designMode.setter
+    def designMode(self, value):
+        self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, value)
+
+
+    def reset(self):
+        if len(self.ilayout) == 0 and len(self.ilayout.shapes) == 0:
+            return
+
+        reply = QMessageBox.question(
+            self, "Save scene before closing",
+            "Do you want to save your scene before closing?",
+            QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
+
+        if reply == QMessageBox.Save:
+            self.saveSceneLayoutToFile()
+
+        self.inner.setParent(None)
+        self.inner = QWidget(self)
+        self.ilayout = FixedLayout()
+        self.inner.setLayout(self.ilayout)
+        self.layout().addWidget(self.inner)
 
 
     # Returns true, when items has been copied; otherwise false
@@ -107,73 +1237,10 @@ class GraphicsView(QGraphicsView):
         return (len(self.__copiedItem) > 0)
 
 
-    # All selected items of the scene are returned
-    def selectedItems(self):
-        return self.__scene.selectedItems()
-
-
-    # If there are exactely 2 selected items (not of type Link) they are returned
-    # as a pair; otherwise None is returned
-    def selectedItemPair(self):
-        items = self.selectedItems()
-        if len(items) == 2:
-            firstItem = items[0]
-            secondItem = items[1]
-
-            if isinstance(firstItem, Link):
-                firstItem = None
-            if isinstance(secondItem, Link):
-                secondItem = None
-
-            if firstItem and secondItem:
-                return (firstItem, secondItem)
-
-        return None
-
-
-    # All selected items of type Text are returned
-    def selectedTextItems(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            textItems = []
-            for item in items:
-                if isinstance(item, Text):
-                    textItems.append(item)
-            return textItems
-        return None
-
-
-    # All selected items of type Link are returned
-    def selectedLinks(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            linkItems = []
-            for item in items:
-                if isinstance(item, LinkBase):
-                    linkItems.append(item)
-            if len(linkItems) > 0:
-                return linkItems
-        return None
-
-
-    def selectedItemGroup(self):
-        items = self.selectedItems()
-
-        if len(items) > 0:
-            groupItems = []
-            for item in items:
-                if isinstance(item, QGraphicsItemGroup):
-                    groupItems.append(item)
-            if len(groupItems) > 0:
-                return groupItems
-        return None
-
-
     # Open saved view from file
     def openSceneLayoutFromFile(self):
-        filename = QFileDialog.getOpenFileName(None, "Open saved view", QDir.tempPath(), "SCENE (*.scene)")
+        filename = QFileDialog.getOpenFileName(None, "Open saved view",
+                                               QDir.tempPath(), "SVG (*.svg)")
         if len(filename) < 1:
             return
 
@@ -227,19 +1294,21 @@ class GraphicsView(QGraphicsView):
     # Helper function opens *.scene file
     # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
     def openScene(self, filename):
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
+        self.tree = ElementTree.parse(filename)
+        root = self.tree.getroot()
+        self.inner.setParent(None)
+        self.inner = QWidget(self)
+        self.ilayout = FixedLayout.load(root, None)
+        self.inner.setLayout(self.ilayout)
+        self.layout().addWidget(self.inner)
+        self.designMode = True
 
-        xmlContent = str()
-        while file.atEnd() == False:
-            xmlContent += str(file.readLine())
-
-        self.removeItems(self.items())
-        sceneReader = CustomXmlReader(self)
-        sceneReader.read(xmlContent)
-
-        return sceneReader.getInternalKeyTextTuples()
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        self.tree.write(buf)
+        buf.close()
+        self.load(ar)
 
 
     # Helper function opens *.xml configuration file
@@ -247,17 +1316,38 @@ class GraphicsView(QGraphicsView):
         print "openConfiguration", filename
 
 
-    # Save active view to file
     def saveSceneLayoutToFile(self):
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "SCENE (*.scene)")
+        """ Save active view to file """
+        filename = QFileDialog.getSaveFileName(None, "Save file as",
+                                               QDir.tempPath(), "SVG (*.svg)")
         if len(filename) < 1:
             return
+        self.saveScene(filename)
 
+    def saveScene(self, filename):
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
-            filename += ".scene"
+            filename += ".svg"
 
-        CustomXmlWriter(self.__scene).write(filename)
+        root = self.tree.getroot().copy()
+        tree = ElementTree.ElementTree(root)
+        e = self.ilayout.element()
+        root.extend(ee for ee in e)
+        tree.write(filename)
+
+
+    def mimeData(self):
+        e = self.ilayout.element(selected=True)
+        e.tag = ns_svg + "svg"
+        tree = ElementTree.ElementTree(e)
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        tree.write(buf)
+        buf.close()
+        mime = QMimeData()
+        mime.setData("image/svg+xml", ar)
+        return mime
 
 
     def saveSceneConfigurationsToFile(self):
@@ -274,22 +1364,16 @@ class GraphicsView(QGraphicsView):
         self.saveSceneConfigurations(dirPath)
 
 
-    # Save active view and configurations to folder/files
     def saveSceneLayoutConfigurationsToFile(self):
-        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save layout and configuration files", QDir.tempPath(),
-                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-
-        if len(dirPath) < 1:
+        """ Save active view and configurations to folder/files """
+        dir = QFileDialog.getExistingDirectory(
+            self, "Select directory to save layout and configuration files",
+            options=QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if not dir:
             return
-
-        # Check, if directory is empty
-        self.checkDirectoryBeforeSave(dirPath)
-
-        # Save layout to directory
-        CustomXmlWriter(self.__scene).write(dirPath + "/" + QDir(dirPath).dirName() + ".scene")
-
-        # Save configurations of navigation related items
-        self.saveSceneConfigurations(dirPath)
+        self.checkDirectoryBeforeSave(dir)
+        self.saveScene(os.path.join(dir, os.path.basename(dir) + ".svg"))
+        self.saveSceneConfigurations(dir)
 
 
     # Helper function checks whether the directory to save to is empty
@@ -312,8 +1396,7 @@ class GraphicsView(QGraphicsView):
 
     # Helper function to save all configurations for scene items
     def saveSceneConfigurations(self, dirPath):
-        items = self.items()
-        for item in items:
+        for item in self.ilayout.shapes:
             if isinstance(item, GraphicsCustomItem):
                 # TODO: Remove dirty hack for scientific computing again!!!
                 croppedClassId = item.text().split("-")
@@ -321,334 +1404,9 @@ class GraphicsView(QGraphicsView):
                 Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(classId), str(item.internalKey()))
 
 
-    # A new instance of a text is created and passed to the _setupItem function
-    # to position and select
-    def addText(self):
-        textDialog = TextDialog(self)
-        if textDialog.exec_() == QDialog.Rejected:
-            return
-
-        textItem = Text(self.__isDesignMode)
-        textItem.setText(textDialog.text())
-        textItem.setFont(textDialog.font())
-        textItem.setTextColor(textDialog.textColor())
-        textItem.setBackgroundColor(textDialog.backgroundColor())
-        textItem.setOutlineColor(textDialog.outlineColor())
-
-        self._setupItem(textItem)
-
-
-    # Add a link, if exactely 2 items are selected
-    def addLink(self):
-        items = self.selectedItemPair()
-        if items is None:
-            return
-
-        link = Link(items[0], items[1])
-        self.__scene.addItem(link)
-
-
-    # Add an arrow, if exactely 2 items are selected
-    def addArrowLink(self):
-        items = self.selectedItemPair()
-        if items is None:
-            return
-
-        arrowLink = Arrow(items[0], items[1])
-        self.__scene.addItem(arrowLink)
-
-
-    # Cut is two-part process: copy selected items and remove item from scene
-    def cut(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Copy items
-        self.copy()
-        # Remove items from scene
-        for item in items:
-            self.__scene.removeItem(item)
-            del item
-
-
-    # The selected items are stored as binary data inside the application
-    def copy(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Copy data into DataStream
-        self.__copiedItem.clear()
-        stream = QDataStream(self.__copiedItem, QIODevice.WriteOnly)
-        for item in items:
-            if isinstance(item, Text):
-                stream.writeString("Text")
-                stream.writeString(item.text())
-                stream.writeString(item.font().toString())
-                stream.writeString(item.textColor().name())
-                stream.writeString(item.outlineColor().name())
-                stream.writeString(item.backgroundColor().name())
                 stream.writeString("\n")
-            elif isinstance(item, Link):
-                print "Link"
-            elif isinstance(item, Arrow):
-                print "Arrow"
-            elif isinstance(item, Line):
-                line = item.line()
-                stream.writeString("Line")
-                stream.writeString("{},{},{},{}".format(line.x1(), line.y1(),
-                                                        line.x2(), line.y2()))
-                stream.writeString("{}".format(item.length()))
-                stream.writeString("{}".format(item.widthF()))
-                stream.writeString("{}".format(item.style()))
-                stream.writeString(item.color().name())
                 stream.writeString("\n")
-            elif isinstance(item, Rectangle):
-                rect = item.rect()
-                topLeft = rect.topLeft()
-                stream.writeString("Rectangle")
-                stream.writeString("{},{},{},{}".format(topLeft.x(), topLeft.y(),
-                                                        rect.width(), rect.height()))
                 stream.writeString("\n")
-            elif isinstance(item, GraphicsProxyWidgetContainer):
-                print "GraphicsProxyWidgetContainer"
-            elif isinstance(item, GraphicsProxyWidget):
-                print "GraphicsProxyWidget"
-                embeddedWidget = item.widget()
-
-
-    # The copied item data is extracted and the items are instantiated with the
-    # refered binary data
-    def paste(self):
-        if len(self.__copiedItem) < 1:
-            return
-
-        stream = QDataStream(self.__copiedItem, QIODevice.ReadOnly)
-
-        itemData = [ ]
-        while not stream.atEnd():
-            input = stream.readString()
-
-            if input == "\n":
-                # Create item
-                type = itemData[0]
-                if type == "Text" and len(itemData) == 6:
-                    textItem = Text(self.__isDesignMode)
-                    textItem.setText(itemData[1])
-                    font = QFont()
-                    font.fromString(itemData[2])
-                    textItem.setFont(font)
-                    textItem.setTextColor(QColor(itemData[3]))
-                    textItem.setOutlineColor(QColor(itemData[4]))
-                    textItem.setBackgroundColor(QColor(itemData[5]))
-                    self._setupItem(textItem)
-                elif type == "Link":
-                    print "Link"
-                elif type == "Arrow":
-                    print "Arrow"
-                elif type == "Line" and len(itemData) == 6:
-                    lineItem = Line(self.__isDesignMode)
-                    # Get line coordinates
-                    lineCoords = itemData[1].split(",")
-                    if len(lineCoords) == 4:
-                        line = QLineF(float(lineCoords[0]), float(lineCoords[1]), \
-                                      float(lineCoords[2]), float(lineCoords[3]))
-                        lineItem.setLine(line)
-                    # Get line length
-                    length = float(itemData[2])
-                    lineItem.setLength(length)
-                    # Get line width
-                    widthF = float(itemData[3])
-                    lineItem.setWidthF(widthF)
-                    # Get line style
-                    style = int(itemData[4])
-                    lineItem.setStyle(style)
-                    # Get line color
-                    lineItem.setColor(QColor(itemData[5]))
-
-                    self._setupItem(lineItem)
-                    lineItem.setTransformOriginPoint(lineItem.boundingRect().center())
-                elif type == "Rectangle" and len(itemData) == 2:
-                    rectItem = Rectangle(self.__isDesignMode)
-                    rectData = itemData[1].split(",")
-                    if len(rectData) == 4:
-                        rect = QRectF(float(rectData[0]), float(rectData[1]), \
-                                      float(rectData[2]), float(rectData[3]))
-                        rectItem.setRect(rect)
-                    self._setupItem(rectItem)
-                    rectItem.setTransformOriginPoint(rectItem.boundingRect().center())
-                elif type == "GraphicsProxyWidgetContainer":
-                    print "GraphicsProxyWidgetContainer"
-                elif type == "GraphicsProxyWidget":
-                    print "GraphicsProxyWidget"
-
-                itemData = [ ]
-                continue
-
-            itemData.append(input)
-
-
-    # All selected items are removed; when an item (not type Link) is removed its
-    # destructor deletes any links that are associated with it
-    # To avoid double-deleting links, the Link-items are removed before deleting the other items
-    def remove(self):
-        items = self.selectedItems()
-        if (len(items) and QMessageBox.question(self, "Remove selected items",
-                                                "Remove {0} item{1}?".format(len(items),
-                                                "s" if len(items) != 1 else ""),
-                                                QMessageBox.Yes|QMessageBox.No) ==
-                                                QMessageBox.No):
-            return
-
-        self.removeItems(items)
-
-
-    def removeItems(self, items):
-        while items:
-            item = items.pop()
-            if isinstance(item, Text) or isinstance(item, Rectangle):
-                for link in item.links():
-                    if link in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(link)
-                    self.__scene.removeItem(link)
-            elif isinstance(item, Link) or isinstance(item, Arrow):
-                print "Link or Arrow removed"
-            elif isinstance(item, Line):
-                print "Line removed"
-            elif isinstance(item, GraphicsProxyWidgetContainer):
-                layout = item.layout()
-                while layout.count() > 0:
-                    proxyItem = layout.itemAt(layout.count()-1)
-                    if not proxyItem:
-                        continue
-                    
-                    keys = proxyItem.keys
-                    if keys:
-                        for key in keys:
-                            Manager().removeVisibleDevice(key)
-                    # Destroy and unregister
-                    proxyItem.destroy()
-                    if proxyItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(proxyItem)
-                    
-                    self.__scene.removeItem(proxyItem)
-                    layout.removeItem(proxyItem)
-                    
-                item.destroy()
-            elif isinstance(item, GraphicsProxyWidget):
-                keys = item.keys
-                if keys:
-                    for key in keys:
-                        Manager().removeVisibleDevice(key)
-                # Destroy and unregister
-                item.destroy()
-            elif isinstance(item, GraphicsCustomItem):
-                for inputItem in item.inputChannelItems():
-                    if inputItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(inputItem)
-                    self.__scene.removeItem(inputItem)
-                for outputItem in item.outputChannelItems():
-                    if outputItem in items:
-                        # Remove item from list - prevent double deletion
-                        items.remove(outputItem)
-                    self.__scene.removeItem(outputItem)
-                Manager().removeVisibleDevice(item.internalKey())
-                Manager().unregisterEditableComponent(item.deviceIdKey, item)
-
-            self.__scene.removeItem(item)
-            del item
-
-
-    # Rotates all selected items around 30 degrees
-    def rotate(self):
-        for item in self.selectedItems():
-            #item.rotate(30)
-            item.setRotation(self.__rotAngle)
-            self.__rotAngle += 30
-
-
-    # Scales all selected items up (so far) : TODO use value
-    def scaleSelectedItemsUp(self): # value
-        for item in self.selectedItems():
-            item.scale(1.5, 1.5)
-
-
-    def scaleSelectedItemsDown(self): # value
-        for item in self.selectedItems():
-            item.scale(0.75, 0.75)
-
-
-    def groupItems(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        # Unselect all selected items
-        for item in items:
-            item.setSelected(False)
-
-        itemGroup = self.__scene.createItemGroup(items)
-        itemGroup.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable)
-        itemGroup.setSelected(True)
-        self.bringToFront()
-
-
-    def horizontalLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        self.createGraphicsItemContainer(Qt.Horizontal, items)
-
-
-    def verticalLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        self.createGraphicsItemContainer(Qt.Vertical, items)
-
-
-    def breakLayout(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-        for item in items:
-            self.__scene.breakLayout(item)
-
-
-    def unGroupItems(self):
-        items = self.selectedItems()
-        if len(items) < 1:
-            return
-
-        childItems = []
-        for item in items:
-            if isinstance(item, QGraphicsItemGroup):
-                childItems = item.childItems()
-                self.__scene.destroyItemGroup(item)
-        # Select all items again
-		for childItem in childItems:
-		    childItem.setSelected(True)
-
-
-    # Increments self.__maxZ value, and then sets the currently selected item's z
-    # value to self.__maxZ
-    def bringToFront(self):
-        self.__maxZ += 1
-        self._setZValue(self.__maxZ)
-
-
-    # Decrements self.__minZ value, and then sets the currently selected item's z
-    # value to self.__minZ
-    def sendToBack(self):
-        self.__minZ -=1
-        self._setZValue(self.__minZ)
-
-
-### private ###
     # Positions a newly added or pasted item in the scene
     # The sequence number ensures that new items are added in different positions
     # rather than on top of each other
@@ -658,148 +1416,92 @@ class GraphicsView(QGraphicsView):
         self._addItem(item)
 
 
-    def _addItem(self, item):
-        self.__scene.addItem(item)
-        self.__scene.clearSelection()
-        item.setSelected(True)
-        self.bringToFront()
-
-
-    # Sets the z value of all selected items to z
-    def _setZValue(self, z):
-        items = self.selectedItems()
-        for item in items:
-            item.setZValue(z)
-
-
     # Creates and returns container item
-    def createGraphicsItemContainer(self, orientation, items):
+    def createGraphicsItemContainer(self, orientation, items, pos):
         # Initialize layout
-        layout = QGraphicsLinearLayout(orientation)
-        layout.setContentsMargins(5,5,5,5)
+        layout = BoxLayout(QBoxLayout.LeftToRight if
+                           orientation == Qt.Horizontal else
+                           QBoxLayout.TopToBottom)
 
-        width = 0
-        height = 0
-        for item in items:
-            if isinstance(item, QGraphicsLayoutItem) is False:
-                continue
+        for item, component in items:
+            proxy = ProxyWidget(self.inner)
+            proxy.set_child(item, component)
+            layout.addWidget(proxy)
+            proxy.show()
 
-            item.setFlag(QGraphicsItem.ItemIsMovable, False)
-            item.setFlag(QGraphicsItem.ItemIsSelectable, False)
-
-            layout.addItem(item)
-            layout.setAlignment(item, Qt.AlignCenter)
-
-            # Recalculate width and height of the whole item
-            itemGeometry = item.geometry()
-            width += itemGeometry.width()
-            if height < itemGeometry.height():
-                height = itemGeometry.height()
-
-        # Create container item for items in layout
-        containerItem = GraphicsProxyWidgetContainer(self.__isDesignMode)
-        containerItem.setLayout(layout)
-        # Set correct geometry for containerItem - important for positioning
-        containerItem.setGeometry(QRectF(0, 0, width, height))
-        # Add created item to scene
-        self._addItem(containerItem)
-
-        # Calculations to position item center-oriented
-        bRect = containerItem.boundingRect()
-        leftPos = bRect.topLeft()
-        leftPos = containerItem.mapToScene(leftPos)
-        centerPos = bRect.center()
-        centerPos = containerItem.mapToScene(centerPos)
-        offset = centerPos-leftPos
-        containerItem.setTransformOriginPoint(centerPos)
-
-        return (containerItem, offset)
+        layout.fixed_geometry = QRect(pos, layout.sizeHint())
+        self.ilayout.add_item(layout)
+        layout.selected = True
+        return layout
 
 
-### protected ###
-    #def wheelEvent(self, event):
-    #    #factor = 1.41 ** (-event.delta() / 240.0)
-    #    factor = 1.0 + (0.2 * qAbs(event.delta()) / 120.0)
-    #    if event.delta() > 0:
-    #        self.scale(factor, factor)
-    #    else:
-    #        factor = 1.0/factor
-    #        self.scale(factor, factor)
-    #    QGraphicsView.wheelEvent(self, event)
+    def clear_selection(self):
+        for s in self.ilayout.shapes:
+            s.selected = False
+        for c in self.ilayout:
+            c.selected = False
 
 
     def mousePressEvent(self, event):
-        if (event.button() != Qt.LeftButton):
+        if not self.designMode:
             return
+        if event.button() == Qt.LeftButton:
+            self.current_action.mousePressEvent(self, event)
+        else:
+            child = self.inner.childAt(event.pos())
+            if child is not None:
+                while not isinstance(child, ProxyWidget):
+                    child = child.parent()
+                child.mousePressEvent(event)
 
-        # Items are created in origin and must then be moved to the position to
-        # set their position correctly for later purposes!!!
-        pos = QPointF(self.mapToScene(event.pos()))
-        if self.__mode == self.InsertLine:
-            self.__line = Line(self.__isDesignMode)
-            self._addItem(self.__line)
-            self.__line.setPos(pos.x(), pos.y())
-        elif self.__mode == self.InsertRect:
-            self.__rect = Rectangle(self.__isDesignMode)
-            self._addItem(self.__rect)
-            self.__rect.setPos(pos.x(), pos.y())
+        QWidget.mousePressEvent(self, event)
 
-        QGraphicsView.mousePressEvent(self, event)
+
+    def contextMenuEvent(self, event):
+        if not self.designMode:
+            return
+        child = self.inner.childAt(event.pos())
+        if child is not None:
+            while not isinstance(child, ProxyWidget):
+                child = child.parent()
+            child.event(event)
 
 
     def mouseMoveEvent(self, event):
-        pos = self.mapToScene(event.pos())
-        if self.__mode == self.InsertLine and self.__line:
-            linePos = self.__line.pos()
-            pos = QPointF(pos.x()-linePos.x(), pos.y()-linePos.y())
-            newLine = QLineF(QPointF(), QPointF(pos))
-            self.__line.setLine(newLine)
-        elif self.__mode == self.InsertRect and self.__rect:
-            rectPos = self.__rect.pos()
-            pos = QPointF(pos.x()-rectPos.x(), pos.y()-rectPos.y())
-            newRect = QRectF(QPointF(), QPointF(pos))
-            self.__rect.setRect(newRect)
-        #elif self.__mode == self.MoveItem:
-        QGraphicsView.mouseMoveEvent(self, event)
+        self.current_action.mouseMoveEvent(self, event)
+        QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
-        if self.__line and self.__mode == self.InsertLine:
-            centerPos = self.__line.boundingRect().center()
-            self.__line.setTransformOriginPoint(centerPos)
-            self.__line.setSelected(True)
-            self.lineInserted.emit()
-        elif self.__rect and self.__mode == self.InsertRect:
-            rect = self.__rect.boundingRect()
-            centerPos = rect.center()
-            self.__rect.setTransformOriginPoint(centerPos)
-            self.__rect.setSelected(True)
-            self.rectInserted.emit()
-
-        self.__line = None
-        self.__rect = None
-        QGraphicsView.mouseReleaseEvent(self, event)
+        self.current_action.mouseReleaseEvent(self, event)
+        QWidget.mouseReleaseEvent(self, event)
 
 
-# Drag & Drop events
+    def mouseDoubleClickEvent(self, event):
+        if not self.designMode:
+            return
+        w = self.inner.childAt(event.pos())
+        if w is not None:
+            while not isinstance(w, ProxyWidget):
+                w = w.parent()
+            w.edit()
+            return
+        item = self.ilayout.itemAtPosition(event.pos())
+        if item is None:
+            return
+        item.edit()
+
+
     def dragEnterEvent(self, event):
         source = event.source()
-        if (source is not None) and (source is not self):
+        if source is not None and source is not self and self.designMode:
             event.accept()
-
-        QGraphicsView.dragEnterEvent(self, event)
-
-
-    def dragMoveEvent(self, event):
-        # Drop event only in design mode possible
-        if not self.__isDesignMode:
-            event.ignore()
-            return
-        
-        event.accept()
+        QWidget.dragEnterEvent(self, event)
 
 
     def dropEvent(self, event):
+        #print "GraphicsView.dropEvent"
+
         source = event.source()
         if source is not None:
             customItem = None
@@ -826,12 +1528,14 @@ class GraphicsView(QGraphicsView):
                 configKey, configCount = Manager().createNewConfigKeyAndCount(displayName)
                 
                 # Create graphical item
-                customItem = GraphicsCustomItem(configKey, self.__isDesignMode, displayName, schema, (navItemType == NavigationItemTypes.CLASS))
+                customItem = GraphicsCustomItem(
+                    configKey, self.designMode, displayName, schema,
+                    (navItemType == NavigationItemTypes.CLASS))
                 tooltipText = "<html><b>Associated key: </b>%s</html>" % configKey
                 customItem.setToolTip(tooltipText)
-                offset = QPointF()
-                # Add created item to scene
-                self._addItem(customItem)
+                customItem.position = event.pos()
+                self.ilayout.shapes.append(customItem)
+                self.update()
 
                 if navItemType and (navItemType == NavigationItemTypes.CLASS):
                     Manager().createNewProjectConfig(customItem, configKey, configCount, displayName, schema)
@@ -875,7 +1579,7 @@ class GraphicsView(QGraphicsView):
                 displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
                 if displayNameProxyWidget:
                     # Add item to itemlist
-                    items.append(displayNameProxyWidget)
+                    items.append((displayNameProxyWidget, None))
 
                 # Does key concern state of device?
                 keys = str(internalKey).split('.configuration.')
@@ -905,19 +1609,14 @@ class GraphicsView(QGraphicsView):
                                                             enumeration = enumeration, \
                                                             metricPrefixSymbol=metricPrefixSymbol, \
                                                             unitSymbol=unitSymbol)
+                    displayComponent.widget.setToolTip(internalKey)
                     
-                    displayComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    displayProxyWidget = GraphicsProxyWidget(self.__isDesignMode, displayComponent.widget, displayComponent, isStateToDisplay)
-                    displayProxyWidget.setTransformOriginPoint(displayProxyWidget.boundingRect().center())
-                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
-                    displayProxyWidget.setToolTip(tooltipText)
-                    # Add item to itemlist
-                    items.append(displayProxyWidget)
+                    items.append((displayComponent.widget, displayComponent))
                     
                     # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(metricPrefixSymbol, unitSymbol)
                     if unitProxyWidget:
-                        items.append(unitProxyWidget)
+                        items.append((unitProxyWidget, None))
 
                     # Register as visible device
                     Manager().newVisibleDevice(internalKey)
@@ -938,29 +1637,29 @@ class GraphicsView(QGraphicsView):
 
                         # Register as visible device
                         Manager().newVisibleDevice(internalKey)
+                        
+                    items.append((editableComponent.widget, editableComponent))
                     
-                    editableComponent.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-                    editableProxyWidget = GraphicsProxyWidget(self.__isDesignMode, editableComponent.widget, editableComponent, isStateToDisplay)
-                    editableProxyWidget.setTransformOriginPoint(editableProxyWidget.boundingRect().center())
-                    tooltipText = "<html><b>Associated key: </b>%s</html>" % internalKey
-                    editableProxyWidget.setToolTip(tooltipText)
-                    # Add item to itemlist
-                    items.append(editableProxyWidget)                  
 
-                customTuple = self.createGraphicsItemContainer(Qt.Horizontal, items)
-                customItem = customTuple[0]
-                offset = customTuple[1]
+                customItem = self.createGraphicsItemContainer(
+                    Qt.Horizontal, items, event.pos())
 
-            if customItem is None: return
-
-            pos = event.pos()
-            scenePos = self.mapToScene(pos)
-            scenePos = scenePos-offset
-            customItem.setPos(scenePos)
+            if customItem is None:
+                return
 
         event.accept()
 
-        QGraphicsView.dropEvent(self, event)
+        QWidget.dropEvent(self, event)
+
+
+    def event(self, event):
+        ret = QWidget.event(self, event)
+        if event.type() == QEvent.ToolTip:
+            item = self.inner.childAt(event.pos())
+            if item is not None:
+                item.event(event)
+                return True
+        return ret
 
 
     def _getWidgetCenterPosition(self, pos, centerX, centerY):
@@ -975,11 +1674,7 @@ class GraphicsView(QGraphicsView):
             return None
 
         # Label only, if there is something to show
-        label = QLabel(displayName)
-        label.setAttribute(Qt.WA_NoSystemBackground, True)
-        displayNameProxyWidget = GraphicsProxyWidget(self.__isDesignMode, label)
-        displayNameProxyWidget.setTransformOriginPoint(displayNameProxyWidget.boundingRect().center())
-        return displayNameProxyWidget
+        return QLabel(displayName)
 
 
     def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
@@ -994,39 +1689,23 @@ class GraphicsView(QGraphicsView):
         
         if len(unitLabel) > 0:
             laUnit = QLabel(unitLabel)
-            laUnit.setAttribute(Qt.WA_NoSystemBackground, True)
-            return GraphicsProxyWidget(self.__isDesignMode, laUnit)
+            return laUnit
         
         return None
 
 
-### slots ###
-    def onRemoveUserCustomFrame(self, userCustomFrame):
-        print "onRemoveUserCustomFrame", userCustomFrame
-        if userCustomFrame is None:
-            return
-        userCustomFrame.deleteLater()
-
-
-    # Called whenever an item of the scene is un-/selected
-    def onSceneSelectionChanged(self):
-        self.sceneSelectionChanged.emit()
-
-        if (len(self.__scene.selectedItems()) == 1):
-            selectedItem = self.__scene.selectedItems()[0]
-            if isinstance(selectedItem, GraphicsCustomItem):
-                Manager().selectNavigationItemByKey(selectedItem.internalKey())
-            elif isinstance(selectedItem, GraphicsProxyWidget):
-                keys = selectedItem.keys
-                if keys:
-                    for key in keys:
-                        Manager().treemodel.selectPath(key)
-            elif isinstance(selectedItem, GraphicsProxyWidgetContainer):
-                layout = selectedItem.layout()
-                for i in xrange(layout.count()):
-                    proxyItem = layout.itemAt(i)
-                    keys = proxyItem.keys
-                    if keys:
-                        for key in keys:
-                            Manager().treemodel.selectPath(key)
-
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        try:
+            self.renderer().render(painter, self.renderer().viewBoxF())
+            self.ilayout.draw(painter)
+            painter.save()
+            if self.designMode:
+                painter.setPen(Qt.DashLine)
+                for item in self.ilayout:
+                    if item.selected:
+                        painter.drawRect(item.geometry())
+            painter.restore()
+            self.current_action.draw(painter)
+        finally:
+            painter.end()
