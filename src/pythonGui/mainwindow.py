@@ -304,8 +304,7 @@ class MainWindow(QMainWindow):
         elif action is self.__acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
-        # Emit signal that globals.GLOBAL_ACCESS_LEVEL has changed
-        Manager().notifier.signalGlobalAccessLevelChanged.emit()
+        Manager().signalGlobalAccessLevelChanged.emit()
 
 
     def onServerConnectionChanged(self, isConnected):

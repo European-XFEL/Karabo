@@ -1020,7 +1020,7 @@ class GraphicsView(QGraphicsView):
                 keys = selectedItem.keys
                 if keys:
                     for key in keys:
-                        Manager().selectNavigationItemByKey(key)
+                        Manager().treemodel.selectPath(key)
             elif isinstance(selectedItem, GraphicsProxyWidgetContainer):
                 layout = selectedItem.layout()
                 for i in xrange(layout.count()):
@@ -1028,5 +1028,5 @@ class GraphicsView(QGraphicsView):
                     keys = proxyItem.keys
                     if keys:
                         for key in keys:
-                            Manager().selectNavigationItemByKey(key)
+                            Manager().treemodel.selectPath(key)
 

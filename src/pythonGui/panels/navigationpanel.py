@@ -36,10 +36,6 @@ class NavigationPanel(QWidget):
     #    pass
     ##########################################
 
-    # signals
-    signalNavigationItemChanged = pyqtSignal(dict) # type, key
-
-
     def __init__(self, treemodel):
         super(NavigationPanel, self).__init__()
         
@@ -47,24 +43,11 @@ class NavigationPanel(QWidget):
         self.setWindowTitle(title)
                 
         self.__twNavigation = NavigationTreeView(self, treemodel)
-        self.connect(self.__twNavigation.selectionModel(),
-                    SIGNAL('selectionChanged(const QItemSelection &, const QItemSelection &)'),
-                    self.onNavigationItemClicked)
+
+        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
-        # Make connects
-        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
-        
-        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
-        
-        Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
-        Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
-        
-        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
-        
-        Manager().notifier.signalReset.connect(self.onResetPanel)
-        Manager().notifier.signalInstanceNewReset.connect(self.onResetPanel)
+        Manager().signalReset.connect(self.onResetPanel)
+        Manager().signalInstanceNewReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -95,7 +78,6 @@ class NavigationPanel(QWidget):
         selection is not needed anymore.
         """
         self.__twNavigation.clearSelection()
-        self.__twNavigation.lastSelectionPath = str()
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -128,44 +110,11 @@ class NavigationPanel(QWidget):
     #    Manager().onNewNavigationItem(itemInfo)
 
 
-    # NavigationTreeView: selectionChanged(const QItemSelection &, const QItemSelection &)
-    def onNavigationItemClicked(self):
-        #print "NavigationPanel.itemClicked"
-        self.__twNavigation.itemClicked()
-
-
-    # signal from Manager NavigationTreeWidgetItem clicked (ConfigurationPanel)
-    def onNavigationItemChanged(self, itemInfo):
-        #print "NavigationPanel.itemChanged"
-        self.__twNavigation.itemChanged(itemInfo)
-
-
-    def onNavigationItemSelectionChanged(self, path):
-        self.__twNavigation.selectItem(path)
-
-
-    def onInstanceGone(self, path, parentPath):
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            index = None
-        else:
-            index = self.__twNavigation.findIndex(path)
-        
-        if index and index.isValid():
-            return
-
-        self.__twNavigation.selectItem(parentPath)
-
-
     def updateNavigationTreeView(self, config):
         self.__twNavigation.updateTreeModel(config)
         self.__twNavigation.expandAll()
 
         
-    def onSystemTopologyChanged(self, config):
-        self.updateNavigationTreeView(config)
-
-
     def onGlobalAccessLevelChanged(self):
         self.updateNavigationTreeView(Manager().treemodel.currentConfig)
 

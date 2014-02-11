@@ -43,7 +43,7 @@ class DisplayCommand(DisplayWidget):
         self.__pbCommand.clicked.connect(self.onCommandClicked)
         
         # TODO: better solution
-        Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
+        Manager().signalDeviceStateChanged.connect(self.onDeviceStateChanged)
 
 
     @property

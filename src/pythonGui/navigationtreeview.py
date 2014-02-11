@@ -24,14 +24,12 @@ from PyQt4.QtGui import *
 
 
 class NavigationTreeView(QTreeView):
-
-
     def __init__(self, parent, model):
         super(NavigationTreeView, self).__init__(parent)
         
-        # Stores the last selected path of an tree row
-        self.__lastSelectionPath = str()
         self.setModel(model)
+        self.setSelectionModel(model.selection_model)
+        model.modelReset.connect(self.expandAll)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -41,38 +39,6 @@ class NavigationTreeView(QTreeView):
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
-
-
-    def _lastSelectionPath(self):
-        return self.__lastSelectionPath
-    def _setLastSelectionPath(self, lastSelectionPath):
-        self.__lastSelectionPath = lastSelectionPath
-    lastSelectionPath = property(fget=_lastSelectionPath, fset=_setLastSelectionPath)
-
-
-    def saveSelectionState(self):
-        """
-        Saves the current selected index path to restore the selection later.
-        """
-        selectedIndexes = self.selectedIndexes()
-        if len(selectedIndexes) < 1:
-            return
-
-        self.__lastSelectionPath = selectedIndexes[0].internalPointer().path
-
-
-    def restoreSelectionState(self):
-        """
-        Restores the selected index with the saved last path.
-        """
-        if (self.__lastSelectionPath is None) or (self.__lastSelectionPath == ""):
-            return
-
-        index = self.findIndex(self.__lastSelectionPath)
-        if index and index.isValid():
-            self.selectionModel().blockSignals(True)
-            self.setCurrentIndex(index)
-            self.selectionModel().blockSignals(False)
 
 
     def _setupContextMenu(self):
@@ -153,82 +119,15 @@ class NavigationTreeView(QTreeView):
         return self.model().findIndex(path)
 
 
-    def selectIndex(self, index):
-        if not index:
-            return
-        
-        path = index.internalPointer().path
-        if self.lastSelectionPath == path:
-            return
-        self.lastSelectionPath = path
-        
-        if index.isValid():
-            self.setCurrentIndex(index)
-        else:
-            self.clearSelection()
-
-
     def updateTreeModel(self, config):
         self.saveSelectionState()
         self.model().updateData(config)
         self.restoreSelectionState()
 
 
-    def itemClicked(self):
-        index = self.currentIndex()
-        
-        if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
-               
-        level = self.model().getHierarchyLevel(index)
-        row = index.row()
-
-        classId = None
-        path = ""
-        
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            path = "server." + index.data()
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            
-            schema = Manager().getClassSchema(serverId, classId)
-            path = str("server." + serverId + ".classes." + classId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=schema))
-        elif level == 3:
-            type = NavigationItemTypes.DEVICE
-            deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
-            
-            path = str("device." + deviceId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId, type=type, schema=None))
-        
-        itemInfo = dict(key=path, classId=classId, type=type, level=level, row=row)
-        Manager().onNavigationItemChanged(itemInfo)
-        
-        return type # Needed in ConfigurationPanel
-
-
-    def itemChanged(self, itemInfo):
-        path = itemInfo.get('key')
-        if len(path) == 0:
-            return
-        
-        index = self.findIndex(path)
-        self.selectIndex(index)
-
-
     def selectItem(self, path):
         index = self.findIndex(path)
-        self.selectIndex(index)
+        self.model().selectIndex(index)
 
 
     def onKillServer(self):

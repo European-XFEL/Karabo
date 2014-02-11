@@ -49,7 +49,7 @@ class ProjectPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__twProject)
         
-        Manager().notifier.signalCreateNewProjectConfig.connect(self.onCreateNewProjectConfig)
+        Manager().signalCreateNewProjectConfig.connect(self.onCreateNewProjectConfig)
 
 
     def setupActions(self):
@@ -63,7 +63,7 @@ class ProjectPanel(QWidget):
     def projectItemSelectionChanged(self):
         item = self.__twProject.currentItem()
         if not item: return
-        Manager().notifier.signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
+        Manager().signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
 
 
     def onCreateNewProjectConfig(self, customItem, path, configName):

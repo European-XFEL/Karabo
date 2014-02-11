@@ -48,7 +48,7 @@ class CustomMiddlePanel(QWidget):
         mainLayout.setContentsMargins(3,3,3,3)
         mainLayout.addWidget(self.__customWidget)
         
-        Manager().notifier.signalReset.connect(self.onResetPanel)
+        Manager().signalReset.connect(self.onResetPanel)
         
         self.setupActions(isConnectedToServer)
         self.updateActions()

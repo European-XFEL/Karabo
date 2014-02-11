@@ -8,13 +8,9 @@
 """This module contains the manager class which works a man in the middle of the
    star structure. All relevant signals go over here.
    
-   The manager class is a singleton and has a notifier object due to problems with
-   the definition of signals inside of a singleton class.
+   The manager class is a singleton.
    
    All relevant configuration data is stored in a member hash variable.
-   
-   This notifier class contains only the signals needed to spread to all relevant
-   places.
 """
 
 __all__ = ["Manager"]
@@ -39,8 +35,6 @@ import time
 class _Manager(QObject):
     """Class for signals which can not be integrated in Manager class"""
     # signals
-    signalSystemTopologyChanged = pyqtSignal(object)
-
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
@@ -49,8 +43,6 @@ class _Manager(QObject):
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalSchemaAvailable = pyqtSignal(dict) # key, schema
-    signalNavigationItemChanged = pyqtSignal(dict) # type, key
-    signalNavigationItemSelectionChanged = pyqtSignal(str) # key
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
@@ -134,11 +126,6 @@ class _Manager(QObject):
     def _hash(self):
         return self.__hash
     hash = property(fget=_hash)
-
-
-    @property
-    def notifier(self):
-        return self
 
 
     def _sqlDatabase(self):
@@ -481,10 +468,6 @@ class _Manager(QObject):
 ### TODO: Temporary functions for scientific computing END ###
 
 
-    def selectNavigationItemByKey(self, path):
-        self.signalNavigationItemSelectionChanged.emit(path)
-
-
     def executeCommand(self, itemInfo):
         # instanceId, name, arguments
         path = itemInfo.get('path')
@@ -623,10 +606,6 @@ class _Manager(QObject):
         self.saveAsXml(str(filename), classId, path)
 
 
-    def onNavigationItemChanged(self, itemInfo):
-        self.signalNavigationItemChanged.emit(itemInfo)
-
-
     # TODO: needs to be implemented
     def onReloadXsd(self, deviceServer, deviceId):
         print "Manager, onReloadXsd", deviceServer, deviceId
@@ -635,16 +614,9 @@ class _Manager(QObject):
         pass
 
 
-### New pythonGui2 stuff ###
     def handleSystemTopology(self, config):
-        #print "handleSystemTopology"
-        #print config
-        #print ""
-        # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        
-        # Send full internal hash to navigation
-        self.signalSystemTopologyChanged.emit(self.__hash)
+        self.treemodel.updateData(self.__hash)
 
 
     def handleInstanceNew(self, config):
@@ -701,12 +673,8 @@ class _Manager(QObject):
             print "Unknown instance \"" + instanceId + "\" gone."
             return
         
-        # Remove instance from central hash
         self.__hash.erase(path)
-        
-        # Send full internal hash to navigation
-        self.signalSystemTopologyChanged.emit(self.__hash)
-        # Update navigation and configuration panel
+        self.treemodel.updateData(self.__hash)
         self.signalInstanceGone.emit(path, parentPath)
 
 
