@@ -106,8 +106,9 @@ class ConfigurationPanel(QWidget):
         Manager().notifier.signalChangingState.connect(self.onChangingState)
         Manager().notifier.signalErrorState.connect(self.onErrorState)
         Manager().notifier.signalReset.connect(self.onResetPanel)
+        Manager().notifier.signalInstanceNewReset.connect(self.onInstanceNewReset)
 
-        self.__prevDevicePath = str() # previous selected DEVICE_INSTANCE internalKey
+        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
         # Initial page
         twInitalParameterEditorPage = ParameterTreeWidget(self)
@@ -271,8 +272,8 @@ class ConfigurationPanel(QWidget):
         self.__toolBar.removeAction(action)
 
 
-    def updateApplyAllActions(self, deviceId):
-        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+    def updateApplyAllActions(self, path):
+        parameterEditor = self._getParameterEditorByPath(path)
         if parameterEditor is None:
             return
 
@@ -315,8 +316,8 @@ class ConfigurationPanel(QWidget):
             self.__acApplyAll.setMenu(None)
 
 
-    def updateResetAllActions(self, deviceId):
-        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+    def updateResetAllActions(self, path):
+        parameterEditor = self._getParameterEditorByPath(path)
         if parameterEditor is None:
             return
 
@@ -423,17 +424,17 @@ class ConfigurationPanel(QWidget):
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
-    def _setApplyAllEnabled(self, deviceId, enable):
+    def _setApplyAllEnabled(self, path, enable):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
-        self.updateApplyAllActions(deviceId)
-        self.updateResetAllActions(deviceId)
+        self.updateApplyAllActions(path)
+        self.updateResetAllActions(path)
 
 
-    def _setResetAllEnabled(self, deviceId, enable):
+    def _setResetAllEnabled(self, path, enable):
         self.__pbResetAll.setEnabled(enable)
         self.__acResetAll.setEnabled(enable)
-        self.updateResetAllActions(deviceId)
+        self.updateResetAllActions(path)
 
 
     def _setParameterEditorIndex(self, index):
@@ -462,14 +463,14 @@ class ConfigurationPanel(QWidget):
         return self.__swParameterEditor.currentWidget()
     
     
-    def _getParameterEditorByDeviceId(self, deviceId):
+    def _getParameterEditorByPath(self, path):
         """
-        Returns the parameterEditor-Treewidget with the given deviceId.
+        Returns the parameterEditor-Treewidget with the given \path.
         If not found, return None.
         """
         for index in range(self.__swParameterEditor.count()):
             parameterEditor = self.__swParameterEditor.widget(index)
-            if deviceId == parameterEditor.instanceKey:
+            if path == parameterEditor.instanceKey:
                 return parameterEditor
         return None
 
@@ -544,10 +545,10 @@ class ConfigurationPanel(QWidget):
         if index:
             self._setParameterEditorIndex(index)
 
-            if (type is NavigationItemTypes.DEVICE) and (self.__prevDevicePath != path):
-                # Visible deviceId has changed
+            if (type is NavigationItemTypes.DEVICE) and (self.__prevPath != path):
+                # Visible device has changed
                 Manager().newVisibleDevice(path)
-                self.__prevDevicePath = path
+                self.__prevPath = path
         else:
             self._setParameterEditorIndex(0)
             
@@ -558,21 +559,49 @@ class ConfigurationPanel(QWidget):
             self._hideAllButtons()
 
 
+    def removeParameterEditorPage(self, parameterEditor):
+        """
+        The \parameterEditor is remove from StackedWidget and all registered
+        components get unregistered.
+        """
+        if parameterEditor is None:
+            return
+
+        # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
+        self._r_unregisterComponents(parameterEditor.invisibleRootItem())
+        # Clear page
+        parameterEditor.clear()
+        # Remove widget completely
+        self.__swParameterEditor.removeWidget(parameterEditor)
+        # Reset old selection path
+        self.__twNavigation.lastSelectionPath = str()
+        self._setParameterEditorIndex(0)
+        self._hideAllButtons()
+
+
 ### slots ###
     def onResetPanel(self):
-        self._setParameterEditorIndex(0)
+        """
+        This slot is called when the configurator needs a reset which means all
+        parameter editor pages need to be cleaned and removed.
+        """
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
-        self.__twNavigation.lastSelectionPath = str()
 
         while self.__swParameterEditor.count() > 1:
-            twParameterEditorPage = self.__swParameterEditor.widget(self.__swParameterEditor.count()-1)
-            # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-            self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
-            twParameterEditorPage.clear()
+            self.removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
 
-            # Remove widget completely
-            self.__swParameterEditor.removeWidget(twParameterEditorPage)
+
+    def onInstanceNewReset(self, path):
+        """
+        This slot is called when a new instance is available which means, if there
+        was already a parameter editor for the given path created it needs to
+        be cleaned and removed.
+        """
+        # Remove \path from map
+        if path in self.__navItemInternalKeyIndexMap:
+            del self.__navItemInternalKeyIndexMap[path]
+        self.removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -628,15 +657,15 @@ class ConfigurationPanel(QWidget):
     def onNavigationItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
-        
+
         if type is NavigationItemTypes.CLASS:
             self.updateButtonsVisibility = True
-        elif (type is NavigationItemTypes.SERVER) or (type is NavigationItemTypes.DEVICE):
+        else:
             self.updateButtonsVisibility = False
 
-        if (self.__prevDevicePath != "") and (self.__prevDevicePath != path):
-            Manager().removeVisibleDevice(self.__prevDevicePath)
-            self.__prevDevicePath = str()
+        if (self.__prevPath != "") and (self.__prevPath != path):
+            Manager().removeVisibleDevice(self.__prevPath)
+            self.__prevPath = str()
         
         self.__twNavigation.itemChanged(itemInfo)
         
@@ -684,8 +713,8 @@ class ConfigurationPanel(QWidget):
             twParameterEditorPage.stateUpdated(state)
 
 
-    def onConflictStateChanged(self, deviceId, hasConflict):
-        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+    def onConflictStateChanged(self, path, hasConflict):
+        parameterEditor = self._getParameterEditorByPath(path)
         if parameterEditor is None:
             return
 
@@ -695,13 +724,13 @@ class ConfigurationPanel(QWidget):
             self.hasConflicts = hasConflict
 
 
-    def onChangingState(self, deviceId, isChanging):
-        if deviceId in self.__changingTimerDeviceIdMap:
-            timer = self.__changingTimerDeviceIdMap[deviceId]
+    def onChangingState(self, path, isChanging):
+        if path in self.__changingTimerDeviceIdMap:
+            timer = self.__changingTimerDeviceIdMap[path]
         else:
             timer = QTimer(self)
             timer.timeout.connect(self.onTimeOut)
-            self.__changingTimerDeviceIdMap[deviceId] = timer
+            self.__changingTimerDeviceIdMap[path] = timer
         
         if isChanging is True:
             if not timer.isActive():
@@ -709,14 +738,14 @@ class ConfigurationPanel(QWidget):
         else:
             timer.stop()
             
-            parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+            parameterEditor = self._getParameterEditorByPath(path)
             if parameterEditor:
                 parameterEditor.setReadOnly(False)
 
  
-    def onErrorState(self, deviceId, inErrorState):
+    def onErrorState(self, path, inErrorState):
         # Get corresponding parameterEditor-Treewidget to update state
-        parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+        parameterEditor = self._getParameterEditorByPath(path)
         if parameterEditor:
             parameterEditor.setErrorState(inErrorState)
 
@@ -725,22 +754,22 @@ class ConfigurationPanel(QWidget):
         timer = self.sender()
         timer.stop()
         
-        # Check deviceId against deviceId of current parameter editor
+        # Check path against path of current parameter editor
         mapValues = self.__changingTimerDeviceIdMap.values()
         for i in xrange(len(mapValues)):
             if timer == mapValues[i]:
-                deviceId = self.__changingTimerDeviceIdMap.keys()[i]
+                path = self.__changingTimerDeviceIdMap.keys()[i]
                 
-                parameterEditor = self._getParameterEditorByDeviceId(deviceId)
+                parameterEditor = self._getParameterEditorByPath(path)
                 if parameterEditor:
                     parameterEditor.setReadOnly(True)
                 break
 
 
-    def onApplyChanged(self, deviceId, enable, hasConflicts=False):
-        # called when apply button of attributewidget changed
-        self._setApplyAllEnabled(deviceId, enable)
-        self._setResetAllEnabled(deviceId, enable)
+    def onApplyChanged(self, path, enable, hasConflicts=False):
+        # Called when apply button of ParameterPage changed
+        self._setApplyAllEnabled(path, enable)
+        self._setResetAllEnabled(path, enable)
         self.hasConflicts = hasConflicts
 
 
@@ -823,7 +852,6 @@ class ConfigurationPanel(QWidget):
         path = info.get('key')
         type = info.get('type')
         classId = info.get('classId')
-        deviceId = info.get('deviceId')
         
         configChangeType = None
         if type is NavigationItemTypes.CLASS:
@@ -847,7 +875,6 @@ class ConfigurationPanel(QWidget):
         path = info.get('key')
         type = info.get('type')
         classId = info.get('classId')
-        deviceId = info.get('deviceId')
 
         Manager().onSaveAsXml(str(classId), str(path))
 
