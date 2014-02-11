@@ -7,7 +7,9 @@
  */
 
 #include <boost/python.hpp>
+#include <boost/python/type_id.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/converter/registry.hpp>
 #include <boost/any.hpp>
 #include <vector>
 
@@ -58,6 +60,35 @@ void exportp2p();
 void exportPyXipStatistics();
 template <class T> void exportPyXipCpuImage();
 void exportPyXipRawImageData();
+
+void *convert_to_cstring(PyObject *obj)
+{
+    char *ret = PyString_AsString(obj);
+    if (!ret)
+        PyErr_Clear();
+    return ret;
+}
+
+void *convertible_string(PyObject *obj)
+{
+    if (PyUnicode_Check(obj))
+        return const_cast<char *>("");
+    else
+        return 0;
+}
+
+
+void construct_string(PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data* data)
+{
+    void* storage = ((boost::python::converter::rvalue_from_python_storage<std::string>*)data)->
+	storage.bytes;
+    char *str;
+    Py_ssize_t size;
+    PyString_AsStringAndSize(obj, &str, &size);
+    new (storage) std::string(str, size);
+    data->convertible = storage;
+}
+
 
 BOOST_PYTHON_MODULE(karathon) {
     
@@ -120,4 +151,11 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyXipCpuImage<short>();
     exportPyXipCpuImage<unsigned short>();   
     exportPyXipRawImageData();
+
+    boost::python::converter::registry::insert(convert_to_cstring,
+	boost::python::type_id<char>(),
+	&boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
+    boost::python::converter::registry::insert(convertible_string,
+	construct_string, boost::python::type_id<std::string>(),
+	&boost::python::converter::wrap_pytype<&PyUnicode_Type>::get_pytype);
 }

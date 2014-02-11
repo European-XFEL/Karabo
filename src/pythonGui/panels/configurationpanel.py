@@ -77,42 +77,35 @@ class ConfigurationPanel(QWidget):
         vLayout.addWidget(splitTopPanes)
                 
         self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        self.connect(self.__twNavigation.selectionModel(),
-                    SIGNAL('selectionChanged(const QItemSelection &, const QItemSelection &)'),
-                    self.onNavigationItemClicked)
+        treemodel.itemChanged.connect(self.onNavigationItemChanged)
         self.__twNavigation.hide()
 
         splitTopPanes.setStretchFactor(0, 1)
         
-        # Make connects
-        Manager().notifier.signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
+        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
-        Manager().notifier.signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
+        Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
+        Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
+        Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
+        Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
         
-        Manager().notifier.signalNewNavigationItem.connect(self.onNewNavigationItem)
-        Manager().notifier.signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().notifier.signalSchemaAvailable.connect(self.onSchemaAvailable)
-        Manager().notifier.signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
-        
-        Manager().notifier.signalNavigationItemChanged.connect(self.onNavigationItemChanged)
-        Manager().notifier.signalNavigationItemSelectionChanged.connect(self.onNavigationItemSelectionChanged)
+        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
-        Manager().notifier.signalProjectItemChanged.connect(self.onProjectItemChanged)
-
-        Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
+        Manager().signalInstanceGone.connect(self.onInstanceGone)
         
-        Manager().notifier.signalDeviceStateChanged.connect(self.onDeviceStateChanged)
-        Manager().notifier.signalConflictStateChanged.connect(self.onConflictStateChanged)
-        Manager().notifier.signalChangingState.connect(self.onChangingState)
-        Manager().notifier.signalErrorState.connect(self.onErrorState)
-        Manager().notifier.signalReset.connect(self.onResetPanel)
-        Manager().notifier.signalInstanceNewReset.connect(self.onInstanceNewReset)
+        Manager().signalDeviceStateChanged.connect(self.onDeviceStateChanged)
+        Manager().signalConflictStateChanged.connect(self.onConflictStateChanged)
+        Manager().signalChangingState.connect(self.onChangingState)
+        Manager().signalErrorState.connect(self.onErrorState)
+        Manager().signalReset.connect(self.onResetPanel)
+        Manager().signalInstanceNewReset.connect(self.onInstanceNewReset)
 
         self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
         # Initial page
         twInitalParameterEditorPage = ParameterTreeWidget(self)
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
+        twInitalParameterEditorPage.path = None
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
         splitTopPanes.setStretchFactor(1, 3)
 
@@ -369,6 +362,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditorPage.addContextAction(self.__acKillInstance)
         twParameterEditorPage.addContextAction(self.__acApplyAll)
         twParameterEditorPage.addContextAction(self.__acResetAll)
+        twParameterEditorPage.path = path
         
         if type is NavigationItemTypes.CLASS:
             twParameterEditorPage.hideColumn(1)
@@ -641,39 +635,17 @@ class ConfigurationPanel(QWidget):
                 self.__internalKeySchemaLoadedMap[key] = False
 
 
-    # signal from Manager NavigationTreeWidgetItem clicked (NavigationPanel)
-    def onNavigationItemClicked(self):
-        #print "ConfigurationPanel.itemClicked"
-        type = self.__twNavigation.itemClicked()
-        if type is NavigationItemTypes.UNDEFINED:
-            return
-        
-        if type is NavigationItemTypes.CLASS:
-            self.updateButtonsVisibility = True
-        else:
-            self.updateButtonsVisibility = False
-
-
     def onNavigationItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
-        if type is NavigationItemTypes.CLASS:
-            self.updateButtonsVisibility = True
-        else:
-            self.updateButtonsVisibility = False
+        self.updateButtonsVisibility = type == NavigationItemTypes.CLASS
 
         if (self.__prevPath != "") and (self.__prevPath != path):
             Manager().removeVisibleDevice(self.__prevPath)
             self.__prevPath = str()
         
-        self.__twNavigation.itemChanged(itemInfo)
-        
         self.showParameterPage(type, path)
-
-
-    def onNavigationItemSelectionChanged(self, path):
-        self.__twNavigation.selectItem(path)
 
 
     def onProjectItemChanged(self, itemInfo):
@@ -690,20 +662,10 @@ class ConfigurationPanel(QWidget):
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        # Check whether path of the gone instance was selected
-        path = self.__twNavigation.lastSelectionPath
-        if len(path) < 1:
-            index = None
-        else:
-            index = self.__twNavigation.findIndex(path)
-        
-        if index and index.isValid():
-            return
-        
-        self._setParameterEditorIndex(0)
-        self.__twNavigation.selectItem(parentPath)
-        # Hide buttons and actions
-        self._hideAllButtons()
+        if path == self._getCurrentParameterEditor().path:
+            self._setParameterEditorIndex(0)
+            self.__twNavigation.selectItem(parentPath)
+            self._hideAllButtons()
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -830,14 +792,6 @@ class ConfigurationPanel(QWidget):
     def onDeviceSchemaUpdated(self, key):
         key = str(key)
         self.__internalKeySchemaLoadedMap[key] = False
-
-
-    def onSystemTopologyChanged(self, config):
-        # Already done in NavigationPanel which uses the same model
-        #self.__twNavigation.updateTreeModel(config)
-        self.__twNavigation.saveSelectionState()
-        self.__twNavigation.expandAll()
-        self.__twNavigation.restoreSelectionState()
 
 
     def onGlobalAccessLevelChanged(self):
