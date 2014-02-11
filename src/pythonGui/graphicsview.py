@@ -813,7 +813,8 @@ class Layout(Loadable):
         self.fixed_geometry = rect
 
 
-    def update_shapes(self, rect):
+    def setGeometry(self, rect):
+        super(Layout, self).setGeometry(rect)
         if self.shape_geometry is None:
             self.shape_geometry = QRect(self.fixed_geometry)
         for s in self.shapes:
@@ -978,7 +979,7 @@ class FixedLayout(Layout, QLayout):
         return QSize(10, 10)
 
 
-class BoxLayout(QBoxLayout, Layout):
+class BoxLayout(Layout, QBoxLayout):
     def __init__(self, dir):
         QBoxLayout.__init__(self, dir)
         Layout.__init__(self)
@@ -987,11 +988,6 @@ class BoxLayout(QBoxLayout, Layout):
 
     def save(self):
         return {ns_karabo + "Direction": self.direction()}
-
-
-    def setGeometry(self, rect):
-        QBoxLayout.setGeometry(self, rect)
-        self.update_shapes(rect)
 
 
     @staticmethod
@@ -1019,7 +1015,7 @@ def _reduce(xs):
             del xs[i]
 
 
-class GridLayout(QGridLayout, Layout):
+class GridLayout(Layout, QGridLayout):
     def __init__(self):
         QGridLayout.__init__(self)
         Layout.__init__(self)
@@ -1069,11 +1065,6 @@ class GridLayout(QGridLayout, Layout):
         layout.load_item(elem, ret)
         ret.load_element(elem)
         return ret
-
-
-    def setGeometry(self, rect):
-        QGridLayout.setGeometry(self, rect)
-        self.update_shapes(rect)
 
 
 class ProxyWidget(QStackedWidget):
