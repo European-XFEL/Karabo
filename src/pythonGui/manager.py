@@ -23,7 +23,9 @@ __all__ = ["Manager"]
 from datanotifier import DataNotifier
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
+import globals
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
+                             Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
@@ -42,6 +44,7 @@ class _Manager(QObject):
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
+    signalInstanceNewReset = pyqtSignal(str) # path
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -98,7 +101,7 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
-        # Central hash
+        # Reset Central hash
         self.__hash = Hash()
         # Project hash
         self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
@@ -195,8 +198,8 @@ class _Manager(QObject):
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
+        # Inform others about changes
         self.handleSystemTopology(Hash())
-        self.onNavigationItemChanged(dict(key=str(), type=NavigationItemTypes.UNDEFINED))
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
 
@@ -452,8 +455,8 @@ class _Manager(QObject):
         self.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
         self.signalProjectItemChanged.emit(dict(key=path))
         
-        print self.__projectHash
-        print "-----"
+        #print self.__projectHash
+        #print "-----"
 
 
     def createNewConfigKeyAndCount(self, classId):
@@ -500,11 +503,9 @@ class _Manager(QObject):
 
 
     def onRefreshInstance(self, internalPath):
-        print "onRefreshInstance", internalPath
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
         if (not deviceId) and (not self.__hash.has(internalPath)):
             return
-        print "signalRefreshInstance", deviceId
         self.signalRefreshInstance.emit(deviceId)
 
    
@@ -646,6 +647,41 @@ class _Manager(QObject):
         self.signalSystemTopologyChanged.emit(self.__hash)
 
 
+    def handleInstanceNew(self, config):
+        """
+        This function gets the configuration for a new instance.
+        Before the system topology is updated, it is checked whether this instance
+        already exists in the central hash.
+        If \True, the existing stuff is removed (from central hash, old parameter
+                  page..
+        If \False, nothing is removed.
+        """
+        # Check for existing stuff and remove
+        instanceIds = self.removeExistingInstances(config)
+        for id in instanceIds:
+            timestamp = Timestamp()
+            # TODO: better format for timestamp and timestamp generation in karabo
+            timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
+            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
+                         "Detected dirty shutdown for instance \"" + id + "\", which " \
+                         "is coming up now.#"
+            # A log message is triggered
+            self.onLogDataAvailable(logMessage)
+
+        # Update central hash with new configuration
+        self.handleSystemTopology(config)
+
+        # If device was instantiated from GUI, it should be selected after coming up
+        deviceKey = "device"
+        if config.has(deviceKey):
+            deviceConfig = config.get(deviceKey)
+            deviceIds = list()
+            deviceConfig.getKeys(deviceIds)
+            for deviceId in deviceIds:
+                self.selectDeviceByPath(deviceKey + "." + deviceId)
+                self.potentiallyRefreshVisibleDevice(deviceId)
+
+
     def handleInstanceGone(self, instanceId):
         # Remove instanceId from central hash and update
         
@@ -755,6 +791,18 @@ class _Manager(QObject):
                 # Check, if serverId is already in central hash
                 path = serverKey + "." + serverId
                 if self.__hash.has(path):
+                    # Check old classes and send signal to remove old configuration pages
+                    serverConfig = self.__hash.get(serverKey)
+                    if serverConfig.hasAttribute(serverId, "deviceClasses"):
+                        classes = serverConfig.getAttribute(serverId, "deviceClasses")
+                        visibilities = serverConfig.getAttribute(serverId, "visibilities")
+                        i = -1
+                        for deviceClass in classes:
+                            i = i + 1
+                            if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
+                                classPath = path + ".classes." + deviceClass
+                                # Remove configuration page for associated class
+                                self.signalInstanceNewReset.emit(classPath)
                     # Remove path from central hash
                     self.__hash.erase(path)
                     removedInstanceIds.append(serverId)

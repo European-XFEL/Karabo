@@ -277,7 +277,7 @@ class Network(QObject):
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleInstanceNew(bodyHash)
+                Manager().handleInstanceNew(bodyHash)
             elif type == "instanceUpdated":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
@@ -532,30 +532,4 @@ class Network(QObject):
         shortMessage = bodyHash.get("shortMsg")
         detailedMessage = bodyHash.get("detailedMsg")
         Manager().handleNotification(timestamp, type, shortMessage, detailedMessage, deviceId)
-
-
-    def _handleInstanceNew(self, bodyHash):
-        # Check for existing stuff and remove
-        instanceIds = Manager().removeExistingInstances(bodyHash)
-        for id in instanceIds:
-            timestamp = Timestamp()
-            # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
-            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
-                         "Detected dirty shutdown for instance \"" + id + "\", which " \
-                         "is coming up now.#"
-            self._handleLog(logMessage)
-
-        # Update central hash with new configuration
-        Manager().handleSystemTopology(bodyHash)
-
-        # If device was instantiated from GUI, it should be selected after coming up
-        deviceKey = "device"
-        if bodyHash.has(deviceKey):
-            deviceConfig = bodyHash.get(deviceKey)
-            deviceIds = list()
-            deviceConfig.getKeys(deviceIds)
-            for deviceId in deviceIds:
-                Manager().selectDeviceByPath(deviceKey + "." + deviceId)
-                Manager().potentiallyRefreshVisibleDevice(deviceId)
 

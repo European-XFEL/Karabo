@@ -219,7 +219,6 @@ class NavigationTreeView(QTreeView):
 
     def itemChanged(self, itemInfo):
         path = itemInfo.get('key')
-        
         if len(path) == 0:
             return
         

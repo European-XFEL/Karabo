@@ -64,6 +64,7 @@ class NavigationPanel(QWidget):
         Manager().notifier.signalInstanceGone.connect(self.onInstanceGone)
         
         Manager().notifier.signalReset.connect(self.onResetPanel)
+        Manager().notifier.signalInstanceNewReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -89,6 +90,11 @@ class NavigationPanel(QWidget):
 
 ### slots ###
     def onResetPanel(self):
+        """
+        This slot is called when the panel needs a reset which means the last
+        selection is not needed anymore.
+        """
+        self.__twNavigation.clearSelection()
         self.__twNavigation.lastSelectionPath = str()
 
 

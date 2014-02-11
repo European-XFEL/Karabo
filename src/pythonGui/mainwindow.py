@@ -11,7 +11,7 @@
 
 __all__ = ["MainWindow"]
 
-
+import os
 import qrc_icons
 
 from docktabwindow import DockTabWindow
@@ -37,7 +37,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super(MainWindow, self).__init__()
-        
+
+        self.__karaboVersion = self._getVersion()
+
         self._setupActions()
         self._setupMenuBar()
         self._setupToolBar()
@@ -46,12 +48,20 @@ class MainWindow(QMainWindow):
         self._setupNetwork()
         self._setupPanels()
 
-        self.setWindowTitle("European XFEL - Karabo GUI " + globals.KARABO_FRAMEWORK_VERSION)
+        self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)
         self.resize(1200,800)
         self.show()
 
 
 ### initializations ###
+    def _getVersion(self):
+        filePath = os.environ['HOME'] + "/.karabo/karaboVersion"
+        try:
+            with open(filePath, 'r') as file:
+                return file.readline()
+        except IOError:
+            return ""
+
 
     def _setupActions(self):
         text = "Change access level"
