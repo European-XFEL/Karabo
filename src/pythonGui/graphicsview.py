@@ -1111,7 +1111,8 @@ class ProxyWidget(QStackedWidget):
     def contextMenuEvent(self, event):
         if not self.parent().parent().designMode:
             return
-        QMenu.exec_(self.actions(), event.globalPos(), None, self)
+        QMenu.exec_(self.currentWidget().actions() + self.actions(),
+                    event.globalPos(), None, self)
 
     def element(self):
         g = self.geometry()
