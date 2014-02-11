@@ -18,11 +18,17 @@ from graphicsoutputchannelitem import GraphicsOutputChannelItem
 
 from layoutcomponents.nodebase import NodeBase
 
+from manager import Manager
+
+from registry import Loadable, ns_karabo, ns_svg
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+from xml.etree import ElementTree
 
-class GraphicsCustomItem(NodeBase, QGraphicsObject):
+
+class GraphicsCustomItem(NodeBase, Loadable, QObject):
     # signals
     signalValueChanged = pyqtSignal(str, object) # key, value
 
@@ -47,6 +53,8 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         
         self.__inputChannelItems = [] # List contains GraphicsInputChannelItem
         self.__outputChannelItems = [] # List contains GraphicsOutputChannelItem
+        self.position = QPoint()
+        self.selected = False
         
         if schema:
             schemaReader = PrivateSchemaReader(schema)
@@ -56,11 +64,15 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
             # Update channel graphics representation
             self._updateChannelItems()
 
-        self.setFlags(QGraphicsItem.ItemIsMovable | QGraphicsItem.ItemIsSelectable | QGraphicsItem.ItemSendsGeometryChanges)
-
-
     def internalKey(self):
         return self.__internalKey
+
+    def setToolTip(self, tip):
+        pass
+
+
+    def translate(self, pos):
+        self.position += pos
 
 
     def _getValue(self):
@@ -104,22 +116,22 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         return self.__outputChannelItems
 
 
-    def boundingRect(self):
-        margin = 80 # 1, TODO: consider channels as well..
-        return self._outlineRect().adjusted(-margin, -margin, +margin, +margin)
-
-
     def shape(self):
         rect = self._outlineRect()
         path = QPainterPath()
         path.addRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         return path
 
+    def contains(self, pos):
+        return self._outlineRect().contains(pos)
 
-    def paint(self, painter, option, widget):
-        #pen = QPen(self.__outlineColor)
+    def geometry(self):
+        return self._outlineRect()
+
+
+    def draw(self, painter):
         pen = painter.pen()
-        if self.isSelected():
+        if self.selected:
             pen.setStyle(Qt.DotLine)
             pen.setWidth(2)
         
@@ -128,7 +140,6 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
         painter.setBrush(QColor(224,240,255)) # light blue
         rect = self._outlineRect()
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
-        #painter.setPen(self.__textColor)
         painter.drawText(rect, Qt.AlignCenter, self.__compositeText)
 
 
@@ -211,10 +222,11 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
 
     def _outlineRect(self):
         padding = 10
-        metrics = QFontMetricsF(self.__textFont) #qApp.fontMetrics())
+        metrics = QFontMetrics(self.__textFont) #qApp.fontMetrics())
         rect = metrics.boundingRect(self.__compositeText)
         rect.adjust(-padding, -padding, +padding, +padding)
         rect.translate(-rect.center())
+        rect.translate(self.position)
         return rect
 
 
@@ -250,6 +262,48 @@ class GraphicsCustomItem(NodeBase, QGraphicsObject):
     def onValueChanged(self, key, value):
         if self.deviceIdKey == key:
             self.value = value
+
+
+    def element(self):
+        g = self.geometry()
+        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height(),
+              "style": "fill:#e0f0ff;stroke:#000000",
+              ns_karabo + "class": self.__class__.__name__,
+              ns_karabo + "internalKey": self.internalKey(),
+              ns_karabo + "text": self.text(),
+              ns_karabo + "devInstId": self.value}
+        return ElementTree.Element(ns_svg + 'rect',
+                                   {k: unicode(v) for k, v in d.iteritems()})
+
+
+    @staticmethod
+    def load(element, layout):
+        internalKey = element.get("internalKey")
+        Manager().newVisibleDevice(internalKey)
+        Manager().selectNavigationItemByKey(internalKey)
+        schema = Manager().getSchemaByInternalKey(internalKey)
+
+        if len(schema) == 0:
+            # TODO: Remove dirty hack for scientific computing again!!!
+            croppedClassId = text.split("-")
+            newClassId = croppedClassId[0]
+
+            newInternalKey = internalKey
+            keys = internalKey.split('+', 1)
+            if len(keys) == 2:
+                serverId = keys[0]
+                newInternalKey = keys[0] + "+" + newClassId
+                schema = Manager().getSchemaByInternalKey(newInternalKey)
+                Manager().createNewDeviceClassPlugin(serverId, newClassId, text)
+        customItem = GraphicsCustomItem(internalKey,
+                                        layout.widget().parent().isDesignMode,
+                                        text, schema)
+
+        customItem.signalValueChanged.connect(
+            Manager().onDeviceClassValueChanged)
+        Manager().registerEditableComponent(customItem.deviceId, customItem)
+        customItem.value = deviceId
+        return customItem
 
 
 ####################################################################################

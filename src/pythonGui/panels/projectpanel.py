@@ -16,7 +16,6 @@ import const
 from enums import NavigationItemTypes
 from manager import Manager
 
-#from PyQt4.QtCore import *
 from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
 
@@ -27,7 +26,7 @@ class ProjectPanel(QWidget):
     # 
     #def setupActions(self):
     #    pass
-    #def setupToolBars(self, standardToolBar, parent):
+    #def setupToolBar(self, toolBar):
     #    pass
     #def onUndock(self):
     #    pass
@@ -56,7 +55,7 @@ class ProjectPanel(QWidget):
         pass
 
 
-    def setupToolBars(self, standardToolBar, parent):
+    def setupToolBars(self, toolBar, parent):
         pass
 
 
