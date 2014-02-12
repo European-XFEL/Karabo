@@ -32,6 +32,7 @@ void exportp2p() {
 
     {
         bp::class_<IOService, boost::shared_ptr<IOService> >("IOService", bp::no_init)
+                .def("__del__", &IOServiceWrap().__del__)
                 .def("run", &IOServiceWrap().run, "This method blocks until at least one handler is registered in it.")
                 .def("work", &IOServiceWrap().work, "This method blocks forever, event no handlers are registered.  Service can be stopped by 'stop' call.")
                 .def("stop", &IOServiceWrap().stop, "This method stops service operations.")
