@@ -33,7 +33,7 @@ class DisplayIconset(DisplayWidget):
     alias = "Iconset"
 
     def __init__(self, **kwargs):
-        DisplayWidget.__init__(self, **kwargs)
+        super(DisplayIconset, self).__init__(**kwargs)
         self.widget = QSvgWidget()
         action = QAction("Change Iconset...", self.widget)
         action.triggered.connect(self.onChangeIcons)
