@@ -12,7 +12,7 @@
 __all__ = ["BaseComponent"]
 
 
-#from manager import Manager
+from manager import Manager
 #from messagebox import MessageBox
 
 from registry import Loadable, ns_karabo, ns_svg
@@ -123,6 +123,12 @@ class BaseComponent(Loadable, QObject):
         d = {k: elem.get(ns_karabo + k) for k in ks}
         d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
         component = cls(**d)
+        # Register as visible device
+        online = Manager().newVisibleDevice(component.keys[0])
+        if not online:
+            # TODO:
+            #print "offline"
+            pass
         component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         return component
 
