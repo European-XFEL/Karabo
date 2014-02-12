@@ -24,20 +24,40 @@ import globals
 
 from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from karabo.karathon import Types
+
+from PyQt4.QtCore import QEvent
+from PyQt4.QtGui import QSpinBox
 
 
 class EditableSpinBox(EditableWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, value=None, **params):
+    def __init__(self, value=None, valueType=None, **params):
         super(EditableSpinBox, self).__init__(**params)
 
         self.__spinBox = QSpinBox()
-        #intMax = sys.maxint <--- This produces a bug in 64bit systems
-        self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        
+        if valueType == Types.INT8:
+            self.__spinBox.setRange(globals.MIN_INT8, globals.MAX_INT8)
+        elif valueType == Types.UINT8:
+            self.__spinBox.setRange(0, globals.MAX_UINT8)
+        elif valueType == Types.INT16:
+            self.__spinBox.setRange(globals.MIN_INT16, globals.MAX_INT16)
+        elif valueType == Types.UINT16:
+            self.__spinBox.setRange(0, globals.MAX_UINT16)
+        elif valueType == Types.INT32:
+            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        elif valueType == Types.UINT32:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(0, globals.MAX_INT32)
+        elif valueType == Types.INT64:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
+        elif valueType == Types.UINT64:
+            # TODO: not supported for QSpinBox
+            self.__spinBox.setRange(0, globals.MAX_INT32)
         
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)

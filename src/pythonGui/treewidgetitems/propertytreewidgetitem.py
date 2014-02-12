@@ -19,7 +19,7 @@ from choicecomponent import ChoiceComponent
 from displaycomponent import DisplayComponent
 from popupwidget import PopupWidget
 
-from PyQt4.QtCore import QSize, Qt
+from PyQt4.QtCore import Qt, QSize
 from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
 
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
@@ -31,9 +31,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         # Popup widget for tooltip info
         self.__popupWidget = None
         self.__currentValueOnDevice = None
-        
-        # Value type
-        self.__valueType = None
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
@@ -70,12 +67,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setText(0, text)
         self.treeWidget().resizeColumnToContents(0)
     displayText = property(fset=_setText)
-
-
-    def _setValueType(self, valueType):
-        self.__valueType = valueType
-        self.displayComponent.displayWidget.valueType = valueType
-    valueType = property(fset=_setValueType)
 
 
     def _defaultValue(self):
@@ -120,8 +111,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.description is not None:
                 info["Description"] = self.description
             info["Key"] = paramKey[1]
-            if self.__valueType is not None:
-                info["Value Type"] = self.__valueType
+            if self.valueType is not None:
+                info["Value Type"] = self.valueType
             if self.defaultValue is not None:
                 info["Default Value"] = self.defaultValue
             if self.alias is not None:

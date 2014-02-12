@@ -11,7 +11,6 @@
 
 __all__ = ["ParameterTreeWidget"]
 
-
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
@@ -19,7 +18,7 @@ from manager import Manager
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 
-from PyQt4.QtCore import QMimeData, QRect, Qt
+from PyQt4.QtCore import QByteArray, QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
 
 
@@ -88,62 +87,7 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def mimeData(self, items):
-        item = items[0]
-
-        # Attributes can not be dropped
-        if isinstance(item, AttributeTreeWidgetItem):
-            return
-        
-        mimeData = QMimeData()        
-
-        # Put necessary data in MimeData:
-        # Source type
-        mimeData.setData("sourceType", "ParameterTreeWidget")
-        # Internal key
-        mimeData.setData("internalKey", item.internalKey)
-        # Display name
-        displayName = item.text(0)
-        # Use DeviceClass/DeviceInstance-Key if no displayName is set
-        if len(item.text(0)) == 0:
-            keys = item.internalKey.split('.')
-            displayName = keys[1]
-        mimeData.setData("displayName", displayName)
-        
-        # Get NavigationItemType
-        navigationItemType = self.__configPanel.getNavigationItemType()
-        
-        # Display component?
-        hasDisplayComponent = navigationItemType == NavigationItemTypes.DEVICE
-        mimeData.setData("hasDisplayComponent", "{}".format(hasDisplayComponent))
-        # Editable component?
-        hasEditableComponent = item.editableComponent is not None
-        mimeData.setData("hasEditableComponent", "{}".format(hasEditableComponent))
-        
-        # TODO: HACK to get apply button disabled
-        if hasEditableComponent:
-            mimeData.setData("currentValue", "{}".format(item.editableComponent.value))
-        
-        if item.unitSymbol:
-            mimeData.setData("unitSymbol", "{}".format(item.unitSymbol))
-        if item.metricPrefixSymbol:
-            mimeData.setData("metricPrefixSymbol", "{}".format(item.metricPrefixSymbol))
-
-        if item.enumeration:
-            enumerationString = str()
-            nbEnums = len(item.enumeration)
-            for i in xrange(nbEnums):
-                enumerationString += item.enumeration[i]
-                if i != (nbEnums-1):
-                    enumerationString += ","
-            mimeData.setData("enumeration", enumerationString)
-            
-        # Navigation item type
-        mimeData.setData("navigationItemType", "{}".format(navigationItemType))
-        # Class alias
-        if item.classAlias:
-            mimeData.setData("classAlias", "{}".format(item.classAlias))
-
-        return mimeData
+        return QMimeData()
 
 
 ### getter & setter functions ###
