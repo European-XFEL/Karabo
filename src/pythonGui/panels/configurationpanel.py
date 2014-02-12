@@ -565,8 +565,6 @@ class ConfigurationPanel(QWidget):
         parameterEditor.clear()
         # Remove widget completely
         self.__swParameterEditor.removeWidget(parameterEditor)
-        # Reset old selection path
-        self.__twNavigation.lastSelectionPath = str()
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
@@ -660,10 +658,9 @@ class ConfigurationPanel(QWidget):
             if path in key:
                 self.__internalKeySchemaLoadedMap[key] = False
 
-        if path == self._getCurrentParameterEditor().path:
-            self._setParameterEditorIndex(0)
-            self.__twNavigation.selectItem(parentPath)
-            self._hideAllButtons()
+        self._setParameterEditorIndex(0)
+        self._hideAllButtons()
+        self.__twNavigation.selectItem(parentPath)
 
 
     def onDeviceStateChanged(self, internalKey, state):
