@@ -26,6 +26,8 @@ from layoutcomponents.nodebase import NodeBase
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
+from pendialog import PenDialog
+
 from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
 from navigationtreeview import NavigationTreeView
