@@ -1093,7 +1093,7 @@ class ProxyWidget(QStackedWidget):
                 component.widgetCategory)
             keys = component.keys[0].split('.configuration.')
             if keys[1] == "state":
-                aliases += factory.getAliasesViaCategory("State")
+                aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
                 menu = QMenu(self)
