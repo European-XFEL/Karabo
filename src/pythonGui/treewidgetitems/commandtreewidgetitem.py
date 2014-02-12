@@ -15,8 +15,8 @@ from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QIcon, QPushButton
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
     

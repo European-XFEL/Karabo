@@ -13,19 +13,18 @@ from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 
-from enums import *
+from enums import AccessMode, NavigationItemTypes
 
-from treewidgetitems.attributetreewidgetitem import *
-from treewidgetitems.commandtreewidgetitem import *
-from treewidgetitems.imagetreewidgetitem import *
-from treewidgetitems.propertytreewidgetitem import *
+from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
+from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
+from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
+from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 #from schematest.sampleschema import SampleSchema 
 
-from karabo.karathon import *
+from karabo.karathon import Types
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QIcon
 
 
 class SchemaReader(object):
@@ -249,6 +248,8 @@ class SchemaReader(object):
             self._handleFloat(key, item)
         elif valueType == Types.COMPLEX_DOUBLE:
             self._handleFloat(key, item)
+        elif valueType == Types.INT8:
+            self._handleInteger(key, item)
         elif valueType == Types.UINT8:
             self._handleInteger(key, item)
         elif valueType == Types.INT16:
@@ -710,7 +711,8 @@ class SchemaReader(object):
                                                              value=item.defaultValue,
                                                              enumeration=item.enumeration,
                                                              metricPrefixSymbol=item.metricPrefixSymbol,
-                                                             unitSymbol=item.unitSymbol)
+                                                             unitSymbol=item.unitSymbol,
+                                                             valueType=item.valueType)
         else:
             if accessMode is AccessMode.RECONFIGURABLE:
                 editableComponent = EditableApplyLaterComponent(classAlias=item.classAlias,
@@ -718,7 +720,8 @@ class SchemaReader(object):
                                                                 value=item.defaultValue,
                                                                 enumeration=item.enumeration,
                                                                 metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                unitSymbol=item.unitSymbol)
+                                                                unitSymbol=item.unitSymbol,
+                                                                valueType=item.valueType)
                 editableComponent.signalApplyChanged.connect(self.__treeWidget.onApplyChanged)
         
         # Check minimum and maximum inclusives/exclusives
