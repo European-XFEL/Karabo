@@ -15,8 +15,8 @@ __all__ = ["AttributeTreeWidgetItem"]
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QIcon
 
 class AttributeTreeWidgetItem(BaseTreeWidgetItem):
 

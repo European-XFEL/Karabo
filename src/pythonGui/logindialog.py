@@ -96,22 +96,22 @@ class LoginDialog(QDialog):
 
     @property
     def username(self):
-        return str(self.__leUsername.text().lower())
+        return self.__leUsername.text().lower()
 
 
     @property
     def password(self):
-        return str(self.__lePassword.text())
+        return self.__lePassword.text()
 
     
     @property
     def provider(self):
-        return str(self.__cbProvider.currentText())
+        return self.__cbProvider.currentText()
 
 
     @property
     def hostname(self):
-        return str(self.__leHostname.text())
+        return self.__leHostname.text()
 
 
     @property
