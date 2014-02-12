@@ -27,12 +27,8 @@ namespace karathon {
                 ScopedGILRelease nogil;
                 ioserv->run();
             } catch (const karabo::util::Exception& e) {
-                ChannelWrap::clear();
-                ConnectionWrap::clear();
                 KARABO_RETHROW
             }
-            ChannelWrap::clear();
-            ConnectionWrap::clear();
         }
 
         static void work(karabo::net::IOService::Pointer ioserv) {
@@ -40,12 +36,8 @@ namespace karathon {
             try {
                 ioserv->work();
             } catch (const karabo::util::Exception& e) {
-                ChannelWrap::clear();
-                ConnectionWrap::clear();
                 KARABO_RETHROW
             }
-            ChannelWrap::clear();
-            ConnectionWrap::clear();
         }
 
         static void stop(karabo::net::IOService::Pointer ioserv) {
@@ -55,6 +47,11 @@ namespace karathon {
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             }
+        }
+        
+        static void __del__(karabo::net::IOService::Pointer ioserv) {
+                ChannelWrap::clear();
+                ConnectionWrap::clear();
         }
     };
 }
