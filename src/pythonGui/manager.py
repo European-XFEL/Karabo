@@ -39,19 +39,16 @@ class DataNotifier(QObject):
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
 
-        self.signalUpdateComponent.connect(self.onValueChanged)
         self.addComponent(key, component)
-
-
-    def onValueChanged(self, key, value):
-        self.value = value
+        # Store first added component for later value update
+        self.firstComponent = component
 
 
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
-        if hasattr(self, "value"):
-            self.signalUpdateComponent.emit(key, self.value)
+        if hasattr(self, "firstComponent"):
+            self.signalUpdateComponent.emit(key, self.firstComponent.value)
 
 
     def updateDisplayValue(self, key, value):
