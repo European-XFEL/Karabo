@@ -5,7 +5,7 @@
 #############################################################################
 
 
-"""This module contains a class which represents a QGraphicsView."""
+"""This module contains a class which represents a QSvgWidget."""
 
 __all__ = ["GraphicsView"]
     

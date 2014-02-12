@@ -53,7 +53,7 @@ class CustomMiddlePanel(QWidget):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        if self.__customWidget.close():
+        if self.graphicsview.close():
             event.accept()
         else:
             event.ignore()
@@ -149,7 +149,6 @@ class CustomMiddlePanel(QWidget):
         parent.addToolBar(toolBar)
         self.graphicsview.setFocusProxy(toolBar)
         toolBar.setFocusPolicy(Qt.StrongFocus)
-
         
         toolBar.addSeparator()
         toolBar.addWidget(self.__tbOpen)
@@ -160,10 +159,15 @@ class CustomMiddlePanel(QWidget):
         for a in self.graphicsactions:
             toolBar.addAction(a)
         self.drawingToolBar = toolBar
+
+        # Add placeholder widget to toolbar
+        widget = QWidget()
+        widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.drawingToolBar.addWidget(widget)
         
 
     def onResetPanel(self):
-        self.__customWidget.reset()
+        self.graphicsview.reset()
 
 
     def onServerConnectionChanged(self, isConnected):

@@ -16,7 +16,7 @@ import qrc_icons
 
 from docktabwindow import DockTabWindow
 import globals
-from karabo.karathon import *
+from karabo.karathon import AccessLevel
 from manager import Manager
 from network import Network
 

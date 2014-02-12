@@ -12,14 +12,15 @@
 __all__ = ["Network"]
 
 
-from karabo.karathon import Authenticator, BinarySerializerHash, Hash, Timestamp
+from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
+                             Hash, Timestamp)
 from logindialog import LoginDialog
 from manager import Manager
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QDataStream, \
-                         QObject
+from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStream,
+                          QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 
 import globals

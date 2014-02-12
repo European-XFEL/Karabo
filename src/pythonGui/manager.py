@@ -5,8 +5,8 @@
 #############################################################################
 
 
-"""This module contains the manager class which works a man in the middle of the
-   star structure. All relevant signals go over here.
+"""This module contains the manager class which works as a man in the middle of
+   the star structure. All relevant signals go over here.
    
    The manager class is a singleton.
    
@@ -59,7 +59,6 @@ class DataNotifier(QObject):
 
 
 class _Manager(QObject):
-    """Class for signals which can not be integrated in Manager class"""
     # signals
     signalGlobalAccessLevelChanged = pyqtSignal()
 
@@ -98,6 +97,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
+
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
@@ -635,6 +635,7 @@ class _Manager(QObject):
 
 
     def handleSystemTopology(self, config):
+        # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         self.treemodel.updateData(self.__hash)
 
@@ -675,8 +676,9 @@ class _Manager(QObject):
 
 
     def handleInstanceGone(self, instanceId):
-        # Remove instanceId from central hash and update
-        
+        """
+        Remove instanceId from central hash and update
+        """
         path = None
         if self.__hash.has("server." + instanceId):
             path = "server." + instanceId
@@ -692,7 +694,8 @@ class _Manager(QObject):
         if path is None:
             print "Unknown instance \"" + instanceId + "\" gone."
             return
-        
+
+        # Remove instance from central hash
         self.__hash.erase(path)
         self.treemodel.updateData(self.__hash)
         self.signalInstanceGone.emit(path, parentPath)
