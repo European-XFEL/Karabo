@@ -32,7 +32,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
         self.selection_model = QItemSelectionModel(self)
-        self.selection_model.selectionChanged.connect(self.selectionChanged)
+        self.selection_model.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _currentConfig(self):
@@ -154,8 +154,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
             self.selectPath(lastSelectionPath)
 
 
-    def selectionChanged(self, selected, deselected):
-        index = selected.indexes()[0]
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        if len(selectedIndexes) < 1:
+            return
+        
+        index = selectedIndexes[0]
 
         if not index.isValid():
             return NavigationItemTypes.UNDEFINED
