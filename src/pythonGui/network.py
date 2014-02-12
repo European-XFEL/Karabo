@@ -25,8 +25,6 @@ from PyQt4.QtGui import QDialog, QMessageBox
 import globals
 import socket
 
-BYTES_TOTAL_SIZE_TAG = 4
-BYTES_HEADER_SIZE_TAG = 4
 BYTES_MESSAGE_SIZE_TAG = 4
 
 class Network(QObject):
@@ -165,9 +163,9 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.__auth = Authenticator(self.__username, self.__password, \
-                                            self.__provider, ipAddress, \
-                                            self.__brokerHost, self.__brokerPort, \
+                self.__auth = Authenticator(str(self.__username), str(self.__password), 
+                                            str(self.__provider), ipAddress,
+                                            self.__brokerHost, self.__brokerPort,
                                             self.__brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
