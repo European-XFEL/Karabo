@@ -40,6 +40,7 @@ class DataNotifier(QObject):
         super(DataNotifier, self).__init__()
 
         self.signalUpdateComponent.connect(self.onValueChanged)
+        self.signalUpdateDisplayValue.connect(self.onValueChanged)
         self.addComponent(key, component)
 
 
@@ -52,6 +53,7 @@ class DataNotifier(QObject):
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
         if hasattr(self, "value"):
             self.signalUpdateComponent.emit(key, self.value)
+            self.signalUpdateDisplayValue.emit(key, self.value)
 
 
     def updateDisplayValue(self, key, value):
