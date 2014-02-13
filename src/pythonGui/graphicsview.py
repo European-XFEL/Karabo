@@ -1207,6 +1207,26 @@ class GraphicsView(QSvgWidget):
         self.current_action.action.setChecked(True)
 
 
+    def closeEvent(self, event):
+        if len(self.ilayout) == 0 and len(self.ilayout.shapes) == 0:
+            return
+
+        messageBox = QMessageBox(self)
+        messageBox.setWindowTitle("Save scene before closing")
+        messageBox.setText("Do you want to save your scene before closing?")
+        messageBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        messageBox.setDefaultButton(QMessageBox.Save)
+
+        reply = messageBox.exec_()
+        if reply == QMessageBox.Cancel:
+            event.ignore()
+            return
+
+        if reply == QMessageBox.Save:
+            self.saveSceneLayoutToFile()
+        event.accept()
+
+
     @property
     def designMode(self):
         return self.inner.testAttribute(Qt.WA_TransparentForMouseEvents)
