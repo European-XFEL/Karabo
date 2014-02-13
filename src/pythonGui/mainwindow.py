@@ -25,7 +25,7 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
-#from panels.projectpanel import ProjectPanel
+from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *

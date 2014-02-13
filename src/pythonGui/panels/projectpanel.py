@@ -16,7 +16,9 @@ from projecttree import ProjectTree
 from enums import NavigationItemTypes
 from manager import Manager
 
-from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import (QAction, QIcon, QTreeWidget, QTreeWidgetItem,
+                         QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
