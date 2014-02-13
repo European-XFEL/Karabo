@@ -26,6 +26,8 @@ from layoutcomponents.nodebase import NodeBase
 from layoutcomponents.text import Text
 from layoutcomponents.textdialog import TextDialog
 
+from pendialog import PenDialog
+
 from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
 from navigationtreeview import NavigationTreeView
@@ -1093,7 +1095,7 @@ class ProxyWidget(QStackedWidget):
                 component.widgetCategory)
             keys = component.keys[0].split('.configuration.')
             if keys[1] == "state":
-                aliases += factory.getAliasesViaCategory("State")
+                aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
                 menu = QMenu(self)
