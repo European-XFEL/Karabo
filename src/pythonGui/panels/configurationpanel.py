@@ -14,17 +14,16 @@ __all__ = ["ConfigurationPanel"]
 
 import const
 
-from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
-
+from parametertreewidget import ParameterTreeWidget
+from projecttree import ProjectTree
 from schemareader import SchemaReader 
 
-from karabo.karathon import *
 from PyQt4.QtCore import SIGNAL, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
@@ -43,6 +42,7 @@ class ConfigurationPanel(QWidget):
     #def onDock(self):
     #    pass
     ##########################################
+
 
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
