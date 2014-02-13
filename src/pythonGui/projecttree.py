@@ -48,7 +48,7 @@ class ProjectTree(QTreeWidget):
         self.itemSelectionChanged.connect(self.onItemSelectionChanged)
 
         Manager().signalProjectHashChanged.connect(self.onUpdate)
-        #Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
+        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
 
 
     def _createNewProject(self, projectName, directory):
@@ -167,7 +167,6 @@ class ProjectTree(QTreeWidget):
 
 
     def serverConnectionChanged(self, isConnected):
-        print "serverConnectionChanged", isConnected
         if not isConnected:
             self.__serverTopology = None
 
@@ -317,6 +316,9 @@ class ProjectTree(QTreeWidget):
 
 
     def onSystemTopologyChanged(self, config):
+        print "onSystemTopologyChanged"
+        print config
+        print ""
         serverKey = "server"
         if not config.has(serverKey):
             return

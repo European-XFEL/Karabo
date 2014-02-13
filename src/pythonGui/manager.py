@@ -62,6 +62,8 @@ class DataNotifier(QObject):
 
 class _Manager(QObject):
     # signals
+    signalSystemTopologyChanged = pyqtSignal(object)
+    
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
@@ -639,6 +641,8 @@ class _Manager(QObject):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
         self.treemodel.updateData(self.__hash)
+        # Send new topology to projecttree
+        self.signalSystemTopologyChanged.emit(self.__hash)
 
 
     def handleInstanceNew(self, config):
