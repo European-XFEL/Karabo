@@ -25,22 +25,22 @@ namespace karathon {
             try {
                 ScopedGILRelease nogil;
                 ioserv->run();
-                finalize(ioserv);
             } catch (const karabo::util::Exception& e) {
                 finalize(ioserv);
                 KARABO_RETHROW
             }
+            finalize(ioserv);
         }
 
         static void work(karabo::net::IOService::Pointer ioserv) {
             try {
                 ScopedGILRelease nogil;
                 ioserv->work();
-                finalize(ioserv);
             } catch (const karabo::util::Exception& e) {
                 finalize(ioserv);
                 KARABO_RETHROW
             }
+            finalize(ioserv);
         }
 
         static void stop(karabo::net::IOService::Pointer ioserv) {

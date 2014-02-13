@@ -63,10 +63,6 @@ namespace karathon {
             std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> >::iterator it = m_handlers.find(ioserv.get());
             if (it == m_handlers.end()) return;
             std::map<karabo::net::Channel*, karabo::util::Hash>& cmap = it->second;
-            for (std::map<karabo::net::Channel*, karabo::util::Hash>::iterator ii = cmap.begin(); ii!=cmap.begin(); ++ii) {
-                karabo::util::Hash& h = ii->second;
-                h.clear();
-            }
             cmap.clear();
             m_handlers.erase(it);
         }
