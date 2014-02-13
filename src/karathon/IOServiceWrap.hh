@@ -19,39 +19,42 @@ namespace bp = boost::python;
 namespace karathon {
 
     class IOServiceWrap {
-
     public:
 
         static void run(karabo::net::IOService::Pointer ioserv) {
             try {
                 ScopedGILRelease nogil;
                 ioserv->run();
+                finalize(ioserv);
             } catch (const karabo::util::Exception& e) {
+                finalize(ioserv);
                 KARABO_RETHROW
             }
         }
 
         static void work(karabo::net::IOService::Pointer ioserv) {
-            ScopedGILRelease nogil;
             try {
+                ScopedGILRelease nogil;
                 ioserv->work();
+                finalize(ioserv);
             } catch (const karabo::util::Exception& e) {
+                finalize(ioserv);
                 KARABO_RETHROW
             }
         }
 
         static void stop(karabo::net::IOService::Pointer ioserv) {
-            ScopedGILRelease nogil;
             try {
+                ScopedGILRelease nogil;
                 ioserv->stop();
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW
             }
         }
-        
-        static void __del__(karabo::net::IOService::Pointer ioserv) {
-                ChannelWrap::clear();
-                ConnectionWrap::clear();
+
+        static void finalize(karabo::net::IOService::Pointer ioserv) {
+            ChannelWrap::clear(ioserv);
+            ConnectionWrap::clear(ioserv);
         }
     };
 }
