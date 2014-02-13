@@ -59,7 +59,8 @@ class DivWidget(QFrame):
 
     def forceClose(self):
         """
-        This function makes .
+        This function sets the member variable to False which decides whether
+        this widget should be closed on dockonevent and calls closeEvent.
         """
         self.__doesDockOnClose = False
         return self.close()

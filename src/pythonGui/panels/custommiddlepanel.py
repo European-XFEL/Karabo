@@ -164,10 +164,6 @@ class CustomMiddlePanel(QWidget):
         widget = QWidget()
         widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.drawingToolBar.addWidget(widget)
-        
-
-    def onResetPanel(self):
-        self.graphicsview.reset()
 
 
     def onServerConnectionChanged(self, isConnected):
