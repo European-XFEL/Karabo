@@ -181,10 +181,12 @@ class MainWindow(QMainWindow):
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        #self.__projectPanel = ProjectPanel()
-        #self.__projectTab = DockTabWindow("Projects", leftArea)
-        #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        #leftArea.setStretchFactor(1,1)
+        self.__projectPanel = ProjectPanel()
+        self.__projectTab = DockTabWindow("Projects", leftArea)
+        self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
+        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = self._createCustomMiddlePanel()
