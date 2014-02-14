@@ -117,8 +117,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 
         # Use key to register component to manager
-        key = params.get('key')
-        Manager().registerEditableComponent(key, self)
+        Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
