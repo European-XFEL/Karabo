@@ -52,8 +52,7 @@ class EditableNoApplyComponent(BaseComponent):
         self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         # Use key to register component to manager
-        key = params.get('key')
-        Manager().registerEditableComponent(key, self)
+        Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
