@@ -58,15 +58,15 @@ namespace karathon {
         static void startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
         static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
 
-        static void clear() {
-            {
-                boost::mutex::scoped_lock lock(m_changedConnectionHandlersMutex);
-                m_connectionHandlers.clear();
-            }
-            {
-                boost::mutex::scoped_lock lock(m_changedErrorHandlersMutex);
-                m_errorHandlers.clear();
-            }
+        static void clear(karabo::net::IOService::Pointer ioserv) {
+            if (!ioserv) return;
+            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+            if (m_handlers.empty()) return;
+            std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::util::Hash> >::iterator it = m_handlers.find(ioserv.get());
+            if (it == m_handlers.end()) return;
+            std::map<karabo::net::Connection*, karabo::util::Hash>& cmap = it->second;
+            cmap.clear();
+            m_handlers.erase(it);
         }
 
     private:
@@ -81,10 +81,8 @@ namespace karathon {
         }
 
     private:
-        static boost::mutex m_changedConnectionHandlersMutex;
-        static std::map<karabo::net::Connection*, karabo::util::Hash> m_connectionHandlers;
-        static boost::mutex m_changedErrorHandlersMutex;
-        static std::map<karabo::net::Connection*, karabo::util::Hash> m_errorHandlers;
+        static boost::mutex m_changedHandlersMutex;
+        static std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::util::Hash> > m_handlers;
     };
 }
 
