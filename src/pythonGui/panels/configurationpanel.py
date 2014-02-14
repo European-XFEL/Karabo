@@ -551,7 +551,7 @@ class ConfigurationPanel(QWidget):
             self._hideAllButtons()
 
 
-    def removeParameterEditorPage(self, parameterEditor):
+    def _removeParameterEditorPage(self, parameterEditor):
         """
         The \parameterEditor is remove from StackedWidget and all registered
         components get unregistered.
@@ -579,7 +579,7 @@ class ConfigurationPanel(QWidget):
         self.__navItemInternalKeyIndexMap = dict()
 
         while self.__swParameterEditor.count() > 1:
-            self.removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
+            self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
 
 
     def onInstanceNewReset(self, path):
@@ -591,7 +591,7 @@ class ConfigurationPanel(QWidget):
         # Remove \path from map
         if path in self.__navItemInternalKeyIndexMap:
             del self.__navItemInternalKeyIndexMap[path]
-        self.removeParameterEditorPage(self._getParameterEditorByPath(path))
+        self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -606,7 +606,6 @@ class ConfigurationPanel(QWidget):
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
         key = itemInfo.get('key')
-        
         if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index:

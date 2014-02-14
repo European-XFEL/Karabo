@@ -26,15 +26,14 @@ class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, **params):
         super(ChoiceComponent, self).__init__(classAlias)
         
-        # Use key to register component to manager
-        key = params.get('key')
-        Manager().registerEditableComponent(key, self)
-        
         self.__classAlias = classAlias
         self.__initParams = params
         
         self.__choiceWidget = EditableWidget.get_class(classAlias)(**params)
         self.widget.setEnabled(False)
+
+        # Use key to register component to manager
+        Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
