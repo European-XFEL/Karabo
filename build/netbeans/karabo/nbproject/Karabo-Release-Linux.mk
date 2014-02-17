@@ -48,6 +48,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
 	${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o \
+	${OBJECTDIR}/_ext/1072794519/FileTools.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinarySerializer.o \
@@ -244,6 +245,11 @@ ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o: ../../../src/karabo/io/CppOutpu
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ../../../src/karabo/io/CppOutputHandler.cc
+
+${OBJECTDIR}/_ext/1072794519/FileTools.o: ../../../src/karabo/io/FileTools.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/FileTools.o ../../../src/karabo/io/FileTools.cc
 
 ${OBJECTDIR}/_ext/1072794519/HashBinaryFileInput.o: ../../../src/karabo/io/HashBinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -1102,6 +1108,19 @@ ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o: ${OBJECTDIR}/_ext/107279
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o ../../../src/karabo/io/CppOutputHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/FileTools_nomain.o: ${OBJECTDIR}/_ext/1072794519/FileTools.o ../../../src/karabo/io/FileTools.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/FileTools.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/FileTools_nomain.o ../../../src/karabo/io/FileTools.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/FileTools.o ${OBJECTDIR}/_ext/1072794519/FileTools_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/HashBinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashBinaryFileInput.o ../../../src/karabo/io/HashBinaryFileInput.cc 

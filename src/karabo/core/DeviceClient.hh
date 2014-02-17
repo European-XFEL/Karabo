@@ -61,7 +61,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
             
-            static const int CONNECTION_KEEP_ALIVE = 15;
+            static const unsigned int CONNECTION_KEEP_ALIVE = 15;
            
         protected: // members
 
