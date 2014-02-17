@@ -63,15 +63,13 @@ class DisplayTrendline(DisplayWidget):
     alias = "Trendline"
 
  
-    def __init__(self, **kwargs):
+    def __init__(self, key=None, **kwargs):
         super(DisplayTrendline, self).__init__(**kwargs)
         
         if not useGuiQwt:
             self.dialog = None
             return
 
-        self.data = [ ]
-        
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
         self.plot = self.dialog.get_plot()
@@ -80,8 +78,9 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisTitle(Qwt.QwtPlot.xBottom, 'Time')
         self.plot.setAxisTitle(Qwt.QwtPlot.yLeft, 'Value')
         
-        self.curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
-        self.plot.add_item(self.curve)
+        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
+        self.plot.add_item(curve)
+        self.curves = {key: ([], curve)}
 
         self.manager = PlotManager(self)
         self.manager.add_plot(self.plot)
@@ -105,6 +104,23 @@ class DisplayTrendline(DisplayWidget):
     value = None
 
 
+    def addKey(self, key):
+        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
+        self.plot.add_item(curve)
+        self.curves[key] = [], curve
+        return True
+
+
+    def removeKey(self, key):
+        self.plot.remove_item(self.curves[key])
+        del self.curves[key]
+
+
+    @property
+    def keys(self):
+        return self.curves.keys()
+
+
     def valueChanged(self, key, value, timestamp=None):
         if value is None or not useGuiQwt:
             return
@@ -113,14 +129,14 @@ class DisplayTrendline(DisplayWidget):
             # Generate timestamp here...
             timestamp = Timestamp()
             
-        self.data.append((value, timestamp.getSeconds()))
-        data = numpy.array(self.data)
+        self.curves[key][0].append((value, timestamp.getSeconds()))
+        data = numpy.array(self.curves[key][0])
 
         self.plot.setAxisLabelRotation(Qwt.QwtPlot.xBottom, -45.0)
         self.plot.setAxisLabelAlignment(Qwt.QwtPlot.xBottom,
                                         Qt.AlignLeft | Qt.AlignBottom)
-                
-        self.curve.set_data(data[:, 1], data[:, 0])
+
+        self.curves[key][1].set_data(data[:, 1], data[:, 0])
         self.plot.setAxisAutoScale(Qwt.QwtPlot.xBottom)
         self.plot.setAxisAutoScale(Qwt.QwtPlot.yLeft)
         self.plot.replot()

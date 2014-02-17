@@ -53,6 +53,13 @@ class Widget(QObject, Registry):
         return cls.categoryToAliases.get(category, [ ])
 
 
+    def addKey(self, key):
+        """adds the *key* to the displayed or edited keys.
+
+        Return `True` if that is possible, `False` otherwise."""
+        return False
+
+
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
