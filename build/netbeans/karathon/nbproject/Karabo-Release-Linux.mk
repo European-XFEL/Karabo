@@ -109,12 +109,12 @@ ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o: ../../../src/karathon/ConnectionWr
 ${OBJECTDIR}/_ext/381567218/HashWrap.o: ../../../src/karathon/HashWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/HashWrap.o ../../../src/karathon/HashWrap.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/HashWrap.o ../../../src/karathon/HashWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o: ../../../src/karathon/PyCoreDeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ../../../src/karathon/PyCoreDeviceClient.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ../../../src/karathon/PyCoreDeviceClient.cc
 
 ${OBJECTDIR}/_ext/381567218/PyH5Tools.o: ../../../src/karathon/PyH5Tools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -124,7 +124,7 @@ ${OBJECTDIR}/_ext/381567218/PyH5Tools.o: ../../../src/karathon/PyH5Tools.cc
 ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o: ../../../src/karathon/PyIoFileTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o ../../../src/karathon/PyIoFileTools.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o ../../../src/karathon/PyIoFileTools.cc
 
 ${OBJECTDIR}/_ext/381567218/PyLogLogger.o: ../../../src/karathon/PyLogLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -139,7 +139,7 @@ ${OBJECTDIR}/_ext/381567218/PyUtilClassInfo.o: ../../../src/karathon/PyUtilClass
 ${OBJECTDIR}/_ext/381567218/PyUtilDims.o: ../../../src/karathon/PyUtilDims.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ../../../src/karathon/PyUtilDims.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ../../../src/karathon/PyUtilDims.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o: ../../../src/karathon/PyUtilEpochstamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -149,12 +149,12 @@ ${OBJECTDIR}/_ext/381567218/PyUtilEpochstamp.o: ../../../src/karathon/PyUtilEpoc
 ${OBJECTDIR}/_ext/381567218/PyUtilHash.o: ../../../src/karathon/PyUtilHash.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ../../../src/karathon/PyUtilHash.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ../../../src/karathon/PyUtilHash.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o: ../../../src/karathon/PyUtilSchema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ../../../src/karathon/PyUtilSchema.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ../../../src/karathon/PyUtilSchema.cc
 
 ${OBJECTDIR}/_ext/381567218/PyUtilTimestamp.o: ../../../src/karathon/PyUtilTimestamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -184,7 +184,7 @@ ${OBJECTDIR}/_ext/381567218/PyXipImage.o: ../../../src/karathon/PyXipImage.cc
 ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o: ../../../src/karathon/PyXipRawImageData.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ../../../src/karathon/PyXipRawImageData.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ../../../src/karathon/PyXipRawImageData.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o: ../../../src/karathon/PyXipStatistics.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -194,12 +194,12 @@ ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o: ../../../src/karathon/PyXipStatis
 ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o: ../../../src/karathon/PyXmsRequestor.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o ../../../src/karathon/PyXmsRequestor.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o ../../../src/karathon/PyXmsRequestor.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o: ../../../src/karathon/PyXmsSignalSlotable.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ../../../src/karathon/PyXmsSignalSlotable.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ../../../src/karathon/PyXmsSignalSlotable.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o: ../../../src/karathon/PyXmsSlotElement.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -209,22 +209,22 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o: ../../../src/karathon/PyXmsSlotE
 ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o: ../../../src/karathon/PythonInputHandler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ../../../src/karathon/PythonInputHandler.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ../../../src/karathon/PythonInputHandler.cc
 
 ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o: ../../../src/karathon/PythonOutputHandler.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ../../../src/karathon/PythonOutputHandler.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ../../../src/karathon/PythonOutputHandler.cc
 
 ${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc
 
 ${OBJECTDIR}/_ext/381567218/karathon.o: ../../../src/karathon/karathon.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/karathon.o ../../../src/karathon/karathon.cc
+	$(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/karathon.o ../../../src/karathon/karathon.cc
 
 ${OBJECTDIR}/_ext/381567218/p2pbinding.o: ../../../src/karathon/p2pbinding.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -287,7 +287,7 @@ ${OBJECTDIR}/_ext/381567218/HashWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/HashW
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/HashWrap_nomain.o ../../../src/karathon/HashWrap.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/HashWrap_nomain.o ../../../src/karathon/HashWrap.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/HashWrap.o ${OBJECTDIR}/_ext/381567218/HashWrap_nomain.o;\
 	fi
@@ -300,7 +300,7 @@ ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o: ${OBJECTDIR}/_ext/38156
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o ../../../src/karathon/PyCoreDeviceClient.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o ../../../src/karathon/PyCoreDeviceClient.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient.o ${OBJECTDIR}/_ext/381567218/PyCoreDeviceClient_nomain.o;\
 	fi
@@ -326,7 +326,7 @@ ${OBJECTDIR}/_ext/381567218/PyIoFileTools_nomain.o: ${OBJECTDIR}/_ext/381567218/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyIoFileTools_nomain.o ../../../src/karathon/PyIoFileTools.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyIoFileTools_nomain.o ../../../src/karathon/PyIoFileTools.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyIoFileTools.o ${OBJECTDIR}/_ext/381567218/PyIoFileTools_nomain.o;\
 	fi
@@ -365,7 +365,7 @@ ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o: ${OBJECTDIR}/_ext/381567218/PyU
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o ../../../src/karathon/PyUtilDims.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o ../../../src/karathon/PyUtilDims.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilDims.o ${OBJECTDIR}/_ext/381567218/PyUtilDims_nomain.o;\
 	fi
@@ -391,7 +391,7 @@ ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o: ${OBJECTDIR}/_ext/381567218/PyU
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o ../../../src/karathon/PyUtilHash.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o ../../../src/karathon/PyUtilHash.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilHash.o ${OBJECTDIR}/_ext/381567218/PyUtilHash_nomain.o;\
 	fi
@@ -404,7 +404,7 @@ ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o: ${OBJECTDIR}/_ext/381567218/P
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o ../../../src/karathon/PyUtilSchema.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o ../../../src/karathon/PyUtilSchema.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyUtilSchema.o ${OBJECTDIR}/_ext/381567218/PyUtilSchema_nomain.o;\
 	fi
@@ -482,7 +482,7 @@ ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o: ${OBJECTDIR}/_ext/381567
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o ../../../src/karathon/PyXipRawImageData.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o ../../../src/karathon/PyXipRawImageData.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o ${OBJECTDIR}/_ext/381567218/PyXipRawImageData_nomain.o;\
 	fi
@@ -508,7 +508,7 @@ ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o: ${OBJECTDIR}/_ext/381567218
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o ../../../src/karathon/PyXmsRequestor.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o ../../../src/karathon/PyXmsRequestor.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsRequestor.o ${OBJECTDIR}/_ext/381567218/PyXmsRequestor_nomain.o;\
 	fi
@@ -521,7 +521,7 @@ ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o: ${OBJECTDIR}/_ext/3815
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o ../../../src/karathon/PyXmsSignalSlotable.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o ../../../src/karathon/PyXmsSignalSlotable.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o;\
 	fi
@@ -547,7 +547,7 @@ ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o: ${OBJECTDIR}/_ext/38156
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o ../../../src/karathon/PythonInputHandler.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o ../../../src/karathon/PythonInputHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PythonInputHandler.o ${OBJECTDIR}/_ext/381567218/PythonInputHandler_nomain.o;\
 	fi
@@ -560,7 +560,7 @@ ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o: ${OBJECTDIR}/_ext/3815
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o ../../../src/karathon/PythonOutputHandler.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o ../../../src/karathon/PythonOutputHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o;\
 	fi
@@ -573,7 +573,7 @@ ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o: ${OBJECTDIR}/_ext/381567218/Wrappe
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o ../../../src/karathon/Wrapper.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o ../../../src/karathon/Wrapper.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/Wrapper.o ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o;\
 	fi
@@ -586,7 +586,7 @@ ${OBJECTDIR}/_ext/381567218/karathon_nomain.o: ${OBJECTDIR}/_ext/381567218/karat
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/karathon_nomain.o ../../../src/karathon/karathon.cc;\
+	    $(COMPILE.cc) -O2 -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/karathon_nomain.o ../../../src/karathon/karathon.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/karathon.o ${OBJECTDIR}/_ext/381567218/karathon_nomain.o;\
 	fi
