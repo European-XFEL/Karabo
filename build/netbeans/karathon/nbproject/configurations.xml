@@ -296,6 +296,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <warningLevel>1</warningLevel>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"
             ex="false"
