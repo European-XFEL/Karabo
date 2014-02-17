@@ -84,7 +84,9 @@ namespace karabo {
                 return karabo::util::Hash();
             }
 
-            virtual void update() {
+            
+            virtual void update(const bool& unsetEndOfStreamFlag = true) {
+                
             }
 
             virtual void signalEndOfStream() {
