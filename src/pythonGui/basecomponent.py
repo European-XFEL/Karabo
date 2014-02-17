@@ -122,7 +122,11 @@ class BaseComponent(Loadable, QObject):
             ks += "command", "allowedStates", "commandText"
         d = {k: elem.get(ns_karabo + k) for k in ks}
         d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
+        keys = d['key'].split(",")
+        d['key'] = keys[0]
         component = cls(**d)
+        for k in keys[1:]:
+            component.addKey(k)
         # Register as visible device
         online = Manager().newVisibleDevice(component.keys[0])
         if not online:
