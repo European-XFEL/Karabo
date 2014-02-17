@@ -1166,6 +1166,14 @@ class ProxyWidget(QStackedWidget):
             if ok:
                 self.currentWidget().setText(text)
 
+    def dropEvent(self, event):
+        source = event.source()
+        if source is None or not isinstance(source, ParameterTreeWidget):
+            return
+        for item in source.selectedItems():
+            if self.component.addKey(item.internalKey):
+                event.accept()
+
 
 class GraphicsView(QSvgWidget):
     def __init__(self, parent, designMode=True):
@@ -1524,6 +1532,14 @@ class GraphicsView(QSvgWidget):
 
 
     def dropEvent(self, event):
+        w = self.inner.childAt(event.pos())
+        if w is not None:
+            while not isinstance(w, ProxyWidget):
+                w = w.parent()
+            w.dropEvent(event)
+            if event.isAccepted():
+                return
+
         source = event.source()
         customItem = None
         if isinstance(source, ParameterTreeWidget):
