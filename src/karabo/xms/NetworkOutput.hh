@@ -82,9 +82,11 @@ namespace karabo {
             boost::mutex m_currentWritersCountMutex;
             boost::mutex m_onTcpReadMutex;
             boost::mutex m_updateMutex;
+            
 
             // Async out
             CurrentWritersCount m_currentWritersCount;
+            CurrentWritersCount m_maxWritersCount;
             std::map<TcpChannelPointer, unsigned int> m_channel2ChunkId;
 
             unsigned int m_channelId;
@@ -152,6 +154,8 @@ namespace karabo {
                 // Memory related
                 m_channelId = MemoryType::registerChannel();
                 m_chunkId = MemoryType::registerChunk(m_channelId);
+                
+                KARABO_LOG_FRAMEWORK_DEBUG<<"Outputting data on Channel "<<m_channelId<<" and Chunk "<<m_chunkId;
 
                 // Data networking
                 int tryAgain = 50; // Try maximum 50 times to start a server
@@ -295,6 +299,7 @@ namespace karabo {
                 std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
                 int chunkId = chunkIds.front();
                 chunkIds.pop_front();
+                KARABO_LOG_FRAMEWORK_DEBUG<<"Distributing from queue: "<<chunkId;
                 if (channelInfo.get<std::string > ("memoryLocation") == "local") distributeLocal(chunkId, channelInfo);
                 else distributeRemote(chunkId, channelInfo);
             }
@@ -303,6 +308,7 @@ namespace karabo {
                 std::deque<int>& chunkIds = channelInfo.get<std::deque<int> >("queuedChunks");
                 int chunkId = chunkIds.front();
                 chunkIds.pop_front();
+                KARABO_LOG_FRAMEWORK_DEBUG<<"Copying from queue: "<<chunkId;
                 if (channelInfo.get<std::string > ("memoryLocation") == "local") copyLocal(chunkId, channelInfo);
                 else copyRemote(chunkId, channelInfo);
             }
@@ -357,15 +363,17 @@ namespace karabo {
                 return true;
             }
 
-            void update() {
+            void update(const bool& unsetEndOfStreamFlag = true) {
 
+                //boost::mutex::scoped_lock lock(m_updateMutex);
+                
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";
 
                 // If no data was written return
                 if (MemoryType::size(m_channelId, m_chunkId) == 0) return;
 
                 // Unset endOfStream flag
-                m_isEndOfStream = false;
+                if(unsetEndOfStreamFlag) m_isEndOfStream = false;
 
                 registerWritersOnChunk();
 
@@ -374,8 +382,12 @@ namespace karabo {
 
                 // Copy chunk(s)
                 copy();
+                
+                deleteWrittenChunks();
 
                 m_chunkId = MemoryType::registerChunk(m_channelId);
+                
+                MemoryType::subscribeChunk(m_channelId, m_chunkId);
             }
 
             void signalEndOfStream() {
@@ -383,13 +395,15 @@ namespace karabo {
                 // End of stream should be send only exactly once
                 if (m_isEndOfStream) return;
 
-                // If there is still some data in the pipe, put it out
-                if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
+                
                 
                 // Update sets m_isEndOfStream to false -> we have to set it here, now
                 // It is also needed to switch to synchronous TCP write as we have to now wait until all left data
                 // was sent.
                 m_isEndOfStream = true;
+                
+                // If there is still some data in the pipe, put it out
+                if (MemoryType::size(m_channelId, m_chunkId) > 0) update(false);
                 
                 // Wait until all queued data is fetched
                 bool doWait = true;
@@ -403,7 +417,8 @@ namespace karabo {
                     if (!doWait) break;
                     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
                 }
-                                                
+                
+                                                             
                 for (size_t i = 0; i < m_registeredSharedInputs.size(); ++i) {
                     const karabo::util::Hash& channelInfo = m_registeredSharedInputs[i];
                     const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
@@ -422,15 +437,26 @@ namespace karabo {
                 if (!m_registeredSharedInputs.empty()) nWriters++;
                 nWriters += m_registeredCopyInputs.size();
                 m_writersOnChunk[m_chunkId] = nWriters;
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Registered " << nWriters << " for chunkId " << m_chunkId;
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Registered " << nWriters << " writers for chunkId " << m_chunkId << " on channel "<<m_channelId;
             }
 
             void unregisterWriterFromChunk(int chunkId) {
                 m_writersOnChunk[chunkId]--;
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " << m_writersOnChunk[chunkId] << " Writers  left for chunkId " << chunkId;
-                if (m_writersOnChunk[chunkId] == 0) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Releasing memory for chunk " << chunkId;
+                
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT " << m_writersOnChunk[chunkId] << " Writers  left for chunkId " << chunkId << " on channel "<<m_channelId;
+                /*if (m_writersOnChunk[chunkId] == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Releasing memory for chunk " << chunkId << " on channel "<<m_channelId;
                     MemoryType::clearChunk(m_channelId, chunkId);
+                }*/
+            }
+            
+            void deleteWrittenChunks(){
+                for(std::map<int, int>::iterator it = m_writersOnChunk.begin(); it != m_writersOnChunk.end(); ++it){
+                    if(it->second == 0){
+                        MemoryType::unsubscribeChunk(m_channelId, it->first);
+                        KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Releasing memory for chunk " << it->first << " on channel "<<m_channelId;
+                        MemoryType::clearChunk(m_channelId, it->first);
+                    }
                 }
             }
 
@@ -534,6 +560,23 @@ namespace karabo {
                     }
                 }
             }
+            
+            
+            void waitForAsyncToFinish(){
+                //make sure all the synchronous writes have finished
+                bool asyncIsNotDone = true;
+                while(asyncIsNotDone){
+                    
+                    
+                    m_currentWritersCountMutex.lock();
+                    if(m_currentWritersCount.size() == 0) asyncIsNotDone = false;
+                    m_currentWritersCountMutex.unlock();
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                    
+   
+                }
+                this->concludeEndOfStream();
+            }
 
             void distributeLocal(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
@@ -542,41 +585,53 @@ namespace karabo {
                 // Synchronous write as it takes no time here
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Now writing out (local memory)";
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
-                //unregisterWriterFromChunk(chunkId);
+                boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
+                unregisterWriterFromChunk(chunkId);
             }
+            
+            
 
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
                 
                 //if (m_isEndOfStream) { // write synchronously
+                    
+                    //waitForAsyncToFinish();
+                    
                     karabo::util::Hash header;
                     std::vector<char> data;
                     MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
                     tcpChannel->write(header, data);
+                    boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
+                    unregisterWriterFromChunk(chunkId);
                 /*} else {
                     registerAsyncWrite(tcpChannel, chunkId);
+                    
                     const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to distribute " << entry.first.size() << " bytes of data";
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
                     tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
-                }*/
+                    
+            }*/
             }
 
             void registerAsyncWrite(const TcpChannelPointer& channel, const unsigned int& chunkId) {
 
-                m_currentWritersCountMutex.lock();
-
+                boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
+                KARABO_LOG_FRAMEWORK_DEBUG << "Registering chunk id "<<chunkId;
                 m_channel2ChunkId[channel] = chunkId;
                 CurrentWritersCount::iterator it = m_currentWritersCount.find(chunkId);
                 if (it == m_currentWritersCount.end()) { // No one tried to write this chunk, yet
-                    m_currentWritersCountMutex.unlock();
+                    
                     MemoryType::cacheAsContiguousBlock(m_channelId, chunkId);
-                    m_currentWritersCountMutex.lock();
+                    
+                    
                 }
                 m_currentWritersCount[chunkId]++;
+                m_maxWritersCount[chunkId]++;
 
-                m_currentWritersCountMutex.unlock();
+                //m_currentWritersCountMutex.unlock();
             }
 
             const std::pair<std::vector<char>, karabo::util::Hash>& getAsyncWriteData(const unsigned int& chunkId) {
@@ -584,20 +639,29 @@ namespace karabo {
             }
 
             void onWriteCompleted(TcpChannelPointer channel) {
-
+                
                 boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
 
                 TcpChannelPointer2ChunkId::iterator it = m_channel2ChunkId.find(channel);
                 if (it != m_channel2ChunkId.end()) {
                     unsigned int chunkId = it->second;
                     m_currentWritersCount[chunkId]--;
-
+                    
                     if (m_currentWritersCount[chunkId] == 0) {
+                        //KARABO_LOG_FRAMEWORK_DEBUG<<this->getInstanceId()<<" unlocking cache for channel: "<<m_channelId<<" and chunk: "<<chunkId;
+                        //MemoryType::unlockContiguousBlockCache(m_channelId, chunkId);
+                        //KARABO_LOG_FRAMEWORK_DEBUG<<this->getInstanceId()<<" unlocked cache for channel: "<<m_channelId<<" and chunk: "<<chunkId;
                         MemoryType::clearContiguousBlockCache(m_channelId, chunkId);
                         m_currentWritersCount.erase(chunkId);
                         KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Cleared asynchronous write cache";
-                        unregisterWriterFromChunk(chunkId);
+                        //unregister writers from chunk
+                        for(size_t i = 0; i != m_maxWritersCount[chunkId]; i++){
+                             unregisterWriterFromChunk(chunkId);
+                        }
+                        m_maxWritersCount.erase(chunkId);
+                        
                     }
+                   
                 } else {
                     throw KARABO_LOGIC_EXCEPTION("Bad async write encountered");
                 }
@@ -648,6 +712,8 @@ namespace karabo {
                 // Synchronous write as it takes no time here
                 // Writing no data signals input to read from memory
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
+                boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
+                unregisterWriterFromChunk(chunkId);
             }
 
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
@@ -656,18 +722,21 @@ namespace karabo {
  
                 //if (m_isEndOfStream) { // write synchronously
                     
-                   
+                    //waitForAsyncToFinish();
+                    
                     karabo::util::Hash header;
                     std::vector<char> data;
                     MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
                     tcpChannel->write(header, data);
+                    boost::mutex::scoped_lock lock(m_currentWritersCountMutex);
+                    unregisterWriterFromChunk(chunkId);
                 /*} else {
                     registerAsyncWrite(tcpChannel, chunkId);
                     const std::pair< std::vector<char>, karabo::util::Hash>& entry = getAsyncWriteData(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Going to copy " << entry.first.size() << " bytes of data";
-                    KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
+                    //KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT With header: " << entry.second;
                     tcpChannel->writeAsyncHashVector(entry.second, entry.first, boost::bind(&karabo::xms::NetworkOutput<T>::onWriteCompleted, this, _1));
-                }*/
+            }*/
             }
         };
 
