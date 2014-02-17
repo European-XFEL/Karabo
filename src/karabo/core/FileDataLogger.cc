@@ -428,7 +428,7 @@ namespace karabo {
 
                         vector<Hash> tmp = getData(deviceId, key, j);
                         bool collect = false;
-                        bool done = false;
+                        //bool done = false;
                         for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
                             //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
                             Epochstamp current;
