@@ -234,7 +234,7 @@ namespace karabo {
             vector<string> keys;
             period.getKeys(keys);
 
-            for (int i = 1; i < keys.size(); ++i) {
+            for (size_t i = 1; i < keys.size(); ++i) {
                 if ((keys[i] == "KRB_start") || (keys[i] == "KRB_stop") || (keys[i] == "KRB_duration") || (keys[i] == "KRB_details")) continue;
                 sql(os, keys[i], period.get<Hash>(keys[i]), current_key);
             }

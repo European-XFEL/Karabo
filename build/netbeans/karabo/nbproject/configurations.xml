@@ -129,6 +129,7 @@
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/io/FileTools.cc</itemPath>
       <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="log" projectFiles="true">
@@ -636,6 +637,11 @@
       <item path="../../../src/karabo/io/CppOutputHandler.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/FileTools.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/FileTools.hh"
@@ -2317,6 +2323,11 @@
       <item path="../../../src/karabo/io/CppOutputHandler.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/FileTools.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/FileTools.hh"
