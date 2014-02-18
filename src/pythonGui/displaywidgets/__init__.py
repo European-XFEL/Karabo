@@ -6,7 +6,7 @@
 
 # define package displaywidgets
 
-__all__ = [
+__all__ = ["displaybitfield",
     "displaycheckbox", "displaychoiceelement", "displaycombobox",
     "displaycommand", "displaydirectory", "displaydoublespinbox",
     "displayfilein", "displayfileout", "displayhistogram", "displayiconset",
