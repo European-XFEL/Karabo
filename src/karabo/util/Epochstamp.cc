@@ -223,6 +223,13 @@ namespace karabo {
         }
 
 
+        double Epochstamp::toTimestamp(TIME_UNITS precision) const {
+            ostringstream oss;
+            oss << m_seconds << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
+            return karabo::util::fromString<double>(oss.str());
+        }
+
+
         std::string Epochstamp::toFormattedString(const std::string& format) const {
 
             const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());

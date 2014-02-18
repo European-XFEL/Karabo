@@ -20,6 +20,7 @@
 #include <karabo/io/Input.hh>
 #include <karabo/io/FileTools.hh>
 #include <karabo/log/Logger.hh>
+#include <karabo/util/Version.hh>
 
 #include "DeviceServer.hh"
 
@@ -130,7 +131,9 @@ namespace karabo {
                         showUsage(std::string(argv[0]));
                     }
                 } else if (lowerOption == "version" || lowerOption == "v") {
-                    std::cout << "Karabo-Version: " << KARABO_FRAMEWORK_VERSION << std::endl;
+                    
+                    std::cout << "Karabo-Version: " << karabo::util::Version::getVersion() << std::endl;
+                    
                 } else {
                     showUsage(std::string(argv[0]));
                 }
