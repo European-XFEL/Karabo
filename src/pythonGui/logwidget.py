@@ -317,7 +317,6 @@ class LogWidget(QWidget):
             self.sqlQueryModel.setLogQuery(queryText)
 
         self.twLogTable.resizeRowsToContents()
-        self.twLogTable.restoreLastSelection()
 
 
     def addLogMessage(self, logData):
@@ -451,8 +450,6 @@ class LogWidget(QWidget):
         self.twLogTable.horizontalHeader().restoreState(self.viewState)
         # Resize row contents
         self.twLogTable.resizeRowsToContents()
-        # Restore last selection
-        self.twLogTable.restoreLastSelection()
 
 
     def saveDatabaseContentToFile(self):
@@ -497,6 +494,7 @@ class LogTableView(QTableView):
 
         # Model
         self.setModel(model)
+        model.signalRestoreLastSelection.connect(self.onRestoreLastSelection)
         
         # Selection
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
@@ -517,30 +515,6 @@ class LogTableView(QTableView):
         self.sortByColumn(0, Qt.DescendingOrder)
 
 
-    def restoreLastSelection(self):
-        print ""
-        print "restoreLastSelection", self.lastSelectedId, type(self.lastSelectedId)
-        if self.lastSelectedId is not None:
-            rowCount = self.model().rowCount()
-            print "rowcount", rowCount
-            for row in xrange(rowCount):
-                if rowCount != self.model().rowCount():
-                    print "+++ RETURN +++"
-                    print ""
-                    return
-                index = self.model().index(row, 0)
-                id = index.data(Qt.DisplayRole)
-                print "ID", id
-                if id == self.lastSelectedId:
-                    print "selection", id
-                    self.selectionModel().blockSignals(True)
-                    self.selectionModel().select(index,
-                       QItemSelectionModel.Rows | QItemSelectionModel.Select)
-                    self.scrollTo(index, QAbstractItemView.PositionAtCenter)
-                    self.selectionModel().blockSignals(False)
-                    break
-
-
     # TODO: not working right now due to model-view in navigation
     def mouseDoubleClickEvent(self, event):
         index = self.model().index(self.currentIndex().row(), 3)
@@ -550,19 +524,33 @@ class LogTableView(QTableView):
         QTableView.mouseDoubleClickEvent(self, event)
 
 
+    def onRestoreLastSelection(self, index):
+        # Scroll to selected index
+        self.blockSignals(True)
+        self.scrollTo(index, QAbstractItemView.PositionAtCenter)
+        self.blockSignals(False)
+
+        # Select index
+        self.selectionModel().blockSignals(True)
+        self.selectionModel().select(index,
+                   QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
+        self.selectionModel().blockSignals(False)
+
+
     def onSelectionChanged(self, selected, deselected):
         indexes = selected.indexes()
         nbIndexes = len(indexes)
         if nbIndexes < 1:
             return
         # Save database unique ID
-        self.lastSelectedId = indexes[0].data(Qt.DisplayRole)
+        self.model().lastSelectedId = indexes[0].data(Qt.DisplayRole)
 
 
 
 class LogSqlQueryModel(QSqlQueryModel):
     # Define signals
     signalViewNeedsSortUpdate = pyqtSignal(str) # queryText
+    signalRestoreLastSelection = pyqtSignal(object) # modelIndex
 
     def __init__(self, parent=None, preQueryText=str(), sortByColumn=0, sortOrder=Qt.DescendingOrder):
         super(LogSqlQueryModel, self).__init__(parent)
@@ -570,6 +558,7 @@ class LogSqlQueryModel(QSqlQueryModel):
         self.preQueryText = preQueryText
         self.sortByColumn = sortByColumn
         self.sortOrder = sortOrder
+        self.lastSelectedId = None
 
 
     def setLogQuery(self, queryText=str()):
@@ -606,6 +595,9 @@ class LogSqlQueryModel(QSqlQueryModel):
         self.setHeaderData(3, Qt.Horizontal, "Instance ID")
         self.setHeaderData(4, Qt.Horizontal, "Description")
         self.setHeaderData(5, Qt.Horizontal, "Additional description")
+
+	while self.canFetchMore():
+            self.fetchMore()
 
 
     def getIcon(self, value):
@@ -650,6 +642,8 @@ class LogSqlQueryModel(QSqlQueryModel):
             return self.getTextColor(modelIndex.data(Qt.DisplayRole))
         elif role == Qt.DisplayRole:
             value = QSqlQueryModel.data(self, index, role)
+            if (index.column() == 0) and (value == self.lastSelectedId):
+                self.signalRestoreLastSelection.emit(index)
             return value
         elif role == Qt.ToolTipRole:
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
@@ -717,10 +711,10 @@ class LogThread(QThread):
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
         # Performance test
-        i = 20
-        while i > 0:
-            self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
-            i -= 1
+        #i = 20
+        #while i > 0:
+        #    self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
+        #    i -= 1
 
 
     def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=str()):
