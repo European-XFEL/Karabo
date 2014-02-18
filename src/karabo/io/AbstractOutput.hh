@@ -85,7 +85,7 @@ namespace karabo {
             }
 
             
-            virtual void update(const bool& unsetEndOfStreamFlag = true) {
+            virtual void update() {
                 
             }
 
