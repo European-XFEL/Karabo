@@ -311,7 +311,6 @@ class LogWidget(QWidget):
         print "=== onViewNeedsUpdate"
         # Update view considering filter options
         self.onFilterChanged()
-        print "=== done"
 
 
     def onViewNeedsSortUpdate(self, queryText):
@@ -323,8 +322,7 @@ class LogWidget(QWidget):
 
         #self.twLogTable.horizontalHeader().restoreState(self.viewState)
         self.twLogTable.resizeRowsToContents()
-        self.twLogTable.restoreLastSelection()
-        print "### done"
+        #self.twLogTable.restoreLastSelection()
 
 
     def addLogMessage(self, logData):
@@ -525,14 +523,17 @@ class LogTableView(QTableView):
 
 
     def restoreLastSelection(self):
-        if self.lastItemSelection:
-            self.selectionModel().blockSignals(True)
-            self.selectionModel().select(self.lastItemSelection,
-                                         QItemSelectionModel.Select)
-            #self.selectRow(self.twLogTable.lastItemSelection.row())
-            self.scrollTo(self.lastItemSelection,
-                          QAbstractItemView.PositionAtCenter)
-            self.selectionModel().blockSignals(False)
+        try:
+            if self.lastItemSelection is not None:
+                self.selectionModel().blockSignals(True)
+                self.selectionModel().select(self.lastItemSelection,
+                   QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
+                                             #QItemSelectionModel.Select)
+                self.scrollTo(self.lastItemSelection,
+                              QAbstractItemView.PositionAtCenter)
+                self.selectionModel().blockSignals(False)
+        except Exception, e:
+            print e
 
 
     # TODO: not working right now due to model-view in navigation
@@ -547,13 +548,14 @@ class LogTableView(QTableView):
     def onSelectionChanged(self, selected, deselected):
         indexes = selected.indexes()
         nbIndexes = len(indexes)
-        print "=== onSelectionChanged", nbIndexes, self
+        print "=== onSelectionChanged", nbIndexes, self.selectionModel()
         if nbIndexes < 2:
             return
 
-        #self.lastItemSelection = QItemSelection(indexes[0], indexes[1])
-        self.lastItemSelection = indexes[1]
+        #self.lastItemSelection = selected
+        self.lastItemSelection = indexes[0]
         print "self.lastItemSelection", self.lastItemSelection
+        print ""
 
 
 
