@@ -308,19 +308,12 @@ class LogWidget(QWidget):
         return filterWidget
 
 
-    def onViewNeedsUpdate(self, model):
-        self.hViewState = self.__twLogTable.horizontalHeader().saveState()
-        #self.vViewState = self.__twLogTable.verticalHeader().saveState()
-        
-        #with QMutexLocker(self.__modelMutex):
-        #    self.sqlQueryModel = model
-        #    self.sqlQueryModel.signalViewNeedsSortUpdate.connect(self.onViewNeedsSortUpdate)
-        #self.__twLogTable.setTableModel(self.sqlQueryModel)
+    def onViewNeedsUpdate(self):
+        self.viewState = self.__twLogTable.horizontalHeader().saveState()
         
         self.onFilterChanged()
 
-        self.__twLogTable.horizontalHeader().restoreState(self.hViewState)
-        #self.__twLogTable.verticalHeader().restoreState(self.vViewState)
+        self.__twLogTable.horizontalHeader().restoreState(self.viewState)
         
         #if self.__twLogTable.lastItemSelection:
         #    self.__twLogTable.selectionModel().select(self.__twLogTable.lastItemSelection,
@@ -683,7 +676,7 @@ class LogSqlQueryModel(QSqlQueryModel):
 
 class LogThread(QThread):
     # Define signals
-    signalViewNeedsUpdate = pyqtSignal(object) # LogSqlQueryModel()
+    signalViewNeedsUpdate = pyqtSignal()
 
     def __init__(self, parent, model, logDataQueue, logDataMutex):
         super(LogThread, self).__init__(parent)
@@ -734,7 +727,7 @@ class LogThread(QThread):
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
         # Performance test
-        i = 100
+        i = 50
         while i > 0:
             self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
             i -= 1
@@ -767,7 +760,7 @@ class LogThread(QThread):
                 # Insert log block into database
                 self.processLogData(logBlock)
                 # Notify main thread
-                self.signalViewNeedsUpdate.emit(self.sqlQueryModel)
+                self.signalViewNeedsUpdate.emit()
             # Sleep for 1 sec
             sleep(1)
 
