@@ -75,10 +75,6 @@ class LogWidget(QWidget):
         self.__logDataMutex = QMutex()
         self.__modelMutex = QMutex()
 
-        # Create mutexes
-        self.__logDataMutex = QMutex()
-        self.__modelMutex = QMutex()
-
         # Create sql query model
         self.sqlQueryModel = LogSqlQueryModel()
         #self.sqlQueryModel.signalViewNeedsSortUpdate.connect(self.onViewNeedsSortUpdate)
@@ -121,7 +117,7 @@ class LogWidget(QWidget):
         self.__leSearch = QLineEdit()
         self.__leSearch.setStatusTip(text)
         self.__leSearch.setToolTip(text)
-        self.__leSearch.textChanged.connect(self.onFilterChanged)
+        #self.__leSearch.textChanged.connect(self.onFilterChanged)
         self.__pbSearchInsId = QPushButton("Instance ID")
 
         hSearchLayout = QHBoxLayout()
@@ -130,21 +126,21 @@ class LogWidget(QWidget):
         self.__pbSearchInsId.setToolTip(text)
         self.__pbSearchInsId.setCheckable(True)
         self.__pbSearchInsId.setChecked(False)
-        self.__pbSearchInsId.clicked.connect(self.onFilterChanged)
+        #self.__pbSearchInsId.clicked.connect(self.onFilterChanged)
         self.__pbSearchDescr = QPushButton("Description")
         text = "Search description"
         self.__pbSearchDescr.setStatusTip(text)
         self.__pbSearchDescr.setToolTip(text)
         self.__pbSearchDescr.setCheckable(True)
         self.__pbSearchDescr.setChecked(True)
-        self.__pbSearchDescr.clicked.connect(self.onFilterChanged)
+        #self.__pbSearchDescr.clicked.connect(self.onFilterChanged)
         self.__pbSearchAddDescr = QPushButton("Additional description")
         text = "Search additional description"
         self.__pbSearchAddDescr.setStatusTip(text)
         self.__pbSearchAddDescr.setToolTip(text)
         self.__pbSearchAddDescr.setCheckable(True)
         self.__pbSearchAddDescr.setChecked(False)
-        self.__pbSearchAddDescr.clicked.connect(self.onFilterChanged)
+        #self.__pbSearchAddDescr.clicked.connect(self.onFilterChanged)
 
         hSearchLayout.addWidget(self.__pbSearchInsId)
         hSearchLayout.addWidget(self.__pbSearchDescr)
@@ -163,21 +159,21 @@ class LogWidget(QWidget):
         self.__gbDate.setFlat(True)
         self.__gbDate.setCheckable(True)
         self.__gbDate.setChecked(False)
-        self.__gbDate.clicked.connect(self.onFilterChanged)
+        #self.__gbDate.clicked.connect(self.onFilterChanged)
 
         dateLayout = QFormLayout()
         self.__dtStartDate = QDateTimeEdit()
         self.__dtStartDate.setDisplayFormat("yyyy-MM-dd hh:mm")
         self.__dtStartDate.setCalendarPopup(True)
         self.__dtStartDate.setDate(QDate(2012, 1, 1))
-        self.__dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
+        #self.__dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
         dateLayout.addRow("Start date: ", self.__dtStartDate)
 
         self.__dtEndDate = QDateTimeEdit()
         self.__dtEndDate.setDisplayFormat("yyyy-MM-dd hh:mm")
         self.__dtEndDate.setCalendarPopup(True)
         self.__dtEndDate.setDateTime(QDateTime.currentDateTime())
-        self.__dtEndDate.dateTimeChanged.connect(self.onFilterChanged)
+        #self.__dtEndDate.dateTimeChanged.connect(self.onFilterChanged)
         dateLayout.addRow("End date: ", self.__dtEndDate)
 
         hDateLayout = QHBoxLayout(self.__gbDate)
@@ -210,7 +206,7 @@ class LogWidget(QWidget):
         self.__pbFilterDebug.setToolTip(text)
         self.__pbFilterDebug.setCheckable(True)
         self.__pbFilterDebug.setChecked(True)
-        self.__pbFilterDebug.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterDebug.clicked.connect(self.onFilterChanged)
 
         text = "Show information messages"
         self.__pbFilterInfo = QToolButton()
@@ -220,7 +216,7 @@ class LogWidget(QWidget):
         self.__pbFilterInfo.setToolTip(text)
         self.__pbFilterInfo.setCheckable(True)
         self.__pbFilterInfo.setChecked(True)
-        self.__pbFilterInfo.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterInfo.clicked.connect(self.onFilterChanged)
 
         text = "Show warn messages"
         self.__pbFilterWarn = QToolButton()
@@ -230,7 +226,7 @@ class LogWidget(QWidget):
         self.__pbFilterWarn.setToolTip(text)
         self.__pbFilterWarn.setCheckable(True)
         self.__pbFilterWarn.setChecked(True)
-        self.__pbFilterWarn.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterWarn.clicked.connect(self.onFilterChanged)
 
         text = "Show error messages"
         self.__pbFilterError = QToolButton()
@@ -240,7 +236,7 @@ class LogWidget(QWidget):
         self.__pbFilterError.setToolTip(text)
         self.__pbFilterError.setCheckable(True)
         self.__pbFilterError.setChecked(True)
-        self.__pbFilterError.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterError.clicked.connect(self.onFilterChanged)
 
         text = "Show alarm messages"
         self.__pbFilterAlarm = QToolButton()
@@ -250,7 +246,7 @@ class LogWidget(QWidget):
         self.__pbFilterAlarm.setToolTip(text)
         self.__pbFilterAlarm.setCheckable(True)
         self.__pbFilterAlarm.setChecked(True)
-        self.__pbFilterAlarm.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterAlarm.clicked.connect(self.onFilterChanged)
 
         text = "Show warning messages"
         self.__pbFilterWarning = QToolButton()
@@ -260,7 +256,7 @@ class LogWidget(QWidget):
         self.__pbFilterWarning.setToolTip(text)
         self.__pbFilterWarning.setCheckable(True)
         self.__pbFilterWarning.setChecked(True)
-        self.__pbFilterWarning.clicked.connect(self.onFilterChanged)
+        #self.__pbFilterWarning.clicked.connect(self.onFilterChanged)
 
         hFilterLayout.setContentsMargins(5,5,5,5)
         hFilterLayout.addWidget(self.__laFilter)
@@ -308,56 +304,40 @@ class LogWidget(QWidget):
         return filterWidget
 
 
-    def onViewNeedsUpdate(self, model):
-        self.hViewState = self.__twLogTable.horizontalHeader().saveState()
-        #self.vViewState = self.__twLogTable.verticalHeader().saveState()
-        
-        #with QMutexLocker(self.__modelMutex):
-        #    self.sqlQueryModel = model
-        #    self.sqlQueryModel.signalViewNeedsSortUpdate.connect(self.onViewNeedsSortUpdate)
-        #self.__twLogTable.setTableModel(self.sqlQueryModel)
-        
-        self.onFilterChanged()
-
-        self.__twLogTable.horizontalHeader().restoreState(self.hViewState)
-        #self.__twLogTable.verticalHeader().restoreState(self.vViewState)
-        
-        #if self.__twLogTable.lastItemSelection:
-        #    self.__twLogTable.selectionModel().select(self.__twLogTable.lastItemSelection,
-        #                                              QItemSelectionModel.Select)
-            #self.__twLogTable.selectRow(self.__twLogTable.lastItemSelection.row())
-        #    self.__twLogTable.scrollTo(self.__twLogTable.lastItemSelection,
-        #                               QAbstractItemView.PositionAtCenter)
-
-
-    def onViewNeedsSortUpdate(self, queryText):
-        self.viewState = self.__twLogTable.horizontalHeader().saveState()
-        with QMutexLocker(self.__modelMutex):
-            self.sqlQueryModel.setLogQuery(queryText)
-        self.__twLogTable.horizontalHeader().restoreState(self.viewState)
-
-
     def addLogMessage(self, logData):
         with QMutexLocker(self.__logDataMutex):
             self.__logDataQueue.put(logData)
 
 
-    def addNotificationMessage(self, notificationData):
-        with QMutexLocker(self.__logDataMutex):
-            self.__logDataQueue.put(notificationData)
+### slots ###
+    def onViewNeedsUpdate(self):
+        print "onViewNeedsUpdate", self.__twLogTable.selectionModel
+        #self.hViewState = self.__twLogTable.horizontalHeader().saveState()
+        #self.vViewState = self.__twLogTable.verticalHeader().saveState()
+
+        print "last selection", self.__twLogTable.lastItemSelection
+
+        #self.onFilterChanged()
+        queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog"
+        with QMutexLocker(self.__modelMutex):
+            self.sqlQueryModel.setLogQuery(queryText)
+
+        if self.__twLogTable.lastItemSelection:
+            #self.__twLogTable.selectionModel.select(self.__twLogTable.lastItemSelection,
+            #                                        QItemSelectionModel.Select)
+            self.__twLogTable.selectRow(self.__twLogTable.lastItemSelection.row())
+            self.__twLogTable.scrollTo(self.__twLogTable.lastItemSelection,
+                                       QAbstractItemView.PositionAtCenter)
+
+        #self.__twLogTable.horizontalHeader().restoreState(self.vViewState)
+        #self.__twLogTable.horizontalHeader().restoreState(self.hViewState)
 
 
-    def onFilterOptionVisible(self, checked):
-        if checked:
-            text = "Hide filter options"
-            self.__pbFilterOptions.setText("- " + text)
-        else:
-            text = "Show filter options"
-            self.__pbFilterOptions.setText("+ " + text)
-        self.__pbFilterOptions.setStatusTip(text)
-        self.__pbFilterOptions.setToolTip(text)
-
-        self.__filterWidget.setVisible(checked)
+    def onViewNeedsSortUpdate(self, queryText):
+        #viewState = self.__twLogTable.horizontalHeader().saveState()
+        with QMutexLocker(self.__modelMutex):
+            self.sqlQueryModel.setLogQuery(queryText)
+        #self.__twLogTable.horizontalHeader().restoreState(viewState)
 
 
     def onFilterChanged(self):
@@ -460,42 +440,22 @@ class LogWidget(QWidget):
 
         with QMutexLocker(self.__modelMutex):
             self.sqlQueryModel.setLogQuery(queryText)
-        self.__twLogTable.resizeColumnsToContents()
-        self.__twLogTable.resizeRowsToContents()
+        #self.__twLogTable.resizeColumnsToContents()
+        #self.__twLogTable.resizeRowsToContents()
 
 
-    def saveDatabaseContentToFile(self):
-        # Write current database content to a file
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "LOG (*.log)")
-        if len(filename) < 1:
-            return
+    def onFilterOptionVisible(self, checked):
+        if checked:
+            text = "Hide filter options"
+            self.__pbFilterOptions.setText("- " + text)
+        else:
+            text = "Show filter options"
+            self.__pbFilterOptions.setText("+ " + text)
+        self.__pbFilterOptions.setStatusTip(text)
+        self.__pbFilterOptions.setToolTip(text)
 
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".log"
+        self.__filterWidget.setVisible(checked)
 
-        logFile = QFile(filename)
-        if logFile.open(QIODevice.WriteOnly | QIODevice.Text) is False:
-            return
-        out = QTextStream(logFile)
-
-        model = QSqlQueryModel()
-        queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog order by dateTime DESC;"
-        model.setQuery(queryText);
-
-        for i in xrange(model.rowCount()):
-            id = model.record(i).value("id")
-            dateTime = model.record(i).value("dateTime")
-            messageType = model.record(i).value("messageType")
-            instanceId = model.record(i).value("instanceId")
-            description = model.record(i).value("description")
-            additionalDescription = model.record(i).value("additionalDescription")
-
-            logMessage = str(id) + " | " + str(dateTime) + " | " + str(messageType) \
-                               + " | " + str(instanceId) + " | " + str(description) \
-                               + " | " + str(additionalDescription) + "#"
-            out << logMessage
-        logFile.close()
 
 
 class LogTableView(QTableView):
@@ -504,17 +464,18 @@ class LogTableView(QTableView):
     def __init__(self, model, parent=None):
         super(LogTableView, self).__init__(parent)
 
-        # Set models
-        self.setTableModel(model)
+        # Models
+        self.setModel(model)
 
         # Selection
-        self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
+        self.selectionModel = self.selectionModel()
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
         self.lastItemSelection = None
 
         self.setWordWrap(True)
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setStretchLastSection(True)
-        #self.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
+        self.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)#Interactive)
         self.verticalHeader().setVisible(False)
 
         # Selection
@@ -524,14 +485,6 @@ class LogTableView(QTableView):
         # Sorting
         self.setSortingEnabled(True)
         self.sortByColumn(0, Qt.DescendingOrder)
-
-
-    def setTableModel(self, model):
-        # Model
-        self.setModel(model)
-        # Selection
-        self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
-        self.lastItemSelection = None
 
 
     # TODO: not working right now due to model-view in navigation
@@ -544,9 +497,10 @@ class LogTableView(QTableView):
 
 
     def onSelectionChanged(self, selected, deselected):
+
         indexes = selected.indexes()
         nbIndexes = len(indexes)
-        print "onSelectionChanged", nbIndexes, self.selectionModel()
+        print "onSelectionChanged", nbIndexes, self.selectionModel
         if nbIndexes < 2:
             return
 
@@ -563,57 +517,52 @@ class LogSqlQueryModel(QSqlQueryModel):
     def __init__(self, parent=None, preQueryText=str(), sortByColumn=0, sortOrder=Qt.DescendingOrder):
         super(LogSqlQueryModel, self).__init__(parent)
 
-        self.__preQueryText = preQueryText
-        self.__sortByColumn = sortByColumn
-        self.__sortOrder = sortOrder
-
-
-    def _getPreQueryText(self):
-        return self.__preQueryText
-    def _setPreQueryText(self, preQueryText):
-        self.__preQueryText = preQueryText
-    preQueryText = property(fget=_getPreQueryText, fset=_setPreQueryText)
-
-
-    def _getSortByColumn(self):
-        return self.__sortByColumn
-    def _setSortByColumn(self, sortByColumn):
-        self.__sortByColumn = sortByColumn
-    sortByColumn = property(fget=_getSortByColumn, fset=_setSortByColumn)
-
-
-    def _getSortOrder(self):
-        return self.__sortOrder
-    def _setSortOrder(self, sortOrder):
-        self.__sortOrder = sortOrder
-    sortOrder = property(fget=_getSortOrder, fset=_setSortOrder)
+        self.preQueryText = preQueryText
+        self.sortByColumn = sortByColumn
+        self.sortOrder = sortOrder
 
 
     def setLogQuery(self, queryText=str()):
+        self.setQuery(queryText)
+
+        self.setHeaderData(0, Qt.Horizontal, "ID")
+        self.setHeaderData(1, Qt.Horizontal, "Date and time")
+        self.setHeaderData(2, Qt.Horizontal, "Message type")
+        self.setHeaderData(3, Qt.Horizontal, "Instance ID")
+        self.setHeaderData(4, Qt.Horizontal, "Description")
+        self.setHeaderData(5, Qt.Horizontal, "Additional description")
+
+        if self.lastError().isValid():
+            print "Error", self.lastError()
+        return
+
         if len(queryText) == 0:
             queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog;"
 
-        self.__preQueryText = queryText
+        self.preQueryText = queryText
 
         # Consider sorting
-        if self.__sortByColumn == 0:
+        if self.sortByColumn == 0:
             sortBy = "id"
-        elif self.__sortByColumn == 1:
+        elif self.sortByColumn == 1:
             sortBy = "dateTime"
-        elif self.__sortByColumn == 2:
+        elif self.sortByColumn == 2:
             sortBy = "messageType"
-        elif self.__sortByColumn == 3:
+        elif self.sortByColumn == 3:
             sortBy = "instanceId"
-        elif self.__sortByColumn == 4:
+        elif self.sortByColumn == 4:
             sortBy = "description"
-        elif self.__sortByColumn == 5:
+        elif self.sortByColumn == 5:
             sortBy = "additionalDescription"
 
-        if self.__sortOrder == Qt.AscendingOrder:
+        if self.sortOrder == Qt.AscendingOrder:
             order = "ASC"
         else:
             order = "DESC"
         queryText += " ORDER BY " + sortBy + " " + order
+
+        print queryText
+        print ""
         self.setQuery(queryText)
 
         self.setHeaderData(0, Qt.Horizontal, "ID")
@@ -673,27 +622,27 @@ class LogSqlQueryModel(QSqlQueryModel):
         return None
 
 
-    def sort(self, column, order):
-        self.__sortByColumn = column
-        self.__sortOrder = order
-        self.setLogQuery(self.__preQueryText)
+    #def sort(self, column, order):
+    #    self.sortByColumn = column
+    #    self.sortOrder = order
+    #    self.setLogQuery(self.preQueryText)
         # Send signal to update view
-        #self.signalViewNeedsSortUpdate.emit(self.__preQueryText)
+    #    self.signalViewNeedsSortUpdate.emit(self.preQueryText)
 
 
 class LogThread(QThread):
     # Define signals
-    signalViewNeedsUpdate = pyqtSignal(object) # LogSqlQueryModel()
+    signalViewNeedsUpdate = pyqtSignal()
 
     def __init__(self, parent, model, logDataQueue, logDataMutex):
         super(LogThread, self).__init__(parent)
 
         self.sqlQueryModel = model
 
-        self.__modelMutex = QMutex()
+        self.modelMutex = QMutex()
 
-        self.__logDataQueue = logDataQueue
-        self.__logDataMutex = logDataMutex
+        self.logDataQueue = logDataQueue
+        self.logDataMutex = logDataMutex
 
         self.isFinished = False
         # Delete when no longer needed
@@ -703,9 +652,9 @@ class LogThread(QThread):
     def getLogDataBlock(self):
         # Put all data from current queue into string
         logBlock = str()
-        with QMutexLocker(self.__logDataMutex):
-            while not self.__logDataQueue.empty():
-                logBlock += self.__logDataQueue.get()
+        with QMutexLocker(self.logDataMutex):
+            while not self.logDataQueue.empty():
+                logBlock += self.logDataQueue.get()
         return logBlock
 
 
@@ -734,10 +683,10 @@ class LogThread(QThread):
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
         # Performance test
-        i = 100
-        while i > 0:
-            self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
-            i -= 1
+        #i = 50
+        #while i > 0:
+        #    self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
+        #    i -= 1
 
 
     def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=str()):
@@ -745,29 +694,19 @@ class LogThread(QThread):
         queryText = "INSERT INTO tLog (dateTime, messageType, instanceId, description, additionalDescription) " \
                     "VALUES (strftime('%Y-%m-%d %H:%M:%S','" + dateTime + "'), '" +msgType+ "', '" +instanceId+ \
                     "', '" +description+ "', '" +additionalDescription+ "');"
-        with QMutexLocker(self.__modelMutex):
+        with QMutexLocker(self.modelMutex):
             self.sqlQueryModel.setQuery(queryText)
 
 
     def run(self):
         while not self.isFinished:
-            if not self.__logDataQueue.empty():
-
-                # Create new model for tableView, otherwise update gets messy/blank for a while
-                if self.sqlQueryModel:
-                    preQueryText = self.sqlQueryModel.preQueryText
-                    sortByColumn = self.sqlQueryModel.sortByColumn
-                    sortOrder = self.sqlQueryModel.sortOrder
-                    self.sqlQueryModel = LogSqlQueryModel(None, preQueryText, sortByColumn, sortOrder)
-                else:
-                    self.sqlQueryModel = LogSqlQueryModel()
-
+            if not self.logDataQueue.empty():
                 # Get log block of current queue
                 logBlock = self.getLogDataBlock()
                 # Insert log block into database
                 self.processLogData(logBlock)
                 # Notify main thread
-                self.signalViewNeedsUpdate.emit(self.sqlQueryModel)
+                self.signalViewNeedsUpdate.emit()
             # Sleep for 1 sec
             sleep(1)
 
