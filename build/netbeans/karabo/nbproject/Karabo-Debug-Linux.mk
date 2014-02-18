@@ -35,10 +35,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o \
-	${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o \
-	${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o \
-	${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o \
 	${OBJECTDIR}/_ext/163556830/ComputeDevice.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
@@ -56,13 +52,17 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/HashInput.o \
 	${OBJECTDIR}/_ext/1072794519/HashOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashTextFileInput.o \
+	${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileInput.o \
 	${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o \
+	${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaBinarySerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaInput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaOutput.o \
+	${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o \
+	${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/SchemaXsdSerializer.o \
 	${OBJECTDIR}/_ext/1072794519/TextFileInput.o \
@@ -181,26 +181,6 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJE
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
-${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o: ../../../src/karabo/HashTextFileOutput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o ../../../src/karabo/HashTextFileOutput.cc
-
-${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o: ../../../src/karabo/SchemaBinaryFileInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o ../../../src/karabo/SchemaBinaryFileInput.cc
-
-${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o: ../../../src/karabo/SchemaTextFileInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o ../../../src/karabo/SchemaTextFileInput.cc
-
-${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o: ../../../src/karabo/SchemaTextFileOutput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o ../../../src/karabo/SchemaTextFileOutput.cc
-
 ${OBJECTDIR}/_ext/163556830/ComputeDevice.o: ../../../src/karabo/core/ComputeDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
@@ -286,6 +266,11 @@ ${OBJECTDIR}/_ext/1072794519/HashTextFileInput.o: ../../../src/karabo/io/HashTex
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/HashTextFileInput.o ../../../src/karabo/io/HashTextFileInput.cc
 
+${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o: ../../../src/karabo/io/HashTextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o ../../../src/karabo/io/HashTextFileOutput.cc
+
 ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o: ../../../src/karabo/io/HashXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} "$@.d"
@@ -300,6 +285,11 @@ ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o: ../../../src/karabo/io/Hdf5FileOu
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ../../../src/karabo/io/Hdf5FileOutput.cc
+
+${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o: ../../../src/karabo/io/SchemaBinaryFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o ../../../src/karabo/io/SchemaBinaryFileInput.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileOutput.o: ../../../src/karabo/io/SchemaBinaryFileOutput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -320,6 +310,16 @@ ${OBJECTDIR}/_ext/1072794519/SchemaOutput.o: ../../../src/karabo/io/SchemaOutput
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaOutput.o ../../../src/karabo/io/SchemaOutput.cc
+
+${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o: ../../../src/karabo/io/SchemaTextFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o ../../../src/karabo/io/SchemaTextFileInput.cc
+
+${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o: ../../../src/karabo/io/SchemaTextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o ../../../src/karabo/io/SchemaTextFileOutput.cc
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o: ../../../src/karabo/io/SchemaXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -941,58 +941,6 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
 
-${OBJECTDIR}/_ext/818272684/HashTextFileOutput_nomain.o: ${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o ../../../src/karabo/HashTextFileOutput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/HashTextFileOutput_nomain.o ../../../src/karabo/HashTextFileOutput.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/818272684/HashTextFileOutput.o ${OBJECTDIR}/_ext/818272684/HashTextFileOutput_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o ../../../src/karabo/SchemaBinaryFileInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput_nomain.o ../../../src/karabo/SchemaBinaryFileInput.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput.o ${OBJECTDIR}/_ext/818272684/SchemaBinaryFileInput_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/818272684/SchemaTextFileInput_nomain.o: ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o ../../../src/karabo/SchemaTextFileInput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput_nomain.o ../../../src/karabo/SchemaTextFileInput.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput.o ${OBJECTDIR}/_ext/818272684/SchemaTextFileInput_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput_nomain.o: ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o ../../../src/karabo/SchemaTextFileOutput.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/818272684
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput_nomain.o ../../../src/karabo/SchemaTextFileOutput.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput.o ${OBJECTDIR}/_ext/818272684/SchemaTextFileOutput_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o`; \
@@ -1214,6 +1162,19 @@ ${OBJECTDIR}/_ext/1072794519/HashTextFileInput_nomain.o: ${OBJECTDIR}/_ext/10727
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashTextFileInput.o ${OBJECTDIR}/_ext/1072794519/HashTextFileInput_nomain.o;\
 	fi
 
+${OBJECTDIR}/_ext/1072794519/HashTextFileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o ../../../src/karabo/io/HashTextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput_nomain.o ../../../src/karabo/io/HashTextFileOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput.o ${OBJECTDIR}/_ext/1072794519/HashTextFileOutput_nomain.o;\
+	fi
+
 ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o ../../../src/karabo/io/HashXmlSerializer.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/HashXmlSerializer.o`; \
@@ -1251,6 +1212,19 @@ ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o: ${OBJECTDIR}/_ext/10727945
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o ../../../src/karabo/io/Hdf5FileOutput.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput.o ${OBJECTDIR}/_ext/1072794519/Hdf5FileOutput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o ../../../src/karabo/io/SchemaBinaryFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput_nomain.o ../../../src/karabo/io/SchemaBinaryFileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput.o ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileInput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaBinaryFileOutput.o ../../../src/karabo/io/SchemaBinaryFileOutput.cc 
@@ -1303,6 +1277,32 @@ ${OBJECTDIR}/_ext/1072794519/SchemaOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaOutput_nomain.o ../../../src/karabo/io/SchemaOutput.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaOutput.o ${OBJECTDIR}/_ext/1072794519/SchemaOutput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o ../../../src/karabo/io/SchemaTextFileInput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput_nomain.o ../../../src/karabo/io/SchemaTextFileInput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput.o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileInput_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o ../../../src/karabo/io/SchemaTextFileOutput.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput_nomain.o ../../../src/karabo/io/SchemaTextFileOutput.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput.o ${OBJECTDIR}/_ext/1072794519/SchemaTextFileOutput_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer_nomain.o: ${OBJECTDIR}/_ext/1072794519/SchemaXmlSerializer.o ../../../src/karabo/io/SchemaXmlSerializer.cc 

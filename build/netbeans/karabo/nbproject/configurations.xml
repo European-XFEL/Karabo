@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="88">
+<configurationDescriptor version="90">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
@@ -87,9 +87,9 @@
         <itemPath>../../../src/karabo/io/Hdf5FileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Input.hh</itemPath>
         <itemPath>../../../src/karabo/io/InputHandler.hh</itemPath>
-        <itemPath>../../../src/karabo/SchemaBinaryFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaBinaryFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaInput.cc</itemPath>
-        <itemPath>../../../src/karabo/SchemaTextFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaTextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
       </logicalFolder>
@@ -101,14 +101,14 @@
         <itemPath>../../../src/karabo/io/CppOutputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashOutput.cc</itemPath>
-        <itemPath>../../../src/karabo/HashTextFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashTextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Output.hh</itemPath>
         <itemPath>../../../src/karabo/io/OutputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaBinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaOutput.cc</itemPath>
-        <itemPath>../../../src/karabo/SchemaTextFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaTextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.hh</itemPath>
       </logicalFolder>
@@ -485,26 +485,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/HashTextFileOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaBinaryFileInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaTextFileInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaTextFileOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -694,6 +674,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/HashTextFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
             ex="false"
             tool="1"
@@ -743,6 +728,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaBinaryFileOutput.cc"
             ex="false"
             tool="1"
@@ -764,6 +754,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileOutput.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -2171,26 +2171,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../src/karabo/HashTextFileOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaBinaryFileInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaTextFileInput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/SchemaTextFileOutput.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -2380,6 +2360,11 @@
             tool="1"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/HashTextFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
             ex="false"
             tool="1"
@@ -2429,6 +2414,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaBinaryFileOutput.cc"
             ex="false"
             tool="1"
@@ -2450,6 +2440,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileOutput.cc"
             ex="false"
             tool="1"
             flavor2="0">
