@@ -97,6 +97,7 @@ namespace karabo {
             bool m_isEndOfStream;
             bool m_forwardEOS;
 
+            bool m_unsetEndOfStreamFlag;
 
 
         public:
@@ -143,7 +144,7 @@ namespace karabo {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config), m_sharedInputIndex(0), m_isEndOfStream(false) {
+            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config), m_sharedInputIndex(0), m_isEndOfStream(false),m_unsetEndOfStreamFlag(true) {
 
                 config.get("distributionMode", m_distributionMode);
                 config.get("noInputShared", m_onNoSharedInputChannelAvailable);
@@ -363,7 +364,7 @@ namespace karabo {
                 return true;
             }
 
-            void update(const bool& unsetEndOfStreamFlag = true) {
+            void update() {
 
                 //boost::mutex::scoped_lock lock(m_updateMutex);
                 
@@ -373,7 +374,7 @@ namespace karabo {
                 if (MemoryType::size(m_channelId, m_chunkId) == 0) return;
 
                 // Unset endOfStream flag
-                if(unsetEndOfStreamFlag) m_isEndOfStream = false;
+                if(m_unsetEndOfStreamFlag) m_isEndOfStream = false;
 
                 registerWritersOnChunk();
 
@@ -401,9 +402,11 @@ namespace karabo {
                 // It is also needed to switch to synchronous TCP write as we have to now wait until all left data
                 // was sent.
                 m_isEndOfStream = true;
-                
+                m_unsetEndOfStreamFlag = false;
                 // If there is still some data in the pipe, put it out
-                if (MemoryType::size(m_channelId, m_chunkId) > 0) update(false);
+                if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
+                
+                m_unsetEndOfStreamFlag = true;
                 
                 // Wait until all queued data is fetched
                 bool doWait = true;
