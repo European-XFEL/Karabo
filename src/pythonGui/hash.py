@@ -1,7 +1,13 @@
+from hashtypes import Type
+import hashtypes
+
 from collections import OrderedDict
 from xml.etree import ElementTree
 from cStringIO import StringIO
+import numbers
 import numpy
+
+from struct import pack, unpack, calcsize
 
 def schemaloader(s):
     name, xml = s.split(":", 1)
@@ -14,17 +20,6 @@ class Element(object):
     text = property(lambda self: None, lambda self, value: None)
     tail = text
 
-    types = {
-        "BOOL": lambda s: bool(int(s)),
-        "STRING": unicode,
-        "INT32": int,
-        "UINT32": numpy.uint32,
-        "UINT16": numpy.uint16,
-        "DOUBLE": float,
-        "VECTOR_STRING": lambda s: s.split(","),
-        "VECTOR_INT32": lambda s: numpy.array([int(x) for x in s.split(",")]),
-        "SCHEMA": schemaloader }
-
     def __init__(self, tag, attrs={}):
         self.tag = tag
         if "KRB_Artificial" in attrs:
@@ -32,7 +27,7 @@ class Element(object):
         self.type = attrs.get("KRB_Type")
         def parse(vv):
             k, v = vv.split(":", 1)
-            return self.types[k[4:]](v)
+            return Type.fromname[k[4:]].fromstring(v)
         self.attrs = {k: parse(v) for k, v in attrs.iteritems()
                       if k[:4] != "KRB_"}
 
@@ -66,7 +61,7 @@ class SimpleElement(Element):
     @text.setter
     def text(self, value):
         try:
-            self.data = self.types[self.type](value)
+            self.data = Type.fromname[self.type].fromstring(value)
         except:
             raise
 
@@ -191,6 +186,15 @@ class Hash(OrderedDict):
     def hasAttribute(self, item, key):
         return key in self[item, ...]
 
+    def paths(self):
+        ret = [ ]
+        for k, v in self.iteritems():
+            if isinstance(v, Hash):
+                ret.extend([k + '.' + kk for kk in v.paths()])
+            else:
+                ret.append(k)
+        return ret
+
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
@@ -232,3 +236,76 @@ def writeXML(hash):
         return rets
     finally:
         ret.close()
+
+
+class BinaryParser(object):
+    def readFormat(self, fmt):
+        size = calcsize(fmt)
+        s = self.file.read(size)
+        return unpack(fmt, s)
+
+
+    def readKey(self):
+        size, = self.readFormat('B')
+        return self.file.read(size)
+
+
+    def read(self, file):
+        #for s in str(file):
+        #    print '{:02x}'.format(ord(s)) if ord(s) < 0x20 else s,
+        self.file = StringIO(file)
+        ret = hashtypes.Hash.read(self)
+        #print
+        print ret
+        return ret
+
+
+class BinaryWriter(object):
+    def writeFormat(self, fmt, data):
+        s = pack(fmt, data)
+        self.file.write(s)
+
+
+    def writeKey(self, key):
+        key = str(key)
+        self.writeFormat('B', len(key))
+        self.file.write(key)
+
+
+    def _gettype(self, data):
+        try:
+            return Type.strs[data.dtype.str]
+        except AttributeError:
+            if isinstance(data, numbers.Integral):
+                return hashtypes.Int64
+            elif isinstance(data, numbers.Real):
+                return hashtypes.Double
+            elif isinstance(data, numbers.Complex):
+                return hashtypes.Complex
+            elif isinstance(data, (str, unicode)):
+                return hashtypes.String
+            elif isinstance(data, Hash):
+                return hashtypes.Hash
+            elif isinstance(data, list):
+                return self._gettype(data[0])
+            else:
+                raise RuntimeError('unknown datatype {}'.format(data.__class__))
+
+
+    def writeType(self, type):
+        type = self._gettype(type)
+        self.writeFormat('I', type.number)
+
+
+    def writeData(self, data):
+        type = self._gettype(data)
+        type.write(self, data)
+
+
+    def write(self, data):
+        self.file = StringIO()
+        try:
+            hashtypes.Hash.write(self, data)
+            return self.file.getvalue()
+        finally:
+            self.file.close()

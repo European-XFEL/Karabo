@@ -21,7 +21,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStrea
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.karathon import Authenticator
-from hash import Hash, parseXML, writeXML
+from hash import Hash, BinaryParser, BinaryWriter
 
 import datetime
 import globals
@@ -220,6 +220,7 @@ class Network(QObject):
     def onReadServerData(self):
         input = QDataStream(self.__tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
+        parser = BinaryParser()
 
         #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
@@ -260,7 +261,7 @@ class Network(QObject):
 
 
             # Fork on responseType
-            headerHash = parseXML(self.__headerBytes)
+            headerHash = parser.read(self.__headerBytes)
 
             type = headerHash.get("type")
             #print "Request: ", type
@@ -274,35 +275,35 @@ class Network(QObject):
             # "invalidateCache" (instanceId)
 
             if type == "systemTopology":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleInstanceNew(bodyHash)
             elif type == "instanceUpdated":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
                 Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
                 Manager().onLogDataAvailable(str(self.__bodyBytes))
             elif type == "schemaUpdated":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
             elif type == "brokerInformation":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
-                bodyHash = parseXML(self.__bodyBytes)
+                bodyHash = parser.read(self.__bodyBytes)
                 self._handleNotification(headerHash, bodyHash)
             elif type == "historicData":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
@@ -485,8 +486,9 @@ class Network(QObject):
 
     def _tcpWriteHashHash(self, headerHash, bodyHash):
         stream = QByteArray()
-        headerString = writeXML(headerHash)
-        bodyString = writeXML(bodyHash)
+        writer = BinaryWriter()
+        headerString = writer.write(headerHash)
+        bodyString = writer.write(bodyHash)
         nBytesHeader = len(headerString)
         nBytesBody = len(bodyString)
 
