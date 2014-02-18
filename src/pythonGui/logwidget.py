@@ -308,21 +308,16 @@ class LogWidget(QWidget):
 
 
     def onViewNeedsUpdate(self):
-        print "=== onViewNeedsUpdate"
         # Update view considering filter options
         self.onFilterChanged()
 
 
     def onViewNeedsSortUpdate(self, queryText):
-        print "### onViewNeedsSortUpdate"
-        #self.viewState = self.twLogTable.horizontalHeader().saveState()
-        
         with QMutexLocker(self.modelMutex):
             self.sqlQueryModel.setLogQuery(queryText)
 
-        #self.twLogTable.horizontalHeader().restoreState(self.viewState)
         self.twLogTable.resizeRowsToContents()
-        #self.twLogTable.restoreLastSelection()
+        self.twLogTable.restoreLastSelection()
 
 
     def addLogMessage(self, logData):
@@ -505,7 +500,7 @@ class LogTableView(QTableView):
         
         # Selection
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
-        self.lastItemSelection = None
+        self.lastSelectedId = None
 
         self.setWordWrap(True)
         self.setAlternatingRowColors(True)
@@ -523,17 +518,27 @@ class LogTableView(QTableView):
 
 
     def restoreLastSelection(self):
-        try:
-            if self.lastItemSelection is not None:
-                self.selectionModel().blockSignals(True)
-                self.selectionModel().select(self.lastItemSelection,
-                   QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
-                                             #QItemSelectionModel.Select)
-                self.scrollTo(self.lastItemSelection,
-                              QAbstractItemView.PositionAtCenter)
-                self.selectionModel().blockSignals(False)
-        except Exception, e:
-            print e
+        print ""
+        print "restoreLastSelection", self.lastSelectedId, type(self.lastSelectedId)
+        if self.lastSelectedId is not None:
+            rowCount = self.model().rowCount()
+            print "rowcount", rowCount
+            for row in xrange(rowCount):
+                if rowCount != self.model().rowCount():
+                    print "+++ RETURN +++"
+                    print ""
+                    return
+                index = self.model().index(row, 0)
+                id = index.data(Qt.DisplayRole)
+                print "ID", id
+                if id == self.lastSelectedId:
+                    print "selection", id
+                    self.selectionModel().blockSignals(True)
+                    self.selectionModel().select(index,
+                       QItemSelectionModel.Rows | QItemSelectionModel.Select)
+                    self.scrollTo(index, QAbstractItemView.PositionAtCenter)
+                    self.selectionModel().blockSignals(False)
+                    break
 
 
     # TODO: not working right now due to model-view in navigation
@@ -548,14 +553,10 @@ class LogTableView(QTableView):
     def onSelectionChanged(self, selected, deselected):
         indexes = selected.indexes()
         nbIndexes = len(indexes)
-        print "=== onSelectionChanged", nbIndexes, self.selectionModel()
-        if nbIndexes < 2:
+        if nbIndexes < 1:
             return
-
-        #self.lastItemSelection = selected
-        self.lastItemSelection = indexes[0]
-        print "self.lastItemSelection", self.lastItemSelection
-        print ""
+        # Save database unique ID
+        self.lastSelectedId = indexes[0].data(Qt.DisplayRole)
 
 
 
@@ -716,10 +717,10 @@ class LogThread(QThread):
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
         # Performance test
-        #i = 50
-        #while i > 0:
-        #    self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
-        #    i -= 1
+        i = 20
+        while i > 0:
+            self.insertInto(QDateTime.currentDateTime().toString(dateTimeFormat), "INFO", "pcx17673/DemoDevice/100", "This is short.", "LOW")
+            i -= 1
 
 
     def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=str()):
