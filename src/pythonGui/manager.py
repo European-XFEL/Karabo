@@ -16,9 +16,8 @@
 __all__ = ["Manager"]
 
 
+from enums import NavigationItemTypes, ConfigChangeTypes
 import datetime
-from enums import NavigationItemTypes
-from enums import ConfigChangeTypes
 from hash import Hash, HashMergePolicy
 from karabo.karathon import Timestamp
 from navigationhierarchymodel import NavigationHierarchyModel

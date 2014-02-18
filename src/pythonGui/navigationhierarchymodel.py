@@ -12,7 +12,6 @@ __all__ = ["NavigationHierarchyModel"]
 
 import globals
 from navigationhierarchynode import *
-from karabo.karathon import *
 import manager
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
