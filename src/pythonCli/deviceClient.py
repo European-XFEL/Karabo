@@ -202,7 +202,7 @@ class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
                 dt = datetime.datetime.fromtimestamp( value )
             except:
                 dt = datetime.datetime.fromtimestamp( 0 )
-            return Qwt5.Qwt.QwtText( '%s' % dt.strftime( '%H:%M:%S' ) )
+            return Qwt5.Qwt.QwtText( dt.isoformat() )
 
 class DeviceClient(object):
     def __init__(self, connectionType = "Jms", config = Hash()):
@@ -473,16 +473,20 @@ class DeviceClient(object):
             return False, "Invalid condition string: " + str(e)
         
 
-    def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = None, y = None, t0 = None, t1 = None):
-        if not HAS_GUIDATA: return 
-        schema = self.__client.getDeviceSchema(deviceId)
+    def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = None, y = None, t0 = None, t1 = None, displayType = None):
+        if not HAS_GUIDATA: return
         itemId = deviceId + ":" + key
         unit = str()
-        if (schema.hasMetricPrefix(key)): unit += schema.getMetricPrefixSymbol(key)
-        if (schema.hasUnit(key)): unit += schema.getUnitSymbol(key)
-        if (len(unit) > 0): unit = " [" + unit + "]"
-        displayType = "Scalar"
-        if (schema.hasDisplayType(key)): displayType = schema.getDisplayType(key)
+        
+        if self.__client.exists(deviceId)[0]:
+            schema = self.__client.getDeviceSchema(deviceId)            
+            if (schema.hasMetricPrefix(key)): unit += schema.getMetricPrefixSymbol(key)
+            if (schema.hasUnit(key)): unit += schema.getUnitSymbol(key)
+            if (len(unit) > 0): unit = " [" + unit + "]"
+            displayType = "Scalar"
+            if (schema.hasDisplayType(key)): displayType = schema.getDisplayType(key)
+        else:
+            if displayType is None: displayType = "Scalar"
             
         if (displayType == "Image"):
             if x is None: x = 600
@@ -523,7 +527,7 @@ class DeviceClient(object):
                     self.__curveDialogs[itemId] = dialog
                     self.__client.registerPropertyMonitor(deviceId, key, self._onCurveUpdate)
                 return dialog
-        elif (displayType == "Scalar" and schema.getValueType(key) != krb.Types.STRING):
+        elif (displayType == "Scalar"): # and schema.getValueType(key) != krb.Types.STRING):
             if x is None: x = 800
             if y is None: y = 500
             self._prepareTrendlineData(deviceId, key, t0, t1)
@@ -564,11 +568,11 @@ class DeviceClient(object):
             data.reverse()
             for hash in data:
                 value = hash.get("v")
-                timestamp = krb.Epochstamp.fromHashAttributes(hash.getAttributes("v"))
-                self.__trendlineData[itemId].append((value, timestamp.getSeconds()))
+                e = krb.Epochstamp.fromHashAttributes(hash.getAttributes("v"))
+                self.__trendlineData[itemId].append((value, e.toTimestamp()))
         else:
-            value = self.__client.get(deviceId, key)
-            self.__trendlineData[itemId].append((value, krb.Epochstamp().getSeconds()))
+            value = self.__client.get(deviceId, key)            
+            self.__trendlineData[itemId].append((value, krb.Epochstamp().toTimestamp()))
                                     
                         
     def _hashImageToNumpyImage(self, hashImage):

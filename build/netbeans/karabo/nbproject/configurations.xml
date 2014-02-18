@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="90">
+<configurationDescriptor version="88">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
@@ -269,6 +269,8 @@
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Version.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Version.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
         <itemPath>../../../src/karabo/util/FromInt.cc</itemPath>
@@ -441,6 +443,7 @@
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -1782,6 +1785,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/Version.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/karaboDll.hh"
             ex="false"
             tool="3"
@@ -2126,6 +2139,7 @@
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -3461,6 +3475,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/VectorElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.hh"
             ex="false"
             tool="3"
             flavor2="0">

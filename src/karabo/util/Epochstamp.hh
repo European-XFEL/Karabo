@@ -177,6 +177,13 @@ namespace karabo {
              * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
              */
             std::string toIso8601Ext(TIME_UNITS precision = MICROSEC, bool extended = false) const;
+            
+            
+            /**
+             * Generates a timestamp as double with seconds.fractions format
+             * @return A double value with the decimal point indicating fractions of seconds
+             */
+            double toTimestamp(TIME_UNITS precision = MICROSEC) const;
 
             /**
              * Formats to specified format time stored in the object
