@@ -16,11 +16,11 @@ from manager import Manager
 
 from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QMutex, QMutexLocker,
                           Qt, QThread)
-from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit, QFormLayout,
-                         QFrame, QGroupBox, QHBoxLayout, QHeaderView, QIcon,
-                         QItemSelection, QItemSelectionModel, QLabel, QLineEdit,
-                         QPushButton, QTableView, QToolButton, QVBoxLayout,
-                         QWidget)
+from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit, QFileDialog,
+                         QFormLayout, QFrame, QGroupBox, QHBoxLayout,
+                         QHeaderView, QIcon, QItemSelectionModel, QLabel,
+                         QLineEdit, QPushButton, QTableView, QToolButton,
+                         QVBoxLayout, QWidget)
 
 from Queue import Queue
 from time import sleep
@@ -525,16 +525,16 @@ class LogTableView(QTableView):
 
 
     def onRestoreLastSelection(self, index):
-        # Scroll to selected index
-        self.blockSignals(True)
-        self.scrollTo(index, QAbstractItemView.PositionAtCenter)
-        self.blockSignals(False)
-
         # Select index
         self.selectionModel().blockSignals(True)
         self.selectionModel().select(index,
                    QItemSelectionModel.Rows | QItemSelectionModel.SelectCurrent)
         self.selectionModel().blockSignals(False)
+        
+        # Scroll to selected index
+        #self.blockSignals(True)
+        #self.scrollTo(index, QAbstractItemView.PositionAtCenter)
+        #self.blockSignals(False)
 
 
     def onSelectionChanged(self, selected, deselected):
@@ -596,8 +596,8 @@ class LogSqlQueryModel(QSqlQueryModel):
         self.setHeaderData(4, Qt.Horizontal, "Description")
         self.setHeaderData(5, Qt.Horizontal, "Additional description")
 
-	while self.canFetchMore():
-            self.fetchMore()
+	#while self.canFetchMore():
+        #    self.fetchMore()
 
 
     def getIcon(self, value):
