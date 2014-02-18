@@ -1,9 +1,10 @@
+from enums import AccessMode
 import hash
-import schema
-
 from registry import Registry
+
 from struct import unpack, calcsize
 import numpy
+
 
 class Simple(object):
     @classmethod
@@ -19,6 +20,14 @@ class Simple(object):
     @classmethod
     def write(cls, file, data):
         file.writeFormat(cls.format, data)
+
+
+class Integer(Simple):
+    pass
+
+
+class Number(Simple):
+    pass
 
 
 class Vector(object):
@@ -77,15 +86,16 @@ class VectorBool(Type):
     pass
 
 
-class Char(Type):
+class Char(Simple, Type):
     format = "c"
+    numpy = numpy.str_
 
 
-class VectorChar(Type):
+class VectorChar(Vector, Char):
     pass
 
 
-class Int8(Simple, Type):
+class Int8(Integer, Type):
     format = "b"
     numpy = numpy.int8
 
@@ -94,7 +104,7 @@ class VectorInt8(Vector, Int8):
     pass
 
 
-class UInt8(Simple, Type):
+class UInt8(Integer, Type):
     format = "B"
     numpy = numpy.uint8
 
@@ -103,7 +113,7 @@ class VectorUInt8(Vector, UInt8):
     pass
 
 
-class Int16(Simple, Type):
+class Int16(Integer, Type):
     format = "h"
     numpy = numpy.int16
 
@@ -112,7 +122,7 @@ class VectorInt16(Vector, Int16):
     pass
 
 
-class UInt16(Simple, Type):
+class UInt16(Integer, Type):
     format = "H"
     numpy = numpy.uint16
 
@@ -121,7 +131,7 @@ class VectorUInt16(Vector, UInt16):
     pass
 
 
-class Int32(Simple, Type):
+class Int32(Integer, Type):
     format = "i"
     numpy = numpy.int32
 
@@ -130,7 +140,7 @@ class VectorInt32(Vector, Int32):
     pass
 
 
-class UInt32(Simple, Type):
+class UInt32(Integer, Type):
     format = "I"
     numpy = numpy.uint32
 
@@ -139,7 +149,7 @@ class VectorUInt32(Vector, UInt32):
     pass
 
 
-class Int64(Simple, Type):
+class Int64(Integer, Type):
     format = "q"
     numpy = numpy.int64
 
@@ -148,7 +158,7 @@ class VectorInt64(Vector, Int64):
     pass
 
 
-class UInt64(Simple, Type):
+class UInt64(Integer, Type):
     format = "Q"
     numpy = numpy.uint64
 
@@ -157,7 +167,7 @@ class VectorUInt64(Vector, UInt64):
     pass
 
 
-class Float(Simple, Type):
+class Float(Number, Type):
     format = "f"
     numpy = numpy.float32
 
@@ -166,7 +176,7 @@ class VectorFloat(Vector, Float):
     pass
 
 
-class Double(Simple, Type):
+class Double(Number, Type):
     format = "d"
     numpy = numpy.float64
 
@@ -175,7 +185,7 @@ class VectorDouble(Vector, Double):
     pass
 
 
-class ComplexFloat(Simple, Type):
+class ComplexFloat(Number, Type):
     format = "ff"
     numpy = numpy.complex64
 
@@ -184,7 +194,7 @@ class VectorComplexFloat(Vector, ComplexFloat):
     pass
 
 
-class ComplexDouble(Simple, Type):
+class ComplexDouble(Number, Type):
     format = "dd"
     numpy = numpy.complex128
 
@@ -330,8 +340,7 @@ class Schema(Hash):
         size, = file.readFormat('Q')
         name = file.file.read(size)
         ret = super(Schema, cls).read(file)
-        print 'schema', name, ret
-        return schema.Schema(name, ret)
+        return hash.Schema(name, ret)
 
 
 class VectorSchema(Type):
@@ -354,7 +363,7 @@ class Unknown(Type):
     pass
 
 
-class Simple(Type):
+class Simple_(Type):
     pass
 
 

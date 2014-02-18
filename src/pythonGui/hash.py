@@ -1,4 +1,3 @@
-from hashtypes import Type
 import hashtypes
 
 from collections import OrderedDict
@@ -27,7 +26,7 @@ class Element(object):
         self.type = attrs.get("KRB_Type")
         def parse(vv):
             k, v = vv.split(":", 1)
-            return Type.fromname[k[4:]].fromstring(v)
+            return hashtypes.Type.fromname[k[4:]].fromstring(v)
         self.attrs = {k: parse(v) for k, v in attrs.iteritems()
                       if k[:4] != "KRB_"}
 
@@ -61,7 +60,7 @@ class SimpleElement(Element):
     @text.setter
     def text(self, value):
         try:
-            self.data = Type.fromname[self.type].fromstring(value)
+            self.data = hashtypes.Type.fromname[self.type].fromstring(value)
         except:
             raise
 
@@ -251,13 +250,8 @@ class BinaryParser(object):
 
 
     def read(self, file):
-        #for s in str(file):
-        #    print '{:02x}'.format(ord(s)) if ord(s) < 0x20 else s,
         self.file = StringIO(file)
-        ret = hashtypes.Hash.read(self)
-        #print
-        print ret
-        return ret
+        return hashtypes.Hash.read(self)
 
 
 class BinaryWriter(object):
@@ -274,7 +268,7 @@ class BinaryWriter(object):
 
     def _gettype(self, data):
         try:
-            return Type.strs[data.dtype.str]
+            return hashtypes.Type.strs[data.dtype.str]
         except AttributeError:
             if isinstance(data, numbers.Integral):
                 return hashtypes.Int64
@@ -309,3 +303,9 @@ class BinaryWriter(object):
             return self.file.getvalue()
         finally:
             self.file.close()
+
+
+class Schema(object):
+    def __init__(self, name, hash):
+        self.name = name
+        self.hash = hash
