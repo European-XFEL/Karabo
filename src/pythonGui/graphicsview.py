@@ -909,6 +909,9 @@ class FixedLayout(Layout, QLayout):
                     if isinstance(p, Layout):
                         stack.extend(p)
                     else:
+                        if p.component is not None:
+                            for k in p.component.keys:
+                                Manager().removeVisibleDevice(k)
                         p.setParent(None)
                 del self[i]
             else:
@@ -1172,6 +1175,7 @@ class ProxyWidget(QStackedWidget):
             return
         for item in source.selectedItems():
             if self.component.addKey(item.internalKey):
+                Manager().newVisibleDevice(item.internalKey)
                 event.accept()
 
 
@@ -1257,10 +1261,22 @@ class GraphicsView(QSvgWidget):
         if reply == QMessageBox.Save:
             self.saveSceneLayoutToFile()
 
-        self.inner.setParent(None)
-        self.inner = QWidget(self)
+        self.clean()
         self.ilayout = FixedLayout()
         self.inner.setLayout(self.ilayout)
+        self.layout().addWidget(self.inner)
+
+
+    def clean(self):
+        """Remove all child widgets"""
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and c.component is not None:
+                for k in c.component.keys:
+                    Manager().removeVisibleDevice(k)
+            c.setParent(None)
+        self.inner.setParent(None)
+        self.inner = QWidget(self)
+        self.ilayout = None
         self.layout().addWidget(self.inner)
 
 
@@ -1328,11 +1344,9 @@ class GraphicsView(QSvgWidget):
     def openScene(self, filename):
         self.tree = ElementTree.parse(filename)
         root = self.tree.getroot()
-        self.inner.setParent(None)
-        self.inner = QWidget(self)
+        self.clean()
         self.ilayout = FixedLayout.load(root, None)
         self.inner.setLayout(self.ilayout)
-        self.layout().addWidget(self.inner)
         self.designMode = True
 
         ar = QByteArray()
