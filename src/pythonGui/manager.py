@@ -24,11 +24,8 @@ from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject,
-                          QTime, QTimer)
+from PyQt4.QtCore import pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
-
-import time
 
 
 class DataNotifier(QObject):
