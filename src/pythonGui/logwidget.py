@@ -508,7 +508,17 @@ class LogWidget(QWidget):
 
 
     def onClearLog(self):
-        print "onClearLog"
+        # Remove all message from database
+        queryText = "DELETE FROM tLog;"
+        model = QSqlQueryModel()
+        model.setQuery(queryText, Manager().sqlDatabase)
+
+        # Reset last selected id
+        with QMutexLocker(self.modelMutex):
+            self.sqlQueryModel.lastSelectedId = None
+
+        # Update
+        self.onFilterChanged()
 
 
 
