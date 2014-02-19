@@ -16,11 +16,11 @@
 __all__ = ["Manager"]
 
 
+import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 import globals
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
-                             Timestamp)
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile)
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
@@ -646,9 +646,9 @@ class _Manager(QObject):
         # Check for existing stuff and remove
         instanceIds = self.removeExistingInstances(config)
         for id in instanceIds:
-            timestamp = Timestamp()
+            timestamp = datetime.datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
+            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
             logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
                          "Detected dirty shutdown for instance \"" + id + "\", which " \
                          "is coming up now.#"
