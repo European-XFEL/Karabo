@@ -14,8 +14,9 @@ __all__ = ["LogWidget", "LogTableView", "LogSqlQueryModel", "LogThread"]
 
 from manager import Manager
 
-from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QMutex, QMutexLocker,
-                          Qt, QThread)
+from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QDir, QFile, QFileInfo,
+                          QIODevice, QMutex, QMutexLocker, Qt, QTextStream,
+                          QThread)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit, QFileDialog,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
                          QHeaderView, QIcon, QItemSelectionModel, QLabel,
@@ -168,7 +169,7 @@ class LogWidget(QWidget):
         self.dtStartDate = QDateTimeEdit()
         self.dtStartDate.setDisplayFormat("yyyy-MM-dd hh:mm")
         self.dtStartDate.setCalendarPopup(True)
-        self.dtStartDate.setDate(QDate(2012, 1, 1))
+        self.dtStartDate.setDate(QDate(2014, 1, 1))
         self.dtStartDate.dateTimeChanged.connect(self.onFilterChanged)
         dateLayout.addRow("Start date: ", self.dtStartDate)
 
@@ -307,29 +308,43 @@ class LogWidget(QWidget):
         return filterWidget
 
 
+    def addNotificationMessage(self, notificationData):
+        with QMutexLocker(self.logDataMutex):
+            self.logDataQueue.put(notificationData)
+
+
+### slots ###
+    def onLogDataAvailable(self, logData):
+        """
+        This slot is called from the LoggingPanel when new logging data is
+        available.
+        """
+        with QMutexLocker(self.logDataMutex):
+            self.logDataQueue.put(logData)
+
+
     def onViewNeedsUpdate(self):
         # Update view considering filter options
         self.onFilterChanged()
 
 
     def onViewNeedsSortUpdate(self, queryText):
+        """
+        This slot is called from SqlQueryModel whenever the sorting changed and
+        the previous query needs to be called but with the new sorting query
+        added.
+        """
         with QMutexLocker(self.modelMutex):
             self.sqlQueryModel.setLogQuery(queryText)
 
         self.twLogTable.resizeRowsToContents()
 
 
-    def addLogMessage(self, logData):
-        with QMutexLocker(self.logDataMutex):
-            self.logDataQueue.put(logData)
-
-
-    def addNotificationMessage(self, notificationData):
-        with QMutexLocker(self.logDataMutex):
-            self.logDataQueue.put(notificationData)
-
-
     def onFilterOptionVisible(self, checked):
+        """
+        This slot is called from here when the filter options should be visible
+        or not.
+        """
         if checked:
             text = "Hide filter options"
             self.pbFilterOptions.setText("- " + text)
@@ -343,6 +358,10 @@ class LogWidget(QWidget):
 
 
     def onFilterChanged(self):
+        """
+        This slot is called from here when the filter options might have changed
+        and the view needs to be updated by a new query to the database.
+        """
         # Save current view state
         self.viewState = self.twLogTable.horizontalHeader().saveState()
 
@@ -452,9 +471,10 @@ class LogWidget(QWidget):
         self.twLogTable.resizeRowsToContents()
 
 
-    def saveDatabaseContentToFile(self):
+    def onSaveToFile(self):
         # Write current database content to a file
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "LOG (*.log)")
+        filename = QFileDialog.getSaveFileName(self, "Save file as",
+                                               QDir.tempPath(), "LOG (*.log)")
         if len(filename) < 1:
             return
 
@@ -463,13 +483,14 @@ class LogWidget(QWidget):
             filename += ".log"
 
         logFile = QFile(filename)
-        if logFile.open(QIODevice.WriteOnly | QIODevice.Text) is False:
+        if not logFile.open(QIODevice.WriteOnly | QIODevice.Text):
             return
         out = QTextStream(logFile)
 
         model = QSqlQueryModel()
-        queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog order by dateTime DESC;"
-        model.setQuery(queryText);
+        queryText = "SELECT id, dateTime, messageType, instanceId, description, \
+                     additionalDescription FROM tLog order by dateTime DESC;"
+        model.setQuery(queryText, Manager().sqlDatabase)
 
         for i in xrange(model.rowCount()):
             id = model.record(i).value("id")
@@ -479,11 +500,16 @@ class LogWidget(QWidget):
             description = model.record(i).value("description")
             additionalDescription = model.record(i).value("additionalDescription")
 
-            logMessage = str(id) + " | " + str(dateTime) + " | " + str(messageType) \
-                               + " | " + str(instanceId) + " | " + str(description) \
-                               + " | " + str(additionalDescription) + "#"
+            logMessage = str(id) + " | " + dateTime + " | " + messageType \
+                               + " | " + instanceId + " | " + description \
+                               + " | " + additionalDescription + "#\n"
             out << logMessage
         logFile.close()
+
+
+    def onClearLog(self):
+        print "onClearLog"
+
 
 
 class LogTableView(QTableView):

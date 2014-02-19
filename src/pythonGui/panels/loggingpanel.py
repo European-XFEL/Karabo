@@ -43,7 +43,7 @@ class LoggingPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__logWidget)
         
-        Manager().signalLogDataAvailable.connect(self.onLogDataAvailable)
+        Manager().signalLogDataAvailable.connect(self.__logWidget.onLogDataAvailable)
         
         self.setupActions()
 
@@ -53,19 +53,18 @@ class LoggingPanel(QWidget):
         self.__acSaveLog = QAction(QIcon(":save"), "&Save log data (.log)", self)
         self.__acSaveLog.setToolTip(text)
         self.__acSaveLog.setStatusTip(text)
-        self.__acSaveLog.triggered.connect(self.onSaveLogDataToFile)
+        self.__acSaveLog.triggered.connect(self.__logWidget.onSaveToFile)
+
+        text = "Clear log"
+        self.__acClearLog = QAction(QIcon(":save"), text, self)
+        self.__acClearLog.setToolTip(text)
+        self.__acClearLog.setStatusTip(text)
+        self.__acClearLog.triggered.connect(self.__logWidget.onClearLog)
 
 
     def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acSaveLog)
-
-
-    def onLogDataAvailable(self, logData):
-        self.__logWidget.addLogMessage(logData)
-
-    
-    def onSaveLogDataToFile(self):
-        self.__logWidget.saveDatabaseContentToFile()
+        #toolBar.addAction(self.__acClearLog)
         
     
     # virtual function
