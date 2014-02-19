@@ -13,51 +13,34 @@ __all__ = ["SqlDatabase"]
 
 from PyQt4.QtCore import QCoreApplication, QDir, QFile
 try:
-    from PyQt4.QtSql import QSqlDatabase, QSqlDriver, QSqlQuery, QSqlQueryModel
+    from PyQt4.QtSql import QSqlDatabase, QSqlQuery
 except:
     print "*ERROR* The PyQt4 sql module is not installed"
 
 
-class SqlDatabase(object):
+class SqlDatabase(QSqlDatabase):
 
 
     def __init__(self):
-        super(SqlDatabase, self).__init__()
+        super(SqlDatabase, self).__init__(QSqlDatabase.addDatabase("QSQLITE"))
 
         # Use temp path for database stuff
         xfelDir = QDir.tempPath()
-        #dir = QDir(xfelDir)
-        self.__dbName = xfelDir + "/xfelgui-" + str(QCoreApplication.applicationPid()) +".db"
-        #print "database:", self.__dbName
-        
-        #self.__database = QSqlDatabase.addDatabase("QOCI")
-        #self.__database.setHostName("131.169.140.93")
-        #self.__database.setDatabaseName("XE");
-        #self.__database.setPort(1521)
-        #self.__database.setUserName("xfel")
-        #self.__database.setPassword("xfelpass")
-        
-        #drivers = QSqlDatabase.drivers()
-        #print "Available drivers:"
-        #for i in xrange(drivers.count()):
-        #    print drivers[i]
-        #print ""
-        #if not QSqlDatabase.isDriverAvailable("QOCI"):
-        #    print "No QOCI driver available"
+        self.dbName = xfelDir + "/xfelgui-" + str(QCoreApplication.applicationPid()) +".db"
+        print "database:", self.dbName
         
         # Establish database connection
-        self.__database = QSqlDatabase.addDatabase("QSQLITE")
-        self.__database.setDatabaseName(self.__dbName)
+        self.setDatabaseName(self.dbName)
 
 
     def openConnection(self):
         # Called from manager.reset() method
-        if self.__database.open():
-            #print self.__dbName, "connection established."
-            query = QSqlQuery(self.__database)
+        if self.open():
+            #print self.dbName, "connection established."
+            query = QSqlQuery(self)
             #query.exec_("PRAGMA foreign_keys = ON;");
 
-            tables = self.__database.tables()
+            tables = self.tables()
             #if len(tables) < 1:
             #    print "Creating database tables"
 
@@ -78,16 +61,16 @@ class SqlDatabase(object):
 
     def closeConnection(self):
         # Called from network.endServerConnection method
-        #print self.__dbName, "connection closed."
+        print self.dbName, "connection closed."
         # Clear database
-        #query = QSqlQuery(self.__database)
+        #query = QSqlQuery(self)
         #query.exec_("DELETE FROM tLog;")
         
         # Close database
-        self.__database.close()
+        self.close()
         # Remove database file
-        db = QFile(self.__dbName)
+        db = QFile(self.dbName)
         if not db.remove():
-            print "Database %s could not be deleted properly." % self.__dbName
+            print "Database %s could not be deleted properly." % self.dbName
             print "Permission problems might be the reason."
 

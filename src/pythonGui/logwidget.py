@@ -461,7 +461,7 @@ class LogWidget(QWidget):
         
         model = QSqlQueryModel()
         queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog order by dateTime DESC;"
-        model.setQuery(queryText);
+        model.setQuery(queryText, Manager().sqlDatabase)
         
         for i in xrange(model.rowCount()):
             id = model.record(i).value("id")
@@ -559,7 +559,7 @@ class LogSqlQueryModel(QSqlQueryModel):
         else:
             order = "DESC"
         queryText += " ORDER BY " + sortBy + " " + order
-        self.setQuery(queryText)
+        self.setQuery(queryText, Manager().sqlDatabase)
         
         self.setHeaderData(0, Qt.Horizontal, "ID")
         self.setHeaderData(1, Qt.Horizontal, "Date and time")
@@ -697,7 +697,7 @@ class LogThread(QThread):
                     "VALUES (strftime('%Y-%m-%d %H:%M:%S','" + dateTime + "'), '" +msgType+ "', '" +instanceId+ \
                     "', '" +description+ "', '" +additionalDescription+ "');"
         with QMutexLocker(self.__modelMutex):
-            self.__sqlQueryModel.setQuery(queryText)
+            self.__sqlQueryModel.setQuery(queryText, Manager().sqlDatabase)
 
 
     def run(self):

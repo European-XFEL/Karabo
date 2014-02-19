@@ -107,8 +107,8 @@ class _Manager(QObject):
         self.__keyNotifierMapDisplayValue = dict()
         
         # Initiate database connection
-        self.__sqlDatabase = SqlDatabase()
-        self.__sqlDatabase.openConnection()
+        self.sqlDatabase = SqlDatabase()
+        self.sqlDatabase.openConnection()
         
         self.__treemodel = NavigationHierarchyModel()
         
@@ -153,18 +153,13 @@ class _Manager(QObject):
     hash = property(fget=_hash)
 
 
-    def _sqlDatabase(self):
-        return self.__sqlDatabase
-    sqlDatabase = property(fget=_sqlDatabase)
-
-
     def _treemodel(self):
         return self.__treemodel
     treemodel = property(fget=_treemodel)
 
 
     def closeDatabaseConnection(self):
-        self.__sqlDatabase.closeConnection()
+        self.sqlDatabase.closeConnection()
 
     
     def _getDataNotifierEditableValue(self, key):
