@@ -16,11 +16,11 @@
 __all__ = ["Manager"]
 
 
+import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 import globals
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
-                             Timestamp)
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile)
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
@@ -107,8 +107,8 @@ class _Manager(QObject):
         self.__keyNotifierMapDisplayValue = dict()
         
         # Initiate database connection
-        self.__sqlDatabase = SqlDatabase()
-        self.__sqlDatabase.openConnection()
+        self.sqlDatabase = SqlDatabase()
+        self.sqlDatabase.openConnection()
         
         self.__treemodel = NavigationHierarchyModel()
         
@@ -153,18 +153,13 @@ class _Manager(QObject):
     hash = property(fget=_hash)
 
 
-    def _sqlDatabase(self):
-        return self.__sqlDatabase
-    sqlDatabase = property(fget=_sqlDatabase)
-
-
     def _treemodel(self):
         return self.__treemodel
     treemodel = property(fget=_treemodel)
 
 
     def closeDatabaseConnection(self):
-        self.__sqlDatabase.closeConnection()
+        self.sqlDatabase.closeConnection()
 
     
     def _getDataNotifierEditableValue(self, key):
@@ -651,9 +646,9 @@ class _Manager(QObject):
         # Check for existing stuff and remove
         instanceIds = self.removeExistingInstances(config)
         for id in instanceIds:
-            timestamp = Timestamp()
+            timestamp = datetime.datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
+            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
             logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
                          "Detected dirty shutdown for instance \"" + id + "\", which " \
                          "is coming up now.#"
