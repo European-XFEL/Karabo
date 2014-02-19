@@ -11,9 +11,8 @@
 
 __all__ = ["Network"]
 
-
 from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
-                             Hash, Timestamp)
+                             Hash)
 from logindialog import LoginDialog
 from manager import Manager
 from struct import pack
@@ -23,6 +22,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStrea
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 
+import datetime
 import globals
 import socket
 
@@ -524,9 +524,9 @@ class Network(QObject):
 
     def _handleNotification(self, headerHash, bodyHash):
         deviceId = headerHash.get("deviceId")
-        timestamp = Timestamp()
+        timestamp = datetime.datetime.now()
         # TODO: better format for timestamp and timestamp generation in karabo
-        timestamp = timestamp.toFormattedString("%Y-%m-%d %H:%M:%S")
+        timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
         type = bodyHash.get("type")
         shortMessage = bodyHash.get("shortMsg")
         detailedMessage = bodyHash.get("detailedMsg")
