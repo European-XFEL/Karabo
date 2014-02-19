@@ -27,7 +27,7 @@ from Queue import Queue
 from time import sleep
 
 try:
-    from PyQt4.QtSql import QSqlTableModel, QSqlQueryModel
+    from PyQt4.QtSql import QSqlTableModel, QSqlQuery, QSqlQueryModel
 except:
     print "*ERROR* The PyQt4 sql module is not installed"
 
@@ -755,6 +755,21 @@ class LogThread(QThread):
 
 
     def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=str()):
+        # Check number of rows in database
+        queryText = "SELECT count(1) FROM tLog;"
+        query = QSqlQuery(queryText, Manager().sqlDatabase)
+        nRows = 0
+        while query.next():
+            nbRows = query.value(0)
+
+        # Remove rows if limit is reached
+        rowLimit = 20000
+        if nbRows > rowLimit:
+            queryText = "DELETE FROM tLog WHERE id in (  \
+                      SELECT t.id FROM tLog t ORDER BY t.dateTime asc limit 10);"
+            with QMutexLocker(self.modelMutex):
+                self.sqlQueryModel.setQuery(queryText)
+
         # Insert parameter into database
         queryText = "INSERT INTO tLog (dateTime, messageType, instanceId, description, additionalDescription) " \
                     "VALUES (strftime('%Y-%m-%d %H:%M:%S','" + dateTime + "'), '" +msgType+ "', '" +instanceId+ \
