@@ -56,7 +56,7 @@ class LoggingPanel(QWidget):
         self.__acSaveLog.triggered.connect(self.__logWidget.onSaveToFile)
 
         text = "Clear log"
-        self.__acClearLog = QAction(QIcon(":save"), text, self)
+        self.__acClearLog = QAction(QIcon(":edit-clear"), text, self)
         self.__acClearLog.setToolTip(text)
         self.__acClearLog.setStatusTip(text)
         self.__acClearLog.triggered.connect(self.__logWidget.onClearLog)
@@ -64,7 +64,7 @@ class LoggingPanel(QWidget):
 
     def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acSaveLog)
-        #toolBar.addAction(self.__acClearLog)
+        toolBar.addAction(self.__acClearLog)
         
     
     # virtual function
