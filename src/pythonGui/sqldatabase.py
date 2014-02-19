@@ -5,7 +5,8 @@
 #############################################################################
 
 
-"""This module contains a class which represents a database connection based on SQLite.
+"""
+This module contains a class which represents a database connection based on SQLite.
 """
 
 __all__ = ["SqlDatabase"]
@@ -27,7 +28,7 @@ class SqlDatabase(QSqlDatabase):
         # Use temp path for database stuff
         xfelDir = QDir.tempPath()
         self.dbName = xfelDir + "/xfelgui-" + str(QCoreApplication.applicationPid()) +".db"
-        print "database:", self.dbName
+        #print "database:", self.dbName
         
         # Establish database connection
         self.setDatabaseName(self.dbName)
@@ -61,7 +62,7 @@ class SqlDatabase(QSqlDatabase):
 
     def closeConnection(self):
         # Called from network.endServerConnection method
-        print self.dbName, "connection closed."
+        #print self.dbName, "connection closed."
         # Clear database
         #query = QSqlQuery(self)
         #query.exec_("DELETE FROM tLog;")

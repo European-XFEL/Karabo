@@ -512,13 +512,14 @@ class LogTableView(QTableView):
 
         # Sorting
         self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.DescendingOrder)
+        self.sortByColumn(0, Qt.AscendingOrder)
 
 
-    # TODO: not working right now due to model-view in navigation
     def mouseDoubleClickEvent(self, event):
         index = self.model().index(self.currentIndex().row(), 3)
         value = index.data()
+        if value is None:
+            return
         # Emit signal with deviceId to select device instance
         Manager().signalSelectNewNavigationItem.emit("device." + value)
         QTableView.mouseDoubleClickEvent(self, event)
@@ -552,7 +553,7 @@ class LogSqlQueryModel(QSqlQueryModel):
     signalViewNeedsSortUpdate = pyqtSignal(str) # queryText
     signalRestoreLastSelection = pyqtSignal(object) # modelIndex
 
-    def __init__(self, parent=None, preQueryText=str(), sortByColumn=0, sortOrder=Qt.DescendingOrder):
+    def __init__(self, parent=None, preQueryText=str(), sortByColumn=0, sortOrder=Qt.AscendingOrder):
         super(LogSqlQueryModel, self).__init__(parent)
 
         self.preQueryText = preQueryText
