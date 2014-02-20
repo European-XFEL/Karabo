@@ -128,8 +128,3 @@ class EditableSpinBox(EditableWidget):
         if forceRefresh:
             # Needs to be called to update possible apply buttons
             self.onEditingFinished(value)
-
-
-### slots ###
-    def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
