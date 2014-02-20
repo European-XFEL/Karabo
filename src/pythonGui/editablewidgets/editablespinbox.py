@@ -132,4 +132,4 @@ class EditableSpinBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.valueEditingFinished(self.keys[0], value)
+        self.signalEditingFinished.emit(self.keys[0], value)
