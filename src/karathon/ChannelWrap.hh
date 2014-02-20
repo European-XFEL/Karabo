@@ -56,23 +56,15 @@ namespace karathon {
             return size_t(&(*channel));
         }
 
-        static void clear() {
-            {
-                boost::mutex::scoped_lock lock(m_changedChannelReadHandlersMutex);
-                m_channelReadHandlers.clear();
-            }
-            {
-                boost::mutex::scoped_lock lock(m_changedChannelWriteHandlersMutex);
-                m_channelWriteHandlers.clear();
-            }
-            {
-                boost::mutex::scoped_lock lock(m_changedChannelErrorHandlersMutex);
-                m_channelErrorHandlers.clear();
-            }
-            {
-                boost::mutex::scoped_lock lock(m_changedChannelWaitHandlersMutex);
-                m_channelWaitHandlers.clear();
-            }
+        static void clear(karabo::net::IOService::Pointer ioserv) {
+            if (!ioserv) return;
+            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+            if (m_handlers.empty()) return;
+            std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> >::iterator it = m_handlers.find(ioserv.get());
+            if (it == m_handlers.end()) return;
+            std::map<karabo::net::Channel*, karabo::util::Hash>& cmap = it->second;
+            cmap.clear();
+            m_handlers.erase(it);
         }
 
     private:
@@ -99,17 +91,8 @@ namespace karathon {
         }
 
     private:
-        //        static boost::mutex m_changedChannelHandlersMutex;
-        //        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelHandlers;
-
-        static boost::mutex m_changedChannelReadHandlersMutex;
-        static boost::mutex m_changedChannelWriteHandlersMutex;
-        static boost::mutex m_changedChannelErrorHandlersMutex;
-        static boost::mutex m_changedChannelWaitHandlersMutex;
-        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelReadHandlers;
-        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelWriteHandlers;
-        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelErrorHandlers;
-        static std::map<karabo::net::Channel*, karabo::util::Hash> m_channelWaitHandlers;
+        static boost::mutex m_changedHandlersMutex;
+        static std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> > m_handlers;
     };
 
 }

@@ -84,4 +84,4 @@ class EditableDoubleSpinBox(EditableWidget):
         if len(value) < 1:
             return
         self.__lastCursorPos = self.__leDblValue.cursorPosition()
-        self.valueEditingFinished(self.keys[0], float(value))
+        self.signalEditingFinished.emit(self.keys[0], float(value))

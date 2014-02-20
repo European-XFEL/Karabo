@@ -141,7 +141,7 @@ namespace karabo {
             if (m_nEndOfStreams >= m_expectedEndOfStreams) { // || get<bool>("singleEndOfStreamSuffice")) {
                 m_nEndOfStreams = 0;
                 m_isEndOfStream = true;
-                if (get<bool>("autoEndOfStream")) this->endOfStream();
+                this->endOfStream();
             }
         }
 
@@ -149,10 +149,11 @@ namespace karabo {
         void ComputeDevice::endOfStreamAction() {
             
             this->onEndOfStream();
-            const OutputChannels& outputChannels = this->getOutputChannels();
-            for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
-                it->second->signalEndOfStream();
-
+            if (get<bool>("autoEndOfStream")) {
+                const OutputChannels& outputChannels = this->getOutputChannels();
+                for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
+                    it->second->signalEndOfStream();
+            }
         }
 
 
@@ -215,7 +216,7 @@ namespace karabo {
         }
 
 
-        void ComputeDevice::doCompute() {
+        void ComputeDevice::doCompute() try{
             while (true) {
                 m_computeMutex.lock();
                 if (m_deviceIsDead) return;
@@ -223,6 +224,18 @@ namespace karabo {
                 m_computeMutex.unlock();
                 if (!m_isAborted) this->computeFinished();
             }
+        } catch (const karabo::util::Exception& e){
+            KARABO_LOG_FRAMEWORK_ERROR<<e.what();
+            KARABO_LOG_FRAMEWORK_ERROR<<"Restarting compute thread...";
+            if(m_computeThread.joinable()) m_computeThread.join();
+            m_computeMutex.lock();
+            m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));             
+        } catch (...){
+            KARABO_LOG_FRAMEWORK_ERROR<<"Caught unknown exception in compute thread";
+            KARABO_LOG_FRAMEWORK_ERROR<<"Restarting compute thread...";
+            if(m_computeThread.joinable()) m_computeThread.join();
+            m_computeMutex.lock();
+            m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));          
         }
 
 
@@ -247,7 +260,7 @@ namespace karabo {
         }
 
 
-        void ComputeDevice::doWait() {
+        void ComputeDevice::doWait() try {
             while (true) {
                 m_waitingIOMutex.lock();
                 if (m_deviceIsDead) return;
@@ -261,6 +274,18 @@ namespace karabo {
                 m_waitingIOMutex.unlock();
                 this->updatedIO();
             }
+        } catch (const karabo::util::Exception& e){
+            KARABO_LOG_FRAMEWORK_ERROR<<e.what();
+            KARABO_LOG_FRAMEWORK_ERROR<<"Restarting IO thread...";
+            if(m_waitingIOThread.joinable()) m_waitingIOThread.join();
+            m_waitingIOMutex.lock();
+            m_waitingIOThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doWait, this));
+        } catch (...){
+            KARABO_LOG_FRAMEWORK_ERROR<<"Caught unknown exception in IO thread";
+            KARABO_LOG_FRAMEWORK_ERROR<<"Restarting IO thread...";
+            if(m_waitingIOThread.joinable()) m_waitingIOThread.join();
+            m_waitingIOMutex.lock();
+            m_waitingIOThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doWait, this));
         }
 
 

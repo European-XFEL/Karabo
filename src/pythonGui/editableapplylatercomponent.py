@@ -17,7 +17,7 @@ from manager import Manager
 from messagebox import MessageBox
 from widget import EditableWidget
 
-from PyQt4.QtCore import pyqtSignal, pyqtSlot, QSize, QTimer
+from PyQt4.QtCore import pyqtSignal, pyqtSlot, QSize, QTimer, Qt
 from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
                         QToolButton, QWidget
 
@@ -117,8 +117,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
 
         # Use key to register component to manager
-        key = params.get('key')
-        Manager().registerEditableComponent(key, self)
+        Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
@@ -262,16 +261,17 @@ class EditableApplyLaterComponent(BaseComponent):
             Manager().unregisterEditableComponent(key, self)
 
 
-    def changeWidget(self, factory, proxyWidget, alias):
+    def changeWidget(self, factory, alias):
         self.classAlias = alias
         self.__initParams['value'] = self.value
 
         oldWidget = self.__editableWidget.widget
-        oldWidget.deleteLater()
         self.__editableWidget = factory.get_class(alias)(**self.__initParams)
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        proxyWidget.setWidget(self.__editableWidget.widget)
+        self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
+        oldWidget.parent().layout().insertWidget(0, self.__editableWidget.widget)
+        oldWidget.setParent(None)
         self.__editableWidget.widget.show()
 
         # Refresh new widget...

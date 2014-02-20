@@ -18,6 +18,7 @@
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/NodeElement.hh>
 #include <karabo/util/ChoiceElement.hh>
+#include <karabo/util/Version.hh>
 #include <karabo/io/Input.hh>
 #include <karabo/io/Output.hh>
 #include <karabo/log/Logger.hh>
@@ -180,7 +181,7 @@ namespace karabo {
             karabo::util::Hash instanceInfo;
             instanceInfo.set("type", "server");
             instanceInfo.set("serverId", m_serverId);
-            instanceInfo.set("version", KARABO_FRAMEWORK_VERSION);
+            instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", boost::asio::ip::host_name());
             instanceInfo.set("visibility", m_visibility);
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, instanceInfo));

@@ -109,6 +109,7 @@
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -296,6 +297,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <warningLevel>1</warningLevel>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"
             ex="false"
@@ -473,6 +477,7 @@
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>

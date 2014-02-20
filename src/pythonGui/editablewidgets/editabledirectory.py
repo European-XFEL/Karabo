@@ -64,11 +64,6 @@ class EditableDirectory(EditableWidget):
         self.__lePath.blockSignals(False)
 
 
-### slots ###
-    def onEditingFinished(self, value):
-        self.valueEditingFinished(self.keys[0], value)
-
-
     def onDirectoryClicked(self):
         directory = QFileDialog.getExistingDirectory(None, "Select directory")
         if len(directory) < 1:
