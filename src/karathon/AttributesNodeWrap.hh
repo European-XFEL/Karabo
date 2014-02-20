@@ -54,7 +54,7 @@ namespace karathon {
 
         static bp::object getValueAs(const Pointer& node, const bp::object& o_type) {
             using namespace karabo::util;
-            Types::ReferenceType reftype;
+            Types::ReferenceType reftype = Types::UNKNOWN;
             if (bp::extract<std::string>(o_type).check()) {
                 std::string type = bp::extract<std::string>(o_type);
                 reftype = Types::from<FromLiteral>(type);

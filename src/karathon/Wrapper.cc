@@ -230,6 +230,7 @@ namespace karathon {
         } catch (const boost::bad_any_cast& e) {
             KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(e.what()));
         }
+        return bp::object();   // make compiler happy -- we never reach this statement
     }
 
     void Wrapper::toAny(const bp::object& obj, boost::any& any) {
