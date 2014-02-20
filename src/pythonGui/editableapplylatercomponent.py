@@ -269,6 +269,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget = factory.get_class(alias)(**self.__initParams)
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
+        self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         oldWidget.parent().layout().insertWidget(0, self.__editableWidget.widget)
         oldWidget.setParent(None)
         self.__editableWidget.widget.show()
