@@ -103,6 +103,10 @@ void exportPyUtilEpochstamp() {
     e.def("toIso8601Ext"
           , (string (Epochstamp::*)(karabo::util::TIME_UNITS, bool) const) (&Epochstamp::toIso8601Ext)
           , (bp::arg("precision")=karabo::util::MICROSEC, bp::arg("extended")=(bool)(false)) );
+    
+     e.def("toTimestamp"
+          , (double (Epochstamp::*)(karabo::util::TIME_UNITS) const) (&Epochstamp::toTimestamp)
+          , (bp::arg("precision")=karabo::util::MICROSEC) );
 
     e.def("toFormattedString"
           , (string (Epochstamp::*)(const string &) const) (&Epochstamp::toFormattedString)

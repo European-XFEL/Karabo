@@ -29,7 +29,8 @@ class DisplayComponent(BaseComponent):
         self.__initParams = params
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
             classAlias)(**params)
-        
+
+        # Use key to register component to manager
         Manager().registerDisplayComponent(params.get("key"), self)
 
 
@@ -71,13 +72,11 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget.setErrorState(isError)
 
 
-    def addKeyValue(self, key, value):
-        if self.__displayWidget.minMaxAssociatedKeys[1] == 1:
-            existingKeys = self.__displayWidget.keys
-            for k in existingKeys:
-                self.removeKey(k)
-        Manager().registerDisplayComponent(key, self)
-        self.__displayWidget.addKeyValue(key, value)
+    def addKey(self, key):
+        if self.__displayWidget.addKey(key):
+            Manager().registerDisplayComponent(key, self)
+            return True
+        return False
 
 
     def removeKey(self, key):

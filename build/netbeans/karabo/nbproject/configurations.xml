@@ -80,10 +80,16 @@
         <itemPath>../../../src/karabo/io/BinaryFileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/CppInputHandler.cc</itemPath>
         <itemPath>../../../src/karabo/io/CppInputHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinaryFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashTextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Input.hh</itemPath>
         <itemPath>../../../src/karabo/io/InputHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaBinaryFileInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaInput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaTextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
       </logicalFolder>
@@ -93,10 +99,16 @@
         <itemPath>../../../src/karabo/io/BinaryFileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/CppOutputHandler.cc</itemPath>
         <itemPath>../../../src/karabo/io/CppOutputHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/HashBinaryFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/HashTextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Output.hh</itemPath>
         <itemPath>../../../src/karabo/io/OutputHandler.hh</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaBinaryFileOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaOutput.cc</itemPath>
+        <itemPath>../../../src/karabo/io/SchemaTextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/TextFileOutput.hh</itemPath>
       </logicalFolder>
@@ -117,6 +129,7 @@
         <itemPath>../../../src/karabo/io/SchemaXsdSerializer.hh</itemPath>
         <itemPath>../../../src/karabo/io/TextSerializer.hh</itemPath>
       </logicalFolder>
+      <itemPath>../../../src/karabo/io/FileTools.cc</itemPath>
       <itemPath>../../../src/karabo/io/FileTools.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="log" projectFiles="true">
@@ -256,6 +269,8 @@
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
+        <itemPath>../../../src/karabo/util/Version.cc</itemPath>
+        <itemPath>../../../src/karabo/util/Version.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Type System" projectFiles="true">
         <itemPath>../../../src/karabo/util/FromInt.cc</itemPath>
@@ -428,6 +443,7 @@
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -606,9 +622,24 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/FileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/FileTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinaryFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinarySerializer.cc"
@@ -629,6 +660,26 @@
       <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashTextFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
@@ -680,6 +731,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaBinarySerializer.cc"
             ex="false"
             tool="1"
@@ -688,6 +749,26 @@
       <item path="../../../src/karabo/io/SchemaBinarySerializer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
@@ -1704,6 +1785,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/Version.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/karaboDll.hh"
             ex="false"
             tool="3"
@@ -2048,6 +2139,7 @@
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -2227,9 +2319,24 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/FileTools.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/FileTools.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashBinaryFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashBinarySerializer.cc"
@@ -2250,6 +2357,26 @@
       <item path="../../../src/karabo/io/HashHdf5Serializer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/HashTextFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/HashXmlSerializer.cc"
@@ -2301,6 +2428,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaBinaryFileOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/SchemaBinarySerializer.cc"
             ex="false"
             tool="1"
@@ -2309,6 +2446,26 @@
       <item path="../../../src/karabo/io/SchemaBinarySerializer.hh"
             ex="false"
             tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaOutput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileInput.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/SchemaTextFileOutput.cc"
+            ex="false"
+            tool="1"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/SchemaXmlSerializer.cc"
@@ -3318,6 +3475,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/VectorElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/Version.hh"
             ex="false"
             tool="3"
             flavor2="0">

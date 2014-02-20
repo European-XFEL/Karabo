@@ -47,6 +47,8 @@ from xml.etree import ElementTree
 from functools import partial
 import os.path
 from bisect import bisect
+from itertools import chain
+
 
 class Action(Registry):
     actions = [ ]
@@ -260,33 +262,27 @@ class Select(Action):
     """ This is the default action. It has no icon nor text since
     it is selected if nothing else is selected. """
 
+
+    cursors = {'l': Qt.SizeHorCursor, 'r': Qt.SizeHorCursor,
+               't': Qt.SizeVerCursor, 'b': Qt.SizeVerCursor,
+               'lt': Qt.SizeFDiagCursor, 'lb': Qt.SizeBDiagCursor,
+               'rt': Qt.SizeBDiagCursor, 'rb': Qt.SizeFDiagCursor,
+               '': Qt.ArrowCursor, 'm': Qt.OpenHandCursor}
+
+
     def __init__(self):
         self.selection_start = self.moving_item = None
+        self.resize = ''
+
 
     def mousePressEvent(self, parent, event):
+        if self.resize:
+            return
         item = parent.ilayout.itemAtPosition(event.pos())
-        if item is not None and item.selected:
-            g = item.geometry()
-            p = event.pos()
-            if p.x() - g.left() < 10:
-                self.resize = "left"
-            elif g.right() - p.x() < 10:
-                self.resize = "right"
-            elif p.y() - g.top() < 10:
-                self.resize = "top"
-            elif g.bottom() - p.y() < 10:
-                self.resize = "bottom"
-            else:
-                self.resize = None
-            if self.resize is not None:
-                self.resize_item = item
-                return
         if item is None:
             self.selection_stop = self.selection_start = event.pos()
             parent.update()
         else:
-            self.moving_item = item
-            self.moving_pos = event.pos()
             if event.modifiers() & Qt.ShiftModifier:
                 item.selected = not item.selected
             else:
@@ -295,39 +291,63 @@ class Select(Action):
             parent.update()
             event.accept()
 
+
     def mouseMoveEvent(self, parent, event):
-        if self.moving_item is not None:
-            self.moving_item.translate(event.pos() - self.moving_pos)
-            self.moving_pos = event.pos()
-            event.accept()
-        elif self.selection_start is not None:
-            self.selection_stop = event.pos()
-            event.accept()
-        elif self.resize is not None:
-            og = self.resize_item.geometry()
-            g = QRect(og)
-            if self.resize == "top":
-                g.setTop(event.pos().y())
-            elif self.resize == "bottom":
-                g.setBottom(event.pos().y())
-            elif self.resize == "left":
-                g.setLeft(event.pos().x())
-            elif self.resize == "right":
-                g.setRight(event.pos().x())
-            min = self.resize_item.minimumSize()
-            max = self.resize_item.maximumSize()
-            if (not min.width() <= g.size().width() <= max.width() or
-                not min.height() <= g.size().height() <= max.height()) and (
-                min.width() <= og.size().width() <= max.width() and
-                min.height() <= og.size().height() <= max.height()):
-                return
-            self.resize_item.set_geometry(g)
-            parent.ilayout.update()
-        parent.update()
+        if not event.buttons():
+            item = parent.ilayout.itemAtPosition(event.pos())
+            self.resize = ""
+            if item is not None and item.selected:
+                g = item.geometry()
+                p = event.pos()
+                if p.x() - g.left() < 5:
+                    self.resize += 'l'
+                elif g.right() - p.x() < 5:
+                    self.resize += 'r'
+                if p.y() - g.top() < 5:
+                    self.resize += 't'
+                elif g.bottom() - p.y() < 5:
+                    self.resize += 'b'
+                if not self.resize:
+                    self.resize = 'm'
+                self.resize_item = item
+                self.moving_pos = event.pos()
+            parent.setCursor(self.cursors[self.resize])
+        else:
+            if self.resize == 'm':
+                for c in chain(parent.ilayout, parent.ilayout.shapes):
+                    if c.selected:
+                        c.translate(event.pos() - self.moving_pos)
+                self.moving_pos = event.pos()
+                event.accept()
+            elif self.selection_start is not None:
+                self.selection_stop = event.pos()
+                event.accept()
+            elif self.resize:
+                og = self.resize_item.geometry()
+                g = QRect(og)
+                if "t" in self.resize:
+                    g.setTop(event.pos().y())
+                elif "b" in self.resize:
+                    g.setBottom(event.pos().y())
+                if "l" in self.resize:
+                    g.setLeft(event.pos().x())
+                elif "r" in self.resize:
+                    g.setRight(event.pos().x())
+                min = self.resize_item.minimumSize()
+                max = self.resize_item.maximumSize()
+                if (not min.width() <= g.size().width() <= max.width() or
+                    not min.height() <= g.size().height() <= max.height()) and (
+                    min.width() <= og.size().width() <= max.width() and
+                    min.height() <= og.size().height() <= max.height()):
+                    return
+                self.resize_item.set_geometry(g)
+                parent.ilayout.update()
+            parent.update()
+
 
     def mouseReleaseEvent(self, parent, event):
-        self.moving_item = None
-        self.resize = self.resize_item = None
+        self.resize = ""
+        self.resize_item = None
         if self.selection_start is not None:
             rect = QRect(self.selection_start, self.selection_stop)
             if not event.modifiers() & Qt.ShiftModifier:
@@ -909,6 +929,9 @@ class FixedLayout(Layout, QLayout):
                     if isinstance(p, Layout):
                         stack.extend(p)
                     else:
+                        if p.component is not None:
+                            for k in p.component.keys:
+                                Manager().removeVisibleDevice(k)
                         p.setParent(None)
                 del self[i]
             else:
@@ -1166,6 +1189,15 @@ class ProxyWidget(QStackedWidget):
             if ok:
                 self.currentWidget().setText(text)
 
+    def dropEvent(self, event):
+        source = event.source()
+        if source is None or not isinstance(source, ParameterTreeWidget):
+            return
+        for item in source.selectedItems():
+            if self.component.addKey(item.internalKey):
+                Manager().newVisibleDevice(item.internalKey)
+                event.accept()
+
 
 class GraphicsView(QSvgWidget):
     def __init__(self, parent, designMode=True):
@@ -1190,6 +1222,8 @@ class GraphicsView(QSvgWidget):
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
+        self.setAttribute(Qt.WA_MouseTracking)
+
 
     def add_actions(self, source):
         for v in Action.actions:
@@ -1249,10 +1283,22 @@ class GraphicsView(QSvgWidget):
         if reply == QMessageBox.Save:
             self.saveSceneLayoutToFile()
 
-        self.inner.setParent(None)
-        self.inner = QWidget(self)
+        self.clean()
         self.ilayout = FixedLayout()
         self.inner.setLayout(self.ilayout)
+        self.layout().addWidget(self.inner)
+
+
+    def clean(self):
+        """Remove all child widgets"""
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and c.component is not None:
+                for k in c.component.keys:
+                    Manager().removeVisibleDevice(k)
+            c.setParent(None)
+        self.inner.setParent(None)
+        self.inner = QWidget(self)
+        self.ilayout = None
         self.layout().addWidget(self.inner)
 
 
@@ -1320,11 +1366,9 @@ class GraphicsView(QSvgWidget):
     def openScene(self, filename):
         self.tree = ElementTree.parse(filename)
         root = self.tree.getroot()
-        self.inner.setParent(None)
-        self.inner = QWidget(self)
+        self.clean()
         self.ilayout = FixedLayout.load(root, None)
         self.inner.setLayout(self.ilayout)
-        self.layout().addWidget(self.inner)
         self.designMode = True
 
         ar = QByteArray()
@@ -1524,6 +1568,14 @@ class GraphicsView(QSvgWidget):
 
 
     def dropEvent(self, event):
+        w = self.inner.childAt(event.pos())
+        if w is not None:
+            while not isinstance(w, ProxyWidget):
+                w = w.parent()
+            w.dropEvent(event)
+            if event.isAccepted():
+                return
+
         source = event.source()
         customItem = None
         if isinstance(source, ParameterTreeWidget):

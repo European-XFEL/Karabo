@@ -404,19 +404,19 @@ namespace karabo {
                 //bool isLastFlagIsUp = false; // TODO continue here
                 for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
                     //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
-                    Epochstamp current;
                     try {
-                        current = Epochstamp::fromHashAttributes(rit->getAttributes("v"));
+                        Epochstamp current(Epochstamp::fromHashAttributes(rit->getAttributes("v")));
+                   
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toIso8601();
+                        if (t1 > current) collect = true; // Time until is bigger then current timestamp, so collect
+                        if (collect) result.push_back(*rit);
+                        if (t0 > current) { // Time from is now bigger than current flag -> we are done
+                            done = true;
+                            break;
+                        }                        
                     } catch (Exception& e) {
                         // TODO Clean this
                         continue;
-                    }
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toFormattedString();
-                    if (t1 > current) collect = true; // Time until is bigger then current timestamp, so collect
-                    if (collect) result.push_back(*rit);
-                    if (t0 > current) { // Time from is now bigger than current flag -> we are done
-                        done = true;
-                        break;
                     }
                 }
                 if (!done) { // Puuh! Go further back!
@@ -428,7 +428,7 @@ namespace karabo {
 
                         vector<Hash> tmp = getData(deviceId, key, j);
                         bool collect = false;
-                        bool done = false;
+                        //bool done = false;
                         for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
                             //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
                             Epochstamp current;
