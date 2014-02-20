@@ -126,7 +126,7 @@ class EditableChoiceElement(EditableWidget):
     def onEditingFinished(self, index):
         if index > -1 and index < len(self.childItemList):
             self._updateChoiceItems(index)
-        self.valueEditingFinished(self.keys[0], self.value)
+        self.signalEditingFinished.emit(self.keys[0], self.value)
 
 
     def copy(self, item):
