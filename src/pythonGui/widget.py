@@ -128,6 +128,5 @@ class EditableWidget(Widget):
     def addParameters(self, **params):
         pass
 
-    
-    def valueEditingFinished(self, key, value):
-        self.signalEditingFinished.emit(key, value)
+    def onEditingFinished(self, value):
+        self.signalEditingFinished.emit(self.keys[0], value)
