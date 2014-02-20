@@ -125,6 +125,11 @@ namespace karabo {
                 m_channelId = Memory<T>::registerChannel();
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
                 m_inactiveChunk = Memory<T>::registerChunk(m_channelId);
+               
+                
+                
+                KARABO_LOG_FRAMEWORK_DEBUG << "Inputting on Channel "<<m_channelId<<" and chunkId "<<m_activeChunk<<" and "<<m_inactiveChunk;
+                
             }
 
             void parseOutputChannelConfiguration(const karabo::util::Hash& config) {
@@ -145,7 +150,7 @@ namespace karabo {
                 if (config.has("minData")) config.get("minData", m_minData);
                 if (config.has("keepDataUntilNew")) config.get("keepDataUntilNew", m_keepDataUntilNew);
                 if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
-                if (config.has("m_respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
+                if (config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
@@ -231,15 +236,19 @@ namespace karabo {
             void onTcpChannelRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& data) {
                 m_isEndOfStream = false;
                 if (header.has("endOfStream")) {
+                    //if(!m_respondToEndOfStream) {
+                    //    channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+                    //    return;
+                    //}
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Receiving EOS";
-                    m_isEndOfStream = true;
+                    if(m_respondToEndOfStream) m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Triggering another compute";
                         this->swapBuffers();
                         this->triggerIOEvent();
                     }
 
-                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Triggering eos function";
+                    if(m_respondToEndOfStream) KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Triggering eos function";
                     if(m_respondToEndOfStream) this->triggerEndOfStreamEvent();
                    
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
@@ -250,11 +259,15 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: reading from local memory";
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Inputting from Channel "<<channelId<<" and chunkId "<<chunkId;
+                    Memory<T>::subscribeChunk(channelId, chunkId);
                     Memory<T>::writeChunk(Memory<T>::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
+                    Memory<T>::unsubscribeChunk(channelId, chunkId);
                 } else { // TCP data
                     boost::mutex::scoped_lock lock(m_mutex);
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: reading from remote memory (over tcp)";
                     Memory<T>::writeAsContiguosBlock(data, header, m_channelId, m_inactiveChunk);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: wrote data";
                 }
 
                 m_mutex.lock();
@@ -274,6 +287,7 @@ namespace karabo {
                 } else { // Data complete on both pots now
                     if (m_keepDataUntilNew) {
                         m_keepDataUntilNew = false;
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Updating";
                         update();
                         m_keepDataUntilNew = true;
                     }
@@ -308,7 +322,9 @@ namespace karabo {
                 // Clear active chunk
                 Memory<T>::clearChunk(m_channelId, m_activeChunk);
                 // Swap buffers
-                std::swap(m_activeChunk, m_inactiveChunk);
+                //std::swap(m_activeChunk, m_inactiveChunk);
+                swapBuffers();
+                
                 // Fetch number of data pieces
                 size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
                 m_mutex.unlock();
@@ -326,6 +342,7 @@ namespace karabo {
             }
 
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel) {
+                KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: notifying output channel that "<<this->getInstanceId()<<" is read for next read.";
                 channel->write(karabo::util::Hash("reason", "update", "instanceId", this->getInstanceId()));
             }
             

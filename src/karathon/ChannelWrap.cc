@@ -13,50 +13,78 @@ using namespace std;
 using namespace karabo::util;
 using namespace karabo::net;
 
-std::map<karabo::net::Channel*, karabo::util::Hash> karathon::ChannelWrap::m_channelReadHandlers;
-std::map<karabo::net::Channel*, karabo::util::Hash> karathon::ChannelWrap::m_channelWriteHandlers;
-std::map<karabo::net::Channel*, karabo::util::Hash> karathon::ChannelWrap::m_channelErrorHandlers;
-std::map<karabo::net::Channel*, karabo::util::Hash> karathon::ChannelWrap::m_channelWaitHandlers;
-boost::mutex karathon::ChannelWrap::m_changedChannelReadHandlersMutex;
-boost::mutex karathon::ChannelWrap::m_changedChannelWriteHandlersMutex;
-boost::mutex karathon::ChannelWrap::m_changedChannelErrorHandlersMutex;
-boost::mutex karathon::ChannelWrap::m_changedChannelWaitHandlersMutex;
+std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> > karathon::ChannelWrap::m_handlers;
+boost::mutex karathon::ChannelWrap::m_changedHandlersMutex;
 
 namespace karathon {
 
     void ChannelWrap::registerReadHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        boost::mutex::scoped_lock lock(m_changedChannelReadHandlersMutex);
-        m_channelReadHandlers[channel.get()] = karabo::util::Hash("_function", handler);
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Channel*, Hash>();
+        map<Channel*, Hash>& cmap = m_handlers[ioserv.get()];
+        map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+        if (ii == cmap.end()) cmap[channel.get()] = Hash();
+        Hash& hash = cmap[channel.get()];
+        hash.set("_read", handler); // register python read handler for channel
     }
 
     void ChannelWrap::registerWriteHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        boost::mutex::scoped_lock lock(m_changedChannelWriteHandlersMutex);
-        m_channelWriteHandlers[channel.get()] = karabo::util::Hash("_function", handler);
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Channel*, Hash>();
+        map<Channel*, Hash>& cmap = m_handlers[ioserv.get()];
+        map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+        if (ii == cmap.end()) cmap[channel.get()] = Hash();
+        Hash& hash = cmap[channel.get()];
+        hash.set("_write", handler); // register python write handler for channel
     }
 
     void ChannelWrap::registerErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        boost::mutex::scoped_lock lock(m_changedChannelErrorHandlersMutex);
-        m_channelErrorHandlers[channel.get()] = karabo::util::Hash("_function", handler);
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Channel*, Hash>();
+        map<Channel*, Hash>& cmap = m_handlers[ioserv.get()];
+        map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+        if (ii == cmap.end()) cmap[channel.get()] = Hash();
+        Hash& hash = cmap[channel.get()];
+        hash.set("_error", handler); // register python write handler for channel
     }
 
     void ChannelWrap::registerWaitHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
-        boost::mutex::scoped_lock lock(m_changedChannelWaitHandlersMutex);
-        m_channelWaitHandlers[channel.get()] = karabo::util::Hash("_function", handler);
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Channel*, Hash>();
+        map<Channel*, Hash>& cmap = m_handlers[ioserv.get()];
+        map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+        if (ii == cmap.end()) cmap[channel.get()] = Hash();
+        Hash& hash = cmap[channel.get()];
+        hash.set("_wait", handler); // register python write handler for channel
     }
 
     bp::object ChannelWrap::getPythonReadHandler(karabo::net::Channel::Pointer channel) {
-        Hash hash;
-        {
-            boost::mutex::scoped_lock lock(m_changedChannelReadHandlersMutex);
-            std::map<Channel*, Hash>::iterator it = m_channelReadHandlers.find(channel.get());
-            if (it == m_channelReadHandlers.end())
-                return bp::object(); // throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
-            hash += it->second;
-            m_channelReadHandlers.erase(it);
-        }
-        if (!hash.has("_function"))
-            throw KARABO_PYTHON_EXCEPTION("Logical error: connection registration parameters are not found");
-        return hash.get<bp::object>("_function");
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) return bp::object();
+        map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+        map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+        if (ii == cmap.end()) return bp::object();
+        Hash& h = ii->second;
+        if (!h.has("_read"))
+            throw KARABO_PYTHON_EXCEPTION("Logical error: Read handler's registration is not found");
+        bp::object onread = h.get<bp::object>("_read");
+        h.erase("_read");
+        return onread;
     }
 
     bp::object ChannelWrap::readStr(karabo::net::Channel::Pointer channel) {
@@ -244,20 +272,24 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyWriteCompleteHandler(karabo::net::Channel::Pointer channel) {
-        ScopedGILAcquire gil;
-        Hash hash;
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        bp::object onwrite;
         {
-            boost::mutex::scoped_lock lock(m_changedChannelWriteHandlersMutex);
-            std::map<Channel*, Hash>::iterator it = m_channelWriteHandlers.find(channel.get());
-            if (it == m_channelWriteHandlers.end())
-                return; // throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
-            hash += it->second;
-            m_channelWriteHandlers.erase(it);
+            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+            map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+            if (it == m_handlers.end()) return;
+            map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+            map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+            if (ii == cmap.end()) return;
+            Hash& h = ii->second;
+            if (!h.has("_write"))
+                throw KARABO_PYTHON_EXCEPTION("Logical error: WriteComplete handler's registration is not found");
+            onwrite = h.get<bp::object>("_write");
+            h.erase("_write");
         }
-        if (!hash.has("_function"))
-            throw KARABO_PYTHON_EXCEPTION("Logical error: connection registration parameters are not found");
-        bp::object handler = hash.get<bp::object>("_function");
-        handler(bp::object(channel));
+        ScopedGILAcquire gil;
+        onwrite(bp::object(channel));
     }
 
     void ChannelWrap::writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler) {
@@ -304,19 +336,24 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
-        ScopedGILAcquire gil;
-        Hash hash;
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        bp::object onerr;
         {
-            boost::mutex::scoped_lock lock(m_changedChannelErrorHandlersMutex);
-            std::map<Channel*, Hash>::iterator it = m_channelErrorHandlers.find(channel.get());
-            if (it == m_channelErrorHandlers.end())
-                return; // throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
-            hash += it->second;
+            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+            map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+            if (it == m_handlers.end()) return;
+            map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+            map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+            if (ii == cmap.end()) return;
+            Hash& h = ii->second;
+            if (!h.has("_error"))
+                throw KARABO_PYTHON_EXCEPTION("Logical error: Error handler's registration is not found");
+            onerr = h.get<bp::object>("_error");
+            //h.erase("_error");     <--- comment it:  error handler lives forever
         }
-        if (!hash.has("_function"))
-            throw KARABO_PYTHON_EXCEPTION("Logical error: connection registration parameters are not found");
-        bp::object handler = hash.get<bp::object>("_function");
-        handler(bp::object(channel), bp::object(code));
+        ScopedGILAcquire gil;
+        onerr(bp::object(channel), bp::object(code));
     }
 
     void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
@@ -331,19 +368,23 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel) {
-        ScopedGILAcquire gil;
-        Hash hash;
+        Connection::Pointer connection = channel->getConnection();
+        IOService::Pointer ioserv = connection->getIOService();
+        bp::object onwait;
         {
-            boost::mutex::scoped_lock lock(m_changedChannelWaitHandlersMutex);
-            std::map<Channel*, Hash>::iterator it = m_channelWaitHandlers.find(channel.get());
-            if (it == m_channelWaitHandlers.end())
-                return; // throw KARABO_PYTHON_EXCEPTION("Logical error: connection is not registered");
-            hash += it->second;
-            m_channelWaitHandlers.erase(it);
+            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+            map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+            if (it == m_handlers.end()) return;
+            map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+            map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+            if (ii == cmap.end()) return;
+            Hash& h = ii->second;
+            if (!h.has("_wait"))
+                throw KARABO_PYTHON_EXCEPTION("Logical error: WaitComplete handler's registration is not found");
+            onwait = h.get<bp::object>("_wait");
+            //h.erase("_error");     <--- comment it:  error handler lives forever
         }
-        if (!hash.has("_function"))
-            throw KARABO_PYTHON_EXCEPTION("Logical error: connection registration parameters are not found");
-        bp::object handler = hash.get<bp::object>("_function");
-        handler(bp::object(channel));
+        ScopedGILAcquire gil;
+        onwait(bp::object(channel));
     }
 }

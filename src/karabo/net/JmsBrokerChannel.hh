@@ -97,6 +97,9 @@ namespace karabo {
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
             
+            // Consumer mutex
+            boost::mutex m_syncConsumerMutex;
+            
 
         public:
 
