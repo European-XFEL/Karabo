@@ -84,7 +84,7 @@ class EditableBitfield(EditableWidget):
 
 
     def onEditingFinished(self, value):
-        self.valueEditingFinished(self.keys[0], value)
+        self.signalEditingFinished.emit(self.keys[0], value)
 
 
 class DisplayBitfield(DisplayWidget):

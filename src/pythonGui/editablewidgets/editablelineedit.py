@@ -75,4 +75,4 @@ class EditableLineEdit(EditableWidget):
          #   self.__lineEdit.setText("")
          #   return
         self.__lastCursorPos = self.__lineEdit.cursorPosition()
-        self.valueEditingFinished(self.keys[0], value)
+        self.signalEditingFinished.emit(self.keys[0], value)

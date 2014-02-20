@@ -86,4 +86,4 @@ class EditableList(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.__label.value = value
-        self.valueEditingFinished(self.keys[0], value)
+        self.signalEditingFinished.emit(self.keys[0], value)
