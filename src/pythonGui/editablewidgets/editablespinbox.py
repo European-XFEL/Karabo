@@ -24,8 +24,6 @@ import globals
 
 from widget import EditableWidget
 
-from karabo.karathon import Types
-
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QSpinBox
 
