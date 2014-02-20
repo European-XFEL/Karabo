@@ -16,6 +16,13 @@ ElementTree.register_namespace("krb", ns_karabo[1:-1])
 Registry = None
 
 
+class Monkey(object):
+    def __new__(cls, name, bases, dict):
+        for k, v in dict.iteritems():
+            setattr(bases[0], k, v)
+        return bases[0]
+
+
 class Metaclass(QObject.__class__):
     def __init__(self, name, bases, dict):
         super(Metaclass, self).__init__(name, bases, dict)

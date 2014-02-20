@@ -1,7 +1,6 @@
 import hashtypes
-from hashtypes import Char as cc, Simple as ss
 from enums import AccessMode, NavigationItemTypes
-from registry import Registry
+from registry import Monkey
 
 from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
@@ -15,19 +14,9 @@ from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from PyQt4.QtGui import QIcon
 
 
-class Injector(Registry):
-    fromname = { }
+class Type(hashtypes.Type):
+    __metaclass__ = Monkey
 
-    @classmethod
-    def register(cls, name, dict):
-        for k, v in hashtypes.Type.fromname.iteritems():
-            if (k not in cls.fromname or issubclass(cls, cls.fromname[k])) and (
-                    issubclass(v, cls.__bases__[-1])):
-                cls.fromname[k] = cls
-
-
-
-class Simple(Injector, hashtypes.Simple):
     @classmethod
     def populateItem(cls, item, attrs, classtype, treewidget):
         if "options" in attrs:
@@ -57,12 +46,14 @@ class Simple(Injector, hashtypes.Simple):
                 treewidget.onApplyChanged)
 
 
-class String(Simple, hashtypes.String):
+class String(hashtypes.String):
+    __metaclass__ = Monkey
+
     @classmethod
-    def populateItem(self, item, attrs, classtype, treewidget):
+    def populateItem(cls, item, attrs, classtype, treewidget):
         item.classAlias = "Text Field"
         item.setIcon(0, QIcon(":string"))
-        super(String, self).populateItem(item, attrs, classtype, treewidget)
+        super(String, cls).populateItem(item, attrs, classtype, treewidget)
 
         ca = dict(directory='Directory', fileIn='File In',
                   fileOut='fileOut').get(attrs.get('displayType'))
@@ -71,7 +62,9 @@ class String(Simple, hashtypes.String):
             item.setIcon(0, QIcon(':path'))
 
 
-class Integer(Simple, hashtypes.Integer):
+class Integer(hashtypes.Integer):
+    __metaclass__ = Monkey
+
     @classmethod
     def populateItem(self, item, attrs, classtype, treewidget):
         item.classAlias = 'Integer Field'
@@ -79,7 +72,9 @@ class Integer(Simple, hashtypes.Integer):
         super(Integer, self).populateItem(item, attrs, classtype, treewidget)
 
 
-class Number(Simple, hashtypes.Number):
+class Number(hashtypes.Number):
+    __metaclass__ = Monkey
+
     @classmethod
     def populateItem(self, item, attrs, classtype, treewidget):
         item.classAlias = "Float Field"
@@ -87,7 +82,9 @@ class Number(Simple, hashtypes.Number):
         super(Number, self).populateItem(item, attrs, classtype, treewidget)
 
 
-class Bool(Simple, hashtypes.Bool):
+class Bool(hashtypes.Bool):
+    __metaclass__ = Monkey
+
     @classmethod
     def populateItem(self, item, attrs, classtype, treewidget):
         item.classAlias = "Toggle Field"
@@ -167,7 +164,7 @@ class SchemaReader(object):
         self.copyAttr(item, attrs, 'defaultValue')
         self.copyAttr(item, attrs, 'metricPrefixSymbol')
         self.copyAttr(item, attrs, 'unitSymbol')
-        Injector.fromname[attrs['valueType']].populateItem(
+        Type.fromname[attrs['valueType']].populateItem(
             item, attrs, self.deviceType == NavigationItemTypes.CLASS,
             self.treeWidget)
         keys = dict(warnLow='Warn Low', warnHigh='Warn High',
