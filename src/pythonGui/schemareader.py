@@ -40,7 +40,7 @@ class Type(hashtypes.Type):
                 value=item.defaultValue,
                 metricPrefixSymbol=item.metricPrefixSymbol,
                 enumeration=item.enumeration,
-                unitSymbol=item.unitSymbol)
+                unitSymbol=item.unitSymbol, valueType=item.valueType)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treewidget.onApplyChanged)
@@ -164,7 +164,8 @@ class SchemaReader(object):
         self.copyAttr(item, attrs, 'defaultValue')
         self.copyAttr(item, attrs, 'metricPrefixSymbol')
         self.copyAttr(item, attrs, 'unitSymbol')
-        Type.fromname[attrs['valueType']].populateItem(
+        item.valueType = Type.fromname[attrs['valueType']]
+        item.valueType.populateItem(
             item, attrs, self.deviceType == NavigationItemTypes.CLASS,
             self.treeWidget)
         keys = dict(warnLow='Warn Low', warnHigh='Warn High',
@@ -180,8 +181,7 @@ class SchemaReader(object):
                 fullPath = key + "@" + k
                 value = attrs[k]
 
-                aitem = AttributeTreeWidgetItem(fullPath, self.treeWidget,
-                                                parent)
+                aitem = AttributeTreeWidgetItem(fullPath, self.treeWidget, item)
                 aitem.setText(0, v)
 
                 aitem.classAlias = item.classAlias
@@ -193,15 +193,15 @@ class SchemaReader(object):
                 editableComponent = None
                 if self.deviceType == NavigationItemTypes.CLASS:
                     editableComponent = EditableNoApplyComponent(
-                        classAlias=item.classAlias, key=item.internalKey,
-                        value=value)
+                        classAlias=aitem.classAlias, key=aitem.internalKey,
+                        value=value, valueType=aitem.valueType)
                 else:
                     aitem.displayComponent.onValueChanged(key, value)
 
                     if accessMode == AccessMode.RECONFIGURABLE:
                         editableComponent = EditableApplyLaterComponent(
-                            classAlias=item.classAlias, key=item.internalKey,
-                            value=value)
+                            classAlias=aitem.classAlias, key=aitem.internalKey,
+                            value=value, valueType=aitem.valueType)
                         editableComponent.signalApplyChanged.connect(
                             self.treeWidget.onApplyChanged)
                 aitem.editableComponent = editableComponent
