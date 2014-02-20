@@ -30,11 +30,12 @@ class Number(Simple):
     pass
 
 
-class Vector(object):
+class Vector(Simple):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        return numpy.array([super(Vector, cls).read(file) for i in range(size)])
+        return numpy.array(file.readFormat('{}{}'.format(size, cls.format)),
+            dtype=cls.numpy)
 
 
     @classmethod
@@ -222,7 +223,7 @@ class String(Type):
         file.file.write(data)
 
 
-class VectorString(Vector, String):
+class VectorString(String):
     @staticmethod
     def fromstring(s):
         return unicode(s).split(',')
@@ -231,7 +232,7 @@ class VectorString(Vector, String):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        return [super(Vector, cls).read(file) for i in xrange(size)]
+        return [String.read(file) for i in xrange(size)]
 
 
 class Hash(Type):
