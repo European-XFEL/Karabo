@@ -47,6 +47,8 @@ from xml.etree import ElementTree
 from functools import partial
 import os.path
 from bisect import bisect
+from itertools import chain
+
 
 class Action(Registry):
     actions = [ ]
@@ -265,7 +267,7 @@ class Select(Action):
                't': Qt.SizeVerCursor, 'b': Qt.SizeVerCursor,
                'lt': Qt.SizeFDiagCursor, 'lb': Qt.SizeBDiagCursor,
                'rt': Qt.SizeBDiagCursor, 'rb': Qt.SizeFDiagCursor,
-               '': Qt.ArrowCursor}
+               '': Qt.ArrowCursor, 'm': Qt.OpenHandCursor}
 
 
     def __init__(self):
@@ -281,8 +283,6 @@ class Select(Action):
             self.selection_stop = self.selection_start = event.pos()
             parent.update()
         else:
-            self.moving_item = item
-            self.moving_pos = event.pos()
             if event.modifiers() & Qt.ShiftModifier:
                 item.selected = not item.selected
             else:
@@ -307,12 +307,16 @@ class Select(Action):
                     self.resize += 't'
                 elif g.bottom() - p.y() < 5:
                     self.resize += 'b'
-                if self.resize:
-                    self.resize_item = item
-            parent.setCursor(self.cursors.get(self.resize))
+                if not self.resize:
+                    self.resize = 'm'
+                self.resize_item = item
+                self.moving_pos = event.pos()
+            parent.setCursor(self.cursors[self.resize])
         else:
-            if self.moving_item is not None:
-                self.moving_item.translate(event.pos() - self.moving_pos)
+            if self.resize == 'm':
+                for c in chain(parent.ilayout, parent.ilayout.shapes):
+                    if c.selected:
+                        c.translate(event.pos() - self.moving_pos)
                 self.moving_pos = event.pos()
                 event.accept()
             elif self.selection_start is not None:
@@ -342,8 +346,8 @@ class Select(Action):
 
 
     def mouseReleaseEvent(self, parent, event):
-        self.moving_item = None
-        self.resize = self.resize_item = None
+        self.resize = ""
+        self.resize_item = None
         if self.selection_start is not None:
             rect = QRect(self.selection_start, self.selection_stop)
             if not event.modifiers() & Qt.ShiftModifier:
