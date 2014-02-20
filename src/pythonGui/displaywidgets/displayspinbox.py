@@ -20,11 +20,7 @@
 
 __all__ = ["DisplaySpinBox"]
 
-import globals
-
 from widget import DisplayWidget
-
-from karabo.karathon import Types
 
 from PyQt4.QtGui import QSpinBox
 

@@ -12,8 +12,6 @@
 __all__ = ["ConfigurationPanel"]
 
 
-import const
-
 from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
@@ -24,8 +22,7 @@ from navigationtreeview import NavigationTreeView
 
 from schemareader import SchemaReader 
 
-from karabo.karathon import *
-from PyQt4.QtCore import SIGNAL, Qt, QTimer
+from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
 
