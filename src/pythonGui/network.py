@@ -132,15 +132,15 @@ class Network(QObject):
         """
         End connection to server and database.
         """
-        if self._logout():
-            Manager().disconnectedFromServer()
+        self._logout()
+        Manager().disconnectedFromServer()
 
-            self.__tcpSocket.disconnectFromHost()
-            if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
-                self.__tcpSocket.waitForDisconnected(5000):
-                print "Disconnected from server"
-            else:
-                print "Disconnect failed:", self.__tcpSocket.errorString()
+        self.__tcpSocket.disconnectFromHost()
+        if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
+            self.__tcpSocket.waitForDisconnected(5000):
+            print "Disconnected from server"
+        else:
+            print "Disconnect failed:", self.__tcpSocket.errorString()
 
 
     def _login(self):
@@ -178,8 +178,8 @@ class Network(QObject):
             except Exception, e:
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
-                raise RuntimeError("Login exception. Please verify, if service is running. " + str(e))
-
+                print "Login problem. Please verify, if service is running. " + str(e)
+                
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
                 self._sendLoginInformation(self.__username, self.__password, \
@@ -205,12 +205,12 @@ class Network(QObject):
         Authentification logout.
         """
         # Execute Logout
-        if self.__auth is None: return False
+        if self.__auth is None: return
 
         try:
-            return self.__auth.logout()
+            self.__auth.logout()
         except Exception, e:
-            raise RuntimeError("Logout exception. Please verify, if service is running. " + str(e))
+            print "Logout problem. Please verify, if service is running. " + str(e)
 
 
 ### Slots ###
