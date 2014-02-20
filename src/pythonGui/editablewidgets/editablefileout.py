@@ -64,11 +64,6 @@ class EditableFileOut(EditableWidget):
         self.__lePath.blockSignals(False)
 
 
-### slots ###
-    def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
-
-
     def onFileOutClicked(self):
         fileOut = QFileDialog.getSaveFileName(None, "Select output file")
         if len(fileOut) < 1:

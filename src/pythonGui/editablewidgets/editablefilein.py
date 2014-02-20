@@ -64,11 +64,6 @@ class EditableFileIn(EditableWidget):
         self.__lePath.blockSignals(False)
 
 
-### slots ###
-    def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
-
-
     def onFileInClicked(self):
         fileIn = QFileDialog.getOpenFileName(None, "Select input file")
         if len(fileIn) < 1:
