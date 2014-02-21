@@ -624,7 +624,6 @@ class ConfigurationPanel(QWidget):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
-                print "twParameterEditorPage", twParameterEditorPage.isVisible()
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:

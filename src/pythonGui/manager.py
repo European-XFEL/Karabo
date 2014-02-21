@@ -705,16 +705,14 @@ class _Manager(QObject):
 
 
     def handleClassSchema(self, config):
-        print "handleClassSchema"
         path = str(config.paths()[0])
         schema = config.get(path)
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        
+
+        print "handleClassSchema", path
         path = path.split('.description', 1)[0]
         classId = path.split('.')[3]
-        print "path", path
-        print "classId", classId
         self.onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
 
 
@@ -723,8 +721,8 @@ class _Manager(QObject):
         if self.__hash.has(path):
             return self.__hash.get(path)
 
-        # Send network request
         print "getClassSchema", serverId, classId
+        # Send network request
         self.signalGetClassSchema.emit(serverId, classId)
         return None
     
