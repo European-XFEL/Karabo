@@ -24,6 +24,8 @@ namespace karabo {
         public:
 
             KARABO_CLASSINFO(CpuEnvironment, "cpu", "1.0")
+            
+            virtual ~CpuEnvironment() {}
 
             static void expectedParameters(karabo::util::Schema& expected) {
             }

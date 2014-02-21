@@ -352,13 +352,14 @@ namespace karabo {
                     v[1] = dimY();
                     return v;
                 }
-                 if (nDims == 3) {
+                if (nDims == 3) {
                     std::vector<unsigned long long> v(3);
                     v[0] = dimX();
                     v[1] = dimY();
                     v[2] = dimZ();
                     return v;
                 }
+                return std::vector<unsigned long long>();
             }
 
             bool isEmpty() const {

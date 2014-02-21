@@ -20,7 +20,8 @@ import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 import globals
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile)
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
+                             Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -30,8 +31,8 @@ from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 
 class DataNotifier(QObject):
-    signalUpdateComponent = pyqtSignal(str, object) # internalKey, value, timestamp (TODO)
-    signalUpdateDisplayValue = pyqtSignal(str, object)
+    signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
+    signalUpdateDisplayValue = pyqtSignal(str, object, object)
 
 
     def __init__(self, key, component):
@@ -42,20 +43,21 @@ class DataNotifier(QObject):
         self.addComponent(key, component)
 
 
-    def onValueChanged(self, key, value):
+    def onValueChanged(self, key, value, timestamp=None):
         self.value = value
+        self.timestamp = timestamp
 
 
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
         if hasattr(self, "value"):
-            self.signalUpdateComponent.emit(key, self.value)
-            self.signalUpdateDisplayValue.emit(key, self.value)
+            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
 
-    def updateDisplayValue(self, key, value):
-        self.signalUpdateDisplayValue.emit(key, value)
+    def updateDisplayValue(self, key, value, timestamp):
+        self.signalUpdateDisplayValue.emit(key, value, timestamp)
 
 
 class _Manager(QObject):
@@ -300,6 +302,11 @@ class _Manager(QObject):
         topLevelKeys = config.keys()
         for key in topLevelKeys:
             value = config.get(key)
+            try:
+                timestamp = Timestamp.fromHashAttributes(
+                    config.getAttributes(key))
+            except RuntimeError as e:
+                timestamp = None
 
             if len(path) < 1:
                 internalPath = key
@@ -312,21 +319,21 @@ class _Manager(QObject):
             if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
             elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
             elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
                 dataNotifier = self._getDataNotifierDisplayValue(internalPath)
                 if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value)
+                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
                 
                 # Notify editable widget of display value change
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     # Broadcast new displayValue to all editable widgets
-                    dataNotifier.updateDisplayValue(internalPath, value)
+                    dataNotifier.updateDisplayValue(internalPath, value, timestamp)
                 
                 # Check state
                 if key == "state":
@@ -364,7 +371,7 @@ class _Manager(QObject):
 
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
-            dataNotifier.signalUpdateComponent.emit(key, value)
+            dataNotifier.signalUpdateComponent.emit(key, value, None)
 
 
     def onDeviceInstanceValueChanged(self, key, value):
@@ -374,7 +381,7 @@ class _Manager(QObject):
 
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
-            dataNotifier.signalUpdateComponent.emit(key, value)
+            dataNotifier.signalUpdateComponent.emit(key, value, None)
         
         keys = str(key).split('.configuration.')
         deviceId = keys[0].split('.')[1]
@@ -389,7 +396,8 @@ class _Manager(QObject):
         for path in paths:
             dataNotifier = self._getDataNotifierEditableValue(path)
             if dataNotifier is not None:
-                dataNotifier.signalUpdateComponent.emit(path, config.get(path))
+                dataNotifier.signalUpdateComponent.emit(path, config.get(path),
+                                                        None)
         
         self._mergeIntoHash(config)
 
