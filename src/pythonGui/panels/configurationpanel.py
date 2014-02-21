@@ -71,11 +71,13 @@ class ConfigurationPanel(QWidget):
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.__twNavigation = NavigationTreeView(None, treemodel)
+        treemodel.itemChanged.connect(self.onNavigationItemChanged)
         #self.__twNavigation.hide()
         navSplitter.addWidget(self.__twNavigation)
 
         # Project tree
         self.__twProject = ProjectTree()
+        self.__twProject.itemChanged.connect(self.onProjectItemChanged)
         #self.__twProject.hide()
         navSplitter.addWidget(self.__twProject)
 
@@ -441,7 +443,6 @@ class ConfigurationPanel(QWidget):
 
 
     def _setParameterEditorIndex(self, index):
-        print "_setParameterEditorIndex", index
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
@@ -661,7 +662,7 @@ class ConfigurationPanel(QWidget):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
-        self.showParameterPage(type, str(path))
+        self.showParameterPage(type, path)
 
 
     def onInstanceGone(self, path, parentPath):
