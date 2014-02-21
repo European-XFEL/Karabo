@@ -84,6 +84,8 @@ namespace karabo {
 
             void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
 
+            void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+
 
             void sendSystemTopology(karabo::net::Channel::Pointer channel);
 

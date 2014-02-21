@@ -58,7 +58,7 @@ namespace karabo {
         }
 
 
-        double Timestamp::toTimestamp(TIME_UNITS precision = MICROSEC) const {
+        double Timestamp::toTimestamp(TIME_UNITS precision) const {
             return m_epochstamp.toTimestamp(precision);
         }
 

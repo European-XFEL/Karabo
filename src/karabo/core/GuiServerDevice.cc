@@ -145,6 +145,8 @@ namespace karabo {
                         onGetClassSchema(channel, header, body);
                     } else if (type == "getDeviceSchema") {
                         onGetDeviceSchema(channel, header, body);
+                    } else if (type == "getFromPast") {
+                        onGetFromPast(channel, header);
                     }
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
@@ -343,6 +345,23 @@ namespace karabo {
             }
         }
 
+
+        void GuiServerDevice::onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetFromPast";
+                string deviceId = header.get<string > ("deviceId");
+                string property = header.get<string > ("property");
+                double t0 = header.get<double > ("t0");
+                double t1 = header.get<double > ("t1");
+
+//                boost::mutex::scoped_lock lock(m_channelMutex);
+//                Hash h("type", "historicData", "deviceId", deviceId, "property", property, "t0", t0, "t1", t1);
+//                Hash b("data", remote().getFromPast(deviceId, property, t0, t1));
+//                channel->write(h, b);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
+            }
+        }
 
         void GuiServerDevice::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
             try {
