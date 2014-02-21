@@ -108,7 +108,6 @@ class DisplayComponent(BaseComponent):
             Manager().onRefreshInstance(key)
 
 
-    @pyqtSlot(str, object)
     def onValueChanged(self, key, value, timestamp=None):
         self.__displayWidget.valueChanged(key, value, timestamp)
         # Emit signal to update possible tooltips in ParameterTreeWidget
