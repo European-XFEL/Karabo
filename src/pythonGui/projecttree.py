@@ -21,7 +21,7 @@ from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
-                         QInputDialog, QItemSelectionModel, QLineEdit, QMenu,
+                         QInputDialog, QLineEdit, QMenu,
                          QMessageBox, QTreeView, QTreeWidgetItem)
 
 
