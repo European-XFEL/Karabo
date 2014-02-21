@@ -22,7 +22,6 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
-    itemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -31,8 +30,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
         self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selection_model = QItemSelectionModel(self)
-        self.selection_model.selectionChanged.connect(self.onSelectionChanged)
+        self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _currentConfig(self):
@@ -49,7 +48,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if self.__currentConfig != config:
             self.__currentConfig = config
 
-        selectedIndexes = self.selection_model.selectedIndexes()
+        selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
             lastSelectionPath = selectedIndexes[0].internalPointer().path
         else:
@@ -197,7 +196,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         itemInfo = dict(key=path, classId=classId,
                         type=type, level=level, row=row)
-        self.itemChanged.emit(itemInfo)
 
 
     def selectIndex(self, index):
@@ -205,7 +203,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return
 
         path = index.internalPointer().path
-        self.selection_model.setCurrentIndex(index,
+        self.selectionModel.setCurrentIndex(index,
                                              QItemSelectionModel.ClearAndSelect)
 
 
@@ -239,8 +237,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
     def selectPath(self, path):
         index = self.findIndex(path)
         if index is not None:
-            self.selection_model.select(index,
-                                        QItemSelectionModel.ClearAndSelect)
+            self.selectionModel.select(index, QItemSelectionModel.ClearAndSelect)
 
 
     def rowCount(self, parent=QModelIndex()):

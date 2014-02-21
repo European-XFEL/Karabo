@@ -22,6 +22,7 @@ from enums import ConfigChangeTypes
 import globals
 from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile)
 from navigationhierarchymodel import NavigationHierarchyModel
+from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
 from PyQt4.QtCore import pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
@@ -94,12 +95,10 @@ class _Manager(QObject):
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
     signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, path, configName
-    signalProjectItemChanged = pyqtSignal(dict) # path
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
 
-    signalProjectHashChanged = pyqtSignal(object) # projectHash
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
@@ -112,8 +111,11 @@ class _Manager(QObject):
         # Initiate database connection
         self.sqlDatabase = SqlDatabase()
         self.sqlDatabase.openConnection()
-        
-        self.__treemodel = NavigationHierarchyModel()
+
+        # One model for navigation hierarchy view
+        self.navHierarchyModel = NavigationHierarchyModel(self)
+        # One model for project view
+        self.projModel = ProjectModel(self)
         
         # Sets all parameters to start configuration
         self.reset()
@@ -153,11 +155,6 @@ class _Manager(QObject):
     def _hash(self):
         return self.__hash
     hash = property(fget=_hash)
-
-
-    def _treemodel(self):
-        return self.__treemodel
-    treemodel = property(fget=_treemodel)
 
 
     def closeDatabaseConnection(self):
@@ -471,12 +468,12 @@ class _Manager(QObject):
         
         self.__projectHash.set(projectName, projectConfig)
         self.__projectHash.setAttribute(projectName, "directory", directory)
-        self.signalProjectHashChanged.emit(self.__projectHash)
+        self.projModel.updateData(self.__projectHash)
 
 
     def addDeviceToProject(self, deviceConfig):
         self.__projectHash.merge(deviceConfig, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.signalProjectHashChanged.emit(self.__projectHash)
+        self.projModel.updateData(self.__projectHash)
 
 
     def selectNavigationItemByKey(self, path):
@@ -632,7 +629,8 @@ class _Manager(QObject):
     def handleSystemTopology(self, config):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
-        self.treemodel.updateData(self.__hash)
+        # Update navigation model
+        self.navHierarchyModel.updateData(self.__hash)
         # Send new topology to projecttree
         self.signalSystemTopologyChanged.emit(self.__hash)
 
@@ -694,7 +692,7 @@ class _Manager(QObject):
 
         # Remove instance from central hash
         self.__hash.erase(path)
-        self.treemodel.updateData(self.__hash)
+        self.navHierarchyModel.updateData(self.__hash)
         self.signalInstanceGone.emit(path, parentPath)
 
 

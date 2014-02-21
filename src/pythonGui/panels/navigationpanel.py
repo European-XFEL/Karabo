@@ -117,7 +117,7 @@ class NavigationPanel(QWidget):
 
 
     def onGlobalAccessLevelChanged(self):
-        self.updateNavigationTreeView(Manager().treemodel.currentConfig)
+        self.updateNavigationTreeView(Manager().navHierarchyModel.currentConfig)
 
 
     # virtual function

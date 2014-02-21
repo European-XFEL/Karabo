@@ -96,7 +96,6 @@ class ProjectPanel(QWidget):
 
 
     def onServerConnectionChanged(self, isConnected):
-        print "onServerConnectionChanged", isConnected
         self.__twProject.serverConnectionChanged(isConnected)
 
 
