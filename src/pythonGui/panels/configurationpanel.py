@@ -441,6 +441,7 @@ class ConfigurationPanel(QWidget):
 
 
     def _setParameterEditorIndex(self, index):
+        print "_setParameterEditorIndex", index
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
@@ -545,6 +546,7 @@ class ConfigurationPanel(QWidget):
     def showParameterPage(self, type, path):
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
+        print "showParameterPage", index, path
         if index:
             self._setParameterEditorIndex(index)
 
@@ -621,6 +623,7 @@ class ConfigurationPanel(QWidget):
             index = self.__navItemInternalKeyIndexMap.get(key)
             if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
+                print "twParameterEditorPage", twParameterEditorPage.isVisible()
                 # Parsing of schema necessary?
                 schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
                 if not schemaLoaded:
@@ -634,7 +637,7 @@ class ConfigurationPanel(QWidget):
             self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
-            
+
             if schema:
                 self.__internalKeySchemaLoadedMap[key] = True
             else:
