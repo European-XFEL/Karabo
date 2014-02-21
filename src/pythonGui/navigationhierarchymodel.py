@@ -22,6 +22,8 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
+    # signal
+    itemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -196,6 +198,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         itemInfo = dict(key=path, classId=classId,
                         type=type, level=level, row=row)
+        self.itemChanged.emit(itemInfo)
 
 
     def selectIndex(self, index):

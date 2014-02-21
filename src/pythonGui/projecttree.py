@@ -29,6 +29,7 @@ class ProjectTree(QTreeView):
 
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
+    itemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -222,20 +223,18 @@ class ProjectTree(QTreeView):
 
         path = index.data(ProjectModel.ITEM_PATH)
         if not path: return
-
-        print "path", path
         
         serverId = index.data(ProjectModel.ITEM_SERVER_ID)
         classId = index.data(ProjectModel.ITEM_CLASS_ID)
 
         # Get schema
         schema = Manager().getClassSchema(serverId, classId)
-        print "schema is None?", schema is None
-        print "serverId:", serverId, "classId:", classId
-        print ""
+        
         # TODO: check whether deviceId is already online!!!
         itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema)
         Manager().onSchemaAvailable(itemInfo)
+        # Notify configurator of changes
+        self.itemChanged.emit(itemInfo)
 
 
     def onSystemTopologyChanged(self, config):
