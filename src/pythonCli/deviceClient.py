@@ -413,7 +413,7 @@ class DeviceClient(object):
         Example:
             
             def onPropertyChange(deviceId, key, value, timeStamp):
-                print deviceId, ":", key, "->", value, "(", timeStamp.getMsSinceEpoch(), ")"
+                print deviceId, ":", key, "->", value, "(", timeStamp.toFormattedString(), ")"
         
         c = DeviceClient()
         c.registerPropertyMonitor("Test_MyDevice_0", "result", onPropertyChange)

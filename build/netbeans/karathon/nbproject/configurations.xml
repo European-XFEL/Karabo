@@ -124,6 +124,7 @@
             <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/karathon.${CND_DLIB_EXT}</output>
@@ -496,6 +497,8 @@
             <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
+          <commandLine>-Wno-unused-local-typedefs</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -674,6 +677,9 @@
             ex="false"
             tool="1"
             flavor2="0">
+        <ccTool>
+          <commandLine>-Wno-unused-but-set-variable -Wno-strict-aliasing</commandLine>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"
             ex="false"
