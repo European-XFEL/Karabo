@@ -96,6 +96,12 @@ namespace karabo {
             std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
 
             /**
+             * Generates a timestamp as double with seconds.fractions format
+             * @return A double value with the decimal point indicating fractions of seconds
+             */
+            double toTimestamp(TIME_UNITS precision = MICROSEC) const;
+
+            /**
              * Formats as Hash attributes
              * @param attributes container to which the time point information is added
              */
