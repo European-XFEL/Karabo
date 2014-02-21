@@ -55,7 +55,7 @@ class DateTimeScaleDraw(Qwt.QwtScaleDraw):
                 dt = datetime.datetime.fromtimestamp(value)
             except:
                 dt = datetime.datetime.fromtimestamp(0)
-            return Qwt.QwtText('%s' % dt.strftime( '%H:%M:%S' ))
+            return Qwt.QwtText(dt.isoformat())
         
 
 class DisplayTrendline(DisplayWidget):
@@ -129,7 +129,7 @@ class DisplayTrendline(DisplayWidget):
             # Generate timestamp here...
             timestamp = Timestamp()
             
-        self.curves[key][0].append((value, timestamp.getSeconds()))
+        self.curves[key][0].append((value, timestamp.toTimestamp()))
         data = numpy.array(self.curves[key][0])
 
         self.plot.setAxisLabelRotation(Qwt.QwtPlot.xBottom, -45.0)
