@@ -33,6 +33,10 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateData(self, projectHash):
+        print "updateData"
+        print projectHash
+        print ""
+
         self.beginResetModel()
         self.clear()
         self.setHorizontalHeaderLabels(["Projects"])
