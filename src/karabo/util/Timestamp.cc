@@ -58,6 +58,11 @@ namespace karabo {
         }
 
 
+        double Timestamp::toTimestamp(TIME_UNITS precision = MICROSEC) const {
+            return m_epochstamp.toTimestamp(precision);
+        }
+
+
         void Timestamp::toHashAttributes(Hash::Attributes& attributes) const {
             m_epochstamp.toHashAttributes(attributes);
             m_trainstamp.toHashAttributes(attributes);
