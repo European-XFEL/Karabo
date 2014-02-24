@@ -109,7 +109,8 @@ class SchemaReader(object):
 
 
     def parse(self, key, hash, attrs, parent=None):
-        nodes = (self.parseLeaf, self.parseNode, self.parseChoiceOfNodes)
+        nodes = (self.parseLeaf, self.parseNode, self.parseChoiceOfNodes,
+                 self.parseListOfNodes)
         item = nodes[attrs['nodeType']](key, hash, attrs, parent)
         ral = 0 if parent is None else parent.requiredAccessLevel
         item.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
@@ -274,3 +275,7 @@ class SchemaReader(object):
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
         return item
 
+
+    def parseListOfNodes(self, key, hash, attrs, parent):
+        for k in hash:
+            self.parse(key + "." + k, hash[k], hash[k, ...], parent)
