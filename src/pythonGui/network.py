@@ -212,61 +212,66 @@ class Network(QObject):
 
     def onReadServerData(self):
         while self.__tcpSocket.bytesAvailable() >= self.bytesNeeded:
-            self.bytesNeeded = self.runner.send(self.__tcpSocket.read(
-                self.bytesNeeded))
+            try:
+                self.bytesNeeded = self.runner.send(self.__tcpSocket.read(
+                    self.bytesNeeded))
+            except Exception as e:
+                self.runner = self.processInput()
+                self.bytesNeeded = self.runner.next()
+                if not isinstance(e, StopIteration):
+                    raise
 
 
     def processInput(self):
         parser = BinaryParser()
 
-        while True:
-            headerSize, = unpack('I', (yield 4))
-            headerBytes = yield headerSize
-            bodySize, = unpack('I', (yield 4))
-            bodyBytes = yield bodySize
+        headerSize, = unpack('I', (yield 4))
+        headerBytes = yield headerSize
+        bodySize, = unpack('I', (yield 4))
+        bodyBytes = yield bodySize
 
-            headerHash = parser.read(headerBytes)
+        headerHash = parser.read(headerBytes)
 
-            type = headerHash.get("type")
+        type = headerHash.get("type")
 
-            if type == "systemTopology":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleSystemTopology(bodyHash)
-            elif type == "instanceNew":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleInstanceNew(bodyHash)
-            elif type == "instanceUpdated":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleSystemTopology(bodyHash)
-            elif type == "instanceGone":
-                Manager().handleInstanceGone(bodyBytes)
-            elif type == "classDescription":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleClassSchema(bodyHash)
-            elif type == "deviceSchema":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleDeviceSchema(headerHash, bodyHash)
-            elif type == "configurationChanged":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleConfigurationChanged(headerHash, bodyHash)
-            elif type == "log":
-                Manager().onLogDataAvailable(str(bodyBytes))
-            elif type == "schemaUpdated":
-                bodyHash = parser.read(bodyBytes)
-                Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
-            elif type == "brokerInformation":
-                bodyHash = parser.read(bodyBytes)
-                self._handleBrokerInformation(headerHash, bodyHash)
-            elif type == "notification":
-                bodyHash = parser.read(bodyBytes)
-                self._handleNotification(headerHash, bodyHash)
-            elif type == "historicData":
-                bodyHash = self.__serializer.load(bodyBytes)
-                Manager().handleHistoricData(headerHash, bodyHash)
-            elif type == "invalidateCache":
-                print "invalidateCache"
-            else:
-                print "WARN : Got unknown communication token \"", type, "\" from server"
+        if type == "systemTopology":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleSystemTopology(bodyHash)
+        elif type == "instanceNew":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleInstanceNew(bodyHash)
+        elif type == "instanceUpdated":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleSystemTopology(bodyHash)
+        elif type == "instanceGone":
+            Manager().handleInstanceGone(bodyBytes)
+        elif type == "classDescription":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleClassSchema(bodyHash)
+        elif type == "deviceSchema":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleDeviceSchema(headerHash, bodyHash)
+        elif type == "configurationChanged":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleConfigurationChanged(headerHash, bodyHash)
+        elif type == "log":
+            Manager().onLogDataAvailable(str(bodyBytes))
+        elif type == "schemaUpdated":
+            bodyHash = parser.read(bodyBytes)
+            Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
+        elif type == "brokerInformation":
+            bodyHash = parser.read(bodyBytes)
+            self._handleBrokerInformation(headerHash, bodyHash)
+        elif type == "notification":
+            bodyHash = parser.read(bodyBytes)
+            self._handleNotification(headerHash, bodyHash)
+        elif type == "historicData":
+            bodyHash = self.__serializer.load(bodyBytes)
+            Manager().handleHistoricData(headerHash, bodyHash)
+        elif type == "invalidateCache":
+            print "invalidateCache"
+        else:
+            print "WARN : Got unknown communication token \"", type, "\" from server"
 
 
     def onSocketError(self, socketError):
