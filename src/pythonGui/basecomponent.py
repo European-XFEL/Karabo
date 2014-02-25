@@ -15,13 +15,16 @@ __all__ = ["BaseComponent"]
 from manager import Manager
 #from messagebox import MessageBox
 
-from registry import Loadable, ns_karabo, ns_svg
+from layouts import ProxyWidget
+from registry import Loadable, ns_karabo
+from widget import EditableWidget
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 class BaseComponent(Loadable, QObject):
-    # signals
+    factories = EditableWidget.factories
+
     signalValueChanged = pyqtSignal(str, object) # key, value
 
 
@@ -111,23 +114,25 @@ class BaseComponent(Loadable, QObject):
             d[ns_karabo + "allowedStates"] = ",".join(
                 self.widgetFactory.allowedStates)
             d[ns_karabo + "command"] = self.widgetFactory.command
-        d[ns_karabo + "key"] = ",".join(self.keys)
+        d[ns_karabo + "keys"] = ",".join(self.keys)
         return d
 
 
     @classmethod
     def load(cls, elem, layout):
-        ks = "classAlias", "key", "widgetFactory"
+        ks = "classAlias", "keys", "widgetFactory"
         if elem.get(ns_karabo + "classAlias") == "Command":
             ks += "command", "allowedStates", "commandText"
         d = {k: elem.get(ns_karabo + k) for k in ks}
-        d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
-        keys = d['key'].split(",")
-        d['key'] = keys[0]
-        component = cls(**d)
+        keys = d['keys'].split(",")
+        component = cls(commandEnabled=elem.get(
+                            ns_karabo + "commandEnabled") == "True",
+                        key=keys[0], **d)
+        parent = ProxyWidget(layout.parentWidget(), component)
+        parent.setWidget(component.widget)
+        layout.loadPosition(elem, parent)
         for k in keys[1:]:
             component.addKey(k)
-        # Register as visible device
         online = Manager().newVisibleDevice(component.keys[0])
         if not online:
             # TODO:
