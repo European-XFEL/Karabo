@@ -12,41 +12,32 @@ __all__ = ["GraphicsView"]
 
 from displaycomponent import DisplayComponent
 
-from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 
-from layoutcomponents.arrow import Arrow
 from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
-from layoutcomponents.graphicsproxywidgetcontainer import GraphicsProxyWidgetContainer
-from layoutcomponents.link import Link
-from layoutcomponents.linkbase import LinkBase
-from layoutcomponents.nodebase import NodeBase
-from layoutcomponents.text import Text
-from layoutcomponents.textdialog import TextDialog
 
-from pendialog import PenDialog
+from dialogs import PenDialog, TextDialog
+from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget
 
 from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 
-from widget import DisplayWidget, EditableWidget
-
 from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
-    QFileInfo, QBuffer, QIODevice, pyqtSlot, QMimeData)
+                          QFileInfo, QBuffer, QIODevice, QMimeData)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QGridLayout, QFileDialog, QIcon, QInputDialog,
-                         QLabel, QLayout, QKeySequence, QMenu, QMessageBox,
-                         QPainter, QPen, QStackedWidget, QStackedLayout, QWidget)
+                         QFileDialog, QFont, QFrame, QIcon, QLabel,
+                         QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
+                         QPainter, QPen, QStackedLayout,
+                         QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
 from functools import partial
 import os.path
-from bisect import bisect
 from itertools import chain
 
 
@@ -380,11 +371,11 @@ class Label(Action, Loadable):
 
 
     def mousePressEvent(self, parent, event):
-        text, ok = QInputDialog.getText(parent, "Add new label", "Enter text:")
-        if not ok:
-            return
-        p = ProxyWidget(parent)
-        p.addWidget(QLabel(text))
+        p = ProxyWidget(parent.inner, None)
+        label = QLabel('', p)
+        p.setWidget(label)
+        dialog = TextDialog(label)
+        dialog.exec_()
         p.fixed_geometry = QRect(event.pos(), p.sizeHint())
         parent.ilayout.add_item(p)
         parent.set_current_action(None)
@@ -400,7 +391,26 @@ class Label(Action, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        return QLabel(elem.get(ns_karabo + "text"))
+        proxy = ProxyWidget(layout.parentWidget(), None)
+        label = QLabel(elem.get(ns_karabo + "text"), proxy)
+        proxy.setWidget(label)
+        layout.loadPosition(elem, proxy)
+        font = QFont()
+        font.fromString(elem.get(ns_karabo + "font"))
+        label.setFont(font)
+        palette = QPalette(label.palette())
+        palette.setColor(QPalette.Foreground, QColor(
+            elem.get(ns_karabo + 'foreground', 'black')))
+        bg = elem.get(ns_karabo + 'background')
+        if bg is not None:
+            label.setAutoFillBackground(True)
+            palette.setColor(QPalette.Background, QColor(bg))
+        label.setPalette(palette)
+        fw = elem.get(ns_karabo + "frameWidth")
+        if fw is not None:
+            label.setFrameShape(QFrame.Box)
+            label.setLineWidth(int(fw))
+        return proxy
 
 
 class Line(Shape):
@@ -449,6 +459,7 @@ class Line(Shape):
         ret.line = QLine(float(e.get("x1")), float(e.get("y1")),
                          float(e.get("x2")), float(e.get("y2")))
         ret.loadpen(e)
+        layout.shapes.append(ret)
         return ret
 
 
@@ -505,20 +516,12 @@ class Rectangle(Shape):
         ret.rect = QRect(float(e.get("x")), float(e.get("y")),
                          float(e.get("width")), float(e.get("height")))
         ret.loadpen(e)
+        layout.shapes.append(ret)
         return ret
 
     def edit(self):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
-
-
-def _parse_rect(elem):
-    if elem.get(ns_karabo + "x") is not None:
-        ns = ns_karabo
-    else:
-        ns = ""
-    return QRect(float(elem.get(ns + "x")), float(elem.get(ns + "y")),
-                 float(elem.get(ns + "width")), float(elem.get(ns + "height")))
 
 
 Separator()
@@ -735,470 +738,6 @@ class Lower(SimpleAction):
         self.parent.update()
 
 
-class Layout(Loadable):
-    subclasses = { }
-
-
-    def __init__(self):
-        self.shapes = [ ]
-        self.shape_geometry = None
-        self.selected = False
-
-
-    def __len__(self):
-        return self.count()
-
-
-    def __getitem__(self, i):
-        if isinstance(i, slice):
-            r = (self.itemAt(j) for j in range(i.start, i.stop, i.step))
-            return [rr.widget() if rr.widget() else rr for rr in r
-                    if rr is not None]
-        r = self.itemAt(i)
-        if r is None:
-            raise IndexError("index out of range")
-        return r.widget() if r.widget() is not None else r
-
-
-    def __delitem__(self, i):
-        if isinstance(i, slice):
-            for j in range(i.start, i.stop, i.step):
-                self.takeAt(j)
-        else:
-            self.takeAt(i)
-
-
-    def load_element(self, element):
-        i = 0
-        while i < len(element):
-            elem = element[i]
-            w = r = Loadable.load(elem, self)
-            if r is None:
-                i += 1
-            elif isinstance(r, Shape):
-                self.shapes.append(r)
-                del element[i]
-            else:
-                if not isinstance(r, Layout):
-                    w = ProxyWidget(self.widget())
-                    if isinstance(r, QLabel):
-                        w.set_child(r, None)
-                    else:
-                        w.set_child(r.widget, r)
-                    self.load_item(elem, w)
-                if len(element[i]):
-                    i += 1
-                else:
-                    del element[i]
-
-
-    def draw(self, painter):
-        for s in self.shapes:
-            painter.save()
-            s.draw(painter)
-            painter.restore()
-        for i in range(self.count()):
-            item = self.itemAt(i)
-            if isinstance(item, Layout):
-                item.draw(painter)
-
-
-    def element(self, selected=False):
-        """ save this layout to an element. if selected is True,
-        only selected elements are saved, for cut&paste support """
-        g = self.geometry()
-        d = { ns_karabo + "x": g.x(), ns_karabo + "y": g.y(),
-              ns_karabo + "width": g.width(), ns_karabo + "height": g.height(),
-              ns_karabo + "class": self.__class__.__name__ }
-        d.update(self.save())
-
-        e = ElementTree.Element(ns_svg + "g",
-                                {k: unicode(v) for k, v in d.iteritems()})
-        if selected:
-            self.add_children(e, True)
-        else:
-            self.add_children(e)
-        return e
-
-
-    def add_children(self, e, selected=False):
-        e.extend(e.element() for e in self if not selected or e.selected)
-        e.extend(s.element() for s in self.shapes if not selected or s.selected)
-
-
-    def translate(self, pos):
-        self.fixed_geometry.translate(pos)
-        self.update()
-
-
-    def set_geometry(self, rect):
-        self.fixed_geometry = rect
-
-
-    def setGeometry(self, rect):
-        super(Layout, self).setGeometry(rect)
-        if self.shape_geometry is None:
-            self.shape_geometry = QRect(self.fixed_geometry)
-        for s in self.shapes:
-            s.translate(rect.topLeft() - self.shape_geometry.topLeft())
-        self.shape_geometry = QRect(rect)
-
-
-    def edit(self):
-        pass
-
-
-class FixedLayout(Layout, QLayout):
-    xmltag = ns_svg + "g"
-
-    def __init__(self):
-        QLayout.__init__(self)
-        Layout.__init__(self)
-        self._children = [ ] # contains only QLayoutItems
-
-
-    def __setitem__(self, key, value):
-        if not isinstance(key, slice):
-            key = slice(key, key + 1)
-            value = [value]
-        values = [ ]
-        for v in value:
-            if isinstance(v, ProxyWidget):
-                self.addWidget(v)
-                values.append(self._item)
-            elif isinstance(v, Layout):
-                self.addChildLayout(v)
-                values.append(v)
-        self._children[key] = values
-        self.update()
-
-
-    def add_item(self, item):
-        """add ProxyWidgets or Layouts"""
-        self[len(self):len(self)] = [item]
-
-
-    def load_item(self, element, item):
-        self.add_item(item)
-        try:
-            item.fixed_geometry = _parse_rect(element)
-        except TypeError:
-            rect = QRect()
-            for c in item:
-                rect.united(c.geometry())
-            for s in item.shapes:
-                rect = rect.united(s.geometry())
-            item.fixed_geometry = rect
-
-
-    def itemAtPosition(self, pos):
-        for item in self._children:
-            if item.geometry().contains(pos):
-                if item.widget() is not None:
-                    return item.widget()
-                else:
-                    return item
-        for s in self.shapes[::-1]:
-            if s.contains(pos) or s.selected and s.geometry().contains(pos):
-                return s
-
-
-    def relayout(self, widget):
-        for c in self:
-            ll = [c]
-            ret = None
-            while ll and ret is None:
-                l = ll.pop()
-                if isinstance(l, Layout):
-                    ll.extend(l)
-                else:
-                    if l is widget:
-                        ret = l
-        if ret is None:
-            return
-        c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
-
-
-    def delete_selected(self):
-        i = 0
-        while i < len(self):
-            if self[i].selected:
-                stack = [self[i]]
-                while stack:
-                    p = stack.pop()
-                    if isinstance(p, Layout):
-                        stack.extend(p)
-                    else:
-                        if p.component is not None:
-                            for k in p.component.keys:
-                                Manager().removeVisibleDevice(k)
-                        p.setParent(None)
-                del self[i]
-            else:
-                i += 1
-        self.shapes = [s for s in self.shapes if not s.selected]
-
-
-    def geometry(self):
-        try:
-            return self.fixed_geometry
-        except AttributeError:
-            return self.parentWidget().geometry()
-
-
-    def translate(self, pos):
-        for c in self:
-            c.fixed_geometry.translate(pos)
-        for s in self.shapes:
-            s.translate(pos)
-        Layout.translate(self, pos)
-
-
-    def save(self):
-        return { }
-
-
-    @staticmethod
-    def load(elem, layout):
-        ret = FixedLayout()
-        ret.load_element(elem)
-        if layout is not None:
-            layout.load_item(elem, ret)
-        return ret
-
-
-    def addItem(self, item):
-        "only to be used by Qt, don't use directly!"
-        self._item = item
-
-
-    def itemAt(self, index):
-        "only to be used by Qt, don't use directly!"
-        try:
-            return self._children[index]
-        except IndexError:
-            return
-
-
-    def takeAt(self, index):
-        "only to be used by Qt, don't use directly!"
-        try:
-            return self._children.pop(index)
-        except IndexError:
-            return
-
-
-    def count(self):
-        "only to be used by Qt, don't use directly!"
-        return len(self._children)
-
-
-    def setGeometry(self, geometry):
-        "only to be used by Qt, don't use directly!"
-        for item in self._children:
-            i = item.widget() if item.widget() is not None else item
-            i.setGeometry(i.fixed_geometry)
-
-
-    def sizeHint(self):
-        return QSize(10, 10)
-
-
-class BoxLayout(Layout, QBoxLayout):
-    def __init__(self, dir):
-        QBoxLayout.__init__(self, dir)
-        Layout.__init__(self)
-        self.setContentsMargins(5, 5, 5, 5)
-
-
-    def save(self):
-        return {ns_karabo + "Direction": self.direction()}
-
-
-    @staticmethod
-    def load(elem, layout):
-        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
-        layout.load_item(elem, ret)
-        ret.load_element(elem)
-        return ret
-
-
-    def load_item(self, element, item):
-        if isinstance(item, ProxyWidget):
-            self.addWidget(item)
-        else:
-            self.addLayout(item)
-
-
-def _reduce(xs):
-    xs.sort()
-    i = 1
-    while i < len(xs):
-        if xs[i] - xs[i - 1] > 10:
-            i += 1
-        else:
-            del xs[i]
-
-
-class GridLayout(Layout, QGridLayout):
-    def __init__(self):
-        QGridLayout.__init__(self)
-        Layout.__init__(self)
-
-    def set_children(self, children):
-        xs = [c.geometry().x() for c in children]
-        ys = [c.geometry().y() for c in children]
-        _reduce(xs)
-        _reduce(ys)
-        for c in children:
-            col = bisect(xs, c.geometry().x())
-            row = bisect(ys, c.geometry().y())
-            colspan = bisect(xs, c.geometry().right()) - col + 1
-            rowspan = bisect(ys, c.geometry().bottom()) - row + 1
-            if isinstance(c, ProxyWidget):
-                self.addWidget(c, row, col, rowspan, colspan)
-            else:
-                self.addLayout(c, row, col, rowspan, colspan)
-
-
-    def save(self):
-        return { }
-
-
-    def add_children(self, e):
-        e.extend(s.element() for s in self.shapes)
-        for i in range(len(self)):
-            c = self[i].element()
-            for n, v in zip(("row", "col", "rowspan", "colspan"),
-                            self.getItemPosition(i)):
-                c.set(ns_karabo + n, unicode(v))
-            e.append(c)
-
-
-    def load_item(self, element, item):
-        p = (int(element.get(ns_karabo + s)) for s in
-             ("row", "col", "rowspan", "colspan"))
-        if isinstance(item, ProxyWidget):
-            self.addWidget(item, *p)
-        else:
-            self.addLayout(item, *p)
-
-
-    @staticmethod
-    def load(elem, layout):
-        ret = GridLayout()
-        layout.load_item(elem, ret)
-        ret.load_element(elem)
-        return ret
-
-
-class ProxyWidget(QStackedWidget):
-    def __init__(self, parent):
-        QStackedWidget.__init__(self, parent)
-        #self.setContextMenuPolicy(Qt.ActionsContextMenu)
-        self.selected = False
-
-    def set_child(self, child, component):
-        if self.count() > 0:
-            self.removeWidget(self.widget(0))
-        self.addWidget(child)
-        self.component = component
-        if component is None:
-            return
-
-        component.setParent(self)
-
-        if isinstance(component, DisplayComponent):
-            Widget = DisplayWidget
-        else:
-            Widget = EditableWidget
-
-        for text, factory in Widget.factories.iteritems():
-            aliases = factory.getAliasesViaCategory(
-                component.widgetCategory)
-            keys = component.keys[0].split('.configuration.')
-            if keys[1] == "state":
-                aliases = aliases + factory.getAliasesViaCategory("State")
-            if aliases:
-                aa = QAction(text, self)
-                menu = QMenu(self)
-                for a in aliases:
-                    menu.addAction(a).triggered.connect(
-                        partial(self.on_changeWidget, factory, a))
-                aa.setMenu(menu)
-                self.addAction(aa)
-
-    @pyqtSlot()
-    def on_changeWidget(self, factory, alias):
-        self.component.changeWidget(factory, alias)
-        self.parent().layout().relayout(self)
-        self.adjustSize()
-        
-    def contextMenuEvent(self, event):
-        if not self.parent().parent().designMode:
-            return
-        QMenu.exec_(self.currentWidget().actions() + self.actions(),
-                    event.globalPos(), None, self)
-
-    def element(self):
-        g = self.geometry()
-        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height() }
-        if self.component is None:
-            d[ns_karabo + "class"] = "Label"
-            d[ns_karabo + "text"] = self.widget(0).text()
-        else:
-            d.update(self.component.attributes())
-        return ElementTree.Element(ns_svg + "rect",
-                                   {k: unicode(v) for k, v in d.iteritems()})
-
-
-    @staticmethod
-    def load(elem, layout):
-        if elem.get(ns_karabo + "class") == "Label":
-            ret = ProxyWidget(layout.widget())
-            ret.set_child(QLabel(elem.get(ns_karabo + "text"), ret), None)
-            ret.show()
-            return ret
-        ks = "classAlias", "key", "widgetFactory"
-        if elem.get(ns_karabo + "classAlias") == "Command":
-            ks += "command", "allowedStates", "commandText"
-        d = {k: elem.get(ns_karabo + k) for k in ks}
-        d["commandEnabled"] = elem.get(ns_karabo + "commandEnabled") == "True"
-        component = globals()[elem.get(ns_karabo + "componentType")](**d)
-        component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
-        ret = ProxyWidget(layout.widget())
-        ret.set_child(component.widget, component)
-        ret.show()
-        return ret
-
-
-    def translate(self, pos):
-        self.fixed_geometry.translate(pos)
-        self.parent().layout().update()
-
-
-    def set_geometry(self, rect):
-        self.fixed_geometry = rect
-
-
-    def edit(self):
-        if isinstance(self.currentWidget(), QLabel):
-            text, ok = QInputDialog.getText(self.parent(), "Edit text",
-                                            "Enter text:",
-                                            text=self.currentWidget().text())
-            if ok:
-                self.currentWidget().setText(text)
-
-    def dropEvent(self, event):
-        source = event.source()
-        if source is None or not isinstance(source, ParameterTreeWidget):
-            return
-        for item in source.selectedItems():
-            if self.component.addKey(item.internalKey):
-                Manager().newVisibleDevice(item.internalKey)
-                event.accept()
-
-
 class GraphicsView(QSvgWidget):
     def __init__(self, parent, designMode=True):
         super(GraphicsView, self).__init__(parent)
@@ -1302,11 +841,6 @@ class GraphicsView(QSvgWidget):
         self.layout().addWidget(self.inner)
 
 
-    # Returns true, when items has been copied; otherwise false
-    def hasCopy(self):
-        return (len(self.__copiedItem) > 0)
-
-
     # Open saved view from file
     def openSceneLayoutFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved view",
@@ -1367,8 +901,7 @@ class GraphicsView(QSvgWidget):
         self.tree = ElementTree.parse(filename)
         root = self.tree.getroot()
         self.clean()
-        self.ilayout = FixedLayout.load(root, None)
-        self.inner.setLayout(self.ilayout)
+        self.ilayout = FixedLayout.load(root, widget=self.inner)
         self.designMode = True
 
         ar = QByteArray()
@@ -1492,8 +1025,8 @@ class GraphicsView(QSvgWidget):
                            QBoxLayout.TopToBottom)
 
         for item, component in items:
-            proxy = ProxyWidget(self.inner)
-            proxy.set_child(item, component)
+            proxy = ProxyWidget(self.inner, component)
+            proxy.addWidget(item)
             layout.addWidget(proxy)
             proxy.show()
 
@@ -1674,13 +1207,6 @@ class GraphicsView(QSvgWidget):
                 item.event(event)
                 return True
         return ret
-
-
-    def _getWidgetCenterPosition(self, pos, centerX, centerY):
-        # QPointF pos, int centerX, int centerY
-        pos.setX(pos.x()-centerX)
-        pos.setY(pos.y()-centerY)
-        return pos
 
 
     def _createDisplayNameProxyWidget(self, displayName):
