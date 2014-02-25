@@ -1,6 +1,7 @@
 from PyQt4 import uic
 from PyQt4.QtCore import Qt, pyqtSlot
-from PyQt4.QtGui import QDialog, QIcon, QPixmap, QColorDialog, QValidator
+from PyQt4.QtGui import (QDialog, QIcon, QPixmap, QColorDialog, QValidator,
+                         QPalette, QFrame, QFontDialog)
 from os import path
 
 class Validator(QValidator):
@@ -94,3 +95,55 @@ class PenDialog(QDialog):
                 c = self.brush.color()
                 c.setAlpha(self.fillopacity.value())
                 self.brush.setColor(c)
+
+
+class TextDialog(QDialog):
+    def __init__(self, label):
+        QDialog.__init__(self)
+        uic.loadUi(path.join(path.dirname(__file__), 'textdialog.ui'), self)
+
+        self.label = label
+        self.palette = QPalette(label.palette())
+        self.text.setText(label.text())
+        self.set_color()
+        self.background.setChecked(self.label.autoFillBackground())
+        self.framewidth.setValue(self.label.frameWidth())
+
+
+    @pyqtSlot()
+    def on_textcolor_clicked(self):
+        self.palette.setColor(QPalette.Foreground,
+            QColorDialog.getColor(self.palette.color(QPalette.Foreground)))
+        self.set_color()
+
+
+    @pyqtSlot()
+    def on_backcolor_clicked(self):
+        self.palette.setColor(QPalette.Background,
+            QColorDialog.getColor(self.palette.color(QPalette.Background)))
+        self.set_color()
+
+
+    @pyqtSlot()
+    def on_font_clicked(self):
+        font, ok = QFontDialog.getFont(self.label.font(), self)
+        if ok:
+            self.label.setFont(font)
+
+
+    def set_color(self):
+        p = QPixmap(32, 16)
+        p.fill(self.palette.windowText().color())
+        self.textcolor.setIcon(QIcon(p))
+        p.fill(self.palette.window().color())
+        self.backcolor.setIcon(QIcon(p))
+
+
+    def exec_(self):
+        QDialog.exec_(self)
+        self.label.setPalette(self.palette)
+        self.label.setText(self.text.text())
+        self.label.setFrameShape(QFrame.NoFrame if self.framewidth.value == 0
+                                 else QFrame.Box)
+        self.label.setLineWidth(self.framewidth.value())
+        self.label.setAutoFillBackground(self.background.isChecked())
