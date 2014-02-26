@@ -738,13 +738,11 @@ class _Manager(QObject):
         return None
     
     
-    def handleDeviceSchema(self, deviceId, config):
-        # Merge new configuration data into central hash
+    def handleDeviceSchema(self, headerHash, config):
         self._mergeIntoHash(config)
-
-        path = "device." + deviceId
-        descriptionPath = path + ".description"
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
+        path = "device." + headerHash.get("deviceId")
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE,
+                                    schema=config.get(path + '.description')))
         self.newVisibleDevice(path)
 
 
@@ -758,21 +756,17 @@ class _Manager(QObject):
         return None
         
 
-    def handleDeviceSchemaUpdated(self, deviceId, config):
-        path = "device." + deviceId
+    def handleDeviceSchemaUpdated(self, headerHash, config):
+        path = "device." + headerHash.get("deviceId")
         self.signalDeviceSchemaUpdated.emit(path)
-        self.handleDeviceSchema(deviceId, config)
-        # Refresh needed
+        self.handleDeviceSchema(headerHash, config)
         self.onRefreshInstance(path)
 
 
     # TODO: This function must be thread-safe!!
-    # Called by network class
-    def handleConfigurationChanged(self, deviceId, config):
-        configurationPath = "device." + deviceId + ".configuration"
-        self._changeHash(configurationPath, config.get(configurationPath))
-        
-        # Merge new configuration data into central hash
+    def handleConfigurationChanged(self, headerHash, config):
+        path = "device.{}.configuration".format(headerHash.get('deviceId'))
+        self._changeHash(path, config.get(path))
         self._mergeIntoHash(config)
 
 
