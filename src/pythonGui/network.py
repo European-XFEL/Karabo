@@ -16,7 +16,7 @@ from manager import Manager
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStream,
+from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.karathon import Authenticator, Timestamp
@@ -26,8 +26,8 @@ from enums import AccessLevel
 import datetime
 import globals
 import socket
+from struct import unpack
 
-BYTES_MESSAGE_SIZE_TAG = 4
 
 class Network(QObject):
     # signals
@@ -65,11 +65,6 @@ class Network(QObject):
         Manager().signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         Manager().signalGetFromPast.connect(self.onGetFromPast)
-
-        self.__headerSize = 0
-        self.__bodySize = 0
-        self.__headerBytes = bytearray()
-        self.__bodyBytes = bytearray()
 
 
     def connectToServer(self):
@@ -116,15 +111,14 @@ class Network(QObject):
         self.__provider = provider
         self.__hostname = hostname
         self.__port = port
-        self.__headerSize = 0
-        self.__bodySize = 0
 
         self.__tcpSocket = QTcpSocket(self)
         self.__tcpSocket.connected.connect(self.onConnected)
         self.__tcpSocket.disconnected.connect(self.onDisconnected)
+        self.runner = self.processInput()
+        self.bytesNeeded = self.runner.next()
         self.__tcpSocket.readyRead.connect(self.onReadServerData)
         self.__tcpSocket.error.connect(self.onSocketError)
-
         self.__tcpSocket.connectToHost(hostname, port)
 
 
@@ -216,105 +210,63 @@ class Network(QObject):
             print "Logout problem. Please verify, if service is running. " + str(e)
 
 
-### Slots ###
     def onReadServerData(self):
-        input = QDataStream(self.__tcpSocket)
-        input.setByteOrder(QDataStream.LittleEndian)
+        while self.__tcpSocket.bytesAvailable() >= self.bytesNeeded:
+            self.bytesNeeded = self.runner.send(self.__tcpSocket.read(
+                self.bytesNeeded))
+
+
+    def processInput(self):
         parser = BinaryParser()
 
-        #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
+            headerSize, = unpack('I', (yield 4))
+            headerBytes = yield headerSize
+            bodySize, = unpack('I', (yield 4))
+            bodyBytes = yield bodySize
 
-            if self.__headerSize == 0:
-
-                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
-                    break
-
-                self.__headerSize = input.readUInt32()
-
-            if len(self.__headerBytes) == 0:
-
-                if self.__tcpSocket.bytesAvailable() < self.__headerSize :
-                    break
-
-                self.__headerBytes = bytearray(self.__headerSize)
-                self.__headerBytes = input.readRawData(self.__headerSize)
-                # TODO How to do this nicely?
-                self.__headerBytes = bytearray(self.__headerBytes)
-
-            if self.__bodySize == 0:
-
-                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
-                    break
-
-                self.__bodySize = input.readUInt32()
-
-            if len(self.__bodyBytes) == 0:
-
-                if self.__tcpSocket.bytesAvailable() < self.__bodySize:
-                    break
-
-                self.__bodyBytes = bytearray(self.__bodySize)
-                self.__bodyBytes = input.readRawData(self.__bodySize)
-                # TODO How to do this nicely?
-                self.__bodyBytes = bytearray(self.__bodyBytes)
-
-
-            # Fork on responseType
-            headerHash = parser.read(self.__headerBytes)
+            headerHash = parser.read(headerBytes)
 
             type = headerHash.get("type")
-            #print "Request: ", type
-
-            # "instanceNew" (instanceId, instanceInfo)
-            # "instanceUpdated" (instanceId, instanceInfo)
-            # "instanceGone" (instanceId)
-            # "configurationChanged" (config, instanceId)
-            # "log" (logMessage)
-            # "notification" (type, shortMsg, detailedMsg, instanceId)
-            # "invalidateCache" (instanceId)
 
             if type == "systemTopology":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceNew":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleInstanceNew(bodyHash)
             elif type == "instanceUpdated":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleSystemTopology(bodyHash)
             elif type == "instanceGone":
-                Manager().handleInstanceGone(str(self.__bodyBytes))
+                Manager().handleInstanceGone(bodyBytes)
             elif type == "classDescription":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
-                Manager().onLogDataAvailable(str(self.__bodyBytes))
+                Manager().onLogDataAvailable(str(bodyBytes))
             elif type == "schemaUpdated":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
             elif type == "brokerInformation":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
-                bodyHash = parser.read(self.__bodyBytes)
+                bodyHash = parser.read(bodyBytes)
                 self._handleNotification(headerHash, bodyHash)
             elif type == "historicData":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
+                bodyHash = self.__serializer.load(bodyBytes)
                 Manager().handleHistoricData(headerHash, bodyHash)
             elif type == "invalidateCache":
                 print "invalidateCache"
             else:
                 print "WARN : Got unknown communication token \"", type, "\" from server"
-            # Invalidate variables
-            self.__bodySize = self.__headerSize = 0
-            self.__headerBytes = self.__bodyBytes = bytearray()
 
 
     def onSocketError(self, socketError):
