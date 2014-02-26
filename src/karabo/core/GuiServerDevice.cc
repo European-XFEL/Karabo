@@ -351,13 +351,13 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetFromPast";
                 string deviceId = header.get<string > ("deviceId");
                 string property = header.get<string > ("property");
-                double t0 = header.get<double > ("t0");
-                double t1 = header.get<double > ("t1");
+                string t0 = header.get<string > ("t0");
+                string t1 = header.get<string > ("t1");
 
-//                boost::mutex::scoped_lock lock(m_channelMutex);
-//                Hash h("type", "historicData", "deviceId", deviceId, "property", property, "t0", t0, "t1", t1);
-//                Hash b("data", remote().getFromPast(deviceId, property, t0, t1));
-//                channel->write(h, b);
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                Hash h("type", "historicData", "deviceId", deviceId, "property", property, "t0", t0, "t1", t1);
+                Hash b("data", remote().getFromPast(deviceId, property, t0, t1));
+                channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
             }
