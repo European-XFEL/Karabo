@@ -172,6 +172,11 @@ class Hash(OrderedDict):
     def getAttribute(self, item, key):
         return self[item, key]
 
+
+    def getAttributes(self, item):
+        return self[item, ...]
+
+
     def has(self, item):
         try:
             self._get(item)
