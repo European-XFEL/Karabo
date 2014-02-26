@@ -9,7 +9,9 @@ import numpy
 class Simple(object):
     @classmethod
     def read(cls, file):
-        return cls.numpy(*file.readFormat(cls.format))
+        ret = numpy.frombuffer(file.data, cls.numpy, 1, file.pos)[0]
+        file.pos += cls.numpy().itemsize
+        return ret
 
 
     @classmethod
@@ -34,8 +36,9 @@ class Vector(Simple):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        return numpy.array(file.readFormat('{}{}'.format(size, cls.format)),
-            dtype=cls.numpy)
+        ret = numpy.frombuffer(file.data, cls.numpy, size, file.pos)
+        file.pos += cls.numpy().itemsize * size
+        return ret
 
 
     @classmethod
@@ -88,12 +91,18 @@ class VectorBool(Type):
 
 
 class Char(Simple, Type):
-    format = "c"
-    numpy = numpy.str_
+    @staticmethod
+    def read(file):
+        file.pos += 1
+        return bytes(file.data[file.pos - 1:file.pos])
 
 
 class VectorChar(Vector, Char):
-    pass
+    @staticmethod
+    def read(file):
+        size, = file.readFormat('I')
+        file.pos += size
+        return bytes(file.data[file.pos - size:file.pos])
 
 
 class Int8(Integer, Type):
@@ -208,7 +217,8 @@ class String(Type):
     @staticmethod
     def read(file):
         size, = file.readFormat('I')
-        return file.file.read(size)
+        file.pos += size
+        return unicode(file.data[file.pos - size:file.pos])
 
 
     @staticmethod
@@ -339,7 +349,8 @@ class Schema(Hash):
     def read(cls, file):
         file.readFormat('I') # ignore length
         size, = file.readFormat('Q')
-        name = file.file.read(size)
+        name = unicode(file.data[file.pos:file.pos + size])
+        file.pos += size
         ret = super(Schema, cls).read(file)
         return hash.Schema(name, ret)
 

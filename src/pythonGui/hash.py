@@ -240,17 +240,19 @@ def writeXML(hash):
 class BinaryParser(object):
     def readFormat(self, fmt):
         size = calcsize(fmt)
-        s = self.file.read(size)
-        return unpack(fmt, s)
+        self.pos += size
+        return unpack(fmt, self.data[self.pos - size:self.pos])
 
 
     def readKey(self):
         size, = self.readFormat('B')
-        return self.file.read(size)
+        self.pos += size
+        return self.data[self.pos - size:self.pos]
 
 
     def read(self, file):
-        self.file = StringIO(file)
+        self.pos = 0
+        self.data = file
         return hashtypes.Hash.read(self)
 
 
