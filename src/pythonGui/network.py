@@ -65,6 +65,7 @@ class Network(QObject):
 
         Manager().signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
+        Manager().signalGetFromPast.connect(self.onGetFromPast)
 
         self.__headerSize = 0
         self.__bodySize = 0
@@ -302,6 +303,9 @@ class Network(QObject):
             elif type == "notification":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleNotification(headerHash, bodyHash)
+            elif type == "historicData":
+                bodyHash = self.__serializer.load(self.__bodyBytes)
+                Manager().handleHistoricData(headerHash, bodyHash)
             elif type == "invalidateCache":
                 print "invalidateCache"
             else:
@@ -453,6 +457,16 @@ class Network(QObject):
     def onGetDeviceSchema(self, deviceId):
         header = Hash("type", "getDeviceSchema")
         header.set("deviceId", str(deviceId))
+        self._tcpWriteHashHash(header, Hash())
+
+
+    def onGetFromPast(self, deviceId, property, t0, t1):
+        header = Hash()
+        header.set('type', 'getFromPast')
+        header.set('deviceId', deviceId)
+        header.set('property', property)
+        header.set('t0', t0)
+        header.set('t1', t1)
         self._tcpWriteHashHash(header, Hash())
 
 
