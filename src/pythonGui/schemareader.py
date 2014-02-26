@@ -92,6 +92,15 @@ class Bool(hashtypes.Bool):
         super(Bool, self).populateItem(item, attrs, classtype, treewidget)
 
 
+class Vector(hashtypes.Vector):
+    __metaclass__ = Monkey
+
+    @classmethod
+    def populateItem(self, item, attrs, classtype, treewidget):
+        item.classAlias = 'Histogram'
+        Type.populateItem(item, attrs, classtype, treewidget)
+
+
 class SchemaReader(object):
     def setDeviceType(self, deviceType):
         self.deviceType = deviceType
