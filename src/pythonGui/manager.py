@@ -19,7 +19,7 @@ __all__ = ["Manager"]
 from enums import NavigationItemTypes, ConfigChangeTypes
 import datetime
 from hash import Hash, HashMergePolicy
-from karabo.karathon import Timestamp
+from timestamp import Timestamp
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
@@ -318,7 +318,7 @@ class _Manager(QObject):
             try:
                 timestamp = Timestamp.fromHashAttributes(
                     config.getAttributes(key))
-            except RuntimeError as e:
+            except KeyError as e:
                 timestamp = None
 
             if len(path) < 1:
