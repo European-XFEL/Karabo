@@ -32,6 +32,7 @@ from PyQt4.QtGui import (QFileDialog, QMessageBox)
 class DataNotifier(QObject):
     signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
     signalUpdateDisplayValue = pyqtSignal(str, object, object)
+    signalHistoricData = pyqtSignal(str, object)
 
 
     def __init__(self, key, component):
@@ -98,6 +99,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
+    signalGetFromPast = pyqtSignal(str, str, str, str)
 
 
     def __init__(self, *args, **kwargs):
@@ -237,7 +239,19 @@ class _Manager(QObject):
 
     def unregisterDisplayComponent(self, key, component):
         pass
-        
+
+
+    def registerHistoricData(self, key, slot):
+        dataNotifier = self._getDataNotifierDisplayValue(key)
+        dataNotifier.signalHistoricData.connect(slot)
+
+
+    def handleHistoricData(self, headerHash, bodyHash):
+        key = "device.{}.configuration.{}".format(
+            headerHash.get("deviceId"), headerHash.get("property"))
+        dataNotifier = self._getDataNotifierDisplayValue(key)
+        dataNotifier.signalHistoricData.emit(key, bodyHash.get("data"))
+
 
     def _getDeviceIdFromInternalPath(self, internalPath):
         """

@@ -410,7 +410,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toIso8601();
                         if (t1 > current) collect = true; // Time until is bigger then current timestamp, so collect
                         if (collect) result.push_back(*rit);
-                        if (t0 > current) { // Time from is now bigger than current flag -> we are done
+                        if (t0 >= current) { // Time from is now bigger than current flag -> we are done
                             done = true;
                             break;
                         }                        
