@@ -32,7 +32,21 @@ class Number(Simple):
     pass
 
 
-class Vector(Simple):
+class Vector(object):
+    @classmethod
+    def read(cls, file):
+        size, = file.readFormat('I')
+        return [super(Vector, cls).read(file) for i in xrange(size)]
+
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat('I', len(data))
+        for d in data:
+            super(Vector, cls).write(file, d)
+
+
+class NumpyVector(Vector):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
@@ -110,7 +124,7 @@ class Int8(Integer, Type):
     numpy = numpy.int8
 
 
-class VectorInt8(Vector, Int8):
+class VectorInt8(NumpyVector, Int8):
     pass
 
 
@@ -119,7 +133,7 @@ class UInt8(Integer, Type):
     numpy = numpy.uint8
 
 
-class VectorUInt8(Vector, UInt8):
+class VectorUInt8(NumpyVector, UInt8):
     pass
 
 
@@ -128,7 +142,7 @@ class Int16(Integer, Type):
     numpy = numpy.int16
 
 
-class VectorInt16(Vector, Int16):
+class VectorInt16(NumpyVector, Int16):
     pass
 
 
@@ -137,7 +151,7 @@ class UInt16(Integer, Type):
     numpy = numpy.uint16
 
 
-class VectorUInt16(Vector, UInt16):
+class VectorUInt16(NumpyVector, UInt16):
     pass
 
 
@@ -146,7 +160,7 @@ class Int32(Integer, Type):
     numpy = numpy.int32
 
 
-class VectorInt32(Vector, Int32):
+class VectorInt32(NumpyVector, Int32):
     pass
 
 
@@ -155,7 +169,7 @@ class UInt32(Integer, Type):
     numpy = numpy.uint32
 
 
-class VectorUInt32(Vector, UInt32):
+class VectorUInt32(NumpyVector, UInt32):
     pass
 
 
@@ -164,7 +178,7 @@ class Int64(Integer, Type):
     numpy = numpy.int64
 
 
-class VectorInt64(Vector, Int64):
+class VectorInt64(NumpyVector, Int64):
     pass
 
 
@@ -173,7 +187,7 @@ class UInt64(Integer, Type):
     numpy = numpy.uint64
 
 
-class VectorUInt64(Vector, UInt64):
+class VectorUInt64(NumpyVector, UInt64):
     pass
 
 
@@ -182,7 +196,7 @@ class Float(Number, Type):
     numpy = numpy.float32
 
 
-class VectorFloat(Vector, Float):
+class VectorFloat(NumpyVector, Float):
     pass
 
 
@@ -191,7 +205,7 @@ class Double(Number, Type):
     numpy = numpy.float64
 
 
-class VectorDouble(Vector, Double):
+class VectorDouble(NumpyVector, Double):
     pass
 
 
@@ -200,7 +214,7 @@ class ComplexFloat(Number, Type):
     numpy = numpy.complex64
 
 
-class VectorComplexFloat(Vector, ComplexFloat):
+class VectorComplexFloat(NumpyVector, ComplexFloat):
     pass
 
 
@@ -209,13 +223,13 @@ class ComplexDouble(Number, Type):
     numpy = numpy.complex128
 
 
-class VectorComplexDouble(Vector, ComplexDouble):
+class VectorComplexDouble(NumpyVector, ComplexDouble):
     pass
 
 
 class String(Type):
-    @staticmethod
-    def read(file):
+    @classmethod
+    def read(cls, file):
         size, = file.readFormat('I')
         file.pos += size
         return unicode(file.data[file.pos - size:file.pos])
@@ -233,16 +247,10 @@ class String(Type):
         file.file.write(data)
 
 
-class VectorString(String):
+class VectorString(Vector, String):
     @staticmethod
     def fromstring(s):
         return unicode(s).split(',')
-
-
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        return [String.read(file) for i in xrange(size)]
 
 
 class Hash(Type):
@@ -280,7 +288,7 @@ class Hash(Type):
             file.writeData(v)
 
 
-class VectorHash(Type):
+class VectorHash(Vector, Hash):
     pass
 
 
