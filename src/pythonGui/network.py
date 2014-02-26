@@ -266,7 +266,7 @@ class Network(QObject):
             bodyHash = parser.read(bodyBytes)
             self._handleNotification(headerHash, bodyHash)
         elif type == "historicData":
-            bodyHash = self.__serializer.load(bodyBytes)
+            bodyHash = parser.read(bodyBytes)
             Manager().handleHistoricData(headerHash, bodyHash)
         elif type == "invalidateCache":
             print "invalidateCache"
