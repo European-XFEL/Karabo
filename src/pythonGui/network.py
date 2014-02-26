@@ -288,15 +288,15 @@ class Network(QObject):
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleDeviceSchema(headerHash, bodyHash)
+                Manager().handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleConfigurationChanged(headerHash, bodyHash)
+                Manager().handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
-                self._handleLog(str(self.__bodyBytes))
+                Manager().onLogDataAvailable(str(self.__bodyBytes))
             elif type == "schemaUpdated":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleSchemaUpdated(headerHash, bodyHash)
+                Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
             elif type == "brokerInformation":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
@@ -508,25 +508,6 @@ class Network(QObject):
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
-
-
-    def _handleLog(self, logMessage):
-        Manager().onLogDataAvailable(logMessage)
-
-
-    def _handleDeviceSchema(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleDeviceSchema(deviceId, bodyHash)
-
-
-    def _handleConfigurationChanged(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleConfigurationChanged(deviceId, bodyHash)
-
-
-    def _handleSchemaUpdated(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)
 
 
     def _handleBrokerInformation(self, headerHash, bodyHash):
