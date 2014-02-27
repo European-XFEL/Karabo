@@ -169,6 +169,13 @@ safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib/pythonCli/. $PYKARABO/
 
+# pythonTools
+cd ../pythonTools
+safeRunCommand "./build.sh"
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
+
+
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
 fi
