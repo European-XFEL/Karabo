@@ -33,6 +33,7 @@ from PyQt4.QtGui import (QFileDialog, QMessageBox)
 class DataNotifier(QObject):
     signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
     signalUpdateDisplayValue = pyqtSignal(str, object, object)
+    signalHistoricData = pyqtSignal(str, object)
 
 
     def __init__(self, key, component):
@@ -100,6 +101,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
+    signalGetFromPast = pyqtSignal(str, str, str, str)
 
 
     def __init__(self, *args, **kwargs):
@@ -236,7 +238,19 @@ class _Manager(QObject):
 
     def unregisterDisplayComponent(self, key, component):
         pass
-        
+
+
+    def registerHistoricData(self, key, slot):
+        dataNotifier = self._getDataNotifierDisplayValue(key)
+        dataNotifier.signalHistoricData.connect(slot)
+
+
+    def handleHistoricData(self, headerHash, bodyHash):
+        key = "device.{}.configuration.{}".format(
+            headerHash.get("deviceId"), headerHash.get("property"))
+        dataNotifier = self._getDataNotifierDisplayValue(key)
+        dataNotifier.signalHistoricData.emit(key, bodyHash.get("data"))
+
 
     def _getDeviceIdFromInternalPath(self, internalPath):
         """
@@ -727,13 +741,11 @@ class _Manager(QObject):
         return None
     
     
-    def handleDeviceSchema(self, deviceId, config):
-        # Merge new configuration data into central hash
+    def handleDeviceSchema(self, headerHash, config):
         self._mergeIntoHash(config)
-
-        path = "device." + deviceId
-        descriptionPath = path + ".description"
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE, schema=config.get(descriptionPath)))
+        path = "device." + headerHash.get("deviceId")
+        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE,
+                                    schema=config.get(path + '.description')))
         self.newVisibleDevice(path)
 
 
@@ -747,21 +759,17 @@ class _Manager(QObject):
         return None
         
 
-    def handleDeviceSchemaUpdated(self, deviceId, config):
-        path = "device." + deviceId
+    def handleDeviceSchemaUpdated(self, headerHash, config):
+        path = "device." + headerHash.get("deviceId")
         self.signalDeviceSchemaUpdated.emit(path)
-        self.handleDeviceSchema(deviceId, config)
-        # Refresh needed
+        self.handleDeviceSchema(headerHash, config)
         self.onRefreshInstance(path)
 
 
     # TODO: This function must be thread-safe!!
-    # Called by network class
-    def handleConfigurationChanged(self, deviceId, config):
-        configurationPath = "device." + deviceId + ".configuration"
-        self._changeHash(configurationPath, config.get(configurationPath))
-        
-        # Merge new configuration data into central hash
+    def handleConfigurationChanged(self, headerHash, config):
+        path = "device.{}.configuration".format(headerHash.get('deviceId'))
+        self._changeHash(path, config.get(path))
         self._mergeIntoHash(config)
 
 
