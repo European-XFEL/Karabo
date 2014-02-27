@@ -453,3 +453,4 @@ class ProxyWidget(QStackedWidget):
             if self.component.addKey(item.internalKey):
                 Manager().newVisibleDevice(item.internalKey)
                 event.accept()
+
