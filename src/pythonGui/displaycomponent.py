@@ -21,6 +21,7 @@ from PyQt4.QtGui import *
 
 
 class DisplayComponent(BaseComponent):
+    factories = DisplayWidget.factories
 
 
     def __init__(self, classAlias, widgetFactory="DisplayWidget", **params):
