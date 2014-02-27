@@ -84,6 +84,14 @@ class ProjectTree(QTreeView):
         if not QDir(absoluteProjectPath).exists():
             dir.mkpath(absoluteProjectPath)
         else:
+            reply = QMessageBox.question(self, "New project",
+                "A project folder named \"" + projectName + "\" already exists.<br>"
+                "Do you want to replace it?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return
+            
             self._clearProjectDir(absoluteProjectPath)
 
         # Add subfolders
@@ -179,15 +187,22 @@ class ProjectTree(QTreeView):
     def onAddDevice(self):
         if not self.__serverTopology or self.__serverTopology.empty():
             reply = QMessageBox.question(self, "No server connection",
+                                         "There is no connection to the server.<br>"
                                          "Do you want to establish a server connection?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
             if reply == QMessageBox.No:
                 return
             self.signalConnectToServer.emit()
+            return
 
         # Show dialog to select plugin
-        self.__pluginDialog = PluginDialog(self.__serverTopology)
+        self.__pluginDialog = PluginDialog()
+        if not self.__pluginDialog.updateServerTopology(self.__serverTopology):
+            QMessageBox.warning(self, "No servers available",
+            "There are no servers available.<br>Please check, if all servers "
+            "are <br>started correctly!")
+            return
         if self.__pluginDialog.exec_() == QDialog.Rejected:
             return
 
