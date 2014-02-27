@@ -282,17 +282,23 @@ namespace karabo {
                             // That is what we expect it should be
                             for (size_t i = 0; i < userOptions.size(); ++i) {
                                 const Hash& option = userOptions[i];
-                                Hash::Node rootNode = *(option.begin());
-                                string optionName = rootNode.getKey();
-                                if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
-                                    Hash tmp;
-                                    r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
-                                    workNodes.push_back(Hash(optionName, tmp));
-                                } else {
-                                    report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
-                                    report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
-                                    return;
+                                if (!option.empty()) {
+                                    Hash::Node rootNode = *(option.begin());
+                                    string optionName = rootNode.getKey();
+                                    if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
+                                        Hash tmp;
+                                        r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
+                                        workNodes.push_back(Hash(optionName, tmp));
+                                    } else {
+                                        report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
+                                        report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
+                                        return;
 
+                                    }
+                                } else {
+                                    // No value provided
+                                    report << "Missing parameter: \"" << key << "\". ";
+                                    return;
                                 }
                             }
                         }
