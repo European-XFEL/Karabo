@@ -109,7 +109,10 @@ elif params == 5:
         tContinue = True
 	t1=None
 else:
-    print "Assuming min 2 max 4 params. Example: TEST1 currentSpeed 'Wed Feb 19 16:00:00 CET 2014' 'Wed Feb 19 16:10:00 CET 2014'"
+    print "usage: deviceId propertyName [t0 [t1]]\n"
+    print "where t0, t1 - data/time in format 'Thu Feb 26 14:45:55 CET 2014' or any other like '26.02.2014 14:45:55 2014' "
+    print "If timezone (like CET) is not specified, then local system time zone will be assumed."
+    print "Example: myDeviceId currentSpeed 'Wed Feb 26 14:45:55 CET 2014' '26.02.2014 15:10:00 2014'"
     sys.exit()
 
 #temporary for now store resuts in file
@@ -200,6 +203,7 @@ if t0 is not None:
         
 else:         #no t0, no t1 
     #print "continueRunFromNow"
+    checkDeviceExists()
     c.registerPropertyMonitor(deviceId, key, onPropertyChange)
     while True:
         time.sleep(100000) 
