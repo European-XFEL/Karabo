@@ -2,6 +2,7 @@
  * $Id$
  *
  * Author: <burkhard.heisen@xfel.eu>
+ * Modified by: <krzysztof.wrona@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -11,13 +12,27 @@
 
 using namespace karabo::core;
 using namespace karabo::util;
-using namespace karabo::log;
+using namespace karabo::log; 
 
 
 int main(int argc, char** argv) {
-    try {
+    try {  
         
-        DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
+
+        vector<char*> newArgvVec(argc + 1);
+        char** newArgv = &newArgvVec[0];
+        for (int i = 0; i < argc; ++i) {
+            newArgv[i] = argv[i]; 
+        }
+
+        string serverIdFileName("serverId.xml");
+        if (boost::filesystem::exists(serverIdFileName)) {
+            newArgv[argc] = (char*) "serverId.xml";
+            argc++;
+        }
+
+
+        DeviceServer::Pointer deviceServer = Runner<DeviceServer>::instantiate(argc, newArgv);
         if (deviceServer) deviceServer->run();
 
     } catch (const karabo::util::TimeoutException& e) {
