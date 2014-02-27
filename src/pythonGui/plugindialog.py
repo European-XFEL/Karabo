@@ -14,12 +14,12 @@ import globals
 
 #from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-                         QGroupBox, QLineEdit, QVBoxLayout)
+                         QGroupBox, QLineEdit, QMessageBox, QVBoxLayout)
 
 
 class PluginDialog(QDialog):
 
-    def __init__(self, serverTopology):
+    def __init__(self):
         super(PluginDialog, self).__init__()
 
         self.setWindowTitle("Add device")
@@ -27,75 +27,75 @@ class PluginDialog(QDialog):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
 
-        self.__gbSelectDeviceId = QGroupBox("Select device ID", self)
-        fLayout = QFormLayout(self.__gbSelectDeviceId)
+        self.gbSelectDeviceId = QGroupBox("Select device ID", self)
+        fLayout = QFormLayout(self.gbSelectDeviceId)
         fLayout.setContentsMargins(5,5,5,5)
-        self.__leDeviceId = QLineEdit("")
-        self.__leDeviceId.textChanged.connect(self.onDeviceIdChanged)
-        fLayout.addRow("Device ID:", self.__leDeviceId)
-        vLayout.addWidget(self.__gbSelectDeviceId)
+        self.leDeviceId = QLineEdit("")
+        self.leDeviceId.textChanged.connect(self.onDeviceIdChanged)
+        fLayout.addRow("Device ID:", self.leDeviceId)
+        vLayout.addWidget(self.gbSelectDeviceId)
 
-        self.__gbSelectServer = QGroupBox("Select server", self)
-        fLayout = QFormLayout(self.__gbSelectServer)
+        self.gbSelectServer = QGroupBox("Select server", self)
+        fLayout = QFormLayout(self.gbSelectServer)
         fLayout.setContentsMargins(5,5,5,5)
-        self.__cbServer = QComboBox()
-        self.__cbServer.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.__cbServer.currentIndexChanged[int].connect(self.onServerChanged)
-        fLayout.addRow("Server:     ", self.__cbServer)
-        vLayout.addWidget(self.__gbSelectServer)
+        self.cbServer = QComboBox()
+        self.cbServer.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.cbServer.currentIndexChanged[int].connect(self.onServerChanged)
+        fLayout.addRow("Server:     ", self.cbServer)
+        vLayout.addWidget(self.gbSelectServer)
 
         self.__gbSelectPlugin = QGroupBox("Select device type", self)
         fLayout = QFormLayout(self.__gbSelectPlugin)
         fLayout.setContentsMargins(5,5,5,5)
-        self.__cbPlugin = QComboBox()
-        self.__cbPlugin.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.__cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
-        fLayout.addRow("Device:    ", self.__cbPlugin)
+        self.cbPlugin = QComboBox()
+        self.cbPlugin.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
+        fLayout.addRow("Device:    ", self.cbPlugin)
         vLayout.addWidget(self.__gbSelectPlugin)
 
-        self.__gbStartUp = QGroupBox("Select startup behaviour", self)
-        fLayout = QFormLayout(self.__gbStartUp)
+        self.gbStartUp = QGroupBox("Select startup behaviour", self)
+        fLayout = QFormLayout(self.gbStartUp)
         fLayout.setContentsMargins(5,5,5,5)
-        self.__cbStartUp = QComboBox()
-        self.__cbStartUp.addItems(["Instantiate, if not exists",
+        self.cbStartUp = QComboBox()
+        self.cbStartUp.addItems(["Instantiate, if not exists",
                                    "Restart, if exists", "Never instantiate"])
-        self.__cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.__cbStartUp.currentIndexChanged[int].connect(self.onStartUpBehaviourChanged)
-        fLayout.addRow("Startup behaviour:", self.__cbStartUp)
-        vLayout.addWidget(self.__gbStartUp)
+        self.cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        self.cbStartUp.currentIndexChanged[int].connect(self.onStartUpBehaviourChanged)
+        fLayout.addRow("Startup behaviour:", self.cbStartUp)
+        vLayout.addWidget(self.gbStartUp)
 
-        self.__buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.__buttonBox.accepted.connect(self.accept)
-        self.__buttonBox.rejected.connect(self.reject)
-        vLayout.addWidget(self.__buttonBox)
-        
-        self.updateServerTopology(serverTopology)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+        self.serverTopology = None
 
 
     def updateServerTopology(self, serverTopology):
-        self.__serverTopology = serverTopology
-        if not self.__serverTopology:
-            return
+        self.serverTopology = serverTopology
+        if self.serverTopology is None:
+            return False
 
-        self.__cbPlugin.clear()
-        self.__cbServer.clear()
+        self.cbPlugin.clear()
+        self.cbServer.clear()
 
-        for serverId in self.__serverTopology.keys():
+        for serverId in self.serverTopology.keys():
 
-            visibility = self.__serverTopology.getAttribute(serverId, "visibility")
+            visibility = self.serverTopology.getAttribute(serverId, "visibility")
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
                 continue
 
             deviceClasses = None
-            if self.__serverTopology.hasAttribute(serverId, "deviceClasses"):
-                deviceClasses = self.__serverTopology.getAttribute(serverId, "deviceClasses")
+            if self.serverTopology.hasAttribute(serverId, "deviceClasses"):
+                deviceClasses = self.serverTopology.getAttribute(serverId, "deviceClasses")
 
             if not deviceClasses:
-                return
+                continue
 
             visibleClasses = []
-            visibilities = self.__serverTopology.getAttribute(serverId, "visibilities")
+            visibilities = self.serverTopology.getAttribute(serverId, "visibilities")
             i = -1
             for classId in deviceClasses:
                 i = i + 1
@@ -103,60 +103,68 @@ class PluginDialog(QDialog):
                     visibleClasses.append(classId)
 
 
-            #self.__cbServer.blockSignals(True)
-            self.__cbServer.addItem(serverId, visibleClasses)
-            #self.__cbServer.blockSignals(False)
+            #self.cbServer.blockSignals(True)
+            self.cbServer.addItem(serverId, visibleClasses)
+            #self.cbServer.blockSignals(False)
 
             #for plugin in deviceClasses:
-            #    index = self.__cbPlugin.findText(plugin)
+            #    index = self.cbPlugin.findText(plugin)
             #    if index > -1:
-            #        data = self.__cbPlugin.itemData(index)
+            #        data = self.cbPlugin.itemData(index)
             #        data.append(serverId)
-            #        self.__cbPlugin.setItemData(index, data)
+            #        self.cbPlugin.setItemData(index, data)
             #        continue
 
-            #    self.__cbPlugin.blockSignals(True)
-            #    self.__cbPlugin.addItem(plugin, [serverId])
-            #    self.__cbPlugin.blockSignals(False)
+            #    self.cbPlugin.blockSignals(True)
+            #    self.cbPlugin.addItem(plugin, [serverId])
+            #    self.cbPlugin.blockSignals(False)
 
-        self.__cbPlugin.adjustSize()
-        self.__cbServer.adjustSize()
+        # No servers and therefore no plugins available?
+        if self.cbServer.count() < 1:
+            return False
+
+        self.cbPlugin.adjustSize()
+        self.cbServer.adjustSize()
+        
+        return True
 
 
     @property
     def deviceId(self):
-        return self.__leDeviceId.text()
+        return self.leDeviceId.text()
 
 
     @property
     def plugin(self):
-        return self.__cbPlugin.currentText()
+        return self.cbPlugin.currentText()
 
 
     @property
     def server(self):
-        return self.__cbServer.currentText()
+        return self.cbServer.currentText()
 
 
 ### Slots ###
     def onDeviceIdChanged(self, text):
-        self.__buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
 
 
     def onServerChanged(self, index):
+        if index < 0:
+            return
         # Get plugins which exist on server
-        data = self.__cbServer.itemData(index)
-        self.__cbPlugin.clear()
+        data = self.cbServer.itemData(index)
+        self.cbPlugin.clear()
         for d in data:
-            self.__cbPlugin.blockSignals(True)
-            self.__cbPlugin.addItem(d)
-            self.__cbPlugin.blockSignals(False)
+            self.cbPlugin.blockSignals(True)
+            self.cbPlugin.addItem(d)
+            self.cbPlugin.blockSignals(False)
 
 
     def onPluginChanged(self, index):
         # Get servers where plugin exists
         pass
-        #data = self.__cbPlugin.itemData(index)
+        #data = self.cbPlugin.itemData(index)
         #print "onPluginChanged", data
 
 
