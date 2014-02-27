@@ -136,6 +136,9 @@ class Network(QObject):
         self._logout()
         Manager().disconnectedFromServer()
 
+        if self.__tcpSocket is None:
+            return
+
         self.__tcpSocket.disconnectFromHost()
         if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
             self.__tcpSocket.waitForDisconnected(5000):
