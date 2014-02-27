@@ -65,6 +65,7 @@ class Network(QObject):
 
         Manager().signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
+        Manager().signalGetFromPast.connect(self.onGetFromPast)
 
         self.__headerSize = 0
         self.__bodySize = 0
@@ -134,6 +135,9 @@ class Network(QObject):
         """
         self._logout()
         Manager().disconnectedFromServer()
+
+        if self.__tcpSocket is None:
+            return
 
         self.__tcpSocket.disconnectFromHost()
         if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
@@ -287,21 +291,24 @@ class Network(QObject):
                 Manager().handleClassSchema(bodyHash)
             elif type == "deviceSchema":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleDeviceSchema(headerHash, bodyHash)
+                Manager().handleDeviceSchema(headerHash, bodyHash)
             elif type == "configurationChanged":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleConfigurationChanged(headerHash, bodyHash)
+                Manager().handleConfigurationChanged(headerHash, bodyHash)
             elif type == "log":
-                self._handleLog(str(self.__bodyBytes))
+                Manager().onLogDataAvailable(str(self.__bodyBytes))
             elif type == "schemaUpdated":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleSchemaUpdated(headerHash, bodyHash)
+                Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
             elif type == "brokerInformation":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleBrokerInformation(headerHash, bodyHash)
             elif type == "notification":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 self._handleNotification(headerHash, bodyHash)
+            elif type == "historicData":
+                bodyHash = self.__serializer.load(self.__bodyBytes)
+                Manager().handleHistoricData(headerHash, bodyHash)
             elif type == "invalidateCache":
                 print "invalidateCache"
             else:
@@ -456,6 +463,16 @@ class Network(QObject):
         self._tcpWriteHashHash(header, Hash())
 
 
+    def onGetFromPast(self, deviceId, property, t0, t1):
+        header = Hash()
+        header.set('type', 'getFromPast')
+        header.set('deviceId', deviceId)
+        header.set('property', property)
+        header.set('t0', t0)
+        header.set('t1', t1)
+        self._tcpWriteHashHash(header, Hash())
+
+
 ### private functions ###
     def _sendLoginInformation(self, username, password, provider, sessionToken):
         header = Hash("type", "login")
@@ -494,25 +511,6 @@ class Network(QObject):
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
         self.__tcpSocket.write(stream)
-
-
-    def _handleLog(self, logMessage):
-        Manager().onLogDataAvailable(logMessage)
-
-
-    def _handleDeviceSchema(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleDeviceSchema(deviceId, bodyHash)
-
-
-    def _handleConfigurationChanged(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleConfigurationChanged(deviceId, bodyHash)
-
-
-    def _handleSchemaUpdated(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        Manager().handleDeviceSchemaUpdated(deviceId, bodyHash)
 
 
     def _handleBrokerInformation(self, headerHash, bodyHash):
