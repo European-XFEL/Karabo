@@ -373,6 +373,8 @@ class ProxyWidget(QStackedWidget):
         if component is None:
             return
 
+        self.setToolTip(component.keys[0])
+
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
