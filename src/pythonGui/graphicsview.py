@@ -1151,7 +1151,6 @@ class GraphicsView(QSvgWidget):
                                                         metricPrefixSymbol=item.metricPrefixSymbol,
                                                         unitSymbol=item.unitSymbol,
                                                         valueType=item.valueType)
-                    displayComponent.widget.setToolTip(internalKey)
                     
                     items.append((displayComponent.widget, displayComponent))
                     # Create proxy widget
@@ -1204,6 +1203,8 @@ class GraphicsView(QSvgWidget):
         if event.type() == QEvent.ToolTip:
             item = self.inner.childAt(event.pos())
             if item is not None:
+                while not isinstance(item, ProxyWidget):
+                    item = item.parent()
                 item.event(event)
                 return True
         return ret
