@@ -1250,4 +1250,3 @@ class GraphicsView(QSvgWidget):
             self.current_action.draw(painter)
         finally:
             painter.end()
-
