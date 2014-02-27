@@ -32,8 +32,8 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel = QItemSelectionModel(self)
 
 
-    def updateData(self, projectHash):
-        print "updateData"
+    def updateData(self, projectHash, centralHash):
+        print ""
         print projectHash
         print ""
 
@@ -71,16 +71,19 @@ class ProjectModel(QStandardItemModel):
                     if subConfig.empty():
                         continue
 
-                    for n in subConfig.keys():
-                        leafItem = QStandardItem(n)
-                        # TODO: update icon on availability of device
-                        leafItem.setIcon(QIcon(":device-instance"))
+                    for deviceId in subConfig.keys():
+                        leafItem = QStandardItem(deviceId)
+                        # Update icon on availability of device
+                        if centralHash.has("device." + deviceId):
+                            leafItem.setIcon(QIcon(":device-instance"))
+                        else:
+                            leafItem.setIcon(QIcon(":offline"))
                         childItem.appendRow(leafItem)
 
-                        deviceId = k + "." + l + "." + m + "." + n
-                        leafItem.setData(deviceId, ProjectModel.ITEM_PATH)
+                        path = k + "." + l + "." + m + "." + deviceId
+                        leafItem.setData(path, ProjectModel.ITEM_PATH)
 
-                        classConfig = subConfig.get(n)
+                        classConfig = subConfig.get(deviceId)
                         for classId in classConfig.keys():
                             serverId = classConfig.get(classId + ".serverId")
                             # Set server and class ID

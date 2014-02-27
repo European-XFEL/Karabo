@@ -118,8 +118,12 @@ class _Manager(QObject):
 
         # One model for navigation hierarchy view
         self.navHierarchyModel = NavigationHierarchyModel(self)
+        self.navHierarchyModel.selectionModel.selectionChanged. \
+                        connect(self.onNavigationHierarchyModelSelectionChanged)
         # One model for project view
         self.projModel = ProjectModel(self)
+        self.projModel.selectionModel.selectionChanged. \
+                        connect(self.onProjectModelSelectionChanged)
         
         # Sets all parameters to start configuration
         self.reset()
@@ -274,6 +278,7 @@ class _Manager(QObject):
 
     def newVisibleDevice(self, internalPath):
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
+        print "newVisibleDevice", deviceId
         if not deviceId:
             return
 
@@ -297,6 +302,7 @@ class _Manager(QObject):
 
     def removeVisibleDevice(self, internalPath):
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
+        print "removeVisibleDevice", deviceId
         if not deviceId:
             return
 
@@ -424,6 +430,28 @@ class _Manager(QObject):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
 
+    def onNavigationHierarchyModelSelectionChanged(self, selected, deselect):
+        """
+        This slot is called whenever something of the navigation panel is selected.
+        If an item was selected, the selection of the project panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.projModel.selectionModel.clearSelection()
+
+
+    def onProjectModelSelectionChanged(self, selected, deselected):
+        """
+        This slot is called whenever something of the project panel is selected.
+        If an item was selected, the selection of the navigation panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.navHierarchyModel.selectionModel.clearSelection()
+
+
     def initDevice(self, serverId, classId, path):
         #print "initDevice", internalKey
         #print self.__hash
@@ -490,12 +518,12 @@ class _Manager(QObject):
         
         self.__projectHash.set(projectName, projectConfig)
         self.__projectHash.setAttribute(projectName, "directory", directory)
-        self.projModel.updateData(self.__projectHash)
+        self.projModel.updateData(self.__projectHash, self.__hash)
 
 
     def addDeviceToProject(self, deviceConfig):
         self.__projectHash.merge(deviceConfig, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.projModel.updateData(self.__projectHash)
+        self.projModel.updateData(self.__projectHash, self.__hash)
 
 
     def selectNavigationItemByKey(self, path):
