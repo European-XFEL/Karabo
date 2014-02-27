@@ -779,8 +779,8 @@ class ConfigurationPanel(QWidget):
         serverId = itemInfo.get('serverId')
         classId = itemInfo.get('classId')
         path = itemInfo.get('key')
-        
-        Manager().initDevice(str(serverId), str(classId), str(path))
+
+        Manager().initDevice(serverId, classId, path)
 
 
     def onDeviceSchemaUpdated(self, key):
