@@ -27,12 +27,13 @@
 #include "DeviceServer.hh"
 #include "karabo/io/FileTools.hh"
 
+
 namespace karabo {
 
     namespace core {
 
         //template class Runner<DeviceServer>;
-
+                
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -45,7 +46,7 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
         void DeviceServer::expectedParameters(Schema& expected) {
-
+            
             STRING_ELEMENT(expected).key("serverId")
                     .displayedName("Server ID")
                     .description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
@@ -102,17 +103,87 @@ namespace karabo {
                     .appendParametersOfConfigurableClass<Logger>("Logger")
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("Logger.appenders")
-                    .setNewDefaultValue("Ostream")
+            NODE_ELEMENT(expected).key("Logger.rollingFile")
+                    .description("Log Appender settings for file")
+                    .displayedName("Rolling File Appender")
+                    .appendParametersOfConfigurableClass<AppenderConfigurator>("RollingFile")
+                    .advanced()
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
                     .setNewDefaultValue("Pattern")
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout.Pattern.format")
+                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
+                    .setNewDefaultValue("device-server.log")
+                    .commit();
+            
+
+            
+            NODE_ELEMENT(expected).key("Logger.network")
+                    .description("Log Appender settings for Network")
+                    .displayedName("Network Appender")
+                    .appendParametersOfConfigurableClass<AppenderConfigurator>("Network")
+                    .advanced()
+                    .commit();
+
+
+
+
+            NODE_ELEMENT(expected).key("Logger.ostream")
+                    .description("Log Appender settings for terminal")
+                    .displayedName("Ostream Appender")
+                    .appendParametersOfConfigurableClass<AppenderConfigurator>("Ostream")
+                    .advanced()
+                    .commit();
+
+
+            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout.Pattern.format")
                     .setNewDefaultValue("%p  %c  : %m%n")
                     .commit();
+
+            NODE_ELEMENT(expected).key("Logger.karabo")
+                    .description("Logger category for karabo framework")
+                    .displayedName("Karabo framework logger")
+                    .appendParametersOfConfigurableClass<CategoryConfigurator>("Category")
+                    .advanced()
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
+                    .setNewAssignmentOptional()
+                    .setNewDefaultValue("karabo")
+                    .commit();
+
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
+                    .setNewDefaultValue(false)
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders")
+                    .setNewDefaultValue("RollingFile")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout.Pattern.format")
+                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                    .commit();
+
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
+                    .setNewDefaultValue("device-server.log")
+                    .commit();
+
+
         }
 
 
@@ -124,7 +195,7 @@ namespace karabo {
             if (input.has("serverId")) {
                 input.get("serverId", m_serverId);
                 // Automatically load this configuration on next startup
-                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "autoload.xml");
+                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "serverId.xml");
             } else {
                 m_serverId = generateDefaultServerId();
             }
@@ -152,11 +223,36 @@ namespace karabo {
 
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
-            config.set("categories[0].Category.name", "karabo");
-            config.set("categories[0].Category.appenders[0].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
-            config.set("categories[0].Category.additivity", false);
             config.set("appenders[1].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
             config.set("appenders[1].Network.connection", m_connectionConfig);
+
+            // make a copy of additional appenders defined by user
+            vector<Hash> appenders = config.get < vector<Hash> >("appenders");
+
+            // handle predefined DeviceServer appenders
+            vector<Hash> newAppenders(3, Hash());
+            newAppenders[0].set("Ostream", config.get<Hash>("ostream"));
+            newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
+            newAppenders[2].set("Network", config.get<Hash>("network"));
+
+            config.erase("ostream");
+            config.erase("rollingFile");
+            config.erase("network");
+
+            for (size_t i = 0; i < appenders.size(); ++i) {
+                if (appenders[i].has("Ostream")) {
+                    if (appenders[i].get<string>("Ostream.name") == "default")
+                        continue;
+                }
+                newAppenders.push_back(appenders[i]);
+            }
+
+            config.set("appenders", newAppenders);
+            Hash category = config.get<Hash>("karabo");
+            category.set("name", "karabo");
+            config.set("categories[0].Category", category);
+            config.erase("karabo");
+            //            cerr << "loadLogger final:" << endl << config << endl;
             Logger::configure(config);
         }
 
