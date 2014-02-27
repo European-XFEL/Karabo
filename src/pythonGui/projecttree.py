@@ -64,8 +64,8 @@ class ProjectTree(QTreeView):
         projectConfig.setAttribute("project", "name", projectName)
 
         deviceLabel = "Devices"
-        projectConfig.set("project.devices", Hash())
-        projectConfig.setAttribute("project.devices", "label", deviceLabel)
+        projectConfig.set("project.device", Hash())
+        projectConfig.setAttribute("project.device", "label", deviceLabel)
         sceneLabel = "Scenes"
         projectConfig.set("project.scenes", Hash())
         projectConfig.setAttribute("project.scenes", "label", sceneLabel)
@@ -211,7 +211,7 @@ class ProjectTree(QTreeView):
             projectIndex = index.parent()
             if projectIndex:
                 # Path for device in project hash
-                devicePath = projectIndex.data(Qt.DisplayRole) + ".project.devices." + \
+                devicePath = projectIndex.data(Qt.DisplayRole) + ".project.device." + \
                              self.__pluginDialog.deviceId
                 # Path for device configuration
                 configPath = devicePath + "." + self.__pluginDialog.plugin
@@ -237,16 +237,21 @@ class ProjectTree(QTreeView):
         index = selectedIndexes[0]
 
         path = index.data(ProjectModel.ITEM_PATH)
-        if not path: return
+        if path is None: return
         
         serverId = index.data(ProjectModel.ITEM_SERVER_ID)
         classId = index.data(ProjectModel.ITEM_CLASS_ID)
+        deviceId = index.data(Qt.DisplayRole)
 
         # Get schema
         schema = Manager().getClassSchema(serverId, classId)
         
-        # TODO: check whether deviceId is already online!!!
-        itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema)
+        # Check whether deviceId is already online
+        if Manager().hash.has("device." + deviceId):
+            itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.DEVICE, schema=schema)
+        else:
+            itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema)
+        
         Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
         self.itemChanged.emit(itemInfo)
