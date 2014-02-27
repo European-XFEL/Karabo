@@ -27,6 +27,7 @@ void exportPyUtilClassInfo();
 void exportPyUtilTrainstamp();
 void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
+void exportPyUtilTimeDuration();
 void exportPyUtilDims();
 
 // io
@@ -101,6 +102,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilTrainstamp();
     exportPyUtilEpochstamp();
     exportPyUtilTimestamp();
+    exportPyUtilTimeDuration();
     exportPyUtilDims();
     exportPyUtilSchema();
     
