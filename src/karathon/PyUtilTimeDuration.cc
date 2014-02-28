@@ -22,6 +22,35 @@ void exportPyUtilTimeDuration() {
     t.def(bp::init< long long unsigned int, long long unsigned int >((bp::arg("seconds"), bp::arg("fractions"))));
     t.def(bp::init< int, int, int, long long unsigned int, long long unsigned int >((bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions"))));
     t.def(bp::self_ns::str(bp::self));
+    t.def("set"
+          , (TimeDuration & (TimeDuration::*)(TimeValue const, TimeValue const))(&TimeDuration::set)
+          , (bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
+
+    t.def("set"
+          , (TimeDuration & (TimeDuration::*)(int const, int const, int const, TimeValue const, TimeValue const))(&TimeDuration::set)
+          , (bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
+
+    t.def("add"
+          , (TimeDuration & (TimeDuration::*)(TimeValue const, TimeValue const))(&TimeDuration::add)
+          , (bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
+
+    t.def("add"
+          , (TimeDuration & (TimeDuration::*)(int const, int const, int const, TimeValue const, TimeValue const))(&TimeDuration::add)
+          , (bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
+
+    t.def("sub"
+          , (TimeDuration & (TimeDuration::*)(TimeValue const, TimeValue const))(&TimeDuration::sub)
+          , (bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
+
+    t.def("sub"
+          , (TimeDuration & (TimeDuration::*)(int const, int const, int const, TimeValue const, TimeValue const))(&TimeDuration::sub)
+          , (bp::arg("days"), bp::arg("hours"), bp::arg("minutes"), bp::arg("seconds"), bp::arg("fractions"))
+          , bp::return_internal_reference<> ());
 
     t.def("format"
           , (string(TimeDuration::*)(string const &) const) (&TimeDuration::format)
@@ -40,7 +69,7 @@ void exportPyUtilTimeDuration() {
 
     t.def("getHours"
           , (unsigned long int (TimeDuration::*)()const) (&TimeDuration::getHours));
-    
+
     t.def("getMinutes"
           , (unsigned long int (TimeDuration::*)()const) (&TimeDuration::getMinutes));
 
@@ -67,7 +96,7 @@ void exportPyUtilTimeDuration() {
     t.def("toHash"
           , (void (TimeDuration::*)(Hash &))(&TimeDuration::toHash)
           , (bp::arg("hash")));
-    
+
     t.def(bp::self != bp::self);
     t.def(bp::self + bp::self);
     t.def(bp::self += bp::self);
