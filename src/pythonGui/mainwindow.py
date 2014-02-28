@@ -25,7 +25,7 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
-#from panels.projectpanel import ProjectPanel
+from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
@@ -175,16 +175,18 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        self.__navigationPanel = NavigationPanel(Manager().treemodel)
+        self.__navigationPanel = NavigationPanel(Manager().navHierarchyModel)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        #self.__projectPanel = ProjectPanel()
-        #self.__projectTab = DockTabWindow("Projects", leftArea)
-        #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        #leftArea.setStretchFactor(1,1)
+        self.__projectPanel = ProjectPanel()
+        self.__projectTab = DockTabWindow("Projects", leftArea)
+        self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
+        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = self._createCustomMiddlePanel()
@@ -209,7 +211,7 @@ class MainWindow(QMainWindow):
         self.__outputTab.addDockableTab(self.__notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.__configurationPanel = ConfigurationPanel(Manager().treemodel)
+        self.__configurationPanel = ConfigurationPanel(Manager().navHierarchyModel)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")

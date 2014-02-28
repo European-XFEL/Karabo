@@ -22,6 +22,7 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
+    # signal
     itemChanged = pyqtSignal(dict)
 
 
@@ -31,8 +32,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
         self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selection_model = QItemSelectionModel(self)
-        self.selection_model.selectionChanged.connect(self.onSelectionChanged)
+        self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _currentConfig(self):
@@ -49,7 +50,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if self.__currentConfig != config:
             self.__currentConfig = config
 
-        selectedIndexes = self.selection_model.selectedIndexes()
+        selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
             lastSelectionPath = selectedIndexes[0].internalPointer().path
         else:
@@ -62,8 +63,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         serverKey = "server"
         if config.has(serverKey):
             serverConfig = config.get(serverKey)
-            serverIds = list()
-            serverConfig.getKeys(serverIds)
+            serverIds = serverConfig.keys()
             for serverId in serverIds:
                 # Get attributes
                 #serverAttributes = serverConfig.getAttributes(serverId)
@@ -102,8 +102,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         deviceKey = "device"
         if config.has(deviceKey):
             deviceConfig = config.get(deviceKey)
-            deviceIds = list()
-            deviceConfig.getKeys(deviceIds)
+            deviceIds = deviceConfig.keys()
             for deviceId in deviceIds:
                 # Get attributes
                 visibility = deviceConfig.getAttribute(deviceId, "visibility")
@@ -207,7 +206,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return
 
         path = index.internalPointer().path
-        self.selection_model.setCurrentIndex(index,
+        self.selectionModel.setCurrentIndex(index,
                                              QItemSelectionModel.ClearAndSelect)
 
 
@@ -241,8 +240,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
     def selectPath(self, path):
         index = self.findIndex(path)
         if index is not None:
-            self.selection_model.select(index,
-                                        QItemSelectionModel.ClearAndSelect)
+            self.selectionModel.select(index, QItemSelectionModel.ClearAndSelect)
 
 
     def rowCount(self, parent=QModelIndex()):
