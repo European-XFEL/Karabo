@@ -110,10 +110,9 @@ namespace karabo {
                         m_serializer->save(data, m_h5file, "0");
                         closeFile();
                         p.stopPeriod("write");
-                        double writeTime = karabo::util::HighResolutionTimer::time2double(p.getTime("write"));
                         if (false) {
                             std::clog << std::endl;
-                            std::clog << "write data                       : " << writeTime << " [s]" << std::endl;
+                            std::clog << "write data                       : " << p.getPeriod("write").getDuration() << " [s]" << std::endl;
                         }
                     }
 
