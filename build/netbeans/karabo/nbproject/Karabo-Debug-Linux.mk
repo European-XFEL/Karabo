@@ -115,13 +115,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Hash.o \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
-	${OBJECTDIR}/_ext/163016059/Profiler.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/TimeDuration.o \
 	${OBJECTDIR}/_ext/163016059/TimePeriod.o \
 	${OBJECTDIR}/_ext/163016059/TimeProfiler.o \
-	${OBJECTDIR}/_ext/163016059/Timer.o \
 	${OBJECTDIR}/_ext/163016059/Timestamp.o \
 	${OBJECTDIR}/_ext/163016059/Trainstamp.o \
 	${OBJECTDIR}/_ext/163016059/Validator.o \
@@ -582,11 +580,6 @@ ${OBJECTDIR}/_ext/163016059/PluginLoader.o: ../../../src/karabo/util/PluginLoade
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/PluginLoader.o ../../../src/karabo/util/PluginLoader.cc
 
-${OBJECTDIR}/_ext/163016059/Profiler.o: ../../../src/karabo/util/Profiler.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Profiler.o ../../../src/karabo/util/Profiler.cc
-
 ${OBJECTDIR}/_ext/163016059/Schema.o: ../../../src/karabo/util/Schema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
@@ -611,11 +604,6 @@ ${OBJECTDIR}/_ext/163016059/TimeProfiler.o: ../../../src/karabo/util/TimeProfile
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/TimeProfiler.o ../../../src/karabo/util/TimeProfiler.cc
-
-${OBJECTDIR}/_ext/163016059/Timer.o: ../../../src/karabo/util/Timer.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc
 
 ${OBJECTDIR}/_ext/163016059/Timestamp.o: ../../../src/karabo/util/Timestamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -1987,19 +1975,6 @@ ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o: ${OBJECTDIR}/_ext/163016059/P
 	    ${CP} ${OBJECTDIR}/_ext/163016059/PluginLoader.o ${OBJECTDIR}/_ext/163016059/PluginLoader_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/163016059/Profiler_nomain.o: ${OBJECTDIR}/_ext/163016059/Profiler.o ../../../src/karabo/util/Profiler.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Profiler.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o ../../../src/karabo/util/Profiler.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/Profiler.o ${OBJECTDIR}/_ext/163016059/Profiler_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Schema.o`; \
@@ -2063,19 +2038,6 @@ ${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o: ${OBJECTDIR}/_ext/163016059/T
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o ../../../src/karabo/util/TimeProfiler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/TimeProfiler.o ${OBJECTDIR}/_ext/163016059/TimeProfiler_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/163016059/Timer_nomain.o: ${OBJECTDIR}/_ext/163016059/Timer.o ../../../src/karabo/util/Timer.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/Timer.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o ../../../src/karabo/util/Timer.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163016059/Timer.o ${OBJECTDIR}/_ext/163016059/Timer_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Timestamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Timestamp.o ../../../src/karabo/util/Timestamp.cc 
