@@ -14,17 +14,16 @@ __all__ = ["ConfigurationPanel"]
 
 import const
 
-from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
-
+from parametertreewidget import ParameterTreeWidget
+from projecttree import ProjectTree
 from schemareader import SchemaReader 
 
-from karabo.karathon import *
 from PyQt4.QtCore import SIGNAL, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
@@ -44,6 +43,7 @@ class ConfigurationPanel(QWidget):
     #    pass
     ##########################################
 
+
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
         
@@ -61,24 +61,48 @@ class ConfigurationPanel(QWidget):
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
+        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
+
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainSplitter = QSplitter(Qt.Vertical)
 
-        # widget with navigation/attributeeditor-splitter and button-layout
-        topWidget = QWidget(mainSplitter)
-        vLayout = QVBoxLayout(topWidget)
-        vLayout.setContentsMargins(0,0,0,0)
-        
-        # splitter for navigation + attributeeditor
-        splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
-        vLayout.addWidget(splitTopPanes)
-                
-        self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
+        # Layout for navigation and project tree
+        navSplitter = QSplitter(Qt.Vertical)
+        # Navigation tree
+        self.__twNavigation = NavigationTreeView(None, treemodel)
         treemodel.itemChanged.connect(self.onNavigationItemChanged)
-        self.__twNavigation.hide()
+        #self.__twNavigation.hide()
+        navSplitter.addWidget(self.__twNavigation)
+
+        # Project tree
+        self.__twProject = ProjectTree()
+        self.__twProject.itemChanged.connect(self.onProjectItemChanged)
+        #self.__twProject.hide()
+        navSplitter.addWidget(self.__twProject)
+
+        navSplitter.setStretchFactor(0, 1)
+        navSplitter.setStretchFactor(1, 1)
+
+        # Stacked widget for configuration parameters
+        self.__swParameterEditor = QStackedWidget(None)
+        # Initial page
+        twInitalParameterEditorPage = ParameterTreeWidget(self)
+        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
+        self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+
+        topWidget = QWidget(mainSplitter)
+
+        splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
+        splitTopPanes.addWidget(navSplitter)
+        splitTopPanes.addWidget(self.__swParameterEditor)
 
         splitTopPanes.setStretchFactor(0, 1)
+        splitTopPanes.setStretchFactor(1, 3)
+
+        vLayout = QVBoxLayout(topWidget)
+        vLayout.setContentsMargins(0,0,0,0)
+        vLayout.addWidget(splitTopPanes)
         
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
@@ -86,8 +110,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
-        
-        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -97,15 +119,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
         Manager().signalInstanceNewReset.connect(self.onInstanceNewReset)
-
-        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
-        self.__swParameterEditor = QStackedWidget(splitTopPanes)
-        # Initial page
-        twInitalParameterEditorPage = ParameterTreeWidget(self)
-        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
-        twInitalParameterEditorPage.path = None
-        self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
-        splitTopPanes.setStretchFactor(1, 3)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -534,6 +547,7 @@ class ConfigurationPanel(QWidget):
     def showParameterPage(self, type, path):
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
+        print "+++ showParameterPage +++", index, path
         if index:
             self._setParameterEditorIndex(index)
 
@@ -623,7 +637,7 @@ class ConfigurationPanel(QWidget):
             self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
-            
+
             if schema:
                 self.__internalKeySchemaLoadedMap[key] = True
             else:
@@ -647,7 +661,7 @@ class ConfigurationPanel(QWidget):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
-        self.showParameterPage(type, str(path))
+        self.showParameterPage(type, path)
 
 
     def onInstanceGone(self, path, parentPath):
@@ -830,9 +844,11 @@ class ConfigurationPanel(QWidget):
     # virtual function
     def onUndock(self):
         self.__twNavigation.show()
+        self.__twProject.show()
 
 
     # virtual function
     def onDock(self):
         self.__twNavigation.hide()
+        self.__twProject.hide()
 

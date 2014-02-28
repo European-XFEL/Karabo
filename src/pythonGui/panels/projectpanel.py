@@ -11,12 +11,14 @@
 
 __all__ = ["ProjectPanel"]
 
-import const
+from projecttree import ProjectTree
 
 from enums import NavigationItemTypes
 from manager import Manager
 
-from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import (QAction, QIcon, QTreeWidget, QTreeWidgetItem,
+                         QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -33,61 +35,68 @@ class ProjectPanel(QWidget):
     #def onDock(self):
     #    pass
     ##########################################
-    
+
+    # To import a plugin a server connection needs to be established
+    signalConnectToServer = pyqtSignal()
+
     def __init__(self):
         super(ProjectPanel, self).__init__()
         
         title = "Projects"
         self.setWindowTitle(title)
-        
-        self.__twProject = QTreeWidget(self)
-        self.__twProject.setHeaderLabels([])
-        self.__twProject.itemSelectionChanged.connect(self.projectItemSelectionChanged)
+
+        self.__twProject = ProjectTree(self)
+        self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.__twProject)
-        
-        Manager().signalCreateNewProjectConfig.connect(self.onCreateNewProjectConfig)
+
+        self.setupActions()
 
 
     def setupActions(self):
-        pass
+        text = "New project"
+        self.__acProjectNew = QAction(QIcon(":new"), "&New project", self)
+        self.__acProjectNew.setStatusTip(text)
+        self.__acProjectNew.setToolTip(text)
+        self.__acProjectNew.triggered.connect(self.onProjectNew)
+
+        text = "Open project"
+        self.__acProjectOpen = QAction(QIcon(":open"), "&Open project", self)
+        self.__acProjectOpen.setStatusTip(text)
+        self.__acProjectOpen.setToolTip(text)
+        self.__acProjectOpen.triggered.connect(self.onProjectOpen)
+
+        text = "Save project"
+        self.__acProjectSave = QAction(QIcon(":save"), "&Save project", self)
+        self.__acProjectSave.setStatusTip(text)
+        self.__acProjectSave.setToolTip(text)
+        self.__acProjectSave.setEnabled(False)
+        self.__acProjectSave.triggered.connect(self.onProjectSave)
 
 
-    def setupToolBars(self, toolBar, parent):
-        pass
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.__acProjectNew)
+        standardToolBar.addAction(self.__acProjectOpen)
+        standardToolBar.addAction(self.__acProjectSave)
 
 
-    def projectItemSelectionChanged(self):
-        item = self.__twProject.currentItem()
-        if not item: return
-        Manager().signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
+### slots ###
+    def onProjectNew(self):
+        self.__twProject.newProject()
 
 
-    def onCreateNewProjectConfig(self, customItem, path, configName):
-        #print serverId, classId
-        
-        item = QTreeWidgetItem(self.__twProject)
-        item.setData(0, const.INTERNAL_KEY, path)
-        item.setText(0, configName)
-        
-        customItem.signalValueChanged.connect(self.onAdditionalInfoChanged)
-        
-        for i in self.__twProject.selectedItems():
-            i.setSelected(False)
-        
-        item.setSelected(True)
+    def onProjectOpen(self):
+        self.__twProject.openProject()
 
 
-    def onAdditionalInfoChanged(self, key, deviceId):
-        # When deviceId of customItem was changed
-        for i in xrange(self.__twProject.topLevelItemCount()):
-            item = self.__twProject.topLevelItem(i)
-            if (item.data(0, const.INTERNAL_KEY) + ".configuration.deviceId") == key:
-                oldText = item.text(0)
-                splittedText = str(oldText).split("-<")
-                item.setText(0, "{}-<{}>").format(splittedText[0], deviceId)
+    def onProjectSave(self):
+        self.__twProject.saveProject()
+
+
+    def onServerConnectionChanged(self, isConnected):
+        self.__twProject.serverConnectionChanged(isConnected)
 
 
     # virtual function
