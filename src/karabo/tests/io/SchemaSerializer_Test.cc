@@ -8,7 +8,7 @@
 #include <karabo/io/SchemaXsdSerializer.hh>
 #include <karabo/io/SchemaBinarySerializer.hh>
 #include "karabo/io/BinarySerializer.hh"
-#include "karabo/util/Profiler.hh"
+#include "karabo/util/TimeProfiler.hh"
 #include <karabo/io/TextFileOutput.hh>
 #include <karabo/io/BinaryFileOutput.hh>
 #include <karabo/util/SimpleElement.hh>

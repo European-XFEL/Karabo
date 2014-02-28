@@ -18,7 +18,7 @@
 
 
 
-#include "karabo/util/Profiler.hh"
+#include "karabo/util/TimeProfiler.hh"
 #include <karabo/log/Tracer.hh>
 #include <karabo/util/ArrayTools.hh>
 
