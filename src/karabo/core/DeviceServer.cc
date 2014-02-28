@@ -223,8 +223,7 @@ namespace karabo {
 
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
-            config.set("appenders[1].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
-            config.set("appenders[1].Network.connection", m_connectionConfig);
+            
 
             // make a copy of additional appenders defined by user
             vector<Hash> appenders = config.get < vector<Hash> >("appenders");
@@ -234,6 +233,9 @@ namespace karabo {
             newAppenders[0].set("Ostream", config.get<Hash>("ostream"));
             newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
             newAppenders[2].set("Network", config.get<Hash>("network"));
+            
+            config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
+            config.set("appenders[2].Network.connection", m_connectionConfig);
 
             config.erase("ostream");
             config.erase("rollingFile");
@@ -252,7 +254,7 @@ namespace karabo {
             category.set("name", "karabo");
             config.set("categories[0].Category", category);
             config.erase("karabo");
-            //            cerr << "loadLogger final:" << endl << config << endl;
+//            cerr << "loadLogger final:" << endl << config << endl;
             Logger::configure(config);
         }
 
