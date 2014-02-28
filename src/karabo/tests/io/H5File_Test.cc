@@ -21,7 +21,6 @@
 #include <karabo/io/h5/File.hh>
 #include <karabo/io/h5/Element.hh>
 #include <karabo/io/h5/Scalar.hh>
-#include <karabo/util/Profiler.hh>
 #include <karabo/util/TimeProfiler.hh>
 
 #include <karabo/log/Tracer.hh>
@@ -551,7 +550,7 @@ void H5File_Test::testBufferWrite() {
 
         Hash data;
 
-        Profiler p("VectorBufferWrite");
+        TimeProfiler p("VectorBufferWrite");
 
         p.start("format");
         Format::Pointer format = Format::createEmptyFormat();
@@ -885,7 +884,7 @@ void H5File_Test::testBufferRead() {
     try {
 
 
-        Profiler p("VectorBufferRead");
+        TimeProfiler p("VectorBufferRead");
 
         p.start("format");
         //        Format::Pointer format = Format::createEmptyFormat();
@@ -1164,7 +1163,7 @@ void H5File_Test::testWriteFailure() {
 
 
 void H5File_Test::testManyTables() {
-    Profiler p("ManyTables");
+    TimeProfiler p("ManyTables");
 
 
     try {
@@ -1282,7 +1281,7 @@ void H5File_Test::testManyTables() {
 
 
 void H5File_Test::testManyGroups() {
-    Profiler p("ManyGroups");
+    TimeProfiler p("ManyGroups");
 
     Format::createEmptyFormat();
 
@@ -1633,7 +1632,7 @@ void H5File_Test::testManyGroups() {
 
 void H5File_Test::testVLWrite() {
 
-    Profiler p("VLWrite");
+    TimeProfiler p("VLWrite");
     Hash data;
     try {
 
@@ -1758,7 +1757,7 @@ void H5File_Test::testTrainFormat() {
         unsigned char checksumSize = dataset.get<unsigned char>("checksumSize");
         unsigned short detectorDataSize = dataset.get<unsigned short>("detectorDataSize");
 
-        Profiler p("train");
+        TimeProfiler p("train");
         // 
         string filename = "/dev/shm/train.h5";
         //        filename = resourcePath("train.h5");

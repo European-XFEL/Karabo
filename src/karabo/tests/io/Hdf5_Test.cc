@@ -7,7 +7,7 @@
 
 #include "Hdf5_Test.hh"
 #include <hdf5/hdf5.h>
-#include <karabo/util/Profiler.hh>
+#include <karabo/util/TimeProfiler.hh>
 #include "TestPathSetup.hh"
 #include "karabo/io/Input.hh"
 #include <karabo/log/Tracer.hh>
@@ -86,7 +86,7 @@ void Hdf5_Test::testPureHdf5() {
     //compute total data size in MBytes
     unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
-    Profiler p("write");
+    TimeProfiler p("write");
     p.start("allocate");
     //allocate memory for one image and set the data value
     data = (unsigned short*) malloc(sizeof (unsigned short) *imageSize);
@@ -217,7 +217,7 @@ void Hdf5_Test::testKaraboHdf5() {
     unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
 
-    Profiler p("writeKarabo");
+    TimeProfiler p("writeKarabo");
 
     p.start("allocate");
     //allocate memory for one image and set the data value   
@@ -319,7 +319,7 @@ void Hdf5_Test::testManyDatasets() {
     //compute total data size in MBytes
 //    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
-    Profiler p("write");
+    TimeProfiler p("write");
     p.start("allocate");
     //allocate memory for one image and set the data value
     data = (unsigned short*) malloc(sizeof (unsigned short) *imageSize);
@@ -506,7 +506,7 @@ void Hdf5_Test::testManyDatasets1() {
 
 
 
-    Profiler p("write");
+    TimeProfiler p("write");
     p.start("all");
 
     //create data file
@@ -684,7 +684,7 @@ void Hdf5_Test::testSerializer() {
 
     try {
 
-        Profiler p("Hdf5Serializer");
+        TimeProfiler p("Hdf5Serializer");
         {
             Hash data;
 
@@ -866,7 +866,7 @@ void Hdf5_Test::testSerializer() {
             rooted.setAttribute("a.b.c", "c2", vector<int> (3, 1222)); // vector<string > (3, "bla"));
             Hash m_rootedHash = rooted;
 
-            Profiler p("a");
+            TimeProfiler p("a");
             p.start("vec");
             //    Hash big("a.b", std::vector<double>(20*1024*1024, 1.0));
             Hash big("a.b", std::vector<double>(1000, 1.0));
