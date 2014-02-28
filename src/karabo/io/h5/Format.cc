@@ -15,7 +15,7 @@
 #include <karabo/util/SimpleElement.hh>
 
 #include "Element.hh"
-#include "karabo/util/Profiler.hh"
+#include "karabo/util/TimeProfiler.hh"
 #include <karabo/util/HashFilter.hh>
 
 

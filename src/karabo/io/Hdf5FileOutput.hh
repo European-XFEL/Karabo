@@ -99,17 +99,17 @@ namespace karabo {
 
             void write(const T& data) {
                 using namespace std;
-                karabo::util::Profiler p("Output");
+                karabo::util::TimeProfiler p("Output");
                 try {
                     if (m_enableAppendMode) {
                         m_serializer->save(data, m_h5file, karabo::util::toString(m_idx));
                         m_idx++;
                     } else {
-                        p.start("write");
+                        p.startPeriod("write");
                         openFile();
                         m_serializer->save(data, m_h5file, "0");
                         closeFile();
-                        p.stop("write");
+                        p.stopPeriod("write");
                         double writeTime = karabo::util::HighResolutionTimer::time2double(p.getTime("write"));
                         if (false) {
                             std::clog << std::endl;
