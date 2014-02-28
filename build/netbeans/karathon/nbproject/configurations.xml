@@ -72,6 +72,7 @@
       <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
+      <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
     </logicalFolder>
@@ -101,7 +102,7 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-  </logicalFolder>
+      </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karathon</Elem>
   </sourceRootList>
@@ -279,6 +280,11 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilTimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
@@ -658,6 +664,11 @@
             <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
           </preprocessorList>
         </ccTool>
+      </item>
+      <item path="../../../src/karathon/PyUtilTimeDuration.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilTimestamp.cc"
             ex="false"
