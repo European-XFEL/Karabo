@@ -8,9 +8,6 @@
             <cpp-extensions>cc</cpp-extensions>
             <header-extensions>hh</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
-            <formatting>
-                <project-formatting-style>false</project-formatting-style>
-            </formatting>
             <make-dep-projects>
                 <make-dep-project>../karabo</make-dep-project>
             </make-dep-projects>
@@ -27,6 +24,9 @@
                     <type>2</type>
                 </confElem>
             </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
         </data>
     </configuration>
 </project>
