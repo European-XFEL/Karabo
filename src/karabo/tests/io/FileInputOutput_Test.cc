@@ -8,7 +8,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include <karabo/io/FileTools.hh>
-#include <karabo/util/Profiler.hh>
+#include <karabo/util/TimeProfiler.hh>
 #include <karabo/util.hpp>
 
 #include "TestPathSetup.hh"
@@ -230,7 +230,7 @@ void FileInputOutput_Test::tearDown() {
 
 
 void FileInputOutput_Test::writeTextFile() {
-    Profiler p("writeTextFile");
+    TimeProfiler p("writeTextFile");
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     out->write(m_rootedHash);
@@ -345,7 +345,7 @@ void FileInputOutput_Test::readSequenceFromTextFile() {
 
 void FileInputOutput_Test::writeBinaryFile() {
 
-    Profiler p("writeBinaryFile");
+    TimeProfiler p("writeBinaryFile");
 
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin")));
@@ -464,7 +464,7 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
 
 void FileInputOutput_Test::writeHdf5File() {
 
-    Profiler p("writeHdf5File");
+    TimeProfiler p("writeHdf5File");
 
     try {
 

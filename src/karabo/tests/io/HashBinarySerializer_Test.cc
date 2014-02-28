@@ -9,7 +9,7 @@
 #include "HashBinarySerializer_Test.hh"
 #include "karabo/io/BinarySerializer.hh"
 #include "karabo/io/TextSerializer.hh"
-#include "karabo/util/Profiler.hh"
+#include "karabo/util/TimeProfiler.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(HashBinarySerializer_Test);
 
@@ -35,7 +35,7 @@ void HashBinarySerializer_Test::setUp() {
     rooted.setAttribute("a.b.c", "c2", vector<string > (3, "bla"));
     m_rootedHash = rooted;
 
-    Profiler p("binary");
+    TimeProfiler p("binary");
     p.start("create");
     Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
     p.stop("create");
@@ -113,7 +113,7 @@ void HashBinarySerializer_Test::testSerialization() {
         vector<char> archive2;
 
         //cout << "\nSerialize start ----------------------------\n";
-        Profiler pr("binary");
+        TimeProfiler pr("binary");
         pr.start("serialize");
 
         p->save(m_bigHash, archive1);
