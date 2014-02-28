@@ -44,7 +44,7 @@ namespace karabo {
             void Table::openNew(const Format::Pointer dataFormat) {
 
 
-                //                                Profiler p("hdf5");                
+                //                                TimeProfiler p("hdf5");                
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "Open new Table: " << m_name;
                 //                                p.start("createEmptyTable");
                 createEmptyTable(m_h5file, m_name);
