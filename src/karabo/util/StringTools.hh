@@ -182,6 +182,30 @@ namespace karabo {
         inline T fromString(const std::string& value) {
             return boost::lexical_cast<T > (value);
         }
+        
+        template<>
+        inline int fromString(const std::string& value) {
+            int val = strtol(value.c_str(), NULL, 0);
+            return val;
+        }
+        
+        template<>
+        inline unsigned int fromString(const std::string& value) {
+            unsigned int val = strtoul(value.c_str(), NULL, 0);
+            return val;
+        }
+        
+        template<>
+        inline long long fromString(const std::string& value) {
+            long long val = strtoll(value.c_str(), NULL, 0);
+            return val;
+        }
+        
+        template<>
+        inline unsigned long long fromString(const std::string& value) {
+            unsigned long long val = strtoull(value.c_str(), NULL, 0);
+            return val;
+        }
 
         template<>
         inline karabo::util::CppNone fromString(const std::string& value) {
@@ -258,6 +282,106 @@ namespace karabo {
             }
         }
 
+        template <>
+        inline std::vector<int> fromString(const std::string& value, const std::string& separator) {
+            try {
+                std::vector<std::string> elements;
+                std::string tmp(value);
+                boost::trim(tmp);
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
+                    tmp = tmp.substr(1);
+                    tmp.erase(tmp.size() - 1);
+                }
+                boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
+                std::vector<int> resultArray;
+                for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
+                    std::string element(*it);
+                    boost::trim(element);
+                    int val = strtol(element.c_str(), NULL, 0);
+                    resultArray.push_back(val);
+                }
+                return resultArray;
+            } catch (...) {
+                KARABO_RETHROW;
+                return std::vector<int>(); // Make the compiler happy
+            }
+        }
+        
+        template <>
+        inline std::vector<unsigned int> fromString(const std::string& value, const std::string& separator) {
+            try {
+                std::vector<std::string> elements;
+                std::string tmp(value);
+                boost::trim(tmp);
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
+                    tmp = tmp.substr(1);
+                    tmp.erase(tmp.size() - 1);
+                }
+                boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
+                std::vector<unsigned int> resultArray;
+                for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
+                    std::string element(*it);
+                    boost::trim(element);
+                    unsigned int val = strtoul(element.c_str(), NULL, 0);
+                    resultArray.push_back(val);
+                }
+                return resultArray;
+            } catch (...) {
+                KARABO_RETHROW;
+                return std::vector<unsigned int>(); // Make the compiler happy
+            }
+        }
+                
+        template <>
+        inline std::vector<long long> fromString(const std::string& value, const std::string& separator) {
+            try {
+                std::vector<std::string> elements;
+                std::string tmp(value);
+                boost::trim(tmp);
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
+                    tmp = tmp.substr(1);
+                    tmp.erase(tmp.size() - 1);
+                }
+                boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
+                std::vector<long long> resultArray;
+                for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
+                    std::string element(*it);
+                    boost::trim(element);
+                    long long val = strtoll(element.c_str(), NULL, 0);
+                    resultArray.push_back(val);
+                }
+                return resultArray;
+            } catch (...) {
+                KARABO_RETHROW;
+                return std::vector<long long>(); // Make the compiler happy
+            }
+        }
+        
+        template <>
+        inline std::vector<unsigned long long> fromString(const std::string& value, const std::string& separator) {
+            try {
+                std::vector<std::string> elements;
+                std::string tmp(value);
+                boost::trim(tmp);
+                if (tmp[0] == '[' && tmp[tmp.size() - 1] == ']') {
+                    tmp = tmp.substr(1);
+                    tmp.erase(tmp.size() - 1);
+                }
+                boost::split(elements, tmp, boost::is_any_of(separator), boost::token_compress_on);
+                std::vector<unsigned long long> resultArray;
+                for (std::vector<std::string>::iterator it = elements.begin(); it != elements.end(); ++it) {
+                    std::string element(*it);
+                    boost::trim(element);
+                    unsigned long long val = strtoull(element.c_str(), NULL, 0);
+                    resultArray.push_back(val);
+                }
+                return resultArray;
+            } catch (...) {
+                KARABO_RETHROW;
+                return std::vector<unsigned long long>(); // Make the compiler happy
+            }
+        }
+                
         template<> inline unsigned char fromString<unsigned char>(const std::string& value) {
             return boost::numeric_cast<unsigned char>(boost::lexical_cast<int>(value));
         }
