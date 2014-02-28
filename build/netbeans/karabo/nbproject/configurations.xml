@@ -249,8 +249,6 @@
           <itemPath>../../../src/karabo/util/TimePeriod.hh</itemPath>
           <itemPath>../../../src/karabo/util/TimeProfiler.cc</itemPath>
           <itemPath>../../../src/karabo/util/TimeProfiler.hh</itemPath>
-          <itemPath>../../../src/karabo/util/Timer.cc</itemPath>
-          <itemPath>../../../src/karabo/util/Timer.hh</itemPath>
           <itemPath>../../../src/karabo/util/Timestamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Timestamp.hh</itemPath>
           <itemPath>../../../src/karabo/util/Trainstamp.cc</itemPath>
@@ -264,8 +262,6 @@
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
-        <itemPath>../../../src/karabo/util/Profiler.cc</itemPath>
-        <itemPath>../../../src/karabo/util/Profiler.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
@@ -1670,16 +1666,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Profiler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Profiler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
@@ -1728,10 +1714,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.cc"
             ex="false"
@@ -3377,16 +3359,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/Profiler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Profiler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
@@ -3435,10 +3407,6 @@
             ex="false"
             tool="3"
             flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timer.cc" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/Timer.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Timestamp.cc"
             ex="false"
