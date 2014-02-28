@@ -11,7 +11,7 @@
 #ifndef KARABO_IO_H5_IOPROFILER_HH
 #define	KARABO_IO_H5_IOPROFILER_HH
 
-#include <karabo/util/Profiler.hh>
+#include <karabo/util/TimeProfiler.hh>
 #include <iostream>
 
 #ifdef KARABO_IO_TRACE
@@ -22,7 +22,7 @@
 
 
 
-#define KARABO_PROFILER(p) karabo::util::Profiler p(#p);
+#define KARABO_PROFILER(p) karabo::util::TimeProfiler p(#p);
 #define KARABO_PROFILER_START(p,name) p.start(name);
 #define KARABO_PROFILER_STOP(p) p.stop();
 #define KARABO_PROFILER_REPORT(p, name) std::clog << name << ": " << karabo::util::HighResolutionTimer::time2double(p.getTime(name)) << std::endl;
