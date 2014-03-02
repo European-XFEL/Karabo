@@ -54,6 +54,52 @@ namespace karabo {
         }
 
 
+        TimeDuration& TimeDuration::add(const TimeValue seconds, const TimeValue fractions) {
+            m_Seconds += seconds;
+            m_Fractions += fractions;
+            if (m_Fractions > ATTOSEC) {
+                ++m_Seconds;
+                m_Fractions -= ATTOSEC;
+            }
+            return *this;
+        }
+
+
+        TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
+            m_Seconds += days * DAY + hours * HOUR + minutes * MINUTE + seconds;
+            m_Fractions += fractions;
+            if (m_Fractions > ATTOSEC) {
+                ++m_Seconds;
+                m_Fractions -= ATTOSEC;
+            }
+            return *this;
+        }
+
+
+        TimeDuration& TimeDuration::sub(const TimeValue seconds, const TimeValue fractions) {
+            m_Seconds -= seconds;
+            if (m_Fractions < fractions) {
+                m_Fractions = (ATTOSEC + m_Fractions) - fractions;
+                --m_Seconds;
+            } else {
+                m_Fractions -= fractions;
+            }
+            return *this;
+        }
+
+
+        TimeDuration & TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
+            m_Seconds -= days * DAY + hours * HOUR + minutes * MINUTE + seconds;
+            if (m_Fractions < fractions) {
+                m_Fractions = (ATTOSEC + m_Fractions) - fractions;
+                --m_Seconds;
+            } else {
+                m_Fractions -= fractions;
+            }
+            return *this;
+        }
+
+
         bool TimeDuration::isNull() const {
             return (m_Seconds == 0ull) && (m_Fractions == 0ull);
         }
