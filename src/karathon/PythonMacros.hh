@@ -28,9 +28,65 @@ struct AliasAttributeWrap {
         } else if (PyFloat_Check(obj.ptr())) {
             double param = bp::extract<double>(obj);
             return self.alias(param);
-        } else {
-            throw KARABO_PYTHON_EXCEPTION("Unknown data type of the 'alias' element");
+        } else if (PyList_Check(obj.ptr())) {
+            bp::ssize_t size = bp::len(obj);
+            if (size == 0) {
+                std::vector<std::string> params = std::vector<std::string>();
+                return self.alias(params);
+            }
+            bp::object list0 = obj[0];
+            if (list0.ptr() == Py_None) {
+                std::vector<karabo::util::CppNone> v;
+                for (bp::ssize_t i = 0; i < size; ++i) v.push_back(karabo::util::CppNone());
+                return self.alias(v);
+            }
+            if (PyBool_Check(list0.ptr())) {
+                std::vector<bool> v(size); // Special case here
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<bool>(obj[i]);
+                }
+                return self.alias(v);
+            }
+            if (PyInt_Check(list0.ptr())) {
+                std::vector<int> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<int>(obj[i]);
+                }
+                return self.alias(v);
+            }
+            if (PyFloat_Check(list0.ptr())) {
+                std::vector<double> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<double>(obj[i]);
+                }
+                return self.alias(v);
+            }
+            if (PyLong_Check(list0.ptr())) {
+                std::vector<long long> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<long>(obj[i]);
+                }
+                return self.alias(v);
+            }
+            if (PyString_Check(list0.ptr())) {
+                std::vector<std::string> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<std::string > (obj[i]);
+                }
+                return self.alias(v);
+            }
+            if (PyUnicode_Check(list0.ptr())) {
+                std::vector<std::string> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    size_t size = PyString_Size(str.ptr());
+                    const char* data = PyString_AsString(str.ptr());
+                    v[i] = std::string(data, size);
+                }
+                return self.alias(v);
+            }
         }
+        throw KARABO_PYTHON_EXCEPTION("Unknown data type of the 'alias' element");
     }
 };
 
