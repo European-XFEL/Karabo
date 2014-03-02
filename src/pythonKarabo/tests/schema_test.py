@@ -130,7 +130,8 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getAliasAsString("exampleKey3"), "5.500000000000000")
            
             self.assertEqual(schema.getAliasAsString("exampleKey4"), "exampleAlias4")
-            self.assertEqual(schema.getAliasAsString("exampleKey5"), "exampleAlias5") 
+            self.assertEqual(schema.getAliasAsString("exampleKey5"), "exampleAlias5")
+            self.assertEqual(schema.getAliasAsString("exampleKey6"), "1193046,43724")
             self.assertEqual(schema.getAliasAsString("testPath"), "5")
         except Exception as e:
             self.fail("test_getAliasAsString exception: " + str(e))
@@ -143,6 +144,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertTrue(schema.keyHasAlias("exampleKey3"))
             self.assertTrue(schema.keyHasAlias("exampleKey4"))
             self.assertTrue(schema.keyHasAlias("exampleKey5"))
+            self.assertTrue(schema.keyHasAlias("exampleKey6"))
             self.assertTrue(schema.keyHasAlias("testPath"))
         except Exception as e:
             self.fail("test_keyHasAlias exception: " + str(e))
@@ -154,6 +156,7 @@ class  Schema_TestCase(unittest.TestCase):
               self.assertTrue(schema.aliasHasKey(5.5))
               self.assertTrue(schema.aliasHasKey("exampleAlias4"))
               self.assertTrue(schema.aliasHasKey("exampleAlias5"))
+              self.assertTrue(schema.aliasHasKey([0x00123456, 0x0000aacc]))
               self.assertFalse(schema.aliasHasKey(7))
               self.assertTrue(schema.aliasHasKey(5))
           except Exception as e:
@@ -166,6 +169,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getAliasFromKey("exampleKey3"), 5.5)
             self.assertEqual(schema.getAliasFromKey("exampleKey4"), "exampleAlias4")
             self.assertEqual(schema.getAliasFromKey("exampleKey5"), "exampleAlias5")
+            self.assertEqual(schema.getAliasFromKey("exampleKey6"), [0x00123456, 0x0000aacc])
             self.assertEqual(schema.getAliasFromKey("testPath"), 5)
         except Exception as e:
             self.fail("test_getAliasFromKey exception: " + str(e))
@@ -188,6 +192,7 @@ class  Schema_TestCase(unittest.TestCase):
             self.assertEqual(schema.getKeyFromAlias(5.5), "exampleKey3")
             self.assertEqual(schema.getKeyFromAlias("exampleAlias4"), "exampleKey4")
             self.assertEqual(schema.getKeyFromAlias("exampleAlias5"), "exampleKey5")
+            self.assertEqual(schema.getKeyFromAlias([0x00123456, 0x0000aacc]), "exampleKey6")
             self.assertEqual(schema.getKeyFromAlias(5), "testPath")
         except Exception as e:
             self.fail("test_KeyFromAlias exception: " + str(e))

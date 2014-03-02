@@ -291,7 +291,7 @@ class TestStruct1(object):
                 .readOnly().initialValue(1442244).warnLow(-10).warnHigh(10).alarmLow(-20).alarmHigh(20).archivePolicy(EVERY_EVENT)
                 .commit()
                 ,
-        DOUBLE_ELEMENT(expected).key("exampleKey6")
+        DOUBLE_ELEMENT(expected).key("exampleKey6").alias([0x00123456, 0x0000aacc])
                 .displayedName("Example key 6")
                 .description("Example key 6 description")
                 .readOnly().initialValue(1.11)
