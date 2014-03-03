@@ -25,7 +25,7 @@
 #define KARABO_PROFILER(p) karabo::util::TimeProfiler p(#p);
 #define KARABO_PROFILER_START(p,name) p.start(name);
 #define KARABO_PROFILER_STOP(p) p.stop();
-#define KARABO_PROFILER_REPORT(p, name) std::clog << name << ": " << karabo::util::HighResolutionTimer::time2double(p.getTime(name)) << std::endl;
+#define KARABO_PROFILER_REPORT(p, name) std::clog << name << ": " << p.getPeriod(name).getDuration() << std::endl;
 
 //format(p.getTime(name), "%s.%l") << std::endl;
 
