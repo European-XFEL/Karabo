@@ -25,9 +25,11 @@ from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
+import pathparser
 
 from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
-                          QFileInfo, QBuffer, QIODevice, QMimeData)
+                          QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
+                          QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QFileDialog, QFont, QFrame, QIcon, QLabel,
                          QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
@@ -517,6 +519,52 @@ class Rectangle(Shape):
     def edit(self):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
+
+
+class Path(Shape):
+    xmltag = ns_svg + "path"
+
+
+    def contains(self, p):
+        r = QRectF(p - QPoint(3, 3), p + QPoint(3, 3))
+        return self.path.intersects(r)
+
+
+    def geometry(self):
+        return self.path.boundingRect().toRect()
+
+
+    def translate(self, p):
+        self.path.translate(p)
+
+
+    @staticmethod
+    def load(e, layout):
+        ret = Path()
+        ret.svg = e.get('d')
+        parser = pathparser.Parser(ret.svg)
+        ret.path = parser.parse()
+        ret.loadpen(e)
+        layout.shapes.append(ret)
+        return ret
+
+
+    def draw(self, painter):
+        painter.setPen(self.pen)
+        painter.setBrush(self.brush)
+        painter.drawPath(self.path)
+        Shape.draw(self, painter)
+
+
+    def edit(self):
+        pendialog = PenDialog(self.pen, self.brush)
+        pendialog.exec_()
+
+
+    def element(self):
+        ret = ElementTree.Element(ns_svg + "path", d=self.svg)
+        self.savepen(ret)
+        return ret
 
 
 Separator()
