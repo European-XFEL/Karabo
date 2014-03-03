@@ -235,12 +235,11 @@ void FileInputOutput_Test::writeTextFile() {
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     out->write(m_rootedHash);
 
-    p.start("bigHash");
+    p.startPeriod("bigHash");
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
     out->write(m_bigHash);
-    p.stop("bigHash");
-    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-    if (false) clog << "writing big Hash (text) took " << time << " [s]" << endl;
+    p.stopPeriod("bigHash");
+    if (false) clog << "writing big Hash (text) took " <<  p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
     out->write(m_unrootedHash);
@@ -351,12 +350,11 @@ void FileInputOutput_Test::writeBinaryFile() {
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin")));
     out->write(m_rootedHash);
 
-    p.start("bigHash");
+    p.startPeriod("bigHash");
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
-    p.stop("bigHash");
-    double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-    if (false) clog << "writing big Hash (binary) took " << time << " [s]" << endl;
+    p.stopPeriod("bigHash");
+    if (false) clog << "writing big Hash (binary) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
     out->write(m_unrootedHash);
@@ -472,12 +470,11 @@ void FileInputOutput_Test::writeHdf5File() {
         out->write(m_rootedHash);
 
 
-        p.start("bigHash");
+        p.startPeriod("bigHash");
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
         out->write(m_bigHash);
-        p.stop("bigHash");
-        double time = HighResolutionTimer::time2double(p.getTime("bigHash"));
-        if (false) clog << "writing big Hash (Hdf5) took " << time << " [s]" << endl;
+        p.stopPeriod("bigHash");
+        if (false) clog << "writing big Hash (Hdf5) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
         for (unsigned long long i = 0; i < 1L; ++i) {
             out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS3.h5")));

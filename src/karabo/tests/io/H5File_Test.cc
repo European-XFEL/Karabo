@@ -552,7 +552,7 @@ void H5File_Test::testBufferWrite() {
 
         TimeProfiler p("VectorBufferWrite");
 
-        p.start("format");
+        p.startPeriod("format");
         Format::Pointer format = Format::createEmptyFormat();
 
         {
@@ -661,12 +661,12 @@ void H5File_Test::testBufferWrite() {
         }
 
 
-        p.stop("format");
+        p.stopPeriod("format");
 
 
         //data.set("vectors.image", v0).setAttribute("dims", Dims(1024, 1024).toVector());
 
-        p.start("initialize");
+        p.startPeriod("initialize");
 
         //size_t maxIterations = 100;
         size_t maxIterations = 2;
@@ -698,8 +698,8 @@ void H5File_Test::testBufferWrite() {
         }
 
 
-        p.stop("initialize");
-        p.start("create");
+        p.stopPeriod("initialize");
+        p.startPeriod("create");
 
 
         string filename = "/dev/shm/file3.h5";
@@ -718,8 +718,8 @@ void H5File_Test::testBufferWrite() {
         exists = file.hasTable("planets");
 //        clog << "planets " << exists << endl;
         
-        p.stop("create");
-        p.start("write0");
+        p.stopPeriod("create");
+        p.startPeriod("write0");
 
         int i = 0, l = 23;
         data.set("mercury", &mercury[i]);
@@ -821,8 +821,8 @@ void H5File_Test::testBufferWrite() {
         t->write(data, i, l);
 
 
-        p.stop("write0");
-        p.start("write");
+        p.stopPeriod("write0");
+        p.startPeriod("write");
 
 
         data.set("mercury", &mercury[0]);
@@ -839,18 +839,18 @@ void H5File_Test::testBufferWrite() {
         for (size_t j = 0; j < maxIterations; ++j) {
             t->write(data, m_maxRec*j, m_maxRec);
         }
-        p.stop("write");
+        p.stopPeriod("write");
 
-        p.start("close");
+        p.startPeriod("close");
         file.close();
-        p.stop("close");
-
-        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
-        double initializeTime = HighResolutionTimer::time2double(p.getTime("initialize"));
-        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
-        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
-        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
-
+        p.stopPeriod("close");
+       
+        TimeDuration formatTime = p.getPeriod("format").getDuration();
+        TimeDuration initializeTime = p.getPeriod("initialize").getDuration();
+        TimeDuration createTime = p.getPeriod("create").getDuration();
+        TimeDuration writeTime = p.getPeriod("write").getDuration();
+        TimeDuration closeTime = p.getPeriod("close").getDuration();
+        
         if (m_reportTime) {
             clog << endl;
             clog << "file: " << filename << endl;
@@ -859,10 +859,10 @@ void H5File_Test::testBufferWrite() {
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
             clog << "written data size                : " << totalSize << " [MB]" << endl;
-            clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
+            //clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl; //TODO
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+            //clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl; //TODO
         }
 
 
@@ -886,7 +886,7 @@ void H5File_Test::testBufferRead() {
 
         TimeProfiler p("VectorBufferRead");
 
-        p.start("format");
+        p.startPeriod("format");
         //        Format::Pointer format = Format::createEmptyFormat();
         //        {
         //            Hash h1(
@@ -1182,12 +1182,12 @@ void H5File_Test::testManyTables() {
 
 
 
-        p.start("format");
+        p.startPeriod("format");
         Format::Pointer dataFormat = Format::discover(data);
         Hash h("h5name", "3");
         h5::Element::Pointer e = h5::Element::create("VLARRAY_INT32", h);
         dataFormat->replaceElement("3", e);
-        p.stop("format");
+        p.stopPeriod("format");
 
         //        for (int i = 0; i < n; ++i) {
         //            d1.set(toString(i), vector<int>(rec, i));
@@ -1207,7 +1207,7 @@ void H5File_Test::testManyTables() {
         File file(filename);
         file.open(File::TRUNCATE);
 
-        p.start("create");
+        p.startPeriod("create");
 
 
         Table::Pointer t = file.createTable("/monitor/motor1", dataFormat);
@@ -1215,10 +1215,10 @@ void H5File_Test::testManyTables() {
         data.set("3", 234);
 
         //        clog << "File structure is created" << endl;
-        p.stop("create");
+        p.stopPeriod("create");
         //
         //        //        t->writeAttributes(data);
-        p.start("write");
+        p.startPeriod("write");
         h5::Element::Pointer e3 = t->getFormat()->getElement("3");
         h5::Element::Pointer eid3 = t->getFormat()->getElement("id3");
 
@@ -1246,17 +1246,18 @@ void H5File_Test::testManyTables() {
         //        }
         //        totalSize *= m;
         //
-        p.stop("write");
+        p.stopPeriod("write");
 
-        p.start("close");
+        p.startPeriod("close");
         file.close();
-        p.stop("close");
-
-        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
-        //        double discoverTime = HighResolutionTimer::time2double(p.getTime("discover"));
-        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
-        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
-        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
+        p.stopPeriod("close");
+        
+        TimeDuration formatTime = p.getPeriod("format").getDuration();
+        //        TimeDuration discoverTime = p.getPeriod("discover").getDuration();
+        TimeDuration createTime = p.getPeriod("create").getDuration();
+        TimeDuration writeTime = p.getPeriod("write").getDuration();
+        TimeDuration closeTime = p.getPeriod("close").getDuration();
+        
 
         if (false) {
             clog << endl;
@@ -1328,7 +1329,7 @@ void H5File_Test::testManyGroups() {
         //        d1.setAttribute("status","dims",Dims(200,n).toVector());
 
 
-        p.start("format");
+        p.startPeriod("format");
 
         FormatDiscoveryPolicy::Pointer policy = FormatDiscoveryPolicy::create("Policy", Hash("chunkSize", static_cast<unsigned long long> (rec), "compressionLevel", 9));
         Format::Pointer dataFormat1 = Format::discover(d1, policy);
@@ -1355,7 +1356,7 @@ void H5File_Test::testManyGroups() {
         //            dataFormat1->addElement(e);
         //        }
 
-        p.stop("format");
+        p.stopPeriod("format");
 
 
         string filename = "/dev/shm/fileManyGroups.h5";
@@ -1365,7 +1366,7 @@ void H5File_Test::testManyGroups() {
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File is open";
 
 
-        p.start("create");
+        p.startPeriod("create");
         Table::Pointer t1 = file.createTable("/base/c1", dataFormat1);
         //        file.reportOpenObjects();
         Table::Pointer t2 = file.createTable("/base/c2", dataFormat2);
@@ -1375,39 +1376,39 @@ void H5File_Test::testManyGroups() {
         Table::Pointer t4 = file.createTable("/base/c4", dataFormat4);
         //        file.reportOpenObjects();
         KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is created";
-        p.stop("create");
+        p.stopPeriod("create");
 
-        p.start("attribute");
+        p.startPeriod("attribute");
         if (attr) {
             //            clog << "write attributes" << endl;
             //            file.reportOpenObjects();
-            p.start("attribute1");
+            p.startPeriod("attribute1");
             t1->writeAttributes(d1);
-            p.stop("attribute1");
+            p.stopPeriod("attribute1");
             //            double attTime1 = HighResolutionTimer::time2double(p.getTime("attribute1"));
             //            clog << "t1: " << attTime1 << endl;
             //            file.reportOpenObjects();
-            p.start("attribute2");
+            p.startPeriod("attribute2");
             t2->writeAttributes(d2);
-            p.stop("attribute2");
+            p.stopPeriod("attribute2");
             //            double attTime2 = HighResolutionTimer::time2double(p.getTime("attribute2"));
             //            clog << "t2: " << attTime2 << endl;
             //            file.reportOpenObjects();
-            p.start("attribute3");
+            p.startPeriod("attribute3");
             t3->writeAttributes(d3);
-            p.stop("attribute3");
+            p.stopPeriod("attribute3");
             //            double attTime3 = HighResolutionTimer::time2double(p.getTime("attribute3"));
             //            clog << "t3: " << attTime3 << endl;
             //            file.reportOpenObjects();
-            p.start("attribute4");
+            p.startPeriod("attribute4");
             t4->writeAttributes(d4);
-            p.stop("attribute4");
+            p.stopPeriod("attribute4");
             //            double attTime4 = HighResolutionTimer::time2double(p.getTime("attribute4"));
             //            clog << "t4: " << attTime4 << endl;
             //            file.reportOpenObjects();
             //            clog << "Attributes have been written" << endl;
         }
-        p.stop("attribute");
+        p.stopPeriod("attribute");
         #define WRITE
         #ifdef WRITE
         for (int i = 0; i < n; ++i) {
@@ -1436,7 +1437,7 @@ void H5File_Test::testManyGroups() {
 
 
 
-        p.start("write");
+        p.startPeriod("write");
 
         //        int m = 10; 
         //        for (int i = 0; i < m*rec; ++i) {
@@ -1463,32 +1464,32 @@ void H5File_Test::testManyGroups() {
         }
         totalSize *= m;
 
-        p.stop("write");
+        p.stopPeriod("write");
         //        clog << "---report before closing--" << endl;
         //        file.reportOpenObjects();
-        p.start("close");
+        p.startPeriod("close");
         file.closeTable(t1);
-        p.stop("close");
+        p.stopPeriod("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
-        p.start("close");
+        p.startPeriod("close");
         file.closeTable(t2);
-        p.stop("close");
+        p.stopPeriod("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
-        p.start("close");
+        p.startPeriod("close");
         file.closeTable(t3);
-        p.stop("close");
+        p.stopPeriod("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
-        p.start("close");
+        p.startPeriod("close");
         file.closeTable(t4);
-        p.stop("close");
+        p.stopPeriod("close");
         //        clog << "-----" << endl;
         //        file.reportOpenObjects();
-        p.start("close");
+        p.startPeriod("close");
         file.close();
-        p.stop("close");
+        p.stopPeriod("close");
 
         #endif
 
@@ -1497,65 +1498,65 @@ void H5File_Test::testManyGroups() {
         {
             file.open(File::READONLY);
             //clog << "a" << endl;
-            p.start("open");
+            p.startPeriod("open");
             Table::Pointer t1 = file.getTable("/base/c1");
             Table::Pointer t2 = file.getTable("/base/c2");
             Table::Pointer t3 = file.getTable("/base/c3");
             Table::Pointer t4 = file.getTable("/base/c4");
             KARABO_LOG_FRAMEWORK_TRACE_CF << "File structure is open";
-            p.stop("open");
+            p.stopPeriod("open");
             //clog << "a" << endl;
             Hash rd1, rd2, rd3, rd4;
-            p.start("bind");
+            p.startPeriod("bind");
             t1->bind(rd1, rec);
             t2->bind(rd2, rec);
             t3->bind(rd3, rec);
             t4->bind(rd4, rec);
-            p.stop("bind");
+            p.stopPeriod("bind");
 
 
-            p.start("readAttr");
+            p.startPeriod("readAttr");
             Hash a1, a2, a3, a4;
             //            t1->readAttributes(a1);
             //            t2->readAttributes(a2);
             //            t3->readAttributes(a3);
             //            t4->readAttributes(a4);            
-            p.stop("readAttr");
+            p.stopPeriod("readAttr");
 
-            p.start("read");
+            p.startPeriod("read");
             t1->read(0, rec);
             t2->read(0, rec);
             t3->read(0, rec);
             t4->read(0, rec);
-            p.stop("read");
+            p.stopPeriod("read");
 
 
 
             //            clog << "---report before closing--" << endl;
             //            file.reportOpenObjects();
-            p.start("close1");
+            p.startPeriod("close1");
             file.closeTable(t1);
-            p.stop("close1");
+            p.stopPeriod("close1");
             //            clog << "-----" << endl;
             //            file.reportOpenObjects();
-            p.start("close1");
+            p.startPeriod("close1");
             file.closeTable(t2);
-            p.stop("close1");
+            p.stopPeriod("close1");
             //            clog << "-----" << endl;
             //            file.reportOpenObjects();
-            p.start("close1");
+            p.startPeriod("close1");
             file.closeTable(t3);
-            p.stop("close1");
+            p.stopPeriod("close1");
             //            clog << "-----" << endl;
             //            file.reportOpenObjects();
-            p.start("close1");
+            p.startPeriod("close1");
             file.closeTable(t4);
-            p.stop("close1");
+            p.stopPeriod("close1");
             //            clog << "-----" << endl;
             //            file.reportOpenObjects();
-            p.start("close1");
+            p.startPeriod("close1");
             file.close();
-            p.stop("close1");
+            p.stopPeriod("close1");
 
 
 
@@ -1587,16 +1588,16 @@ void H5File_Test::testManyGroups() {
         }
         #endif
 
-        double formatTime = HighResolutionTimer::time2double(p.getTime("format"));
-        double createTime = HighResolutionTimer::time2double(p.getTime("create"));
-        double attributeTime = HighResolutionTimer::time2double(p.getTime("attribute"));
-        double writeTime = HighResolutionTimer::time2double(p.getTime("write"));
-        double closeTime = HighResolutionTimer::time2double(p.getTime("close"));
-        double openTime = HighResolutionTimer::time2double(p.getTime("open"));
-        double bindTime = HighResolutionTimer::time2double(p.getTime("bind"));
-        double readTime = HighResolutionTimer::time2double(p.getTime("read"));
-        double readAttrTime = HighResolutionTimer::time2double(p.getTime("readAttr"));
-        double close1Time = HighResolutionTimer::time2double(p.getTime("close1"));
+        TimeDuration formatTime = p.getPeriod("format").getDuration();
+        TimeDuration createTime = p.getPeriod("create").getDuration();
+        TimeDuration attributeTime = p.getPeriod("attribute").getDuration();
+        TimeDuration writeTime = p.getPeriod("write").getDuration();
+        TimeDuration closeTime = p.getPeriod("close").getDuration();
+        TimeDuration openTime = p.getPeriod("open").getDuration();
+        TimeDuration bindTime = p.getPeriod("bind").getDuration();
+        TimeDuration readTime = p.getPeriod("read").getDuration();
+        TimeDuration readAttrTime = p.getPeriod("readAttr").getDuration();
+        TimeDuration close1Time = p.getPeriod("close1").getDuration();
 
         if (false) {
             clog << endl;
@@ -1608,10 +1609,10 @@ void H5File_Test::testManyGroups() {
             clog << "write attributes                 : " << attributeTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
             clog << "written data size                : " << totalSize << " [kB]" << endl;
-            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
+            //clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl; //TODO
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
+            //clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl; //TODO
             clog << "Total write time                 : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
             clog << "open for reading                 : " << openTime << " [s]" << endl;
             clog << "bind                             : " << bindTime << " [s]" << endl;
@@ -1654,12 +1655,12 @@ void H5File_Test::testVLWrite() {
 
 
 
-        p.start("create");
+        p.startPeriod("create");
         Table::Pointer t = file.createTable("/base", dataFormat);
-        p.stop("create");
+        p.stopPeriod("create");
 
         //        t->writeAttributes(data);
-        p.start("write");
+        p.startPeriod("write");
         //        for (int i = 0; i < rec; ++i) {
 
         {
@@ -1714,11 +1715,11 @@ void H5File_Test::testVLWrite() {
 
             }
         }
-        p.stop("write");
+        p.stopPeriod("write");
 
-        p.start("close");
+        p.startPeriod("close");
         file.close();
-        p.stop("close");
+        p.stopPeriod("close");
 
     } catch (Exception& ex) {
         clog << ex << endl;
@@ -1767,35 +1768,32 @@ void H5File_Test::testTrainFormat() {
 
 
 
-        p.start("discoverDataset");
+        p.startPeriod("discoverDataset");
         h5::Format::Pointer formatConfiguration = h5::Format::discover(dataset);
         //        clog << Epochstamp().elpased(t10) << endl;
         formatConfiguration->removeElement("checksumType");
         formatConfiguration->removeElement("checksumSize");
         //formatConfiguration->removeElement("encoding");
         //    clog << Epochstamp().elpased(t10) << endl;
-        p.stop("discoverDataset");
+        p.stopPeriod("discoverDataset");
 
-        double discoverTime = HighResolutionTimer::time2double(p.getTime("discoverDataset"));
-        //clog << "discoverDataset: " << discoverTime << endl;
+        //clog << "discoverDataset: " << p.getPeriod("discoverDataset").getDuration() << endl;
         //p.startPeriod("createConfiguration");
 
-        p.start("configuration");
+        p.startPeriod("configuration");
         Table::Pointer lpdTableConfiguration = file.createTable("/instrument/LPD1/configuration", formatConfiguration);
         lpdTableConfiguration->write(dataset, 0);
-        p.stop("configuration");
-        double configurationTime = HighResolutionTimer::time2double(p.getTime("configuration"));
-        //clog << "configuration: " << configurationTime << endl;
+        p.stopPeriod("configuration");
+        //clog << "configuration: " << p.getPeriod("configuration").getDuration() << endl;
         //clog << Epochstamp().elpased(t1) << endl;
         //t1.now();
 
         Epochstamp t1;
         h5::Format::Pointer formatTrainData = trainFormatTrainData(detectorDataSize);
-        p.start("trainData");
+        p.startPeriod("trainData");
         Table::Pointer lpdTableTrainData = file.createTable("/instrument/LPD1/train", formatTrainData);
-        p.stop("trainData");
-        double trainDataTime = HighResolutionTimer::time2double(p.getTime("trainData"));
-        //clog << "trainData: " << trainDataTime << endl;
+        p.stopPeriod("trainData");
+        //clog << "trainData: " << p.getPeriod("trainData").getDuration() << endl;
 
         //        clog << Epochstamp().elpased(t1) << endl;
 
@@ -1808,7 +1806,7 @@ void H5File_Test::testTrainFormat() {
         Table::Pointer lpdTableDescriptors = file.createTable("/instrument/LPD1/descriptors", formatDescriptors);
 
 
-        p.start("writeData");
+        p.startPeriod("writeData");
         size_t idx = 0;
         for (int i = 0; i < 4; ++i) {
 
@@ -1883,9 +1881,8 @@ void H5File_Test::testTrainFormat() {
             idx += imageCount;
         }
 
-        p.stop("writeData");
-        double writeDataTime = HighResolutionTimer::time2double(p.getTime("writeData"));
-        //clog << "writeData: " << writeDataTime << endl;
+        p.stopPeriod("writeData");
+        //clog << "writeData: " << p.getPeriod("writeData").getDuration() << endl;
         file.close();
 
     } catch (Exception& ex) {
