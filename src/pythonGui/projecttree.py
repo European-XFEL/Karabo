@@ -16,8 +16,9 @@ __all__ = ["ProjectTree"]
 from enums import NavigationItemTypes
 from manager import Manager
 from karabo.karathon import Hash
-from plugindialog import PluginDialog
+from dialogs.plugindialog import PluginDialog
 from projectmodel import ProjectModel
+from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import (pyqtSignal, QDir, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
@@ -29,7 +30,8 @@ class ProjectTree(QTreeView):
 
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
-    itemChanged = pyqtSignal(dict)
+    signalAddScene = pyqtSignal(str) # scene title
+    signalItemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -53,7 +55,7 @@ class ProjectTree(QTreeView):
         Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
 
 
-    def _createNewProject(self, projectName, directory):
+    def _createNewProject(self, projectName, directory, overwrite=True):
         """
         This function creates a new project in the panel.
         """
@@ -84,15 +86,16 @@ class ProjectTree(QTreeView):
         if not QDir(absoluteProjectPath).exists():
             dir.mkpath(absoluteProjectPath)
         else:
-            reply = QMessageBox.question(self, "New project",
-                "A project folder named \"" + projectName + "\" already exists.<br>"
-                "Do you want to replace it?",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+            if not overwrite:
+                reply = QMessageBox.question(self, "New project",
+                    "A project folder named \"" + projectName + "\" already exists.<br>"
+                    "Do you want to replace it?",
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
-            if reply == QMessageBox.No:
-                return
-            
-            self._clearProjectDir(absoluteProjectPath)
+                if reply == QMessageBox.No:
+                    return
+
+                self._clearProjectDir(absoluteProjectPath)
 
         # Add subfolders
         dir.mkpath(absoluteProjectPath + "/" + deviceLabel)
@@ -123,6 +126,24 @@ class ProjectTree(QTreeView):
             if len(subDirToDelete.entryList()) > 0:
                 self._clearProjectDir(subDirPath)
             subDirToDelete.rmpath(subDirPath)
+
+
+    def _addScene(self, fileName, alias):
+        # Send signal to mainWindow to add scene
+        self.signalAddScene.emit(alias)
+
+        projScenePath = "default_project.project.scenes"
+
+        # Update project hash
+        scenePath = projScenePath + "." + alias
+
+        # Put info in Hash
+        config = [Hash("filename", fileName, "alias", alias)]
+        # Add device to project hash
+        Manager().addSceneToProject(projScenePath, config)
+
+        # Select added device
+        self.model().selectPath(scenePath)
 
 
     def newProject(self):
@@ -159,6 +180,11 @@ class ProjectTree(QTreeView):
         print "saveProject"
 
 
+    def setupDefaultProject(self):
+        self._createNewProject("default_project", "/tmp/", True)
+        self._addScene("default_scene", "default_scene")
+
+
     def serverConnectionChanged(self, isConnected):
         if not isConnected:
             self.__serverTopology = None
@@ -175,12 +201,23 @@ class ProjectTree(QTreeView):
             # Show devices menu
             menu = QMenu()
             text = "Add device"
-            acImportPlugin = QAction(QIcon(":device-class"), text, None)
+            acImportPlugin = QAction(text, None)
             acImportPlugin.setStatusTip(text)
             acImportPlugin.setToolTip(text)
             acImportPlugin.triggered.connect(self.onAddDevice)
 
             menu.addAction(acImportPlugin)
+            menu.exec_(QCursor.pos())
+        elif index.data(Qt.DisplayRole) == "Scenes":
+            # Show devices menu
+            menu = QMenu()
+            text = "Add scene"
+            acAddScene = QAction(text, None)
+            acAddScene.setStatusTip(text)
+            acAddScene.setToolTip(text)
+            acAddScene.triggered.connect(self.onAddScene)
+
+            menu.addAction(acAddScene)
             menu.exec_(QCursor.pos())
 
 
@@ -221,12 +258,20 @@ class ProjectTree(QTreeView):
                 config.set(configPath + ".deviceId", self.__pluginDialog.deviceId)
                 config.set(configPath + ".serverId", self.__pluginDialog.server)
                 # Add device to project hash
-                Manager().addDeviceToProject(config)
+                Manager().addConfigToProject(config)
 
                 # Select added device
                 self.model().selectPath(devicePath)
 
         self.__pluginDialog = None
+
+
+    def onAddScene(self):
+        dialog = SceneDialog()
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        self._addScene(dialog.fileName, dialog.alias)
 
 
     def onSelectionChanged(self, selected, deselected):
@@ -243,6 +288,10 @@ class ProjectTree(QTreeView):
         classId = index.data(ProjectModel.ITEM_CLASS_ID)
         deviceId = index.data(Qt.DisplayRole)
 
+        if serverId is None: return
+        if classId is None: return
+        if deviceId is None: return
+
         # Get schema
         schema = Manager().getClassSchema(serverId, classId)
         
@@ -254,7 +303,7 @@ class ProjectTree(QTreeView):
         
         Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
-        self.itemChanged.emit(itemInfo)
+        self.signalItemChanged.emit(itemInfo)
 
 
     def onSystemTopologyChanged(self, config):
