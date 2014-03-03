@@ -48,6 +48,7 @@ class MainWindow(QMainWindow):
         self._setupNetwork()
         self._setupPanels()
 
+        # Setup default project
         self.__projectPanel.setupDefaultProject()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)

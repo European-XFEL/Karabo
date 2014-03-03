@@ -48,10 +48,11 @@ class ConfigurationPanel(QWidget):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
-        # map = { deviceInternalKey, swIndex }
-        self.__navItemInternalKeyIndexMap = dict()
-        # map = { deviceInternalKey, bool }
-        self.__internalKeySchemaLoadedMap = dict()
+
+        # map = { path, swIndex }
+        self.__itemPathIndex = dict()
+        # map = { path, bool }
+        self.__pathSchemaLoadedMap = dict()
         
         self.__schemaReader = SchemaReader()
         
@@ -546,7 +547,7 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, type, path):
         # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(path)
+        index = self.__itemPathIndex.get(path)
         print "+++ showParameterPage +++", index, path
         if index:
             self._setParameterEditorIndex(index)
@@ -590,7 +591,7 @@ class ConfigurationPanel(QWidget):
         parameter editor pages need to be cleaned and removed.
         """
         # Reset map
-        self.__navItemInternalKeyIndexMap = dict()
+        self.__itemPathIndex = dict()
 
         while self.__swParameterEditor.count() > 1:
             self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
@@ -603,8 +604,8 @@ class ConfigurationPanel(QWidget):
         be cleaned and removed.
         """
         # Remove \path from map
-        if path in self.__navItemInternalKeyIndexMap:
-            del self.__navItemInternalKeyIndexMap[path]
+        if path in self.__itemPathIndex:
+            del self.__itemPathIndex[path]
         self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
@@ -620,28 +621,28 @@ class ConfigurationPanel(QWidget):
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
         key = itemInfo.get('key')
-        if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
-            index = self.__navItemInternalKeyIndexMap.get(key)
+        if (key in self.__itemPathIndex) and (key in self.__pathSchemaLoadedMap):
+            index = self.__itemPathIndex.get(key)
             if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
-                schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
+                schemaLoaded = self.__pathSchemaLoadedMap.get(key)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
                     self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
                     twParameterEditorPage.clear()
 
                     if self._parseSchema(itemInfo, twParameterEditorPage):
-                        self.__internalKeySchemaLoadedMap[key] = True
+                        self.__pathSchemaLoadedMap[key] = True
         else:
-            self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
+            self.__itemPathIndex[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
 
             if schema:
-                self.__internalKeySchemaLoadedMap[key] = True
+                self.__pathSchemaLoadedMap[key] = True
             else:
-                self.__internalKeySchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[key] = False
 
 
     def onDeviceItemChanged(self, itemInfo):
@@ -659,10 +660,10 @@ class ConfigurationPanel(QWidget):
 
     def onInstanceGone(self, path, parentPath):
         # New schema can be in plugins of instance
-        keys = self.__internalKeySchemaLoadedMap.keys()
+        keys = self.__pathSchemaLoadedMap.keys()
         for key in keys:
             if path in key:
-                self.__internalKeySchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[key] = False
 
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
@@ -670,7 +671,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceStateChanged(self, internalKey, state):
-        index = self.__navItemInternalKeyIndexMap.get(internalKey)
+        index = self.__itemPathIndex.get(internalKey)
         if index:
             twParameterEditorPage = self.__swParameterEditor.widget(index)
             twParameterEditorPage.stateUpdated(state)
@@ -792,7 +793,7 @@ class ConfigurationPanel(QWidget):
 
     def onDeviceSchemaUpdated(self, key):
         key = str(key)
-        self.__internalKeySchemaLoadedMap[key] = False
+        self.__pathSchemaLoadedMap[key] = False
 
 
     def onGlobalAccessLevelChanged(self):
