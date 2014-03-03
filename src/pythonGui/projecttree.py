@@ -67,19 +67,19 @@ class ProjectTree(QTreeView):
         projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
 
         deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICE_KEY
-        projectConfig.set(deviceKey, Hash())
+        projectConfig.set(deviceKey, None)
         projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
         sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
-        projectConfig.set(sceneKey, Hash())
+        projectConfig.set(sceneKey, None)
         projectConfig.setAttribute(sceneKey, "label", ProjectModel.SCENES_LABEL)
         macroKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MACROS_KEY
-        projectConfig.set(macroKey, Hash())
+        projectConfig.set(macroKey, None)
         projectConfig.setAttribute(macroKey, "label", ProjectModel.MACROS_LABEL)
         monitorKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MONITORS_KEY
-        projectConfig.set(monitorKey, Hash())
+        projectConfig.set(monitorKey, None)
         projectConfig.setAttribute(monitorKey, "label", ProjectModel.MONITORS_LABEL)
         resourceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.RESOURCES_KEY
-        projectConfig.set(resourceKey, Hash())
+        projectConfig.set(resourceKey, None)
         projectConfig.setAttribute(resourceKey, "label", ProjectModel.RESOURCES_LABEL)
 
         absoluteProjectPath = directory + "/" + projectName
@@ -139,7 +139,7 @@ class ProjectTree(QTreeView):
         scenePath = projScenePath + "." + alias
 
         # Put info in Hash
-        config = [Hash("filename", fileName, "alias", alias)]
+        config = Hash("filename", fileName, "alias", alias)
         # Add device to project hash
         Manager().addSceneToProject(projScenePath, config)
 

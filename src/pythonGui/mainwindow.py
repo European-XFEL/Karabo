@@ -187,8 +187,8 @@ class MainWindow(QMainWindow):
         self.__projectPanel = ProjectPanel()
         self.__projectTab = DockTabWindow("Projects", leftArea)
         self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
         self.__projectPanel.signalAddScene.connect(self.onAddScene)
+        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
         self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
