@@ -353,6 +353,23 @@ class Select(Action):
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
 
 
+class SelectAll(SimpleAction):
+    text = 'Select All'
+    icon = 'icons/select-all.svg'
+    shortcut = QKeySequence.Paste
+
+
+    def run(self):
+        for c in self.parent.ilayout:
+            c.selected = True
+        for s in self.parent.ilayout.shapes:
+            s.selected = True
+        self.parent.update()
+
+
+Separator()
+
+
 class Label(Action, Loadable):
     text = "Add text"
     icon = ":text"
