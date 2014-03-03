@@ -18,7 +18,7 @@ from editableapplylatercomponent import EditableApplyLaterComponent
 from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 
-from dialogs import PenDialog, TextDialog
+from dialogs.dialogs import PenDialog, TextDialog
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget
 
 from registry import Loadable, Registry, ns_karabo, ns_svg

@@ -12,6 +12,7 @@ a treeview.
 
 __all__ = ["ProjectModel"]
 
+from karabo.karathon import VectorHash
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QIcon, QItemSelectionModel, QStandardItem,
@@ -32,6 +33,40 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel = QItemSelectionModel(self)
 
 
+    def _handleLeafItems(self, childItem, projectPath, categoryKey, config, centralHash):
+        if config.empty():
+            return
+
+        if categoryKey == "scenes":
+            fileName = config.get("filename")
+            alias = config.get("alias")
+
+            leafItem = QStandardItem(alias)
+            leafPath = projectPath + "." + categoryKey + "." + alias
+            leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
+            childItem.appendRow(leafItem)
+        else:
+            for leafKey in config.keys():
+                leafItem = QStandardItem(leafKey)
+                leafPath = projectPath + "." + categoryKey + "." + leafKey
+                leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
+                childItem.appendRow(leafItem)
+
+                if categoryKey == "device":
+                    # Update icon on availability of device
+                    if centralHash.has("device." + leafKey):
+                        leafItem.setIcon(QIcon(":device-instance"))
+                    else:
+                        leafItem.setIcon(QIcon(":offline"))
+
+                    classConfig = config.get(leafKey)
+                    for classId in classConfig.keys():
+                        serverId = classConfig.get(classId + ".serverId")
+                        # Set server and class ID
+                        leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
+                        leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
+
+
     def updateData(self, projectHash, centralHash):
         print ""
         print projectHash
@@ -44,9 +79,9 @@ class ProjectModel(QStandardItemModel):
         rootItem = self.invisibleRootItem()
 
         # Add child items
-        for k in projectHash.keys():
+        for projectKey in projectHash.keys():
             # Project names - toplevel items
-            item = QStandardItem(k)
+            item = QStandardItem(projectKey)
             font = item.font()
             font.setBold(True)
             item.setFont(font)
@@ -54,41 +89,28 @@ class ProjectModel(QStandardItemModel):
             #item.setExpanded(True)
             rootItem.appendRow(item)
 
-            projectConfig = projectHash.get(k)
-            for l in projectConfig.keys():
+            projectConfig = projectHash.get(projectKey)
+            for p in projectConfig.keys():
                 # Project key
 
                 # Get children
-                categoryConfig = projectConfig.get(l)
-                for m in categoryConfig.keys():
+                categoryConfig = projectConfig.get(p)
+                for categoryKey in categoryConfig.keys():
                     # Categories - sub items
-                    childItem = QStandardItem(categoryConfig.getAttribute(m, "label"))
+                    childItem = QStandardItem(categoryConfig.getAttribute(categoryKey, "label"))
                     childItem.setIcon(QIcon(":folder"))
                     #childItem.setExpanded(True)
                     item.appendRow(childItem)
 
-                    subConfig = categoryConfig.get(m)
-                    if subConfig.empty():
-                        continue
-
-                    for deviceId in subConfig.keys():
-                        leafItem = QStandardItem(deviceId)
-                        # Update icon on availability of device
-                        if centralHash.has("device." + deviceId):
-                            leafItem.setIcon(QIcon(":device-instance"))
-                        else:
-                            leafItem.setIcon(QIcon(":offline"))
-                        childItem.appendRow(leafItem)
-
-                        path = k + "." + l + "." + m + "." + deviceId
-                        leafItem.setData(path, ProjectModel.ITEM_PATH)
-
-                        classConfig = subConfig.get(deviceId)
-                        for classId in classConfig.keys():
-                            serverId = classConfig.get(classId + ".serverId")
-                            # Set server and class ID
-                            leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
-                            leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
+                    projectPath = projectKey + "." + p
+                    subConfig = categoryConfig.get(categoryKey)
+                    if isinstance(subConfig, VectorHash):
+                        # Vector of Hashes
+                        for indexConfig in subConfig:
+                            self._handleLeafItems(childItem, projectPath, categoryKey, indexConfig, centralHash)
+                    else:
+                        # Normal Hash
+                        self._handleLeafItems(childItem, projectPath, categoryKey, subConfig, centralHash)
 
         self.endResetModel()
 

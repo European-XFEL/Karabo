@@ -38,6 +38,7 @@ class ProjectPanel(QWidget):
 
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
+    signalAddScene = pyqtSignal(str) # scene title
 
     def __init__(self):
         super(ProjectPanel, self).__init__()
@@ -47,6 +48,7 @@ class ProjectPanel(QWidget):
 
         self.__twProject = ProjectTree(self)
         self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
+        self.__twProject.signalAddScene.connect(self.signalAddScene)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -80,6 +82,13 @@ class ProjectPanel(QWidget):
         standardToolBar.addAction(self.__acProjectNew)
         standardToolBar.addAction(self.__acProjectOpen)
         standardToolBar.addAction(self.__acProjectSave)
+
+
+    def setupDefaultProject(self):
+        """
+        
+        """
+        self.__twProject.setupDefaultProject()
 
 
 ### slots ###
