@@ -523,6 +523,7 @@ class _Manager(QObject):
 
     def addConfigToProject(self, config):
         self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        # TODO: central hash only for online/offline device check - better solution?
         self.projModel.updateData(self.__projectHash, self.__hash)
 
 
@@ -536,6 +537,7 @@ class _Manager(QObject):
         print "+++++++++++++++++++++++++++++++++"
 
         self.__projectHash.set(projScenePath, sceneConfig)
+        # TODO: central hash only for online/offline device check - better solution?
         self.projModel.updateData(self.__projectHash, self.__hash)
 
 

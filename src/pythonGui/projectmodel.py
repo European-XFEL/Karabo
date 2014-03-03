@@ -70,6 +70,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
                 if categoryKey == ProjectModel.DEVICE_KEY:
+                    # TODO: Look for other possibilities than centralHash
+                    # to check whether deviceId is on/offline
                     # Update icon on availability of device
                     if centralHash.has(ProjectModel.DEVICE_KEY + leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
@@ -153,6 +155,6 @@ class ProjectModel(QStandardItemModel):
         
         indexPath = item.data(ProjectModel.ITEM_PATH)
         if indexPath == path:
-            return item.index() #self.createIndex(index.row(), 0, index)
+            return item.index()
         return None
 

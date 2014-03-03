@@ -45,6 +45,7 @@ class ProjectTree(QTreeView):
 
         # Set same mode for each project view
         self.setModel(Manager().projModel)
+        self.expandAll()
         self.model().modelReset.connect(self.expandAll)
         self.setSelectionModel(Manager().projModel.selectionModel)
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
@@ -55,7 +56,7 @@ class ProjectTree(QTreeView):
         Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
 
 
-    def _createNewProject(self, projectName, directory, overwrite=True):
+    def _createNewProject(self, projectName, directory, overwrite=False):
         """
         This function creates a new project in the panel.
         """
@@ -164,12 +165,14 @@ class ProjectTree(QTreeView):
             self.onProjectNew()
             return
 
+        projectName = projectName[0]
+
         directory = QFileDialog.getExistingDirectory(self, "Saving location of project", \
                         "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if not directory:
+        if directory is None:
             return
 
-        self._createNewProject(projectName[0], directory)
+        self._createNewProject(projectName, directory)
 
 
     def openProject(self):
@@ -181,6 +184,11 @@ class ProjectTree(QTreeView):
 
 
     def setupDefaultProject(self):
+        """
+        This function sets up a default project.
+        So basically a new project is created and saved in the users /tmp/ folder.
+        Previous data is overwritten.
+        """
         self._createNewProject("default_project", "/tmp/", True)
         self._addScene("default_scene", "default_scene")
 
@@ -211,7 +219,7 @@ class ProjectTree(QTreeView):
             # Show devices menu
             menu = QMenu()
             text = "Add device"
-            acImportPlugin = QAction(text, None)
+            acImportPlugin = QAction(text, self)
             acImportPlugin.setStatusTip(text)
             acImportPlugin.setToolTip(text)
             acImportPlugin.triggered.connect(self.onAddDevice)
@@ -222,7 +230,7 @@ class ProjectTree(QTreeView):
             # Show devices menu
             menu = QMenu()
             text = "Add scene"
-            acAddScene = QAction(text, None)
+            acAddScene = QAction(text, self)
             acAddScene.setStatusTip(text)
             acAddScene.setToolTip(text)
             acAddScene.triggered.connect(self.onAddScene)
@@ -298,9 +306,8 @@ class ProjectTree(QTreeView):
         classId = index.data(ProjectModel.ITEM_CLASS_ID)
         deviceId = index.data(Qt.DisplayRole)
 
-        if serverId is None: return
-        if classId is None: return
-        if deviceId is None: return
+        if (serverId is None) or (classId is None) or (deviceId is None):
+            return
 
         # Get schema
         schema = Manager().getClassSchema(serverId, classId)
