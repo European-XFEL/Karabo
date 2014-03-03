@@ -48,6 +48,8 @@ class MainWindow(QMainWindow):
         self._setupNetwork()
         self._setupPanels()
 
+        self.__projectPanel.setupDefaultProject()
+
         self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)
         self.resize(1200,800)
         self.show()
@@ -185,21 +187,12 @@ class MainWindow(QMainWindow):
         self.__projectTab = DockTabWindow("Projects", leftArea)
         self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
         self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.__projectPanel.signalAddScene.connect(self.onAddScene)
         self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        customViewPanel = self._createCustomMiddlePanel()
         self.__customTab = DockTabWindow("Custom view", middleArea)
-        self.__customTab.addDockableTab(customViewPanel, "Custom view")
-        # Add tab
-        tbNewTab = QToolButton()
-        tbNewTab.setIcon(QIcon(":add"))
-        text = "Open a new tab"
-        tbNewTab.setToolTip(text)
-        tbNewTab.setStatusTip(text)
-        self.__customTab.addCornerWidget(tbNewTab)
-        tbNewTab.clicked.connect(self.onOpenNewCustomViewTab)
         middleArea.setStretchFactor(0, 10)
 
         self.__loggingPanel = LoggingPanel()
@@ -275,10 +268,11 @@ class MainWindow(QMainWindow):
         print "onHelpAbout"
 
 
-    def onOpenNewCustomViewTab(self):
+    def onAddScene(self, sceneName):
         customViewPanel = self._createCustomMiddlePanel()
-        self.__customTab.addDockableTab(customViewPanel, "Custom view")
-        self.__customTab.updateTabsClosable()
+        self.__customTab.addDockableTab(customViewPanel, sceneName)
+        if self.__customTab.count()-1 > 0:
+            self.__customTab.updateTabsClosable()
 
 
     def onChangeAccessLevel(self, action):

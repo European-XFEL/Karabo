@@ -521,8 +521,21 @@ class _Manager(QObject):
         self.projModel.updateData(self.__projectHash, self.__hash)
 
 
-    def addDeviceToProject(self, deviceConfig):
-        self.__projectHash.merge(deviceConfig, HashMergePolicy.MERGE_ATTRIBUTES)
+    def addConfigToProject(self, config):
+        self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.projModel.updateData(self.__projectHash, self.__hash)
+
+
+    def addSceneToProject(self, projScenePath, sceneConfig):
+        print "===== addSceneToProject", projScenePath
+        print ""
+
+        # Get old config of scenes
+        oldConfig = self.__projectHash.get(projScenePath)
+        print oldConfig
+        print "+++++++++++++++++++++++++++++++++"
+
+        self.__projectHash.set(projScenePath, sceneConfig)
         self.projModel.updateData(self.__projectHash, self.__hash)
 
 

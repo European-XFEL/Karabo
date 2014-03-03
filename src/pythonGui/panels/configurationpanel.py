@@ -71,13 +71,13 @@ class ConfigurationPanel(QWidget):
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.__twNavigation = NavigationTreeView(None, treemodel)
-        treemodel.itemChanged.connect(self.onNavigationItemChanged)
+        treemodel.signalItemChanged.connect(self.onDeviceItemChanged)
         #self.__twNavigation.hide()
         navSplitter.addWidget(self.__twNavigation)
 
         # Project tree
         self.__twProject = ProjectTree()
-        self.__twProject.itemChanged.connect(self.onProjectItemChanged)
+        self.__twProject.signalItemChanged.connect(self.onDeviceItemChanged)
         #self.__twProject.hide()
         navSplitter.addWidget(self.__twProject)
 
@@ -644,7 +644,7 @@ class ConfigurationPanel(QWidget):
                 self.__internalKeySchemaLoadedMap[key] = False
 
 
-    def onNavigationItemChanged(self, itemInfo):
+    def onDeviceItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
@@ -654,13 +654,6 @@ class ConfigurationPanel(QWidget):
             Manager().removeVisibleDevice(self.__prevPath)
             self.__prevPath = str()
         
-        self.showParameterPage(type, path)
-
-
-    def onProjectItemChanged(self, itemInfo):
-        type = itemInfo.get('type')
-        path = itemInfo.get('key')
-
         self.showParameterPage(type, path)
 
 
