@@ -528,15 +528,17 @@ class _Manager(QObject):
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
-        print "===== addSceneToProject", projScenePath
-        print ""
-
         # Get old config of scenes
-        oldConfig = self.__projectHash.get(projScenePath)
-        print oldConfig
-        print "+++++++++++++++++++++++++++++++++"
+        vecConfig = self.__projectHash.get(projScenePath)
 
-        self.__projectHash.set(projScenePath, sceneConfig)
+        if vecConfig is None:
+            # Create vector of hashes, if not existent yet
+            vecConfig = [sceneConfig]
+        else:
+            # Append new scene to vector of hashes
+            vecConfig.append(sceneConfig)
+        
+        self.__projectHash.set(projScenePath, vecConfig)
         # TODO: central hash only for online/offline device check - better solution?
         self.projModel.updateData(self.__projectHash, self.__hash)
 

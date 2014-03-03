@@ -49,7 +49,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def _handleLeafItems(self, childItem, projectPath, categoryKey, config, centralHash):
-        if config.empty():
+        if (config is None) or config.empty():
             return
 
         if categoryKey == ProjectModel.SCENES_KEY:

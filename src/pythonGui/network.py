@@ -72,7 +72,7 @@ class Network(QObject):
         self.__headerBytes = bytearray()
         self.__bodyBytes = bytearray()
 
-
+    
     def connectToServer(self):
         """
         Connection to server via LoginDialog.
