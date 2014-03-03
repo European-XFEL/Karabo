@@ -154,12 +154,7 @@ class FixedLayout(Layout, QLayout):
         try:
             item.fixed_geometry = _parse_rect(element)
         except TypeError:
-            rect = QRect()
-            for c in item:
-                rect.united(c.geometry())
-            for s in item.shapes:
-                rect = rect.united(s.geometry())
-            item.fixed_geometry = rect
+            pass
 
 
     def itemAtPosition(self, pos):
@@ -237,6 +232,13 @@ class FixedLayout(Layout, QLayout):
         else:
             widget.setLayout(ret)
         ret.load_element(elem)
+        if not hasattr(ret, 'fixed_geometry'):
+            rect = QRect()
+            for c in ret:
+                rect.united(c.geometry())
+            for s in ret.shapes:
+                rect = rect.united(s.geometry())
+            ret.fixed_geometry = rect
         return ret
 
 
