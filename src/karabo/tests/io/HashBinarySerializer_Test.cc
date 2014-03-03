@@ -36,19 +36,19 @@ void HashBinarySerializer_Test::setUp() {
     m_rootedHash = rooted;
 
     TimeProfiler p("binary");
-    p.start("create");
+    p.startPeriod("create");
     Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
-    p.stop("create");
+    p.stopPeriod("create");
 //    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
 
-    p.start("ref");
+    p.startPeriod("ref");
     const vector<double>& vect = big.get<vector<double> >("a.b");
-    p.stop("ref");
+    p.stopPeriod("ref");
 //    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
 
-    p.start("copy");
+    p.startPeriod("copy");
     vector<double> vect1 = vect;
-    p.stop("copy");
+    p.stopPeriod("copy");
 //    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
 
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
@@ -114,10 +114,10 @@ void HashBinarySerializer_Test::testSerialization() {
 
         //cout << "\nSerialize start ----------------------------\n";
         TimeProfiler pr("binary");
-        pr.start("serialize");
+        pr.startPeriod("serialize");
 
         p->save(m_bigHash, archive1);
-        pr.stop("serialize");
+        pr.stopPeriod("serialize");
 
 //        cout << "\nSerialize time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(pr.getTime("serialize")) << endl;
 
