@@ -130,9 +130,7 @@ class ProjectTree(QTreeView):
 
 
     def _addScene(self, fileName, alias):
-        # Send signal to mainWindow to add scene
-        self.signalAddScene.emit(alias)
-
+        # TODO: use correct path!!!
         projScenePath = "default_project.project.scenes"
 
         # Update project hash
@@ -145,6 +143,9 @@ class ProjectTree(QTreeView):
 
         # Select added device
         self.model().selectPath(scenePath)
+        
+        # Send signal to mainWindow to add scene
+        self.signalAddScene.emit(alias)
 
 
     def newProject(self):
