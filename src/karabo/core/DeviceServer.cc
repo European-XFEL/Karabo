@@ -234,8 +234,7 @@ namespace karabo {
             newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
             newAppenders[2].set("Network", config.get<Hash>("network"));
             
-            config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
-            config.set("appenders[2].Network.connection", m_connectionConfig);
+            
 
             config.erase("ostream");
             config.erase("rollingFile");
@@ -249,7 +248,13 @@ namespace karabo {
                 newAppenders.push_back(appenders[i]);
             }
 
+            
             config.set("appenders", newAppenders);
+            
+            config.set("appenders[2].Network.layout", Hash());
+            config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
+            config.set("appenders[2].Network.connection", m_connectionConfig);
+            
             Hash category = config.get<Hash>("karabo");
             category.set("name", "karabo");
             config.set("categories[0].Category", category);
