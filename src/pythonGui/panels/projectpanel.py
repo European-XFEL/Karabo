@@ -47,8 +47,8 @@ class ProjectPanel(QWidget):
         self.setWindowTitle(title)
 
         self.__twProject = ProjectTree(self)
-        self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
         self.__twProject.signalAddScene.connect(self.signalAddScene)
+        self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
