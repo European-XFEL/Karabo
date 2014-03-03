@@ -19,7 +19,7 @@ from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 
 from dialogs import PenDialog, TextDialog
-from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget
+from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
 from registry import Loadable, Registry, ns_karabo, ns_svg
 from manager import Manager
@@ -160,11 +160,6 @@ class Shape(ShapeAction, Loadable):
         self.pen = QPen()
         self.pen.setWidth(1)
         self.brush = QBrush()
-
-
-    @classmethod
-    def add_action(cls, source, parent):
-        return super(Shape, cls).add_action(source, parent)
 
 
     def loadpen(self, e):
