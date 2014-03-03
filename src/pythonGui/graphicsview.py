@@ -135,7 +135,7 @@ class ShapeAction(Action):
 
 
     def mouseMoveEvent(self, parent, event):
-        if hasattr(self, 'shape'):
+        if event.buttons() and hasattr(self, 'shape'):
             self.shape.set_points(self.start_pos, event.pos())
             event.accept()
             parent.update()
