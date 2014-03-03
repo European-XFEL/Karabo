@@ -62,24 +62,24 @@ class ProjectTree(QTreeView):
         # Project name to lower case
         projectName = str(projectName).lower()
 
-        projectConfig = Hash("project")
-        projectConfig.setAttribute("project", "name", projectName)
+        projectConfig = Hash(ProjectModel.PROJECT_KEY)
+        projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
 
-        deviceLabel = "Devices"
-        projectConfig.set("project.device", Hash())
-        projectConfig.setAttribute("project.device", "label", deviceLabel)
-        sceneLabel = "Scenes"
-        projectConfig.set("project.scenes", Hash())
-        projectConfig.setAttribute("project.scenes", "label", sceneLabel)
-        macroLabel = "Macros"
-        projectConfig.set("project.macros", Hash())
-        projectConfig.setAttribute("project.macros", "label", macroLabel)
-        monitorLabel = "Monitors"
-        projectConfig.set("project.monitors", Hash())
-        projectConfig.setAttribute("project.monitors", "label", monitorLabel)
-        resourceLabel = "Resources"
-        projectConfig.set("project.resources", Hash())
-        projectConfig.setAttribute("project.resources", "label", resourceLabel)
+        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICE_KEY
+        projectConfig.set(deviceKey, Hash())
+        projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
+        sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
+        projectConfig.set(sceneKey, Hash())
+        projectConfig.setAttribute(sceneKey, "label", ProjectModel.SCENES_LABEL)
+        macroKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MACROS_KEY
+        projectConfig.set(macroKey, Hash())
+        projectConfig.setAttribute(macroKey, "label", ProjectModel.MACROS_LABEL)
+        monitorKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MONITORS_KEY
+        projectConfig.set(monitorKey, Hash())
+        projectConfig.setAttribute(monitorKey, "label", ProjectModel.MONITORS_LABEL)
+        resourceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.RESOURCES_KEY
+        projectConfig.set(resourceKey, Hash())
+        projectConfig.setAttribute(resourceKey, "label", ProjectModel.RESOURCES_LABEL)
 
         absoluteProjectPath = directory + "/" + projectName
         dir = QDir()
@@ -98,11 +98,11 @@ class ProjectTree(QTreeView):
                 self._clearProjectDir(absoluteProjectPath)
 
         # Add subfolders
-        dir.mkpath(absoluteProjectPath + "/" + deviceLabel)
-        dir.mkpath(absoluteProjectPath + "/" + sceneLabel)
-        dir.mkpath(absoluteProjectPath + "/" + macroLabel)
-        dir.mkpath(absoluteProjectPath + "/" + monitorLabel)
-        dir.mkpath(absoluteProjectPath + "/" + resourceLabel)
+        dir.mkpath(absoluteProjectPath + "/" + deviceKey)
+        dir.mkpath(absoluteProjectPath + "/" + sceneKey)
+        dir.mkpath(absoluteProjectPath + "/" + macroKey)
+        dir.mkpath(absoluteProjectPath + "/" + monitorKey)
+        dir.mkpath(absoluteProjectPath + "/" + resourceKey)
 
         # Send changes to manager
         Manager().addNewProject(projectName, directory, projectConfig)
@@ -188,6 +188,16 @@ class ProjectTree(QTreeView):
     def serverConnectionChanged(self, isConnected):
         if not isConnected:
             self.__serverTopology = None
+
+
+    def mouseDoubleClickEvent(self, event):
+        print "mouseDoubleClickEvent"
+        index = self.selectionModel().currentIndex()
+        if index is None: return
+        if not index.isValid(): return
+
+        print "path", index.data(ProjectModel.ITEM_PATH)
+
 
 
 ### slots ###
@@ -296,7 +306,7 @@ class ProjectTree(QTreeView):
         schema = Manager().getClassSchema(serverId, classId)
         
         # Check whether deviceId is already online
-        if Manager().hash.has("device." + deviceId):
+        if Manager().hash.has(ProjectModel.DEVICE_KEY + deviceId):
             itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.DEVICE, schema=schema)
         else:
             itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema)

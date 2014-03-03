@@ -22,8 +22,23 @@ from PyQt4.QtGui import (QIcon, QItemSelectionModel, QStandardItem,
 class ProjectModel(QStandardItemModel):
 
     ITEM_PATH = Qt.UserRole
-    ITEM_SERVER_ID = Qt.UserRole + 1
-    ITEM_CLASS_ID = Qt.UserRole + 2
+    ITEM_CATEGORY = Qt.UserRole + 1
+    ITEM_SERVER_ID = Qt.UserRole + 2
+    ITEM_CLASS_ID = Qt.UserRole + 3
+
+    PROJECT_KEY = "project"
+
+    DEVICE_KEY = "device"
+    SCENES_KEY = "scenes"
+    MACROS_KEY = "macros"
+    MONITORS_KEY = "monitors"
+    RESOURCES_KEY = "resources"
+
+    DEVICES_LABEL = "Devices"
+    SCENES_LABEL = "Scenes"
+    MACROS_LABEL = "Macros"
+    MONITORS_LABEL = "Monitors"
+    RESOURCES_LABEL = "Resources"
 
 
     def __init__(self, parent=None):
@@ -37,26 +52,26 @@ class ProjectModel(QStandardItemModel):
         if config.empty():
             return
 
-        if categoryKey == "scenes":
+        if categoryKey == ProjectModel.SCENES_KEY:
             fileName = config.get("filename")
             alias = config.get("alias")
 
             leafItem = QStandardItem(alias)
-            leafItem.setFlags(leafItem.flags() & ~Qt.ItemIsEditable)
+            leafItem.setEditable(False)
             leafPath = projectPath + "." + categoryKey + "." + alias
             leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
             childItem.appendRow(leafItem)
         else:
             for leafKey in config.keys():
                 leafItem = QStandardItem(leafKey)
-                leafItem.setFlags(leafItem.flags() & ~Qt.ItemIsEditable)
+                leafItem.setEditable(False)
                 leafPath = projectPath + "." + categoryKey + "." + leafKey
                 leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
                 childItem.appendRow(leafItem)
 
-                if categoryKey == "device":
+                if categoryKey == ProjectModel.DEVICE_KEY:
                     # Update icon on availability of device
-                    if centralHash.has("device." + leafKey):
+                    if centralHash.has(ProjectModel.DEVICE_KEY + leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
@@ -84,7 +99,7 @@ class ProjectModel(QStandardItemModel):
         for projectKey in projectHash.keys():
             # Project names - toplevel items
             item = QStandardItem(projectKey)
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setEditable(False)
             font = item.font()
             font.setBold(True)
             item.setFont(font)
@@ -100,7 +115,7 @@ class ProjectModel(QStandardItemModel):
                 for categoryKey in categoryConfig.keys():
                     # Categories - sub items
                     childItem = QStandardItem(categoryConfig.getAttribute(categoryKey, "label"))
-                    childItem.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    childItem.setEditable(False)
                     childItem.setIcon(QIcon(":folder"))
                     item.appendRow(childItem)
 
