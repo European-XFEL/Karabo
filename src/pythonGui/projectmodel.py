@@ -42,12 +42,14 @@ class ProjectModel(QStandardItemModel):
             alias = config.get("alias")
 
             leafItem = QStandardItem(alias)
+            leafItem.setFlags(leafItem.flags() & ~Qt.ItemIsEditable)
             leafPath = projectPath + "." + categoryKey + "." + alias
             leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
             childItem.appendRow(leafItem)
         else:
             for leafKey in config.keys():
                 leafItem = QStandardItem(leafKey)
+                leafItem.setFlags(leafItem.flags() & ~Qt.ItemIsEditable)
                 leafPath = projectPath + "." + categoryKey + "." + leafKey
                 leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
                 childItem.appendRow(leafItem)
@@ -82,11 +84,11 @@ class ProjectModel(QStandardItemModel):
         for projectKey in projectHash.keys():
             # Project names - toplevel items
             item = QStandardItem(projectKey)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             font = item.font()
             font.setBold(True)
             item.setFont(font)
             item.setIcon(QIcon(":folder"))
-            #item.setExpanded(True)
             rootItem.appendRow(item)
 
             projectConfig = projectHash.get(projectKey)
@@ -98,8 +100,8 @@ class ProjectModel(QStandardItemModel):
                 for categoryKey in categoryConfig.keys():
                     # Categories - sub items
                     childItem = QStandardItem(categoryConfig.getAttribute(categoryKey, "label"))
+                    childItem.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     childItem.setIcon(QIcon(":folder"))
-                    #childItem.setExpanded(True)
                     item.appendRow(childItem)
 
                     projectPath = projectKey + "." + p

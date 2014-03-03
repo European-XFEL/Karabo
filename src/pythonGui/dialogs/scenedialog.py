@@ -11,7 +11,8 @@
 __all__ = ["SceneDialog"]
 
 
-from PyQt4.QtGui import (QDialog)
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
+                         QLineEdit, QVBoxLayout)
 
 
 class SceneDialog(QDialog):
@@ -25,11 +26,11 @@ class SceneDialog(QDialog):
         vLayout.setContentsMargins(5,5,5,5)
 
         self.gbSelectFileName = QGroupBox("Select file name", self)
-        fLayout = QFormLayout(self.gbSelectSceneFileName)
+        fLayout = QFormLayout(self.gbSelectFileName)
         fLayout.setContentsMargins(5,5,5,5)
         self.leFileName = QLineEdit("")
         self.leFileName.textChanged.connect(self.onTextChanged)
-        fLayout.addRow("File name:", self.leDeviceId)
+        fLayout.addRow("File name:", self.leFileName)
         vLayout.addWidget(self.gbSelectFileName)
 
         self.gbSelectAlias = QGroupBox("Select alias", self)
