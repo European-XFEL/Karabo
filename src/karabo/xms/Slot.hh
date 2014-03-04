@@ -61,16 +61,7 @@ namespace karabo {
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
-            void invalidateSenderInformation();
-
-            //void startSlotProcessing();
-
-            //void stopSlotProcessing();
-
-            template <class T>
-            const T& getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
-                return hash.get<T > (key);
-            }
+            void invalidateSenderInformation();       
 
             SignalSlotable* m_signalSlotable;
             karabo::net::BrokerChannel::Pointer m_channel;
@@ -78,10 +69,6 @@ namespace karabo {
             std::string m_slotFunction;
 
         };
-
-        // This one does appropriate conversions for a boolean target type
-        template <>
-        const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const;
 
         class Slot0 : public Slot {
 
