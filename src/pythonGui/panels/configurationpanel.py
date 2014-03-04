@@ -50,9 +50,12 @@ class ConfigurationPanel(QWidget):
         self.__toolBar = None
 
         # map = { path, swIndex }
-        self.__itemPathIndex = dict()
+        self.__itemPathIndexMap = dict()
         # map = { path, bool }
         self.__pathSchemaLoadedMap = dict()
+        
+        # map = { path, projectPath }
+        self.__itemProjectPathMap = dict()
         
         self.__schemaReader = SchemaReader()
         
@@ -547,8 +550,10 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, type, path):
         # Show correct parameters
-        index = self.__itemPathIndex.get(path)
+        index = self.__itemPathIndexMap.get(path)
         print "+++ showParameterPage +++", index, path
+        print ""
+        print ""
         if index:
             self._setParameterEditorIndex(index)
 
@@ -590,8 +595,10 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        # Reset map
-        self.__itemPathIndex = dict()
+        # Reset maps
+        self.__itemPathIndexMap = dict()
+        self.__pathSchemaLoadedMap = dict()
+        self.__itemProjectPathMap = dict()
 
         while self.__swParameterEditor.count() > 1:
             self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
@@ -604,8 +611,10 @@ class ConfigurationPanel(QWidget):
         be cleaned and removed.
         """
         # Remove \path from map
-        if path in self.__itemPathIndex:
-            del self.__itemPathIndex[path]
+        if path in self.__itemPathIndexMap:
+            del self.__itemPathIndexMap[path]
+        if path in self.__itemProjectPathMap:
+            del self.__itemProjectPathMap[path]
         self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
@@ -620,29 +629,43 @@ class ConfigurationPanel(QWidget):
 
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
-        key = itemInfo.get('key')
-        if (key in self.__itemPathIndex) and (key in self.__pathSchemaLoadedMap):
-            index = self.__itemPathIndex.get(key)
+        paramPageKey = itemInfo.get('key')
+        # Get project path, if it is set
+        projNaviPathTuple = itemInfo.get('projNaviPathTuple')
+        print "==== onSchemaAvailable ====", paramPageKey
+        
+        if (paramPageKey in self.__itemPathIndexMap) and (paramPageKey in self.__pathSchemaLoadedMap):
+            index = self.__itemPathIndexMap.get(paramPageKey)
+            print "++++ index ++++", index
             if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
-                schemaLoaded = self.__pathSchemaLoadedMap.get(key)
+                schemaLoaded = self.__pathSchemaLoadedMap.get(paramPageKey)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
                     self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
                     twParameterEditorPage.clear()
 
                     if self._parseSchema(itemInfo, twParameterEditorPage):
-                        self.__pathSchemaLoadedMap[key] = True
+                        self.__pathSchemaLoadedMap[paramPageKey] = True
         else:
-            self.__itemPathIndex[key] = self._createNewParameterPage(itemInfo)
+            self.__itemPathIndexMap[paramPageKey] = self._createNewParameterPage(itemInfo)
+            print "+++ Createpage +++", paramPageKey
+            if projNaviPathTuple is not None:
+                self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
 
             if schema:
-                self.__pathSchemaLoadedMap[key] = True
+                self.__pathSchemaLoadedMap[paramPageKey] = True
             else:
-                self.__pathSchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[paramPageKey] = False
+        
+        # Load schema for project path, if existing
+        projectPath = self.__itemProjectPathMap.get(paramPageKey)
+        if (projectPath is not None) and (projectPath in self.__pathSchemaLoadedMap):
+            if not self.__pathSchemaLoadedMap.get(projectPath):
+                self.onSchemaAvailable(dict(key=projectPath, schema=itemInfo.get('schema')))
 
 
     def onDeviceItemChanged(self, itemInfo):
@@ -671,7 +694,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceStateChanged(self, internalKey, state):
-        index = self.__itemPathIndex.get(internalKey)
+        index = self.__itemPathIndexMap.get(internalKey)
         if index:
             twParameterEditorPage = self.__swParameterEditor.widget(index)
             twParameterEditorPage.stateUpdated(state)
