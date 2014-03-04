@@ -113,10 +113,11 @@ else:
     print "where t0, t1 - data/time in format 'Thu Feb 26 14:45:55 CET 2014' or any other like '26.02.2014 14:45:55 2014' "
     print "If timezone (like CET) is not specified, then local system time zone will be assumed."
     print "Example: myDeviceId currentSpeed 'Wed Feb 26 14:45:55 CET 2014' '26.02.2014 15:10:00 2014'"
+    print "Results will be stored in a file: /tmp/myDeviceId_currentSpeed.txt"
     sys.exit()
 
 #temporary for now store resuts in file
-resultFile = deviceId+"-"+key+".txt" #maybe also use time in naming
+resultFile = "/tmp/"+deviceId+"_"+key+".txt" #maybe also use time in naming
 #print "resultFile will be:", resultFile 
 
 text_file = open(resultFile, "w")
