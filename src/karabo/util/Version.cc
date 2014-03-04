@@ -20,7 +20,7 @@ namespace karabo {
 
         Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_revision(-1) {
             
-            boost::filesystem::path versionFile(std::string(getenv("HOME")) + "/.karabo/karaboVersion");
+            boost::filesystem::path versionFile = getPathToVersionFile();
             if (boost::filesystem::exists(versionFile)) {
                 std::stringstream buffer;
                 std::ifstream file(versionFile.string().c_str());
@@ -42,6 +42,24 @@ namespace karabo {
                     }
                 }
             }            
+        }
+        
+        std::string Version::getPathToVersionFile() {
+            boost::filesystem::path karaboLocation(std::string(getenv("HOME")) + "/.karabo/karaboFramework");
+            if (boost::filesystem::exists(karaboLocation)) {
+                std::stringstream buffer;
+                std::ifstream file(karaboLocation.string().c_str());
+                if (file) {
+                    buffer << file.rdbuf();
+                    file.close();
+                } else {
+                    throw KARABO_IO_EXCEPTION("Cannot open file: " + karaboLocation.string());
+                }
+                // Get rid of the newline character
+                std::string path(buffer.str());
+                path = path.substr(0, path.size()-1);
+                return path + "/VERSION";
+            }
         }
         
         Version& Version::getInstance() {

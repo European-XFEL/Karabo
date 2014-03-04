@@ -31,6 +31,8 @@ namespace karabo {
             };
 
             static Version& getInstance();
+            
+            static std::string getPathToVersionFile();
 
         public:
 

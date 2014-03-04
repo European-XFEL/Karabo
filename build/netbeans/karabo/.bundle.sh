@@ -77,6 +77,9 @@ fi
 # Start fresh
 mkdir -p $PACKAGEDIR
 
+# Version information
+echo $VERSION > $PACKAGEDIR/VERSION
+
 # karabo
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib $PACKAGEDIR/
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
