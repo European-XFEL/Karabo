@@ -66,34 +66,6 @@ namespace karabo {
             m_accessLevelOfSender = "";
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
-        }
-
-        //        void Slot::startSlotProcessing() {
-        //            m_signalSlotable->setSlotProcessingFlag(true);
-        //        }
-
-        //        void Slot::stopSlotProcessing() {
-        //            m_signalSlotable->setSlotProcessingFlag(false);
-        //        }
-
-
-        template <>
-        const bool& Slot::getAndCast(const std::string& key, const karabo::util::Hash& hash) const {
-            //std::cout << "int -> boolean caster in action..." << std::endl;
-            karabo::util::Hash::Node node;
-            try {
-                node = hash.getNode(key);
-            } catch (...) {
-                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Slot was called with to less arguments"));
-            }
-            if (node.is<int>()) {
-                // TODO Check portability
-                const bool& b = *(reinterpret_cast<const bool*> (&(node.getValue<int>())));
-                //std::cout << "casting integer to boolean, value: " << b << std::endl;
-                return b;
-            } else {
-                return node.getValue<bool>();
-            }
-        }
+        }      
     }
 }
