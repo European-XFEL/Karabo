@@ -1,4 +1,4 @@
-from dialogs import TextDialog
+from dialogs.dialogs import TextDialog
 from registry import Loadable, ns_svg, ns_karabo
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
