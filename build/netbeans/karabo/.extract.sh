@@ -55,7 +55,7 @@ then
   installDir="${install_prefix_dir}"
 fi
 
-echo "This is a self-extracting archive."
+echo " This is a self-extracting archive."
 if [ "x${interactive}x" = "xTRUEx" ]
 then
   read -e -p " Installation path [$HOME]: " dir
@@ -82,7 +82,7 @@ tail -n +$SKIP $0 | (cd  $installDir && tar xzf -) || echo_exit "Problem unpacki
 echo  " unpacking finished successfully"
 # Any script here will happen after the tar file extract.
 echo
-echo -n "Running post install script..."
+echo -n " Running post install script..."
 mkdir -p $HOME/.karabo
 echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
