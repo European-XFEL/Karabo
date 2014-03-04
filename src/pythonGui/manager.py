@@ -278,7 +278,6 @@ class _Manager(QObject):
 
     def newVisibleDevice(self, internalPath):
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        print "newVisibleDevice", deviceId
         if not deviceId:
             return
 
@@ -302,7 +301,6 @@ class _Manager(QObject):
 
     def removeVisibleDevice(self, internalPath):
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        print "removeVisibleDevice", deviceId
         if not deviceId:
             return
 
@@ -769,7 +767,6 @@ class _Manager(QObject):
         # Merge new configuration data into central hash
         self._mergeIntoHash(config)
 
-        print "handleClassSchema", path
         path = path.split('.description', 1)[0]
         classId = path.split('.')[3]
         self.onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
@@ -780,7 +777,6 @@ class _Manager(QObject):
         if self.__hash.has(path):
             return self.__hash.get(path)
 
-        print "getClassSchema", serverId, classId
         # Send network request
         self.signalGetClassSchema.emit(serverId, classId)
         return None

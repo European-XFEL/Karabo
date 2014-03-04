@@ -129,9 +129,28 @@ class ProjectTree(QTreeView):
             subDirToDelete.rmpath(subDirPath)
 
 
-    def _addScene(self, fileName, alias):
-        # TODO: use correct path!!!
-        projScenePath = "default_project.project.scenes"
+    def _addDevice(self):
+        projectName = self._currentProjectName()
+        if projectName is None: return
+        
+        # Path for device in project hash
+        devicePath = projectName + ".project.device." + self.__pluginDialog.deviceId
+        # Path for device configuration
+        configPath = devicePath + "." + self.__pluginDialog.plugin
+
+        # Put info in Hash
+        config = Hash()
+        config.set(configPath + ".deviceId", self.__pluginDialog.deviceId)
+        config.set(configPath + ".serverId", self.__pluginDialog.server)
+        # Add device to project hash
+        Manager().addConfigToProject(config)
+
+        # Select added device
+        self._selectPath(devicePath)
+
+
+    def _addScene(self, projectName, fileName, alias):
+        projScenePath = projectName + ".project.scenes"
 
         # Update project hash
         scenePath = projScenePath + "." + alias
@@ -142,10 +161,36 @@ class ProjectTree(QTreeView):
         Manager().addSceneToProject(projScenePath, config)
 
         # Select added device
-        self.model().selectPath(scenePath)
+        self._selectPath(scenePath)
         
         # Send signal to mainWindow to add scene
         self.signalAddScene.emit(alias)
+
+
+    def _selectPath(self, path):
+        """
+        The item with the given \path is selected.
+        """
+        self.model().selectPath(path)
+        
+
+    def _currentProjectName(self):
+        """
+        This function returns the current project name, if a category like
+        Devices, Scenes etc. is selected.
+        
+        It returns None, if no index can be found.
+        """
+        index = self.selectionModel().currentIndex()
+        if not index.isValid():
+            return None
+        
+        projectIndex = index.parent()
+        if projectIndex is None:
+            return None
+        
+        return projectIndex.data(Qt.DisplayRole)
+        
 
 
     def newProject(self):
@@ -190,8 +235,11 @@ class ProjectTree(QTreeView):
         So basically a new project is created and saved in the users /tmp/ folder.
         Previous data is overwritten.
         """
-        self._createNewProject("default_project", "/tmp/", True)
-        self._addScene("default_scene", "default_scene")
+        projectName = "default_project"
+        sceneName = "default_scene"
+        
+        self._createNewProject(projectName, "/tmp/", True)
+        self._addScene(projectName, sceneName, sceneName)
 
 
     def serverConnectionChanged(self, isConnected):
@@ -200,7 +248,6 @@ class ProjectTree(QTreeView):
 
 
     def mouseDoubleClickEvent(self, event):
-        print "mouseDoubleClickEvent"
         index = self.selectionModel().currentIndex()
         if index is None: return
         if not index.isValid(): return
@@ -262,26 +309,7 @@ class ProjectTree(QTreeView):
         if self.__pluginDialog.exec_() == QDialog.Rejected:
             return
 
-        index = self.selectionModel().currentIndex()
-        if index.isValid():
-            projectIndex = index.parent()
-            if projectIndex:
-                # Path for device in project hash
-                devicePath = projectIndex.data(Qt.DisplayRole) + ".project.device." + \
-                             self.__pluginDialog.deviceId
-                # Path for device configuration
-                configPath = devicePath + "." + self.__pluginDialog.plugin
-
-                # Put info in Hash
-                config = Hash()
-                config.set(configPath + ".deviceId", self.__pluginDialog.deviceId)
-                config.set(configPath + ".serverId", self.__pluginDialog.server)
-                # Add device to project hash
-                Manager().addConfigToProject(config)
-
-                # Select added device
-                self.model().selectPath(devicePath)
-
+        self._addDevice()
         self.__pluginDialog = None
 
 
@@ -290,7 +318,9 @@ class ProjectTree(QTreeView):
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        self._addScene(dialog.fileName, dialog.alias)
+        # Get project name
+        projectName = self._currentProjectName()
+        self._addScene(projectName, dialog.fileName, dialog.alias)
 
 
     def onSelectionChanged(self, selected, deselected):
@@ -309,15 +339,22 @@ class ProjectTree(QTreeView):
 
         if (serverId is None) or (classId is None) or (deviceId is None):
             return
-
-        # Get schema
-        schema = Manager().getClassSchema(serverId, classId)
         
         # Check whether deviceId is already online
-        if Manager().hash.has(ProjectModel.DEVICE_KEY + deviceId):
-            itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.DEVICE, schema=schema)
+        if Manager().hash.has(ProjectModel.DEVICE_KEY + "." + deviceId):
+            # Get schema
+            schema = Manager().getDeviceSchema(deviceId)
+            # Set path which is used to get class schema
+            naviPath = "device." + deviceId
+            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path), classId=classId, \
+                            type=NavigationItemTypes.DEVICE, schema=schema)
         else:
-            itemInfo = dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema)
+            # Get schema
+            schema = Manager().getClassSchema(serverId, classId)
+            # Set path which is used to get class schema
+            naviPath = "server." + serverId + ".classes." + classId
+            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path), classId=classId, \
+                            type=NavigationItemTypes.CLASS, schema=schema)
         
         Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
