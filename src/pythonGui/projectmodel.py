@@ -73,7 +73,7 @@ class ProjectModel(QStandardItemModel):
                     # TODO: Look for other possibilities than centralHash
                     # to check whether deviceId is on/offline
                     # Update icon on availability of device
-                    if centralHash.has(ProjectModel.DEVICE_KEY + leafKey):
+                    if centralHash.has(ProjectModel.DEVICE_KEY + "." + leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
