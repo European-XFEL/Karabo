@@ -714,6 +714,24 @@ class Ungroup(GroupActions, SimpleAction):
                 i += 1
 
 
+class EntireWindow(GroupActions, SimpleAction):
+    'One group should occupy the entire window'
+    text = "Entire Window"
+    icon = "icons/entire.svg"
+
+
+    def run(self):
+        if self.parent.ilayout.entire is not None:
+            self.parent.ilayout.entire = None
+            self.parent.ilayout.update()
+            return
+        for c in self.parent.ilayout:
+            if c.selected:
+                self.parent.ilayout.entire = c
+                self.parent.ilayout.update()
+                return
+
+
 Separator()
 
 

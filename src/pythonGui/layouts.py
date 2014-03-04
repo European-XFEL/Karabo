@@ -126,6 +126,7 @@ class FixedLayout(Layout, QLayout):
         QLayout.__init__(self)
         Layout.__init__(self)
         self._children = [ ] # contains only QLayoutItems
+        self.entire = None
 
 
     def __setitem__(self, key, value):
@@ -151,10 +152,22 @@ class FixedLayout(Layout, QLayout):
 
     def loadPosition(self, element, item):
         self.add_item(item)
+        if element.get(ns_karabo + 'entire') is not None:
+            self.entire = item
         try:
             item.fixed_geometry = _parse_rect(element)
         except TypeError:
             pass
+
+
+    def add_children(self, e, selected=False):
+        for c in self:
+            if not selected or c.selected:
+                ee = c.element()
+                if self.entire == c:
+                    ee.set('entire', 'True')
+                e.append(ee)
+        e.extend(s.element() for s in self.shapes if not selected or s.selected)
 
 
     def itemAtPosition(self, pos):
@@ -206,6 +219,8 @@ class FixedLayout(Layout, QLayout):
 
 
     def geometry(self):
+        if self.entire is not None:
+            return self.entire.geometry()
         try:
             return self.fixed_geometry
         except AttributeError:
@@ -270,12 +285,16 @@ class FixedLayout(Layout, QLayout):
 
     def setGeometry(self, geometry):
         "only to be used by Qt, don't use directly!"
+        if self.entire is not None:
+            self.entire.fixed_geometry = geometry
         for item in self._children:
             i = item.widget() if item.widget() is not None else item
             i.setGeometry(i.fixed_geometry)
 
 
     def sizeHint(self):
+        if self.entire is not None:
+            return self.entire.sizeHint()
         return QSize(10, 10)
 
 
