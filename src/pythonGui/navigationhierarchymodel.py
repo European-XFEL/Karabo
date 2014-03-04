@@ -11,8 +11,8 @@
 __all__ = ["NavigationHierarchyModel"]
 
 import globals
-from navigationhierarchynode import *
-from karabo.karathon import *
+from navigationhierarchynode import NavigationHierarchyNode
+#from karabo.karathon import *
 import manager
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
@@ -161,11 +161,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
         index = selectedIndexes[0]
 
         if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
+            return
 
         level = self.getHierarchyLevel(index)
-        row = index.row()
-
+        
         classId = None
         path = ""
 
@@ -180,10 +179,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
             serverId = parentIndex.data()
             classId = index.data()
 
-            schema = manager.Manager().getClassSchema(serverId, classId)
             path = "server.{}.classes.{}".format(serverId, classId)
+            schema = manager.Manager().getClassSchema(serverId, classId)
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+                                                type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data()
@@ -193,11 +192,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             #serverId = serverIndex.data()
 
             path = "device." + deviceId
+            schema = manager.Manager().getDeviceSchema(deviceId)
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=None))
+                                                type=type, schema=schema))
 
-        itemInfo = dict(key=path, classId=classId,
-                        type=type, level=level, row=row)
+        itemInfo = dict(key=path, classId=classId, type=type)
         self.signalItemChanged.emit(itemInfo)
 
 

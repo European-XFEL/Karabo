@@ -288,6 +288,7 @@ class _Manager(QObject):
         if hasDevice and (self.getDeviceSchema(deviceId) is None):
             return True
 
+        print "newVisibleDevice", deviceId, internalPath
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] += 1
@@ -295,6 +296,7 @@ class _Manager(QObject):
             self.__visibleDevInsKeys[deviceId] = 1
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
+        print "deviceIdCount", self.__visibleDevInsKeys
         
         return hasDevice
 
@@ -304,6 +306,7 @@ class _Manager(QObject):
         if not deviceId:
             return
 
+        print "removeVisibleDevice", deviceId, internalPath
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] -= 1
@@ -783,15 +786,19 @@ class _Manager(QObject):
     
     
     def handleDeviceSchema(self, headerHash, config):
+        path = "device.{}".format(headerHash.get("deviceId"))
+        descriptionPath = "{}.description".format(path)
+        if self.__hash.has(descriptionPath):
+            return
+        
         self._mergeIntoHash(config)
-        path = "device." + headerHash.get("deviceId")
         self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE,
-                                    schema=config.get(path + '.description')))
+                                    schema=config.get(descriptionPath)))
         self.newVisibleDevice(path)
 
 
     def getDeviceSchema(self, deviceId):
-        path = str("device." + deviceId + ".description")
+        path = "device.{}.description".format(deviceId)
         if self.__hash.has(path):
             return self.__hash.get(path)
 

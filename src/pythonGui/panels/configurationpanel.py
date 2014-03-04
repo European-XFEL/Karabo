@@ -553,7 +553,6 @@ class ConfigurationPanel(QWidget):
         index = self.__itemPathIndexMap.get(path)
         print "+++ showParameterPage +++", index, path
         print ""
-        print ""
         if index:
             self._setParameterEditorIndex(index)
 
@@ -632,6 +631,7 @@ class ConfigurationPanel(QWidget):
         paramPageKey = itemInfo.get('key')
         # Get project path, if it is set
         projNaviPathTuple = itemInfo.get('projNaviPathTuple')
+        print ""
         print "==== onSchemaAvailable ====", paramPageKey
         
         if (paramPageKey in self.__itemPathIndexMap) and (paramPageKey in self.__pathSchemaLoadedMap):
@@ -655,8 +655,7 @@ class ConfigurationPanel(QWidget):
                 self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
-
-            if schema:
+            if schema is not None:
                 self.__pathSchemaLoadedMap[paramPageKey] = True
             else:
                 self.__pathSchemaLoadedMap[paramPageKey] = False
@@ -672,6 +671,7 @@ class ConfigurationPanel(QWidget):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
+        print "onDeviceItemChanged", path
         self.updateButtonsVisibility = type == NavigationItemTypes.CLASS
 
         if (self.__prevPath != "") and (self.__prevPath != path):
