@@ -29,7 +29,7 @@ class ParameterTreeWidget(QTreeWidget):
         # configPanel - save parent widget for toolbar buttons
         # path - full path of navigationItem
         super(ParameterTreeWidget, self).__init__()
-        
+
         self.__classId = classId # DeviceClass name stored for XML save
         self.__instanceKey = path
         self.__configPanel = configPanel

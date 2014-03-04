@@ -46,7 +46,7 @@
     <file alias="remote">icons/remote.png</file>
     <file alias="apply">icons/apply-32x32.png</file>
     <file alias="online">icons/online.png</file>
-    <file alias="offline">icons/offline.png</file>
+    <file alias="offline">icons/offline-32x32.png</file>
     <file alias="yes">icons/yes.png</file>
     <file alias="no">icons/no.png</file>
     <file alias="refresh">icons/refresh-32x32.png</file>
