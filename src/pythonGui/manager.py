@@ -170,12 +170,10 @@ class _Manager(QObject):
 
     
     def _getDataNotifierEditableValue(self, key):
-        key = str(key)
         return self.__keyNotifierMapEditableValue.get(key)
 
 
     def _getDataNotifierDisplayValue(self, key):
-        key = str(key)
         return self.__keyNotifierMapDisplayValue.get(key)
 
     
@@ -288,7 +286,6 @@ class _Manager(QObject):
         if hasDevice and (self.getDeviceSchema(deviceId) is None):
             return True
 
-        print "newVisibleDevice", deviceId, internalPath
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] += 1
@@ -296,7 +293,6 @@ class _Manager(QObject):
             self.__visibleDevInsKeys[deviceId] = 1
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
-        print "deviceIdCount", self.__visibleDevInsKeys
         
         return hasDevice
 
@@ -306,7 +302,6 @@ class _Manager(QObject):
         if not deviceId:
             return
 
-        print "removeVisibleDevice", deviceId, internalPath
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] -= 1
@@ -805,7 +800,7 @@ class _Manager(QObject):
         # Send network request
         self.signalGetDeviceSchema.emit(deviceId)
         return None
-        
+
 
     def handleDeviceSchemaUpdated(self, headerHash, config):
         path = "device." + headerHash.get("deviceId")
@@ -817,8 +812,23 @@ class _Manager(QObject):
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, headerHash, config):
         path = "device.{}.configuration".format(headerHash.get('deviceId'))
-        self._changeHash(path, config.get(path))
+        deviceConfig = config.get(path)
+        self._changeHash(path, deviceConfig)
         self._mergeIntoHash(config)
+        
+        # Check, if device is also in project hash
+        for projectKey in self.__projectHash:
+            projectConfig = self.__projectHash.get(projectKey)
+            for p in projectConfig.keys():
+                categoryConfig = projectConfig.get(p)
+                for categoryKey in categoryConfig.keys():
+                    if categoryKey == ProjectModel.DEVICE_KEY:
+                        config = categoryConfig.get(categoryKey)
+                        if config is None:
+                            break
+                        for deviceId in config.keys():
+                            projectPath = "{}.{}.{}.{}.configuration".format(projectKey, p, categoryKey, deviceId)
+                            self._changeHash(projectPath, deviceConfig)
 
 
     def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
