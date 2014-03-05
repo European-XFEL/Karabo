@@ -26,6 +26,7 @@ from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 import pathparser
+import icons
 
 from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
@@ -56,7 +57,7 @@ class Action(Registry):
 
     @classmethod
     def add_action(cls, source, parent):
-        action = QAction(QIcon(cls.icon), cls.text, source)
+        action = QAction(cls.icon, cls.text, source)
         action.setStatusTip(cls.text)
         action.setToolTip(cls.text)
         if hasattr(cls, "shortcut"):
@@ -355,7 +356,7 @@ class Select(Action):
 
 class SelectAll(SimpleAction):
     text = 'Select All'
-    icon = 'icons/select-all.svg'
+    icon = icons.selectAll
     shortcut = QKeySequence.Paste
 
 
@@ -372,7 +373,7 @@ Separator()
 
 class Label(Action, Loadable):
     text = "Add text"
-    icon = ":text"
+    icon = icons.text
 
 
     @classmethod
@@ -430,7 +431,7 @@ class Label(Action, Loadable):
 class Line(Shape):
     xmltag = ns_svg + "line"
     text = "Add Line"
-    icon = ":line"
+    icon = icons.line
 
     def set_points(self, start, end):
         self.line = QLine(start, end)
@@ -485,7 +486,7 @@ class Line(Shape):
 class Rectangle(Shape):
     xmltag = ns_svg + "rect"
     text = "Add rectangle"
-    icon = ":rect"
+    icon = icons.rect
 
     def set_points(self, start, end):
         self.rect = QRect(start, end).normalized()
@@ -587,7 +588,7 @@ class Path(Shape):
 Separator()
 
 class GroupActions(ActionGroup):
-    icon = ":group"
+    icon = icons.group
     text = "Group"
 
 class GroupAction(SimpleAction):
@@ -621,7 +622,7 @@ class GroupAction(SimpleAction):
 
 class FixedGroup(GroupActions, GroupAction):
     text = "Group without layout"
-    icon = "icons/group-grid.svg"
+    icon = icons.groupGrid
 
 
     def run(self):
@@ -657,7 +658,7 @@ class BoxGroup(GroupAction):
 
 class VerticalGroup(GroupActions, BoxGroup):
     text = "Group Vertically"
-    icon = "icons/group-vertical.svg"
+    icon = icons.groupVertical
 
 
     def run(self):
@@ -667,7 +668,7 @@ class VerticalGroup(GroupActions, BoxGroup):
 
 class HorizontalGroup(GroupActions, BoxGroup):
     text = "Group Horizontally"
-    icon = "icons/group-horizontal.svg"
+    icon = icons.groupHorizontal
 
 
     def run(self):
@@ -677,7 +678,7 @@ class HorizontalGroup(GroupActions, BoxGroup):
 
 class GridGroup(GroupActions, BoxGroup):
     text = "Group in a Grid"
-    icon = "icons/group-grid.svg"
+    icon = icons.groupGrid
 
 
     def run(self):
@@ -694,7 +695,7 @@ class GridGroup(GroupActions, BoxGroup):
 class Ungroup(GroupActions, SimpleAction):
     "Ungroup items"
     text = "Ungroup"
-    icon = "icons/ungroup.svg"
+    icon = icons.ungroup
 
 
     def run(self):
@@ -717,7 +718,7 @@ class Ungroup(GroupActions, SimpleAction):
 class EntireWindow(GroupActions, SimpleAction):
     'One group should occupy the entire window'
     text = "Entire Window"
-    icon = "icons/entire.svg"
+    icon = icons.entireWindow
 
 
     def run(self):
@@ -737,7 +738,7 @@ Separator()
 
 class Cut(SimpleAction):
     text = "Cut"
-    icon = ":edit-cut"
+    icon = icons.editCut
     shortcut = QKeySequence.Cut
 
 
@@ -749,7 +750,7 @@ class Cut(SimpleAction):
 
 class Copy(SimpleAction):
     text = "Copy"
-    icon = ":edit-copy"
+    icon = icons.editCopy
     shortcut = QKeySequence.Copy
 
 
@@ -759,7 +760,7 @@ class Copy(SimpleAction):
 
 class Paste(SimpleAction):
     text = "Paste"
-    icon = ":edit-paste"
+    icon = icons.editPaste
     shortcut = QKeySequence.Paste
 
 
@@ -782,7 +783,7 @@ Separator()
 
 class Raise(SimpleAction):
     text = "Bring to front"
-    icon = ":bringtofront"
+    icon = icons.bringToFront
 
 
     def run(self):
@@ -800,7 +801,7 @@ class Raise(SimpleAction):
 
 class Lower(SimpleAction):
     text = "Send to back"
-    icon = ":sendtoback"
+    icon = icons.sendToBack
 
 
     def run(self):

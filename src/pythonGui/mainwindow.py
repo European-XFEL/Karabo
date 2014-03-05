@@ -12,7 +12,7 @@
 __all__ = ["MainWindow"]
 
 import os
-import qrc_icons
+import icons
 
 from docktabwindow import DockTabWindow
 import globals
@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
     def _setupActions(self):
         text = "Change access level"
         self.__tbAccessLevel = QToolButton(self)
-        self.__tbAccessLevel.setIcon(QIcon(":lock"))
+        self.__tbAccessLevel.setIcon(icons.lock)
         self.__tbAccessLevel.setToolTip(text)
         self.__tbAccessLevel.setStatusTip(text)
         self.__tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
@@ -115,14 +115,15 @@ class MainWindow(QMainWindow):
         self.__tbAccessLevel.setMenu(self.__mAccessLevel)
         
         text = "Connect to server"
-        self.__acServerConnect = QAction(QIcon(":remote"), "&Connect to server", self)
+        self.__acServerConnect = QAction(icons.remote,
+                                         "&Connect to server", self)
         self.__acServerConnect.setStatusTip(text)
         self.__acServerConnect.setToolTip(text)
         self.__acServerConnect.setCheckable(True)
         self.__acServerConnect.triggered.connect(self.onConnectToServer)
 
         text = "Exit application"
-        self.__acExit = QAction(QIcon(':exit'), '&Exit', self)
+        self.__acExit = QAction(icons.exit, '&Exit', self)
         self.__acExit.setStatusTip(text)
         self.__acExit.setToolTip(text)
         self.__acExit.setShortcut('Ctrl+Q')
