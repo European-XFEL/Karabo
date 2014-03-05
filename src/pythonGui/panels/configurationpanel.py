@@ -671,7 +671,6 @@ class ConfigurationPanel(QWidget):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
-        print "onDeviceItemChanged", path
         self.updateButtonsVisibility = type == NavigationItemTypes.CLASS
 
         if (self.__prevPath != "") and (self.__prevPath != path):
