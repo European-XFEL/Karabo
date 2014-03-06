@@ -346,7 +346,7 @@ class ProjectTree(QTreeView):
             schema = Manager().getDeviceSchema(deviceId)
             # Set path which is used to get class schema
             naviPath = "device." + deviceId
-            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path), classId=classId, \
+            itemInfo = dict(key=naviPath, classId=classId, \
                             type=NavigationItemTypes.DEVICE, schema=schema)
         else:
             # Get schema
@@ -369,4 +369,6 @@ class ProjectTree(QTreeView):
         self.__serverTopology = config.get(serverKey)
         if self.__pluginDialog:
             self.__pluginDialog.updateServerTopology(self.__serverTopology)
+        
+        # TODO: Update on/offline status devices in tree
 
