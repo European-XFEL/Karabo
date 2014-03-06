@@ -234,7 +234,7 @@ namespace karabo {
                 string deviceId = header.get<string > ("deviceId");
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
                 Hash b;
-                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
+                Hash& tmp = b.bindReference<Hash>("configuration");
                 tmp = remote().get(deviceId);
                 preprocessImageData(tmp);
                 channel->write(h, b);
@@ -323,8 +323,8 @@ namespace karabo {
                 string serverId = header.get<string > ("serverId");
                 string classId = header.get<string> ("classId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash h("type", "classDescription");
-                Hash b("server." + serverId + ".classes." + classId + ".description", remote().getClassSchema(serverId, classId));
+                Hash h("type", "classDescription", "serverId", serverId, "classId", classId);
+                Hash b("schema", remote().getClassSchema(serverId, classId));
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
@@ -338,7 +338,7 @@ namespace karabo {
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 Hash h("type", "deviceSchema", "deviceId", deviceId);
-                Hash b("device." + deviceId + ".description", remote().getDeviceSchema(deviceId));
+                Hash b("schema", remote().getDeviceSchema(deviceId));
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
@@ -452,7 +452,7 @@ namespace karabo {
                 preprocessImageData(modified);
 
                 Hash header("type", "configurationChanged", "deviceId", deviceId);
-                Hash body("device." + deviceId + ".configuration", modified);
+                Hash body("configuration", modified);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
