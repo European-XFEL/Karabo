@@ -75,7 +75,7 @@ class ConfigurationPanel(QWidget):
         vLayout.addWidget(splitTopPanes)
                 
         self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        treemodel.itemChanged.connect(self.onNavigationItemChanged)
+        treemodel.signalItemChanged.connect(self.onNavigationItemChanged)
         self.__twNavigation.hide()
 
         splitTopPanes.setStretchFactor(0, 1)
@@ -624,7 +624,7 @@ class ConfigurationPanel(QWidget):
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
             
-            if schema:
+            if schema is not None:
                 self.__internalKeySchemaLoadedMap[key] = True
             else:
                 self.__internalKeySchemaLoadedMap[key] = False
