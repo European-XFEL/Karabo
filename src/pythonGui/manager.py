@@ -276,7 +276,7 @@ class _Manager(QObject):
     def newVisibleDevice(self, internalPath):
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
         if not deviceId:
-            return
+            return False
 
         # Check whether deviceId in central hash
         hasDevice = self.__hash.has("device." + deviceId)
@@ -293,7 +293,7 @@ class _Manager(QObject):
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
         
-        return hasDevice
+        return True
 
 
     def removeVisibleDevice(self, internalPath):
@@ -729,7 +729,7 @@ class _Manager(QObject):
 
 
     def getClassSchema(self, serverId, classId):
-        path = str("server." + serverId + ".classes." + classId + ".description")
+        path = "server.{}.classes.{}.description".format(serverId, classId)
         if self.__hash.has(path):
             return self.__hash.get(path)
 
@@ -739,15 +739,19 @@ class _Manager(QObject):
     
     
     def handleDeviceSchema(self, headerHash, config):
+        path = "device.{}".format(headerHash.get("deviceId"))
+        descriptionPath = "{}.description".format(path)
+        if self.__hash.has(descriptionPath):
+            return
+        
         self._mergeIntoHash(config)
-        path = "device." + headerHash.get("deviceId")
         self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE,
-                                    schema=config.get(path + '.description')))
+                                    schema=config.get(descriptionPath)))
         self.newVisibleDevice(path)
 
 
     def getDeviceSchema(self, deviceId):
-        path = str("device." + deviceId + ".description")
+        path = "device.{}.description".format(deviceId)
         if self.__hash.has(path):
             return self.__hash.get(path)
 

@@ -11,8 +11,7 @@
 __all__ = ["NavigationHierarchyModel"]
 
 import globals
-from navigationhierarchynode import *
-from karabo.karathon import *
+from navigationhierarchynode import NavigationHierarchyNode
 import manager
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
@@ -22,7 +21,7 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
-    itemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(dict)
 
 
     def __init__(self, parent=None):
@@ -162,10 +161,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
         index = selectedIndexes[0]
 
         if not index.isValid():
-            return NavigationItemTypes.UNDEFINED
+            return
 
         level = self.getHierarchyLevel(index)
-        row = index.row()
 
         classId = None
         path = ""
@@ -193,13 +191,13 @@ class NavigationHierarchyModel(QAbstractItemModel):
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data()
 
+            schema = manager.Manager().getDeviceSchema(deviceId)
             path = "device." + deviceId
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=None))
+                                                     type=type, schema=schema))
 
-        itemInfo = dict(key=path, classId=classId,
-                        type=type, level=level, row=row)
-        self.itemChanged.emit(itemInfo)
+        itemInfo = dict(key=path, classId=classId, type=type)
+        self.signalItemChanged.emit(itemInfo)
 
 
     def selectIndex(self, index):
