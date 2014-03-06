@@ -180,7 +180,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             classId = index.data()
 
             schema = manager.Manager().getClassSchema(serverId, classId)
-            path = "server.{}.classes.{}".format(serverId, classId)
+            path = "{}.{}".format(serverId, classId)
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
                                                      type=type, schema=schema))
         elif level == 3:

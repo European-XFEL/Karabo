@@ -114,7 +114,15 @@ class _Manager(QObject):
         self.sqlDatabase = SqlDatabase()
         self.sqlDatabase.openConnection()
         
-        self.__treemodel = NavigationHierarchyModel()
+        # Model for navigationtreeview
+        self.systemTopology = NavigationHierarchyModel()
+        # Model for projecttree TODO: after merge of projectPanel-branch
+        #self.projectTopology = ProjectModel()
+        
+        # Map stores { (serverId, class), startupConfiguration }
+        self.serverClassData = dict()
+        # Map stores { deviceId, deviceConfiguration }
+        self.deviceData = dict()
         
         # Sets all parameters to start configuration
         self.reset()
@@ -122,8 +130,6 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
-        # Reset Central hash
-        self.__hash = Hash()
         # Project hash
         self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
         self.__projectHash.setAttribute("project", "name", "xfelTest")
@@ -152,16 +158,6 @@ class _Manager(QObject):
         self.__isInitDeviceCurrentlyProcessed = False
 
 
-    def _hash(self):
-        return self.__hash
-    hash = property(fget=_hash)
-
-
-    def _treemodel(self):
-        return self.__treemodel
-    treemodel = property(fget=_treemodel)
-
-
     def closeDatabaseConnection(self):
         self.sqlDatabase.closeConnection()
 
@@ -174,14 +170,6 @@ class _Manager(QObject):
     def _getDataNotifierDisplayValue(self, key):
         key = str(key)
         return self.__keyNotifierMapDisplayValue.get(key)
-
-    
-    def _mergeIntoHash(self, config):
-        #print ""
-        #print config
-        #print ""
-        self.__hash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES) #REPLACE_ATTRIBUTES)
-        #print self.__hash
 
 
     def _setFromPath(self, key, value):
@@ -278,8 +266,8 @@ class _Manager(QObject):
         if not deviceId:
             return False
 
-        # Check whether deviceId in central hash
-        hasDevice = self.__hash.has("device." + deviceId)
+        # Check, whether deviceId is in systemTopology (means online)
+        hasDevice = deviceId in self.deviceData
         # If schema was not seen, request device schema in function
         # getDeviceSchema will call newVisibleDevice again
         if hasDevice and (self.getDeviceSchema(deviceId) is None):
@@ -293,6 +281,7 @@ class _Manager(QObject):
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
         
+        print "newVisible", deviceId
         return True
 
 
@@ -381,7 +370,7 @@ class _Manager(QObject):
 
 ### Slots ###
     def onDeviceClassValueChanged(self, key, value):
-        #print "onDeviceClassValueChanged", key, value
+        print "onDeviceClassValueChanged", key, value
         self._setFromPath(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -651,9 +640,8 @@ class _Manager(QObject):
 
 
     def handleSystemTopology(self, config):
-        # Merge new configuration data into central hash
-        self._mergeIntoHash(config)
-        self.treemodel.updateData(self.__hash)
+        # Update navigation treemodel
+        self.systemTopology.updateData(config)
 
 
     def handleInstanceNew(self, config):
@@ -713,48 +701,49 @@ class _Manager(QObject):
 
         # Remove instance from central hash
         self.__hash.erase(path)
-        self.treemodel.updateData(self.__hash)
+        self.systemTopology.updateData(self.__hash)
         self.signalInstanceGone.emit(path, parentPath)
 
 
-    def handleClassSchema(self, config):
-        path = str(config.paths()[0])
-        schema = config.get(path)
-        # Merge new configuration data into central hash
-        self._mergeIntoHash(config)
+    def handleClassSchema(self, headerHash, config):
+        serverId = headerHash.get("serverId")
+        classId = headerHash.get("classId")
+        schema = config.get("schema")
         
-        path = path.split('.description', 1)[0]
-        classId = path.split('.')[3]
-        self.onSchemaAvailable(dict(key=path, classId=classId, type=NavigationItemTypes.CLASS, schema=schema))
+        # Update map for server and class with schema
+        self.serverClassData[serverId, classId] = schema
+        path = "{}.{}".format(serverId, classId)
+        self.onSchemaAvailable(dict(key=path, classId=classId, 
+                               type=NavigationItemTypes.CLASS, schema=schema))
 
 
     def getClassSchema(self, serverId, classId):
-        path = "server.{}.classes.{}.description".format(serverId, classId)
-        if self.__hash.has(path):
-            return self.__hash.get(path)
+        # Return class schema, if already existing
+        if (serverId, classId) in self.serverClassData:
+            return self.serverClassData[serverId, classId]
 
-        # Send network request
+        # Else, send network request
         self.signalGetClassSchema.emit(serverId, classId)
         return None
     
     
     def handleDeviceSchema(self, headerHash, config):
-        path = "device.{}".format(headerHash.get("deviceId"))
-        descriptionPath = "{}.description".format(path)
-        if self.__hash.has(descriptionPath):
+        deviceId = headerHash.get("deviceId")
+        if deviceId in self.deviceData:
             return
         
-        self._mergeIntoHash(config)
-        self.onSchemaAvailable(dict(key=path, type=NavigationItemTypes.DEVICE,
-                                    schema=config.get(descriptionPath)))
-        self.newVisibleDevice(path)
+        schema = config.get("schema")
+        self.deviceData[deviceId] = schema
+        
+        self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
+                                    schema=schema))
+        self.newVisibleDevice(deviceId)
 
 
     def getDeviceSchema(self, deviceId):
-        path = "device.{}.description".format(deviceId)
-        if self.__hash.has(path):
-            return self.__hash.get(path)
-
+        if deviceId in self.deviceData:
+            return self.deviceData[deviceId]
+        
         # Send network request
         self.signalGetDeviceSchema.emit(deviceId)
         return None
@@ -769,9 +758,11 @@ class _Manager(QObject):
 
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, headerHash, config):
-        path = "device.{}.configuration".format(headerHash.get('deviceId'))
-        self._changeHash(path, config.get(path))
-        self._mergeIntoHash(config)
+        deviceId = headerHash.get("deviceId")
+        self._changeHash(deviceId, config.get("configuration"))
+        #self._mergeIntoHash(config)
+        # TODO: merge into self.deviceData
+        #self.deviceData[deviceId].configuration = config
 
 
     def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
