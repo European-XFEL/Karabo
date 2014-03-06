@@ -288,7 +288,7 @@ class Network(QObject):
                 Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleClassSchema(bodyHash)
+                Manager().handleClassSchema(headerHash, bodyHash)
             elif type == "deviceSchema":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
                 Manager().handleDeviceSchema(headerHash, bodyHash)
