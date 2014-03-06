@@ -1220,6 +1220,7 @@ class GraphicsView(QSvgWidget):
                     items.append((displayNameProxyWidget, None))
 
                 # Does key concern state of device?
+                print "internalKey", internalKey
                 keys = internalKey.split('.configuration.')
                 isStateToDisplay = keys[1] == "state"
                 
