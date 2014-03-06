@@ -59,7 +59,7 @@ class SchemaReader(object):
         #print self.__schema
         #print ""
         
-        self.__rootPath = path + ".configuration"
+        self.__rootPath = path
         
         keys = self.__schema.getKeys()
         for key in keys:

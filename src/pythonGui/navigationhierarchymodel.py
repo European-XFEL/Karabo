@@ -143,7 +143,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     else:
                         continue
 
-                path = "device." + deviceId
+                path = deviceId
                 deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
                 deviceItem.status = status
                 classItem.appendChildItem(deviceItem)
@@ -192,7 +192,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             #serverId = serverIndex.data()
 
             schema = manager.Manager().getDeviceSchema(deviceId)
-            path = "device." + deviceId
+            path = deviceId
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
                                                      type=type, schema=schema))
 
@@ -355,24 +355,22 @@ class NavigationHierarchyModel(QAbstractItemModel):
         elif level == 1:
             type = NavigationItemTypes.SERVER
             serverId = index.data()
-            path = "server." + serverId
+            path = serverId
             return dict(key=path, type=type, serverId=serverId)
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-            path = "server." + serverId + ".classes." + classId
-            return dict(key=path + ".configuration", type=type,
-                        serverId=serverId, classId=classId)
+            path = "{}.{}".format(serverId, classId)
+            return dict(key=path, type=type, serverId=serverId, classId=classId)
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             parentIndex = index.parent()
             classId = parentIndex.data()
             deviceId = index.data()
-            path = "device." + deviceId
-            return dict(key=path + ".configuration", type=type,
-                        classId=classId, deviceId=deviceId)
+            path = deviceId
+            return dict(key=path, type=type, classId=classId, deviceId=deviceId)
 
 
     def mimeData(self, items):
