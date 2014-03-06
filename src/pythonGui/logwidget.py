@@ -557,7 +557,7 @@ class LogTableView(QTableView):
         if value is None:
             return
         # Emit signal with deviceId to select device instance
-        Manager().signalSelectNewNavigationItem.emit("device." + value)
+        Manager().signalSelectNewNavigationItem.emit(value)
         QTableView.mouseDoubleClickEvent(self, event)
 
 

@@ -163,12 +163,10 @@ class _Manager(QObject):
 
     
     def _getDataNotifierEditableValue(self, key):
-        key = str(key)
         return self.__keyNotifierMapEditableValue.get(key)
 
 
     def _getDataNotifierDisplayValue(self, key):
-        key = str(key)
         return self.__keyNotifierMapDisplayValue.get(key)
 
 
@@ -235,8 +233,7 @@ class _Manager(QObject):
 
 
     def handleHistoricData(self, headerHash, bodyHash):
-        key = "device.{}.configuration.{}".format(
-            headerHash.get("deviceId"), headerHash.get("property"))
+        key = "{}.{}".format(headerHash.get("deviceId"), headerHash.get("property"))
         dataNotifier = self._getDataNotifierDisplayValue(key)
         dataNotifier.signalHistoricData.emit(key, bodyHash.get("data"))
 
