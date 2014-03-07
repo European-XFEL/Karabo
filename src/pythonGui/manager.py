@@ -185,11 +185,7 @@ class _Manager(QObject):
             parameterKey = keys[0]
             attributeKey = keys[1]
             
-            print "keys", keys
             self.serverClassData[serverId, classId].setAttribute(parameterKey, attributeKey, value)
-            #if not self.__hash.has(paramKey):
-            #    self.__hash.set(paramKey, None)
-            #self.__hash.setAttribute(paramKey, attribute, value)
         else:
             self.serverClassData[serverId, classId].set(paramKey, value)
     
@@ -208,31 +204,9 @@ class _Manager(QObject):
             parameterKey = keys[0]
             attributeKey = keys[1]
             
-            print "keys", keys
             self.deviceData[deviceId].setAttribute(parameterKey, attributeKey, value)
-            #if not self.__hash.has(paramKey):
-            #    self.__hash.set(paramKey, None)
-            #self.__hash.setAttribute(paramKey, attribute, value)
         else:
             self.deviceData[deviceId].set(paramKey, value)
-
-
-    #def _setFromPath(self, key, value):
-        # pass key and value as list (immutable, important for ungoing procedures)
-    #    print "key:", key, "value:", value
-        # Safety conversion before hashing
-    #    if "@" in key:
-            # Merge attribute value in central hash
-    #        keys = key.split("@")
-    #        paramKey = keys[0]
-    #        attribute = keys[1]
-            
-    #        if not self.__hash.has(paramKey):
-    #            self.__hash.set(paramKey, 0)
-    #        self.__hash.setAttribute(paramKey, attribute, value)
-    #    else:
-            # Merge parameter value in central hash
-            #self.__hash.set(key, value)
 
 
     def disconnectedFromServer(self):
@@ -344,8 +318,6 @@ class _Manager(QObject):
                 internalPath = key
             else:
                 internalPath = path + "." + key
-            
-            #self._setFromPath(internalPath, value)
             
             # Check if DataNotifier for key available
             if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
@@ -469,8 +441,6 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return
         
-        # Remove device instance data from internal hash
-        #self._setFromPath("server." + serverId, Hash())
         self.signalKillServer.emit(serverId)
 
 
@@ -512,13 +482,13 @@ class _Manager(QObject):
     def executeCommand(self, itemInfo):
         # instanceId, name, arguments
         path = itemInfo.get('path')
-        keys = str(path).split('.')
-        deviceId = keys[1]
+        keys = path.split('.')
+        deviceId = keys[0]
         
         command = itemInfo.get('command')
         args = itemInfo.get('args')
         
-        self.signalExecute.emit(deviceId, dict(command=str(command), args=args))
+        self.signalExecute.emit(deviceId, dict(command=command, args=args))
 
 
     def onLogDataAvailable(self, logData):
@@ -527,6 +497,7 @@ class _Manager(QObject):
 
 
     def onRefreshInstance(self, internalPath):
+        print "onRefreshInstance", internalPath
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
         if (not deviceId) and (not self.__hash.has(internalPath)):
             return
@@ -607,7 +578,7 @@ class _Manager(QObject):
         # ...
         
         # Remove old data from internal hash
-        self._setFromPath(path, Hash())
+        #self._setFromPath(path, Hash())
         
         # Update internal hash with new data for path
         self._changeHash(path, tmp, configChangeType)
