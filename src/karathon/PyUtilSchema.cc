@@ -1787,6 +1787,9 @@ void exportPyUtilSchema() {
                 .def("reconfigurable"
                      , &ChoiceElement::reconfigurable
                      , bp::return_internal_reference<> ())
+                .def("init"
+                     , &ChoiceElement::init
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
