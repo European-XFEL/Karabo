@@ -1498,9 +1498,9 @@ void exportPyUtilSchema() {
 
         //********* 'has'-methods ****************
 
-        s.def("keyHasAlias", &Schema::keyHasAlias);
+        s.def("keyHasAlias", &Schema::keyHasAlias, (bp::arg("key")));
 
-        s.def("aliasHasKey", &schemawrap::aliasHasKey);
+        s.def("aliasHasKey", &schemawrap::aliasHasKey, (bp::arg("alias")));
 
         s.def("getAliasFromKey", &schemawrap::getAliasFromKey, (bp::arg("key")));
 
