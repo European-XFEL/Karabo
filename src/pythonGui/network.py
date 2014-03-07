@@ -283,7 +283,7 @@ class Network(QObject):
                 Manager().handleInstanceNew(bodyHash)
             elif type == "instanceUpdated":
                 bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleSystemTopology(bodyHash)
+                Manager().handleInstanceUpdated(bodyHash)
             elif type == "instanceGone":
                 Manager().handleInstanceGone(str(self.__bodyBytes))
             elif type == "classDescription":

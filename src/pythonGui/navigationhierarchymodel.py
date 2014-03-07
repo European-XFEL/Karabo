@@ -29,7 +29,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
-        # TODO: Remove hash from here
+        # TODO: do not use internal hash - just model instead
         self.currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
         self.selection_model = QItemSelectionModel(self)
@@ -41,7 +41,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         #print config
         #print ""
         
-        # TODO: Remove again and use model as this kind datastructure
+        # TODO: do not use internal hash - just model instead
         if self.currentConfig != config:
             self.currentConfig = config
 
@@ -156,12 +156,27 @@ class NavigationHierarchyModel(QAbstractItemModel):
         return True
 
 
-    def instanceNew(self, config):
+    def merge(self, config):
+        # TODO: do not use internal hash - just model instead
         self.currentConfig.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         self.updateData(self.currentConfig)
 
 
+    def instanceNew(self, config):
+        print "instanceNew"
+        # TODO: do not use internal hash - just model instead
+        self.merge(config)
+
+
+    def instanceUpdated(self, config):
+        print "instanceUpdated"
+        # TODO: do not use internal hash - just model instead
+        self.merge(config)
+
+
     def instanceGone(self, path):
+        print "instanceGone", path
+        # TODO: do not use internal hash - just model instead
         if self.currentConfig.has(path):
             self.currentConfig.erase(path)
             self.updateData(self.currentConfig)
