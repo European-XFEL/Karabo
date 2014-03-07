@@ -52,7 +52,6 @@ class DataNotifier(QObject):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
         if hasattr(self, "value"):
-            print "update signal", key
             self.signalUpdateComponent.emit(key, self.value, self.timestamp)
             self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
@@ -670,9 +669,6 @@ class _Manager(QObject):
                   page..
         If \False, nothing is removed.
         """
-        print "handleInstanceNew"
-        print config
-        print ""
         
         # TODO: comment in again
         # Check for existing stuff and remove
@@ -709,8 +705,8 @@ class _Manager(QObject):
         fullServerPath = "server.{}".format(instanceId)
         fullDevicePath = "device.{}".format(instanceId)
         if self.systemTopology.currentConfig.has(fullServerPath):
-            if self.__hash.hasAttribute(fullServerPath, "host"):
-                parentPath = self.__hash.getAttribute(fullServerPath, "host")
+            if self.systemTopology.currentConfig.hasAttribute(fullServerPath, "host"):
+                parentPath = self.systemTopology.currentConfig.getAttribute(fullServerPath, "host")
             path = fullServerPath
         elif self.systemTopology.currentConfig.has(fullDevicePath):
             if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "serverId"):
