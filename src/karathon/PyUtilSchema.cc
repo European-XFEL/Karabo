@@ -1784,6 +1784,9 @@ void exportPyUtilSchema() {
                 .def("appendAsNode"
                      , &ChoiceElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
                      , bp::return_internal_reference<> ())
+                .def("reconfigurable"
+                     , &ChoiceElement::reconfigurable
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
