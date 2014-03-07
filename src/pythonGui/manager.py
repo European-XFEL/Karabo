@@ -697,6 +697,10 @@ class _Manager(QObject):
                 self.potentiallyRefreshVisibleDevice(deviceId)
 
 
+    def handleInstanceUpdated(self, config):
+        self.systemTopology.instanceUpdated(config)
+
+
     def handleInstanceGone(self, instanceId):
         """
         Remove instanceId from central hash and update
