@@ -351,22 +351,19 @@ class NavigationHierarchyModel(QAbstractItemModel):
         elif level == 1:
             type = NavigationItemTypes.SERVER
             serverId = index.data()
-            path = serverId
-            return dict(key=path, type=type, serverId=serverId)
+            return dict(type=type, serverId=serverId)
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-            path = "{}.{}".format(serverId, classId)
-            return dict(key=path, type=type, serverId=serverId, classId=classId)
+            return dict(type=type, serverId=serverId, classId=classId)
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             parentIndex = index.parent()
             classId = parentIndex.data()
             deviceId = index.data()
-            path = deviceId
-            return dict(key=path, type=type, classId=classId, deviceId=deviceId)
+            return dict(type=type, classId=classId, deviceId=deviceId)
 
 
     def mimeData(self, items):

@@ -398,24 +398,15 @@ class Network(QObject):
     def onReconfigureAsHash(self, deviceId, body):
         header = Hash()
         header.set("type", "reconfigure")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         self._tcpWriteHashHash(header, body)
 
 
     def onInitDevice(self, serverId, config):
         header = Hash()
         header.set("type", "initDevice")
-        header.set("serverId", str(serverId))
+        header.set("serverId", serverId)
         self._tcpWriteHashHash(header, config)
-
-
-    def onCreateNewDeviceClassPlugin(self, devSrvInsId, classId, newClassId):
-        header = Hash("type", "createNewDeviceClassPlugin")
-        body = Hash()
-        body.set("devSrvInsId", str(devSrvInsId))
-        body.set("classId", str(classId))
-        body.set("newClassId", str(newClassId))
-        self._tcpWriteHashHash(header, body)
 
 
     def onExecute(self, deviceId, info):

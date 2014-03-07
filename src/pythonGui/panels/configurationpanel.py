@@ -779,9 +779,8 @@ class ConfigurationPanel(QWidget):
         
         serverId = itemInfo.get('serverId')
         classId = itemInfo.get('classId')
-        path = itemInfo.get('key')
 
-        Manager().initDevice(serverId, classId, path)
+        Manager().initDevice(serverId, classId)
 
 
     def onDeviceSchemaUpdated(self, key):
@@ -815,7 +814,7 @@ class ConfigurationPanel(QWidget):
         croppedClassId = classId.split("-")
         classId = croppedClassId[0]
         
-        Manager().onFileOpen(configChangeType, str(path), str(classId))
+        Manager().onFileOpen(configChangeType, path, classId)
 
 
     def onFileSaveAs(self):
