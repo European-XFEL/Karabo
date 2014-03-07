@@ -1218,11 +1218,6 @@ class GraphicsView(QSvgWidget):
                 if displayNameProxyWidget:
                     # Add item to itemlist
                     items.append((displayNameProxyWidget, None))
-
-                # Does key concern state of device?
-                print "internalKey", internalKey
-                keys = internalKey.split('.configuration.')
-                isStateToDisplay = keys[1] == "state"
                 
                 # Display component
                 if configDisplayComponent:

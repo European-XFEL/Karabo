@@ -399,8 +399,7 @@ class ProxyWidget(QStackedWidget):
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
-            keys = component.keys[0].split('.configuration.')
-            if keys[1] == "state":
+            if "state" in component.keys[0]:
                 aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
