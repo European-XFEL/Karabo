@@ -163,19 +163,16 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def instanceNew(self, config):
-        print "instanceNew"
         # TODO: do not use internal hash - just model instead
         self.merge(config)
 
 
     def instanceUpdated(self, config):
-        print "instanceUpdated"
         # TODO: do not use internal hash - just model instead
         self.merge(config)
 
 
     def instanceGone(self, path):
-        print "instanceGone", path
         # TODO: do not use internal hash - just model instead
         if self.currentConfig.has(path):
             self.currentConfig.erase(path)
