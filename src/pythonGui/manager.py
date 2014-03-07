@@ -670,18 +670,17 @@ class _Manager(QObject):
         If \False, nothing is removed.
         """
         
-        # TODO: comment in again
         # Check for existing stuff and remove
-        #instanceIds = self.removeExistingInstances(config)
-        #for id in instanceIds:
-        #    timestamp = datetime.datetime.now()
+        instanceIds = self.removeExistingInstances(config)
+        for id in instanceIds:
+            timestamp = datetime.datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
-        #    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        #    logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
-        #                 "Detected dirty shutdown for instance \"" + id + "\", which " \
-        #                 "is coming up now.#"
+            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
+                         "Detected dirty shutdown for instance \"" + id + "\", which " \
+                         "is coming up now.#"
             # A log message is triggered
-        #    self.onLogDataAvailable(logMessage)
+            self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
         self.systemTopology.instanceNew(config)
@@ -722,7 +721,7 @@ class _Manager(QObject):
         if path is None:
             print "Unknown instance \"" + instanceId + "\" gone."
             return
-        
+
         # Update system topology
         self.systemTopology.instanceGone(path)
         self.signalInstanceGone.emit(instanceId, parentPath)
@@ -809,24 +808,24 @@ class _Manager(QObject):
             for serverId in serverIds:
                 # Check, if serverId is already in central hash
                 path = serverKey + "." + serverId
-                if self.systemTopology.has(path):
+                if self.systemTopology.currentConfig.has(path):
                     # Check old classes and send signal to remove old configuration pages
-                    serverConfig = self.__hash.get(serverKey)
+                    serverConfig = self.systemTopology.currentConfig.get(serverKey)
                     if serverConfig.hasAttribute(serverId, "deviceClasses"):
                         classes = serverConfig.getAttribute(serverId, "deviceClasses")
                         visibilities = serverConfig.getAttribute(serverId, "visibilities")
                         i = -1
-                        for deviceClass in classes:
+                        for classId in classes:
                             i = i + 1
                             if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                                classPath = path + ".classes." + deviceClass
+                                classPath = "{}.{}".format(serverId, classId)
                                 # Remove configuration page for associated class
                                 self.signalInstanceNewReset.emit(classPath)
                     # Remove path from central hash
-                    self.__hash.erase(path)
+                    self.systemTopology.currentConfig.erase(path)
                     removedInstanceIds.append(serverId)
                     # Check for running instances on server
-                    self._removeExistingDevices(self.__hash, removedInstanceIds, serverId)
+                    self._removeExistingDevices(self.systemTopology.currentConfig, removedInstanceIds, serverId)
 
         # Check devices
         self._removeExistingDevices(config, removedInstanceIds)
@@ -843,9 +842,6 @@ class _Manager(QObject):
         
         A list with removed instances is filled.
         """
-        
-        
-        
         deviceKey = "device"
 
         if config.has(deviceKey):
@@ -861,9 +857,9 @@ class _Manager(QObject):
                             removedInstanceIds.append(deviceId)
                 else:
                     # Check, if deviceId is already in central hash
-                    if self.__hash.has(path):
+                    if self.systemTopology.currentConfig.has(path):
                         # Remove path from central hash
-                        self.__hash.erase(path)
+                        self.systemTopology.currentConfig.erase(path)
                         removedInstanceIds.append(deviceId)
 
 
