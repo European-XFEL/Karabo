@@ -11,6 +11,7 @@
 __all__ = ["NavigationHierarchyModel"]
 
 import globals
+from karabo.karathon import HashMergePolicy
 from navigationhierarchynode import NavigationHierarchyNode
 import manager
 
@@ -28,6 +29,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
+        # TODO: Remove hash from here
+        self.currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
         self.selection_model = QItemSelectionModel(self)
         self.selection_model.selectionChanged.connect(self.onSelectionChanged)
@@ -37,6 +40,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
         #print "+++ NavigationHierarchyModel.updateData"
         #print config
         #print ""
+        
+        # TODO: Remove again and use model as this kind datastructure
+        if self.currentConfig != config:
+            self.currentConfig = config
 
         selectedIndexes = self.selection_model.selectedIndexes()
         if selectedIndexes:
@@ -72,7 +79,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
                     self.__rootItem.appendChildItem(hostItem)
                 
-                path = "server." + serverId
+                path = serverId
                 serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                 hostItem.appendChildItem(serverItem)
             
@@ -82,7 +89,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     i = 0
                     for deviceClass in classes:
                         if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                            path = "server." + serverId + ".classes." + deviceClass
+                            path = "{}.{}".format(serverId, deviceClass)
                             classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
                             serverItem.appendChildItem(classItem)
                         i = i + 1
@@ -117,7 +124,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 serverItem = hostItem.getItem(serverId)
                 if not serverItem:
                     if serverId == "__none__":
-                        path = "server." + serverId
+                        path = serverId
                         serverItem = NavigationHierarchyNode(serverId, path, hostItem)
                         hostItem.appendChildItem(serverItem)
                     else:
@@ -127,7 +134,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 classItem = serverItem.getItem(classId)
                 if not classItem:
                     if serverId == "__none__":
-                        path = "server." + serverId + ".classes." + classId
+                        path = "{}.{}".format(serverId, classId)
                         classItem = NavigationHierarchyNode(classId, path, serverItem)
                         serverItem.appendChildItem(classItem)
                     else:
@@ -149,6 +156,17 @@ class NavigationHierarchyModel(QAbstractItemModel):
         return True
 
 
+    def instanceNew(self, config):
+        self.currentConfig.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.updateData(self.currentConfig)
+
+
+    def instanceGone(self, path):
+        if self.currentConfig.has(path):
+            self.currentConfig.erase(path)
+            self.updateData(self.currentConfig)
+
+
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
         if len(selectedIndexes) < 1:
@@ -168,7 +186,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             type = NavigationItemTypes.HOST
         elif level == 1:
             type = NavigationItemTypes.SERVER
-            path = "server." + index.data()
+            path = index.data()
         elif level == 2:
             type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
@@ -200,7 +218,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if not index:
             return
 
-        path = index.internalPointer().path
         self.selection_model.setCurrentIndex(index,
                                              QItemSelectionModel.ClearAndSelect)
 

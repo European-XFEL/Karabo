@@ -457,8 +457,8 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return
 
-        # Remove device instance data from internal hash
-        self._setFromPath("device." + deviceId, Hash())
+        # Remove deviceId data
+        del self.deviceData[deviceId]
         self.signalKillDevice.emit(deviceId)
 
 
@@ -471,7 +471,7 @@ class _Manager(QObject):
             return
         
         # Remove device instance data from internal hash
-        self._setFromPath("server." + serverId, Hash())
+        #self._setFromPath("server." + serverId, Hash())
         self.signalKillServer.emit(serverId)
 
 
@@ -548,7 +548,7 @@ class _Manager(QObject):
         # If deviceId is already visible in scene but was offline, force refresh
         if (deviceId in self.__visibleDevInsKeys) and \
            (self.__visibleDevInsKeys[deviceId] > 0):
-            self.signalSelectNewNavigationItem.emit("device." + deviceId)
+            self.signalSelectNewNavigationItem.emit(deviceId)
             self.signalRefreshInstance.emit(deviceId)
 
 
@@ -670,20 +670,25 @@ class _Manager(QObject):
                   page..
         If \False, nothing is removed.
         """
+        print "handleInstanceNew"
+        print config
+        print ""
+        
+        # TODO: comment in again
         # Check for existing stuff and remove
-        instanceIds = self.removeExistingInstances(config)
-        for id in instanceIds:
-            timestamp = datetime.datetime.now()
+        #instanceIds = self.removeExistingInstances(config)
+        #for id in instanceIds:
+        #    timestamp = datetime.datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
-            timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
-                         "Detected dirty shutdown for instance \"" + id + "\", which " \
-                         "is coming up now.#"
+        #    timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        #    logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
+        #                 "Detected dirty shutdown for instance \"" + id + "\", which " \
+        #                 "is coming up now.#"
             # A log message is triggered
-            self.onLogDataAvailable(logMessage)
+        #    self.onLogDataAvailable(logMessage)
 
-        # Update central hash with new configuration
-        self.handleSystemTopology(config)
+        # Update system topology with new configuration
+        self.systemTopology.instanceNew(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -692,7 +697,7 @@ class _Manager(QObject):
             deviceIds = list()
             deviceConfig.getKeys(deviceIds)
             for deviceId in deviceIds:
-                self.selectDeviceByPath(deviceKey + "." + deviceId)
+                self.selectDeviceByPath(deviceId)
                 self.potentiallyRefreshVisibleDevice(deviceId)
 
 
@@ -701,25 +706,26 @@ class _Manager(QObject):
         Remove instanceId from central hash and update
         """
         path = None
-        if self.__hash.has("server." + instanceId):
-            path = "server." + instanceId
-            if self.__hash.hasAttribute(path, "host"):
-                parentPath = self.__hash.getAttribute(path, "host")
-        elif self.__hash.has("device." + instanceId):
-            path = "device." + instanceId
-            if self.__hash.hasAttribute(path, "serverId"):
-                parentPath = "server." + self.__hash.getAttribute(path, "serverId")
-            if self.__hash.hasAttribute(path, "classId"):
-                parentPath += ".classes." + self.__hash.getAttribute(path, "classId")
+        fullServerPath = "server.{}".format(instanceId)
+        fullDevicePath = "device.{}".format(instanceId)
+        if self.systemTopology.currentConfig.has(fullServerPath):
+            if self.__hash.hasAttribute(fullServerPath, "host"):
+                parentPath = self.__hash.getAttribute(fullServerPath, "host")
+            path = fullServerPath
+        elif self.systemTopology.currentConfig.has(fullDevicePath):
+            if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "serverId"):
+                parentPath = self.systemTopology.currentConfig.getAttribute(fullDevicePath, "serverId")
+            if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "classId"):
+                parentPath += ".{}".format(self.systemTopology.currentConfig.getAttribute(fullDevicePath, "classId"))
+            path = fullDevicePath
                 
         if path is None:
             print "Unknown instance \"" + instanceId + "\" gone."
             return
-
-        # Remove instance from central hash
-        self.__hash.erase(path)
-        self.systemTopology.updateData(self.__hash)
-        self.signalInstanceGone.emit(path, parentPath)
+        
+        # Update system topology
+        self.systemTopology.instanceGone(path)
+        self.signalInstanceGone.emit(instanceId, parentPath)
 
 
     def handleClassSchema(self, headerHash, config):
@@ -803,7 +809,7 @@ class _Manager(QObject):
             for serverId in serverIds:
                 # Check, if serverId is already in central hash
                 path = serverKey + "." + serverId
-                if self.__hash.has(path):
+                if self.systemTopology.has(path):
                     # Check old classes and send signal to remove old configuration pages
                     serverConfig = self.__hash.get(serverKey)
                     if serverConfig.hasAttribute(serverId, "deviceClasses"):
