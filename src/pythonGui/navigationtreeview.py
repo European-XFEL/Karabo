@@ -119,12 +119,6 @@ class NavigationTreeView(QTreeView):
         return self.model().findIndex(path)
 
 
-    def updateTreeModel(self, config):
-        self.saveSelectionState()
-        self.model().updateData(config)
-        self.restoreSelectionState()
-
-
     def selectItem(self, path):
         index = self.findIndex(path)
         self.model().selectIndex(index)
