@@ -16,6 +16,7 @@
 __all__ = ["Manager"]
 
 
+from configurations import Configuration
 import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
@@ -708,7 +709,7 @@ class _Manager(QObject):
         schema = config.get("schema")
         
         # Update map for server and class with schema
-        self.serverClassData[serverId, classId] = schema
+        self.serverClassData[serverId, classId] = Configuration(schema)
         path = "{}.{}".format(serverId, classId)
         self.onSchemaAvailable(dict(key=path, classId=classId, 
                                type=NavigationItemTypes.CLASS, schema=schema))
@@ -717,7 +718,7 @@ class _Manager(QObject):
     def getClassSchema(self, serverId, classId):
         # Return class schema, if already existing
         if (serverId, classId) in self.serverClassData:
-            return self.serverClassData[serverId, classId]
+            return self.serverClassData[serverId, classId].schema
 
         # Else, send network request
         self.signalGetClassSchema.emit(serverId, classId)
@@ -729,8 +730,9 @@ class _Manager(QObject):
         if deviceId in self.deviceData:
             return
         
+        # Add configuration with schema to device data
         schema = config.get("schema")
-        self.deviceData[deviceId] = schema
+        self.deviceData[deviceId] = Configuration(schema)
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
                                     schema=schema))
@@ -739,7 +741,7 @@ class _Manager(QObject):
 
     def getDeviceSchema(self, deviceId):
         if deviceId in self.deviceData:
-            return self.deviceData[deviceId]
+            return self.deviceData[deviceId].schema
         
         # Send network request
         self.signalGetDeviceSchema.emit(deviceId)
@@ -757,9 +759,8 @@ class _Manager(QObject):
     def handleConfigurationChanged(self, headerHash, config):
         deviceId = headerHash.get("deviceId")
         self._changeHash(deviceId, config.get("configuration"))
-        #self._mergeIntoHash(config)
-        # TODO: merge into self.deviceData
-        #self.deviceData[deviceId].configuration = config
+        # Merge configuration into self.deviceData
+        self.deviceData[deviceId].merge(config)
 
 
     def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
