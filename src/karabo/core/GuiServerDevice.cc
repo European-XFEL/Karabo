@@ -233,10 +233,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = header.get<string > ("deviceId");
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
-                Hash b;
-                Hash& tmp = b.bindReference<Hash>("configuration");
-                tmp = remote().get(deviceId);
-                preprocessImageData(tmp);
+                Hash b = remote().get(deviceId);
+                preprocessImageData(b);
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
@@ -452,7 +450,6 @@ namespace karabo {
                 preprocessImageData(modified);
 
                 Hash header("type", "configurationChanged", "deviceId", deviceId);
-                Hash body("configuration", modified);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
@@ -460,7 +457,7 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(header, body);
+                        it->first->write(header, modified);
                     }
                 }
             } catch (const Exception& e) {
