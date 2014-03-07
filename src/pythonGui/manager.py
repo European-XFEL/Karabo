@@ -440,20 +440,11 @@ class _Manager(QObject):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
 
-    def initDevice(self, serverId, classId, path):
-        #print "initDevice", internalKey
-        #print self.__hash
+    def initDevice(self, serverId, classId):
+        # Put configuration hash together
+        config = Hash(classId, self.serverClassData[serverId, classId].configuration)
         
-        h = Hash()
-        if self.__hash.has(path):
-            h = self.__hash.get(path)
-        
-        # TODO: Remove dirty hack for scientific computing again!!!
-        croppedDevClaId = classId.split("-")
-        classId = croppedDevClaId[0]
-        
-        config = Hash(classId, h)
-        
+        # Send signal to network
         self.signalInitDevice.emit(serverId, config)
         self.__isInitDeviceCurrentlyProcessed = True
 
@@ -846,6 +837,9 @@ class _Manager(QObject):
         
         A list with removed instances is filled.
         """
+        
+        
+        
         deviceKey = "device"
 
         if config.has(deviceKey):
