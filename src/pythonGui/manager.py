@@ -16,13 +16,12 @@
 __all__ = ["Manager"]
 
 
-from configurations import Configuration
+from configuration import Configuration
 import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 import globals
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
-                             Timestamp)
+from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
@@ -53,6 +52,7 @@ class DataNotifier(QObject):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
         if hasattr(self, "value"):
+            print "update signal", key
             self.signalUpdateComponent.emit(key, self.value, self.timestamp)
             self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
@@ -171,26 +171,69 @@ class _Manager(QObject):
         return self.__keyNotifierMapDisplayValue.get(key)
 
 
-    def _setFromPath(self, key, value):
-        # pass key and value as list (immutable, important for ungoing procedures)
-        #print "key:", key, "value:", value
-        key = str(key)
-        # Safety conversion before hashing
-        if "@" in key:
-            # Merge attribute value in central hash
-            keys = key.split("@")
-            paramKey = keys[0]
-            attribute = keys[1]
-            if not self.__hash.has(paramKey):
-                self.__hash.set(paramKey, 0)
-            self.__hash.setAttribute(paramKey, attribute, value)
-        else:
-            # Merge parameter value in central hash
-            self.__hash.set(key, value)
+    def _changeClassData(self, key, value):
+        serverClassIdParamKey = key.split(".")
+        if len(serverClassIdParamKey) < 3:
+            return
         
-        #print ""
-        #print self.__hash
-        #print ""
+        serverId = serverClassIdParamKey[0]
+        classId = serverClassIdParamKey[1]
+        paramKey = serverClassIdParamKey[2]
+        
+        if "@" in paramKey:
+            # Merge attribute value
+            keys = paramKey.split("@")
+            parameterKey = keys[0]
+            attributeKey = keys[1]
+            
+            print "keys", keys
+            self.serverClassData[serverId, classId].setAttribute(parameterKey, attributeKey, value)
+            #if not self.__hash.has(paramKey):
+            #    self.__hash.set(paramKey, None)
+            #self.__hash.setAttribute(paramKey, attribute, value)
+        else:
+            self.serverClassData[serverId, classId].set(paramKey, value)
+    
+    
+    def _changeDeviceData(self, key, value):
+        deviceIdParamKey = key.split(".")
+        if len(deviceIdParamKey) < 2:
+            return
+
+        deviceId = deviceIdParamKey[0]
+        paramKey = deviceIdParamKey[1]
+        
+        if "@" in paramKey:
+            # Merge attribute value
+            keys = key.split("@")
+            parameterKey = keys[0]
+            attributeKey = keys[1]
+            
+            print "keys", keys
+            self.deviceData[deviceId].setAttribute(parameterKey, attributeKey, value)
+            #if not self.__hash.has(paramKey):
+            #    self.__hash.set(paramKey, None)
+            #self.__hash.setAttribute(paramKey, attribute, value)
+        else:
+            self.deviceData[deviceId].set(paramKey, value)
+
+
+    #def _setFromPath(self, key, value):
+        # pass key and value as list (immutable, important for ungoing procedures)
+    #    print "key:", key, "value:", value
+        # Safety conversion before hashing
+    #    if "@" in key:
+            # Merge attribute value in central hash
+    #        keys = key.split("@")
+    #        paramKey = keys[0]
+    #        attribute = keys[1]
+            
+    #        if not self.__hash.has(paramKey):
+    #            self.__hash.set(paramKey, 0)
+    #        self.__hash.setAttribute(paramKey, attribute, value)
+    #    else:
+            # Merge parameter value in central hash
+            #self.__hash.set(key, value)
 
 
     def disconnectedFromServer(self):
@@ -203,7 +246,6 @@ class _Manager(QObject):
 
 
     def registerEditableComponent(self, key, component):
-        key = str(key)
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is None:
             self.__keyNotifierMapEditableValue[key] = DataNotifier(key, component)
@@ -216,7 +258,6 @@ class _Manager(QObject):
 
 
     def registerDisplayComponent(self, key, component):
-        key = str(key)
         dataNotifier = self._getDataNotifierDisplayValue(key)
         if dataNotifier is None:
             self.__keyNotifierMapDisplayValue[key] = DataNotifier(key, component)
@@ -246,26 +287,19 @@ class _Manager(QObject):
         Only if this internal path belongs to a device, the deviceId is return,
         otherwise return None.
         """
-        splittedPath = internalPath.split('device.')
-        if len(splittedPath) < 2:
-            # no device selected
+        print "_getDeviceIdFromInternalPath", internalPath
+        splittedPath = internalPath.split('.')
+        if len(splittedPath) < 1:
+            # No device selected
             return None
 
-        # Get deviceId
-        deviceParameter = splittedPath[1].split('.configuration.')
-        if len(deviceParameter) < 1:
-            return None
-
-        return deviceParameter[0]
+        print "--- ", splittedPath
+        return splittedPath[0]
 
 
-    def newVisibleDevice(self, internalPath):
-        deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if not deviceId:
-            return False
-
+    def newVisibleDevice(self, deviceId):
         # Check, whether deviceId is in systemTopology (means online)
-        hasDevice = deviceId in self.deviceData
+        hasDevice = self.systemTopology.has(deviceId)
         # If schema was not seen, request device schema in function
         # getDeviceSchema will call newVisibleDevice again
         if hasDevice and (self.getDeviceSchema(deviceId) is None):
@@ -279,15 +313,12 @@ class _Manager(QObject):
         if self.__visibleDevInsKeys[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
         
-        print "newVisible", deviceId
+        print "newVisible", self.__visibleDevInsKeys
+        print ""
         return True
 
 
-    def removeVisibleDevice(self, internalPath):
-        deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if not deviceId:
-            return
-
+    def removeVisibleDevice(self, deviceId):
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
         if deviceIdCount:
             self.__visibleDevInsKeys[deviceId] -= 1
@@ -368,8 +399,7 @@ class _Manager(QObject):
 
 ### Slots ###
     def onDeviceClassValueChanged(self, key, value):
-        print "onDeviceClassValueChanged", key, value
-        self._setFromPath(key, value)
+        self._changeClassData(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
@@ -377,16 +407,14 @@ class _Manager(QObject):
 
 
     def onDeviceInstanceValueChanged(self, key, value):
-        #print "onDeviceInstanceValueChanged", key, value
-        # Safety conversion before hashing
-        self._setFromPath(key, value)
+        self._changeDeviceData(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value, None)
         
-        keys = str(key).split('.configuration.')
-        deviceId = keys[0].split('.')[1]
+        keys = key.split(".")
+        deviceId = keys[0]
         parameterKey = keys[1]
 
         # Informs network
@@ -758,7 +786,7 @@ class _Manager(QObject):
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, headerHash, config):
         deviceId = headerHash.get("deviceId")
-        self._changeHash(deviceId, config.get("configuration"))
+        self._changeHash(deviceId, config)
         # Merge configuration into self.deviceData
         self.deviceData[deviceId].merge(config)
 

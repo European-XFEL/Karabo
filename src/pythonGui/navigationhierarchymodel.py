@@ -28,25 +28,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         self.__rootItem = NavigationHierarchyNode("Hierarchical view")
-        self.__currentConfig = None
         self.setSupportedDragActions(Qt.CopyAction)
         self.selection_model = QItemSelectionModel(self)
         self.selection_model.selectionChanged.connect(self.onSelectionChanged)
-
-
-    def _currentConfig(self):
-        return self.__currentConfig
-    currentConfig = property(fget=_currentConfig)
 
 
     def updateData(self, config):
         #print "+++ NavigationHierarchyModel.updateData"
         #print config
         #print ""
-        
-        # Needed for GLOBAL_ACCESS_LEVEL changes
-        if self.__currentConfig != config:
-            self.__currentConfig = config
 
         selectedIndexes = self.selection_model.selectedIndexes()
         if selectedIndexes:
@@ -151,6 +141,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.endResetModel()
         if lastSelectionPath is not None:
             self.selectPath(lastSelectionPath)
+
+
+    def has(self, path):
+        if self.findIndex(path) is None:
+            return False
+        return True
 
 
     def onSelectionChanged(self, selected, deselected):
