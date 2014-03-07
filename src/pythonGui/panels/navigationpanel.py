@@ -110,13 +110,10 @@ class NavigationPanel(QWidget):
     #    Manager().onNewNavigationItem(itemInfo)
 
 
-    def updateNavigationTreeView(self, config):
-        self.__twNavigation.updateTreeModel(config)
-        self.__twNavigation.expandAll()
-
-        
     def onGlobalAccessLevelChanged(self):
-        self.updateNavigationTreeView(Manager().treemodel.currentConfig)
+        print "onGlobalAccessLevelChanged"
+        self.__twNavigation.updateTreeModel(Manager().systemTopology)
+        self.__twNavigation.expandAll()
 
 
     # virtual function

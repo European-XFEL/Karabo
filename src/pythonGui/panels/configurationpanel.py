@@ -534,6 +534,7 @@ class ConfigurationPanel(QWidget):
     def showParameterPage(self, type, path):
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
+        print "+++ showParameterPage", index, path
         if index:
             self._setParameterEditorIndex(index)
 

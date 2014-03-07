@@ -285,7 +285,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.changeApplyToBusy(True)
         # TODO: KeWe function with key/value pair needed
         for key in self.__editableWidget.keys:
-            self.signalValueChanged.emit(str(key), self.__editableWidget.value)
+            self.signalValueChanged.emit(key, self.__editableWidget.value)
         self.applyEnabled = False
 
 
