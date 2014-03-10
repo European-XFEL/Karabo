@@ -20,7 +20,7 @@ from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 
 from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
+from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
