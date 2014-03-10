@@ -24,7 +24,8 @@ from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
-    signalApplyChanged = pyqtSignal(str, bool, bool)
+    signalApplyChanged = pyqtSignal(str, bool, bool) # internalKey, enable, hasConflicts
+    signalItemSelectionChanged = pyqtSignal(str) # path
 
 
     def __init__(self, path=None):
@@ -39,7 +40,8 @@ class ParameterTreeWidget(QTreeWidget):
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.AscendingOrder)
+        #self.sortByColumn(0, Qt.AscendingOrder)
+        self.itemSelectionChanged.connect(self.onItemSelectionChanged)
         
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
@@ -252,6 +254,14 @@ class ParameterTreeWidget(QTreeWidget):
 
     def onApplyAllRemoteChanges(self):
         self._r_applyAllRemoteChanges(self.invisibleRootItem())
+
+
+    def onItemSelectionChanged(self):
+        editableComponent = self.currentItem().editableComponent
+        if editableComponent is None:
+            return
+        if editableComponent.applyEnabled:
+            self.signalItemSelectionChanged.emit(self.path)
 
 
     def onCustomContextMenuRequested(self, pos):
