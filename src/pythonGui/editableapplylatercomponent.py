@@ -184,7 +184,6 @@ class EditableApplyLaterComponent(BaseComponent):
             self.hasConflict = False
         
         # Broadcast to ConfigurationPanel - treewidget
-        print "+++++ EMIT +++++++"
         self.signalApplyChanged.emit(self.keys[0], enable)
     applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
 

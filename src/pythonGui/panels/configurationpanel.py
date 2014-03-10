@@ -356,6 +356,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.addContextAction(self.__acApplyAll)
         twParameterEditor.addContextAction(self.__acResetAll)
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
+        twParameterEditor.signalItemSelectionChanged.connect(self.onSelectionChanged)
         
         if type is NavigationItemTypes.CLASS:
             twParameterEditor.hideColumn(1)
@@ -457,7 +458,9 @@ class ConfigurationPanel(QWidget):
         """
         for index in range(self.__swParameterEditor.count()):
             twParameterEditor = self.__swParameterEditor.widget(index)
-            if path == twParameterEditor.path:
+            if twParameterEditor.path is None:
+                continue
+            if path.startswith(twParameterEditor.path):
                 return twParameterEditor
         return None
 
@@ -704,6 +707,18 @@ class ConfigurationPanel(QWidget):
         self._setApplyAllEnabled(path, enable)
         self._setResetAllEnabled(path, enable)
         self.hasConflicts = hasConflicts
+
+
+    def onSelectionChanged(self, path):
+        """
+        This function is call from the current parameterEditor whenever the
+        selection of this widget changed and this selection includes an apply
+        enabled.
+        
+        \path The path of the current parameterEditor.
+        """
+        self.updateApplyAllActions(path)
+        self.updateResetAllActions(path)
 
 
     def onApplyAll(self):
