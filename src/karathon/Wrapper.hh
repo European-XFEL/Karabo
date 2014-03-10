@@ -232,6 +232,10 @@ namespace karathon {
                     throw KARABO_PYTHON_EXCEPTION("Unsupported type encountered while converting from PyTypes to Types.");
             }
         }
+        
+        static const ReferenceType category(int type) {
+            return from(karabo::util::Types::category(type));
+        }
     };
 
     struct Wrapper {
