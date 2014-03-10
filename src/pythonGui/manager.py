@@ -401,8 +401,9 @@ class _Manager(QObject):
                 dataNotifier.signalUpdateComponent.emit(path, config.get(path),
                                                         None)
         
+        config = Hash(config.get(deviceId))
         self.deviceData[deviceId].configuration = config
-        self.signalReconfigureAsHash.emit(deviceId, config.get(deviceId))
+        self.signalReconfigureAsHash.emit(deviceId, config)
 
 
     def onConflictStateChanged(self, key, hasConflict):
