@@ -256,7 +256,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if resultItem:
                 return resultItem
 
-        if item.path != "" and path.startswith(item.path):
+        if (item.path != "") and path.startswith(item.path):
             return self.createIndex(item.row(), 0, item)
         return None
 
