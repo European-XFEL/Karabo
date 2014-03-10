@@ -1,3 +1,10 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on February 27, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
 from dialogs import TextDialog
 from registry import Loadable, ns_svg, ns_karabo
 
