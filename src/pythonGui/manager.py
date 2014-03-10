@@ -393,7 +393,7 @@ class _Manager(QObject):
         self.signalReconfigure.emit(deviceId, parameterKey, value)
 
 
-    def onDeviceChangedAsHash(self, instanceKey, config):
+    def onDeviceChangedAsHash(self, deviceId, config):
         paths = config.paths()
         for path in paths:
             dataNotifier = self._getDataNotifierEditableValue(path)
@@ -401,11 +401,8 @@ class _Manager(QObject):
                 dataNotifier.signalUpdateComponent.emit(path, config.get(path),
                                                         None)
         
-        self._mergeIntoHash(config)
-
-        keys = str(instanceKey).split('.')
-        instanceId = keys[1]
-        self.signalReconfigureAsHash.emit(instanceId, config.get(instanceKey + ".configuration"))
+        self.deviceData[deviceId].configuration = config
+        self.signalReconfigureAsHash.emit(deviceId, config.get(deviceId))
 
 
     def onConflictStateChanged(self, key, hasConflict):
@@ -534,7 +531,8 @@ class _Manager(QObject):
 
     def openAsXml(self, filename, deviceId, classId, serverId):
         config = loadFromFile(str(filename))
-        tmp = config.get(classId)
+        # Needs to be copied into new Hash to prevent segmentation fault
+        tmp = Hash(config.get(classId))
         
         # TODO: not working correctly yet
         # Validate against fullSchema - state dependent configurations
@@ -710,9 +708,9 @@ class _Manager(QObject):
 
 
     def handleClassSchema(self, headerHash, config):
-        serverId = headerHash.get("serverId")
-        classId = headerHash.get("classId")
-        schema = config.get("schema")
+        serverId = headerHash.get('serverId')
+        classId = headerHash.get('classId')
+        schema = config.get('schema')
         
         # Update map for server and class with schema
         self.serverClassData[serverId, classId] = Configuration(schema)
@@ -732,12 +730,12 @@ class _Manager(QObject):
     
     
     def handleDeviceSchema(self, headerHash, config):
-        deviceId = headerHash.get("deviceId")
+        deviceId = headerHash.get('deviceId')
         if deviceId in self.deviceData:
             return
         
         # Add configuration with schema to device data
-        schema = config.get("schema")
+        schema = config.get('schema')
         self.deviceData[deviceId] = Configuration(schema)
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
