@@ -758,7 +758,7 @@ class LogThread(QThread):
         # Check number of rows in database
         queryText = "SELECT count(1) FROM tLog;"
         query = QSqlQuery(queryText, Manager().sqlDatabase)
-        nRows = 0
+        nbRows = 0
         while query.next():
             nbRows = query.value(0)
 
