@@ -50,7 +50,7 @@ class NavigationTreeView(QTreeView):
         self.__acKillServer = QAction(QIcon(":delete"), text, self)
         self.__acKillServer.setStatusTip(text)
         self.__acKillServer.setToolTip(text)
-        self.__acKillServer.triggered.connect(self.onKillServer)
+        self.__acKillServer.triggered.connect(self.onKillInstance)
         self.__mServerItem.addAction(self.__acKillServer)
         
         # Device class/instance menu
@@ -74,7 +74,7 @@ class NavigationTreeView(QTreeView):
         self.__acKillDevice = QAction(QIcon(":delete"), text, self)
         self.__acKillDevice.setStatusTip(text)
         self.__acKillDevice.setToolTip(text)
-        self.__acKillDevice.triggered.connect(self.onKillDevice)
+        self.__acKillDevice.triggered.connect(self.onKillInstance)
         self.__mClassItem.addAction(self.__acKillDevice)
 
         self.__mClassItem.addSeparator()
@@ -124,54 +124,37 @@ class NavigationTreeView(QTreeView):
         self.model().selectIndex(index)
 
 
-    def onKillServer(self):
+    def onKillInstance(self):
         itemInfo = self.indexInfo()
-
-        serverId = itemInfo.get('serverId')
         
-        Manager().killServer(serverId)
-
-
-    def onKillDevice(self):
-        itemInfo = self.indexInfo()
-
-        deviceId = itemInfo.get('deviceId')
+        type = itemInfo.get('type')
         
-        Manager().killDevice(deviceId)
+        if type is NavigationItemTypes.DEVICE:
+            deviceId = itemInfo.get('deviceId')
+            Manager().killDevice(deviceId)
+        elif type is NavigationItemTypes.SERVER:
+            serverId = itemInfo.get('serverId')
+            Manager().killServer(serverId)
 
 
     def onFileSaveAs(self):
         itemInfo = self.indexInfo()
         
+        deviceId = itemInfo.get('deviceId')
         classId = itemInfo.get('classId')
-        path = itemInfo.get('key')
+        serverId = itemInfo.get('serverId')
         
-        Manager().onSaveAsXml(str(classId), str(path))
+        Manager().onSaveAsXml(deviceId, classId, serverId)
 
 
     def onFileOpen(self): # TODO
-        type = self.currentIndexType()
-        index = self.currentIndex()
+        itemInfo = self.indexInfo()
         
-        configChangeType = None
-        classId = str()
-        path = str()
-        if type is NavigationItemTypes.CLASS:
-            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-            classId = index.data()
-            parentIndex = index.parent()
-            path = "server." + parentIndex.data() + ".classes." + classId + ".configuration"
-        elif type is NavigationItemTypes.DEVICE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
-            parentIndex = index.parent()
-            classId = parentIndex.data()
-            path = "devices." + index.data()
+        deviceId = itemInfo.get('deviceId')
+        classId = itemInfo.get('classId')
+        serverId = itemInfo.get('serverId')
         
-        # TODO: Remove dirty hack for scientific computing again!!!
-        croppedClassId = classId.split("-")
-        classId = croppedClassId[0]
-        
-        Manager().onFileOpen(configChangeType, str(path), str(classId))
+        Manager().onFileOpen(deviceId, classId, serverId)
 
 
     def onCustomContextMenuRequested(self, pos):

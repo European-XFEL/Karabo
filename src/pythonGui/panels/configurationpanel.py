@@ -760,16 +760,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onKillInstance(self):
-        itemInfo = self.__twNavigation.indexInfo()
-        
-        type = itemInfo.get('type')
-        
-        if type is NavigationItemTypes.DEVICE:
-            deviceId = itemInfo.get('deviceId')
-            Manager().killDevice(deviceId)
-        elif type is NavigationItemTypes.SERVER:
-            serverId = itemInfo.get('serverId')
-            Manager().killServer(serverId)
+        self.__twNavigation.onKillInstance()
 
 
     def onInitDevice(self):
@@ -794,37 +785,12 @@ class ConfigurationPanel(QWidget):
             twParameterEditorPage.globalAccessLevelChanged()
 
 
-    def onFileOpen(self):
-        info = self.__twNavigation.indexInfo()
-        
-        path = info.get('key')
-        type = info.get('type')
-        classId = info.get('classId')
-        
-        configChangeType = None
-        if type is NavigationItemTypes.CLASS:
-            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-        elif type is NavigationItemTypes.DEVICE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
-        
-        if classId is None:
-            print "onFileOpen classId not set"
-        
-        # TODO: Remove dirty hack for scientific computing again!!!
-        croppedClassId = classId.split("-")
-        classId = croppedClassId[0]
-        
-        Manager().onFileOpen(configChangeType, path, classId)
-
-
     def onFileSaveAs(self):
-        info = self.__twNavigation.indexInfo()
-        
-        path = info.get('key')
-        type = info.get('type')
-        classId = info.get('classId')
+        self.__twNavigation.onFileSaveAs()
 
-        Manager().onSaveAsXml(str(classId), str(path))
+
+    def onFileOpen(self):
+        self.__twNavigation.onFileOpen()
 
 
     # virtual function

@@ -297,6 +297,7 @@ class _Manager(QObject):
             self.__visibleDevInsKeys[deviceId] -= 1
             if self.__visibleDevInsKeys[deviceId] == 0:
                 self.signalRemoveVisibleDevice.emit(deviceId)
+                print "removeVisibleDevice", deviceId
 
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
@@ -531,9 +532,8 @@ class _Manager(QObject):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
 
-    def openAsXml(self, filename, path, configChangeType, classId):
+    def openAsXml(self, filename, deviceId, classId, serverId):
         config = loadFromFile(str(filename))
-        
         tmp = config.get(classId)
         
         # TODO: not working correctly yet
@@ -577,36 +577,47 @@ class _Manager(QObject):
         # TODO: Reload XSD in configuration panel
         # ...
         
-        # Remove old data from internal hash
-        #self._setFromPath(path, Hash())
+        changeType = None
+        if deviceId is not None:
+            path = deviceId
+            changeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
+            # Merge new config into internal datastructure
+            self.deviceData[deviceId].configuration = tmp
+        elif serverId is not None:
+            path = "{}.{}".format(serverId, classId)
+            changeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
+            # Merge new config into internal datastructure
+            self.serverClassData[serverId, classId].configuration = tmp
         
-        # Update internal hash with new data for path
-        self._changeHash(path, tmp, configChangeType)
-        self._mergeIntoHash(Hash(path, tmp))
+        # Update view with new data for path
+        self._changeHash(path, tmp, changeType)
 
 
-    def onFileOpen(self, configChangeType, path, classId=str()):
-        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", QDir.tempPath(), "XML (*.xml)")
+    def onFileOpen(self, deviceId, classId, serverId):
+        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", \
+                                               QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
         
         file = QFile(filename)
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
-        
-        self.openAsXml(filename, path, configChangeType, classId)
+            
+        self.openAsXml(filename, deviceId, classId, serverId)
 
 
-    def saveAsXml(self, filename, classId, path):
-        if self.__hash.has(path):
-            config = Hash(classId, self.__hash.get(path))
+    def saveAsXml(self, filename, deviceId, classId, serverId=None):
+        if deviceId is not None:
+            config = Hash(classId, self.deviceData[deviceId].configuration)
+        elif serverId is not None:
+            config = Hash(classId, self.serverClassData[serverId, classId].configuration)
         else:
             config = Hash()
 
         saveToFile(config, filename)
 
     
-    def onSaveAsXml(self, classId, path):
+    def onSaveAsXml(self, deviceId, classId, serverId):
         filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
@@ -615,7 +626,7 @@ class _Manager(QObject):
         if len(fi.suffix()) < 1:
             filename += ".xml"
 
-        self.saveAsXml(str(filename), classId, path)
+        self.saveAsXml(filename, deviceId, classId, serverId)
 
 
     # TODO: needs to be implemented
