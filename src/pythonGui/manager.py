@@ -400,7 +400,6 @@ class _Manager(QObject):
             if dataNotifier is not None:
                 dataNotifier.signalUpdateComponent.emit(path, config.get(path),
                                                         None)
-        
         config = Hash(config.get(deviceId))
         self.deviceData[deviceId].configuration = config
         self.signalReconfigureAsHash.emit(deviceId, config)
