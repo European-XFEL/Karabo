@@ -165,7 +165,7 @@ class ConfigurationPanel(QWidget):
         self.__acApplySelectedChanges = QAction(text, self)
         self.__acApplySelectedChanges.setStatusTip(text)
         self.__acApplySelectedChanges.setToolTip(text)
-        self.__acApplySelectedChanges.triggered.connect(self.onApplySelected)
+        self.__acApplySelectedChanges.triggered.connect(self.onApplyAll)
 
         text = "Accept selected remote changes"
         self.__acApplySelectedRemoteChanges = QAction(text, self)
@@ -412,7 +412,6 @@ class ConfigurationPanel(QWidget):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
         self.updateApplyAllActions(path)
-        self.updateResetAllActions(path)
 
 
     def _setResetAllEnabled(self, path, enable):
@@ -472,17 +471,6 @@ class ConfigurationPanel(QWidget):
         self.__acApplyAll.setVisible(not visible)
         self.__acResetAll.setVisible(not visible)
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
-
-
-    def _applyAllRemoteChanges(self):
-        self._getCurrentParameterEditor().onApplyAllRemoteChanges()
-
-
-    def _applySelectedRemoteChanges(self):
-        twParameterEditor = self._getCurrentParameterEditor()
-        selectedItems = twParameterEditor.selectedItems()
-        for item in selectedItems:
-            twParameterEditor.applyRemoteChanges(item)
 
 
     def _r_unregisterComponents(self, item):
@@ -640,6 +628,7 @@ class ConfigurationPanel(QWidget):
 
         result = parameterEditor.checkApplyButtonsEnabled()
         self.__pbApplyAll.setEnabled(result[0])
+        self.__pbResetAll.setEnabled(result[0])
         if result[1] == hasConflict:
             self.hasConflicts = hasConflict
 
@@ -710,25 +699,18 @@ class ConfigurationPanel(QWidget):
 
 
     def onApplyAllRemoteChanges(self):
-        self._applyAllRemoteChanges()
-        self._setApplyAllEnabled(self._getCurrentParameterEditor().instanceKey, False)
-
-
-    def onApplySelected(self):
-        self._applySelectedChanges()
+        self._getCurrentParameterEditor().onApplyAllRemoteChanges()
 
 
     def onApplySelectedRemoteChanges(self):
-        self._applySelectedRemoteChanges()
-        parameterEditor = self._getCurrentParameterEditor()
-        self._setApplyAllEnabled(parameterEditor.instanceKey, parameterEditor.checkApplyButtonsEnabled()[0])
+        twParameterEditor = self._getCurrentParameterEditor()
+        selectedItems = twParameterEditor.selectedItems()
+        for item in selectedItems:
+            twParameterEditor.applyRemoteChanges(item)
 
 
     def onResetAll(self):
-        if self._getCurrentParameterEditor().nbSelectedApplyEnabledItems() > 0:
-            self._applySelectedRemoteChanges()
-        else:
-            self._applyAllRemoteChanges()
+        self._getCurrentParameterEditor().resetAll()
 
 
     def onKillInstance(self):
