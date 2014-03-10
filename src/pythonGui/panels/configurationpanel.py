@@ -14,13 +14,12 @@ __all__ = ["ConfigurationPanel"]
 
 import const
 
-from parametertreewidget import ParameterTreeWidget
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
-from enums import ConfigChangeTypes
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
+from parametertreewidget import ParameterTreeWidget
 
 from schemareader import SchemaReader 
 
@@ -240,20 +239,6 @@ class ConfigurationPanel(QWidget):
         toolBar.addAction(self.__acFileSaveAs)
 
 
-    def getNavigationItemType(self):
-        return self.__twNavigation.currentIndexType()
-
-
-    def addActionToToolBar(self, action):
-        if self.__toolBar is None: return
-        self.__toolBar.addAction(action)
-
-
-    def removeActionFromToolBar(self, action):
-        if self.__toolBar is None: return
-        self.__toolBar.removeAction(action)
-
-
     def updateApplyAllActions(self, path):
         twParameterEditor = self._getParameterEditorByPath(path)
         if twParameterEditor is None:
@@ -363,11 +348,6 @@ class ConfigurationPanel(QWidget):
 
 
 ### getter functions ###
-    def _navigationTreeWidget(self):
-        return self.__twNavigation
-    navigationTreeWidget = property(fget=_navigationTreeWidget)
-
-
     def _hasConflicts(self):
         return self.__hasConflicts
     def _setHasConflicts(self, hasConflicts):
