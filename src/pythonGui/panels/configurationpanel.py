@@ -238,10 +238,6 @@ class ConfigurationPanel(QWidget):
     def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acFileOpen)
         toolBar.addAction(self.__acFileSaveAs)
-        
-
-    def applyAllAsHash(self, key, config):
-        Manager().onDeviceChangedAsHash(key, config)
 
 
     def getNavigationItemType(self):
@@ -476,18 +472,6 @@ class ConfigurationPanel(QWidget):
         self.__acApplyAll.setVisible(not visible)
         self.__acResetAll.setVisible(not visible)
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
-
-
-    def _applySelectedChanges(self):
-        print "_applySelectedChanges"
-        twParameterEditor = self._getCurrentParameterEditor()
-        selectedItems = twParameterEditor.selectedItems()
-        config = Hash()
-        for item in selectedItems:
-            twParameterEditor.addItemDataToHash(item, config)
-        
-        self.applyAllAsHash(twParameterEditor.path, config)
-        self._setApplyAllEnabled(twParameterEditor.path, twParameterEditor.checkApplyButtonsEnabled()[0])
 
 
     def _applyAllRemoteChanges(self):

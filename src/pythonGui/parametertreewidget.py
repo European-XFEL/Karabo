@@ -244,12 +244,15 @@ class ParameterTreeWidget(QTreeWidget):
     def onApplyAll(self):
         selectedItems = self.selectedItems()
         if len(selectedItems) > 0:
-            print "applySelected"
+            selectedItems = self.selectedItems()
+            config = Hash()
+            for item in selectedItems:
+                self.addItemDataToHash(item, config)
         else:
             # Go trough tree and save changes into config
             config = Hash()
             self._r_applyAll(self.invisibleRootItem(), config)
-            Manager().onDeviceChangedAsHash(self.path, config)
+        Manager().onDeviceChangedAsHash(self.path, config)
 
 
     def onApplyAllRemoteChanges(self):
@@ -260,6 +263,9 @@ class ParameterTreeWidget(QTreeWidget):
         editableComponent = self.currentItem().editableComponent
         if editableComponent is None:
             return
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
+            return
+        
         if editableComponent.applyEnabled:
             self.signalItemSelectionChanged.emit(self.path)
 
