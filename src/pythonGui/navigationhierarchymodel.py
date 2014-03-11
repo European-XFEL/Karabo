@@ -30,7 +30,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         super(NavigationHierarchyModel, self).__init__(parent)
         
         # Root node of hierarchy tree
-        self.rootNode = NavigationHierarchyNode("Hierarchical view")
+        self.rootNode = NavigationHierarchyNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
@@ -38,7 +38,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def updateData(self, config):
+        """
+        This function is called whenever the whole system topology has changed
+        and the view needs a full update.
         
+        The incoming \config represents the system topology.
+        """
         # Get last selection path
         selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
@@ -199,33 +204,41 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def merge(self, config):
+        print "merge"
+        print config
+        print ""
+        
+        serverKey = "server"
+        deviceKey = "device"
+        
+        
         # TODO: do not use internal hash - just model instead
-        self.currentConfig.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.updateData(self.currentConfig)
+        #self.currentConfig.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        #self.updateData(self.currentConfig)
 
 
     def instanceNew(self, config):
         print "instanceNew"
-        print config
-        print ""
-        # TODO: do not use internal hash - just model instead
         self.merge(config)
 
 
     def instanceUpdated(self, config):
         print "instanceUpdated"
-        print config
-        print ""
-        # TODO: do not use internal hash - just model instead
         self.merge(config)
 
 
     def instanceGone(self, path):
-        print "instanceGone", path
-        # TODO: do not use internal hash - just model instead
-        if self.currentConfig.has(path):
-            self.currentConfig.erase(path)
-            self.updateData(self.currentConfig)
+        index = self.findIndex(path)
+        if (index is None) or (not index.isValid()):
+            return ""
+        
+        self.beginResetModel()
+        childNode = index.internalPointer()
+        parentNode = childNode.parentNode
+        parentNode.removeChildNode(childNode)
+        self.endResetModel()
+        
+        return parentNode.path
 
 
     def onSelectionChanged(self, selected, deselected):

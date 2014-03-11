@@ -20,7 +20,7 @@ from PyQt4.QtGui import *
 class NavigationHierarchyNode(object):
 
 
-    def __init__(self, displayName, path="", parentNode=None):
+    def __init__(self, displayName="", path="", parentNode=None):
         super(NavigationHierarchyNode, self).__init__()
         
         self.parentNode = parentNode
