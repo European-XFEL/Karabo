@@ -651,7 +651,8 @@ class _Manager(QObject):
         """
         
         # Check for existing stuff and remove
-        instanceIds = self.removeExistingInstances(config)
+        # TODO: insert commented function again
+        instanceIds = [] #self.removeExistingInstances(config)
         for id in instanceIds:
             timestamp = datetime.datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
@@ -663,7 +664,7 @@ class _Manager(QObject):
             self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
-        self.systemTopology.instanceNew(config)
+        self.systemTopology.merge(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -677,7 +678,7 @@ class _Manager(QObject):
 
 
     def handleInstanceUpdated(self, config):
-        self.systemTopology.instanceUpdated(config)
+        self.systemTopology.merge(config)
 
 
     def handleInstanceGone(self, instanceId):
@@ -837,11 +838,10 @@ class _Manager(QObject):
                             removedInstanceIds.append(deviceId)
                 else:
                     # Check, if deviceId is already in central hash
-                    print "TODO: removedInstanceIds", path
-                    #if self.systemTopology.currentConfig.has(path):
+                    if self.systemTopology.currentConfig.has(path):
                         # Remove path from central hash
-                    #    self.systemTopology.currentConfig.erase(path)
-                    #    removedInstanceIds.append(deviceId)
+                        self.systemTopology.currentConfig.erase(path)
+                        removedInstanceIds.append(deviceId)
 
 
 manager = _Manager()
