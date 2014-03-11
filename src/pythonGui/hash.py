@@ -108,6 +108,13 @@ class Hash(OrderedDict):
     def _get(self, path):
         return OrderedDict.__getitem__(*self._path(path))
 
+
+    def __str__(self):
+        r = ', '.join('{}{}: {}'.format(k, self[k, ...], self[k])
+                      for k in self)
+        return '<' + r + '>'
+
+
     def __setitem__(self, item, value):
         if isinstance(item, tuple):
             key, attr = item
