@@ -160,15 +160,15 @@ class Hash(OrderedDict):
     def merge(self, other, attribute_policy):
         merge = attribute_policy == "merge"
         for k, v in other.iteritems():
-            if k in self and merge:
-                self[k, ...].update(other[k, ...])
             if isinstance(v, Hash):
                 if k not in self:
                     self[k] = Hash()
-                self[k].merge(v, merge)
+                self[k].merge(v, attribute_policy)
             else:
                 self[k] = v
-            if not merge:
+            if merge:
+                self[k, ...].update(other[k, ...])
+            else:
                 self[k, ...] = other[k, ...].copy()
 
 
