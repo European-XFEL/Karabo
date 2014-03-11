@@ -684,26 +684,26 @@ class _Manager(QObject):
         """
         Remove instanceId from central hash and update
         """
-        path = None
-        fullServerPath = "server.{}".format(instanceId)
-        fullDevicePath = "device.{}".format(instanceId)
-        if self.systemTopology.currentConfig.has(fullServerPath):
-            if self.systemTopology.currentConfig.hasAttribute(fullServerPath, "host"):
-                parentPath = self.systemTopology.currentConfig.getAttribute(fullServerPath, "host")
-            path = fullServerPath
-        elif self.systemTopology.currentConfig.has(fullDevicePath):
-            if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "serverId"):
-                parentPath = self.systemTopology.currentConfig.getAttribute(fullDevicePath, "serverId")
-            if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "classId"):
-                parentPath += ".{}".format(self.systemTopology.currentConfig.getAttribute(fullDevicePath, "classId"))
-            path = fullDevicePath
+        #path = None
+        #fullServerPath = "server.{}".format(instanceId)
+        #fullDevicePath = "device.{}".format(instanceId)
+        #if self.systemTopology.currentConfig.has(fullServerPath):
+        #    if self.systemTopology.currentConfig.hasAttribute(fullServerPath, "host"):
+        #        parentPath = self.systemTopology.currentConfig.getAttribute(fullServerPath, "host")
+        #    path = fullServerPath
+        #elif self.systemTopology.currentConfig.has(fullDevicePath):
+        #    if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "serverId"):
+        #        parentPath = self.systemTopology.currentConfig.getAttribute(fullDevicePath, "serverId")
+        #    if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "classId"):
+        #        parentPath += ".{}".format(self.systemTopology.currentConfig.getAttribute(fullDevicePath, "classId"))
+        #    path = fullDevicePath
                 
-        if path is None:
-            print "Unknown instance \"" + instanceId + "\" gone."
-            return
+        #if path is None:
+        #    print "Unknown instance \"" + instanceId + "\" gone."
+        #    return
 
         # Update system topology
-        self.systemTopology.instanceGone(path)
+        parentPath = self.systemTopology.instanceGone(instanceId)
         self.signalInstanceGone.emit(instanceId, parentPath)
 
 
@@ -837,10 +837,11 @@ class _Manager(QObject):
                             removedInstanceIds.append(deviceId)
                 else:
                     # Check, if deviceId is already in central hash
-                    if self.systemTopology.currentConfig.has(path):
+                    print "TODO: removedInstanceIds", path
+                    #if self.systemTopology.currentConfig.has(path):
                         # Remove path from central hash
-                        self.systemTopology.currentConfig.erase(path)
-                        removedInstanceIds.append(deviceId)
+                    #    self.systemTopology.currentConfig.erase(path)
+                    #    removedInstanceIds.append(deviceId)
 
 
 manager = _Manager()
