@@ -124,12 +124,17 @@ class Hash(OrderedDict):
                 self._get(key).attrs[attr] = value
         else:
             s, p = self._path(unicode(item))
+            if p in s:
+                attrs = s[p, ...]
+            else:
+                attrs = { }
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
             else:
                 elem = SimpleElement(p)
                 elem.data = value
+            elem.attrs = attrs
             OrderedDict.__setitem__(s, p, elem)
 
     def __getitem__(self, item):
