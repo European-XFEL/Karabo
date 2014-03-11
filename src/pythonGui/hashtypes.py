@@ -74,9 +74,7 @@ class Type(Registry):
 
 
     @classmethod
-    def register(cls, name, dict):
-        cls.number = len(cls.types)
-        cls.types.append(cls)
+    def hashname(cls):
         s = ''
         lastlower = False
         for c in cls.__name__:
@@ -84,7 +82,14 @@ class Type(Registry):
                 s += '_'
             s += c.capitalize()
             lastlower = c.islower()
-        cls.fromname[s.rstrip('_')] = cls
+        return s.rstrip('_')
+
+
+    @classmethod
+    def register(cls, name, dict):
+        cls.number = len(cls.types)
+        cls.types.append(cls)
+        cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
 
