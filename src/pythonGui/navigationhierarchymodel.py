@@ -11,7 +11,6 @@
 __all__ = ["NavigationHierarchyModel"]
 
 
-from collections import OrderedDict
 import globals
 from karabo.karathon import HashMergePolicy
 from navigationhierarchynode import NavigationHierarchyNode
@@ -30,8 +29,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
     def __init__(self, parent=None):
         super(NavigationHierarchyModel, self).__init__(parent)
         
-        # Datastructure to store hierarchy of model
-        self.hierarchyTree = OrderedDict()
+        # Root node of hierarchy tree
+        self.rootNode = NavigationHierarchyNode("Hierarchical view")
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
@@ -39,12 +38,13 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def updateData(self, config):
+        
         # Get last selection path
-        #selectedIndexes = self.selectionModel.selectedIndexes()
-        #if selectedIndexes:
-        #    lastSelectionPath = selectedIndexes[0].internalPointer().path
-        #else:
-        #    lastSelectionPath = None
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        if selectedIndexes:
+            lastSelectionPath = selectedIndexes[0].internalPointer().path
+        else:
+            lastSelectionPath = None
         
         self.beginResetModel()
         
@@ -77,21 +77,21 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     visibility = AccessLevel.OBSERVER
                                 
                 # TODO: later in view update
-                #if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                #    continue
+                if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                    continue
                 
-                # Create entry for host
-                hostNode = self.hierarchyTree.setdefault(host, OrderedDict())
-                hostNode.path = host
-                hostNode.displayName = host
+                # Create node for host
+                hostNode = self.rootNode.getNode(host)
+                if not hostNode:
+                    hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                    self.rootNode.appendChildNode(hostNode)
                 
-                # Create entry for server
-                serverNode = self.hierarchyTree[host].setdefault(serverId, OrderedDict())
-                serverNode.path = serverId
-                serverNode.displayName = serverId
+                # Create node for server
+                serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
                 serverNode.visibility = visibility
+                hostNode.appendChildNode(serverNode)
                 
-                # Create entries for classes
+                # Create nodes for classes
                 devClaAttrKey = "deviceClasses"
                 if serverConfig.hasAttribute(serverId, devClaAttrKey):
                     classes = serverConfig.getAttribute(serverId, devClaAttrKey)
@@ -105,10 +105,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     i = 0
                     for classId in classes:
                         if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                            classNode = self.hierarchyTree[host][serverId].setdefault(classId, OrderedDict())
-                            classNode.path = "{}.{}".format(serverId, classId)
-                            classNode.displayName = classId
+                            path = "{}.{}".format(serverId, classId)
+                            classNode = NavigationHierarchyNode(classId, path, serverNode)
                             classNode.visibility = visibilities[i]
+                            serverNode.appendChildNode(classNode)
                         i = i + 1
         
         # Get device data
@@ -124,8 +124,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     visibility = AccessLevel.OBSERVER
                 
                 # TODO: later in view update
-                #if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                #    continue
+                if visibility > globals.GLOBAL_ACCESS_LEVEL:
+                    continue
                 
                 if deviceConfig.hasAttribute(deviceId, hostAttrKey):
                     host = deviceConfig.getAttribute(deviceId, hostAttrKey)
@@ -156,151 +156,38 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     status = "ok"
 
                 # Host node
-                hostNode = self.hierarchyTree.setdefault(host, OrderedDict())
-                hostNode.path = host
-                hostNode.displayName = host
+                hostNode = self.rootNode.getNode(host)
+                if hostNode is None:
+                    hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                    self.rootNode.appendChildNode(hostNode)
                 
                 # Server node
-                serverNode = self.hierarchyTree[host].setdefault(serverId, OrderedDict())
-                serverNode.path = serverId
-                serverNode.displayName = serverId
+                serverNode = hostNode.getNode(serverId)
+                if serverNode is None:
+                    if serverId == "__none__":
+                        serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                        hostNode.appendChildNode(serverNode)
+                    else:
+                        continue
 
                 # Class node
-                classNode = self.hierarchyTree[host][serverId].setdefault(classId, OrderedDict())
-                classNode.path = "{}.{}".format(serverId, classId)
-                classNode.displayName = classId
+                classNode = serverNode.getNode(classId)
+                if classNode is None:
+                    if serverId == "__none__":
+                        path = "{}.{}".format(serverId, classId)
+                        classNode = NavigationHierarchyNode(classId, path, serverNode)
+                        serverNode.appendChildNode(classNode)
+                    else:
+                        continue
 
                 # Device node
-                deviceNode = self.hierarchyTree[host][serverId][classId].setdefault(deviceId, OrderedDict())
-                deviceNode.path = deviceId
-                deviceNode.displayName = deviceId
+                deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
                 deviceNode.status = status
+                classNode.appendChildNode(deviceNode)
         
-        print "===="
-        print self.hierarchyTree
-        print "===="
         self.endResetModel()
         
         # Set last selection path
-        #if lastSelectionPath is not None:
-        #    self.selectPath(lastSelectionPath)
-
-
-    def updateData2(self, config):
-        #print "+++ NavigationHierarchyModel.updateData"
-        #print config
-        #print ""
-        
-        # TODO: do not use internal hash - just model instead
-        if self.currentConfig != config:
-            self.currentConfig = config
-
-        selectedIndexes = self.selection_model.selectedIndexes()
-        if selectedIndexes:
-            lastSelectionPath = selectedIndexes[0].internalPointer().path
-        else:
-            lastSelectionPath = None
-        
-        self.beginResetModel()
-        self.__rootItem.clearChildItems()
-        
-        # Get server data
-        serverKey = "server"
-        if config.has(serverKey):
-            serverConfig = config.get(serverKey)
-            serverIds = list()
-            serverConfig.getKeys(serverIds)
-            
-            #for serverId in serverIds:
-            #    server = root.setdefault(serverId, OrderedDict())
-            #    server.visibility =
-            #    for classes in clase;
-            for serverId in serverIds:
-                # Get attributes
-                #serverAttributes = serverConfig.getAttributes(serverId)
-                #version = serverConfig.getAttribute(serverId, "version")
-                
-                host = str("UNKNOWN")
-                if serverConfig.hasAttribute(serverId, "host"):
-                    host = serverConfig.getAttribute(serverId, "host")
-
-                visibility = serverConfig.getAttribute(serverId, "visibility")
-                if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                    continue
-                
-                # Host item already exists?
-                hostItem = self.__rootItem.getItem(host)
-                if not hostItem:
-                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
-                    self.__rootItem.appendChildItem(hostItem)
-                
-                path = serverId
-                serverItem = NavigationHierarchyNode(serverId, path, hostItem)
-                hostItem.appendChildItem(serverItem)
-            
-                if serverConfig.hasAttribute(serverId, "deviceClasses"):
-                    classes = serverConfig.getAttribute(serverId, "deviceClasses")
-                    visibilities = serverConfig.getAttribute(serverId, "visibilities")
-                    i = 0
-                    for deviceClass in classes:
-                        if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                            path = "{}.{}".format(serverId, deviceClass)
-                            classItem = NavigationHierarchyNode(deviceClass, path, serverItem)
-                            serverItem.appendChildItem(classItem)
-                        i = i + 1
-        
-        # Get device data
-        deviceKey = "device"
-        if config.has(deviceKey):
-            deviceConfig = config.get(deviceKey)
-            deviceIds = list()
-            deviceConfig.getKeys(deviceIds)
-            for deviceId in deviceIds:
-                # Get attributes
-                visibility = deviceConfig.getAttribute(deviceId, "visibility")
-                if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                    continue
-                
-                host = deviceConfig.getAttribute(deviceId, "host")
-                classId = deviceConfig.getAttribute(deviceId, "classId")
-                serverId = deviceConfig.getAttribute(deviceId, "serverId")
-                #version = deviceConfig.getAttribute(deviceId, "version")
-                status = "ok"
-                if deviceConfig.hasAttribute(deviceId, "status"):
-                    status = deviceConfig.getAttribute(deviceId, "status")
-
-                # Host item already exists?
-                hostItem = self.__rootItem.getItem(host)
-                if not hostItem:
-                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
-                    self.__rootItem.appendChildItem(hostItem)
-                
-                # Server item already exists?
-                serverItem = hostItem.getItem(serverId)
-                if not serverItem:
-                    if serverId == "__none__":
-                        path = serverId
-                        serverItem = NavigationHierarchyNode(serverId, path, hostItem)
-                        hostItem.appendChildItem(serverItem)
-                    else:
-                        continue
-
-                # Class item already exists?
-                classItem = serverItem.getItem(classId)
-                if not classItem:
-                    if serverId == "__none__":
-                        path = "{}.{}".format(serverId, classId)
-                        classItem = NavigationHierarchyNode(classId, path, serverItem)
-                        serverItem.appendChildItem(classItem)
-                    else:
-                        continue
-
-                path = deviceId
-                deviceItem = NavigationHierarchyNode(deviceId, path, classItem)
-                deviceItem.status = status
-                classItem.appendChildItem(deviceItem)
-
-        self.endResetModel()
         if lastSelectionPath is not None:
             self.selectPath(lastSelectionPath)
 
@@ -309,10 +196,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if self.findIndex(path) is None:
             return False
         return True
-
-
-    def erase(self, host, serverId, classId, deviceId):
-        del self.hierarchyTree[host][serverId][classId][deviceId]
 
 
     def merge(self, config):
@@ -393,7 +276,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def getHierarchyLevel(self, index):
-        # Find out the hierarchy level of the selected item
+        # Find out the hierarchy level of the selected node
         hierarchyLevel = 0
         seekRoot = index
         
@@ -413,18 +296,18 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
     def findIndex(self, path):
         # Recursive search
-        return self._rFindIndex(self.__rootItem, path)
+        return self._rFindIndex(self.rootNode, path)
 
 
-    def _rFindIndex(self, item, path):
-        for i in xrange(item.childCount()):
-            childItem = item.childItem(i)
-            resultItem = self._rFindIndex(childItem, path)
-            if resultItem:
-                return resultItem
+    def _rFindIndex(self, node, path):
+        for i in xrange(node.childCount()):
+            childNode = node.childNode(i)
+            resultNode = self._rFindIndex(childNode, path)
+            if resultNode:
+                return resultNode
 
-        if (item.path != "") and path.startswith(item.path):
-            return self.createIndex(item.row(), 0, item)
+        if (node.path != "") and path.startswith(node.path):
+            return self.createIndex(node.row(), 0, node)
         return None
 
 
@@ -443,16 +326,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return QModelIndex()
 
         if not parent.isValid():
-            parentNode = self.hierarchyTree
+            parentNode = self.rootNode
         else:
             parentNode = parent.internalPointer()
 
-        print "parentNode", parentNode
-        #childNode = parentNode.internalPointer().childItem(row)
-        #if childNode:
-        #    return self.createIndex(row, column, childNode)
-        #else:
-        return QModelIndex()
+        childNode = parentNode.childNode(row)
+        if childNode:
+            return self.createIndex(row, column, childNode)
+        else:
+            return QModelIndex()
 
 
     def parent(self, index):
@@ -462,18 +344,18 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if not index.isValid():
             return QModelIndex()
         
-        childItem = index.internalPointer()
-        if not childItem:
+        childNode = index.internalPointer()
+        if not childNode:
             return QModelIndex()
         
-        parentItem = childItem.parentItem
-        if not parentItem:
+        parentNode = childNode.parentNode
+        if not parentNode:
             return QModelIndex()
         
-        if parentItem == self.__rootItem:
+        if parentNode == self.rootNode:
             return QModelIndex()
 
-        return self.createIndex(parentItem.row(), 0, parentItem)
+        return self.createIndex(parentNode.row(), 0, parentNode)
 
 
     def rowCount(self, parent=QModelIndex()):
@@ -484,11 +366,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return None
 
         if not parent.isValid():
-            parentNode = self.hierarchyTree
+            parentNode = self.rootNode
         else:
             parentNode = parent.internalPointer()
 
-        return len(parentNode.items())
+        return parentNode.childCount()
 
 
     def columnCount(self, parentIndex=QModelIndex()):
@@ -504,14 +386,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
         """
         row = index.row()
         column = index.column()
-        print "data", row, column
 
         if role == Qt.DisplayRole:
             node = index.internalPointer()
-            print "node", node, node.path, node.displayName
             return node.data(column)
         elif (role == Qt.DecorationRole) and (column == 0):
-            # Find out the hierarchy level of the selected item
+            # Find out the hierarchy level of the selected node
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 0:
                 return QIcon(":host")
@@ -524,8 +404,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
             elif hierarchyLevel == 2:
                 return QIcon(":device-class")
             elif hierarchyLevel == 3:
-                item = index.internalPointer()
-                if item.status == "error":
+                node = index.internalPointer()
+                if node.status == "error":
                     return QIcon(":device-instance-error")
                 else:
                     return QIcon(":device-instance")
@@ -581,8 +461,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return dict(type=type, classId=classId, deviceId=deviceId)
 
 
-    def mimeData(self, items):
-        itemInfo = self.indexInfo(items[0])
+    def mimeData(self, nodes):
+        itemInfo = self.indexInfo(nodes[0])
 
         serverId  = itemInfo.get("serverId")
         navigationItemType = itemInfo.get("type")
