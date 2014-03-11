@@ -28,7 +28,7 @@ class NavigationTreeView(QTreeView):
         super(NavigationTreeView, self).__init__(parent)
         
         self.setModel(model)
-        self.setSelectionModel(model.selection_model)
+        self.setSelectionModel(model.selectionModel)
         model.modelReset.connect(self.expandAll)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
