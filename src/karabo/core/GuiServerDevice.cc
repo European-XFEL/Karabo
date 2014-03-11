@@ -233,10 +233,8 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = header.get<string > ("deviceId");
                 Hash h("type", "configurationChanged", "deviceId", deviceId);
-                Hash b;
-                Hash& tmp = b.bindReference<Hash>("device." + deviceId + ".configuration");
-                tmp = remote().get(deviceId);
-                preprocessImageData(tmp);
+                Hash b = remote().get(deviceId);
+                preprocessImageData(b);
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
@@ -323,8 +321,8 @@ namespace karabo {
                 string serverId = header.get<string > ("serverId");
                 string classId = header.get<string> ("classId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash h("type", "classDescription");
-                Hash b("server." + serverId + ".classes." + classId + ".description", remote().getClassSchema(serverId, classId));
+                Hash h("type", "classDescription", "serverId", serverId, "classId", classId);
+                Hash b("schema", remote().getClassSchema(serverId, classId));
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
@@ -338,7 +336,7 @@ namespace karabo {
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 Hash h("type", "deviceSchema", "deviceId", deviceId);
-                Hash b("device." + deviceId + ".description", remote().getDeviceSchema(deviceId));
+                Hash b("schema", remote().getDeviceSchema(deviceId));
                 channel->write(h, b);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
@@ -452,7 +450,6 @@ namespace karabo {
                 preprocessImageData(modified);
 
                 Hash header("type", "configurationChanged", "deviceId", deviceId);
-                Hash body("device." + deviceId + ".configuration", modified);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
@@ -460,7 +457,7 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(header, body);
+                        it->first->write(header, modified);
                     }
                 }
             } catch (const Exception& e) {

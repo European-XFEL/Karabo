@@ -1214,8 +1214,8 @@ class GraphicsView(QSvgWidget):
                 # Get display name
                 displayName = item.text(0)
                 # Use DeviceClass/DeviceInstance-Key if no displayName is set
+                keys = internalKey.split('.')
                 if len(displayName) == 0:
-                    keys = internalKey.split('.')
                     displayName = keys[1]
                 
                 # Display component
@@ -1233,10 +1233,6 @@ class GraphicsView(QSvgWidget):
                 if displayNameProxyWidget:
                     # Add item to itemlist
                     items.append((displayNameProxyWidget, None))
-
-                # Does key concern state of device?
-                keys = internalKey.split('.configuration.')
-                isStateToDisplay = keys[1] == "state"
                 
                 # Display component
                 if configDisplayComponent:
@@ -1255,7 +1251,7 @@ class GraphicsView(QSvgWidget):
                         items.append((unitProxyWidget, None))
 
                     # Register as visible device
-                    Manager().newVisibleDevice(internalKey)
+                    Manager().newVisibleDevice(keys[0])
 
                 # Editable component
                 if configEditableComponent:
@@ -1274,7 +1270,7 @@ class GraphicsView(QSvgWidget):
                         editableComponent.isEditableValueInit = False
 
                         # Register as visible device
-                        Manager().newVisibleDevice(internalKey)
+                        Manager().newVisibleDevice(keys[0])
                         
                     items.append((editableComponent.widget, editableComponent))
 
