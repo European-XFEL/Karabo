@@ -119,9 +119,9 @@ class _Manager(QObject):
         # Model for projecttree TODO: after merge of projectPanel-branch
         #self.projectTopology = ProjectModel()
         
-        # Map stores { (serverId, class), startupConfiguration }
+        # Map stores { (serverId, class), Configuration }
         self.serverClassData = dict()
-        # Map stores { deviceId, deviceConfiguration }
+        # Map stores { deviceId, Configuration }
         self.deviceData = dict()
         
         # Sets all parameters to start configuration
