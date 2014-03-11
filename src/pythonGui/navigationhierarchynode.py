@@ -28,6 +28,8 @@ class NavigationHierarchyNode(object):
         
         self.displayName = displayName
         self.path = path
+        
+        self.visibility = AccessLevel.OBSERVER
         self.status = "ok"
 
 
