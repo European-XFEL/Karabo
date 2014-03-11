@@ -1,3 +1,10 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on February 27, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
 from dialogs import TextDialog
 from registry import Loadable, ns_svg, ns_karabo
 
@@ -399,8 +406,7 @@ class ProxyWidget(QStackedWidget):
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
-            keys = component.keys[0].split('.configuration.')
-            if keys[1] == "state":
+            if "state" in component.keys[0]:
                 aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
