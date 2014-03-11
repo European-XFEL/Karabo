@@ -18,98 +18,77 @@ from PyQt4.QtGui import *
 class NavigationHierarchyNode(object):
 
 
-    def __init__(self, displayData, path=str(), parentItem=None):
+    def __init__(self, displayName="", path="", parentNode=None):
         super(NavigationHierarchyNode, self).__init__()
         
-        self.__parentItem = parentItem
-        self.__childItems = list()
-        self.__displayData = displayData
-        self.__path = path
-        self.__status = "ok"
+        self.parentNode = parentNode
+        self.childNodes = list()
+        
+        self.displayName = displayName
+        self.path = path
+        self.status = "ok"
 
 
-    def _path(self):
-        return self.__path
-    path = property(fget=_path)
+    def appendChildNode(self, childNode):
+        self.childNodes.append(childNode)
 
 
-    def _status(self):
-        return self.__status
-    def _setStatus(self, status):
-        self.__status = status
-    status = property(fget=_status, fset=_setStatus)
+    def removeChildNode(self, childNode):
+        self.childNodes.remove(childNode)
 
 
-    def _parentItem(self):
-        return self.__parentItem
-    parentItem = property(fget=_parentItem)
+    def indexOfChildNode(self, childNode):
+        return self.childNodes.index(childNode)
 
 
-    def _childItems(self):
-        return self.__childItems
-    childItems = property(fget=_childItems)
-
-
-    def appendChildItem(self, childItem):
-        self.__childItems.append(childItem)
-
-
-    def removeChildItem(self, childItem):
-        self.__childItems.remove(childItem)
-
-
-    def indexOfChildItem(self, childItem):
-        return self.__childItems.index(childItem)
-
-
-    def childItem(self, row):
-        if row >= 0 and row < len(self.__childItems):
-            return self.__childItems[row]
+    def childNode(self, row):
+        if row >= 0 and row < len(self.childNodes):
+            return self.childNodes[row]
         return -1
 
 
     def childCount(self):
-        return len(self.__childItems)
+        return len(self.childNodes)
 
 
     def columnCount(self):
         return None
 
 
-    def getItem(self, displayData):
-        for childItem in self.__childItems:
-            if childItem.data(0) == displayData:
-                return childItem
+    def getNode(self, displayName):
+        for childNode in self.childNodes:
+            if childNode.data(0) == displayName:
+                return childNode
         return None
 
 
-    def hasItem(self, displayData):
-        for childItem in self.__childItems:
-            if childItem.data(0) == displayData:
+    def hasNode(self, displayName):
+        for childNode in self.childNodes:
+            if childNode.data(0) == displayName:
                 return True
         return False
 
 
     def data(self, column):
-        return self.__displayData
+        return self.displayName
 
 
     def row(self):
-        if not self.__parentItem:
+        if not self.parentNode:
             return None
         
-        return self.__parentItem.indexOfChildItem(self)
+        return self.parentNode.indexOfChildNode(self)
 
 
-    def clearChildItems(self):
-        while len(self.__childItems) > 0:
-            childItem = self.__childItems.pop()
-            childItem.clearChildItems()
+    def clearChildNodes(self):
+        while len(self.childNodes) > 0:
+            childNode = self.childNodes.pop()
+            childNode.clearChildNodes()
 
 
     def printTree(self, indent=-2):
         indent = indent + 2;
-        for childItem in self.__childItems:
-            print " " * indent, childItem.data(0)
-            childItem.printTree(indent)
+        for childNode in self.childNodes:
+            print " " * indent, childNode.data(0)
+            childNode.printTree(indent)
 

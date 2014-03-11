@@ -196,7 +196,9 @@ class Hash(OrderedDict):
         except KeyError:
             return False
 
-    def getKeys(self, keys):
+    def getKeys(self, keys=None):
+        if keys is None:
+            return self.keys()
         return keys.extend(self.keys())
 
     def hasAttribute(self, item, key):
