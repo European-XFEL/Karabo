@@ -557,7 +557,7 @@ class LogTableView(QTableView):
         if value is None:
             return
         # Emit signal with deviceId to select device instance
-        Manager().signalSelectNewNavigationItem.emit("device." + value)
+        Manager().signalSelectNewNavigationItem.emit(value)
         QTableView.mouseDoubleClickEvent(self, event)
 
 
@@ -758,7 +758,7 @@ class LogThread(QThread):
         # Check number of rows in database
         queryText = "SELECT count(1) FROM tLog;"
         query = QSqlQuery(queryText, Manager().sqlDatabase)
-        nRows = 0
+        nbRows = 0
         while query.next():
             nbRows = query.value(0)
 
