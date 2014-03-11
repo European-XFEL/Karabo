@@ -111,9 +111,7 @@ class NavigationPanel(QWidget):
 
 
     def onGlobalAccessLevelChanged(self):
-        print "onGlobalAccessLevelChanged"
-        self.__twNavigation.updateTreeModel(Manager().systemTopology)
-        self.__twNavigation.expandAll()
+        self.__twNavigation.model().globalAccessLevelChanged()
 
 
     # virtual function

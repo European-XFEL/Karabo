@@ -837,8 +837,10 @@ namespace karabo {
                 boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
                 boost::optional<const Hash::Node&> nodeData = entry.find("_userData");
                 if (nodeData) {
+                    m_deviceChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
                     boost::any_cast < boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)> >(nodeFunc->getValueAsAny())(instanceId, hash, nodeData->getValueAsAny());
                 } else {
+                    m_deviceChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
                     boost::any_cast < boost::function<void (const std::string&, const karabo::util::Hash&)> >(nodeFunc->getValueAsAny())(instanceId, hash);
                 }
             }
@@ -848,6 +850,7 @@ namespace karabo {
         void DeviceClient::notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
             boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
             if (m_propertyChangedHandlers.has(instanceId)) {
+                m_propertyChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
                 castAndCall(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
             }
         }

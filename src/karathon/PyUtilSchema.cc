@@ -1498,9 +1498,9 @@ void exportPyUtilSchema() {
 
         //********* 'has'-methods ****************
 
-        s.def("keyHasAlias", &Schema::keyHasAlias);
+        s.def("keyHasAlias", &Schema::keyHasAlias, (bp::arg("key")));
 
-        s.def("aliasHasKey", &schemawrap::aliasHasKey);
+        s.def("aliasHasKey", &schemawrap::aliasHasKey, (bp::arg("alias")));
 
         s.def("getAliasFromKey", &schemawrap::getAliasFromKey, (bp::arg("key")));
 
@@ -1783,6 +1783,12 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendAsNode"
                      , &ChoiceElementWrap::appendAsNode, (bp::arg("python_class"), bp::arg("nodeName") = "")
+                     , bp::return_internal_reference<> ())
+                .def("reconfigurable"
+                     , &ChoiceElement::reconfigurable
+                     , bp::return_internal_reference<> ())
+                .def("init"
+                     , &ChoiceElement::init
                      , bp::return_internal_reference<> ())
                 ;
     }
