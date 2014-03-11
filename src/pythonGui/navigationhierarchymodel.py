@@ -37,22 +37,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
-    def updateData(self, config):
+    def _handleServerData(self, config):
         """
-        This function is called whenever the whole system topology has changed
-        and the view needs a full update.
-        
-        The incoming \config represents the system topology.
+        This private function checks whether the incoming configuration has server
+        data. If this is the case, this data is put into the tree structure.
         """
-        # Get last selection path
-        selectedIndexes = self.selectionModel.selectedIndexes()
-        if selectedIndexes:
-            lastSelectionPath = selectedIndexes[0].internalPointer().path
-        else:
-            lastSelectionPath = None
-        
-        self.beginResetModel()
-        
         # Define some often used keys
         hostAttrKey = "host"
         versionAttrKey = "version"
@@ -87,14 +76,16 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 
                 # Create node for host
                 hostNode = self.rootNode.getNode(host)
-                if not hostNode:
+                if hostNode is None:
                     hostNode = NavigationHierarchyNode(host, host, self.rootNode)
                     self.rootNode.appendChildNode(hostNode)
                 
                 # Create node for server
-                serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                serverNode = hostNode.getNode(serverId)
+                if serverNode is None:
+                    serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                    hostNode.appendChildNode(serverNode)
                 serverNode.visibility = visibility
-                hostNode.appendChildNode(serverNode)
                 
                 # Create nodes for classes
                 devClaAttrKey = "deviceClasses"
@@ -111,10 +102,22 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     for classId in classes:
                         if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
                             path = "{}.{}".format(serverId, classId)
-                            classNode = NavigationHierarchyNode(classId, path, serverNode)
+                            classNode = serverNode.getNode(classId)
+                            if classNode is None:
+                                classNode = NavigationHierarchyNode(classId, path, serverNode)
+                                serverNode.appendChildNode(classNode)
                             classNode.visibility = visibilities[i]
-                            serverNode.appendChildNode(classNode)
                         i = i + 1
+
+
+    def _handleDeviceData(self, config):
+        """
+        This private function checks whether the incoming configuration has device
+        data. If this is the case, this data is put into the tree structure.
+        """
+        hostAttrKey = "host"
+        versionAttrKey = "version"
+        visibilityAttrKey = "visibility"
         
         # Get device data
         deviceKey = "device"
@@ -189,7 +192,25 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
                 deviceNode.status = status
                 classNode.appendChildNode(deviceNode)
+
+
+    def updateData(self, config):
+        """
+        This function is called whenever the whole system topology has changed
+        and the view needs a full update.
         
+        The incoming \config represents the system topology.
+        """
+        # Get last selection path
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        if selectedIndexes:
+            lastSelectionPath = selectedIndexes[0].internalPointer().path
+        else:
+            lastSelectionPath = None
+        
+        self.beginResetModel()
+        self._handleServerData(config)
+        self._handleDeviceData(config)
         self.endResetModel()
         
         # Set last selection path
@@ -204,27 +225,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
 
     def merge(self, config):
-        print "merge"
-        print config
-        print ""
-        
-        serverKey = "server"
-        deviceKey = "device"
-        
-        
-        # TODO: do not use internal hash - just model instead
-        #self.currentConfig.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        #self.updateData(self.currentConfig)
-
-
-    def instanceNew(self, config):
-        print "instanceNew"
-        self.merge(config)
-
-
-    def instanceUpdated(self, config):
-        print "instanceUpdated"
-        self.merge(config)
+        self.beginResetModel()
+        self._handleServerData(config)
+        self._handleDeviceData(config)
+        self.endResetModel()
 
 
     def instanceGone(self, path):
