@@ -127,6 +127,10 @@ namespace karabo {
              * @return long double
              */
             long double operator /(const TimeDuration& other) const;
+            
+            operator double() const {
+                return boost::lexical_cast<double>(this->format(TimeDuration::DEFAULT_FORMAT));
+            }
 
             /**
              * Check if the time duration is empty, i.e. of zero length. 

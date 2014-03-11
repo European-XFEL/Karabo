@@ -11,6 +11,8 @@
 __all__ = ["NavigationHierarchyNode"]
 
 
+from enums import AccessLevel
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
@@ -26,6 +28,8 @@ class NavigationHierarchyNode(object):
         
         self.displayName = displayName
         self.path = path
+        
+        self.visibility = AccessLevel.OBSERVER
         self.status = "ok"
 
 
