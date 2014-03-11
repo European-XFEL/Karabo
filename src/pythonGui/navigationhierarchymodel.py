@@ -11,6 +11,7 @@
 __all__ = ["NavigationHierarchyModel"]
 
 
+from karabo.karathon import AccessLevel
 import globals
 from navigationhierarchynode import NavigationHierarchyNode
 import manager
@@ -70,10 +71,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     visibility = serverConfig.getAttribute(serverId, visibilityAttrKey)
                 else:
                     visibility = AccessLevel.OBSERVER
-                                
-                # TODO: later in view update
-                if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                    continue
                 
                 # Create node for host
                 hostNode = self.rootNode.getNode(host)
@@ -101,13 +98,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     
                     i = 0
                     for classId in classes:
-                        if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                            path = "{}.{}".format(serverId, classId)
-                            classNode = serverNode.getNode(classId)
-                            if classNode is None:
-                                classNode = NavigationHierarchyNode(classId, path, serverNode)
-                                serverNode.appendChildNode(classNode)
-                            classNode.visibility = visibilities[i]
+                        path = "{}.{}".format(serverId, classId)
+                        classNode = serverNode.getNode(classId)
+                        if classNode is None:
+                            classNode = NavigationHierarchyNode(classId, path, serverNode)
+                            serverNode.appendChildNode(classNode)
+                        classNode.visibility = visibilities[i]
                         i = i + 1
 
 
@@ -131,10 +127,6 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     visibility = deviceConfig.getAttribute(deviceId, visibilityAttrKey)
                 else:
                     visibility = AccessLevel.OBSERVER
-                
-                # TODO: later in view update
-                if visibility > globals.GLOBAL_ACCESS_LEVEL:
-                    continue
                 
                 if deviceConfig.hasAttribute(deviceId, hostAttrKey):
                     host = deviceConfig.getAttribute(deviceId, hostAttrKey)
@@ -195,6 +187,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
                     classNode.appendChildNode(deviceNode)
                 deviceNode.status = status
+                deviceNode.visibility = visibility
 
 
     def updateData(self, config):
@@ -279,6 +272,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
                 removedInstanceIds.append(serverId)
         
         return removedInstanceIds
+
+
+    def globalAccessLevelChanged(self):
+        self.modelReset.emit()
 
 
     def onSelectionChanged(self, selected, deselected):
@@ -384,7 +381,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             parentNode = parent.internalPointer()
 
         childNode = parentNode.childNode(row)
-        if childNode:
+        if childNode is not None:
+            # Consider visibility
+            if childNode.visibility > globals.GLOBAL_ACCESS_LEVEL:
+                return QModelIndex()
+            
             return self.createIndex(row, column, childNode)
         else:
             return QModelIndex()
@@ -406,6 +407,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
             return QModelIndex()
         
         if parentNode == self.rootNode:
+            return QModelIndex()
+
+        # Consider visibility
+        if parentNode.visibility > globals.GLOBAL_ACCESS_LEVEL:
             return QModelIndex()
 
         return self.createIndex(parentNode.row(), 0, parentNode)
