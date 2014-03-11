@@ -736,6 +736,21 @@ class EntireWindow(GroupActions, SimpleAction):
 Separator()
 
 
+class Delete(SimpleAction):
+    text = "Delete"
+    icon = icons.delete
+    shortcut = QKeySequence.Delete
+
+
+    def run(self):
+        if QMessageBox.question(self.parent, "Really delete?",
+                                "Do you really want to delete the items?",
+                                QMessageBox.Yes | QMessageBox.No
+                               ) == QMessageBox.Yes:
+            self.parent.ilayout.delete_selected()
+            self.parent.update()
+
+
 class Cut(SimpleAction):
     text = "Cut"
     icon = icons.editCut
