@@ -196,8 +196,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
     def updateData(self, config):
         """
-        This function is called whenever the whole system topology has changed
-        and the view needs a full update.
+        This function is called whenever the system topology has changed and the
+        view needs an update.
         
         The incoming \config represents the system topology.
         """
@@ -224,17 +224,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
         return True
 
 
-    def merge(self, config):
-        self.beginResetModel()
-        self._handleServerData(config)
-        self._handleDeviceData(config)
-        self.endResetModel()
-
-
-    def instanceGone(self, path):
-        index = self.findIndex(path)
+    def erase(self, instanceId):
+        index = self.findIndex(instanceId)
         if (index is None) or (not index.isValid()):
-            return ""
+            return None
         
         self.beginResetModel()
         childNode = index.internalPointer()
@@ -323,7 +316,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if resultNode:
                 return resultNode
 
-        if (node.path != "") and path.startswith(node.path):
+        if (node.path != "") and (path == node.path):
             return self.createIndex(node.row(), 0, node)
         return None
 
