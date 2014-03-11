@@ -90,6 +90,14 @@ void exportPyUtilHash() {
             .value("NDARRAY_DOUBLE", PyTypes::NDARRAY_DOUBLE)
             .value("NDARRAY_COMPLEX_FLOAT", PyTypes::NDARRAY_COMPLEX_FLOAT)
             .value("NDARRAY_COMPLEX_DOUBLE", PyTypes::NDARRAY_COMPLEX_DOUBLE)
+            .value("SIMPLE", PyTypes::SIMPLE)
+            .value("SEQUENCE", PyTypes::SEQUENCE)
+            ;
+    
+   bp::class_<PyTypes>("TypesClass", bp::no_init)
+            .def("to", (const karabo::util::Types::ReferenceType (*)(const PyTypes::ReferenceType&))&PyTypes::to, (bp::arg("Python_types"))).staticmethod("to")
+            .def("from", (const PyTypes::ReferenceType (*)(const karabo::util::Types::ReferenceType&))&PyTypes::from, (bp::arg("C++_types"))).staticmethod("from")
+            .def("category", (const PyTypes::ReferenceType (*)(int))&PyTypes::category, (bp::arg("C++_types"))).staticmethod("category")
             ;
 
 
