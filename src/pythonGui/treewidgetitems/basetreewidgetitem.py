@@ -20,7 +20,7 @@ import globals
 from manager import Manager
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QTreeWidgetItem
+from PyQt4.QtGui import QCursor, QTreeWidgetItem
 
 
 class BaseTreeWidgetItem(QTreeWidgetItem):

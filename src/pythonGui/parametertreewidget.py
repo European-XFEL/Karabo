@@ -14,36 +14,37 @@ __all__ = ["ParameterTreeWidget"]
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
+from hash import Hash
 from manager import Manager
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 
-from PyQt4.QtCore import QByteArray, QMimeData, QRect, Qt
-from PyQt4.QtGui import QAbstractItemView, QMenu, QTreeWidget
+from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
+from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
+    signalApplyChanged = pyqtSignal(str, bool, bool) # internalKey, enable, hasConflicts
+    signalItemSelectionChanged = pyqtSignal(str) # path
 
 
-    def __init__(self, configPanel, path=str(), classId=str()):
-        # configPanel - save parent widget for toolbar buttons
-        # path - full path of navigationItem
+    def __init__(self, path=None):
+        # path - path of navigationItem
         super(ParameterTreeWidget, self).__init__()
         
-        self.__classId = classId # DeviceClass name stored for XML save
-        self.__instanceKey = path
-        self.__configPanel = configPanel
-        
-        self.__currentItem = None
+        self.path = path
+        # Store previous selected item for tooltip handling
+        self.prevItem = None
 
         self.setWordWrap(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.setSortingEnabled(True)
-        self.sortByColumn(0, Qt.AscendingOrder)
+        #self.sortByColumn(0, Qt.AscendingOrder)
+        self.itemSelectionChanged.connect(self.onItemSelectionChanged)
         
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.__mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
+        self.mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
         self.model().setSupportedDragActions(Qt.CopyAction)
@@ -74,14 +75,14 @@ class ParameterTreeWidget(QTreeWidget):
         # Get the rect surrounding the icon
         iconRect = QRect(itemX, vRect.y(), vRect.height(), vRect.height())      
 
-        if self.__currentItem and (self.__currentItem is not item):
+        if self.prevItem and (self.prevItem is not item):
             # Hide tooltip of former item
-            self.__currentItem.setToolTipDialogVisible(False)
+            self.prevItem.setToolTipDialogVisible(False)
         
         # Now check where the press event took place and handle it correspondingly
         if iconRect.contains(event.pos()):
-            self.__currentItem = item
-            self.__currentItem.setToolTipDialogVisible(True)
+            self.prevItem = item
+            self.prevItem.setToolTipDialogVisible(True)
             
         QTreeWidget.mousePressEvent(self, event)
 
@@ -90,22 +91,10 @@ class ParameterTreeWidget(QTreeWidget):
         return QMimeData()
 
 
-### getter & setter functions ###
-    def _getInstanceKey(self):
-        return self.__instanceKey
-    def _setInstanceKey(self, instanceKey):
-        self.__instanceKey = instanceKey
-    instanceKey = property(fget=_getInstanceKey, fset=_setInstanceKey)
-
-
 ### public functions ###
     def checkApplyButtonsEnabled(self):
         # Returns a tuple containing the enabled and the conflicted state
         return self._r_applyButtonsEnabled(self.invisibleRootItem())
-
-
-    def getParameterTreeWidgetItemByKey(self, key):
-        return self.__configPanel.getParameterTreeWidgetItemByKey(key)
 
 
     def stateUpdated(self, state):
@@ -121,7 +110,7 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         if editableComponent.applyEnabled:
-            config.set(str(item.internalKey), editableComponent.value)
+            config.set(item.internalKey, editableComponent.value)
             editableComponent.changeApplyToBusy(True)
 
 
@@ -137,6 +126,16 @@ class ParameterTreeWidget(QTreeWidget):
             editableComponent.onApplyRemoteChanges(item.internalKey)
 
 
+    def resetAll(self):
+        nbSelectedItems = self.nbSelectedApplyEnabledItems()
+        if nbSelectedItems > 0:
+            selectedItems = self.selectedItems()
+            for item in selectedItems:
+                self.applyRemoteChanges(item)
+        else:
+            self.onApplyAllRemoteChanges()
+
+
     def nbSelectedApplyEnabledItems(self):
         # Return only selected items for not applied yet
         counter = 0
@@ -147,7 +146,7 @@ class ParameterTreeWidget(QTreeWidget):
             if not isinstance(editableComponent, EditableApplyLaterComponent):
                 continue
             
-            if editableComponent.applyEnabled is True:
+            if editableComponent.applyEnabled:
                 counter += 1
         return counter
 
@@ -176,15 +175,15 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def addContextAction(self, action):
-        self.__mContext.addAction(action)
+        self.mContext.addAction(action)
 
 
     def addContextMenu(self, menu):
-        self.__mContext.addMenu(menu)
+        self.mContext.addMenu(menu)
 
 
     def addContextSeparator(self):
-        self.__mContext.addSeparator()
+        self.mContext.addSeparator()
 
 
     def _r_updateParameters(self, parentItem, state):
@@ -249,48 +248,44 @@ class ParameterTreeWidget(QTreeWidget):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
         result = self.checkApplyButtonsEnabled()
-        self.__configPanel.onApplyChanged(key, result[0], result[1])
+        self.signalApplyChanged.emit(key, result[0], result[1])
 
 
-    def onApplyAll(self, config):
-        # go trough tree and save changes into config
-        self._r_applyAll(self.invisibleRootItem(), config)
+    def onApplyAll(self):
+        nbSelectedItems = self.nbSelectedApplyEnabledItems()
+        if nbSelectedItems > 0:
+            config = Hash()
+            selectedItems = self.selectedItems()
+            for item in selectedItems:
+                self.addItemDataToHash(item, config)
+        else:
+            # Go trough tree and save changes into config
+            config = Hash()
+            self._r_applyAll(self.invisibleRootItem(), config)
+        
+        Manager().onDeviceChangedAsHash(self.path, config)
 
 
     def onApplyAllRemoteChanges(self):
         self._r_applyAllRemoteChanges(self.invisibleRootItem())
 
 
-    def onFileOpen(self):
-        type = self.__configPanel.getNavigationItemType()
-        configChangeType = None
-        if type is NavigationItemTypes.CLASS:
-            configChangeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-        elif type is NavigationItemTypes.DEVICE:
-            configChangeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
+    def onItemSelectionChanged(self):
+        editableComponent = self.currentItem().editableComponent
+        if editableComponent is None:
+            return
+        if not isinstance(editableComponent, EditableApplyLaterComponent):
+            return
         
-        if self.__classId is None:
-            print "onFileOpen classId not set"
-            #keys = self.instanceKey.split('+', 1)
-            #if len(keys) is 2:
-            #    self.__classId = str(keys[1])
-        
-        # TODO: Remove dirty hack for scientific computing again!!!
-        croppedClassId = self.__classId.split("-")
-        self.__classId = croppedClassId[0]
-        
-        Manager().onFileOpen(configChangeType, str(self.instanceKey + ".configuration"), str(self.__classId))
-
-
-    def onFileSaveAs(self):
-        Manager().onSaveAsXml(str(self.__classId), str(self.instanceKey + ".configuration"))
+        if editableComponent.applyEnabled:
+            self.signalItemSelectionChanged.emit(self.path)
 
 
     def onCustomContextMenuRequested(self, pos):
         item = self.itemAt(pos)
         if item is None:
             # Show standard context menu
-            self.__mContext.exec_(QCursor.pos())
+            self.mContext.exec_(QCursor.pos())
             return
 
         item.showContextMenu()
