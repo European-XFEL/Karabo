@@ -12,7 +12,6 @@ __all__ = ["NavigationHierarchyModel"]
 
 
 import globals
-from karabo.karathon import HashMergePolicy
 from navigationhierarchynode import NavigationHierarchyNode
 import manager
 
@@ -21,6 +20,7 @@ from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
 from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 from enums import NavigationItemTypes
+
 
 class NavigationHierarchyModel(QAbstractItemModel):
     signalItemChanged = pyqtSignal(dict)
@@ -189,9 +189,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
                         continue
 
                 # Device node
-                deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
+                deviceNode = classNode.getNode(deviceId)
+                if deviceNode is None:
+                    deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
+                    classNode.appendChildNode(deviceNode)
                 deviceNode.status = status
-                classNode.appendChildNode(deviceNode)
 
 
     def updateData(self, config):

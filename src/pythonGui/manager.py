@@ -678,7 +678,7 @@ class _Manager(QObject):
 
 
     def handleInstanceUpdated(self, config):
-        self.systemTopology.merge(config)
+        self.systemTopology.updateData(config)
 
 
     def handleInstanceGone(self, instanceId):
