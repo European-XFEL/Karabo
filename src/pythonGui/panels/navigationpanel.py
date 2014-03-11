@@ -43,11 +43,11 @@ class NavigationPanel(QWidget):
         self.setWindowTitle(title)
                 
         self.__twNavigation = NavigationTreeView(self, treemodel)
+        treemodel.signalInstanceNewReset.connect(self.onResetPanel)
 
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalInstanceNewReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)

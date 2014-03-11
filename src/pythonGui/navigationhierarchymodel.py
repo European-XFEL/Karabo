@@ -24,6 +24,7 @@ from enums import NavigationItemTypes
 
 class NavigationHierarchyModel(QAbstractItemModel):
     signalItemChanged = pyqtSignal(dict)
+    signalInstanceNewReset = pyqtSignal(str) # path
 
 
     def __init__(self, parent=None):
@@ -238,6 +239,46 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.endResetModel()
         
         return parentNode.path
+
+
+    def removeExistingInstances(self, config):
+        """
+        This function checks whether instances already exist in the tree.
+        
+        if \True, these instance is erased from the tree
+        if \False, nothing happens
+        
+        A list with removed instances is returned.
+        """
+        
+        removedInstanceIds = []
+        serverKey = "server"
+        # Check servers
+        if config.has(serverKey):
+            serverConfig = config.get(serverKey)
+            serverIds = serverConfig.keys()
+            for serverId in serverIds:
+                # Check, if serverId is already in central hash
+                index = self.findIndex(serverId)
+                if index is None:
+                    continue
+                
+                serverNode = index.internalPointer()
+                classNodes = serverNode.childNodes
+                for classNode in classNodes:
+                    # Check for running device instances on server
+                    deviceNodes = classNode.childNodes
+                    for deviceNode in deviceNodes:
+                        self.erase(deviceNode.path)
+                        removedInstanceIds.append(deviceNode.path)
+                    # Remove configuration page for associated class
+                    self.signalInstanceNewReset.emit(classNode.path)
+                    
+                # Remove server from tree
+                self.erase(serverId)
+                removedInstanceIds.append(serverId)
+        
+        return removedInstanceIds
 
 
     def onSelectionChanged(self, selected, deselected):

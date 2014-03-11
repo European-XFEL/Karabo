@@ -75,6 +75,7 @@ class ConfigurationPanel(QWidget):
                 
         self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
         treemodel.signalItemChanged.connect(self.onNavigationItemChanged)
+        treemodel.signalInstanceNewReset.connect(self.onInstanceNewReset)
         self.__twNavigation.hide()
 
         splitTopPanes.setStretchFactor(0, 1)
@@ -95,7 +96,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalInstanceNewReset.connect(self.onInstanceNewReset)
 
         self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
         self.__swParameterEditor = QStackedWidget(splitTopPanes)
