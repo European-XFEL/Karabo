@@ -51,60 +51,58 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         # Get server data
         serverKey = "server"
-        if config.has(serverKey):
-            serverConfig = config.get(serverKey)
-            serverIds = serverConfig.getKeys()
-            
-            for serverId in serverIds:
-                # Get attributes
-                if serverConfig.hasAttribute(serverId, hostAttrKey):
-                    host = serverConfig.getAttribute(serverId, hostAttrKey)
-                else:
-                    host = "UNKNOWN"
+        if not config.has(serverKey):
+            return
+        
+        serverConfig = config.get(serverKey)
+        for serverId in serverConfig.getKeys():
+            # Get attributes
+            if serverConfig.hasAttribute(serverId, hostAttrKey):
+                host = serverConfig.getAttribute(serverId, hostAttrKey)
+            else:
+                host = "UNKNOWN"
 
-                if serverConfig.hasAttribute(serverId, versionAttrKey):
-                    version = serverConfig.getAttribute(serverId, versionAttrKey)
-                else:
-                    version = None
+            if serverConfig.hasAttribute(serverId, versionAttrKey):
+                version = serverConfig.getAttribute(serverId, versionAttrKey)
+            else:
+                version = None
 
-                if serverConfig.hasAttribute(serverId, visibilityAttrKey):
-                    visibility = serverConfig.getAttribute(serverId, visibilityAttrKey)
+            if serverConfig.hasAttribute(serverId, visibilityAttrKey):
+                visibility = serverConfig.getAttribute(serverId, visibilityAttrKey)
+            else:
+                visibility = AccessLevel.OBSERVER
+
+            # Create node for host
+            hostNode = self.rootNode.getNode(host)
+            if hostNode is None:
+                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                self.rootNode.appendChildNode(hostNode)
+
+            # Create node for server
+            serverNode = hostNode.getNode(serverId)
+            if serverNode is None:
+                serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                hostNode.appendChildNode(serverNode)
+            serverNode.visibility = visibility
+
+            # Create nodes for classes
+            devClaAttrKey = "deviceClasses"
+            if serverConfig.hasAttribute(serverId, devClaAttrKey):
+                classes = serverConfig.getAttribute(serverId, devClaAttrKey)
+
+                visibilitiesAttrKey = "visibilities"
+                if serverConfig.hasAttribute(serverId, visibilitiesAttrKey):
+                    visibilities = serverConfig.getAttribute(serverId, visibilitiesAttrKey)
                 else:
-                    visibility = AccessLevel.OBSERVER
-                
-                # Create node for host
-                hostNode = self.rootNode.getNode(host)
-                if hostNode is None:
-                    hostNode = NavigationHierarchyNode(host, host, self.rootNode)
-                    self.rootNode.appendChildNode(hostNode)
-                
-                # Create node for server
-                serverNode = hostNode.getNode(serverId)
-                if serverNode is None:
-                    serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
-                    hostNode.appendChildNode(serverNode)
-                serverNode.visibility = visibility
-                
-                # Create nodes for classes
-                devClaAttrKey = "deviceClasses"
-                if serverConfig.hasAttribute(serverId, devClaAttrKey):
-                    classes = serverConfig.getAttribute(serverId, devClaAttrKey)
-                    
-                    visibilitiesAttrKey = "visibilities"
-                    if serverConfig.hasAttribute(serverId, visibilitiesAttrKey):
-                        visibilities = serverConfig.getAttribute(serverId, visibilitiesAttrKey)
-                    else:
-                        visibilities = []
-                    
-                    i = 0
-                    for classId in classes:
-                        path = "{}.{}".format(serverId, classId)
-                        classNode = serverNode.getNode(classId)
-                        if classNode is None:
-                            classNode = NavigationHierarchyNode(classId, path, serverNode)
-                            serverNode.appendChildNode(classNode)
-                        classNode.visibility = visibilities[i]
-                        i = i + 1
+                    visibilities = []
+
+                for visibility, classId in zip(visibilities, classes):
+                    path = "{}.{}".format(serverId, classId)
+                    classNode = serverNode.getNode(classId)
+                    if classNode is None:
+                        classNode = NavigationHierarchyNode(classId, path, serverNode)
+                        serverNode.appendChildNode(classNode)
+                    classNode.visibility = visibility
 
 
     def _handleDeviceData(self, config):
@@ -118,76 +116,78 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         # Get device data
         deviceKey = "device"
-        if config.has(deviceKey):
-            deviceConfig = config.get(deviceKey)
-            deviceIds = deviceConfig.getKeys()
-            for deviceId in deviceIds:
-                # Get attributes
-                if deviceConfig.hasAttribute(deviceId, visibilityAttrKey):
-                    visibility = deviceConfig.getAttribute(deviceId, visibilityAttrKey)
-                else:
-                    visibility = AccessLevel.OBSERVER
-                
-                if deviceConfig.hasAttribute(deviceId, hostAttrKey):
-                    host = deviceConfig.getAttribute(deviceId, hostAttrKey)
-                else:
-                    host = "UNKNOWN"
-                
-                serverIdAttrKey = "serverId"
-                if deviceConfig.hasAttribute(deviceId, serverIdAttrKey):
-                    serverId = deviceConfig.getAttribute(deviceId, serverIdAttrKey)
-                else:
-                    serverId = "unknown-server"
-                
-                classIdAttrKey = "classId"
-                if deviceConfig.hasAttribute(deviceId, classIdAttrKey):
-                    classId = deviceConfig.getAttribute(deviceId, classIdAttrKey)
-                else:
-                    classId = "unknown-class"
-                
-                if deviceConfig.hasAttribute(deviceId, versionAttrKey):
-                    version = deviceConfig.getAttribute(deviceId, versionAttrKey)
-                else:
-                    version = None
-                
-                statusAttrKey = "status"
-                if deviceConfig.hasAttribute(deviceId, statusAttrKey):
-                    status = deviceConfig.getAttribute(deviceId, statusAttrKey)
-                else:
-                    status = "ok"
+        if not config.has(deviceKey):
+            return
+        
+        deviceConfig = config.get(deviceKey)
+        deviceIds = deviceConfig.getKeys()
+        for deviceId in deviceIds:
+            # Get attributes
+            if deviceConfig.hasAttribute(deviceId, visibilityAttrKey):
+                visibility = deviceConfig.getAttribute(deviceId, visibilityAttrKey)
+            else:
+                visibility = AccessLevel.OBSERVER
 
-                # Host node
-                hostNode = self.rootNode.getNode(host)
-                if hostNode is None:
-                    hostNode = NavigationHierarchyNode(host, host, self.rootNode)
-                    self.rootNode.appendChildNode(hostNode)
-                
-                # Server node
-                serverNode = hostNode.getNode(serverId)
-                if serverNode is None:
-                    if serverId == "__none__":
-                        serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
-                        hostNode.appendChildNode(serverNode)
-                    else:
-                        continue
+            if deviceConfig.hasAttribute(deviceId, hostAttrKey):
+                host = deviceConfig.getAttribute(deviceId, hostAttrKey)
+            else:
+                host = "UNKNOWN"
 
-                # Class node
-                classNode = serverNode.getNode(classId)
-                if classNode is None:
-                    if serverId == "__none__":
-                        path = "{}.{}".format(serverId, classId)
-                        classNode = NavigationHierarchyNode(classId, path, serverNode)
-                        serverNode.appendChildNode(classNode)
-                    else:
-                        continue
+            serverIdAttrKey = "serverId"
+            if deviceConfig.hasAttribute(deviceId, serverIdAttrKey):
+                serverId = deviceConfig.getAttribute(deviceId, serverIdAttrKey)
+            else:
+                serverId = "unknown-server"
 
-                # Device node
-                deviceNode = classNode.getNode(deviceId)
-                if deviceNode is None:
-                    deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
-                    classNode.appendChildNode(deviceNode)
-                deviceNode.status = status
-                deviceNode.visibility = visibility
+            classIdAttrKey = "classId"
+            if deviceConfig.hasAttribute(deviceId, classIdAttrKey):
+                classId = deviceConfig.getAttribute(deviceId, classIdAttrKey)
+            else:
+                classId = "unknown-class"
+
+            if deviceConfig.hasAttribute(deviceId, versionAttrKey):
+                version = deviceConfig.getAttribute(deviceId, versionAttrKey)
+            else:
+                version = None
+
+            statusAttrKey = "status"
+            if deviceConfig.hasAttribute(deviceId, statusAttrKey):
+                status = deviceConfig.getAttribute(deviceId, statusAttrKey)
+            else:
+                status = "ok"
+
+            # Host node
+            hostNode = self.rootNode.getNode(host)
+            if hostNode is None:
+                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                self.rootNode.appendChildNode(hostNode)
+
+            # Server node
+            serverNode = hostNode.getNode(serverId)
+            if serverNode is None:
+                if serverId == "__none__":
+                    serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                    hostNode.appendChildNode(serverNode)
+                else:
+                    continue
+
+            # Class node
+            classNode = serverNode.getNode(classId)
+            if classNode is None:
+                if serverId == "__none__":
+                    path = "{}.{}".format(serverId, classId)
+                    classNode = NavigationHierarchyNode(classId, path, serverNode)
+                    serverNode.appendChildNode(classNode)
+                else:
+                    continue
+
+            # Device node
+            deviceNode = classNode.getNode(deviceId)
+            if deviceNode is None:
+                deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
+                classNode.appendChildNode(deviceNode)
+            deviceNode.status = status
+            deviceNode.visibility = visibility
 
 
     def updateData(self, config):
