@@ -202,6 +202,9 @@ class Hash(OrderedDict):
     def hasAttribute(self, item, key):
         return key in self[item, ...]
 
+    def erase(self, key):
+        del self[key]
+
     def paths(self):
         ret = [ ]
         for k, v in self.iteritems():
