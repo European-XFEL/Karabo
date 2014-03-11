@@ -664,7 +664,7 @@ class _Manager(QObject):
             self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
-        self.systemTopology.merge(config)
+        self.systemTopology.updateData(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -685,26 +685,11 @@ class _Manager(QObject):
         """
         Remove instanceId from central hash and update
         """
-        #path = None
-        #fullServerPath = "server.{}".format(instanceId)
-        #fullDevicePath = "device.{}".format(instanceId)
-        #if self.systemTopology.currentConfig.has(fullServerPath):
-        #    if self.systemTopology.currentConfig.hasAttribute(fullServerPath, "host"):
-        #        parentPath = self.systemTopology.currentConfig.getAttribute(fullServerPath, "host")
-        #    path = fullServerPath
-        #elif self.systemTopology.currentConfig.has(fullDevicePath):
-        #    if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "serverId"):
-        #        parentPath = self.systemTopology.currentConfig.getAttribute(fullDevicePath, "serverId")
-        #    if self.systemTopology.currentConfig.hasAttribute(fullDevicePath, "classId"):
-        #        parentPath += ".{}".format(self.systemTopology.currentConfig.getAttribute(fullDevicePath, "classId"))
-        #    path = fullDevicePath
-                
-        #if path is None:
-        #    print "Unknown instance \"" + instanceId + "\" gone."
-        #    return
-
         # Update system topology
-        parentPath = self.systemTopology.instanceGone(instanceId)
+        parentPath = self.systemTopology.erase(instanceId)
+        if parentPath is None:
+            return
+        
         self.signalInstanceGone.emit(instanceId, parentPath)
 
 
