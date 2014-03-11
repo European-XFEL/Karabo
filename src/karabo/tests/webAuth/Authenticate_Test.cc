@@ -10,6 +10,7 @@
 
 
 #include "Authenticate_Test.hh"
+#include "karabo/tests/util/Epochstamp_Test.hh"
 
 using namespace std;
 using namespace karabo::webAuth;
@@ -90,11 +91,13 @@ void Authenticate_Test::testCorrectLogin() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    string ipAddress = "c++UnitTestsIpAddress";
+    //string ipAddress =  "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
     string brokerPortNumber = "4444";
     string brokerTopic = "topic";
 
+    karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
 
     // Expected result values
     const long long expectedSoftwareId = 1;
@@ -131,11 +134,13 @@ void Authenticate_Test::testCorrectLoginAccessLevelZero() {
     string username = "observer";
     string password = "karabo";
     string provider = "LOCAL";
-    string ipAddress = "c++UnitTestsIpAddress";
+    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
     string brokerPortNumber = "4444";
     string brokerTopic = "topic";
 
+    karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
 
     // Expected result values
     const long long expectedSoftwareId = 1;
@@ -172,11 +177,13 @@ void Authenticate_Test::testIncorrectLogin() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass222";
     string provider = "LOCAL";
-    string ipAddress = "c++UnitTestsIpAddress";
+    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
     string brokerPortNumber = "4444";
     string brokerTopic = "topic";
 
+    karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
@@ -219,11 +226,13 @@ void Authenticate_Test::testIncorrectUsername() {
     string username = "unitaryTests2";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    string ipAddress = "c++UnitTestsIpAddress";
+    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
     string brokerPortNumber = "4444";
     string brokerTopic = "topic";
 
+    karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
@@ -245,12 +254,16 @@ void Authenticate_Test::testSingleSignOn() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    string ipAddress = "c++UnitTestsIpAddress";
+    //string ipAddress = "c++UnitTestsIpAddress";
     string hostname = "127.0.0.1";
     string portNumber = "4444";
     string brokerTopic = "topic";
     std::string sessionToken, sessionTokenOrig;
 
+    karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
+    string equalIpAddress = ipAddress;
+    string differentIpAddress = "c++UnitTestsIpAddressXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
     Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, brokerTopic);
 
@@ -258,11 +271,11 @@ void Authenticate_Test::testSingleSignOn() {
     CPPUNIT_ASSERT(a.login() == true);
 
     // Validate session with current machine name => Should be OK
-    sessionTokenOrig = a.getSingleSignOn("c++UnitTestsIpAddress");
+    sessionTokenOrig = a.getSingleSignOn(equalIpAddress);
     CPPUNIT_ASSERT(sessionTokenOrig.empty() == false);
 
     // Validate session with different machine name => Should be NOT OK
-    sessionToken = a.getSingleSignOn("c++UnitTestsIpAddressXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    sessionToken = a.getSingleSignOn(differentIpAddress);
     CPPUNIT_ASSERT(sessionToken.empty() == true);
 
     // Successful logout

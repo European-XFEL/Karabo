@@ -177,7 +177,7 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        self.__navigationPanel = NavigationPanel(Manager().treemodel)
+        self.__navigationPanel = NavigationPanel(Manager().systemTopology)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
         self.__outputTab.addDockableTab(self.__notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.__configurationPanel = ConfigurationPanel(Manager().treemodel)
+        self.__configurationPanel = ConfigurationPanel(Manager().systemTopology)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")

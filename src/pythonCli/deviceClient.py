@@ -629,6 +629,10 @@ class DeviceClient(object):
     
     def _fromTimeStringToUtcString(self, timestamp):
         date = parser.parse(timestamp)
+        if date.tzname() is None:
+            s = time.strftime("%Z", time.gmtime())
+            system_tz = pytz.timezone(s)
+            date = date.replace(tzinfo=system_tz)
         try:
             date = date.astimezone(pytz.utc)
         except:
