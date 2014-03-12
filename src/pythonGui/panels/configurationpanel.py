@@ -90,7 +90,7 @@ class ConfigurationPanel(QWidget):
         # Stacked widget for configuration parameters
         self.__swParameterEditor = QStackedWidget(None)
         # Initial page
-        twInitalParameterEditorPage = ParameterTreeWidget(self)
+        twInitalParameterEditorPage = ParameterTreeWidget()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
 
@@ -121,7 +121,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalInstanceNewReset.connect(self.onInstanceNewReset)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
