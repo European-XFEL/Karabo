@@ -168,6 +168,11 @@ class Hash(OrderedDict):
             return False
 
 
+    def iterall(self):
+        for k in self:
+            yield k, self[k], self[k, ...]
+
+
     def merge(self, other, attribute_policy):
         merge = attribute_policy == "merge"
         for k, v in other.iteritems():
