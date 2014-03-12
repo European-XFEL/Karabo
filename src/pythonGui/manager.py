@@ -300,13 +300,11 @@ class _Manager(QObject):
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
         # Go recursively through Hash
-        self._r_checkHash(devicePath, devicePath, config, configChangeType)
+        self._r_changeHash(devicePath, devicePath, config, configChangeType)
 
 
-    def _r_checkHash(self, path, devicePath, config, configChangeType):
-        topLevelKeys = config.keys()
-        for key in topLevelKeys:
-            value = config.get(key)
+    def _r_changeHash(self, path, devicePath, config, configChangeType):
+        for key, value in config.iteritems():
             try:
                 timestamp = Timestamp.fromHashAttributes(
                     config.getAttributes(key))
@@ -317,17 +315,17 @@ class _Manager(QObject):
                 internalPath = key
             else:
                 internalPath = path + "." + key
-            
+
             # Check if DataNotifier for key available
-            if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
+            if configChangeType == ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
+            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
+            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
                 dataNotifier = self._getDataNotifierDisplayValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
@@ -344,7 +342,7 @@ class _Manager(QObject):
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
-                self._r_checkHash(internalPath, devicePath, value, configChangeType)
+                self._r_changeHash(internalPath, devicePath, value, configChangeType)
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
