@@ -115,12 +115,12 @@ class _Manager(QObject):
         self.sqlDatabase.openConnection()
         
         # Model for navigationtreeview
-        self.systemTopology = NavigationHierarchyModel()
-        # Model for projecttree TODO: after merge of projectPanel-branch
-        #self.projectTopology = ProjectModel()
-        # One model for project view
-        self.projModel = ProjectModel(self)
-        self.projModel.selectionModel.selectionChanged. \
+        self.systemTopology = NavigationHierarchyModel(self)
+        self.systemTopology.selectionModel.selectionChanged. \
+                        connect(self.onNavigationHierarchyModelSelectionChanged)
+        # Model for projecttree
+        self.projectTopology = ProjectModel(self)
+        self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
         
         
@@ -423,6 +423,7 @@ class _Manager(QObject):
     def onConflictStateChanged(self, key, hasConflict):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
+
     def onNavigationHierarchyModelSelectionChanged(self, selected, deselect):
         """
         This slot is called whenever something of the navigation panel is selected.
@@ -431,7 +432,7 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.projModel.selectionModel.clearSelection()
+        self.projectTopology.selectionModel.clearSelection()
 
 
     def onProjectModelSelectionChanged(self, selected, deselected):
@@ -449,7 +450,7 @@ class _Manager(QObject):
     def initDevice(self, serverId, classId):
         # Put configuration hash together
         config = Hash(classId, self.serverClassData[serverId, classId].configuration)
-        
+       
         # Send signal to network
         self.signalInitDevice.emit(serverId, config)
         self.__isInitDeviceCurrentlyProcessed = True
@@ -501,13 +502,13 @@ class _Manager(QObject):
         
         self.__projectHash.set(projectName, projectConfig)
         self.__projectHash.setAttribute(projectName, "directory", directory)
-        self.projModel.updateData(self.__projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
 
 
     def addConfigToProject(self, config):
         self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         # TODO: central hash only for online/offline device check - better solution?
-        self.projModel.updateData(self.__projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
@@ -523,7 +524,7 @@ class _Manager(QObject):
         
         self.__projectHash.set(projScenePath, vecConfig)
         # TODO: central hash only for online/offline device check - better solution?
-        self.projModel.updateData(self.__projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
 
 
     def selectNavigationItemByKey(self, path):
