@@ -311,9 +311,12 @@ class ConfigurationPanel(QWidget):
         deviceType = itemInfo.get('type')
         self.__schemaReader.setDeviceType(deviceType)
 
-        if not self.__schemaReader.readSchema(path, schema, twParameterEditor):
+        s = self.__schemaReader.readSchema(path, schema)
+        if s is None:
             return False
-        
+        else:
+            s.fillWidget(path, twParameterEditor,
+                         deviceType == NavigationItemTypes.CLASS)
         return True
 
 
