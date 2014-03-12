@@ -195,17 +195,7 @@ class MainWindow(QMainWindow):
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        customViewPanel = self._createCustomMiddlePanel()
         self.__customTab = DockTabWindow("Custom view", middleArea)
-        self.__customTab.addDockableTab(customViewPanel, "Custom view")
-        # Add tab
-        tbNewTab = QToolButton()
-        tbNewTab.setIcon(QIcon(":add"))
-        text = "Open a new tab"
-        tbNewTab.setToolTip(text)
-        tbNewTab.setStatusTip(text)
-        self.__customTab.addCornerWidget(tbNewTab)
-        tbNewTab.clicked.connect(self.onOpenNewCustomViewTab)
         middleArea.setStretchFactor(0, 10)
 
         self.__loggingPanel = LoggingPanel()
