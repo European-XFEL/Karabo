@@ -98,15 +98,17 @@ class Hash(OrderedDict):
         for k, v in zip(args[::2], args[1::2]):
             self[k] = v
 
-    def _path(self, path):
+    def _path(self, path, auto=False):
         path = path.split(".")
         s = self
         for p in path[:-1]:
+            if auto and p not in s:
+                OrderedDict.__setitem__(s, p, HashElement(p))
             s = s[p]
         return s, path[-1]
     
-    def _get(self, path):
-        return OrderedDict.__getitem__(*self._path(path))
+    def _get(self, path, auto=False):
+        return OrderedDict.__getitem__(*self._path(path, auto))
 
 
     def __str__(self):
@@ -123,7 +125,7 @@ class Hash(OrderedDict):
             else:
                 self._get(key).attrs[attr] = value
         else:
-            s, p = self._path(unicode(item))
+            s, p = self._path(unicode(item), True)
             if p in s:
                 attrs = s[p, ...]
             else:
@@ -157,6 +159,15 @@ class Hash(OrderedDict):
         else:
             OrderedDict.__delitem__(*self._path(item))
 
+
+    def __contains__(self, key):
+        try:
+            self._get(key)
+            return True
+        except KeyError:
+            return False
+
+
     def merge(self, other, attribute_policy):
         merge = attribute_policy == "merge"
         for k, v in other.iteritems():
@@ -188,13 +199,8 @@ class Hash(OrderedDict):
     def getAttributes(self, item):
         return self[item, ...]
 
-
     def has(self, item):
-        try:
-            self._get(item)
-            return True
-        except KeyError:
-            return False
+        return item in self
 
     def getKeys(self, keys=None):
         if keys is None:
@@ -215,6 +221,9 @@ class Hash(OrderedDict):
             else:
                 ret.append(k)
         return ret
+
+    def empty(self):
+        return len(self) == 0
 
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
