@@ -5,16 +5,15 @@
 #############################################################################
 
 
-"""This module contains a class which represents an item a hierarchical
-   navigation treeview."""
+"""
+This module contains a class which represents an item of a hierarchical
+navigation model.
+"""
 
 __all__ = ["NavigationHierarchyNode"]
 
 
-from karabo.karathon import *
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from karabo.karathon import AccessLevel
 
 
 class NavigationHierarchyNode(object):
