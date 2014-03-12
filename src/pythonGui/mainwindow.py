@@ -25,7 +25,7 @@ from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
-#from panels.projectpanel import ProjectPanel
+from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import *
@@ -47,6 +47,9 @@ class MainWindow(QMainWindow):
 
         self._setupNetwork()
         self._setupPanels()
+
+        # Setup default project
+        self.__projectPanel.setupDefaultProject()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)
         self.resize(1200,800)
@@ -183,10 +186,13 @@ class MainWindow(QMainWindow):
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        #self.__projectPanel = ProjectPanel()
-        #self.__projectTab = DockTabWindow("Projects", leftArea)
-        #self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        #leftArea.setStretchFactor(1,1)
+        self.__projectPanel = ProjectPanel()
+        self.__projectTab = DockTabWindow("Projects", leftArea)
+        self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
+        self.__projectPanel.signalAddScene.connect(self.onAddScene)
+        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
+        leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         customViewPanel = self._createCustomMiddlePanel()
@@ -275,10 +281,11 @@ class MainWindow(QMainWindow):
         print "onHelpAbout"
 
 
-    def onOpenNewCustomViewTab(self):
+    def onAddScene(self, sceneName):
         customViewPanel = self._createCustomMiddlePanel()
-        self.__customTab.addDockableTab(customViewPanel, "Custom view")
-        self.__customTab.updateTabsClosable()
+        self.__customTab.addDockableTab(customViewPanel, sceneName)
+        if self.__customTab.count()-1 > 0:
+            self.__customTab.updateTabsClosable()
 
 
     def onChangeAccessLevel(self, action):

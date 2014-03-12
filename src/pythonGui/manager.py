@@ -22,6 +22,7 @@ from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
+from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
@@ -61,6 +62,8 @@ class DataNotifier(QObject):
 
 class _Manager(QObject):
     # signals
+    signalSystemTopologyChanged = pyqtSignal(object)
+    
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
@@ -93,7 +96,6 @@ class _Manager(QObject):
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
     signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, path, configName
-    signalProjectItemChanged = pyqtSignal(dict) # path
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
@@ -102,7 +104,7 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
-        
+
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
         # Map stores all keys and DataNofiers for display widgets
@@ -116,6 +118,11 @@ class _Manager(QObject):
         self.systemTopology = NavigationHierarchyModel()
         # Model for projecttree TODO: after merge of projectPanel-branch
         #self.projectTopology = ProjectModel()
+        # One model for project view
+        self.projModel = ProjectModel(self)
+        self.projModel.selectionModel.selectionChanged. \
+                        connect(self.onProjectModelSelectionChanged)
+        
         
         # Map stores { (serverId, class), Configuration }
         self.serverClassData = dict()
@@ -129,8 +136,7 @@ class _Manager(QObject):
     # Sets all parameters to start configuration
     def reset(self):
         # Project hash
-        self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
-        self.__projectHash.setAttribute("project", "name", "xfelTest")
+        self.__projectHash = Hash()
         self.__projectArrayIndices = []
         
         # Unregister all editable DataNotifiers, if available
@@ -417,6 +423,28 @@ class _Manager(QObject):
     def onConflictStateChanged(self, key, hasConflict):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
+    def onNavigationHierarchyModelSelectionChanged(self, selected, deselect):
+        """
+        This slot is called whenever something of the navigation panel is selected.
+        If an item was selected, the selection of the project panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.projModel.selectionModel.clearSelection()
+
+
+    def onProjectModelSelectionChanged(self, selected, deselected):
+        """
+        This slot is called whenever something of the project panel is selected.
+        If an item was selected, the selection of the navigation panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.systemTopology.selectionModel.clearSelection()
+
+
 
     def initDevice(self, serverId, classId):
         # Put configuration hash together
@@ -451,39 +479,55 @@ class _Manager(QObject):
         self.signalKillServer.emit(serverId)
 
 
-### TODO: Temporary functions for scientific computing START ###
-    def createNewProjectConfig(self, customItem, path, configCount, classId, schema):
-        
-        configName = "{}-{}-<>".format(configCount, classId)
-        
-        self.signalCreateNewProjectConfig.emit(customItem, path, configName)
-        self.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
-        self.signalProjectItemChanged.emit(dict(key=path))
-        
-        #print self.__projectHash
-        #print "-----"
+    def projectExists(self, projectName):
+        """
+        This functions checks whether a project with the \projectName already exists.
+        """
+        return self.__projectHash.has(projectName)
 
 
-    def createNewConfigKeyAndCount(self, classId):
-        nbConfigs = len(self.__projectArrayIndices)
-        
-        path = "project.devices.[" + str(nbConfigs) + "]." + str(classId)
-        self.__projectHash.set(path, Hash())
-        
-        self.__projectArrayIndices.append(nbConfigs+1)
-        
-        return (path, nbConfigs)
+    def addNewProject(self, projectName, directory, projectConfig):
+        # Check whether project already exists
+        alreadyExists = self.projectExists(projectName)
+        if alreadyExists:
+            # Overwrite?
+            reply = QMessageBox.question(None, "Project already exists",
+                "A project with the same name already exists.<br>"
+                "Do you want to overwrite it?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
-    # project hash:
-    # project name="test" +
-    #   devices +
-    #     0 +
-    #       classId1 +
-    #         deviceId = s1
-    #     1 +
-    #       classId2 +
+            if reply == QMessageBox.No:
+                return
+        
+        self.__projectHash.set(projectName, projectConfig)
+        self.__projectHash.setAttribute(projectName, "directory", directory)
+        self.projModel.updateData(self.__projectHash, self.__hash)
 
-### TODO: Temporary functions for scientific computing END ###
+
+    def addConfigToProject(self, config):
+        self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        # TODO: central hash only for online/offline device check - better solution?
+        self.projModel.updateData(self.__projectHash, self.__hash)
+
+
+    def addSceneToProject(self, projScenePath, sceneConfig):
+        # Get old config of scenes
+        vecConfig = self.__projectHash.get(projScenePath)
+
+        if vecConfig is None:
+            # Create vector of hashes, if not existent yet
+            vecConfig = [sceneConfig]
+        else:
+            # Append new scene to vector of hashes
+            vecConfig.append(sceneConfig)
+        
+        self.__projectHash.set(projScenePath, vecConfig)
+        # TODO: central hash only for online/offline device check - better solution?
+        self.projModel.updateData(self.__projectHash, self.__hash)
+
+
+    def selectNavigationItemByKey(self, path):
+        self.signalNavigationItemSelectionChanged.emit(path)
 
 
     def executeCommand(self, itemInfo):
@@ -646,6 +690,8 @@ class _Manager(QObject):
     def handleSystemTopology(self, config):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
+        # Send new topology to projecttree
+        self.signalSystemTopologyChanged.emit(self.__hash)
 
 
     def handleInstanceNew(self, config):
