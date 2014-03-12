@@ -84,12 +84,6 @@ class NavigationHierarchyNode(object):
         return self.parentNode.indexOfChildNode(self)
 
 
-    def clearChildNodes(self):
-        while len(self.childNodes) > 0:
-            childNode = self.childNodes.pop()
-            childNode.clearChildNodes()
-
-
     def printTree(self, indent=-2):
         indent = indent + 2;
         for childNode in self.childNodes:
