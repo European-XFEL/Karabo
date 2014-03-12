@@ -202,7 +202,7 @@ class SchemaReader(object):
             else:
                 choiceComponent = ChoiceComponent(parentItem.classAlias, key=parentItem.internalKey, value=None)
 
-        parentItem.editableComponent = choiceComponent        
+        parentItem.editableComponent = choiceComponent
 
         choiceKeys = self.schema.getKeys(key)
         #for cKey in choiceKeys:
