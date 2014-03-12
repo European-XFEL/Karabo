@@ -13,7 +13,6 @@ __all__ = ["NavigationHierarchyModel"]
 
 import globals
 from navigationhierarchynode import NavigationHierarchyNode
-import manager
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
@@ -28,11 +27,12 @@ class NavigationHierarchyModel(QAbstractItemModel):
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
-    def __init__(self, parent=None):
-        super(NavigationHierarchyModel, self).__init__(parent)
+    def __init__(self, manager):
+        super(NavigationHierarchyModel, self).__init__(manager)
         
         # Root node of hierarchy tree
         self.rootNode = NavigationHierarchyNode()
+        self.manager = manager
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
@@ -304,10 +304,10 @@ class NavigationHierarchyModel(QAbstractItemModel):
             serverId = parentIndex.data()
             classId = index.data()
 
-            schema = manager.Manager().getClassSchema(serverId, classId)
+            schema = self.manager.getClassSchema(serverId, classId)
             path = "{}.{}".format(serverId, classId)
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+            self.manager.onSchemaAvailable(dict(key=path, classId=classId,
+                                        type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data()

@@ -41,8 +41,8 @@ class ProjectModel(QStandardItemModel):
     RESOURCES_LABEL = "Resources"
 
 
-    def __init__(self, parent=None):
-        super(ProjectModel, self).__init__(parent)
+    def __init__(self, manager):
+        super(ProjectModel, self).__init__(manager)
 
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
