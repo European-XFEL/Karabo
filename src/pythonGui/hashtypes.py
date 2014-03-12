@@ -67,7 +67,11 @@ class NumpyVector(Vector):
             super(Vector, cls).write(file, d)
 
 
-class Type(Registry):
+class Descriptor(object):
+    pass
+
+
+class Type(Descriptor, Registry):
     types = [ ]
     fromname = { }
     strs = { }
