@@ -20,10 +20,9 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
-
+from projecttree import ProjectTree
 from schemareader import SchemaReader 
 
-from karabo.karathon import *
 from PyQt4.QtCore import SIGNAL, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
@@ -43,14 +42,19 @@ class ConfigurationPanel(QWidget):
     #    pass
     ##########################################
 
+
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
-        # map = { deviceInternalKey, swIndex }
-        self.__navItemInternalKeyIndexMap = dict()
-        # map = { deviceInternalKey, bool }
-        self.__internalKeySchemaLoadedMap = dict()
+
+        # map = { path, swIndex }
+        self.__itemPathIndexMap = dict()
+        # map = { path, bool }
+        self.__pathSchemaLoadedMap = dict()
+        
+        # map = { path, projectPath }
+        self.__itemProjectPathMap = dict()
         
         self.__schemaReader = SchemaReader()
         
@@ -60,25 +64,48 @@ class ConfigurationPanel(QWidget):
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
+        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
+
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainSplitter = QSplitter(Qt.Vertical)
 
-        # widget with navigation/attributeeditor-splitter and button-layout
+        # Layout for navigation and project tree
+        navSplitter = QSplitter(Qt.Vertical)
+        # Navigation tree
+        self.__twNavigation = NavigationTreeView(None, treemodel)
+        treemodel.signalItemChanged.connect(self.onDeviceItemChanged)
+        #self.__twNavigation.hide()
+        navSplitter.addWidget(self.__twNavigation)
+
+        # Project tree
+        self.__twProject = ProjectTree()
+        self.__twProject.signalItemChanged.connect(self.onDeviceItemChanged)
+        #self.__twProject.hide()
+        navSplitter.addWidget(self.__twProject)
+
+        navSplitter.setStretchFactor(0, 1)
+        navSplitter.setStretchFactor(1, 1)
+
+        # Stacked widget for configuration parameters
+        self.__swParameterEditor = QStackedWidget(None)
+        # Initial page
+        twInitalParameterEditorPage = ParameterTreeWidget(self)
+        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
+        self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+
         topWidget = QWidget(mainSplitter)
-        vLayout = QVBoxLayout(topWidget)
-        vLayout.setContentsMargins(0,0,0,0)
-        
-        # splitter for navigation + attributeeditor
+
         splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
-        vLayout.addWidget(splitTopPanes)
-                
-        self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        treemodel.signalItemChanged.connect(self.onNavigationItemChanged)
-        treemodel.signalInstanceNewReset.connect(self.onInstanceNewReset)
-        self.__twNavigation.hide()
+        splitTopPanes.addWidget(navSplitter)
+        splitTopPanes.addWidget(self.__swParameterEditor)
 
         splitTopPanes.setStretchFactor(0, 1)
+        splitTopPanes.setStretchFactor(1, 3)
+
+        vLayout = QVBoxLayout(topWidget)
+        vLayout.setContentsMargins(0,0,0,0)
+        vLayout.addWidget(splitTopPanes)
         
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
@@ -86,8 +113,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
-        
-        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -96,14 +121,7 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-
-        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
-        self.__swParameterEditor = QStackedWidget(splitTopPanes)
-        # Initial page
-        twParameterEditorPage = ParameterTreeWidget()
-        twParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
-        self.__swParameterEditor.addWidget(twParameterEditorPage)
-        splitTopPanes.setStretchFactor(1, 3)
+        Manager().signalInstanceNewReset.connect(self.onInstanceNewReset)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -464,8 +482,9 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, type, path):
         # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(path)
-        print "+++ showParameterPage", index, path
+        index = self.__itemPathIndexMap.get(path)
+        print "+++ showParameterPage +++", index, path
+        print ""
         if index:
             self._setParameterEditorIndex(index)
 
@@ -507,8 +526,10 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        # Reset map
-        self.__navItemInternalKeyIndexMap = dict()
+        # Reset maps
+        self.__itemPathIndexMap = dict()
+        self.__pathSchemaLoadedMap = dict()
+        self.__itemProjectPathMap = dict()
 
         while self.__swParameterEditor.count() > 1:
             self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
@@ -521,8 +542,10 @@ class ConfigurationPanel(QWidget):
         be cleaned and removed.
         """
         # Remove \path from map
-        if path in self.__navItemInternalKeyIndexMap:
-            del self.__navItemInternalKeyIndexMap[path]
+        if path in self.__itemPathIndexMap:
+            del self.__itemPathIndexMap[path]
+        if path in self.__itemProjectPathMap:
+            del self.__itemProjectPathMap[path]
         self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
@@ -537,31 +560,46 @@ class ConfigurationPanel(QWidget):
 
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
-        key = itemInfo.get('key')
-        if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
-            index = self.__navItemInternalKeyIndexMap.get(key)
+        paramPageKey = itemInfo.get('key')
+        # Get project path, if it is set
+        projNaviPathTuple = itemInfo.get('projNaviPathTuple')
+        print ""
+        print "==== onSchemaAvailable ====", paramPageKey
+        
+        if (paramPageKey in self.__itemPathIndexMap) and (paramPageKey in self.__pathSchemaLoadedMap):
+            index = self.__itemPathIndexMap.get(paramPageKey)
+            print "++++ index ++++", index
             if index:
-                twParameterEditor = self.__swParameterEditor.widget(index)
+                twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
-                schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
+                schemaLoaded = self.__pathSchemaLoadedMap.get(paramPageKey)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-                    self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
-                    twParameterEditor.clear()
-                    if self._parseSchema(itemInfo, twParameterEditor):
-                        self.__internalKeySchemaLoadedMap[key] = True
+                    self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
+                    twParameterEditorPage.clear()
+
+                    if self._parseSchema(itemInfo, twParameterEditorPage):
+                        self.__pathSchemaLoadedMap[paramPageKey] = True
         else:
-            self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
+            self.__itemPathIndexMap[paramPageKey] = self._createNewParameterPage(itemInfo)
+            print "+++ Createpage +++", paramPageKey
+            if projNaviPathTuple is not None:
+                self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
-            
             if schema is not None:
-                self.__internalKeySchemaLoadedMap[key] = True
+                self.__pathSchemaLoadedMap[paramPageKey] = True
             else:
-                self.__internalKeySchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[paramPageKey] = False
+        
+        # Load schema for project path, if existing
+        projectPath = self.__itemProjectPathMap.get(paramPageKey)
+        if (projectPath is not None) and (projectPath in self.__pathSchemaLoadedMap):
+            if not self.__pathSchemaLoadedMap.get(projectPath):
+                self.onSchemaAvailable(dict(key=projectPath, schema=itemInfo.get('schema')))
 
 
-    def onNavigationItemChanged(self, itemInfo):
+    def onDeviceItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
@@ -574,19 +612,12 @@ class ConfigurationPanel(QWidget):
         self.showParameterPage(type, path)
 
 
-    def onProjectItemChanged(self, itemInfo):
-        type = itemInfo.get('type')
-        path = itemInfo.get('key')
-
-        self.showParameterPage(type, str(path))
-
-
-    def onInstanceGone(self, instanceId, parentPath):
+    def onInstanceGone(self, path, parentPath):
         # New schema can be in plugins of instance
-        keys = self.__internalKeySchemaLoadedMap.keys()
+        keys = self.__pathSchemaLoadedMap.keys()
         for key in keys:
-            if instanceId in key:
-                self.__internalKeySchemaLoadedMap[key] = False
+            if path in key:
+                self.__pathSchemaLoadedMap[key] = False
 
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
@@ -594,7 +625,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceStateChanged(self, internalKey, state):
-        index = self.__navItemInternalKeyIndexMap.get(internalKey)
+        index = self.__itemPathIndexMap.get(internalKey)
         if index:
             twParameterEditor = self.__swParameterEditor.widget(index)
             twParameterEditor.stateUpdated(state)
@@ -708,7 +739,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceSchemaUpdated(self, key):
-        self.__internalKeySchemaLoadedMap[key] = False
+        self.__pathSchemaLoadedMap[key] = False
 
 
     def onGlobalAccessLevelChanged(self):
