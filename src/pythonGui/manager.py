@@ -17,15 +17,14 @@ __all__ = ["Manager"]
 
 
 from configuration import Configuration
-import datetime
+from datetime import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-import globals
 from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
-from PyQt4.QtCore import pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
+from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 
@@ -662,7 +661,7 @@ class _Manager(QObject):
         # Check for existing stuff and remove
         instanceIds = self.systemTopology.removeExistingInstances(config)
         for id in instanceIds:
-            timestamp = datetime.datetime.now()
+            timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
             timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
             logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
