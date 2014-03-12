@@ -23,6 +23,7 @@ from enums import NavigationItemTypes
 
 
 class NavigationHierarchyModel(QAbstractItemModel):
+    # signal
     signalItemChanged = pyqtSignal(dict)
     signalInstanceNewReset = pyqtSignal(str) # path
 
@@ -34,8 +35,8 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.rootNode = NavigationHierarchyNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+        self.selection_model = QItemSelectionModel(self)
+        self.selection_model.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleServerData(self, config):
@@ -272,6 +273,21 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         return removedInstanceIds
 
+                # Host item already exists?
+                hostItem = self.__rootItem.getItem(host)
+                if not hostItem:
+                    hostItem = NavigationHierarchyNode(host, host, self.__rootItem)
+                    self.__rootItem.appendChildItem(hostItem)
+                
+                # Server item already exists?
+                serverItem = hostItem.getItem(serverId)
+                if not serverItem:
+                    if serverId == "__none__":
+                        path = "server." + serverId
+                        serverItem = NavigationHierarchyNode(serverId, path, hostItem)
+                        hostItem.appendChildItem(serverItem)
+                    else:
+                        continue
 
     def globalAccessLevelChanged(self):
         self.modelReset.emit()
@@ -430,6 +446,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         Reimplemented function of QAbstractItemModel.
         """
         if parent.column() > 0:
+            #print "rowCount 1"
             return None
 
         if not parent.isValid():
@@ -499,6 +516,40 @@ class NavigationHierarchyModel(QAbstractItemModel):
         if role == Qt.DisplayRole:
             if (orientation == Qt.Horizontal) and (section == 0):
                     return "Hierarchical view"
+
+
+    def index(self, row, column, parent=QModelIndex()):
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.__rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        childItem = parentItem.childItem(row)
+        if childItem:
+            return self.createIndex(row, column, childItem)
+        else:
+            return QModelIndex()
+
+
+    def parent(self, index):
+        if not index.isValid():
+            return QModelIndex()
+        
+        childItem = index.internalPointer()
+        if not childItem:
+            return QModelIndex()
+        
+        parentItem = childItem.parentItem
+        if not parentItem:
+            return QModelIndex()
+        
+        if parentItem == self.__rootItem:
+            return QModelIndex()
+
+        return self.createIndex(parentItem.row(), 0, parentItem)
 
 
     def indexInfo(self, index):
