@@ -111,8 +111,7 @@ class SchemaReader(object):
         if schema is None:
             return
         for k in schema.hash:
-            self.parse(path + '.configuration.' + k,
-                       schema.hash[k], schema.hash[k, ...])
+            self.parse(path + '.' + k, schema.hash[k], schema.hash[k, ...])
         treeWidget.resizeColumnToContents(0)
         return True
 
