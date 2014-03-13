@@ -117,17 +117,8 @@ class Vector(hashtypes.Vector):
 
 class Schema(hashtypes.Descriptor):
     def __init__(self):
-        object.__setattr__(self, "__dict__",  OrderedDict())
-
-    def __getattr__(self, attr):
-        return self.__dict__[attr]
-
-    def __setattr__(self, attr, value):
-        self.__dict__[attr] = value
-
-
-    def __delattr__(self, attr):
-        del self.__dict__[attr]
+        self.dict = OrderedDict()
+        self.cls = None
 
 
     @staticmethod
@@ -138,7 +129,7 @@ class Schema(hashtypes.Descriptor):
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
         for k, h, a in hash.iterall():
-            setattr(self, k, nodes[a['nodeType']](k, h, a, self))
+            self.dict[k] = nodes[a['nodeType']](k, h, a, self)
         return self
 
 
@@ -162,7 +153,7 @@ class Schema(hashtypes.Descriptor):
 
 
     def _item(self, key, treeWidget, parent, type):
-        for k, v in self.__dict__.iteritems():
+        for k, v in self.dict.iteritems():
             if isinstance(v, hashtypes.Descriptor):
                 v.item(key + '.' + k, treeWidget, parent, type)
 
@@ -170,6 +161,12 @@ class Schema(hashtypes.Descriptor):
     def fillWidget(self, path, treeWidget, type):
         self._item(path, treeWidget, None, type)
         treeWidget.resizeColumnToContents(0)
+
+
+    def getClass(self):
+        if self.cls is None:
+            self.cls = type(self.name, [object], self.dict)
+        return self.cls
 
 
 class ChoiceOfNodes(hashtypes.Descriptor):
@@ -186,7 +183,9 @@ class SchemaReader(object):
     def readSchema(self, schema):
         if schema is None:
             return
-        return Schema.parse('', schema.hash, {})
+        ret = Schema.parse('', schema.hash, {})
+        ret.name = schema.name
+        return ret
 
 
     def parse(self, key, hash, attrs, parent=None):
