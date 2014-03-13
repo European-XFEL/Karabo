@@ -32,6 +32,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 
         # Name of command
         self.__command = command
+        self.classAlias = "Command"
         
         self.__isCommandEnabled = False
         self.__pbCommand = QPushButton()
@@ -79,4 +80,4 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         manager.Manager().executeCommand(
-            dict(path=self.internalKey, command=self.__command, args=args))
+            dict(path=self.internalKey.path, command=self.__command, args=args))
