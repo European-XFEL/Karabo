@@ -87,7 +87,7 @@ class ProjectModel(QStandardItemModel):
                         leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
 
 
-    def updateData(self, projectHash, centralHash):
+    def updateData(self, projectHash):
         #print ""
         #print projectHash
         #print ""
