@@ -14,6 +14,7 @@ __all__ = ["Configuration"]
 
 
 from hash import Hash, HashMergePolicy
+from schemareader import SchemaReader
 
 
 class Configuration(object):
@@ -22,9 +23,8 @@ class Configuration(object):
     def __init__(self, schema):
         super(Configuration, self).__init__()
 
-        # The schema which belongs to this configuration
-        self.schema = schema
-        # The configuration
+        r = SchemaReader()
+        self.schema = r.readSchema(schema)
         self.configuration = Hash()
 
 
