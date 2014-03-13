@@ -136,7 +136,7 @@ class _Manager(QObject):
     # Sets all parameters to start configuration
     def reset(self):
         # Project hash
-        self.__projectHash = Hash()
+        self.projectHash = Hash()
         self.__projectArrayIndices = []
         
         # Unregister all editable DataNotifiers, if available
@@ -484,7 +484,7 @@ class _Manager(QObject):
         """
         This functions checks whether a project with the \projectName already exists.
         """
-        return self.__projectHash.has(projectName)
+        return self.projectHash.has(projectName)
 
 
     def addNewProject(self, projectName, directory, projectConfig):
@@ -500,20 +500,20 @@ class _Manager(QObject):
             if reply == QMessageBox.No:
                 return
         
-        self.__projectHash.set(projectName, projectConfig)
-        self.__projectHash.setAttribute(projectName, "directory", directory)
-        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
+        self.projectHash.set(projectName, projectConfig)
+        self.projectHash.setAttribute(projectName, "directory", directory)
+        self.projectTopology.updateData(self.projectHash, self.systemTopology)
 
 
     def addConfigToProject(self, config):
-        self.__projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         # TODO: central hash only for online/offline device check - better solution?
-        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.projectHash, self.systemTopology)
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
         # Get old config of scenes
-        vecConfig = self.__projectHash.get(projScenePath)
+        vecConfig = self.projectHash.get(projScenePath)
 
         if vecConfig is None:
             # Create vector of hashes, if not existent yet
@@ -522,9 +522,9 @@ class _Manager(QObject):
             # Append new scene to vector of hashes
             vecConfig.append(sceneConfig)
         
-        self.__projectHash.set(projScenePath, vecConfig)
+        self.projectHash.set(projScenePath, vecConfig)
         # TODO: central hash only for online/offline device check - better solution?
-        self.projectTopology.updateData(self.__projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.projectHash, self.systemTopology)
 
 
     def selectNavigationItemByKey(self, path):
@@ -692,7 +692,7 @@ class _Manager(QObject):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
         # Send new topology to projecttree
-        self.signalSystemTopologyChanged.emit(self.systemTopology)
+        self.signalSystemTopologyChanged.emit(config)
 
 
     def handleInstanceNew(self, config):
