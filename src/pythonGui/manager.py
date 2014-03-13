@@ -695,7 +695,7 @@ class _Manager(QObject):
         schema = config.get('schema')
         
         # Update map for server and class with schema
-        conf = Configuration(schema)
+        conf = Configuration(schema, 'class')
         self.serverClassData[serverId, classId] = conf
         path = "{}.{}".format(serverId, classId)
         self.onSchemaAvailable(dict(key=path, classId=classId, 
@@ -720,7 +720,7 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         schema = config.get('schema')
-        conf = Configuration(schema)
+        conf = Configuration(schema, 'device')
         self.deviceData[deviceId] = conf
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
