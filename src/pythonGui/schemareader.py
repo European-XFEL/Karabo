@@ -220,9 +220,14 @@ class Schema(hashtypes.Descriptor):
 
 
     def item(self, treeWidget, parent, configuration, isClass):
-        #if self.attrs['displayType'] == "Image":
-        #    item = self._createImageItem(key, hash, attrs, parent)
-        if self.attrs['displayType'] == "Slot":
+        if self.attrs['displayType'] == "Image":
+            item = ImageTreeWidgetItem(configuration, treeWidget, parent)
+
+            item.enabled = not isClass
+
+            self.copyAttr(item, 'displayText', 'displayedName')
+            self.copyAttr(item, 'allowedStates')
+        elif self.attrs['displayType'] == "Slot":
             item = CommandTreeWidgetItem(self.key, configuration,
                                          treeWidget, parent)
 
@@ -244,9 +249,10 @@ class Schema(hashtypes.Descriptor):
             if isinstance(v, hashtypes.Descriptor):
                 try:
                     c = getattr(configuration, k)
-                    v.item(treeWidget, parent, c, isClass)
                 except AttributeError:
                     print 'missing {} in {}'.format(k, configuration)
+                else:
+                    v.item(treeWidget, parent, c, isClass)
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
