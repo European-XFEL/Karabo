@@ -70,32 +70,32 @@ class PluginDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         vLayout.addWidget(self.buttonBox)
 
-        self.serverTopology = None
 
 
     def updateServerTopology(self, serverTopology):
-        self.serverTopology = serverTopology
-        if self.serverTopology is None:
-            return False
-
         self.cbPlugin.clear()
         self.cbServer.clear()
 
-        for serverId in self.serverTopology.keys():
+        print "updateServerTopology"
+        print serverTopology
+        print ""
+        return
 
-            visibility = self.serverTopology.getAttribute(serverId, "visibility")
+        for serverId in serverTopology.keys():
+
+            visibility = serverTopology.getAttribute(serverId, "visibility")
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
                 continue
 
             deviceClasses = None
-            if self.serverTopology.hasAttribute(serverId, "deviceClasses"):
-                deviceClasses = self.serverTopology.getAttribute(serverId, "deviceClasses")
+            if serverTopology.hasAttribute(serverId, "deviceClasses"):
+                deviceClasses = serverTopology.getAttribute(serverId, "deviceClasses")
 
             if not deviceClasses:
                 continue
 
             visibleClasses = []
-            visibilities = self.serverTopology.getAttribute(serverId, "visibilities")
+            visibilities = serverTopology.getAttribute(serverId, "visibilities")
             i = -1
             for classId in deviceClasses:
                 i = i + 1
