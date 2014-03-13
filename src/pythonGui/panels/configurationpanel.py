@@ -20,7 +20,7 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
-from projecttree import ProjectTree
+from projecttreeview import ProjectTreeView
 from schemareader import SchemaReader 
 
 from PyQt4.QtCore import SIGNAL, Qt, QTimer
@@ -79,7 +79,7 @@ class ConfigurationPanel(QWidget):
         navSplitter.addWidget(self.__twNavigation)
 
         # Project tree
-        self.__twProject = ProjectTree()
+        self.__twProject = ProjectTreeView()
         self.__twProject.signalItemChanged.connect(self.onDeviceItemChanged)
         #self.__twProject.hide()
         navSplitter.addWidget(self.__twProject)

@@ -10,7 +10,7 @@ This module contains a class which represents the treewidget of the project and
 configuration panel containing the parameters of a device.
 """
 
-__all__ = ["ProjectTree"]
+__all__ = ["ProjectTreeView"]
 
 
 from enums import NavigationItemTypes
@@ -26,7 +26,7 @@ from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
                          QMessageBox, QTreeView, QTreeWidgetItem)
 
 
-class ProjectTree(QTreeView):
+class ProjectTreeView(QTreeView):
 
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
@@ -35,7 +35,7 @@ class ProjectTree(QTreeView):
 
 
     def __init__(self, parent=None):
-        super(ProjectTree, self).__init__(parent)
+        super(ProjectTreeView, self).__init__(parent)
 
         # Hash contains server/plugin topology
         self.__serverTopology = None

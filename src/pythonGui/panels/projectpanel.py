@@ -11,7 +11,7 @@
 
 __all__ = ["ProjectPanel"]
 
-from projecttree import ProjectTree
+from projecttreeview import ProjectTreeView
 
 from enums import NavigationItemTypes
 from manager import Manager
@@ -46,7 +46,7 @@ class ProjectPanel(QWidget):
         title = "Projects"
         self.setWindowTitle(title)
 
-        self.__twProject = ProjectTree(self)
+        self.__twProject = ProjectTreeView(self)
         self.__twProject.signalAddScene.connect(self.signalAddScene)
         self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
         
