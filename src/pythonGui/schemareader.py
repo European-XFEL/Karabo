@@ -183,7 +183,7 @@ class SchemaReader(object):
         self.deviceType = deviceType
 
 
-    def readSchema(self, path, schema):
+    def readSchema(self, schema):
         if schema is None:
             return
         return Schema.parse('', schema.hash, {})

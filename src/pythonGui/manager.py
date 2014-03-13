@@ -273,7 +273,7 @@ class _Manager(QObject):
         hasDevice = self.systemTopology.has(deviceId)
         # If schema was not seen, request device schema in function
         # getDeviceSchema will call newVisibleDevice again
-        if hasDevice and (self.getDeviceSchema(deviceId) is None):
+        if hasDevice and (self.getDevice(deviceId) is None):
             return True
 
         deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
@@ -695,16 +695,18 @@ class _Manager(QObject):
         schema = config.get('schema')
         
         # Update map for server and class with schema
-        self.serverClassData[serverId, classId] = Configuration(schema)
+        conf = Configuration(schema)
+        self.serverClassData[serverId, classId] = conf
         path = "{}.{}".format(serverId, classId)
         self.onSchemaAvailable(dict(key=path, classId=classId, 
-                               type=NavigationItemTypes.CLASS, schema=schema))
+                               type=NavigationItemTypes.CLASS,
+                               configuration=conf))
 
 
-    def getClassSchema(self, serverId, classId):
+    def getClass(self, serverId, classId):
         # Return class schema, if already existing
         if (serverId, classId) in self.serverClassData:
-            return self.serverClassData[serverId, classId].schema
+            return self.serverClassData[serverId, classId]
 
         # Else, send network request
         self.signalGetClassSchema.emit(serverId, classId)
@@ -718,16 +720,17 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         schema = config.get('schema')
-        self.deviceData[deviceId] = Configuration(schema)
+        conf = Configuration(schema)
+        self.deviceData[deviceId] = conf
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
-                                    schema=schema))
+                                    configuration=conf))
         self.newVisibleDevice(deviceId)
 
 
-    def getDeviceSchema(self, deviceId):
+    def getDevice(self, deviceId):
         if deviceId in self.deviceData:
-            return self.deviceData[deviceId].schema
+            return self.deviceData[deviceId]
         
         # Send network request
         self.signalGetDeviceSchema.emit(deviceId)
