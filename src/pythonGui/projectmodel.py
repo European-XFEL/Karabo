@@ -12,6 +12,7 @@ a treeview.
 
 __all__ = ["ProjectModel"]
 
+import manager
 from karabo.karathon import VectorHash
 
 from PyQt4.QtCore import Qt
@@ -28,7 +29,7 @@ class ProjectModel(QStandardItemModel):
 
     PROJECT_KEY = "project"
 
-    DEVICE_KEY = "device"
+    DEVICES_KEY = "devices"
     SCENES_KEY = "scenes"
     MACROS_KEY = "macros"
     MONITORS_KEY = "monitors"
@@ -41,14 +42,14 @@ class ProjectModel(QStandardItemModel):
     RESOURCES_LABEL = "Resources"
 
 
-    def __init__(self, manager):
-        super(ProjectModel, self).__init__(manager)
+    def __init__(self, parent=None):
+        super(ProjectModel, self).__init__(parent)
 
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
 
 
-    def _handleLeafItems(self, childItem, projectPath, categoryKey, config, centralHash):
+    def _handleLeafItems(self, childItem, projectPath, categoryKey, config):
         if (config is None) or config.empty():
             return
 
@@ -69,11 +70,11 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
                 childItem.appendRow(leafItem)
 
-                if categoryKey == ProjectModel.DEVICE_KEY:
-                    # TODO: Look for other possibilities than centralHash
+                if categoryKey == ProjectModel.DEVICES_KEY:
+                    # TODO: Look for other possibilities than managers systemTopology
                     # to check whether deviceId is on/offline
                     # Update icon on availability of device
-                    if centralHash.has(ProjectModel.DEVICE_KEY + "." + leafKey):
+                    if manager.Manager().systemTopology.has(leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
@@ -126,10 +127,10 @@ class ProjectModel(QStandardItemModel):
                     if isinstance(subConfig, VectorHash):
                         # Vector of Hashes
                         for indexConfig in subConfig:
-                            self._handleLeafItems(childItem, projectPath, categoryKey, indexConfig, centralHash)
+                            self._handleLeafItems(childItem, projectPath, categoryKey, indexConfig)
                     else:
                         # Normal Hash
-                        self._handleLeafItems(childItem, projectPath, categoryKey, subConfig, centralHash)
+                        self._handleLeafItems(childItem, projectPath, categoryKey, subConfig)
 
         self.endResetModel()
 

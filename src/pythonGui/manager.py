@@ -518,13 +518,12 @@ class _Manager(QObject):
         
         self.projectHash.set(projectName, projectConfig)
         self.projectHash.setAttribute(projectName, "directory", directory)
-        self.projectTopology.updateData(self.projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.projectHash)
 
 
     def addConfigToProject(self, config):
         self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        # TODO: central hash only for online/offline device check - better solution?
-        self.projectTopology.updateData(self.projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.projectHash)
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
@@ -539,8 +538,7 @@ class _Manager(QObject):
             vecConfig.append(sceneConfig)
         
         self.projectHash.set(projScenePath, vecConfig)
-        # TODO: central hash only for online/offline device check - better solution?
-        self.projectTopology.updateData(self.projectHash, self.systemTopology)
+        self.projectTopology.updateData(self.projectHash)
 
 
     def selectNavigationItemByKey(self, path):
