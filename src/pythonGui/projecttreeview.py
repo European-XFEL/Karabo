@@ -346,17 +346,16 @@ class ProjectTreeView(QTreeView):
         if Manager().systemTopology.has(deviceId):
             # Get schema
             schema = Manager().getDeviceSchema(deviceId)
-            # Set path which is used to get class schema
-            naviPath = "device." + deviceId
-            itemInfo = dict(key=naviPath, classId=classId, \
+            itemInfo = dict(key=deviceId, classId=classId, \
                             type=NavigationItemTypes.DEVICE, schema=schema)
         else:
             # Get schema
             schema = Manager().getClassSchema(serverId, classId)
             # Set path which is used to get class schema
-            naviPath = "server." + serverId + ".classes." + classId
-            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path), classId=classId, \
-                            type=NavigationItemTypes.CLASS, schema=schema)
+            naviPath = "{}.{}".format(serverId, classId)
+            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
+                            classId=classId, type=NavigationItemTypes.CLASS, \
+                            schema=schema)
         
         Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
@@ -364,12 +363,8 @@ class ProjectTreeView(QTreeView):
 
 
     def onSystemTopologyChanged(self, config):
-        serverKey = "server"
-        if not config.has(serverKey):
-            return
-
-        # Create copy of nested hash - TODO: remove when hash in native python
-        self.serverTopology = copy(config.get(serverKey))
+        self.serverTopology = config
+        
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.serverTopology)
         

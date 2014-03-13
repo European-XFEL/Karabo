@@ -705,8 +705,8 @@ class _Manager(QObject):
     def handleSystemTopology(self, config):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
-        # Send new topology to projecttree
-        self.signalSystemTopologyChanged.emit(config)
+        # Send new topology as hash object to projecttree
+        self.signalSystemTopologyChanged.emit(self.systemTopology.getAsHash())
 
 
     def handleInstanceNew(self, config):
