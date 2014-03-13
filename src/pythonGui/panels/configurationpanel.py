@@ -593,8 +593,8 @@ class ConfigurationPanel(QWidget):
             twParameterEditor.stateUpdated(state)
 
 
-    def onConflictStateChanged(self, configuration, hasConflict):
-        parameterEditor = configuration._configuration().parameterEditor
+    def onConflictStateChanged(self, deviceId, hasConflict):
+        parameterEditor = Manager().deviceData[deviceId].parameterEditor
 
         result = parameterEditor.checkApplyButtonsEnabled()
         self.__pbApplyAll.setEnabled(result[0])

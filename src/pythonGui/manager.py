@@ -307,8 +307,8 @@ class _Manager(QObject):
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, devicePath, value):
-        deviceId = devicePath.split('.configuration',1)[0]
+    def _triggerStateChange(self, path, value, timestamp):
+        deviceId = path.path.split('.')[0]
         # Update GUI due to state changes
         if value == "Changing...":
             self.signalChangingState.emit(deviceId, True)
@@ -652,9 +652,9 @@ class _Manager(QObject):
         schema = config.get('schema')
         
         # Update map for server and class with schema
-        conf = Configuration(schema, 'class')
-        self.serverClassData[serverId, classId] = conf
         path = "{}.{}".format(serverId, classId)
+        conf = Configuration(schema, path, 'class')
+        self.serverClassData[serverId, classId] = conf
         self.onSchemaAvailable(dict(key=path, classId=classId, 
                                type=NavigationItemTypes.CLASS,
                                configuration=conf))
@@ -677,8 +677,10 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         schema = config.get('schema')
-        conf = Configuration(schema, 'device')
+        conf = Configuration(schema, deviceId, 'device')
         self.deviceData[deviceId] = conf
+        conf.configuration.state.signalUpdateDisplayValue.connect(
+            self._triggerStateChange)
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
                                     configuration=conf))

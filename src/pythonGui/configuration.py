@@ -14,22 +14,22 @@ __all__ = ["Configuration"]
 
 
 from hash import Hash, HashMergePolicy
-from schemareader import SchemaReader, Device, Class
+from schemareader import SchemaReader
 import weakref
 
 
 class Configuration(object):
 
 
-    def __init__(self, schema, type):
+    def __init__(self, schema, path, type):
         """Create a new Configuration for schema,
         type should be 'class' or 'device'."""
         super(Configuration, self).__init__()
 
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self.configuration = self.schema.getClass(
-            Class if type == "class" else Device)()
+        self.configuration = self.schema.getClass()(path)
+        self.type = type
         self.configuration._configuration = weakref.ref(self)
 
 
@@ -49,4 +49,5 @@ class Configuration(object):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self.schema.fillWidget(parameterEditor, self.configuration)
+        self.schema.fillWidget(parameterEditor, self.configuration,
+                               self.type == "class")
