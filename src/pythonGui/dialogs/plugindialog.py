@@ -76,11 +76,6 @@ class PluginDialog(QDialog):
         self.cbPlugin.clear()
         self.cbServer.clear()
 
-        print "updateServerTopology"
-        print serverTopology
-        print ""
-        return
-
         for serverId in serverTopology.keys():
 
             visibility = serverTopology.getAttribute(serverId, "visibility")
