@@ -80,7 +80,7 @@ class _Manager(QObject):
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
-    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
+    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(str, bool) # deviceId, inErrorState
 
@@ -160,14 +160,6 @@ class _Manager(QObject):
         self.sqlDatabase.closeConnection()
 
     
-    def _getDataNotifierEditableValue(self, key):
-        return self.__keyNotifierMapEditableValue.get(key)
-
-
-    def _getDataNotifierDisplayValue(self, key):
-        return self.__keyNotifierMapDisplayValue.get(key)
-
-
     def _changeClassData(self, key, value):
         serverClassIdParamKey = key.split(".")
         if len(serverClassIdParamKey) < 3:
@@ -214,41 +206,6 @@ class _Manager(QObject):
         self.handleSystemTopology(Hash())
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
-
-
-    def registerEditableComponent(self, key, component):
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier is None:
-            self.__keyNotifierMapEditableValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
-
-
-    def unregisterEditableComponent(self, key, component):
-        pass
-
-
-    def registerDisplayComponent(self, key, component):
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        if dataNotifier is None:
-            self.__keyNotifierMapDisplayValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
-
-
-    def unregisterDisplayComponent(self, key, component):
-        pass
-
-
-    def registerHistoricData(self, key, slot):
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        dataNotifier.signalHistoricData.connect(slot)
-
-
-    def handleHistoricData(self, headerHash, bodyHash):
-        key = "{}.{}".format(headerHash.get("deviceId"), headerHash.get("property"))
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        dataNotifier.signalHistoricData.emit(key, bodyHash.get("data"))
 
 
     def _getDeviceIdFromInternalPath(self, internalPath):
@@ -747,13 +704,11 @@ class _Manager(QObject):
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, headerHash, config):
         deviceId = headerHash.get("deviceId")
-        self._changeHash(deviceId, config)
-        # Merge configuration into self.deviceData
         self.deviceData[deviceId].merge(config)
 
 
-    def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
-        self.signalNotificationAvailable.emit(timestamp, type, shortMessage, detailedMessage, deviceId)
+def handleNotification(timestamp, type, shortMessage, detailedMessage, deviceId):
+    Manager().signalNotificationAvailable.emit(timestamp, type, shortMessage, detailedMessage, deviceId)
 
 
 manager = _Manager()

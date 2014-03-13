@@ -13,9 +13,11 @@ from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
+from PyQt4.QtCore import QObject, pyqtSignal
 from PyQt4.QtGui import QIcon
 
 from collections import OrderedDict
+import weakref
 
 
 class Type(hashtypes.Type):
@@ -29,8 +31,9 @@ class Type(hashtypes.Type):
             setattr(item, out, getattr(self, ain))
 
 
-    def item(self, key, treeWidget, parent, type):
-        item = PropertyTreeWidgetItem(key, treeWidget, parent)
+    def item(self, treeWidget, parent, configuration):
+        item = PropertyTreeWidgetItem(configuration.__dict__[self],
+                                      treeWidget, parent)
         try:
             item.displayText = self.displayedName
         except AttributeError:
@@ -48,7 +51,7 @@ class Type(hashtypes.Type):
 
         component = None
         item.editableComponent = None
-        if type == "class":
+        if isinstance(configuration, Class):
             if self.accessMode in (AccessMode.INITONLY,
                                        AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
@@ -115,10 +118,73 @@ class Vector(hashtypes.Vector):
     classAlias = 'Histogram'
 
 
+class Value(QObject):
+    signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
+    signalUpdateDisplayValue = pyqtSignal(object, object, object)
+    signalHistoricData = pyqtSignal(object, object)
+
+    def __init__(self, instance):
+        QObject.__init__(self)
+        self._instance = weakref.ref(instance)
+
+
+    @property
+    def instance(self):
+        return self._instance()
+
+
+    @property
+    def value(self):
+        return self._value
+
+
+    def set(self, value, timestamp):
+        self._value = value
+        self.timestamp = timestamp
+        self.signalUpdateDisplayValue.emit(self, value, timestamp)
+        self.signalUpdateComponent.emit(self, value, timestamp)
+
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+        self.signalUpdateComponent.emit(self, value, None)
+        self.signalUpdateDisplayValue.emit(self, value, None)
+
+
+    def addComponent(self, component):
+        self.signalUpdateComponent.connect(component.onValueChanged)
+        self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
+        if hasattr(self, "_value"):
+            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
+
+
+
+class Object(object):
+    def __init__(self):
+        for v in type(self).__dict__.itervalues():
+            if isinstance(v, hashtypes.Descriptor):
+                self.__dict__[v] = Value(self)
+
+
+class Device(Object):
+    pass
+
+
+class Class(Object):
+    pass
+
+
 class Schema(hashtypes.Descriptor):
     def __init__(self):
         self.dict = OrderedDict()
-        self.cls = None
+        self.classes = { }
+
+
+    def __set__(self, instance, value):
+        for k, v in value.iteritems():
+            setattr(instance, k, v)
 
 
     @staticmethod
@@ -141,7 +207,7 @@ class Schema(hashtypes.Descriptor):
         return ret
 
 
-    def item(self, key, treeWidget, parent, type):
+    def item(self, treeWidget, parent, configuration):
         return
         if self.displayType == "Image":
             item = self._createImageItem(key, hash, attrs, parent)
@@ -152,21 +218,21 @@ class Schema(hashtypes.Descriptor):
         self._item(key, treeWidget, parent)
 
 
-    def _item(self, key, treeWidget, parent, type):
+    def _item(self, treeWidget, parent, configuration):
         for k, v in self.dict.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                v.item(key + '.' + k, treeWidget, parent, type)
+                v.item(treeWidget, parent, configuration)
 
 
-    def fillWidget(self, path, treeWidget, type):
-        self._item(path, treeWidget, None, type)
+    def fillWidget(self, treeWidget, configuration):
+        self._item(treeWidget, None, configuration)
         treeWidget.resizeColumnToContents(0)
 
 
-    def getClass(self):
-        if self.cls is None:
-            self.cls = type(self.name, [object], self.dict)
-        return self.cls
+    def getClass(self, base):
+        if base not in self.classes:
+            self.classes[base] = type(str(self.name), (base,), self.dict)
+        return self.classes[base]
 
 
 class ChoiceOfNodes(hashtypes.Descriptor):
