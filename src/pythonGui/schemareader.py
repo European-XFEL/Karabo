@@ -29,7 +29,7 @@ class Type(hashtypes.Type):
             setattr(item, out, getattr(self, ain))
 
 
-    def item(self, key, treeWidget, parent, isClasstype):
+    def item(self, key, treeWidget, parent, type):
         item = PropertyTreeWidgetItem(key, treeWidget, parent)
         try:
             item.displayText = self.displayedName
@@ -48,7 +48,7 @@ class Type(hashtypes.Type):
 
         component = None
         item.editableComponent = None
-        if isClasstype:
+        if type == "class":
             if self.accessMode in (AccessMode.INITONLY,
                                        AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
@@ -150,7 +150,7 @@ class Schema(hashtypes.Descriptor):
         return ret
 
 
-    def item(self, key, treeWidget, parent, isClasstype):
+    def item(self, key, treeWidget, parent, type):
         return
         if self.displayType == "Image":
             item = self._createImageItem(key, hash, attrs, parent)
@@ -161,14 +161,14 @@ class Schema(hashtypes.Descriptor):
         self._item(key, treeWidget, parent)
 
 
-    def _item(self, key, treeWidget, parent, isClasstype):
+    def _item(self, key, treeWidget, parent, type):
         for k, v in self.__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                v.item(key + '.' + k, treeWidget, parent, isClasstype)
+                v.item(key + '.' + k, treeWidget, parent, type)
 
 
-    def fillWidget(self, path, treeWidget, isClasstype):
-        self._item(path, treeWidget, None, isClasstype)
+    def fillWidget(self, path, treeWidget, type):
+        self._item(path, treeWidget, None, type)
         treeWidget.resizeColumnToContents(0)
 
 

@@ -20,11 +20,14 @@ from schemareader import SchemaReader
 class Configuration(object):
 
 
-    def __init__(self, schema):
+    def __init__(self, schema, type):
+        """Create a new Configuration for schema,
+        type should be 'class' or 'device'."""
         super(Configuration, self).__init__()
 
         r = SchemaReader()
         self.schema = r.readSchema(schema)
+        self.type = type
         self.configuration = Hash()
 
 
@@ -41,3 +44,6 @@ class Configuration(object):
             self.configuration.set(parameterKey, None)
         self.configuration.setAttribute(parameterKey, attributeKey, value)
 
+
+    def fillWidget(self, path, treeWidget):
+        self.schema.fillWidget(path, treeWidget, self.type)

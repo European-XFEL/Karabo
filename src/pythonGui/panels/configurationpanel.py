@@ -312,8 +312,7 @@ class ConfigurationPanel(QWidget):
         if conf is None:
             return False
         else:
-            conf.schema.fillWidget(path, twParameterEditor,
-                                   deviceType == NavigationItemTypes.CLASS)
+            conf.fillWidget(path, twParameterEditor)
         return True
 
 
