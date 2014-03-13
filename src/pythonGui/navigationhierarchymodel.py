@@ -13,6 +13,7 @@ __all__ = ["NavigationHierarchyModel"]
 
 from enums import NavigationItemTypes
 import globals
+from karabo.karathon import Hash
 import manager
 from navigationhierarchynode import NavigationHierarchyNode
 
@@ -315,9 +316,9 @@ class NavigationHierarchyModel(QAbstractItemModel):
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data()
 
-            schema = self.manager.getDeviceSchema(deviceId)
+            schema = manager.Manager().getDeviceSchema(deviceId)
             path = deviceId
-            self.manager.onSchemaAvailable(dict(key=path, classId=classId,
+            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
                                            type=type, schema=schema))
 
         itemInfo = dict(key=path, classId=classId, type=type)
@@ -332,6 +333,33 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.rootNode.parentNode = None
         self.rootNode.childNodes = []
         self.endResetModel()
+
+
+    def getAsHash(self):
+        """
+        This function creates a hash object, fills it with the current visible
+        topology and returns that hash.
+        """
+        h = Hash()
+        self._rGetAsHash(self.rootNode, h)
+        return h
+        
+
+    def _rGetAsHash(self, node, hash, path=""):
+        """
+        This function goes recursively through the tree and stores its data in
+        a hash object, depending on the visibility.
+        """
+        if path == "":
+            path = node.displayName
+        else:
+            path = path + "." + node.displayName
+            hash.set(path, None)
+        
+        for childNode in node.childNodes:
+            if childNode.visibility > globals.GLOBAL_ACCESS_LEVEL:
+                continue
+            self._rGetAsHash(childNode, hash, path)
 
 
     def getHierarchyLevel(self, index):
@@ -457,7 +485,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         if role == Qt.DisplayRole:
             node = index.internalPointer()
-            return node.data(column)
+            return node.displayName
         elif (role == Qt.DecorationRole) and (column == 0):
             # Find out the hierarchy level of the selected node
             hierarchyLevel = self.getHierarchyLevel(index)

@@ -60,20 +60,16 @@ class NavigationHierarchyNode(object):
 
     def getNode(self, displayName):
         for childNode in self.childNodes:
-            if childNode.data(0) == displayName:
+            if childNode.displayName == displayName:
                 return childNode
         return None
 
 
     def hasNode(self, displayName):
         for childNode in self.childNodes:
-            if childNode.data(0) == displayName:
+            if childNode.displayName == displayName:
                 return True
         return False
-
-
-    def data(self, column):
-        return self.displayName
 
 
     def row(self):
@@ -86,6 +82,6 @@ class NavigationHierarchyNode(object):
     def printTree(self, indent=-2):
         indent = indent + 2;
         for childNode in self.childNodes:
-            print " " * indent, childNode.data(0)
+            print " " * indent, childNode.displayName
             childNode.printTree(indent)
-
+        
