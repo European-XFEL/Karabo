@@ -74,7 +74,6 @@ class ProjectPanel(QWidget):
         self.__acProjectSave = QAction(QIcon(":save"), "&Save project", self)
         self.__acProjectSave.setStatusTip(text)
         self.__acProjectSave.setToolTip(text)
-        self.__acProjectSave.setEnabled(False)
         self.__acProjectSave.triggered.connect(self.onProjectSave)
 
 

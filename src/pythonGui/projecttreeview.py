@@ -16,12 +16,12 @@ __all__ = ["ProjectTreeView"]
 from copy import copy
 from enums import NavigationItemTypes
 from manager import Manager
-from karabo.karathon import Hash
+from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
 from dialogs.plugindialog import PluginDialog
 from projectmodel import ProjectModel
 from dialogs.scenedialog import SceneDialog
 
-from PyQt4.QtCore import (pyqtSignal, QDir, Qt)
+from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
                          QInputDialog, QLineEdit, QMenu,
                          QMessageBox, QTreeView, QTreeWidgetItem)
@@ -100,11 +100,11 @@ class ProjectTreeView(QTreeView):
                 self._clearProjectDir(absoluteProjectPath)
 
         # Add subfolders
-        dir.mkpath(absoluteProjectPath + "/" + deviceKey)
-        dir.mkpath(absoluteProjectPath + "/" + sceneKey)
-        dir.mkpath(absoluteProjectPath + "/" + macroKey)
-        dir.mkpath(absoluteProjectPath + "/" + monitorKey)
-        dir.mkpath(absoluteProjectPath + "/" + resourceKey)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.DEVICES_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.SCENES_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MACROS_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MONITORS_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
 
         # Send changes to manager
         Manager().addNewProject(projectName, directory, projectConfig)
@@ -224,11 +224,37 @@ class ProjectTreeView(QTreeView):
 
 
     def openProject(self):
-        print "openProject"
+        filename = QFileDialog.getOpenFileName(None, "Open saved project", \
+                                               QDir.tempPath(), "XML (*.xml)")
+        if len(filename) < 1:
+            return
+        
+        file = QFile(filename)
+        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
+            return
+        
+        projectConfig = loadFromFile(str(filename))
+        # TODO: this function merges the loaded hash into the current project hash
+        # consider projectName to overwrite path
+        Manager().addConfigToProject(projectConfig)
 
 
     def saveProject(self):
-        print "saveProject"
+        filename = QFileDialog.getSaveFileName(None, "Save project as", QDir.tempPath(), "XML (*.xml)")
+        if len(filename) < 1:
+            return
+        
+        fi = QFileInfo(filename)
+        if len(fi.suffix()) < 1:
+            filename += ".xml"
+        
+        # TODO: save selected project
+        name = self._currentProjectName()
+        if name is None:
+            return
+        
+        projectConfig = Manager().projectHash.get(name)
+        saveToFile(projectConfig, filename)
 
 
     def setupDefaultProject(self):
@@ -328,6 +354,7 @@ class ProjectTreeView(QTreeView):
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
         if len(selectedIndexes) < 1:
+            # TODO: update load/save buttons in projectPanel toolbar
             return
 
         index = selectedIndexes[0]
