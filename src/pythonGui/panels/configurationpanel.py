@@ -611,11 +611,11 @@ class ConfigurationPanel(QWidget):
         self.showParameterPage(type, path)
 
 
-    def onInstanceGone(self, path, parentPath):
+    def onInstanceGone(self, instanceId, parentPath):
         # New schema can be in plugins of instance
         keys = self.__pathSchemaLoadedMap.keys()
         for key in keys:
-            if path in key:
+            if instanceId in key:
                 self.__pathSchemaLoadedMap[key] = False
 
         self._setParameterEditorIndex(0)
