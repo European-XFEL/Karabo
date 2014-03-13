@@ -28,9 +28,9 @@ from panels.notificationpanel import NotificationPanel
 from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAction, QActionGroup, qApp, QIcon, QKeySequence,
+                         QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
 
 
 class MainWindow(QMainWindow):
