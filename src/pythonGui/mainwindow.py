@@ -211,6 +211,8 @@ class MainWindow(QMainWindow):
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
+        self.__configurationPanel.signalAddScene.connect(self.onAddScene)
+        self.__configurationPanel.signalConnectToServer.connect(self.__network.connectToServer)
         
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,2)
