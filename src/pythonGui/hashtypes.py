@@ -68,7 +68,12 @@ class NumpyVector(Vector):
 
 
 class Descriptor(object):
-    pass
+    def __set__(self, instance, value):
+        instance.__dict__[self].value = value
+
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self]
 
 
 class Type(Descriptor, Registry):

@@ -25,7 +25,7 @@ from PyQt4.QtGui import *
 class BaseComponent(Loadable, QObject):
     factories = EditableWidget.factories
 
-    signalValueChanged = pyqtSignal(str, object) # key, value
+    signalValueChanged = pyqtSignal(object, object) # key, value
 
 
     def __init__(self, classAlias):

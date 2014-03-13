@@ -14,7 +14,8 @@ __all__ = ["Configuration"]
 
 
 from hash import Hash, HashMergePolicy
-from schemareader import SchemaReader
+from schemareader import SchemaReader, Device, Class
+import weakref
 
 
 class Configuration(object):
@@ -27,12 +28,13 @@ class Configuration(object):
 
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self.type = type
-        self.configuration = Hash()
+        self.configuration = self.schema.getClass(
+            Class if type == "class" else Device)()
+        self.configuration._configuration = weakref.ref(self)
 
 
     def merge(self, config):
-        self.configuration.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.schema.__set__(self.configuration, config)
 
 
     def set(self, parameterKey, value):
@@ -45,5 +47,6 @@ class Configuration(object):
         self.configuration.setAttribute(parameterKey, attributeKey, value)
 
 
-    def fillWidget(self, path, treeWidget):
-        self.schema.fillWidget(path, treeWidget, self.type)
+    def fillWidget(self, parameterEditor):
+        self.parameterEditor = parameterEditor
+        self.schema.fillWidget(parameterEditor, self.configuration)

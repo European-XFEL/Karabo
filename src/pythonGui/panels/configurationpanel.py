@@ -312,7 +312,7 @@ class ConfigurationPanel(QWidget):
         if conf is None:
             return False
         else:
-            conf.fillWidget(path, twParameterEditor)
+            conf.fillWidget(twParameterEditor)
         return True
 
 
@@ -593,10 +593,8 @@ class ConfigurationPanel(QWidget):
             twParameterEditor.stateUpdated(state)
 
 
-    def onConflictStateChanged(self, path, hasConflict):
-        parameterEditor = self._getParameterEditorByPath(path)
-        if parameterEditor is None:
-            return
+    def onConflictStateChanged(self, configuration, hasConflict):
+        parameterEditor = configuration._configuration().parameterEditor
 
         result = parameterEditor.checkApplyButtonsEnabled()
         self.__pbApplyAll.setEnabled(result[0])
