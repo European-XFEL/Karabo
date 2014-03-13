@@ -46,13 +46,13 @@ class ProjectPanel(QWidget):
         title = "Projects"
         self.setWindowTitle(title)
 
-        self.__twProject = ProjectTreeView(self)
-        self.__twProject.signalAddScene.connect(self.signalAddScene)
-        self.__twProject.signalConnectToServer.connect(self.signalConnectToServer)
+        self.twProject = ProjectTreeView(self)
+        self.twProject.signalAddScene.connect(self.signalAddScene)
+        self.twProject.signalConnectToServer.connect(self.signalConnectToServer)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__twProject)
+        mainLayout.addWidget(self.twProject)
 
         self.setupActions()
 
@@ -88,24 +88,24 @@ class ProjectPanel(QWidget):
         """
         
         """
-        self.__twProject.setupDefaultProject()
+        self.twProject.setupDefaultProject()
 
 
 ### slots ###
     def onProjectNew(self):
-        self.__twProject.newProject()
+        self.twProject.newProject()
 
 
     def onProjectOpen(self):
-        self.__twProject.openProject()
+        self.twProject.openProject()
 
 
     def onProjectSave(self):
-        self.__twProject.saveProject()
+        self.twProject.saveProject()
 
 
     def onServerConnectionChanged(self, isConnected):
-        self.__twProject.serverConnectionChanged(isConnected)
+        self.twProject.serverConnectionChanged(isConnected)
 
 
     # virtual function

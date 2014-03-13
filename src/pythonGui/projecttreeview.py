@@ -37,11 +37,11 @@ class ProjectTreeView(QTreeView):
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__(parent)
 
-        # Hash contains server/plugin topology
-        self.__serverTopology = None
+        # Hash contains server topology of the live system
+        self.serverTopology = None
 
         # Dialog to add and change a device
-        self.__pluginDialog = None
+        self.pluginDialog = None
 
         # Set same mode for each project view
         self.setModel(Manager().projectTopology)
@@ -134,14 +134,14 @@ class ProjectTreeView(QTreeView):
         if projectName is None: return
         
         # Path for device in project hash
-        devicePath = projectName + ".project.device." + self.__pluginDialog.deviceId
+        devicePath = projectName + ".project.device." + self.pluginDialog.deviceId
         # Path for device configuration
-        configPath = devicePath + "." + self.__pluginDialog.plugin
+        configPath = devicePath + "." + self.pluginDialog.plugin
 
         # Put info in Hash
         config = Hash()
-        config.set(configPath + ".deviceId", self.__pluginDialog.deviceId)
-        config.set(configPath + ".serverId", self.__pluginDialog.server)
+        config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
+        config.set(configPath + ".serverId", self.pluginDialog.server)
         # Add device to project hash
         Manager().addConfigToProject(config)
 
@@ -244,7 +244,7 @@ class ProjectTreeView(QTreeView):
 
     def serverConnectionChanged(self, isConnected):
         if not isConnected:
-            self.__serverTopology = None
+            self.serverTopology = None
 
 
     def mouseDoubleClickEvent(self, event):
@@ -288,7 +288,7 @@ class ProjectTreeView(QTreeView):
 
 
     def onAddDevice(self):
-        if not self.__serverTopology or self.__serverTopology.empty():
+        if (self.serverTopology is None) or self.serverTopology.empty():
             reply = QMessageBox.question(self, "No server connection",
                                          "There is no connection to the server.<br>"
                                          "Do you want to establish a server connection?",
@@ -300,17 +300,17 @@ class ProjectTreeView(QTreeView):
             return
 
         # Show dialog to select plugin
-        self.__pluginDialog = PluginDialog()
-        if not self.__pluginDialog.updateServerTopology(self.__serverTopology):
+        self.pluginDialog = PluginDialog()
+        if not self.pluginDialog.updateServerTopology(self.serverTopology):
             QMessageBox.warning(self, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
             return
-        if self.__pluginDialog.exec_() == QDialog.Rejected:
+        if self.pluginDialog.exec_() == QDialog.Rejected:
             return
 
         self._addDevice()
-        self.__pluginDialog = None
+        self.pluginDialog = None
 
 
     def onAddScene(self):
@@ -366,9 +366,9 @@ class ProjectTreeView(QTreeView):
         if not config.has(serverKey):
             return
 
-        self.__serverTopology = config.get(serverKey)
-        if self.__pluginDialog:
-            self.__pluginDialog.updateServerTopology(self.__serverTopology)
+        self.serverTopology = config.get(serverKey)
+        if self.pluginDialog is not None:
+            self.pluginDialog.updateServerTopology(self.serverTopology)
         
         # TODO: Update on/offline status devices in tree
 

@@ -87,9 +87,9 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateData(self, projectHash, centralHash):
-        print ""
-        print projectHash
-        print ""
+        #print ""
+        #print projectHash
+        #print ""
 
         self.beginResetModel()
         self.clear()

@@ -23,7 +23,7 @@ from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 from schemareader import SchemaReader 
 
-from PyQt4.QtCore import SIGNAL, Qt, QTimer
+from PyQt4.QtCore import pyqtSignal, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
 
@@ -42,6 +42,10 @@ class ConfigurationPanel(QWidget):
     #    pass
     ##########################################
 
+
+    # To import a plugin a server connection needs to be established
+    signalConnectToServer = pyqtSignal()
+    signalAddScene = pyqtSignal(str) # scene title
 
     def __init__(self, treemodel):
         super(ConfigurationPanel, self).__init__()
@@ -73,16 +77,18 @@ class ConfigurationPanel(QWidget):
         # Layout for navigation and project tree
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
-        self.__twNavigation = NavigationTreeView(None, treemodel)
+        self.twNavigation = NavigationTreeView(None, treemodel)
         treemodel.signalItemChanged.connect(self.onDeviceItemChanged)
-        #self.__twNavigation.hide()
-        navSplitter.addWidget(self.__twNavigation)
+        #self.twNavigation.hide()
+        navSplitter.addWidget(self.twNavigation)
 
         # Project tree
-        self.__twProject = ProjectTreeView()
-        self.__twProject.signalItemChanged.connect(self.onDeviceItemChanged)
-        #self.__twProject.hide()
-        navSplitter.addWidget(self.__twProject)
+        self.twProject = ProjectTreeView()
+        self.twProject.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject.signalAddScene.connect(self.signalAddScene)
+        self.twProject.signalConnectToServer.connect(self.signalConnectToServer)
+        #self.twProject.hide()
+        navSplitter.addWidget(self.twProject)
 
         navSplitter.setStretchFactor(0, 1)
         navSplitter.setStretchFactor(1, 1)
@@ -550,11 +556,11 @@ class ConfigurationPanel(QWidget):
 
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.__twNavigation.createNewItem(itemInfo)
+        self.twNavigation.createNewItem(itemInfo)
 
 
     def onSelectNewNavigationItem(self, devicePath):
-        self.__twNavigation.selectItem(devicePath)
+        self.twNavigation.selectItem(devicePath)
 
 
     def onSchemaAvailable(self, itemInfo):
@@ -620,7 +626,7 @@ class ConfigurationPanel(QWidget):
 
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
-        self.__twNavigation.selectItem(parentPath)
+        self.twNavigation.selectItem(parentPath)
 
 
     def onDeviceStateChanged(self, internalKey, state):
@@ -723,11 +729,11 @@ class ConfigurationPanel(QWidget):
 
 
     def onKillInstance(self):
-        self.__twNavigation.onKillInstance()
+        self.twNavigation.onKillInstance()
 
 
     def onInitDevice(self):
-        itemInfo = self.__twNavigation.indexInfo()
+        itemInfo = self.twNavigation.indexInfo()
         if len(itemInfo) == 0:
             return
         
@@ -748,19 +754,19 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileSaveAs(self):
-        self.__twNavigation.onFileSaveAs()
+        self.twNavigation.onFileSaveAs()
 
 
     def onFileOpen(self):
-        self.__twNavigation.onFileOpen()
+        self.twNavigation.onFileOpen()
 
 
     # virtual function
     def onUndock(self):
-        self.__twNavigation.show()
+        self.twNavigation.show()
 
 
     # virtual function
     def onDock(self):
-        self.__twNavigation.hide()
+        self.twNavigation.hide()
 
