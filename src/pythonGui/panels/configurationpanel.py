@@ -305,18 +305,15 @@ class ConfigurationPanel(QWidget):
 
     def _parseSchema(self, itemInfo, twParameterEditor):
         path = itemInfo.get('key')
-        schema = itemInfo.get('schema')
+        conf = itemInfo["configuration"]
         
         # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
         deviceType = itemInfo.get('type')
-        self.__schemaReader.setDeviceType(deviceType)
-
-        s = self.__schemaReader.readSchema(path, schema)
-        if s is None:
+        if conf is None:
             return False
         else:
-            s.fillWidget(path, twParameterEditor,
-                         deviceType == NavigationItemTypes.CLASS)
+            conf.schema.fillWidget(path, twParameterEditor,
+                                   deviceType == NavigationItemTypes.CLASS)
         return True
 
 
@@ -554,12 +551,8 @@ class ConfigurationPanel(QWidget):
         else:
             self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
             # Schema might not be there yet...
-            schema = itemInfo.get('schema')
-            
-            if schema is not None:
-                self.__internalKeySchemaLoadedMap[key] = True
-            else:
-                self.__internalKeySchemaLoadedMap[key] = False
+            self.__internalKeySchemaLoadedMap[key] = \
+                itemInfo['configuration'] is not None
 
 
     def onNavigationItemChanged(self, itemInfo):
