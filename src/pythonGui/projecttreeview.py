@@ -67,7 +67,7 @@ class ProjectTreeView(QTreeView):
         projectConfig = Hash(ProjectModel.PROJECT_KEY)
         projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
 
-        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICE_KEY
+        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICES_KEY
         projectConfig.set(deviceKey, None)
         projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
         sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
@@ -135,7 +135,8 @@ class ProjectTreeView(QTreeView):
         if projectName is None: return
         
         # Path for device in project hash
-        devicePath = projectName + ".project.device." + self.pluginDialog.deviceId
+        devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
+                     ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
         # Path for device configuration
         configPath = devicePath + "." + self.pluginDialog.plugin
 
@@ -342,7 +343,7 @@ class ProjectTreeView(QTreeView):
             return
         
         # Check whether deviceId is already online
-        if Manager().hash.has(ProjectModel.DEVICE_KEY + "." + deviceId):
+        if Manager().systemTopology.has(deviceId):
             # Get schema
             schema = Manager().getDeviceSchema(deviceId)
             # Set path which is used to get class schema
