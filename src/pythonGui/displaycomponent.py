@@ -31,8 +31,7 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
             classAlias)(**params)
 
-        # Use key to register component to manager
-        manager.Manager().registerDisplayComponent(params.get("key"), self)
+        params['key'].addComponent(self)
 
 
 ### getter and setter functions ###

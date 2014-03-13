@@ -51,9 +51,8 @@ class EditableNoApplyComponent(BaseComponent):
         # In case of attributes (Hash-V2) connect another function here
         self.signalValueChanged.connect(
             manager.Manager().onDeviceClassValueChanged)
-        
-        # Use key to register component to manager
-        manager.Manager().registerEditableComponent(params.get('key'), self)
+
+        params['key'].addComponent(self)
 
 
     def copy(self):
