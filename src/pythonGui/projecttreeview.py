@@ -363,7 +363,12 @@ class ProjectTreeView(QTreeView):
 
 
     def onSystemTopologyChanged(self, config):
-        self.serverTopology = config
+        serverKey = "server"
+        if not config.has(serverKey):
+            return
+
+        # Create copy of nested hash - TODO: remove when hash in native python
+        self.serverTopology = copy(config.get(serverKey))
         
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.serverTopology)
