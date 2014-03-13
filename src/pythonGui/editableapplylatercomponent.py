@@ -24,7 +24,7 @@ from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
-    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
+    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
     signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
 
 
@@ -222,7 +222,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
 
-        self.signalConflictStateChanged.emit(self.keys[0].instance, hasConflict)
+        self.signalConflictStateChanged.emit(self.keys[0].path.split('.')[0],
+                                             hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
 

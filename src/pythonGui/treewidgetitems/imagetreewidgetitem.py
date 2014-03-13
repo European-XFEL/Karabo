@@ -24,6 +24,7 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setIcon(0, QIcon(":image"))
+        self.classAlias = "Image View"
         
         self.displayComponent = DisplayComponent("Image Element", key=path)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
