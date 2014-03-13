@@ -304,10 +304,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             serverId = parentIndex.data()
             classId = index.data()
 
-            schema = manager.Manager().getClassSchema(serverId, classId)
+            conf = manager.Manager().getClass(serverId, classId)
             path = "{}.{}".format(serverId, classId)
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+                                                     type=type,
+                                                     configuration=conf))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data()
@@ -316,10 +317,11 @@ class NavigationHierarchyModel(QAbstractItemModel):
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data()
 
-            schema = manager.Manager().getDeviceSchema(deviceId)
+            conf = manager.Manager().getDevice(deviceId)
             path = deviceId
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+                                                     type=type,
+                                                     configuration=conf))
 
         itemInfo = dict(key=path, classId=classId, type=type)
         self.signalItemChanged.emit(itemInfo)

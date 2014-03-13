@@ -13,7 +13,7 @@ __all__ = ["EditableApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from manager import Manager
+import manager
 from messagebox import MessageBox
 from widget import EditableWidget
 
@@ -113,11 +113,13 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer.timeout.connect(self.onTimeOut)
 
         # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-        self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
+        self.signalValueChanged.connect(
+            manager.Manager().onDeviceInstanceValueChanged)
+        self.signalConflictStateChanged.connect(
+            manager.Manager().onConflictStateChanged)
 
         # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
+        manager.Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
@@ -258,7 +260,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def destroy(self):
         for key in self.__editableWidget.keys:
-            Manager().unregisterEditableComponent(key, self)
+            manager.Manager().unregisterEditableComponent(key, self)
 
 
     def changeWidget(self, factory, alias):
@@ -276,7 +278,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
         # Refresh new widget...
         for key in self.__editableWidget.keys:
-            Manager().onRefreshInstance(key)
+            manager.Manager().onRefreshInstance(key)
 
 
 ### slots ###
