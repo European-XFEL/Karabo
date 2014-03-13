@@ -20,7 +20,7 @@ from configuration import Configuration
 from datetime import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile, Timestamp)
 from navigationhierarchymodel import NavigationHierarchyModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -65,16 +65,16 @@ class DataNotifier(QObject):
                 self.components.append(component)
         else:
             if hasattr(self, "value"):
-                self.signalUpdateComponent.emit(key, self.value)
-                self.signalUpdateDisplayValue.emit(key, self.value)
+                self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+                self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
 
     def updateDisplayValue(self, key, value, timestamp):
         if useOldVersion:
             for component in self.components:
-                component.onDisplayValueChanged(key, value)
+                component.onDisplayValueChanged(key, value, timestamp)
         else:
-            self.signalUpdateDisplayValue.emit(key, value)
+            self.signalUpdateDisplayValue.emit(key, value, timestamp)
 
 
 class _Manager(QObject):
@@ -154,7 +154,6 @@ class _Manager(QObject):
     def reset(self):
         # Project hash
         self.projectHash = Hash()
-        self.__projectArrayIndices = []
         
         # Unregister all editable DataNotifiers, if available
         #for key in self.__keyNotifierMapEditableValue:
@@ -735,7 +734,7 @@ class _Manager(QObject):
             self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
-        self.systemTopology.updateData(config)
+        self.handleSystemTopology(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -746,10 +745,6 @@ class _Manager(QObject):
             for deviceId in deviceIds:
                 self.selectDeviceByPath(deviceId)
                 self.potentiallyRefreshVisibleDevice(deviceId)
-
-
-    def handleInstanceUpdated(self, config):
-        self.systemTopology.updateData(config)
 
 
     def handleInstanceGone(self, instanceId):
