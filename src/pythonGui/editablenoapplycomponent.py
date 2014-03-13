@@ -13,7 +13,7 @@ __all__ = ["EditableNoApplyComponent"]
 
 
 from basecomponent import BaseComponent
-from manager import Manager
+import manager
 from widget import EditableWidget
 
 from PyQt4.QtCore import pyqtSlot
@@ -49,10 +49,11 @@ class EditableNoApplyComponent(BaseComponent):
             hLayout.addWidget(QLabel(unitLabel))
         
         # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        self.signalValueChanged.connect(
+            manager.Manager().onDeviceClassValueChanged)
         
         # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
+        manager.Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
@@ -105,7 +106,7 @@ class EditableNoApplyComponent(BaseComponent):
 
     def destroy(self):
         for key in self.__editableWidget.keys:
-            Manager().unregisterEditableComponent(key, self)
+            manager.Manager().unregisterEditableComponent(key, self)
 
 
     def changeWidget(self, factory, proxyWidget, alias):
@@ -122,7 +123,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         # Refresh new widget...
         for key in self.__editableWidget.keys:
-            Manager().onRefreshInstance(key)
+            manager.Manager().onRefreshInstance(key)
 
 
     @pyqtSlot(str, object)

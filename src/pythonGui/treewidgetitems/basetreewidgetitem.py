@@ -16,8 +16,7 @@ __all__ = ["BaseTreeWidgetItem"]
 
 import const
 import globals
-
-from manager import Manager
+import manager
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeWidgetItem
@@ -179,12 +178,14 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 ### public functions ###
     def unregisterEditableComponent(self):
         if self.editableComponent:
-            Manager().unregisterEditableComponent(self.internalKey, self.editableComponent)
+            manager.Manager().unregisterEditableComponent(
+                self.internalKey, self.editableComponent)
 
 
     def unregisterDisplayComponent(self):
         if self.displayComponent:
-            Manager().unregisterDisplayComponent(self.internalKey, self.displayComponent)
+            manager.Manager().unregisterDisplayComponent(
+                self.internalKey, self.displayComponent)
 
 
     def updateState(self, state):

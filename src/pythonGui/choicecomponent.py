@@ -14,7 +14,7 @@ __all__ = ["ChoiceComponent"]
 
 from basecomponent import BaseComponent
 from widget import EditableWidget
-from manager import Manager
+import manager
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -33,7 +33,7 @@ class ChoiceComponent(BaseComponent):
         self.widget.setEnabled(False)
 
         # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
+        manager.Manager().registerEditableComponent(params.get('key'), self)
 
 
     def copy(self):
