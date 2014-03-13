@@ -118,7 +118,7 @@ class _Manager(QObject):
         self.systemTopology = NavigationHierarchyModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
                         connect(self.onNavigationHierarchyModelSelectionChanged)
-        # Model for projecttree
+        # Model for projecttreeview
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
