@@ -44,10 +44,10 @@ class ProjectTree(QTreeView):
         self.__pluginDialog = None
 
         # Set same mode for each project view
-        self.setModel(Manager().projModel)
+        self.setModel(Manager().projectTopology)
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
-        self.setSelectionModel(Manager().projModel.selectionModel)
+        self.setSelectionModel(Manager().projectTopology.selectionModel)
         self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
