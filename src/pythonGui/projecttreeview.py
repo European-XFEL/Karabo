@@ -13,6 +13,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from copy import copy
 from enums import NavigationItemTypes
 from manager import Manager
 from karabo.karathon import Hash
@@ -288,7 +289,7 @@ class ProjectTreeView(QTreeView):
 
 
     def onAddDevice(self):
-        if (self.serverTopology is None) or self.serverTopology.empty():
+        if self.serverTopology is None:
             reply = QMessageBox.question(self, "No server connection",
                                          "There is no connection to the server.<br>"
                                          "Do you want to establish a server connection?",
@@ -366,7 +367,8 @@ class ProjectTreeView(QTreeView):
         if not config.has(serverKey):
             return
 
-        self.serverTopology = config.get(serverKey)
+        # Create copy of nested hash - TODO: remove when hash in native python
+        self.serverTopology = copy(config.get(serverKey))
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.serverTopology)
         
