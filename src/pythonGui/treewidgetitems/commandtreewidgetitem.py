@@ -13,7 +13,7 @@ __all__ = ["CommandTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
-from manager import Manager
+import manager
 
 #from PyQt4.QtCore import *
 from PyQt4.QtGui import QIcon, QPushButton
@@ -78,4 +78,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 ### slots ###
     def onCommandClicked(self):
         args = [] # TODO slot arguments
-        Manager().executeCommand(dict(path=self.internalKey, command=self.__command, args=args))
+        manager.Manager().executeCommand(
+            dict(path=self.internalKey, command=self.__command, args=args))

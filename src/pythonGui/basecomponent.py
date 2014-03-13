@@ -12,7 +12,7 @@
 __all__ = ["BaseComponent"]
 
 
-from manager import Manager
+import manager
 #from messagebox import MessageBox
 
 from layouts import ProxyWidget
@@ -133,7 +133,7 @@ class BaseComponent(Loadable, QObject):
         layout.loadPosition(elem, parent)
         for k in keys[1:]:
             component.addKey(k)
-        online = Manager().newVisibleDevice(component.keys[0])
+        online = manager.Manager().newVisibleDevice(component.keys[0])
         if not online:
             # TODO:
             #print "offline"
