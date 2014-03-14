@@ -19,7 +19,6 @@ from manager import Manager
 from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
 from dialogs.plugindialog import PluginDialog
 from projectmodel import ProjectModel
-from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
@@ -100,7 +99,7 @@ class ProjectTreeView(QTreeView):
         dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
 
         # Send changes to manager
-        Manager().addNewProject(projectName, directory, projectConfig)
+        self.model().addNewProject(projectName, directory, projectConfig)
 
 
     def _clearProjectDir(self, absolutePath):
@@ -121,25 +120,6 @@ class ProjectTreeView(QTreeView):
             if len(subDirToDelete.entryList()) > 0:
                 self._clearProjectDir(subDirPath)
             subDirToDelete.rmpath(subDirPath)
-        
-
-    def _currentProjectName(self):
-        """
-        This function returns the current project name, if a category like
-        Devices, Scenes etc. is selected.
-        
-        It returns None, if no index can be found.
-        """
-        index = self.selectionModel().currentIndex()
-        if not index.isValid():
-            return None
-        
-        projectIndex = index.parent()
-        if projectIndex is None:
-            return None
-        
-        return projectIndex.data(Qt.DisplayRole)
-        
 
 
     def newProject(self):
@@ -183,7 +163,7 @@ class ProjectTreeView(QTreeView):
         projectConfig = loadFromFile(str(filename))
         # TODO: this function merges the loaded hash into the current project hash
         # consider projectName to overwrite path
-        Manager().addConfigToProject(projectConfig)
+        self.model().addConfigToProject(projectConfig)
 
 
     def saveProject(self):
@@ -200,7 +180,7 @@ class ProjectTreeView(QTreeView):
         if name is None:
             return
         
-        projectConfig = Manager().projectHash.get(name)
+        projectConfig = self.model().projectHash.get(name)
         saveToFile(projectConfig, filename)
 
 

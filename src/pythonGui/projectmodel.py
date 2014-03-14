@@ -15,10 +15,11 @@ __all__ = ["ProjectModel"]
 from copy import copy
 import manager
 from karabo.karathon import Hash, VectorHash
+from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QIcon, QItemSelectionModel, QMessageBox, QStandardItem,
-                         QStandardItemModel)
+from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
+                         QStandardItem, QStandardItemModel)
 
 
 class ProjectModel(QStandardItemModel):
@@ -51,6 +52,7 @@ class ProjectModel(QStandardItemModel):
         super(ProjectModel, self).__init__(parent)
         
         self.systemTopology = None
+        self.projectHash = Hash()
         
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
@@ -149,8 +151,6 @@ class ProjectModel(QStandardItemModel):
         the server/classes which are available over the network.
         """
         print "ProjectModel.updateSystemTopology"
-        print config
-        print "================================="
         #serverKey = "server"
         #if not config.has(serverKey):
         #    return
@@ -191,6 +191,69 @@ class ProjectModel(QStandardItemModel):
         return None
 
 
+    def _currentProjectName(self):
+        """
+        This function returns the current project name, if a category like
+        Devices, Scenes etc. is selected.
+        
+        It returns None, if no index can be found.
+        """
+        index = self.selectionModel.currentIndex()
+        if not index.isValid():
+            return None
+        
+        projectIndex = index.parent()
+        if projectIndex is None:
+            return None
+        
+        return projectIndex.data(Qt.DisplayRole)
+
+
+    def _projectExists(self, projectName):
+        """
+        This functions checks whether a project with the \projectName already exists.
+        """
+        return self.projectHash.has(projectName)
+
+
+    def addNewProject(self, projectName, directory, projectConfig):
+        # Check whether project already exists
+        alreadyExists = self._projectExists(projectName)
+        if alreadyExists:
+            # Overwrite?
+            reply = QMessageBox.question(None, "Project already exists",
+                "A project with the same name already exists.<br>"
+                "Do you want to overwrite it?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return
+        
+        self.projectHash.set(projectName, projectConfig)
+        self.projectHash.setAttribute(projectName, "directory", directory)
+        self.updateData(self.projectHash)
+
+
+    def addConfigToProject(self, config):
+        self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        self.updateData(self.projectHash)
+
+
+    def addSceneToProject(self, projScenePath, sceneConfig):
+        # Get old config of scenes
+        vecConfig = self.projectHash.get(projScenePath)
+
+        if vecConfig is None:
+            # Create vector of hashes, if not existent yet
+            vecConfig = [sceneConfig]
+        else:
+            # Append new scene to vector of hashes
+            vecConfig.append(sceneConfig)
+        
+        self.projectHash.set(projScenePath, vecConfig)
+        self.updateData(self.projectHash)
+
+
     def addDevice(self):
         projectName = self._currentProjectName()
         if projectName is None: return
@@ -206,7 +269,7 @@ class ProjectModel(QStandardItemModel):
         config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
         config.set(configPath + ".serverId", self.pluginDialog.server)
         # Add device to project hash
-        manager.Manager().addConfigToProject(config)
+        self._addConfigToProject(config)
 
         # Select added device
         self.selectPath(devicePath)
@@ -221,7 +284,7 @@ class ProjectModel(QStandardItemModel):
         # Put info in Hash
         config = Hash("filename", fileName, "alias", alias)
         # Add device to project hash
-        manager.Manager().addSceneToProject(projScenePath, config)
+        self.addSceneToProject(projScenePath, config)
 
         # Select added device
         self.selectPath(scenePath)

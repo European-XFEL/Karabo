@@ -20,7 +20,7 @@ from configuration import Configuration
 from datetime import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile, Timestamp)
+from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
 from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -150,9 +150,6 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
-        # Project hash
-        self.projectHash = Hash()
-        
         # Unregister all editable DataNotifiers, if available
         #for key in self.__keyNotifierMapEditableValue:
         #    dataNotifier = self.__keyNotifierMapEditableValue.get(key)
@@ -492,51 +489,6 @@ class _Manager(QObject):
             return
         
         self.signalKillServer.emit(serverId)
-
-
-    def projectExists(self, projectName):
-        """
-        This functions checks whether a project with the \projectName already exists.
-        """
-        return self.projectHash.has(projectName)
-
-
-    def addNewProject(self, projectName, directory, projectConfig):
-        # Check whether project already exists
-        alreadyExists = self.projectExists(projectName)
-        if alreadyExists:
-            # Overwrite?
-            reply = QMessageBox.question(None, "Project already exists",
-                "A project with the same name already exists.<br>"
-                "Do you want to overwrite it?",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return
-        
-        self.projectHash.set(projectName, projectConfig)
-        self.projectHash.setAttribute(projectName, "directory", directory)
-        self.projectTopology.updateData(self.projectHash)
-
-
-    def addConfigToProject(self, config):
-        self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.projectTopology.updateData(self.projectHash)
-
-
-    def addSceneToProject(self, projScenePath, sceneConfig):
-        # Get old config of scenes
-        vecConfig = self.projectHash.get(projScenePath)
-
-        if vecConfig is None:
-            # Create vector of hashes, if not existent yet
-            vecConfig = [sceneConfig]
-        else:
-            # Append new scene to vector of hashes
-            vecConfig.append(sceneConfig)
-        
-        self.projectHash.set(projScenePath, vecConfig)
-        self.projectTopology.updateData(self.projectHash)
 
 
     def selectNavigationItemByKey(self, path):
