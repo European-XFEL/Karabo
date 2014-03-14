@@ -23,8 +23,7 @@ from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
-                         QInputDialog, QLineEdit, QMenu,
-                         QMessageBox, QTreeView, QTreeWidgetItem)
+                         QInputDialog, QLineEdit, QMenu, QTreeView, QTreeWidgetItem)
 
 
 class ProjectTreeView(QTreeView):
@@ -35,26 +34,20 @@ class ProjectTreeView(QTreeView):
     signalItemChanged = pyqtSignal(dict)
 
 
-    def __init__(self, parent=None):
+    def __init__(self, model, parent=None):
         super(ProjectTreeView, self).__init__(parent)
-
-        # Hash contains server topology of the live system
-        self.serverTopology = None
 
         # Dialog to add and change a device
         self.pluginDialog = None
 
         # Set same mode for each project view
-        self.setModel(Manager().projectTopology)
+        self.setModel(model)
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
-        self.setSelectionModel(Manager().projectTopology.selectionModel)
-        self.selectionModel().selectionChanged.connect(self.onSelectionChanged)
+        self.setSelectionModel(model.selectionModel)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
-        
-        Manager().signalSystemTopologyChanged.connect(self.onSystemTopologyChanged)
 
 
     def _createNewProject(self, projectName, directory, overwrite=False):
@@ -128,52 +121,6 @@ class ProjectTreeView(QTreeView):
             if len(subDirToDelete.entryList()) > 0:
                 self._clearProjectDir(subDirPath)
             subDirToDelete.rmpath(subDirPath)
-
-
-    def _addDevice(self):
-        projectName = self._currentProjectName()
-        if projectName is None: return
-        
-        # Path for device in project hash
-        devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
-                     ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
-        # Path for device configuration
-        configPath = devicePath + "." + self.pluginDialog.plugin
-
-        # Put info in Hash
-        config = Hash()
-        config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
-        config.set(configPath + ".serverId", self.pluginDialog.server)
-        # Add device to project hash
-        Manager().addConfigToProject(config)
-
-        # Select added device
-        self._selectPath(devicePath)
-
-
-    def _addScene(self, projectName, fileName, alias):
-        projScenePath = projectName + ".project.scenes"
-
-        # Update project hash
-        scenePath = projScenePath + "." + alias
-
-        # Put info in Hash
-        config = Hash("filename", fileName, "alias", alias)
-        # Add device to project hash
-        Manager().addSceneToProject(projScenePath, config)
-
-        # Select added device
-        self._selectPath(scenePath)
-        
-        # Send signal to mainWindow to add scene
-        self.signalAddScene.emit(alias)
-
-
-    def _selectPath(self, path):
-        """
-        The item with the given \path is selected.
-        """
-        self.model().selectPath(path)
         
 
     def _currentProjectName(self):
@@ -267,7 +214,7 @@ class ProjectTreeView(QTreeView):
         sceneName = "default_scene"
         
         self._createNewProject(projectName, "/tmp/", True)
-        self._addScene(projectName, sceneName, sceneName)
+        self.model().addScene(projectName, sceneName, sceneName)
 
 
     def serverConnectionChanged(self, isConnected):
@@ -298,7 +245,7 @@ class ProjectTreeView(QTreeView):
             acImportPlugin = QAction(text, self)
             acImportPlugin.setStatusTip(text)
             acImportPlugin.setToolTip(text)
-            acImportPlugin.triggered.connect(self.onAddDevice)
+            acImportPlugin.triggered.connect(self.model().onAddDevice)
 
             menu.addAction(acImportPlugin)
             menu.exec_(QCursor.pos())
@@ -309,96 +256,8 @@ class ProjectTreeView(QTreeView):
             acAddScene = QAction(text, self)
             acAddScene.setStatusTip(text)
             acAddScene.setToolTip(text)
-            acAddScene.triggered.connect(self.onAddScene)
+            acAddScene.triggered.connect(self.model().onAddScene)
 
             menu.addAction(acAddScene)
             menu.exec_(QCursor.pos())
-
-
-    def onAddDevice(self):
-        if self.serverTopology is None:
-            reply = QMessageBox.question(self, "No server connection",
-                                         "There is no connection to the server.<br>"
-                                         "Do you want to establish a server connection?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return
-            self.signalConnectToServer.emit()
-            return
-
-        # Show dialog to select plugin
-        self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(self.serverTopology):
-            QMessageBox.warning(self, "No servers available",
-            "There are no servers available.<br>Please check, if all servers "
-            "are <br>started correctly!")
-            return
-        if self.pluginDialog.exec_() == QDialog.Rejected:
-            return
-
-        self._addDevice()
-        self.pluginDialog = None
-
-
-    def onAddScene(self):
-        dialog = SceneDialog()
-        if dialog.exec_() == QDialog.Rejected:
-            return
-        
-        # Get project name
-        projectName = self._currentProjectName()
-        self._addScene(projectName, dialog.fileName, dialog.alias)
-
-
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        if len(selectedIndexes) < 1:
-            # TODO: update load/save buttons in projectPanel toolbar
-            return
-
-        index = selectedIndexes[0]
-
-        path = index.data(ProjectModel.ITEM_PATH)
-        if path is None: return
-        
-        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        deviceId = index.data(Qt.DisplayRole)
-
-        if (serverId is None) or (classId is None) or (deviceId is None):
-            return
-        
-        # Check whether deviceId is already online
-        if Manager().systemTopology.has(deviceId):
-            # Get schema
-            schema = Manager().getDeviceSchema(deviceId)
-            itemInfo = dict(key=deviceId, classId=classId, \
-                            type=NavigationItemTypes.DEVICE, schema=schema)
-        else:
-            # Get schema
-            schema = Manager().getClassSchema(serverId, classId)
-            # Set path which is used to get class schema
-            naviPath = "{}.{}".format(serverId, classId)
-            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
-                            classId=classId, type=NavigationItemTypes.CLASS, \
-                            schema=schema)
-        
-        Manager().onSchemaAvailable(itemInfo)
-        # Notify configurator of changes
-        self.signalItemChanged.emit(itemInfo)
-
-
-    def onSystemTopologyChanged(self, config):
-        serverKey = "server"
-        if not config.has(serverKey):
-            return
-
-        # Create copy of nested hash - TODO: remove when hash in native python
-        self.serverTopology = copy(config.get(serverKey))
-        
-        if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(self.serverTopology)
-        
-        # TODO: Update on/offline status devices in tree
 

@@ -6,21 +6,20 @@
 
 
 """
-This module contains a class which represents an item of a hierarchical
-navigation model.
+This module contains a class which represents a node of a hierarchical model.
 """
 
-__all__ = ["NavigationHierarchyNode"]
+__all__ = ["TreeNode"]
 
 
 from karabo.karathon import AccessLevel
 
 
-class NavigationHierarchyNode(object):
+class TreeNode(object):
 
 
     def __init__(self, displayName="", path="", parentNode=None):
-        super(NavigationHierarchyNode, self).__init__()
+        super(TreeNode, self).__init__()
         
         self.parentNode = parentNode
         self.childNodes = list()

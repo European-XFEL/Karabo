@@ -40,15 +40,15 @@ class ProjectPanel(QWidget):
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
 
-    def __init__(self):
+    def __init__(self, model):
         super(ProjectPanel, self).__init__()
         
         title = "Projects"
         self.setWindowTitle(title)
 
-        self.twProject = ProjectTreeView(self)
-        self.twProject.signalAddScene.connect(self.signalAddScene)
-        self.twProject.signalConnectToServer.connect(self.signalConnectToServer)
+        self.twProject = ProjectTreeView(model, self)
+        model.signalAddScene.connect(self.signalAddScene)
+        model.signalConnectToServer.connect(self.signalConnectToServer)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)

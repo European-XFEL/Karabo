@@ -12,15 +12,20 @@ a treeview.
 
 __all__ = ["ProjectModel"]
 
+from copy import copy
 import manager
-from karabo.karathon import VectorHash
+from karabo.karathon import Hash, VectorHash
 
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QIcon, QItemSelectionModel, QStandardItem,
+from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtGui import (QIcon, QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
 
 
 class ProjectModel(QStandardItemModel):
+    # To import a plugin a server connection needs to be established
+    signalConnectToServer = pyqtSignal()
+    signalAddScene = pyqtSignal(str) # scene title
+    signalItemChanged = pyqtSignal(dict)
 
     ITEM_PATH = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
@@ -44,9 +49,12 @@ class ProjectModel(QStandardItemModel):
 
     def __init__(self, parent=None):
         super(ProjectModel, self).__init__(parent)
-
+        
+        self.systemTopology = None
+        
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleLeafItems(self, childItem, projectPath, categoryKey, config):
@@ -135,6 +143,29 @@ class ProjectModel(QStandardItemModel):
         self.endResetModel()
 
 
+    def updateSystemTopology(self, config):
+        """
+        This function updates the status (on/offline) of the project devices and
+        the server/classes which are available over the network.
+        """
+        print "ProjectModel.updateSystemTopology"
+        print config
+        print "================================="
+        #serverKey = "server"
+        #if not config.has(serverKey):
+        #    return
+
+        # Create copy of nested hash - TODO: remove when hash in native python
+        #self.systemTopology = copy(config.get(serverKey))
+        
+        #if self.pluginDialog is not None:
+        #    self.pluginDialog.updateServerTopology(self.serverTopology)
+
+
+    def handleInstanceGone(self, instanceId):
+        print "ProjectModel.handleInstanceGone", instanceId
+
+
     def selectPath(self, path):
         index = self.findIndex(path)
         if index is None:
@@ -158,4 +189,117 @@ class ProjectModel(QStandardItemModel):
         if indexPath == path:
             return item.index()
         return None
+
+
+    def addDevice(self):
+        projectName = self._currentProjectName()
+        if projectName is None: return
+        
+        # Path for device in project hash
+        devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
+                     ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
+        # Path for device configuration
+        configPath = devicePath + "." + self.pluginDialog.plugin
+
+        # Put info in Hash
+        config = Hash()
+        config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
+        config.set(configPath + ".serverId", self.pluginDialog.server)
+        # Add device to project hash
+        manager.Manager().addConfigToProject(config)
+
+        # Select added device
+        self.selectPath(devicePath)
+
+
+    def addScene(self, projectName, fileName, alias):
+        projScenePath = projectName + ".project.scenes"
+
+        # Update project hash
+        scenePath = projScenePath + "." + alias
+
+        # Put info in Hash
+        config = Hash("filename", fileName, "alias", alias)
+        # Add device to project hash
+        manager.Manager().addSceneToProject(projScenePath, config)
+
+        # Select added device
+        self.selectPath(scenePath)
+        
+        # Send signal to mainWindow to add scene
+        self.signalAddScene.emit(alias)
+
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        if len(selectedIndexes) < 1:
+            # TODO: update load/save buttons in projectPanel toolbar
+            return
+
+        index = selectedIndexes[0]
+
+        path = index.data(ProjectModel.ITEM_PATH)
+        if path is None: return
+        
+        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
+        classId = index.data(ProjectModel.ITEM_CLASS_ID)
+        deviceId = index.data(Qt.DisplayRole)
+
+        if (serverId is None) or (classId is None) or (deviceId is None):
+            return
+        
+        # Check whether deviceId is already online
+        if manager.Manager().systemTopology.has(deviceId):
+            # Get schema
+            schema = manager.Manager().getDeviceSchema(deviceId)
+            itemInfo = dict(key=deviceId, classId=classId, \
+                            type=NavigationItemTypes.DEVICE, schema=schema)
+        else:
+            # Get schema
+            schema = manager.Manager().getClassSchema(serverId, classId)
+            # Set path which is used to get class schema
+            naviPath = "{}.{}".format(serverId, classId)
+            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
+                            classId=classId, type=NavigationItemTypes.CLASS, \
+                            schema=schema)
+        
+        manager.Manager().onSchemaAvailable(itemInfo)
+        # Notify configurator of changes
+        self.signalItemChanged.emit(itemInfo)
+
+
+    def onAddDevice(self):
+        if self.systemTopology is None:
+            reply = QMessageBox.question(None, "No server connection",
+                                         "There is no connection to the server.<br>"
+                                         "Do you want to establish a server connection?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return
+            self.signalConnectToServer.emit()
+            return
+
+        # Show dialog to select plugin
+        self.pluginDialog = PluginDialog()
+        if not self.pluginDialog.updateServerTopology(self.systemTopology):
+            QMessageBox.warning(self, "No servers available",
+            "There are no servers available.<br>Please check, if all servers "
+            "are <br>started correctly!")
+            return
+        if self.pluginDialog.exec_() == QDialog.Rejected:
+            return
+
+        self.addDevice()
+        self.pluginDialog = None
+
+
+    def onAddScene(self):
+        dialog = SceneDialog()
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        # Get project name
+        projectName = self._currentProjectName()
+        self.addScene(projectName, dialog.fileName, dialog.alias)
 

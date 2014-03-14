@@ -47,7 +47,7 @@ class ConfigurationPanel(QWidget):
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
 
-    def __init__(self, treemodel):
+    def __init__(self, treeModel, projectModel):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
@@ -77,16 +77,16 @@ class ConfigurationPanel(QWidget):
         # Layout for navigation and project tree
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
-        self.twNavigation = NavigationTreeView(None, treemodel)
-        treemodel.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation = NavigationTreeView(None, treeModel)
+        treeModel.signalItemChanged.connect(self.onDeviceItemChanged)
         #self.twNavigation.hide()
         navSplitter.addWidget(self.twNavigation)
 
         # Project tree
-        self.twProject = ProjectTreeView()
-        self.twProject.signalItemChanged.connect(self.onDeviceItemChanged)
-        self.twProject.signalAddScene.connect(self.signalAddScene)
-        self.twProject.signalConnectToServer.connect(self.signalConnectToServer)
+        self.twProject = ProjectTreeView(projectModel, self)
+        projectModel.signalItemChanged.connect(self.onDeviceItemChanged)
+        projectModel.signalAddScene.connect(self.signalAddScene)
+        projectModel.signalConnectToServer.connect(self.signalConnectToServer)
         #self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
