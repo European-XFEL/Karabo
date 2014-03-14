@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        self.__projectPanel = ProjectPanel()
+        self.__projectPanel = ProjectPanel(Manager().projectTopology)
         self.__projectTab = DockTabWindow("Projects", leftArea)
         self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
         self.__projectPanel.signalAddScene.connect(self.onAddScene)
@@ -207,7 +207,8 @@ class MainWindow(QMainWindow):
         self.__outputTab.addDockableTab(self.__notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.__configurationPanel = ConfigurationPanel(Manager().systemTopology)
+        self.__configurationPanel = ConfigurationPanel(Manager().systemTopology, \
+                                                       Manager().projectTopology)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__configurationTab = DockTabWindow("Configurator", rightArea)
         self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
