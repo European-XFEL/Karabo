@@ -21,7 +21,7 @@ from datetime import datetime
 from enums import NavigationItemTypes
 from enums import ConfigChangeTypes
 from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile, Timestamp)
-from navigationhierarchymodel import NavigationHierarchyModel
+from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
@@ -79,8 +79,6 @@ class DataNotifier(QObject):
 
 class _Manager(QObject):
     # signals
-    signalSystemTopologyChanged = pyqtSignal(object)
-    
     signalGlobalAccessLevelChanged = pyqtSignal()
 
     signalReset = pyqtSignal()
@@ -132,9 +130,9 @@ class _Manager(QObject):
         self.sqlDatabase.openConnection()
         
         # Model for navigationtreeview
-        self.systemTopology = NavigationHierarchyModel(self)
+        self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
-                        connect(self.onNavigationHierarchyModelSelectionChanged)
+                        connect(self.onNavigationTreeModelSelectionChanged)
         # Model for projecttreeview
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
@@ -440,7 +438,7 @@ class _Manager(QObject):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
 
-    def onNavigationHierarchyModelSelectionChanged(self, selected, deselect):
+    def onNavigationTreeModelSelectionChanged(self, selected, deselect):
         """
         This slot is called whenever something of the navigation panel is selected.
         If an item was selected, the selection of the project panel is cleared.
@@ -705,8 +703,8 @@ class _Manager(QObject):
     def handleSystemTopology(self, config):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
-        # Send new topology as hash object to projecttree
-        self.signalSystemTopologyChanged.emit(config)
+        # Update project model
+        self.projectTopology.updateSystemTopology(config)
 
 
     def handleInstanceNew(self, config):
@@ -751,10 +749,11 @@ class _Manager(QObject):
         """
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
-        if parentPath is None:
-            return
+        if parentPath is not None:
+            self.signalInstanceGone.emit(instanceId, parentPath)
         
-        self.signalInstanceGone.emit(instanceId, parentPath)
+        # Update on/offline status of project
+        self.projectTopology.handleInstanceGone(instanceId)
 
 
     def handleClassSchema(self, headerHash, config):

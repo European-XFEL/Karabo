@@ -8,31 +8,31 @@
 """This module contains a class which represents a model to display a hierarchical
    navigation in a treeview."""
 
-__all__ = ["NavigationHierarchyModel"]
+__all__ = ["NavigationTreeModel"]
 
 
 from enums import NavigationItemTypes
 import globals
 from karabo.karathon import Hash
 import manager
-from navigationhierarchynode import NavigationHierarchyNode
+from treenode import TreeNode
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 
-class NavigationHierarchyModel(QAbstractItemModel):
+class NavigationTreeModel(QAbstractItemModel):
     # signal
     signalItemChanged = pyqtSignal(dict)
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
     def __init__(self, parent=None):
-        super(NavigationHierarchyModel, self).__init__(parent)
+        super(NavigationTreeModel, self).__init__(parent)
         
         # Root node of hierarchy tree
-        self.rootNode = NavigationHierarchyNode()
+        self.rootNode = TreeNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
@@ -75,13 +75,13 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Create node for host
             hostNode = self.rootNode.getNode(host)
             if hostNode is None:
-                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                hostNode = TreeNode(host, host, self.rootNode)
                 self.rootNode.appendChildNode(hostNode)
 
             # Create node for server
             serverNode = hostNode.getNode(serverId)
             if serverNode is None:
-                serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                serverNode = TreeNode(serverId, serverId, hostNode)
                 hostNode.appendChildNode(serverNode)
             serverNode.visibility = visibility
 
@@ -100,7 +100,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     path = "{}.{}".format(serverId, classId)
                     classNode = serverNode.getNode(classId)
                     if classNode is None:
-                        classNode = NavigationHierarchyNode(classId, path, serverNode)
+                        classNode = TreeNode(classId, path, serverNode)
                         serverNode.appendChildNode(classNode)
                     classNode.visibility = visibility
 
@@ -159,14 +159,14 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Host node
             hostNode = self.rootNode.getNode(host)
             if hostNode is None:
-                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                hostNode = TreeNode(host, host, self.rootNode)
                 self.rootNode.appendChildNode(hostNode)
 
             # Server node
             serverNode = hostNode.getNode(serverId)
             if serverNode is None:
                 if serverId == "__none__":
-                    serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                    serverNode = TreeNode(serverId, serverId, hostNode)
                     hostNode.appendChildNode(serverNode)
                 else:
                     continue
@@ -176,7 +176,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if classNode is None:
                 if serverId == "__none__":
                     path = "{}.{}".format(serverId, classId)
-                    classNode = NavigationHierarchyNode(classId, path, serverNode)
+                    classNode = TreeNode(classId, path, serverNode)
                     serverNode.appendChildNode(classNode)
                 else:
                     continue
@@ -184,7 +184,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Device node
             deviceNode = classNode.getNode(deviceId)
             if deviceNode is None:
-                deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
+                deviceNode = TreeNode(deviceId, deviceId, classNode)
                 classNode.appendChildNode(deviceNode)
             deviceNode.status = status
             deviceNode.visibility = visibility
