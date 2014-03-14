@@ -13,8 +13,10 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 from copy import copy
+from enums import NavigationItemTypes
 import manager
-from karabo.karathon import Hash, VectorHash
+from karabo.karathon import Hash, HashMergePolicy, VectorHash
+from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import pyqtSignal, Qt
@@ -27,6 +29,7 @@ class ProjectModel(QStandardItemModel):
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
     signalItemChanged = pyqtSignal(dict)
+    signalSelectionChanged = pyqtSignal(list)
 
     ITEM_PATH = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
@@ -53,6 +56,9 @@ class ProjectModel(QStandardItemModel):
         
         self.systemTopology = None
         self.projectHash = Hash()
+        
+        # Dialog to add and change a device
+        self.pluginDialog = None
         
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
@@ -145,12 +151,17 @@ class ProjectModel(QStandardItemModel):
         self.endResetModel()
 
 
-    def updateSystemTopology(self, config):
+    def systemTopologyChanged(self, config):
         """
         This function updates the status (on/offline) of the project devices and
         the server/classes which are available over the network.
         """
         print "ProjectModel.updateSystemTopology"
+        if self.systemTopology is None:
+            self.systemTopology = config
+        else:
+            self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        
         #serverKey = "server"
         #if not config.has(serverKey):
         #    return
@@ -158,8 +169,8 @@ class ProjectModel(QStandardItemModel):
         # Create copy of nested hash - TODO: remove when hash in native python
         #self.systemTopology = copy(config.get(serverKey))
         
-        #if self.pluginDialog is not None:
-        #    self.pluginDialog.updateServerTopology(self.serverTopology)
+        if self.pluginDialog is not None:
+            self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
     def handleInstanceGone(self, instanceId):
@@ -269,7 +280,7 @@ class ProjectModel(QStandardItemModel):
         config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
         config.set(configPath + ".serverId", self.pluginDialog.server)
         # Add device to project hash
-        self._addConfigToProject(config)
+        self.addConfigToProject(config)
 
         # Select added device
         self.selectPath(devicePath)
@@ -295,8 +306,10 @@ class ProjectModel(QStandardItemModel):
 
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
+        # Send signal to projectPanel to update toolbar actions
+        self.signalSelectionChanged.emit(selectedIndexes)
+        
         if len(selectedIndexes) < 1:
-            # TODO: update load/save buttons in projectPanel toolbar
             return
 
         index = selectedIndexes[0]
@@ -329,6 +342,15 @@ class ProjectModel(QStandardItemModel):
         manager.Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
         self.signalItemChanged.emit(itemInfo)
+
+
+    def onServerConnectionChanged(self, isConnected):
+        """
+        If the server connection is changed, the model needs an update.
+        """
+        print "onServerConnectionChanged", isConnected
+        if not isConnected:
+            self.systemTopology = None
 
 
     def onAddDevice(self):
