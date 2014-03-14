@@ -85,8 +85,6 @@ class ConfigurationPanel(QWidget):
         # Project tree
         self.twProject = ProjectTreeView(projectModel, self)
         projectModel.signalItemChanged.connect(self.onDeviceItemChanged)
-        projectModel.signalAddScene.connect(self.signalAddScene)
-        projectModel.signalConnectToServer.connect(self.signalConnectToServer)
         #self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
