@@ -12,7 +12,7 @@ a treeview.
 
 __all__ = ["ProjectModel"]
 
-from copy import copy
+
 from enums import NavigationItemTypes
 import manager
 from karabo.karathon import Hash, HashMergePolicy, VectorHash
@@ -54,7 +54,9 @@ class ProjectModel(QStandardItemModel):
     def __init__(self, parent=None):
         super(ProjectModel, self).__init__(parent)
         
+        # Hash stores current system topology
         self.systemTopology = None
+        # Hash stores project tree information
         self.projectHash = Hash()
         
         # Dialog to add and change a device
@@ -87,8 +89,6 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
                 if categoryKey == ProjectModel.DEVICES_KEY:
-                    # TODO: Look for other possibilities than managers systemTopology
-                    # to check whether deviceId is on/offline
                     # Update icon on availability of device
                     if self.systemTopology.has("device." + leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
@@ -151,6 +151,13 @@ class ProjectModel(QStandardItemModel):
         self.endResetModel()
 
 
+    def updateNeeded(self):
+        # Update project view and pluginDialog data
+        self.updateData()
+        if self.pluginDialog is not None:
+            self.pluginDialog.updateServerTopology(self.systemTopology)
+
+
     def systemTopologyChanged(self, config):
         """
         This function updates the status (on/offline) of the project devices and
@@ -161,11 +168,8 @@ class ProjectModel(QStandardItemModel):
         else:
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         
-        # Update project view
-        self.updateData()
-        
-        if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(self.systemTopology)
+        # Update relevant
+        self.updateNeeded()
 
 
     def handleInstanceGone(self, instanceId):
@@ -177,11 +181,8 @@ class ProjectModel(QStandardItemModel):
 
         self.systemTopology.erase(path)
         
-        # Update project view
-        self.updateData()
-        
-        if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(self.systemTopology)
+        # Update relevant
+        self.updateNeeded()
 
 
     def selectPath(self, path):
