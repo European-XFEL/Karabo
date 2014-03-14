@@ -72,16 +72,12 @@ class PluginDialog(QDialog):
 
 
 
-    def updateServerTopology(self, serverTopology):
-        print "..."
-        print serverTopology
-        print "...."
-        
+    def updateServerTopology(self, systemTopology):
         serverKey = "server"
-        if not serverTopology.has(serverKey):
+        if not systemTopology.has(serverKey):
             return
         
-        serverTopology = serverTopology.get(serverKey)
+        serverTopology = systemTopology.get(serverKey)
         
         self.cbPlugin.clear()
         self.cbServer.clear()
