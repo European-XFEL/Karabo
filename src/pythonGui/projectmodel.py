@@ -90,7 +90,7 @@ class ProjectModel(QStandardItemModel):
                     # TODO: Look for other possibilities than managers systemTopology
                     # to check whether deviceId is on/offline
                     # Update icon on availability of device
-                    if manager.Manager().systemTopology.has(leafKey):
+                    if self.systemTopology.has("device." + leafKey):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
@@ -156,25 +156,32 @@ class ProjectModel(QStandardItemModel):
         This function updates the status (on/offline) of the project devices and
         the server/classes which are available over the network.
         """
-        print "ProjectModel.updateSystemTopology"
         if self.systemTopology is None:
             self.systemTopology = config
         else:
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         
-        #serverKey = "server"
-        #if not config.has(serverKey):
-        #    return
-
-        # Create copy of nested hash - TODO: remove when hash in native python
-        #self.systemTopology = copy(config.get(serverKey))
+        # Update project view
+        self.updateData(self.projectHash)
         
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
     def handleInstanceGone(self, instanceId):
-        print "ProjectModel.handleInstanceGone", instanceId
+        path = None
+        if self.systemTopology.has("server." + instanceId):
+            path = "server." + instanceId
+        elif self.systemTopology.has("device." + instanceId):
+            path = "device." + instanceId
+
+        self.systemTopology.erase(path)
+        
+        # Update project view
+        self.updateData(self.projectHash)
+        
+        if self.pluginDialog is not None:
+            self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
     def selectPath(self, path):
