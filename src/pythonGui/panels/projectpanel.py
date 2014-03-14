@@ -13,12 +13,8 @@ __all__ = ["ProjectPanel"]
 
 from projecttreeview import ProjectTreeView
 
-from enums import NavigationItemTypes
-from manager import Manager
-
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QAction, QIcon, QTreeWidget, QTreeWidgetItem,
-                         QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QAction, QIcon, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -49,6 +45,7 @@ class ProjectPanel(QWidget):
         self.twProject = ProjectTreeView(model, self)
         model.signalAddScene.connect(self.signalAddScene)
         model.signalConnectToServer.connect(self.signalConnectToServer)
+        model.signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -59,28 +56,29 @@ class ProjectPanel(QWidget):
 
     def setupActions(self):
         text = "New project"
-        self.__acProjectNew = QAction(QIcon(":new"), "&New project", self)
-        self.__acProjectNew.setStatusTip(text)
-        self.__acProjectNew.setToolTip(text)
-        self.__acProjectNew.triggered.connect(self.onProjectNew)
+        self.acProjectNew = QAction(QIcon(":new"), "&New project", self)
+        self.acProjectNew.setStatusTip(text)
+        self.acProjectNew.setToolTip(text)
+        self.acProjectNew.triggered.connect(self.onProjectNew)
 
         text = "Open project"
-        self.__acProjectOpen = QAction(QIcon(":open"), "&Open project", self)
-        self.__acProjectOpen.setStatusTip(text)
-        self.__acProjectOpen.setToolTip(text)
-        self.__acProjectOpen.triggered.connect(self.onProjectOpen)
+        self.acProjectOpen = QAction(QIcon(":open"), "&Open project", self)
+        self.acProjectOpen.setStatusTip(text)
+        self.acProjectOpen.setToolTip(text)
+        self.acProjectOpen.triggered.connect(self.onProjectOpen)
 
         text = "Save project"
-        self.__acProjectSave = QAction(QIcon(":save"), "&Save project", self)
-        self.__acProjectSave.setStatusTip(text)
-        self.__acProjectSave.setToolTip(text)
-        self.__acProjectSave.triggered.connect(self.onProjectSave)
+        self.acProjectSave = QAction(QIcon(":save"), "&Save project", self)
+        self.acProjectSave.setStatusTip(text)
+        self.acProjectSave.setToolTip(text)
+        self.acProjectSave.setEnabled(False)
+        self.acProjectSave.triggered.connect(self.onProjectSave)
 
 
     def setupToolBars(self, standardToolBar, parent):
-        standardToolBar.addAction(self.__acProjectNew)
-        standardToolBar.addAction(self.__acProjectOpen)
-        standardToolBar.addAction(self.__acProjectSave)
+        standardToolBar.addAction(self.acProjectNew)
+        standardToolBar.addAction(self.acProjectOpen)
+        standardToolBar.addAction(self.acProjectSave)
 
 
     def setupDefaultProject(self):
@@ -103,8 +101,8 @@ class ProjectPanel(QWidget):
         self.twProject.saveProject()
 
 
-    def onServerConnectionChanged(self, isConnected):
-        self.twProject.serverConnectionChanged(isConnected)
+    def onSelectionChanged(self, selectedIndexes):
+        self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
 
 
     # virtual function

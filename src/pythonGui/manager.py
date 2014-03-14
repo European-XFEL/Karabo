@@ -653,7 +653,7 @@ class _Manager(QObject):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
         # Update project model
-        self.projectTopology.updateSystemTopology(config)
+        self.projectTopology.systemTopologyChanged(config)
 
 
     def handleInstanceNew(self, config):
