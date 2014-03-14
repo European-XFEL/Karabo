@@ -12,7 +12,6 @@ __all__ = ["PluginDialog"]
 
 import globals
 
-#from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                          QGroupBox, QLineEdit, QMessageBox, QVBoxLayout)
 

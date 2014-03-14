@@ -13,15 +13,12 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-from copy import copy
-from enums import NavigationItemTypes
-from manager import Manager
+#from enums import NavigationItemTypes
 from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QIcon,
-                         QInputDialog, QLineEdit, QMenu, QTreeView, QTreeWidgetItem)
+from PyQt4.QtGui import QAction, QCursor, QMenu, QTreeView
 
 
 class ProjectTreeView(QTreeView):
@@ -94,7 +91,7 @@ class ProjectTreeView(QTreeView):
         dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MONITORS_LABEL)
         dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
 
-        # Send changes to manager
+        # Send changes to model
         self.model().addNewProject(projectName, directory, projectConfig)
 
 

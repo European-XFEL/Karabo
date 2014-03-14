@@ -103,9 +103,9 @@ class ProjectModel(QStandardItemModel):
                         leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
 
 
-    def updateData(self, projectHash):
+    def updateData(self):
         #print ""
-        #print projectHash
+        #print self.projectHash
         #print ""
 
         self.beginResetModel()
@@ -115,7 +115,7 @@ class ProjectModel(QStandardItemModel):
         rootItem = self.invisibleRootItem()
 
         # Add child items
-        for projectKey in projectHash.keys():
+        for projectKey in self.projectHash.keys():
             # Project names - toplevel items
             item = QStandardItem(projectKey)
             item.setEditable(False)
@@ -125,7 +125,7 @@ class ProjectModel(QStandardItemModel):
             item.setIcon(QIcon(":folder"))
             rootItem.appendRow(item)
 
-            projectConfig = projectHash.get(projectKey)
+            projectConfig = self.projectHash.get(projectKey)
             for p in projectConfig.keys():
                 # Project key
 
@@ -162,7 +162,7 @@ class ProjectModel(QStandardItemModel):
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         
         # Update project view
-        self.updateData(self.projectHash)
+        self.updateData()
         
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.systemTopology)
@@ -178,7 +178,7 @@ class ProjectModel(QStandardItemModel):
         self.systemTopology.erase(path)
         
         # Update project view
-        self.updateData(self.projectHash)
+        self.updateData()
         
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.systemTopology)
@@ -249,12 +249,12 @@ class ProjectModel(QStandardItemModel):
         
         self.projectHash.set(projectName, projectConfig)
         self.projectHash.setAttribute(projectName, "directory", directory)
-        self.updateData(self.projectHash)
+        self.updateData()
 
 
     def addConfigToProject(self, config):
         self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.updateData(self.projectHash)
+        self.updateData()
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
@@ -269,7 +269,7 @@ class ProjectModel(QStandardItemModel):
             vecConfig.append(sceneConfig)
         
         self.projectHash.set(projScenePath, vecConfig)
-        self.updateData(self.projectHash)
+        self.updateData()
 
 
     def addDevice(self):
@@ -375,7 +375,7 @@ class ProjectModel(QStandardItemModel):
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
         if not self.pluginDialog.updateServerTopology(self.systemTopology):
-            QMessageBox.warning(self, "No servers available",
+            QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
             return
