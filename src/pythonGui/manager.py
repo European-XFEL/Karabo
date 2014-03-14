@@ -55,6 +55,7 @@ class DataNotifier(QObject):
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
+        
         if useOldVersion:
             if len(self.components) > 0:
                 value = self.components[0].value
@@ -70,11 +71,7 @@ class DataNotifier(QObject):
 
 
     def updateDisplayValue(self, key, value, timestamp):
-        if useOldVersion:
-            for component in self.components:
-                component.onDisplayValueChanged(key, value, timestamp)
-        else:
-            self.signalUpdateDisplayValue.emit(key, value, timestamp)
+        self.signalUpdateDisplayValue.emit(key, value, timestamp)
 
 
 class _Manager(QObject):
