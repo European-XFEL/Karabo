@@ -17,7 +17,6 @@ from copy import copy
 from enums import NavigationItemTypes
 from manager import Manager
 from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
-from dialogs.plugindialog import PluginDialog
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
@@ -35,9 +34,6 @@ class ProjectTreeView(QTreeView):
 
     def __init__(self, model, parent=None):
         super(ProjectTreeView, self).__init__(parent)
-
-        # Dialog to add and change a device
-        self.pluginDialog = None
 
         # Set same mode for each project view
         self.setModel(model)
@@ -195,11 +191,6 @@ class ProjectTreeView(QTreeView):
         
         self._createNewProject(projectName, "/tmp/", True)
         self.model().addScene(projectName, sceneName, sceneName)
-
-
-    def serverConnectionChanged(self, isConnected):
-        if not isConnected:
-            self.serverTopology = None
 
 
     def mouseDoubleClickEvent(self, event):

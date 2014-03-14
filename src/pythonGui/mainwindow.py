@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
         self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
         self.__projectPanel.signalAddScene.connect(self.onAddScene)
         self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
-        self.__network.signalServerConnectionChanged.connect(self.__projectPanel.onServerConnectionChanged)
+        self.__network.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
