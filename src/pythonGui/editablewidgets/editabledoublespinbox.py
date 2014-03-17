@@ -32,8 +32,8 @@ class EditableDoubleSpinBox(EditableWidget):
     category = "Digit"
     alias = "Float Field"
     
-    def __init__(self, value=None, **params):
-        super(EditableDoubleSpinBox, self).__init__(**params)
+    def __init__(self, box):
+        super(EditableDoubleSpinBox, self).__init__(box)
 
         self.__leDblValue = QLineEdit()
         self.__validator = QDoubleValidator(self.__leDblValue)
@@ -42,8 +42,9 @@ class EditableDoubleSpinBox(EditableWidget):
         
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.__lastCursorPos = 0
-        
-        self.valueChanged(self.keys[0], value)
+
+        if hasattr(box, "value"):
+            self.valueChanged(box, box.value)
 
 
     @property
@@ -82,4 +83,4 @@ class EditableDoubleSpinBox(EditableWidget):
 ### slots ###
     def onEditingFinished(self, value):
         self.__lastCursorPos = self.__leDblValue.cursorPosition()
-        self.signalEditingFinished.emit(self.keys[0], float(value))
+        self.signalEditingFinished.emit(self.boxes[0], float(value))
