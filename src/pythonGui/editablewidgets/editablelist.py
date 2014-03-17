@@ -32,16 +32,17 @@ class EditableList(EditableWidget):
     category = "List"
     alias = "Histogram"
 
-    def __init__(self, value=None, **params):
-        super(EditableList, self).__init__(**params)
+    def __init__(self, box):
+        super(EditableList, self).__init__(box)
         
-        self.__label = Label(**params)
+        self.__label = Label(value="", valueType=box.descriptor.valueType)
         self.__label.setMinimumWidth(160)
         self.__label.setMaximumHeight(24)
         self.__label.setFrameStyle(QFrame.Box)
         self.__label.signalEditingFinished.connect(self.onEditingFinished)
-        
-        self.valueChanged(self.keys[0], value)
+
+        if hasattr(box, 'value'):
+            self.valueChanged(box, box.value)
 
 
     @property

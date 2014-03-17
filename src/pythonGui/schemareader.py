@@ -24,12 +24,13 @@ import weakref
 
 class Box(QObject):
     signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
-    signalUpdateDisplayValue = pyqtSignal(object, object, object)
     signalHistoricData = pyqtSignal(object, object)
 
-    def __init__(self, path):
+    def __init__(self, path, descriptor, configuration):
         QObject.__init__(self)
         self.path = path
+        self.descriptor = descriptor
+        self.configuration = configuration
 
 
     configuration = Weak()
@@ -40,32 +41,29 @@ class Box(QObject):
         return self._value
 
 
-    def set(self, value, timestamp):
+    def set(self, value, timestamp=None):
         self._value = value
         self.timestamp = timestamp
-        self.signalUpdateDisplayValue.emit(self, value, timestamp)
         self.signalUpdateComponent.emit(self, value, timestamp)
 
 
     @value.setter
     def value(self, value):
-        self._value = value
-        self.signalUpdateComponent.emit(self, value, None)
-        self.signalUpdateDisplayValue.emit(self, value, None)
+        self.set(value)
 
 
     def addComponent(self, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
-        self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
+        self.signalUpdateComponent.connect(component.onDisplayValueChanged)
         if hasattr(self, "_value"):
             self.signalUpdateComponent.emit(self, self._value, self.timestamp)
-            self.signalUpdateDisplayValue.emit(self, self._value,
-                                               self.timestamp)
 
 
 
 class Type(hashtypes.Type):
     __metaclass__ = Monkey
+    Box = Box
+    icon = icons.undefined
 
 
     def copyAttr(self, item, out, ain=None):
@@ -75,12 +73,12 @@ class Type(hashtypes.Type):
             setattr(item, out, getattr(self, ain))
 
 
-    def item(self, treeWidget, parent, configuration, isClass):
-        item = PropertyTreeWidgetItem(configuration, treeWidget, parent)
+    def item(self, treeWidget, parent, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parent)
         try:
             item.displayText = self.displayedName
         except AttributeError:
-            item.displayText = key.split('.')[-1]
+            item.displayText = box.path.split('.')[-1]
         self.copyAttr(item, 'allowedStates')
 
         try:
@@ -96,18 +94,13 @@ class Type(hashtypes.Type):
         item.editableComponent = None
         if isClass:
             if self.accessMode in (AccessMode.INITONLY,
-                                       AccessMode.RECONFIGURABLE):
+                                   AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
             if self.accessMode == AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
-            item.editableComponent = component(
-                classAlias=item.classAlias, key=item.internalKey,
-                value=item.defaultValue,
-                metricPrefixSymbol=item.metricPrefixSymbol,
-                enumeration=item.enumeration,
-                unitSymbol=item.unitSymbol, valueType=item.valueType)
+            item.editableComponent = component(item.classAlias, box)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)
@@ -165,38 +158,49 @@ class Object(object):
     def __init__(self, path, configuration):
         for k, v in type(self).__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                b = Box(path + '.' + k)
-                b.descriptor = v
-                b.configuration = configuration
-                self.__dict__[v] = b
+                b = v.Box(path + '.' + k, v, configuration)
+                self.__dict__[k] = b
 
 
-    def set(self, value, timestamp):
-        return None
+    def __setattr__(self, key, value):
+        getattr(self, key).set(value)
 
 
-
-class Schema(hashtypes.Descriptor):
-    def __init__(self):
-        self.dict = OrderedDict()
-        self.cls = None
-        self.name = 'DUNNO'
+class SchemaBox(Box):
+    def __init__(self, path, descriptor, configuration):
+        Box.__init__(self, path, descriptor, configuration)
+        self.set(descriptor.getClass()(path, configuration))
 
 
-    def __set__(self, instance, value):
+    def set(self, value, timestamp=None):
+        if isinstance(value, self.descriptor.getClass()):
+            Box.set(self, value, timestamp)
+            return
         for k, v, a in value.iterall():
             try:
-                vv = getattr(instance, k)
+                vv = getattr(self._value, k)
             except AttributeError:
-                print 'schemaset: no {} in {}'.format(k, instance)
+                print 'schemaset: no {} in {}'.format(k, self._value)
             try:
                 ts = Timestamp.fromHashAttributes(a)
             except KeyError:
                 ts = None
             try:
-                vv.set(v, ts)
+                s = vv.set
             except AttributeError:
-                print 'cannot set {} (is {})'.format(k, vv)
+                print 'bullshit in ', self, k, vv
+            s(v, ts)
+        Box.set(self, self._value, timestamp)
+
+
+class Schema(hashtypes.Descriptor):
+    Box = SchemaBox
+
+
+    def __init__(self):
+        self.dict = OrderedDict()
+        self.cls = None
+        self.name = 'DUNNO'
 
 
     @staticmethod
@@ -209,6 +213,8 @@ class Schema(hashtypes.Descriptor):
         for k, h, a in hash.iterall():
             self.dict[k] = nodes[a['nodeType']](k, h, a, self)
         self.attrs = attrs
+        self.classAlias = dict(Image="Image View", Slot="Command").get(
+            attrs.get('displayType', None), "Value Field")
         self.key = key
         return self
 
@@ -249,17 +255,17 @@ class Schema(hashtypes.Descriptor):
         #    item = self._createPropertyItem(key, hash, attrs, parent)
         else:
             return None
-        self._item(treeWidget, parent, configuration, isClass)
+        self._item(treeWidget, item, configuration, isClass)
         return item
 
 
-    def _item(self, treeWidget, parent, configuration, isClass):
+    def _item(self, treeWidget, parent, box, isClass):
         for k, v in self.dict.iteritems():
             if isinstance(v, hashtypes.Descriptor):
                 try:
-                    c = getattr(configuration, k)
+                    c = getattr(box.value, k)
                 except AttributeError:
-                    print 'missing {} in {}'.format(k, configuration)
+                    print 'missing {} in {}'.format(k, box.value)
                 else:
                     v.item(treeWidget, parent, c, isClass)
 
