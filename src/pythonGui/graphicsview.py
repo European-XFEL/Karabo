@@ -1209,49 +1209,34 @@ class GraphicsView(QSvgWidget):
             selectedItems = source.selectedItems()
             
             for item in selectedItems:
-                # Get internal key
-                internalKey = item.internalKey
-                # Get display name
+                box = item.internalKey
                 displayName = item.text(0)
-                # Use DeviceClass/DeviceInstance-Key if no displayName is set
-                keys = internalKey.split('.')
                 if len(displayName) == 0:
-                    displayName = keys[1]
+                    displayName = box.path.split('.')[-1]
                 
-                # Display component
                 if source.isColumnHidden(1):
                     configDisplayComponent = None
                 else:
                     configDisplayComponent = item.displayComponent
-                # Editable component
                 configEditableComponent = item.editableComponent
 
-                # List stored all items for layout
                 items = []
 
                 displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
                 if displayNameProxyWidget:
-                    # Add item to itemlist
                     items.append((displayNameProxyWidget, None))
                 
-                # Display component
                 if configDisplayComponent:
-                    displayComponent = DisplayComponent(item.classAlias, key=internalKey,
-                                                        enumeration=item.enumeration,
-                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                        unitSymbol=item.unitSymbol,
-                                                        valueType=item.valueType)
+                    displayComponent = DisplayComponent(
+                        box.descriptor.classAlias, box=box)
                     
                     items.append((displayComponent.widget, displayComponent))
-                    # Create proxy widget
-                    
-                    # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
                     if unitProxyWidget:
                         items.append((unitProxyWidget, None))
 
                     # Register as visible device
-                    Manager().newVisibleDevice(keys[0])
+                    Manager().newVisibleDevice(box)
 
                 # Editable component
                 if configEditableComponent:

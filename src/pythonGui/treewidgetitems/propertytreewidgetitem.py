@@ -35,7 +35,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
 
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field",
+                                                 box=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
         # Connect to DisplayComponent to get current value on device for tooltip update
@@ -107,7 +108,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     def _updateToolTipDialog(self):
             info = OrderedDict()
             info["Property"] = self.text(0)
-            paramKey = str(self.internalKey).split(".configuration.")
+            paramKey = self.internalKey.path.split(".")[-1]
             if self.description is not None:
                 info["Description"] = self.description
             info["Key"] = paramKey[1]

@@ -28,9 +28,9 @@ class Configuration(object):
 
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self.configuration = self.schema.getClass()(path)
+        self.configuration = self.schema.getClass()('', self)
         self.type = type
-        self.configuration._configuration = weakref.ref(self)
+        self.path = path
 
 
     def merge(self, config):

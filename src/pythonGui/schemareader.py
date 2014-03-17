@@ -4,6 +4,7 @@ from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
 import icons
 from timestamp import Timestamp
+from util import Weak
 
 from choicecomponent import ChoiceComponent
 from editableapplylatercomponent import EditableApplyLaterComponent
@@ -21,7 +22,7 @@ from collections import OrderedDict
 import weakref
 
 
-class Value(QObject):
+class Box(QObject):
     signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
     signalUpdateDisplayValue = pyqtSignal(object, object, object)
     signalHistoricData = pyqtSignal(object, object)
@@ -29,6 +30,9 @@ class Value(QObject):
     def __init__(self, path):
         QObject.__init__(self)
         self.path = path
+
+
+    configuration = Weak()
 
 
     @property
@@ -54,8 +58,9 @@ class Value(QObject):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
         if hasattr(self, "_value"):
-            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
-            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
+            self.signalUpdateComponent.emit(self, self._value, self.timestamp)
+            self.signalUpdateDisplayValue.emit(self, self._value,
+                                               self.timestamp)
 
 
 
@@ -157,10 +162,13 @@ class Vector(hashtypes.Vector):
 
 
 class Object(object):
-    def __init__(self, path):
+    def __init__(self, path, configuration):
         for k, v in type(self).__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                self.__dict__[v] = Value(path + '.' + k)
+                b = Box(path + '.' + k)
+                b.descriptor = v
+                b.configuration = configuration
+                self.__dict__[v] = b
 
 
     def set(self, value, timestamp):
@@ -189,6 +197,7 @@ class Schema(hashtypes.Descriptor):
                 vv.set(v, ts)
             except AttributeError:
                 print 'cannot set {} (is {})'.format(k, vv)
+
 
     @staticmethod
     def parse(key, hash, attrs, parent=None):
