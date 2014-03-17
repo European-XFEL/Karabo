@@ -392,6 +392,12 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 
 
 #define KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
+.def("hex", &T::hex\
+, bp::return_internal_reference<> ())\
+.def("oct", &T::oct\
+, bp::return_internal_reference<> ())\
+.def("bin", &T::bin\
+, bp::return_internal_reference<> ())\
 .def("maxExc", &T::maxExc\
 , bp::return_internal_reference<> ())\
 .def("maxInc", &T::maxInc\
