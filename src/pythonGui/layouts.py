@@ -402,13 +402,13 @@ class ProxyWidget(QStackedWidget):
         if component is None:
             return
 
-        self.setToolTip(component.keys[0])
+        #self.setToolTip(component.boxes[0])
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
-            if "state" in component.keys[0]:
-                aliases = aliases + factory.getAliasesViaCategory("State")
+            #if "state" in component.keys[0]:
+            #    aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
                 menu = QMenu(self)

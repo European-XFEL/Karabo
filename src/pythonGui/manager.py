@@ -86,7 +86,7 @@ class _Manager(QObject):
 
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
 
-    signalNewVisibleDevice = pyqtSignal(str) # deviceId
+    signalNewVisibleDevice = pyqtSignal(object) # device
     signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
 
     signalLogDataAvailable = pyqtSignal(str) # logData
@@ -307,8 +307,8 @@ class _Manager(QObject):
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, path, value, timestamp):
-        deviceId = path.path.split('.')[0]
+    def _triggerStateChange(self, box, value, timestamp):
+        deviceId = box.configuration.path
         # Update GUI due to state changes
         if value == "Changing...":
             self.signalChangingState.emit(deviceId, True)
