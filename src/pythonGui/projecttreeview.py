@@ -13,12 +13,11 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-#from enums import NavigationItemTypes
-from karabo.karathon import Hash, HashMergePolicy, loadFromFile, saveToFile
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import QAction, QCursor, QMenu, QTreeView
+from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QInputDialog, QLineEdit,
+                         QMenu, QTreeView)
 
 
 class ProjectTreeView(QTreeView):
@@ -42,77 +41,17 @@ class ProjectTreeView(QTreeView):
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
-    def _createNewProject(self, projectName, directory, overwrite=False):
+    def setupDefaultProject(self):
         """
-        This function creates a new project in the panel.
+        This function sets up a default project.
+        So basically a new project is created and saved in the users /tmp/ folder.
+        Previous data is overwritten.
         """
-        # Project name to lower case
-        projectName = str(projectName).lower()
-
-        projectConfig = Hash(ProjectModel.PROJECT_KEY)
-        projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
-
-        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICES_KEY
-        projectConfig.set(deviceKey, None)
-        projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
-        sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
-        projectConfig.set(sceneKey, None)
-        projectConfig.setAttribute(sceneKey, "label", ProjectModel.SCENES_LABEL)
-        macroKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MACROS_KEY
-        projectConfig.set(macroKey, None)
-        projectConfig.setAttribute(macroKey, "label", ProjectModel.MACROS_LABEL)
-        monitorKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MONITORS_KEY
-        projectConfig.set(monitorKey, None)
-        projectConfig.setAttribute(monitorKey, "label", ProjectModel.MONITORS_LABEL)
-        resourceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.RESOURCES_KEY
-        projectConfig.set(resourceKey, None)
-        projectConfig.setAttribute(resourceKey, "label", ProjectModel.RESOURCES_LABEL)
-
-        absoluteProjectPath = directory + "/" + projectName
-        dir = QDir()
-        if not QDir(absoluteProjectPath).exists():
-            dir.mkpath(absoluteProjectPath)
-        else:
-            if not overwrite:
-                reply = QMessageBox.question(self, "New project",
-                    "A project folder named \"" + projectName + "\" already exists.<br>"
-                    "Do you want to replace it?",
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-                if reply == QMessageBox.No:
-                    return
-
-                self._clearProjectDir(absoluteProjectPath)
-
-        # Add subfolders
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.DEVICES_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.SCENES_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MACROS_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MONITORS_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
-
-        # Send changes to model
-        self.model().addNewProject(projectName, directory, projectConfig)
-
-
-    def _clearProjectDir(self, absolutePath):
-        if len(absolutePath) < 1:
-            return
-
-        dirToDelete = QDir(absolutePath)
-        # Remove all files from directory
-        fileEntries = dirToDelete.entryList(QDir.Files | QDir.CaseSensitive)
-        while len(fileEntries) > 0:
-            dirToDelete.remove(fileEntries.pop())
-
-        # Remove all sub directories
-        dirEntries = dirToDelete.entryList(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.CaseSensitive)
-        while len(dirEntries) > 0:
-            subDirPath = absolutePath + "/" + dirEntries.pop()
-            subDirToDelete = QDir(subDirPath)
-            if len(subDirToDelete.entryList()) > 0:
-                self._clearProjectDir(subDirPath)
-            subDirToDelete.rmpath(subDirPath)
+        projectName = "default_project"
+        sceneName = "default_scene"
+        
+        self.model().createNewProject(projectName, "/tmp/", True)
+        self.model().addScene(projectName, sceneName, sceneName)
 
 
     def newProject(self):
@@ -130,17 +69,17 @@ class ProjectTreeView(QTreeView):
                 return
 
             # Call function again
-            self.onProjectNew()
+            self.newProject()
             return
 
         projectName = projectName[0]
 
-        directory = QFileDialog.getExistingDirectory(self, "Saving location of project", \
+        directory = QFileDialog.getExistingDirectory(self, "Save project", \
                         "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         if directory is None:
             return
 
-        self._createNewProject(projectName, directory)
+        self.model().createNewProject(projectName, directory)
 
 
     def openProject(self):
@@ -149,45 +88,16 @@ class ProjectTreeView(QTreeView):
         if len(filename) < 1:
             return
         
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
-        
-        projectConfig = loadFromFile(str(filename))
-        # TODO: this function merges the loaded hash into the current project hash
-        # consider projectName to overwrite path
-        self.model().addConfigToProject(projectConfig)
+        self.model().openProject(str(filename))
 
 
     def saveProject(self):
-        filename = QFileDialog.getSaveFileName(None, "Save project as", QDir.tempPath(), "XML (*.xml)")
-        if len(filename) < 1:
+        directory = QFileDialog.getExistingDirectory(self, "Save project", \
+                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if directory is None:
             return
         
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".xml"
-        
-        # TODO: save selected project
-        name = self._currentProjectName()
-        if name is None:
-            return
-        
-        projectConfig = self.model().projectHash.get(name)
-        saveToFile(projectConfig, filename)
-
-
-    def setupDefaultProject(self):
-        """
-        This function sets up a default project.
-        So basically a new project is created and saved in the users /tmp/ folder.
-        Previous data is overwritten.
-        """
-        projectName = "default_project"
-        sceneName = "default_scene"
-        
-        self._createNewProject(projectName, "/tmp/", True)
-        self.model().addScene(projectName, sceneName, sceneName)
+        return self.model().saveProject(directory)
 
 
     def mouseDoubleClickEvent(self, event):
