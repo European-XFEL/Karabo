@@ -26,7 +26,8 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, QIcon(":slot"))
         
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent("Value Field",
+                                                 box=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
@@ -80,4 +81,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         manager.Manager().executeCommand(
-            dict(path=self.internalKey.path, command=self.__command, args=args))
+            dict(path=self.internalKey.configuration.path,
+            command=self.__command, args=args))

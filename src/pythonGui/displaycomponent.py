@@ -24,14 +24,12 @@ class DisplayComponent(BaseComponent):
     factories = DisplayWidget.factories
 
 
-    def __init__(self, classAlias, widgetFactory="DisplayWidget", **params):
+    def __init__(self, classAlias, box, widgetFactory="DisplayWidget", **params):
         super(DisplayComponent, self).__init__(classAlias)
         
-        self.__initParams = params
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
             classAlias)(**params)
-
-        params['key'].addComponent(self)
+        box.addComponent(self)
 
 
 ### getter and setter functions ###
