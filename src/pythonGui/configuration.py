@@ -28,17 +28,23 @@ class Configuration(object):
 
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self.configuration = self.schema.getClass()('', self)
+        self._configuration = self.schema.Box("", self.schema, self)
+        self._configuration.value = self.schema.getClass()("", self)
         self.type = type
         self.path = path
 
 
+    @property
+    def configuration(self):
+        return self._configuration.value
+
+
     def merge(self, config):
-        self.schema.__set__(self.configuration, config)
+        self._configuration.set(config)
 
 
     def set(self, parameterKey, value):
-        self.configuration.set(parameterKey, value)
+        self._configuration.set(parameterKey, value)
 
 
     def setAttribute(self, parameterKey, attributeKey, value):
@@ -49,5 +55,5 @@ class Configuration(object):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self.schema.fillWidget(parameterEditor, self.configuration,
+        self.schema.fillWidget(parameterEditor, self._configuration,
                                self.type == "class")

@@ -28,10 +28,8 @@ class EditableApplyLaterComponent(BaseComponent):
     signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box):
         super(EditableApplyLaterComponent, self).__init__(classAlias)
-
-        self.__initParams = params
 
         self.__isEditableValueInit = True
         
@@ -41,20 +39,14 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(box)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
-        
-        metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get('unitSymbol')
-        
-        # Append unit label, if available
-        unitLabel = str()
-        if metricPrefixSymbol:
-            unitLabel += metricPrefixSymbol
-        if unitSymbol:
-            unitLabel += unitSymbol
-        if len(unitLabel) > 0:
+
+        d = box.descriptor
+        unitLabel = (getattr(d, "metricPrefixSymbol", "") +
+                     getattr(d, "unitSymbol", ""))
+        if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
 
         self.__hasConflict = False
@@ -118,7 +110,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.signalConflictStateChanged.connect(
             manager.Manager().onConflictStateChanged)
 
-        params['key'].addComponent(self)
+        box.addComponent(self)
 
 
     def copy(self):
@@ -143,9 +135,9 @@ class EditableApplyLaterComponent(BaseComponent):
     widget = property(fget=_getWidget)
 
 
-    def _getKeys(self):
-        return self.__editableWidget.keys
-    keys = property(fget=_getKeys)
+    @property
+    def boxes(self):
+        return self.__editableWidget.boxes
 
 
     def _getValue(self):
@@ -222,7 +214,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
 
-        self.signalConflictStateChanged.emit(self.keys[0].configuration.path,
+        self.signalConflictStateChanged.emit(self.boxes[0].configuration.path,
                                              hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 

@@ -679,7 +679,7 @@ class _Manager(QObject):
         schema = config.get('schema')
         conf = Configuration(schema, deviceId, 'device')
         self.deviceData[deviceId] = conf
-        conf.configuration.state.signalUpdateDisplayValue.connect(
+        conf.configuration.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,

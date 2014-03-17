@@ -23,7 +23,7 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 class EditableNoApplyComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box):
         super(EditableNoApplyComponent, self).__init__(classAlias)
         
         self.__initParams = params

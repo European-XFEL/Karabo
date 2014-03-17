@@ -34,18 +34,18 @@ class EditableSpinBox(EditableWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, value=None, valueType=None, **params):
-        super(EditableSpinBox, self).__init__(**params)
+    def __init__(self, box):
+        super(EditableSpinBox, self).__init__(box)
 
         self.__spinBox = QSpinBox()
 
-        if valueType is not None:
-            info = iinfo(valueType.numpy)
-            self.__spinBox.setRange(info.min, info.max)
+        info = iinfo(box.descriptor.numpy)
+        self.__spinBox.setRange(info.min, info.max)
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
         
-        self.valueChanged(self.keys[0], value)
+        if hasattr(box, 'value'):
+            self.valueChanged(self.boxes[0], box.value)
 
         #metricPrefixSymbol = params.get('metricPrefixSymbol')
         #unitSymbol = params.get('unitSymbol')
@@ -100,7 +100,7 @@ class EditableSpinBox(EditableWidget):
     maximum = property(fset=_setMaximum)
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0
         

@@ -35,8 +35,8 @@ class DisplayLabel(DisplayWidget):
     category = "Value"
     alias = "Value Field"
   
-    def __init__(self, **params):
-        super(DisplayLabel, self).__init__(**params)
+    def __init__(self, box):
+        super(DisplayLabel, self).__init__(box)
         
         self.value = None
         
