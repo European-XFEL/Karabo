@@ -15,11 +15,11 @@ __all__ = ["ProjectModel"]
 
 from enums import NavigationItemTypes
 import manager
-from karabo.karathon import Hash, HashMergePolicy, VectorHash
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile, VectorHash)
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 
-from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 
@@ -43,12 +43,14 @@ class ProjectModel(QStandardItemModel):
     MACROS_KEY = "macros"
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
+    CONFIGURATIONS_KEY = "configurations"
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
     MACROS_LABEL = "Macros"
     MONITORS_LABEL = "Monitors"
     RESOURCES_LABEL = "Resources"
+    CONFIGURATIONS_LABEL = "Configurations"
 
 
     def __init__(self, parent=None):
@@ -235,7 +237,92 @@ class ProjectModel(QStandardItemModel):
         return self.projectHash.has(projectName)
 
 
-    def addNewProject(self, projectName, directory, projectConfig):
+    def _clearProjectDir(self, absolutePath):
+        if len(absolutePath) < 1:
+            return
+
+        dirToDelete = QDir(absolutePath)
+        # Remove all files from directory
+        fileEntries = dirToDelete.entryList(QDir.Files | QDir.CaseSensitive)
+        while len(fileEntries) > 0:
+            dirToDelete.remove(fileEntries.pop())
+
+        # Remove all sub directories
+        dirEntries = dirToDelete.entryList(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.CaseSensitive)
+        while len(dirEntries) > 0:
+            subDirPath = absolutePath + "/" + dirEntries.pop()
+            subDirToDelete = QDir(subDirPath)
+            if len(subDirToDelete.entryList()) > 0:
+                self._clearProjectDir(subDirPath)
+            subDirToDelete.rmpath(subDirPath)
+
+
+    def createNewProject(self, projectName, directory, overwrite=False):
+        """
+        This function creates a hash for a new project and saves it to the given
+        \directory.
+        """
+        # Project name to lower case
+        projectName = str(projectName).lower()
+
+        projectConfig = Hash(ProjectModel.PROJECT_KEY)
+        projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
+
+        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICES_KEY
+        projectConfig.set(deviceKey, None)
+        projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
+        sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
+        projectConfig.set(sceneKey, None)
+        projectConfig.setAttribute(sceneKey, "label", ProjectModel.SCENES_LABEL)
+        macroKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MACROS_KEY
+        projectConfig.set(macroKey, None)
+        projectConfig.setAttribute(macroKey, "label", ProjectModel.MACROS_LABEL)
+        monitorKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MONITORS_KEY
+        projectConfig.set(monitorKey, None)
+        projectConfig.setAttribute(monitorKey, "label", ProjectModel.MONITORS_LABEL)
+        resourceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.RESOURCES_KEY
+        projectConfig.set(resourceKey, None)
+        projectConfig.setAttribute(resourceKey, "label", ProjectModel.RESOURCES_LABEL)
+        configurationKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.CONFIGURATIONS_KEY
+        projectConfig.set(configurationKey, None)
+        projectConfig.setAttribute(configurationKey, "label", ProjectModel.CONFIGURATIONS_LABEL)
+
+        absoluteProjectPath = directory + "/" + projectName
+        dir = QDir()
+        if not QDir(absoluteProjectPath).exists():
+            dir.mkpath(absoluteProjectPath)
+        else:
+            if not overwrite:
+                reply = QMessageBox.question(None, "New project",
+                    "A project folder named \"" + projectName + "\" already exists.<br>"
+                    "Do you want to replace it?",
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+                if reply == QMessageBox.No:
+                    return
+
+                self._clearProjectDir(absoluteProjectPath)
+
+        # Add subfolders
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.DEVICES_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.SCENES_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MACROS_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MONITORS_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
+        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.CONFIGURATIONS_LABEL)
+
+        self._addNewProject(projectName, directory, projectConfig)
+        
+        # Save project.xml
+        saveToFile(self.projectHash.get(projectName),
+                   "{}/{}/project.xml".format(directory, projectName))
+
+
+    def _addNewProject(self, projectName, directory, projectConfig):
+        """
+        This function updates the project hash with the given project
+        configuration and updates the view with the new changes.
+        """
         # Check whether project already exists
         alreadyExists = self._projectExists(projectName)
         if alreadyExists:
@@ -253,7 +340,23 @@ class ProjectModel(QStandardItemModel):
         self.updateData()
 
 
-    def addConfigToProject(self, config):
+    def openProject(self, filename):
+        projectConfig = loadFromFile(filename)
+        # TODO: this function merges the loaded hash into the current project hash
+        # consider projectName to overwrite path
+        self.addProjectConfiguration(projectConfig)
+
+
+    def saveProject(self, directory):
+        projectName = self._currentProjectName()
+        print "saveProject", directory, projectName
+        print self.projectHash
+        print ""
+        projectConfig = self.projectHash.get(projectName)
+        #saveToFile(projectConfig, filename)
+
+
+    def addProjectConfiguration(self, config):
         self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
         self.updateData()
 
@@ -288,7 +391,7 @@ class ProjectModel(QStandardItemModel):
         config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
         config.set(configPath + ".serverId", self.pluginDialog.server)
         # Add device to project hash
-        self.addConfigToProject(config)
+        self.addProjectConfiguration(config)
 
         # Select added device
         self.selectPath(devicePath)
@@ -312,6 +415,7 @@ class ProjectModel(QStandardItemModel):
         self.signalAddScene.emit(alias)
 
 
+### slots ###
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
         # Send signal to projectPanel to update toolbar actions

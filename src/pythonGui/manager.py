@@ -126,11 +126,11 @@ class _Manager(QObject):
         self.sqlDatabase = SqlDatabase()
         self.sqlDatabase.openConnection()
         
-        # Model for navigationtreeview
+        # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
                         connect(self.onNavigationTreeModelSelectionChanged)
-        # Model for projecttreeview
+        # Model for project views
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
