@@ -24,7 +24,7 @@ from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
-    signalApplyChanged = pyqtSignal(str, bool, bool) # internalKey, enable, hasConflicts
+    signalApplyChanged = pyqtSignal(object, bool, bool) # internalKey, enable, hasConflicts
     signalItemSelectionChanged = pyqtSignal(str) # path
 
 
@@ -101,17 +101,23 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_updateParameters(self.invisibleRootItem(), state)
 
 
-    def addItemDataToHash(self, item, config):
+    def setItemBusy(self, item):
+        """Shows the busy tag on an editable item
+
+        Change the apply button of an editable component to show the busy
+        flag. Return if that was possible."""
+
         editableComponent = item.editableComponent
         if editableComponent is None:
-            return
+            return False
 
         if not isinstance(editableComponent, EditableApplyLaterComponent):
-            return
+            return False
         
         if editableComponent.applyEnabled:
-            config.set(item.internalKey, editableComponent.value)
             editableComponent.changeApplyToBusy(True)
+            return True
+        return False
 
 
     def applyRemoteChanges(self, item):
@@ -244,11 +250,11 @@ class ParameterTreeWidget(QTreeWidget):
 
 
 ### slots ###
-    def onApplyChanged(self, key, enable):
+    def onApplyChanged(self, box, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
         result = self.checkApplyButtonsEnabled()
-        self.signalApplyChanged.emit(key, result[0], result[1])
+        self.signalApplyChanged.emit(box, result[0], result[1])
 
 
     def onApplyAll(self):
@@ -256,14 +262,13 @@ class ParameterTreeWidget(QTreeWidget):
         if nbSelectedItems > 0:
             config = Hash()
             selectedItems = self.selectedItems()
-            for item in selectedItems:
-                self.addItemDataToHash(item, config)
+            boxes = [item.internalKey for item in selectedItems
+                     if self.setItemBusy(item)]
         else:
-            # Go trough tree and save changes into config
-            config = Hash()
-            self._r_applyAll(self.invisibleRootItem(), config)
-        
-        Manager().onDeviceChangedAsHash(self.path, config)
+            boxes = [item.internalKey for item in self.allItems()
+                     if self.setItemBusy(item)]
+
+        Manager().onDeviceChanged(boxes)
 
 
     def onApplyAllRemoteChanges(self):
