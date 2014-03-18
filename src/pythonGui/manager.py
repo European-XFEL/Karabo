@@ -67,7 +67,7 @@ class _Manager(QObject):
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalSchemaAvailable = pyqtSignal(dict) # key, schema
+    signalSchemaAvailable = pyqtSignal(object) # key, schema
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
@@ -79,10 +79,10 @@ class _Manager(QObject):
 
     signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
-    signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
+    signalDeviceStateChanged = pyqtSignal(object, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
-    signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(str, bool) # deviceId, inErrorState
+    signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
+    signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
 
@@ -225,36 +225,6 @@ class _Manager(QObject):
         return splittedPath[0]
 
 
-    def newVisibleDevice(self, deviceId):
-        # Check, whether deviceId is in systemTopology (means online)
-        hasDevice = self.systemTopology.has(deviceId)
-        # If schema was not seen, request device schema in function
-        # getDeviceSchema will call newVisibleDevice again
-        if hasDevice and (self.getDevice(deviceId) is None):
-            return True
-
-        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
-        if deviceIdCount:
-            self.__visibleDevInsKeys[deviceId] += 1
-        else:
-            self.__visibleDevInsKeys[deviceId] = 1
-        if self.__visibleDevInsKeys[deviceId] == 1:
-            self.signalNewVisibleDevice.emit(deviceId)
-        
-        print "newVisible", self.__visibleDevInsKeys
-        print ""
-        return True
-
-
-    def removeVisibleDevice(self, deviceId):
-        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
-        if deviceIdCount:
-            self.__visibleDevInsKeys[deviceId] -= 1
-            if self.__visibleDevInsKeys[deviceId] == 0:
-                self.signalRemoveVisibleDevice.emit(deviceId)
-                print "removeVisibleDevice", deviceId
-
-
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
         # Go recursively through Hash
         self._r_changeHash(devicePath, devicePath, config, configChangeType)
@@ -308,18 +278,18 @@ class _Manager(QObject):
 
 
     def _triggerStateChange(self, box, value, timestamp):
-        deviceId = box.configuration.path
+        configuration = box.configuration
         # Update GUI due to state changes
         if value == "Changing...":
-            self.signalChangingState.emit(deviceId, True)
+            self.signalChangingState.emit(configuration, True)
         else:
             if ("Error" in value) or ("error" in value):
-                self.signalErrorState.emit(deviceId, True)
+                self.signalErrorState.emit(configuration, True)
             else:
-                self.signalErrorState.emit(deviceId, False)
+                self.signalErrorState.emit(configuration, False)
             
-            self.signalChangingState.emit(deviceId, False)
-            self.signalDeviceStateChanged.emit(deviceId, value)
+            self.signalChangingState.emit(configuration, False)
+            self.signalDeviceStateChanged.emit(configuration, value)
 
 
 ### Slots ###
@@ -651,49 +621,41 @@ class _Manager(QObject):
         classId = headerHash.get('classId')
         schema = config.get('schema')
         
-        # Update map for server and class with schema
-        path = "{}.{}".format(serverId, classId)
-        conf = Configuration(schema, path, 'class')
-        self.serverClassData[serverId, classId] = conf
-        self.onSchemaAvailable(dict(key=path, classId=classId, 
-                               type=NavigationItemTypes.CLASS,
-                               configuration=conf))
+        conf = self.serverClassData[serverId, classId]
+        conf.setSchema(schema)
+        self.onSchemaAvailable(conf)
 
 
     def getClass(self, serverId, classId):
-        # Return class schema, if already existing
-        if (serverId, classId) in self.serverClassData:
-            return self.serverClassData[serverId, classId]
-
-        # Else, send network request
-        self.signalGetClassSchema.emit(serverId, classId)
-        return None
+        if deviceId not in self.deviceData:
+            path = "{}.{}".format(serverId, classId)
+            self.deviceData[deviceId] = Configuration(path, 'device')
+            self.signalGetDeviceSchema.emit(deviceId)
+        return self.deviceData[deviceId]
     
     
     def handleDeviceSchema(self, headerHash, config):
-        deviceId = headerHash.get('deviceId')
-        if deviceId in self.deviceData:
+        deviceId = headerHash['deviceId']
+        if deviceId not in self.deviceData:
+            print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = config.get('schema')
-        conf = Configuration(schema, deviceId, 'device')
-        self.deviceData[deviceId] = conf
+        schema = config['schema']
+        conf = self.deviceData[deviceId]
+        conf.setSchema(schema)
         conf.configuration.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
-        self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
-                                    configuration=conf))
-        self.newVisibleDevice(deviceId)
+        self.onSchemaAvailable(conf)
+        conf.addVisible()
 
 
     def getDevice(self, deviceId):
-        if deviceId in self.deviceData:
-            return self.deviceData[deviceId]
-        
-        # Send network request
-        self.signalGetDeviceSchema.emit(deviceId)
-        return None
+        if deviceId not in self.deviceData:
+            self.deviceData[deviceId] = Configuration(deviceId, 'device')
+            self.signalGetDeviceSchema.emit(deviceId)
+        return self.deviceData[deviceId]
         
 
     def handleDeviceSchemaUpdated(self, headerHash, config):

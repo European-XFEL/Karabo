@@ -24,7 +24,7 @@ from enums import NavigationItemTypes
 
 
 class NavigationHierarchyModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(object)
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
@@ -299,30 +299,21 @@ class NavigationHierarchyModel(QAbstractItemModel):
             type = NavigationItemTypes.SERVER
             path = index.data()
         elif level == 2:
-            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
 
             conf = manager.Manager().getClass(serverId, classId)
             path = "{}.{}".format(serverId, classId)
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     configuration=conf))
+            manager.Manager().onSchemaAvailable(conf)
         elif level == 3:
-            type = NavigationItemTypes.DEVICE
             deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
 
             conf = manager.Manager().getDevice(deviceId)
             path = deviceId
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     configuration=conf))
+            manager.Manager().onSchemaAvailable(conf)
 
-        itemInfo = dict(key=path, classId=classId, type=type)
-        self.signalItemChanged.emit(itemInfo)
+        self.signalItemChanged.emit(conf)
 
 
     def getHierarchyLevel(self, index):

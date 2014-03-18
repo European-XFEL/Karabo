@@ -1235,27 +1235,19 @@ class GraphicsView(QSvgWidget):
                     if unitProxyWidget:
                         items.append((unitProxyWidget, None))
 
-                    # Register as visible device
-                    Manager().newVisibleDevice(box)
+                    box.configuration.addVisible()
 
                 # Editable component
                 if configEditableComponent:
                     if not configDisplayComponent:
-                        editableComponent = EditableNoApplyComponent(item.classAlias, key=internalKey,
-                                                                     enumeration=item.enumeration,
-                                                                     metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                     unitSymbol=item.unitSymbol,
-                                                                     valueType=item.valueType)
+                        editableComponent = EditableNoApplyComponent(
+                            item.classAlias, box)
                     else:
-                        editableComponent = EditableApplyLaterComponent(item.classAlias, key=internalKey,
-                                                                        enumeration=item.enumeration,
-                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                        unitSymbol=item.unitSymbol,
-                                                                        valueType=item.valueType)
+                        editableComponent = EditableApplyLaterComponent(
+                            item.classAlias, box)
                         editableComponent.isEditableValueInit = False
 
-                        # Register as visible device
-                        Manager().newVisibleDevice(keys[0])
+                        box.configuration.addVisible()
                         
                     items.append((editableComponent.widget, editableComponent))
 

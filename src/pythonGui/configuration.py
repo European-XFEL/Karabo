@@ -16,22 +16,27 @@ __all__ = ["Configuration"]
 from hash import Hash, HashMergePolicy
 from schemareader import SchemaReader
 import weakref
+import manager
 
 
 class Configuration(object):
 
 
-    def __init__(self, schema, path, type):
+    def __init__(self, path, type):
         """Create a new Configuration for schema,
         type should be 'class' or 'device'."""
         super(Configuration, self).__init__()
+        self.type = type
+        self.path = path
+        self.schema = None
+        self.visible = 0
 
+
+    def setSchema(self, schema):
         r = SchemaReader()
         self.schema = r.readSchema(schema)
         self._configuration = self.schema.Box("", self.schema, self)
         self._configuration.value = self.schema.getClass()("", self)
-        self.type = type
-        self.path = path
 
 
     @property
@@ -57,3 +62,15 @@ class Configuration(object):
         self.parameterEditor = parameterEditor
         self.schema.fillWidget(parameterEditor, self._configuration,
                                self.type == "class")
+
+
+    def addVisible(self):
+        self.visible += 1
+        if self.visible == 1:
+            manager.Manager().signalNewVisibleDevice.emit(self.path)
+
+
+    def removeVisible(self):
+        self.visible -= 1
+        if self.visible == 0:
+            manager.Manager().signalRemoveVisibleDevice.emit(self.path)
