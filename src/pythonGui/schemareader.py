@@ -110,7 +110,7 @@ class Type(hashtypes.Type):
             if self.accessMode == AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
-            item.editableComponent = component(item.classAlias, box)
+            item.editableComponent = component(item.classAlias, box, treeWidget)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)

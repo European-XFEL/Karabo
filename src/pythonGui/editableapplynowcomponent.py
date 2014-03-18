@@ -23,16 +23,15 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 class EditableApplyNowComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, box):
+    def __init__(self, classAlias, box, parent):
         super(EditableApplyNowComponent, self).__init__(classAlias)
 
-        self.__initParams = params
-
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
