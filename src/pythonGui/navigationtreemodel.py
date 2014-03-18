@@ -8,30 +8,31 @@
 """This module contains a class which represents a model to display a hierarchical
    navigation in a treeview."""
 
-__all__ = ["NavigationHierarchyModel"]
+__all__ = ["NavigationTreeModel"]
 
 
+from enums import NavigationItemTypes
 import globals
-from navigationhierarchynode import NavigationHierarchyNode
+from karabo.karathon import Hash
 import manager
+from treenode import TreeNode
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
 from PyQt4.QtGui import QItemSelectionModel, QIcon
 
-from enums import NavigationItemTypes
 
-
-class NavigationHierarchyModel(QAbstractItemModel):
+class NavigationTreeModel(QAbstractItemModel):
+    # signal
     signalItemChanged = pyqtSignal(dict)
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
     def __init__(self, parent=None):
-        super(NavigationHierarchyModel, self).__init__(parent)
+        super(NavigationTreeModel, self).__init__(parent)
         
         # Root node of hierarchy tree
-        self.rootNode = NavigationHierarchyNode()
+        self.rootNode = TreeNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
@@ -74,13 +75,13 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Create node for host
             hostNode = self.rootNode.getNode(host)
             if hostNode is None:
-                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                hostNode = TreeNode(host, host, self.rootNode)
                 self.rootNode.appendChildNode(hostNode)
 
             # Create node for server
             serverNode = hostNode.getNode(serverId)
             if serverNode is None:
-                serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                serverNode = TreeNode(serverId, serverId, hostNode)
                 hostNode.appendChildNode(serverNode)
             serverNode.visibility = visibility
 
@@ -99,7 +100,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
                     path = "{}.{}".format(serverId, classId)
                     classNode = serverNode.getNode(classId)
                     if classNode is None:
-                        classNode = NavigationHierarchyNode(classId, path, serverNode)
+                        classNode = TreeNode(classId, path, serverNode)
                         serverNode.appendChildNode(classNode)
                     classNode.visibility = visibility
 
@@ -158,14 +159,14 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Host node
             hostNode = self.rootNode.getNode(host)
             if hostNode is None:
-                hostNode = NavigationHierarchyNode(host, host, self.rootNode)
+                hostNode = TreeNode(host, host, self.rootNode)
                 self.rootNode.appendChildNode(hostNode)
 
             # Server node
             serverNode = hostNode.getNode(serverId)
             if serverNode is None:
                 if serverId == "__none__":
-                    serverNode = NavigationHierarchyNode(serverId, serverId, hostNode)
+                    serverNode = TreeNode(serverId, serverId, hostNode)
                     hostNode.appendChildNode(serverNode)
                 else:
                     continue
@@ -175,7 +176,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             if classNode is None:
                 if serverId == "__none__":
                     path = "{}.{}".format(serverId, classId)
-                    classNode = NavigationHierarchyNode(classId, path, serverNode)
+                    classNode = TreeNode(classId, path, serverNode)
                     serverNode.appendChildNode(classNode)
                 else:
                     continue
@@ -183,7 +184,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             # Device node
             deviceNode = classNode.getNode(deviceId)
             if deviceNode is None:
-                deviceNode = NavigationHierarchyNode(deviceId, deviceId, classNode)
+                deviceNode = TreeNode(deviceId, deviceId, classNode)
                 classNode.appendChildNode(deviceNode)
             deviceNode.status = status
             deviceNode.visibility = visibility
@@ -272,7 +273,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         
         return removedInstanceIds
 
-
+                
     def globalAccessLevelChanged(self):
         self.modelReset.emit()
 
@@ -306,7 +307,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             schema = manager.Manager().getClassSchema(serverId, classId)
             path = "{}.{}".format(serverId, classId)
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+                                        type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             deviceId = index.data()
@@ -318,7 +319,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
             schema = manager.Manager().getDeviceSchema(deviceId)
             path = deviceId
             manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                                     type=type, schema=schema))
+                                           type=type, schema=schema))
 
         itemInfo = dict(key=path, classId=classId, type=type)
         self.signalItemChanged.emit(itemInfo)
@@ -332,6 +333,33 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.rootNode.parentNode = None
         self.rootNode.childNodes = []
         self.endResetModel()
+
+
+    def getAsHash(self):
+        """
+        This function creates a hash object, fills it with the current visible
+        topology and returns that hash.
+        """
+        h = Hash()
+        self._rGetAsHash(self.rootNode, h)
+        return h
+        
+
+    def _rGetAsHash(self, node, hash, path=""):
+        """
+        This function goes recursively through the tree and stores its data in
+        a hash object, depending on the visibility.
+        """
+        if path == "":
+            path = node.displayName
+        else:
+            path = path + "." + node.displayName
+            hash.set(path, None)
+        
+        for childNode in node.childNodes:
+            if childNode.visibility > globals.GLOBAL_ACCESS_LEVEL:
+                continue
+            self._rGetAsHash(childNode, hash, path)
 
 
     def getHierarchyLevel(self, index):
@@ -430,6 +458,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
         Reimplemented function of QAbstractItemModel.
         """
         if parent.column() > 0:
+            #print "rowCount 1"
             return None
 
         if not parent.isValid():
@@ -456,7 +485,7 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         if role == Qt.DisplayRole:
             node = index.internalPointer()
-            return node.data(column)
+            return node.displayName
         elif (role == Qt.DecorationRole) and (column == 0):
             # Find out the hierarchy level of the selected node
             hierarchyLevel = self.getHierarchyLevel(index)

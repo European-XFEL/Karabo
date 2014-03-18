@@ -20,11 +20,10 @@ from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
-
+from projecttreeview import ProjectTreeView
 from schemareader import SchemaReader 
 
-from karabo.karathon import *
-from PyQt4.QtCore import SIGNAL, Qt, QTimer
+from PyQt4.QtCore import pyqtSignal, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
                          QSplitter, QStackedWidget, QVBoxLayout, QWidget)
 
@@ -43,14 +42,23 @@ class ConfigurationPanel(QWidget):
     #    pass
     ##########################################
 
-    def __init__(self, treemodel):
+
+    # To import a plugin a server connection needs to be established
+    signalConnectToServer = pyqtSignal()
+    signalAddScene = pyqtSignal(str) # scene title
+
+    def __init__(self, treeModel, projectModel):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
-        # map = { deviceInternalKey, swIndex }
-        self.__navItemInternalKeyIndexMap = dict()
-        # map = { deviceInternalKey, bool }
-        self.__internalKeySchemaLoadedMap = dict()
+
+        # map = { path, swIndex }
+        self.__itemPathIndexMap = dict()
+        # map = { path, bool }
+        self.__pathSchemaLoadedMap = dict()
+        
+        # map = { path, projectPath }
+        self.__itemProjectPathMap = dict()
         
         self.__schemaReader = SchemaReader()
         
@@ -60,25 +68,48 @@ class ConfigurationPanel(QWidget):
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
+        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
+
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainSplitter = QSplitter(Qt.Vertical)
 
-        # widget with navigation/attributeeditor-splitter and button-layout
+        # Layout for navigation and project tree
+        navSplitter = QSplitter(Qt.Vertical)
+        # Navigation tree
+        self.twNavigation = NavigationTreeView(None, treeModel)
+        treeModel.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation.hide()
+        navSplitter.addWidget(self.twNavigation)
+
+        # Project tree
+        self.twProject = ProjectTreeView(projectModel, self)
+        projectModel.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject.hide()
+        navSplitter.addWidget(self.twProject)
+
+        navSplitter.setStretchFactor(0, 1)
+        navSplitter.setStretchFactor(1, 1)
+
+        # Stacked widget for configuration parameters
+        self.__swParameterEditor = QStackedWidget(None)
+        # Initial page
+        twInitalParameterEditorPage = ParameterTreeWidget()
+        twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
+        self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+
         topWidget = QWidget(mainSplitter)
-        vLayout = QVBoxLayout(topWidget)
-        vLayout.setContentsMargins(0,0,0,0)
-        
-        # splitter for navigation + attributeeditor
+
         splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
-        vLayout.addWidget(splitTopPanes)
-                
-        self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        treemodel.signalItemChanged.connect(self.onNavigationItemChanged)
-        treemodel.signalInstanceNewReset.connect(self.onInstanceNewReset)
-        self.__twNavigation.hide()
+        splitTopPanes.addWidget(navSplitter)
+        splitTopPanes.addWidget(self.__swParameterEditor)
 
         splitTopPanes.setStretchFactor(0, 1)
+        splitTopPanes.setStretchFactor(1, 3)
+
+        vLayout = QVBoxLayout(topWidget)
+        vLayout.setContentsMargins(0,0,0,0)
+        vLayout.addWidget(splitTopPanes)
         
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
@@ -86,8 +117,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
-        
-        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -97,107 +126,99 @@ class ConfigurationPanel(QWidget):
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
 
-        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
-        self.__swParameterEditor = QStackedWidget(splitTopPanes)
-        # Initial page
-        twParameterEditorPage = ParameterTreeWidget()
-        twParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
-        self.__swParameterEditor.addWidget(twParameterEditorPage)
-        splitTopPanes.setStretchFactor(1, 3)
-
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
         
         text = "Initiate device"
-        self.__pbInitDevice = QPushButton(QIcon(":start"), text)
-        self.__pbInitDevice.setToolTip(text)
-        self.__pbInitDevice.setStatusTip(text)
-        self.__pbInitDevice.setVisible(False)
-        self.__pbInitDevice.setMinimumSize(140,32)
-        self.__pbInitDevice.clicked.connect(self.onInitDevice)
-        hLayout.addWidget(self.__pbInitDevice)
+        self.pbInitDevice = QPushButton(QIcon(":start"), text)
+        self.pbInitDevice.setToolTip(text)
+        self.pbInitDevice.setStatusTip(text)
+        self.pbInitDevice.setVisible(False)
+        self.pbInitDevice.setMinimumSize(140,32)
+        self.pbInitDevice.clicked.connect(self.onInitDevice)
+        hLayout.addWidget(self.pbInitDevice)
 
         text = "Kill instance"
-        self.__pbKillInstance = QPushButton(QIcon(":delete"), text)
-        self.__pbKillInstance.setStatusTip(text)
-        self.__pbKillInstance.setToolTip(text)
-        self.__pbKillInstance.setVisible(False)
-        self.__pbKillInstance.setMinimumSize(140,32)
+        self.pbKillInstance = QPushButton(QIcon(":delete"), text)
+        self.pbKillInstance.setStatusTip(text)
+        self.pbKillInstance.setToolTip(text)
+        self.pbKillInstance.setVisible(False)
+        self.pbKillInstance.setMinimumSize(140,32)
         # use action for button to reuse
-        self.__acKillInstance = QAction(QIcon(":delete"), text, self)
-        self.__acKillInstance.setStatusTip(text)
-        self.__acKillInstance.setToolTip(text)
-        self.__acKillInstance.triggered.connect(self.onKillInstance)
-        self.__pbKillInstance.clicked.connect(self.__acKillInstance.triggered)
-        hLayout.addWidget(self.__pbKillInstance)
+        self.acKillInstance = QAction(QIcon(":delete"), text, self)
+        self.acKillInstance.setStatusTip(text)
+        self.acKillInstance.setToolTip(text)
+        self.acKillInstance.triggered.connect(self.onKillInstance)
+        self.pbKillInstance.clicked.connect(self.acKillInstance.triggered)
+        hLayout.addWidget(self.pbKillInstance)
         
         self.__hasConflicts = False
 
         text = "Apply all"
-        self.__pbApplyAll = QPushButton(QIcon(":apply"), text)
-        self.__pbApplyAll.setToolTip(text)
-        self.__pbApplyAll.setStatusTip(text)
-        self.__pbApplyAll.setVisible(False)
-        self.__pbApplyAll.setEnabled(False)
-        self.__pbApplyAll.setMinimumSize(140,32)
+        self.pbApplyAll = QPushButton(QIcon(":apply"), text)
+        self.pbApplyAll.setToolTip(text)
+        self.pbApplyAll.setStatusTip(text)
+        self.pbApplyAll.setVisible(False)
+        self.pbApplyAll.setEnabled(False)
+        self.pbApplyAll.setMinimumSize(140,32)
         # use action for button to reuse
-        self.__acApplyAll = QAction(QIcon(":apply"), text, self)
-        self.__acApplyAll.setStatusTip(text)
-        self.__acApplyAll.setToolTip(text)
-        self.__acApplyAll.setEnabled(False)
-        self.__acApplyAll.triggered.connect(self.onApplyAll)
-        self.__pbApplyAll.clicked.connect(self.__acApplyAll.triggered)
+        self.acApplyAll = QAction(QIcon(":apply"), text, self)
+        self.acApplyAll.setStatusTip(text)
+        self.acApplyAll.setToolTip(text)
+        self.acApplyAll.setEnabled(False)
+        self.acApplyAll.triggered.connect(self.onApplyAll)
+        self.pbApplyAll.clicked.connect(self.acApplyAll.triggered)
 
         text = "Accept all local changes"
-        self.__acApplyLocalChanges = QAction(text, self)
-        self.__acApplyLocalChanges.setStatusTip(text)
-        self.__acApplyLocalChanges.setToolTip(text)
-        self.__acApplyLocalChanges.triggered.connect(self.onApplyAll)
+        self.acApplyLocalChanges = QAction(text, self)
+        self.acApplyLocalChanges.setStatusTip(text)
+        self.acApplyLocalChanges.setToolTip(text)
+        self.acApplyLocalChanges.triggered.connect(self.onApplyAll)
 
         text = "Accept all remote changes"
-        self.__acApplyRemoteChanges = QAction(text, self)
-        self.__acApplyRemoteChanges.setStatusTip(text)
-        self.__acApplyRemoteChanges.setToolTip(text)
-        self.__acApplyRemoteChanges.triggered.connect(self.onApplyAllRemoteChanges)
+        self.acApplyRemoteChanges = QAction(text, self)
+        self.acApplyRemoteChanges.setStatusTip(text)
+        self.acApplyRemoteChanges.setToolTip(text)
+        self.acApplyRemoteChanges.triggered.connect(self.onApplyAllRemoteChanges)
 
         text = "Apply selected local changes"
-        self.__acApplySelectedChanges = QAction(text, self)
-        self.__acApplySelectedChanges.setStatusTip(text)
-        self.__acApplySelectedChanges.setToolTip(text)
-        self.__acApplySelectedChanges.triggered.connect(self.onApplyAll)
+        self.acApplySelectedChanges = QAction(text, self)
+        self.acApplySelectedChanges.setStatusTip(text)
+        self.acApplySelectedChanges.setToolTip(text)
+        self.acApplySelectedChanges.triggered.connect(self.onApplyAll)
 
         text = "Accept selected remote changes"
-        self.__acApplySelectedRemoteChanges = QAction(text, self)
-        self.__acApplySelectedRemoteChanges.setStatusTip(text)
-        self.__acApplySelectedRemoteChanges.setToolTip(text)
-        self.__acApplySelectedRemoteChanges.triggered.connect(self.onApplySelectedRemoteChanges)
+        self.acApplySelectedRemoteChanges = QAction(text, self)
+        self.acApplySelectedRemoteChanges.setStatusTip(text)
+        self.acApplySelectedRemoteChanges.setToolTip(text)
+        self.acApplySelectedRemoteChanges.triggered.connect(self.onApplySelectedRemoteChanges)
         
         # add menu to toolbutton
-        self.__mApply = QMenu(self.__pbApplyAll)
-        self.__mApply.addAction(self.__acApplyLocalChanges)
-        self.__mApply.addAction(self.__acApplyRemoteChanges)
-        self.__mApply.addSeparator()
-        self.__mApply.addAction(self.__acApplySelectedChanges)
-        self.__mApply.addAction(self.__acApplySelectedRemoteChanges)
+        self.mApply = QMenu(self.pbApplyAll)
+        self.mApply.addAction(self.acApplyLocalChanges)
+        self.mApply.addAction(self.acApplyRemoteChanges)
+        self.mApply.addSeparator()
+        self.mApply.addAction(self.acApplySelectedChanges)
+        self.mApply.addAction(self.acApplySelectedRemoteChanges)
         
-        hLayout.addWidget(self.__pbApplyAll)
+        hLayout.addWidget(self.pbApplyAll)
         
         text = "Reset all"
-        self.__pbResetAll = QPushButton(QIcon(":no"), text)
-        self.__pbResetAll.setToolTip(text)
-        self.__pbResetAll.setStatusTip(text)
-        self.__pbResetAll.setVisible(False)
-        self.__pbResetAll.setEnabled(False)
-        self.__pbResetAll.setMinimumSize(140,32)
+        self.pbResetAll = QPushButton(QIcon(":no"), text)
+        self.pbResetAll.setToolTip(text)
+        self.pbResetAll.setStatusTip(text)
+        self.pbResetAll.setVisible(False)
+        self.pbResetAll.setEnabled(False)
+        self.pbResetAll.setMinimumSize(140,32)
         # use action for button to reuse
-        self.__acResetAll = QAction(QIcon(":no"), text, self)
-        self.__acResetAll.setStatusTip(text)
-        self.__acResetAll.setToolTip(text)
-        self.__acResetAll.setEnabled(False)
-        self.__acResetAll.triggered.connect(self.onResetAll)
-        self.__pbResetAll.clicked.connect(self.__acResetAll.triggered)
+        self.acResetAll = QAction(QIcon(":no"), text, self)
+        self.acResetAll.setStatusTip(text)
+        self.acResetAll.setToolTip(text)
+        self.acResetAll.setEnabled(False)
+        self.acResetAll.triggered.connect(self.onResetAll)
+        self.pbResetAll.clicked.connect(self.acResetAll.triggered)
 
-        hLayout.addWidget(self.__pbResetAll)
+        hLayout.addWidget(self.pbResetAll)
         hLayout.addStretch()
         vLayout.addLayout(hLayout)
         
@@ -245,42 +266,42 @@ class ConfigurationPanel(QWidget):
             return
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
-        if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
+        if (self.pbApplyAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Apply selected"
             else:
                 text = "Apply ({}) selected".format(nbSelected)
-            self.__acApplyLocalChanges.setVisible(False)
-            self.__acApplyRemoteChanges.setVisible(False)
-            self.__acApplySelectedChanges.setVisible(True)
-            self.__acApplySelectedRemoteChanges.setVisible(True)
+            self.acApplyLocalChanges.setVisible(False)
+            self.acApplyRemoteChanges.setVisible(False)
+            self.acApplySelectedChanges.setVisible(True)
+            self.acApplySelectedRemoteChanges.setVisible(True)
         else:
             text = "Apply all"
-            self.__acApplyLocalChanges.setVisible(True)
-            self.__acApplyRemoteChanges.setVisible(True)
-            self.__acApplySelectedChanges.setVisible(False)
-            self.__acApplySelectedRemoteChanges.setVisible(False)
+            self.acApplyLocalChanges.setVisible(True)
+            self.acApplyRemoteChanges.setVisible(True)
+            self.acApplySelectedChanges.setVisible(False)
+            self.acApplySelectedRemoteChanges.setVisible(False)
 
-        self.__pbApplyAll.setText(text)
-        self.__pbApplyAll.setStatusTip(text)
-        self.__pbApplyAll.setToolTip(text)
+        self.pbApplyAll.setText(text)
+        self.pbApplyAll.setStatusTip(text)
+        self.pbApplyAll.setToolTip(text)
 
-        self.__acApplyAll.setText(text)
-        self.__acApplyAll.setStatusTip(text)
-        self.__acApplyAll.setToolTip(text)
+        self.acApplyAll.setText(text)
+        self.acApplyAll.setStatusTip(text)
+        self.acApplyAll.setToolTip(text)
         
         if self.hasConflicts is True:
             text = "Resolve conflicts"
-            self.__pbApplyAll.setStatusTip(text)
-            self.__pbApplyAll.setToolTip(text)
-            self.__pbApplyAll.setMenu(self.__mApply)
+            self.pbApplyAll.setStatusTip(text)
+            self.pbApplyAll.setToolTip(text)
+            self.pbApplyAll.setMenu(self.mApply)
             
-            self.__acApplyAll.setStatusTip(text)
-            self.__acApplyAll.setToolTip(text)
-            self.__acApplyAll.setMenu(self.__mApply)
+            self.acApplyAll.setStatusTip(text)
+            self.acApplyAll.setToolTip(text)
+            self.acApplyAll.setMenu(self.mApply)
         else:
-            self.__pbApplyAll.setMenu(None)
-            self.__acApplyAll.setMenu(None)
+            self.pbApplyAll.setMenu(None)
+            self.acApplyAll.setMenu(None)
 
 
     def updateResetAllActions(self, path):
@@ -289,7 +310,7 @@ class ConfigurationPanel(QWidget):
             return
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
-        if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
+        if (self.pbResetAll.isEnabled() is True) and (nbSelected > 0):
             if nbSelected == 1:
                 text = "Reset selected"
             else:
@@ -297,13 +318,13 @@ class ConfigurationPanel(QWidget):
         else:
             text = "Reset all"
         
-        self.__pbResetAll.setText(text)
-        self.__pbResetAll.setStatusTip(text)
-        self.__pbResetAll.setToolTip(text)
+        self.pbResetAll.setText(text)
+        self.pbResetAll.setStatusTip(text)
+        self.pbResetAll.setToolTip(text)
 
-        self.__acResetAll.setText(text)
-        self.__acResetAll.setStatusTip(text)
-        self.__acResetAll.setToolTip(text)
+        self.acResetAll.setText(text)
+        self.acResetAll.setStatusTip(text)
+        self.acResetAll.setToolTip(text)
 
 
     def _parseSchema(self, itemInfo, twParameterEditor):
@@ -333,9 +354,9 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.addContextAction(self.__acFileOpen)
         twParameterEditor.addContextAction(self.__acFileSaveAs)
         twParameterEditor.addContextSeparator()
-        twParameterEditor.addContextAction(self.__acKillInstance)
-        twParameterEditor.addContextAction(self.__acApplyAll)
-        twParameterEditor.addContextAction(self.__acResetAll)
+        twParameterEditor.addContextAction(self.acKillInstance)
+        twParameterEditor.addContextAction(self.acApplyAll)
+        twParameterEditor.addContextAction(self.acResetAll)
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.signalItemSelectionChanged.connect(self.onSelectionChanged)
         
@@ -356,47 +377,47 @@ class ConfigurationPanel(QWidget):
         if hasConflicts is True:
             icon = QIcon(":apply-conflict")
             text = "Resolve conflict"
-            self.__pbApplyAll.setIcon(icon)
-            self.__pbApplyAll.setStatusTip(text)
-            self.__pbApplyAll.setToolTip(text)
-            self.__pbApplyAll.setMenu(self.__mApply)
+            self.pbApplyAll.setIcon(icon)
+            self.pbApplyAll.setStatusTip(text)
+            self.pbApplyAll.setToolTip(text)
+            self.pbApplyAll.setMenu(self.mApply)
 
-            self.__acApplyAll.setIcon(icon)
-            self.__acApplyAll.setStatusTip(text)
-            self.__acApplyAll.setToolTip(text)
-            self.__acApplyAll.setMenu(self.__mApply)
+            self.acApplyAll.setIcon(icon)
+            self.acApplyAll.setStatusTip(text)
+            self.acApplyAll.setToolTip(text)
+            self.acApplyAll.setMenu(self.mApply)
             
-            self.__pbResetAll.setEnabled(False)
-            self.__acResetAll.setEnabled(False)
+            self.pbResetAll.setEnabled(False)
+            self.acResetAll.setEnabled(False)
         else:
             icon = QIcon(":apply")
             text = "Apply all"
-            self.__pbApplyAll.setIcon(icon)
-            self.__pbApplyAll.setStatusTip(text)
-            self.__pbApplyAll.setToolTip(text)
-            self.__pbApplyAll.setMenu(None)
+            self.pbApplyAll.setIcon(icon)
+            self.pbApplyAll.setStatusTip(text)
+            self.pbApplyAll.setToolTip(text)
+            self.pbApplyAll.setMenu(None)
             
-            self.__acApplyAll.setIcon(icon)
-            self.__acApplyAll.setStatusTip(text)
-            self.__acApplyAll.setToolTip(text)
-            self.__acApplyAll.setMenu(None)
-        self.__acApplyLocalChanges.setVisible(hasConflicts)
-        self.__acApplyRemoteChanges.setVisible(hasConflicts)
+            self.acApplyAll.setIcon(icon)
+            self.acApplyAll.setStatusTip(text)
+            self.acApplyAll.setToolTip(text)
+            self.acApplyAll.setMenu(None)
+        self.acApplyLocalChanges.setVisible(hasConflicts)
+        self.acApplyRemoteChanges.setVisible(hasConflicts)
 
-        self.__acApplySelectedChanges.setVisible(not hasConflicts)
-        self.__acApplySelectedRemoteChanges.setVisible(not hasConflicts)
+        self.acApplySelectedChanges.setVisible(not hasConflicts)
+        self.acApplySelectedRemoteChanges.setVisible(not hasConflicts)
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
     def _setApplyAllEnabled(self, path, enable):
-        self.__pbApplyAll.setEnabled(enable)
-        self.__acApplyAll.setEnabled(enable)
+        self.pbApplyAll.setEnabled(enable)
+        self.acApplyAll.setEnabled(enable)
         self.updateApplyAllActions(path)
 
 
     def _setResetAllEnabled(self, path, enable):
-        self.__pbResetAll.setEnabled(enable)
-        self.__acResetAll.setEnabled(enable)
+        self.pbResetAll.setEnabled(enable)
+        self.acResetAll.setEnabled(enable)
         self.updateResetAllActions(path)
 
 
@@ -412,14 +433,14 @@ class ConfigurationPanel(QWidget):
 
     def _hideAllButtons(self):
         # Hide buttons and actions
-        self.__pbInitDevice.setVisible(False)
+        self.pbInitDevice.setVisible(False)
         
-        self.__pbKillInstance.setVisible(False)
-        self.__acKillInstance.setVisible(False)
-        self.__pbApplyAll.setVisible(False)
-        self.__acApplyAll.setVisible(False)
-        self.__pbResetAll.setVisible(False)
-        self.__acResetAll.setVisible(False)
+        self.pbKillInstance.setVisible(False)
+        self.acKillInstance.setVisible(False)
+        self.pbApplyAll.setVisible(False)
+        self.acApplyAll.setVisible(False)
+        self.pbResetAll.setVisible(False)
+        self.acResetAll.setVisible(False)
 
 
     def _getCurrentParameterEditor(self):
@@ -441,15 +462,15 @@ class ConfigurationPanel(QWidget):
 
 
     def _updateButtonsVisibility(self, visible):
-        self.__pbInitDevice.setVisible(visible)
+        self.pbInitDevice.setVisible(visible)
         
-        self.__pbKillInstance.setVisible(not visible)
-        self.__pbApplyAll.setVisible(not visible)
-        self.__pbResetAll.setVisible(not visible)
+        self.pbKillInstance.setVisible(not visible)
+        self.pbApplyAll.setVisible(not visible)
+        self.pbResetAll.setVisible(not visible)
         
-        self.__acKillInstance.setVisible(not visible)
-        self.__acApplyAll.setVisible(not visible)
-        self.__acResetAll.setVisible(not visible)
+        self.acKillInstance.setVisible(not visible)
+        self.acApplyAll.setVisible(not visible)
+        self.acResetAll.setVisible(not visible)
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
 
@@ -464,8 +485,7 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, type, path):
         # Show correct parameters
-        index = self.__navItemInternalKeyIndexMap.get(path)
-        print "+++ showParameterPage", index, path
+        index = self.__itemPathIndexMap.get(path)
         if index:
             self._setParameterEditorIndex(index)
 
@@ -507,8 +527,10 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        # Reset map
-        self.__navItemInternalKeyIndexMap = dict()
+        # Reset maps
+        self.__itemPathIndexMap = dict()
+        self.__pathSchemaLoadedMap = dict()
+        self.__itemProjectPathMap = dict()
 
         while self.__swParameterEditor.count() > 1:
             self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
@@ -521,47 +543,60 @@ class ConfigurationPanel(QWidget):
         be cleaned and removed.
         """
         # Remove \path from map
-        if path in self.__navItemInternalKeyIndexMap:
-            del self.__navItemInternalKeyIndexMap[path]
+        if path in self.__itemPathIndexMap:
+            del self.__itemPathIndexMap[path]
+        if path in self.__itemProjectPathMap:
+            del self.__itemProjectPathMap[path]
         self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.__twNavigation.createNewItem(itemInfo)
+        self.twNavigation.createNewItem(itemInfo)
 
 
     def onSelectNewNavigationItem(self, devicePath):
-        self.__twNavigation.selectItem(devicePath)
+        self.twNavigation.selectItem(devicePath)
 
 
     def onSchemaAvailable(self, itemInfo):
         # Update map deviceId = swIndex
-        key = itemInfo.get('key')
-        if (key in self.__navItemInternalKeyIndexMap) and (key in self.__internalKeySchemaLoadedMap):
-            index = self.__navItemInternalKeyIndexMap.get(key)
+        paramPageKey = itemInfo.get('key')
+        # Get project path, if it is set
+        projNaviPathTuple = itemInfo.get('projNaviPathTuple')
+        
+        if (paramPageKey in self.__itemPathIndexMap) and (paramPageKey in self.__pathSchemaLoadedMap):
+            index = self.__itemPathIndexMap.get(paramPageKey)
             if index:
-                twParameterEditor = self.__swParameterEditor.widget(index)
+                twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
-                schemaLoaded = self.__internalKeySchemaLoadedMap.get(key)
+                schemaLoaded = self.__pathSchemaLoadedMap.get(paramPageKey)
                 if not schemaLoaded:
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-                    self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
-                    twParameterEditor.clear()
-                    if self._parseSchema(itemInfo, twParameterEditor):
-                        self.__internalKeySchemaLoadedMap[key] = True
+                    self._r_unregisterComponents(twParameterEditorPage.invisibleRootItem())
+                    twParameterEditorPage.clear()
+
+                    if self._parseSchema(itemInfo, twParameterEditorPage):
+                        self.__pathSchemaLoadedMap[paramPageKey] = True
         else:
-            self.__navItemInternalKeyIndexMap[key] = self._createNewParameterPage(itemInfo)
+            self.__itemPathIndexMap[paramPageKey] = self._createNewParameterPage(itemInfo)
+            if projNaviPathTuple is not None:
+                self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
             # Schema might not be there yet...
             schema = itemInfo.get('schema')
-            
             if schema is not None:
-                self.__internalKeySchemaLoadedMap[key] = True
+                self.__pathSchemaLoadedMap[paramPageKey] = True
             else:
-                self.__internalKeySchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[paramPageKey] = False
+        
+        # Load schema for project path, if existing
+        projectPath = self.__itemProjectPathMap.get(paramPageKey)
+        if (projectPath is not None) and (projectPath in self.__pathSchemaLoadedMap):
+            if not self.__pathSchemaLoadedMap.get(projectPath):
+                self.onSchemaAvailable(dict(key=projectPath, schema=itemInfo.get('schema')))
 
 
-    def onNavigationItemChanged(self, itemInfo):
+    def onDeviceItemChanged(self, itemInfo):
         type = itemInfo.get('type')
         path = itemInfo.get('key')
 
@@ -574,27 +609,20 @@ class ConfigurationPanel(QWidget):
         self.showParameterPage(type, path)
 
 
-    def onProjectItemChanged(self, itemInfo):
-        type = itemInfo.get('type')
-        path = itemInfo.get('key')
-
-        self.showParameterPage(type, str(path))
-
-
     def onInstanceGone(self, instanceId, parentPath):
         # New schema can be in plugins of instance
-        keys = self.__internalKeySchemaLoadedMap.keys()
+        keys = self.__pathSchemaLoadedMap.keys()
         for key in keys:
             if instanceId in key:
-                self.__internalKeySchemaLoadedMap[key] = False
+                self.__pathSchemaLoadedMap[key] = False
 
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
-        self.__twNavigation.selectItem(parentPath)
+        self.twNavigation.selectItem(parentPath)
 
 
     def onDeviceStateChanged(self, internalKey, state):
-        index = self.__navItemInternalKeyIndexMap.get(internalKey)
+        index = self.__itemPathIndexMap.get(internalKey)
         if index:
             twParameterEditor = self.__swParameterEditor.widget(index)
             twParameterEditor.stateUpdated(state)
@@ -606,8 +634,8 @@ class ConfigurationPanel(QWidget):
             return
 
         result = parameterEditor.checkApplyButtonsEnabled()
-        self.__pbApplyAll.setEnabled(result[0])
-        self.__pbResetAll.setEnabled(result[0])
+        self.pbApplyAll.setEnabled(result[0])
+        self.pbResetAll.setEnabled(result[0])
         if result[1] == hasConflict:
             self.hasConflicts = hasConflict
 
@@ -693,11 +721,11 @@ class ConfigurationPanel(QWidget):
 
 
     def onKillInstance(self):
-        self.__twNavigation.onKillInstance()
+        self.twNavigation.onKillInstance()
 
 
     def onInitDevice(self):
-        itemInfo = self.__twNavigation.indexInfo()
+        itemInfo = self.twNavigation.indexInfo()
         if len(itemInfo) == 0:
             return
         
@@ -708,7 +736,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceSchemaUpdated(self, key):
-        self.__internalKeySchemaLoadedMap[key] = False
+        self.__pathSchemaLoadedMap[key] = False
 
 
     def onGlobalAccessLevelChanged(self):
@@ -718,19 +746,19 @@ class ConfigurationPanel(QWidget):
 
 
     def onFileSaveAs(self):
-        self.__twNavigation.onFileSaveAs()
+        self.twNavigation.onFileSaveAs()
 
 
     def onFileOpen(self):
-        self.__twNavigation.onFileOpen()
+        self.twNavigation.onFileOpen()
 
 
     # virtual function
     def onUndock(self):
-        self.__twNavigation.show()
+        self.twNavigation.show()
 
 
     # virtual function
     def onDock(self):
-        self.__twNavigation.hide()
+        self.twNavigation.hide()
 

@@ -16,11 +16,11 @@ __all__ = ["NavigationTreeView"]
 import const
 import qrc_icons
 
-from enums import *
+from enums import NavigationItemTypes
 from manager import Manager
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QIcon, QMenu, QTreeView)
 
 
 class NavigationTreeView(QTreeView):
