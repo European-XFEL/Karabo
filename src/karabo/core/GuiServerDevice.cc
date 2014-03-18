@@ -98,12 +98,12 @@ namespace karabo {
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 registerConnect(channel);
-                
-                Hash instanceInfo("type", "brokerInformation");
-                instanceInfo.set("host", this->getConnection()->getBrokerHostname());
-                instanceInfo.set("port", this->getConnection()->getBrokerPort());
-                instanceInfo.set("topic", this->getConnection()->getBrokerTopic());
-                channel->write(instanceInfo);
+
+                Hash brokerInfo("type", "brokerInformation");
+                brokerInfo.set("host", this->getConnection()->getBrokerHostname());
+                brokerInfo.set("port", this->getConnection()->getBrokerPort());
+                brokerInfo.set("topic", this->getConnection()->getBrokerTopic());
+                channel->write(brokerInfo);
                 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
@@ -322,9 +322,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 string deviceId = header.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash deviceInfo("type", "deviceSchema", "deviceId", deviceId,
-                                "schema", remote().getDeviceSchema(deviceId));
-                channel->write(deviceInfo);
+                Hash instanceInfo("type", "deviceSchema", "deviceId", deviceId,
+                                  "schema", remote().getDeviceSchema(deviceId));
+                channel->write(instanceInfo);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
             }
