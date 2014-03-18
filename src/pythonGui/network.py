@@ -13,7 +13,7 @@ __all__ = ["Network"]
 
 from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
                              Hash)
-from logindialog import LoginDialog
+from dialogs.logindialog import LoginDialog
 from manager import Manager
 from struct import pack
 
@@ -443,4 +443,3 @@ class Network(QObject):
         self.brokerPort = instanceInfo.get("port")
         self.brokerTopic = instanceInfo.get("topic")
         self._login()
-
