@@ -1228,7 +1228,7 @@ class GraphicsView(QSvgWidget):
                 
                 if configDisplayComponent:
                     displayComponent = DisplayComponent(
-                        box.descriptor.classAlias, box=box)
+                        box.descriptor.classAlias, box, self.inner)
                     
                     items.append((displayComponent.widget, displayComponent))
                     unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
@@ -1241,10 +1241,10 @@ class GraphicsView(QSvgWidget):
                 if configEditableComponent:
                     if not configDisplayComponent:
                         editableComponent = EditableNoApplyComponent(
-                            item.classAlias, box)
+                            item.classAlias, box, self.inner)
                     else:
                         editableComponent = EditableApplyLaterComponent(
-                            item.classAlias, box)
+                            item.classAlias, box, self.inner)
                         editableComponent.isEditableValueInit = False
 
                         box.configuration.addVisible()
