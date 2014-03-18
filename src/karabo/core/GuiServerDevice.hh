@@ -68,9 +68,9 @@ namespace karabo {
 
             void onExecute(const karabo::util::Hash& header, const std::vector<char>& body);
 
-            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
-
             void onInitDevice(const karabo::util::Hash& header, const std::vector<char>& body);
+
+            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
             void onKillServer(const karabo::util::Hash& header, const std::vector<char>& body);
 
@@ -86,19 +86,16 @@ namespace karabo {
 
             void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
 
-
-            void sendSystemTopology(karabo::net::Channel::Pointer channel);
-
+            
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
+            void sendSystemTopology(karabo::net::Channel::Pointer channel);
 
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
 
             void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
 
             void instanceGoneHandler(const std::string& instanceId);
-
-            void preprocessImageData(karabo::util::Hash& modified);
 
             void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
             
@@ -107,6 +104,10 @@ namespace karabo {
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
 
             void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
+
+            void preprocessImageData(karabo::util::Hash& modified);
+
+            karabo::util::Hash createConfigurationChangedHash(const std::string& deviceId, karabo::util::Hash modified);
             
         };
     }
