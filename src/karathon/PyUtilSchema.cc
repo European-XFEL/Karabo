@@ -1976,6 +1976,25 @@ void exportPyUtilSchema() {
                      , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
                      , (bp::arg("value"), bp::arg("sep") = ",;")
                      , bp::return_internal_reference<> ())
+                .def("setNewAllowedState"
+                     , (OverwriteElement& (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewAllowedState)
+                     , (bp::arg("states"), bp::arg("sep") = " ,;")
+                     , bp::return_internal_reference<> ())
+                .def("setNowObserverAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowUserAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowUserAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowOperatorAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowOperatorAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowExpertAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowExpertAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowAdminAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowAdminAccess)
+                     , bp::return_internal_reference<> ())
                 .def("setNewUnit"
                      , (OverwriteElement & (OverwriteElement::*)(const UnitType&))(&OverwriteElement::setNewUnit)
                      , (bp::arg("value"))
