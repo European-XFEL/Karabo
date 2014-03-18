@@ -13,6 +13,7 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 
+from copy import copy
 from enums import NavigationItemTypes
 import manager
 from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
@@ -169,11 +170,13 @@ class ProjectModel(QStandardItemModel):
         This function updates the status (on/offline) of the project devices and
         the server/classes which are available over the network.
         """
+        # TODO: remove copying hash
+        config = copy(config)
         if self.systemTopology is None:
             self.systemTopology = config
         else:
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        
+
         # Update relevant
         self.updateNeeded()
 
