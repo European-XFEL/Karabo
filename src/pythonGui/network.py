@@ -22,7 +22,6 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStrea
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 
-import datetime
 import globals
 import socket
 
@@ -50,7 +49,7 @@ class Network(QObject):
         self.__brokerTopic = str()
         self.__sessionToken = str()
 
-        self.__tcpSocket = None
+        self.tcpSocket = None
 
         Manager().signalKillDevice.connect(self.onKillDevice)
         Manager().signalKillServer.connect(self.onKillServer)
@@ -67,10 +66,8 @@ class Network(QObject):
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         Manager().signalGetFromPast.connect(self.onGetFromPast)
 
-        self.__headerSize = 0
-        self.__bodySize = 0
-        self.__headerBytes = bytearray()
-        self.__bodyBytes = bytearray()
+        self.dataSize = 0
+        self.dataBytes = bytearray()
 
 
     def connectToServer(self):
@@ -117,16 +114,15 @@ class Network(QObject):
         self.__provider = provider
         self.__hostname = hostname
         self.__port = port
-        self.__headerSize = 0
-        self.__bodySize = 0
+        self.dataSize = 0
 
-        self.__tcpSocket = QTcpSocket(self)
-        self.__tcpSocket.connected.connect(self.onConnected)
-        self.__tcpSocket.disconnected.connect(self.onDisconnected)
-        self.__tcpSocket.readyRead.connect(self.onReadServerData)
-        self.__tcpSocket.error.connect(self.onSocketError)
+        self.tcpSocket = QTcpSocket(self)
+        self.tcpSocket.connected.connect(self.onConnected)
+        self.tcpSocket.disconnected.connect(self.onDisconnected)
+        self.tcpSocket.readyRead.connect(self.onReadServerData)
+        self.tcpSocket.error.connect(self.onSocketError)
 
-        self.__tcpSocket.connectToHost(hostname, port)
+        self.tcpSocket.connectToHost(hostname, port)
 
 
     def endServerConnection(self):
@@ -136,15 +132,15 @@ class Network(QObject):
         self._logout()
         Manager().disconnectedFromServer()
 
-        if self.__tcpSocket is None:
+        if self.tcpSocket is None:
             return
 
-        self.__tcpSocket.disconnectFromHost()
-        if (self.__tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
-            self.__tcpSocket.waitForDisconnected(5000):
+        self.tcpSocket.disconnectFromHost()
+        if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
+            self.tcpSocket.waitForDisconnected(5000):
             print "Disconnected from server"
         else:
-            print "Disconnect failed:", self.__tcpSocket.errorString()
+            print "Disconnect failed:", self.tcpSocket.errorString()
 
 
     def _login(self):
@@ -219,52 +215,34 @@ class Network(QObject):
 
 ### Slots ###
     def onReadServerData(self):
-        input = QDataStream(self.__tcpSocket)
+        input = QDataStream(self.tcpSocket)
         input.setByteOrder(QDataStream.LittleEndian)
 
-        #print self.__tcpSocket.bytesAvailable(), " bytes are coming in"
+        #print self.tcpSocket.bytesAvailable(), " bytes are coming in"
         while True:
 
-            if self.__headerSize == 0:
+            if self.dataSize == 0:
 
-                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
+                if self.tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG):
                     break
 
-                self.__headerSize = input.readUInt32()
+                self.dataSize = input.readUInt32()
 
-            if len(self.__headerBytes) == 0:
+            if len(self.dataBytes) == 0:
 
-                if self.__tcpSocket.bytesAvailable() < self.__headerSize :
+                if self.tcpSocket.bytesAvailable() < self.dataSize:
                     break
 
-                self.__headerBytes = bytearray(self.__headerSize)
-                self.__headerBytes = input.readRawData(self.__headerSize)
+                self.dataBytes = bytearray(self.dataSize)
+                self.dataBytes = input.readRawData(self.dataSize)
                 # TODO How to do this nicely?
-                self.__headerBytes = bytearray(self.__headerBytes)
-
-            if self.__bodySize == 0:
-
-                if self.__tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG) :
-                    break
-
-                self.__bodySize = input.readUInt32()
-
-            if len(self.__bodyBytes) == 0:
-
-                if self.__tcpSocket.bytesAvailable() < self.__bodySize:
-                    break
-
-                self.__bodyBytes = bytearray(self.__bodySize)
-                self.__bodyBytes = input.readRawData(self.__bodySize)
-                # TODO How to do this nicely?
-                self.__bodyBytes = bytearray(self.__bodyBytes)
+                self.dataBytes = bytearray(self.dataBytes)
 
 
             # Fork on responseType
-            headerHash = self.__serializer.load(self.__headerBytes)
-            #bodyHash = self.__serializer.load(self.__bodyBytes)
+            instanceInfo = self.__serializer.load(self.dataBytes)
 
-            type = headerHash.get("type")
+            type = instanceInfo.get("type")
             #print "Request: ", type
 
             # "instanceNew" (instanceId, instanceInfo)
@@ -275,51 +253,41 @@ class Network(QObject):
             # "notification" (type, shortMsg, detailedMsg, instanceId)
             # "invalidateCache" (instanceId)
 
-            if type == "systemTopology":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleSystemTopology(bodyHash)
+            if type == "brokerInformation":
+                self._handleBrokerInformation(instanceInfo)
+            elif type == "systemTopology":
+                Manager().handleSystemTopology(instanceInfo.get("systemTopology"))
             elif type == "instanceNew":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleInstanceNew(bodyHash)
+                Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
             elif type == "instanceUpdated":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleInstanceUpdated(bodyHash)
+                Manager().handleInstanceUpdated(instanceInfo.get("topologyEntry"))
             elif type == "instanceGone":
-                Manager().handleInstanceGone(str(self.__bodyBytes))
-            elif type == "classDescription":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleClassSchema(headerHash, bodyHash)
+                Manager().handleInstanceGone(instanceInfo.get("instanceId"))
+            elif type == "classSchema":
+                Manager().handleClassSchema(instanceInfo)
             elif type == "deviceSchema":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleDeviceSchema(headerHash, bodyHash)
+                Manager().handleDeviceSchema(instanceInfo)
             elif type == "configurationChanged":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleConfigurationChanged(headerHash, bodyHash)
+                Manager().handleConfigurationChanged(instanceInfo)
             elif type == "log":
-                Manager().onLogDataAvailable(str(self.__bodyBytes))
+                Manager().onLogDataAvailable(instanceInfo.get("message"))
             elif type == "schemaUpdated":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
-            elif type == "brokerInformation":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleBrokerInformation(headerHash, bodyHash)
+                Manager().handleDeviceSchemaUpdated(instanceInfo)
             elif type == "notification":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                self._handleNotification(headerHash, bodyHash)
+                Manager().handleNotification(instanceInfo)
             elif type == "historicData":
-                bodyHash = self.__serializer.load(self.__bodyBytes)
-                Manager().handleHistoricData(headerHash, bodyHash)
+                Manager().handleHistoricData(instanceInfo)
             elif type == "invalidateCache":
                 print "invalidateCache"
             else:
                 print "WARN : Got unknown communication token \"", type, "\" from server"
             # Invalidate variables
-            self.__bodySize = self.__headerSize = 0
-            self.__headerBytes = self.__bodyBytes = bytearray()
+            self.dataSize = 0
+            self.dataBytes = bytearray()
 
 
     def onSocketError(self, socketError):
-        print "onSocketError", self.__tcpSocket.errorString(), socketError
+        print "onSocketError", self.tcpSocket.errorString(), socketError
 
         self.disconnectFromServer()
 
@@ -389,9 +357,9 @@ class Network(QObject):
     def onReconfigure(self, deviceId, parameterId, value):
         header = Hash()
         header.set("type", "reconfigure")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         body = Hash()
-        body.set(str(parameterId), value)
+        body.set(parameterId, value)
         self._tcpWriteHashHash(header, body)
 
 
@@ -476,9 +444,9 @@ class Network(QObject):
         self._tcpWriteHashHash(header, body)
 
 
-    def _tcpWriteHashHash(self, headerHash, bodyHash):
+    def _tcpWriteHashHash(self, instanceInfo, bodyHash):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(headerHash))
+        headerString = QByteArray(self.__serializer.save(instanceInfo))
         bodyString = QByteArray(self.__serializer.save(bodyHash))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
@@ -487,12 +455,12 @@ class Network(QObject):
         stream.push_back(headerString)
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
-        self.__tcpSocket.write(stream)
+        self.tcpSocket.write(stream)
 
 
-    def _tcpWriteHashString(self, headerHash, body):
+    def _tcpWriteHashString(self, instanceInfo, body):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(headerHash))
+        headerString = QByteArray(self.__serializer.save(instanceInfo))
         bodyString = QByteArray(str(body))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
@@ -501,23 +469,12 @@ class Network(QObject):
         stream.push_back(headerString)
         stream.push_back(QByteArray(pack('I', nBytesBody)))
         stream.push_back(bodyString)
-        self.__tcpSocket.write(stream)
+        self.tcpSocket.write(stream)
 
 
-    def _handleBrokerInformation(self, headerHash, bodyHash):
-        self.__brokerHost = bodyHash.get("host")
-        self.__brokerPort = str(bodyHash.get("port"))
-        self.__brokerTopic = bodyHash.get("topic")
+    def _handleBrokerInformation(self, instanceInfo):
+        self.__brokerHost = instanceInfo.get("host")
+        self.__brokerPort = str(instanceInfo.get("port"))
+        self.__brokerTopic = instanceInfo.get("topic")
         self._login()
-
-
-    def _handleNotification(self, headerHash, bodyHash):
-        deviceId = headerHash.get("deviceId")
-        timestamp = datetime.datetime.now()
-        # TODO: better format for timestamp and timestamp generation in karabo
-        timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        type = bodyHash.get("type")
-        shortMessage = bodyHash.get("shortMsg")
-        detailedMessage = bodyHash.get("detailedMsg")
-        Manager().handleNotification(timestamp, type, shortMessage, detailedMessage, deviceId)
 
