@@ -68,11 +68,6 @@ class BaseComponent(Loadable, QObject):
     widget = property(fget=_getWidget)
 
 
-    def _getKeys(self):
-        raise NotImplementedError, "BaseComponent._getKeys"
-    keys = property(fget=_getKeys)
-
-
     def _getValue(self):
         raise NotImplementedError, "BaseComponent._getValue"
     def _setValue(self, value):
