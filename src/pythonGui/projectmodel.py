@@ -352,11 +352,8 @@ class ProjectModel(QStandardItemModel):
 
     def saveProject(self, directory):
         projectName = self._currentProjectName()
-        print "saveProject", directory, projectName
-        print self.projectHash
-        print ""
         projectConfig = self.projectHash.get(projectName)
-        #saveToFile(projectConfig, filename)
+        saveToFile(projectConfig, "{}/{}".format(directory, filename))
 
 
     def addProjectConfiguration(self, config):
@@ -365,9 +362,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
-        print "addSceneToProject", projScenePath
-        print self.projectHash
-        print ""
         # Get old config of scenes
         vecConfig = self.projectHash.get(projScenePath)
 
@@ -409,12 +403,19 @@ class ProjectModel(QStandardItemModel):
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
 
-        self.addDevice()
+        # Get project name
+        projectName = self._currentProjectName()
+
+        # Remove old device
+        if path is not None:
+            self.onRemove()
+        
+        # Add new device
+        self.addDevice(projectName)
         self.pluginDialog = None
 
 
-    def addDevice(self):
-        projectName = self._currentProjectName()
+    def addDevice(self, projectName):
         if projectName is None: return
         
         # Path for device in project hash
@@ -427,10 +428,6 @@ class ProjectModel(QStandardItemModel):
         config = Hash()
         config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
         config.set(configPath + ".serverId", self.pluginDialog.server)
-        
-        print "+++++++++"
-        print config
-        print "+++++++++"
         
         # Add device to project hash
         self.addProjectConfiguration(config)
@@ -451,32 +448,30 @@ class ProjectModel(QStandardItemModel):
         
         # Get project name
         projectName = self._currentProjectName()
-        print "TODO", projectName
-        self.addScene(projectName, dialog.sceneName, dialog.sceneName)
+        self.addScene(projectName, dialog.sceneName, dialog.sceneName, path is not None)
 
 
-    def addScene(self, projectName, fileName, alias):
+    def addScene(self, projectName, fileName, alias, overwrite=False):
         projScenePath = "{}.{}.{}".format(projectName, ProjectModel.PROJECT_KEY, 
                                           ProjectModel.SCENES_KEY)
-        
-        print "projScenePath", projScenePath
 
         # Put info in Hash
         config = Hash("filename", fileName, "alias", alias)
+
+        # Remove old scene
+        if overwrite:
+            self.onRemove()
+            #self.signalRemoveScene(alias) # TODO: remove scene from mainwindow
         
-        print "+++++++++"
-        print config
-        print "+++++++++"
-        
-        # Add device to project hash
+        # Add new scene to project hash
         self.addSceneToProject(projScenePath, config)
 
-        # Select added device
+        # Select added scene
         self.selectPath(projScenePath)
         
         # Send signal to mainWindow to add scene
         self.signalAddScene.emit(alias)
-
+        
 
 ### slots ###
     def onSelectionChanged(self, selected, deselected):
@@ -523,7 +518,6 @@ class ProjectModel(QStandardItemModel):
         """
         If the server connection is changed, the model needs an update.
         """
-        print "onServerConnectionChanged", isConnected
         if not isConnected:
             self.systemTopology = None
 
@@ -542,7 +536,7 @@ class ProjectModel(QStandardItemModel):
         """
         index = self.selectionModel.currentIndex()
         if not index.isValid():
-            return None
+            return
         
         # Remove data from project hash
         self.projectHash.erase(index.data(ProjectModel.ITEM_PATH))

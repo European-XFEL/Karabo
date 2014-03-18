@@ -79,13 +79,13 @@ class ConfigurationPanel(QWidget):
         # Navigation tree
         self.twNavigation = NavigationTreeView(None, treeModel)
         treeModel.signalItemChanged.connect(self.onDeviceItemChanged)
-        #self.twNavigation.hide()
+        self.twNavigation.hide()
         navSplitter.addWidget(self.twNavigation)
 
         # Project tree
         self.twProject = ProjectTreeView(projectModel, self)
         projectModel.signalItemChanged.connect(self.onDeviceItemChanged)
-        #self.twProject.hide()
+        self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
         navSplitter.setStretchFactor(0, 1)
@@ -486,8 +486,6 @@ class ConfigurationPanel(QWidget):
     def showParameterPage(self, type, path):
         # Show correct parameters
         index = self.__itemPathIndexMap.get(path)
-        print "+++ showParameterPage +++", index, path
-        print ""
         if index:
             self._setParameterEditorIndex(index)
 
@@ -566,12 +564,9 @@ class ConfigurationPanel(QWidget):
         paramPageKey = itemInfo.get('key')
         # Get project path, if it is set
         projNaviPathTuple = itemInfo.get('projNaviPathTuple')
-        print ""
-        print "==== onSchemaAvailable ====", paramPageKey
         
         if (paramPageKey in self.__itemPathIndexMap) and (paramPageKey in self.__pathSchemaLoadedMap):
             index = self.__itemPathIndexMap.get(paramPageKey)
-            print "++++ index ++++", index
             if index:
                 twParameterEditorPage = self.__swParameterEditor.widget(index)
                 # Parsing of schema necessary?
@@ -585,7 +580,6 @@ class ConfigurationPanel(QWidget):
                         self.__pathSchemaLoadedMap[paramPageKey] = True
         else:
             self.__itemPathIndexMap[paramPageKey] = self._createNewParameterPage(itemInfo)
-            print "+++ Createpage +++", paramPageKey
             if projNaviPathTuple is not None:
                 self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
             # Schema might not be there yet...
