@@ -43,6 +43,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
 
+        self.box = box
         d = box.descriptor
         unitLabel = (getattr(d, "metricPrefixSymbol", "") +
                      getattr(d, "unitSymbol", ""))
@@ -254,10 +255,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def changeWidget(self, factory, alias):
         self.classAlias = alias
-        self.__initParams['value'] = self.value
 
         oldWidget = self.__editableWidget.widget
-        self.__editableWidget = factory.get_class(alias)(**self.__initParams)
+        self.__editableWidget = factory.get_class(alias)(self.box)
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
@@ -265,9 +265,8 @@ class EditableApplyLaterComponent(BaseComponent):
         oldWidget.setParent(None)
         self.__editableWidget.widget.show()
 
-        # Refresh new widget...
-        for key in self.__editableWidget.keys:
-            manager.Manager().onRefreshInstance(key)
+        for c in {b.configuration for b in self.__editableWidget.boxes}:
+            c.refresh()
 
 
 ### slots ###

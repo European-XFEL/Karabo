@@ -73,7 +73,7 @@ class _Manager(QObject):
     signalKillServer = pyqtSignal(str) # serverId
     signalDeviceSchemaUpdated = pyqtSignal(str) # deviceId
 
-    signalRefreshInstance = pyqtSignal(str) # deviceId
+    signalRefreshInstance = pyqtSignal(object) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
@@ -375,12 +375,8 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logData)
 
 
-    def onRefreshInstance(self, internalPath):
-        print "onRefreshInstance", internalPath
-        deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if (not deviceId) and (not self.__hash.has(internalPath)):
-            return
-        self.signalRefreshInstance.emit(deviceId)
+    def onRefreshInstance(self, configuration):
+        self.signalRefreshInstance.emit(configuration)
 
    
     def onNewNavigationItem(self, itemInfo):
