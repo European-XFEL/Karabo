@@ -10,10 +10,8 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
-#include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
-#include <karabo/net/BrokerConnection.hh>
-#include <karabo/net/BrokerChannel.hh>
+#include <karabo/net/Connection.hh>
 
 #include "Device.hh"
 #include "OkErrorFsm.hh"
@@ -60,31 +58,31 @@ namespace karabo {
 
             void onConnect(karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
+            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onLogin(karabo::net::Channel::Pointer channel, const std::vector<char>& body);
+            void onLogin(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onReconfigure(const karabo::util::Hash& header, const std::vector<char>& body);
+            void onReconfigure(const karabo::util::Hash& info);
 
-            void onExecute(const karabo::util::Hash& header, const std::vector<char>& body);
+            void onExecute(const karabo::util::Hash& info);
 
-            void onInitDevice(const karabo::util::Hash& header, const std::vector<char>& body);
+            void onInitDevice(const karabo::util::Hash& info);
 
-            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onKillServer(const karabo::util::Hash& header, const std::vector<char>& body);
+            void onKillServer(const karabo::util::Hash& info);
 
-            void onKillDevice(const karabo::util::Hash& header, const std::vector<char>& body);
+            void onKillDevice(const karabo::util::Hash& info);
 
-            void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+            void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+            void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
+            void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header, const std::vector<char>& body);
+            void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& header);
+            void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             
             void registerConnect(const karabo::net::Channel::Pointer& channel);
