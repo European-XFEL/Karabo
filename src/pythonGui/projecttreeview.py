@@ -141,12 +141,24 @@ class ProjectTreeView(QTreeView):
             menu.addAction(acAddScene)
         elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY) \
           or (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+            text = "Edit"
+            acEdit = QAction(text, self)
+            acEdit.setStatusTip(text)
+            acEdit.setToolTip(text)
+            
+            if (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY):
+                acEdit.triggered.connect(self.model().onEditDevice)
+            elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+                acEdit.triggered.connect(self.model().onEditScene)
+             
             text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
+            
             menu = QMenu()
+            menu.addAction(acEdit)
             menu.addAction(acRemove)
         
         if menu is None: return
