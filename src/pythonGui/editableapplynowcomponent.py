@@ -48,8 +48,6 @@ class EditableApplyNowComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-
         # Use key to register component to manager
         Manager().registerEditableComponent(params.get('key'), self)
 
@@ -131,5 +129,5 @@ class EditableApplyNowComponent(BaseComponent):
 
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
-        self.signalValueChanged.emit(key, value)
+        manager.Manager().onDeviceInstanceValuesChanged([key])
 
