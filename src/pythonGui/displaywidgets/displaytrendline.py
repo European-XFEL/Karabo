@@ -73,10 +73,10 @@ class Curve(QObject):
 
 
     def getFromPast(self, t0, t1):
-        _, d, _, p = self.key.split('.')
+        deviceId, property = self.key.split('.')
         t0 = datetime.datetime.utcfromtimestamp(t0)
         t1 = datetime.datetime.utcfromtimestamp(t1)
-        Manager().signalGetFromPast.emit(d, p, t0.isoformat(), t1.isoformat())
+        Manager().signalGetFromPast.emit(deviceId, property, t0.isoformat(), t1.isoformat())
 
 
     def changeInterval(self, t0, t1):
