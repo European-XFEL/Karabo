@@ -333,142 +333,109 @@ class Network(QObject):
 
 
     def onKillDevice(self, deviceId):
-        header = Hash()
-        header.set("type", "killDevice")
-        header.set("deviceId", str(deviceId));
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "killDevice")
+        instanceInfo.set("deviceId", deviceId);
+        self._tcpWriteHash(instanceInfo)
 
 
     def onKillServer(self, serverId):
-        header = Hash()
-        header.set("type", "killServer")
-        header.set("serverId", str(serverId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "killServer")
+        instanceInfo.set("serverId", serverId)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onRefreshInstance(self, instanceId):
-        header = Hash()
-        header.set("type", "refreshInstance")
-        header.set("deviceId", str(instanceId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "refreshInstance")
+        instanceInfo.set("deviceId", instanceId)
+        self._tcpWriteHash(instanceInfo)
 
 
-    def onReconfigure(self, deviceId, parameterId, value):
-        header = Hash()
-        header.set("type", "reconfigure")
-        header.set("deviceId", deviceId)
-        body = Hash()
-        body.set(parameterId, value)
-        self._tcpWriteHashHash(header, body)
+    def onReconfigure(self, deviceId, property, value):
+        self.onReconfigureAsHash(deviceId, Hash(property, value))
 
 
-    def onReconfigureAsHash(self, deviceId, body):
-        header = Hash()
-        header.set("type", "reconfigure")
-        header.set("deviceId", deviceId)
-        self._tcpWriteHashHash(header, body)
+    def onReconfigureAsHash(self, deviceId, config):
+        instanceInfo = Hash("type", "reconfigure")
+        instanceInfo.set("deviceId", deviceId)
+        instanceInfo.set("configuration", config)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onInitDevice(self, serverId, config):
-        header = Hash()
-        header.set("type", "initDevice")
-        header.set("serverId", serverId)
-        self._tcpWriteHashHash(header, config)
+        instanceInfo = Hash("type", "initDevice")
+        instanceInfo.set("serverId", serverId)
+        instanceInfo.set("configuration", config)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onExecute(self, deviceId, info):
-        header = Hash()
-        header.set("type", "execute")
-        header.set("deviceId", str(deviceId))
-
-        command = info.get('command')
-        body = Hash("command", str(command))
+        instanceInfo = Hash("type", "execute")
+        instanceInfo.set("deviceId", deviceId)
+        instanceInfo.set("command", info.get('command'))
 
         args = info.get('args')
-        if args:
+        if args is not None:
             i = 0
             for arg in args:
                 i = i+1
                 argName = str("a%s" % i)
-                body.set(argName, str(arg))
-        self._tcpWriteHashHash(header, body)
+                instanceInfo.set(argName, arg)
+
+        self._tcpWriteHash(instanceInfo)
 
 
     def onNewVisibleDevice(self, deviceId):
-        header = Hash()
-        header.set("type", "newVisibleDevice")
-        header.set("deviceId", str(deviceId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "newVisibleDevice")
+        instanceInfo.set("deviceId", deviceId)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onRemoveVisibleDevice(self, deviceId):
-        header = Hash()
-        header.set("type", "removeVisibleDevice")
-        header.set("deviceId", str(deviceId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "removeVisibleDevice")
+        instanceInfo.set("deviceId", deviceId)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onGetClassSchema(self, serverId, classId):
-        header = Hash("type", "getClassSchema")
-        header.set("serverId", str(serverId))
-        header.set("classId", str(classId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "getClassSchema")
+        instanceInfo.set("serverId", serverId)
+        instanceInfo.set("classId", classId)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onGetDeviceSchema(self, deviceId):
-        header = Hash("type", "getDeviceSchema")
-        header.set("deviceId", str(deviceId))
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "getDeviceSchema")
+        instanceInfo.set("deviceId", deviceId)
+        self._tcpWriteHash(instanceInfo)
 
 
     def onGetFromPast(self, deviceId, property, t0, t1):
-        header = Hash()
-        header.set('type', 'getFromPast')
-        header.set('deviceId', deviceId)
-        header.set('property', property)
-        header.set('t0', t0)
-        header.set('t1', t1)
-        self._tcpWriteHashHash(header, Hash())
+        instanceInfo = Hash("type", "getFromPast")
+        instanceInfo.set("deviceId", deviceId)
+        instanceInfo.set("property", property)
+        instanceInfo.set("t0", t0)
+        instanceInfo.set("t1", t1)
+        self._tcpWriteHash(instanceInfo)
 
 
 ### private functions ###
+    def _tcpWriteHash(self, instanceInfo):
+        dataBytes = QByteArray(self.serializer.save(instanceInfo))
+        dataSize = dataBytes.size()
+
+        stream = QByteArray()
+        stream.push_back(QByteArray(pack('I', dataSize)))
+        stream.push_back(dataBytes)
+        self.tcpSocket.write(stream)
+
+
     def _sendLoginInformation(self, username, password, provider, sessionToken):
-        header = Hash("type", "login")
-        body = Hash()
-        body.set("username", username)
-        body.set("password", password)
-        body.set("provider", provider)
-        body.set("sessionToken", sessionToken)
-
-        self._tcpWriteHashHash(header, body)
-
-
-    def _tcpWriteHashHash(self, instanceInfo, bodyHash):
-        stream = QByteArray()
-        headerString = QByteArray(self.serializer.save(instanceInfo))
-        bodyString = QByteArray(self.serializer.save(bodyHash))
-        nBytesHeader = headerString.size()
-        nBytesBody = bodyString.size()
-
-        stream.push_back(QByteArray(pack('I', nBytesHeader)))
-        stream.push_back(headerString)
-        stream.push_back(QByteArray(pack('I', nBytesBody)))
-        stream.push_back(bodyString)
-        self.tcpSocket.write(stream)
-
-
-    def _tcpWriteHashString(self, instanceInfo, body):
-        stream = QByteArray()
-        headerString = QByteArray(self.serializer.save(instanceInfo))
-        bodyString = QByteArray(str(body))
-        nBytesHeader = headerString.size()
-        nBytesBody = bodyString.size()
-
-        stream.push_back(QByteArray(pack('I', nBytesHeader)))
-        stream.push_back(headerString)
-        stream.push_back(QByteArray(pack('I', nBytesBody)))
-        stream.push_back(bodyString)
-        self.tcpSocket.write(stream)
+        loginInfo = Hash("type", "login")
+        loginInfo.set("username", username)
+        loginInfo.set("password", password)
+        loginInfo.set("provider", provider)
+        loginInfo.set("sessionToken", sessionToken)
+        self._tcpWriteHash(loginInfo)
 
 
     def _handleBrokerInformation(self, instanceInfo):

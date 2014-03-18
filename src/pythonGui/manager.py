@@ -77,7 +77,7 @@ class _Manager(QObject):
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
-    signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
+    signalReconfigure = pyqtSignal(str, str, object) # deviceId, property, value
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
@@ -396,10 +396,10 @@ class _Manager(QObject):
         
         keys = key.split(".")
         deviceId = keys[0]
-        parameterKey = keys[1]
+        property = keys[1]
 
         # Informs network
-        self.signalReconfigure.emit(deviceId, parameterKey, value)
+        self.signalReconfigure.emit(deviceId, property, value)
 
 
     def onDeviceChangedAsHash(self, deviceId, config):
