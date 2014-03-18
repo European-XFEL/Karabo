@@ -15,7 +15,8 @@ __all__ = ["ProjectModel"]
 
 from enums import NavigationItemTypes
 import manager
-from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile, VectorHash)
+from karabo.karathon import (Hash, HashMergePolicy, loadFromFile, saveToFile,
+                             VectorHash)
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 
@@ -73,14 +74,15 @@ class ProjectModel(QStandardItemModel):
         if (config is None) or config.empty():
             return
 
-        if categoryKey == ProjectModel.SCENES_KEY:
+        if categoryKey.startswith(ProjectModel.SCENES_KEY):
             fileName = config.get("filename")
             alias = config.get("alias")
 
             leafItem = QStandardItem(alias)
             leafItem.setEditable(False)
-            leafPath = projectPath + "." + categoryKey + "." + alias
+            leafPath = projectPath + "." + categoryKey #+ "." + alias
             leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
+            leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
             childItem.appendRow(leafItem)
         else:
             for leafKey in config.keys():
@@ -91,8 +93,10 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
                 if categoryKey == ProjectModel.DEVICES_KEY:
+                    leafItem.setData(ProjectModel.DEVICES_KEY, ProjectModel.ITEM_CATEGORY)
+                    
                     # Update icon on availability of device
-                    if self.systemTopology.has("device." + leafKey):
+                    if self.systemTopology.has("device.{}".format(leafKey)):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
@@ -144,8 +148,8 @@ class ProjectModel(QStandardItemModel):
                     subConfig = categoryConfig.get(categoryKey)
                     if isinstance(subConfig, VectorHash):
                         # Vector of Hashes
-                        for indexConfig in subConfig:
-                            self._handleLeafItems(childItem, projectPath, categoryKey, indexConfig)
+                        for i, indexConfig in enumerate(subConfig):
+                            self._handleLeafItems(childItem, projectPath, "{}[{}]".format(categoryKey, i), indexConfig)
                     else:
                         # Normal Hash
                         self._handleLeafItems(childItem, projectPath, categoryKey, subConfig)
@@ -223,11 +227,10 @@ class ProjectModel(QStandardItemModel):
         if not index.isValid():
             return None
         
-        projectIndex = index.parent()
-        if projectIndex is None:
-            return None
+        while (index.parent().data(Qt.DisplayRole) is not None):
+            index = index.parent()
         
-        return projectIndex.data(Qt.DisplayRole)
+        return index.data(Qt.DisplayRole)
 
 
     def _projectExists(self, projectName):
@@ -362,6 +365,9 @@ class ProjectModel(QStandardItemModel):
 
 
     def addSceneToProject(self, projScenePath, sceneConfig):
+        print "addSceneToProject", projScenePath
+        print self.projectHash
+        print ""
         # Get old config of scenes
         vecConfig = self.projectHash.get(projScenePath)
 
@@ -374,6 +380,37 @@ class ProjectModel(QStandardItemModel):
         
         self.projectHash.set(projScenePath, vecConfig)
         self.updateData()
+
+
+    def editDevice(self, path=None):
+        if self.systemTopology is None:
+            reply = QMessageBox.question(None, "No server connection",
+                                         "There is no connection to the server.<br>"
+                                         "Do you want to establish a server connection?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return
+            self.signalConnectToServer.emit()
+            return
+
+        if (path is not None) and self.projectHash.has(path):
+            deviceConfig = self.projectHash.get(path)
+        else:
+            deviceConfig = None
+
+        # Show dialog to select plugin
+        self.pluginDialog = PluginDialog()
+        if not self.pluginDialog.updateServerTopology(self.systemTopology, deviceConfig):
+            QMessageBox.warning(None, "No servers available",
+            "There are no servers available.<br>Please check, if all servers "
+            "are <br>started correctly!")
+            return
+        if self.pluginDialog.exec_() == QDialog.Rejected:
+            return
+
+        self.addDevice()
+        self.pluginDialog = None
 
 
     def addDevice(self):
@@ -390,6 +427,11 @@ class ProjectModel(QStandardItemModel):
         config = Hash()
         config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
         config.set(configPath + ".serverId", self.pluginDialog.server)
+        
+        print "+++++++++"
+        print config
+        print "+++++++++"
+        
         # Add device to project hash
         self.addProjectConfiguration(config)
 
@@ -397,19 +439,40 @@ class ProjectModel(QStandardItemModel):
         self.selectPath(devicePath)
 
 
-    def addScene(self, projectName, fileName, alias):
-        projScenePath = projectName + ".project.scenes"
+    def editScene(self, path=None):
+        if (path is not None) and self.projectHash.has(path):
+            sceneConfig = self.projectHash.get(path)
+        else:
+            sceneConfig = None
+        
+        dialog = SceneDialog(sceneConfig)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        # Get project name
+        projectName = self._currentProjectName()
+        print "TODO", projectName
+        self.addScene(projectName, dialog.sceneName, dialog.sceneName)
 
-        # Update project hash
-        scenePath = projScenePath + "." + alias
+
+    def addScene(self, projectName, fileName, alias):
+        projScenePath = "{}.{}.{}".format(projectName, ProjectModel.PROJECT_KEY, 
+                                          ProjectModel.SCENES_KEY)
+        
+        print "projScenePath", projScenePath
 
         # Put info in Hash
         config = Hash("filename", fileName, "alias", alias)
+        
+        print "+++++++++"
+        print config
+        print "+++++++++"
+        
         # Add device to project hash
         self.addSceneToProject(projScenePath, config)
 
         # Select added device
-        self.selectPath(scenePath)
+        self.selectPath(projScenePath)
         
         # Send signal to mainWindow to add scene
         self.signalAddScene.emit(alias)
@@ -437,7 +500,7 @@ class ProjectModel(QStandardItemModel):
             return
         
         # Check whether deviceId is already online
-        if manager.Manager().systemTopology.has(deviceId):
+        if self.systemTopology.has("device.{}".format(deviceId)):
             # Get schema
             schema = manager.Manager().getDeviceSchema(deviceId)
             itemInfo = dict(key=deviceId, classId=classId, \
@@ -465,38 +528,24 @@ class ProjectModel(QStandardItemModel):
             self.systemTopology = None
 
 
-    def onAddDevice(self):
-        if self.systemTopology is None:
-            reply = QMessageBox.question(None, "No server connection",
-                                         "There is no connection to the server.<br>"
-                                         "Do you want to establish a server connection?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return
-            self.signalConnectToServer.emit()
-            return
-
-        # Show dialog to select plugin
-        self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(self.systemTopology):
-            QMessageBox.warning(None, "No servers available",
-            "There are no servers available.<br>Please check, if all servers "
-            "are <br>started correctly!")
-            return
-        if self.pluginDialog.exec_() == QDialog.Rejected:
-            return
-
-        self.addDevice()
-        self.pluginDialog = None
+    def onEditDevice(self):
+        self.editDevice()
 
 
-    def onAddScene(self):
-        dialog = SceneDialog()
-        if dialog.exec_() == QDialog.Rejected:
-            return
+    def onEditScene(self):
+        self.editScene()
+
+
+    def onRemove(self):
+        """
+        This slot removes the currently selected index from the model.
+        """
+        index = self.selectionModel.currentIndex()
+        if not index.isValid():
+            return None
         
-        # Get project name
-        projectName = self._currentProjectName()
-        self.addScene(projectName, dialog.fileName, dialog.alias)
+        # Remove data from project hash
+        self.projectHash.erase(index.data(ProjectModel.ITEM_PATH))
+        # Remove data from model
+        self.removeRow(index.row(), index.parent())
 

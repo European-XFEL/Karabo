@@ -17,7 +17,7 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
 
 class SceneDialog(QDialog):
 
-    def __init__(self):
+    def __init__(self, config):
         super(SceneDialog, self).__init__()
 
         self.setWindowTitle("Add scene")
@@ -25,21 +25,12 @@ class SceneDialog(QDialog):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
 
-        self.gbSelectFileName = QGroupBox("Select file name", self)
-        fLayout = QFormLayout(self.gbSelectFileName)
+        fLayout = QFormLayout()
         fLayout.setContentsMargins(5,5,5,5)
-        self.leFileName = QLineEdit("")
-        self.leFileName.textChanged.connect(self.onTextChanged)
-        fLayout.addRow("File name:", self.leFileName)
-        vLayout.addWidget(self.gbSelectFileName)
-
-        self.gbSelectAlias = QGroupBox("Select alias", self)
-        fLayout = QFormLayout(self.gbSelectAlias)
-        fLayout.setContentsMargins(5,5,5,5)
-        self.leAlias = QLineEdit("")
-        self.leAlias.textChanged.connect(self.onTextChanged)
-        fLayout.addRow("Alias:", self.leAlias)
-        vLayout.addWidget(self.gbSelectAlias)
+        self.leSceneName = QLineEdit("")
+        self.leSceneName.textChanged.connect(self.onTextChanged)
+        fLayout.addRow("Scene name:", self.leSceneName)
+        vLayout.addLayout(fLayout)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -47,19 +38,17 @@ class SceneDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         vLayout.addWidget(self.buttonBox)
 
-
-    @property
-    def fileName(self):
-        return self.leFileName.text()
+        if config is not None:
+            self.leSceneName.setText(config.get("filename"))
 
 
     @property
-    def alias(self):
-        return self.leAlias.text()
+    def sceneName(self):
+        return self.leSceneName.text()
 
 
 ### Slots ###
     def onTextChanged(self, text):
-        enabled = (len(self.leFileName.text()) > 0) and (len(self.leAlias.text()) > 0)
+        enabled = len(self.leSceneName.text()) > 0
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
