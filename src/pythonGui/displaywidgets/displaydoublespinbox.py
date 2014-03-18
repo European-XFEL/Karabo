@@ -32,8 +32,8 @@ class DisplayDoubleSpinBox(DisplayWidget):
     category = "Digit"
     alias = "Float Field"
     
-    def __init__(self, **params):
-        super(DisplayDoubleSpinBox, self).__init__(**params)
+    def __init__(self, box):
+        super(DisplayDoubleSpinBox, self).__init__(box)
         
         self.__leDblValue = QLineEdit()
         self.__validator = QDoubleValidator(self.__leDblValue)
@@ -54,10 +54,7 @@ class DisplayDoubleSpinBox(DisplayWidget):
             return None
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
-        
+    def valueChanged(self, box, value, timestamp=None):
         if value != self.value:
             self.__leDblValue.blockSignals(True)
             self.__leDblValue.setText("{}".format(value))
