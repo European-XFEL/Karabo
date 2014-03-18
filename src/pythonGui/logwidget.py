@@ -273,7 +273,7 @@ class LogWidget(QWidget):
         hFilterLayout.addStretch()
 
         if self.isLogData:
-            # Do not show these buttons
+            # Show these buttons
             self.pbFilterDebug.setChecked(True)
             self.pbFilterDebug.setVisible(True)
             self.pbFilterInfo.setChecked(True)
@@ -282,22 +282,22 @@ class LogWidget(QWidget):
             self.pbFilterWarn.setVisible(True)
             self.pbFilterError.setChecked(True)
             self.pbFilterError.setVisible(True)
-            # Show these buttons
+            # Do not show these buttons
             self.pbFilterAlarm.setChecked(True)
             self.pbFilterAlarm.setVisible(False)
             self.pbFilterWarning.setChecked(True)
             self.pbFilterWarning.setVisible(False)
         else:
-            # Show these buttons
+            # Do not show these buttons
             self.pbFilterDebug.setChecked(True)
             self.pbFilterDebug.setVisible(False)
             self.pbFilterInfo.setChecked(True)
             self.pbFilterInfo.setVisible(False)
             self.pbFilterWarn.setChecked(True)
             self.pbFilterWarn.setVisible(False)
+            # Show these buttons
             self.pbFilterError.setChecked(True)
-            self.pbFilterError.setVisible(False)
-            # Do not show these buttons
+            self.pbFilterError.setVisible(True)
             self.pbFilterAlarm.setChecked(True)
             self.pbFilterAlarm.setVisible(True)
             self.pbFilterWarning.setChecked(True)
@@ -391,6 +391,11 @@ class LogWidget(QWidget):
                 msgTypeFilter += "messageType='ERROR'"
                 filterApplied = True
         else:
+            if self.pbFilterError.isChecked():
+                if filterApplied:
+                    msgTypeFilter += " OR "
+                msgTypeFilter += "messageType='ERROR'"
+                filterApplied = True
             if self.pbFilterAlarm.isChecked():
                 if filterApplied:
                     msgTypeFilter += " OR "
