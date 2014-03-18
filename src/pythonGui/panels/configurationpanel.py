@@ -232,10 +232,9 @@ class ConfigurationPanel(QWidget):
         toolBar.addAction(self.__acFileSaveAs)
 
 
-    def updateApplyAllActions(self, path):
-        twParameterEditor = self._getParameterEditorByPath(path)
-        if twParameterEditor is None:
-            return
+    def updateApplyAllActions(self, box):
+        twParameterEditor = self.__swParameterEditor.widget(
+            box.configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
@@ -276,10 +275,9 @@ class ConfigurationPanel(QWidget):
             self.__acApplyAll.setMenu(None)
 
 
-    def updateResetAllActions(self, path):
-        twParameterEditor = self._getParameterEditorByPath(path)
-        if twParameterEditor is None:
-            return
+    def updateResetAllActions(self, box):
+        twParameterEditor = self.__swParameterEditor.widget(
+            box.configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
@@ -375,16 +373,16 @@ class ConfigurationPanel(QWidget):
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
-    def _setApplyAllEnabled(self, path, enable):
+    def _setApplyAllEnabled(self, box, enable):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
-        self.updateApplyAllActions(path)
+        self.updateApplyAllActions(box)
 
 
-    def _setResetAllEnabled(self, path, enable):
+    def _setResetAllEnabled(self, box, enable):
         self.__pbResetAll.setEnabled(enable)
         self.__acResetAll.setEnabled(enable)
-        self.updateResetAllActions(path)
+        self.updateResetAllActions(box)
 
 
     def _setParameterEditorIndex(self, index):
@@ -617,10 +615,10 @@ class ConfigurationPanel(QWidget):
                 break
 
 
-    def onApplyChanged(self, path, enable, hasConflicts=False):
+    def onApplyChanged(self, box, enable, hasConflicts=False):
         # Called when apply button of ParameterPage changed
-        self._setApplyAllEnabled(path, enable)
-        self._setResetAllEnabled(path, enable)
+        self._setApplyAllEnabled(box, enable)
+        self._setResetAllEnabled(box, enable)
         self.hasConflicts = hasConflicts
 
 
