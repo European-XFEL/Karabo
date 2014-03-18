@@ -11,7 +11,6 @@
 __all__ = ["NavigationHierarchyModel"]
 
 
-from karabo.karathon import AccessLevel
 import globals
 from navigationhierarchynode import NavigationHierarchyNode
 import manager
@@ -323,6 +322,16 @@ class NavigationHierarchyModel(QAbstractItemModel):
 
         itemInfo = dict(key=path, classId=classId, type=type)
         self.signalItemChanged.emit(itemInfo)
+
+
+    def onServerConnectionChanged(self):
+        """
+        If the server connection is changed, the model needs a reset.
+        """
+        self.beginResetModel()
+        self.rootNode.parentNode = None
+        self.rootNode.childNodes = []
+        self.endResetModel()
 
 
     def getHierarchyLevel(self, index):

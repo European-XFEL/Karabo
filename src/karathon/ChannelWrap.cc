@@ -137,7 +137,7 @@ namespace karathon {
 
     void ChannelWrap::write(karabo::net::Channel::Pointer channel, const bp::object& obj) {
         if (PyByteArray_Check(obj.ptr())) {
-            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             ScopedGILRelease nogil;
@@ -162,7 +162,7 @@ namespace karathon {
         if (bp::extract<karabo::util::Hash>(header).check()) {
             const karabo::util::Hash hdr = bp::extract<const karabo::util::Hash&>(header);
             if (PyByteArray_Check(obj.ptr())) {
-                PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+                PyObject* bytearray = obj.ptr();
                 size_t size = PyByteArray_Size(bytearray);
                 char* data = PyByteArray_AsString(bytearray);
                 ScopedGILRelease nogil;
@@ -253,7 +253,7 @@ namespace karathon {
 
     void ChannelWrap::writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& obj, const bp::object& handler) {
         if (PyByteArray_Check(obj.ptr())) {
-            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             registerWriteHandler(channel, handler);
@@ -306,7 +306,7 @@ namespace karathon {
     void ChannelWrap::writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& body, const bp::object& handler) {
         if (bp::extract<Hash>(hdr).check() && PyByteArray_Check(body.ptr())) {
             const Hash& h = bp::extract<Hash>(hdr);
-            PyObject* bytearray = PyByteArray_FromObject(body.ptr());
+            PyObject* bytearray = body.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             registerWriteHandler(channel, handler);
