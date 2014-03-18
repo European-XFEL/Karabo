@@ -12,6 +12,7 @@ __all__ = ["PluginDialog"]
 
 import globals
 
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
                          QGroupBox, QLineEdit, QMessageBox, QVBoxLayout)
 
@@ -70,8 +71,13 @@ class PluginDialog(QDialog):
         vLayout.addWidget(self.buttonBox)
 
 
-
-    def updateServerTopology(self, systemTopology):
+    def updateServerTopology(self, systemTopology, config=None):
+        """
+        This function updates the comboboxes for the servers and the plugins on
+        the servers which are given by the \systemTopology.
+        
+        If the \config is set this configuration is set in the dialog.
+        """
         serverKey = "server"
         if not systemTopology.has(serverKey):
             return
@@ -125,6 +131,16 @@ class PluginDialog(QDialog):
 
         self.cbPlugin.adjustSize()
         self.cbServer.adjustSize()
+
+        if config is not None:
+            for classId in config.keys():
+                deviceId = config.get("{}.deviceId".format(classId))
+                serverId = config.get("{}.serverId".format(classId))
+                self.leDeviceId.setText(deviceId)
+                index = self.cbServer.findText(serverId)
+                self.cbServer.setCurrentIndex(index)
+                index = self.cbPlugin.findText(classId)
+                self.cbPlugin.setCurrentIndex(index)
         
         return True
 
