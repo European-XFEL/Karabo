@@ -35,21 +35,23 @@ class Network(QObject):
     def __init__(self):
         super(Network, self).__init__()
 
-        self.__serializer = BinarySerializerHash.create("Bin")
+        self.serializer = BinarySerializerHash.create("Bin")
 
-        self.__auth = None
-        self.__username = None
-        self.__password = None
-        self.__provider = None
-        self.__hostname = None
-        self.__port = None
+        self.authenticator = None
+        self.username = None
+        self.password = None
+        self.provider = None
+        self.hostname = None
+        self.port = None
 
-        self.__brokerHost = str()
-        self.__brokerPort = str()
-        self.__brokerTopic = str()
-        self.__sessionToken = str()
+        self.brokerHost = str()
+        self.brokerPort = str()
+        self.brokerTopic = str()
+        self.sessionToken = str()
 
         self.tcpSocket = None
+        self.dataSize = 0
+        self.dataBytes = bytearray()
 
         Manager().signalKillDevice.connect(self.onKillDevice)
         Manager().signalKillServer.connect(self.onKillServer)
@@ -66,9 +68,6 @@ class Network(QObject):
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         Manager().signalGetFromPast.connect(self.onGetFromPast)
 
-        self.dataSize = 0
-        self.dataBytes = bytearray()
-
 
     def connectToServer(self):
         """
@@ -76,11 +75,11 @@ class Network(QObject):
         """
         isConnected = False
 
-        dialog = LoginDialog(username=self.__username,
-                             password=self.__password,
-                             provider=self.__provider,
-                             hostname=self.__hostname,
-                             port=self.__port)
+        dialog = LoginDialog(username=self.username,
+                             password=self.password,
+                             provider=self.provider,
+                             hostname=self.hostname,
+                             port=self.port)
         if dialog.exec_() == QDialog.Accepted:
             self.startServerConnection(dialog.username,
                                        dialog.password,
@@ -109,11 +108,11 @@ class Network(QObject):
         Attempt to connect to host on given port and save user specific data for
         later authentification.
         """
-        self.__username = username
-        self.__password = password
-        self.__provider = provider
-        self.__hostname = hostname
-        self.__port = port
+        self.username = username
+        self.password = password
+        self.provider = provider
+        self.hostname = hostname
+        self.port = port
         self.dataSize = 0
 
         self.tcpSocket = QTcpSocket(self)
@@ -151,8 +150,8 @@ class Network(QObject):
         ipAddress = socket.gethostname() # Machine Name
 
         # Easteregg
-        if self.__username == "god":
-            md5 = QCryptographicHash.hash(str(self.__password), QCryptographicHash.Md5).toHex()
+        if self.username == "god":
+            md5 = QCryptographicHash.hash(str(self.password), QCryptographicHash.Md5).toHex()
             if md5 == "39d676ecced45b02da1fb45731790b4c":
                 print "Entering god mode..."
                 globals.GLOBAL_ACCESS_LEVEL = 1000
@@ -164,17 +163,17 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.__auth = Authenticator(str(self.__username), str(self.__password), 
-                                            str(self.__provider), ipAddress,
-                                            self.__brokerHost, self.__brokerPort,
-                                            self.__brokerTopic)
+                self.authenticator = Authenticator(str(self.username), str(self.password),
+                                                   str(self.provider), ipAddress,
+                                                   self.brokerHost, str(self.brokerPort),
+                                                   self.brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
             # Execute Login
             ok = False
             try:
-                ok = self.__auth.login()
+                ok = self.authenticator.login()
             except Exception, e:
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
@@ -182,12 +181,12 @@ class Network(QObject):
                 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
-                self._sendLoginInformation(self.__username, self.__password, \
-                                           self.__provider, self.__sessionToken)
+                self._sendLoginInformation(self.username, self.password, \
+                                           self.provider, self.sessionToken)
                 return
 
             if ok:
-                globals.GLOBAL_ACCESS_LEVEL = self.__auth.getDefaultAccessLevelId()
+                globals.GLOBAL_ACCESS_LEVEL = self.authenticator.getDefaultAccessLevelId()
             else:
                 print "Login failed"
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)
@@ -196,8 +195,8 @@ class Network(QObject):
 
         # Inform the mainwindow to change correspondingly the allowed level-downgrade
         self.signalUserChanged.emit()
-        self._sendLoginInformation(self.__username, self.__password, self.__provider, \
-                                   self.__sessionToken)
+        self._sendLoginInformation(self.username, self.password, self.provider, \
+                                   self.sessionToken)
 
 
     def _logout(self):
@@ -205,10 +204,10 @@ class Network(QObject):
         Authentification logout.
         """
         # Execute Logout
-        if self.__auth is None: return
+        if self.authenticator is None: return
 
         try:
-            self.__auth.logout()
+            self.authenticator.logout()
         except Exception, e:
             print "Logout problem. Please verify, if service is running. " + str(e)
 
@@ -240,7 +239,7 @@ class Network(QObject):
 
 
             # Fork on responseType
-            instanceInfo = self.__serializer.load(self.dataBytes)
+            instanceInfo = self.serializer.load(self.dataBytes)
 
             type = instanceInfo.get("type")
             #print "Request: ", type
@@ -446,8 +445,8 @@ class Network(QObject):
 
     def _tcpWriteHashHash(self, instanceInfo, bodyHash):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(instanceInfo))
-        bodyString = QByteArray(self.__serializer.save(bodyHash))
+        headerString = QByteArray(self.serializer.save(instanceInfo))
+        bodyString = QByteArray(self.serializer.save(bodyHash))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
 
@@ -460,7 +459,7 @@ class Network(QObject):
 
     def _tcpWriteHashString(self, instanceInfo, body):
         stream = QByteArray()
-        headerString = QByteArray(self.__serializer.save(instanceInfo))
+        headerString = QByteArray(self.serializer.save(instanceInfo))
         bodyString = QByteArray(str(body))
         nBytesHeader = headerString.size()
         nBytesBody = bodyString.size()
@@ -473,8 +472,8 @@ class Network(QObject):
 
 
     def _handleBrokerInformation(self, instanceInfo):
-        self.__brokerHost = instanceInfo.get("host")
-        self.__brokerPort = str(instanceInfo.get("port"))
-        self.__brokerTopic = instanceInfo.get("topic")
+        self.brokerHost = instanceInfo.get("host")
+        self.brokerPort = instanceInfo.get("port")
+        self.brokerTopic = instanceInfo.get("topic")
         self._login()
 
