@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
         mainSplitter.setContentsMargins(5,5,5,5)
         
         self.__navigationPanel = NavigationPanel(Manager().systemTopology)
+        self.__network.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.__navigationTab = DockTabWindow("Navigation", leftArea)
         self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")

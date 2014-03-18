@@ -736,21 +736,6 @@ class EntireWindow(GroupActions, SimpleAction):
 Separator()
 
 
-class Delete(SimpleAction):
-    text = "Delete"
-    icon = icons.delete
-    shortcut = QKeySequence.Delete
-
-
-    def run(self):
-        if QMessageBox.question(self.parent, "Really delete?",
-                                "Do you really want to delete the items?",
-                                QMessageBox.Yes | QMessageBox.No
-                               ) == QMessageBox.Yes:
-            self.parent.ilayout.delete_selected()
-            self.parent.update()
-
-
 class Cut(SimpleAction):
     text = "Cut"
     icon = icons.editCut
@@ -792,6 +777,20 @@ class Paste(SimpleAction):
         self.parent.load(ar)
         self.parent.update()
 
+
+class Delete(SimpleAction):
+    text = "Delete"
+    icon = icons.delete
+    shortcut = QKeySequence.Delete
+
+
+    def run(self):
+        if QMessageBox.question(self.parent, "Really delete?",
+                                "Do you really want to delete the items?",
+                                QMessageBox.Yes | QMessageBox.No
+                               ) == QMessageBox.Yes:
+            self.parent.ilayout.delete_selected()
+            self.parent.update()
 
 Separator()
 
@@ -1214,8 +1213,8 @@ class GraphicsView(QSvgWidget):
                 # Get display name
                 displayName = item.text(0)
                 # Use DeviceClass/DeviceInstance-Key if no displayName is set
-                keys = internalKey.split('.')
                 if len(displayName) == 0:
+                    keys = internalKey.split('.')
                     displayName = keys[1]
                 
                 # Display component
@@ -1251,7 +1250,7 @@ class GraphicsView(QSvgWidget):
                         items.append((unitProxyWidget, None))
 
                     # Register as visible device
-                    Manager().newVisibleDevice(keys[0])
+                    Manager().newVisibleDevice(internalKey)
 
                 # Editable component
                 if configEditableComponent:
@@ -1270,7 +1269,7 @@ class GraphicsView(QSvgWidget):
                         editableComponent.isEditableValueInit = False
 
                         # Register as visible device
-                        Manager().newVisibleDevice(keys[0])
+                        Manager().newVisibleDevice(internalKey)
                         
                     items.append((editableComponent.widget, editableComponent))
 

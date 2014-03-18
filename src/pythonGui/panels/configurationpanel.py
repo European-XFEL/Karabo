@@ -545,7 +545,6 @@ class ConfigurationPanel(QWidget):
                     # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
                     self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
                     twParameterEditor.clear()
-
                     if self._parseSchema(itemInfo, twParameterEditor):
                         self.__internalKeySchemaLoadedMap[key] = True
         else:
@@ -706,7 +705,6 @@ class ConfigurationPanel(QWidget):
 
 
     def onDeviceSchemaUpdated(self, key):
-        key = str(key)
         self.__internalKeySchemaLoadedMap[key] = False
 
 

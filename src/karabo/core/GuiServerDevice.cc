@@ -472,7 +472,7 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
                 Hash header("type", "schemaUpdated", "deviceId", deviceId);
-                Hash body("device." + deviceId + ".description", schema);
+                Hash body("schema", schema);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;

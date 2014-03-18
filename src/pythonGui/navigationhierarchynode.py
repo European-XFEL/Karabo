@@ -5,16 +5,15 @@
 #############################################################################
 
 
-"""This module contains a class which represents an item a hierarchical
-   navigation treeview."""
+"""
+This module contains a class which represents an item of a hierarchical
+navigation model.
+"""
 
 __all__ = ["NavigationHierarchyNode"]
 
 
 from enums import AccessLevel
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
 
 
 class NavigationHierarchyNode(object):
@@ -82,12 +81,6 @@ class NavigationHierarchyNode(object):
             return None
         
         return self.parentNode.indexOfChildNode(self)
-
-
-    def clearChildNodes(self):
-        while len(self.childNodes) > 0:
-            childNode = self.childNodes.pop()
-            childNode.clearChildNodes()
 
 
     def printTree(self, indent=-2):
