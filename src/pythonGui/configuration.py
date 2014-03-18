@@ -74,3 +74,7 @@ class Configuration(object):
         self.visible -= 1
         if self.visible == 0:
             manager.Manager().signalRemoveVisibleDevice.emit(self.path)
+
+
+    def refresh(self):
+        manager.Manager().onRefreshInstance(self)
