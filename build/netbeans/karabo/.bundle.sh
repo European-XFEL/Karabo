@@ -178,6 +178,9 @@ safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
 
+# bundle scripts for plugin packages
+cd ../karabo
+cp .bundle-cppplugin.sh .bundle-pythonplugin.sh .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)

@@ -1642,6 +1642,26 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
 
+//    /////////////////////////////////////////////////////////////
+//    //DefaultValue<BitsetElement< EType >, EType >, where EType:
+//    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+//    //and DefaultValue<PathElement, std::string >
+//
+//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned char>,      unsigned char,      BITSET8)
+//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned short>,     unsigned short,     BITSET16)
+//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned int>,       unsigned int,       BITSET32)
+//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
+//
+//    ///////////////////////////////////////////////////////////////
+//    //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
+//    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+//    // and ReadOnlySpecific<PathElement, std::string >
+//
+//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned char>,   unsigned char,      BITSET8)
+//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned short>,  unsigned short,     BITSET16)
+//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned int>,    unsigned int,       BITSET32)
+//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
+
     ///////////////////////////////////////////////////////////
     //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
     //BOOL, INT32, UINT32, INT64, UINT64, DOUBLE, STRING 
@@ -1685,6 +1705,11 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
+//    KARABO_PYTHON_BITSET(unsigned char,      BITSET8)
+//    KARABO_PYTHON_BITSET(unsigned short,     BITSET16)
+//    KARABO_PYTHON_BITSET(unsigned int,       BITSET32)
+//    KARABO_PYTHON_BITSET(unsigned long long, BITSET64)
+    
             //////////////////////////////////////////////////////////////////////
             // Binding karabo::util::PathElement       
             // In Python : PATH_ELEMENT
@@ -1950,6 +1975,25 @@ void exportPyUtilSchema() {
                 .def("setNewOptions"
                      , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewOptions)
                      , (bp::arg("value"), bp::arg("sep") = ",;")
+                     , bp::return_internal_reference<> ())
+                .def("setNewAllowedState"
+                     , (OverwriteElement& (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewAllowedState)
+                     , (bp::arg("states"), bp::arg("sep") = " ,;")
+                     , bp::return_internal_reference<> ())
+                .def("setNowObserverAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowUserAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowUserAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowOperatorAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowOperatorAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowExpertAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowExpertAccess)
+                     , bp::return_internal_reference<> ())
+                .def("setNowAdminAccess"
+                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowAdminAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNewUnit"
                      , (OverwriteElement & (OverwriteElement::*)(const UnitType&))(&OverwriteElement::setNewUnit)

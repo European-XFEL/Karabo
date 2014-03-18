@@ -258,7 +258,7 @@ public:
 
     static bp::object load(karabo::io::TextSerializer<T>& s, const bp::object& obj) {
         if (PyByteArray_Check(obj.ptr())) {
-            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             T object;
@@ -312,11 +312,11 @@ public:
 
     static bp::object load(karabo::io::BinarySerializer<T>& s, const bp::object& obj) {
         if (PyByteArray_Check(obj.ptr())) {
-            PyObject* bytearray = PyByteArray_FromObject(obj.ptr());
+            PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             T object;
-            s.load(object, data, size);
+            s.load(object, data, size);            
             return bp::object(object);
             // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
         } else if (bp::extract<std::string>(obj).check()) {

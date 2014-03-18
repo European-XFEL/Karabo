@@ -18,13 +18,13 @@ __all__ = ["Manager"]
 
 from enums import NavigationItemTypes, ConfigChangeTypes
 from configuration import Configuration
-import datetime
+from datetime import datetime
 from hash import Hash, HashMergePolicy
 from timestamp import Timestamp
 from navigationhierarchymodel import NavigationHierarchyModel
 from sqldatabase import SqlDatabase
 
-from PyQt4.QtCore import pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
+from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 
@@ -255,20 +255,31 @@ class _Manager(QObject):
         """
         This function gets as parameter the \internalPath of a device or a device
         class.
+        
         Only if this internal path belongs to a device, the deviceId is return,
         otherwise return None.
         """
-        print "_getDeviceIdFromInternalPath", internalPath
         splittedPath = internalPath.split('.')
         if len(splittedPath) < 1:
             # No device selected
             return None
 
-        print "--- ", splittedPath
         return splittedPath[0]
 
 
-    def newVisibleDevice(self, deviceId):
+    def newVisibleDevice(self, internalPath):
+        """
+        This function registers a new visible instance in a map. If it is the
+        first occurence, a signal is sent to the network to inform the GuiServerDevice.
+        
+        The incoming parameter \internalPath can be either directly a deviceId
+        or an internalPath of an property item which needs to be splitted to get
+        the deviceId.
+        """
+        deviceId = self._getDeviceIdFromInternalPath(internalPath)
+        if deviceId is None:
+            return
+        
         # Check, whether deviceId is in systemTopology (means online)
         hasDevice = self.systemTopology.has(deviceId)
         # If schema was not seen, request device schema in function
@@ -491,9 +502,8 @@ class _Manager(QObject):
 
 
     def onRefreshInstance(self, internalPath):
-        print "onRefreshInstance", internalPath
         deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if (not deviceId) and (not self.__hash.has(internalPath)):
+        if deviceId is None:
             return
         self.signalRefreshInstance.emit(deviceId)
 
@@ -648,9 +658,8 @@ class _Manager(QObject):
         
         # Check for existing stuff and remove
         instanceIds = self.systemTopology.removeExistingInstances(config)
-        print "instanceIds", instanceIds
         for id in instanceIds:
-            timestamp = datetime.datetime.now()
+            timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
             timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
             logMessage = timestamp + " | " + "INFO" + " | " + id + " | " \
@@ -713,7 +722,7 @@ class _Manager(QObject):
     
     def handleDeviceSchema(self, headerHash, config):
         deviceId = headerHash.get('deviceId')
-        if deviceId in self.deviceData:
+        if (deviceId in self.deviceData) and (self.deviceData[deviceId].schema is not None):
             return
         
         # Add configuration with schema to device data
@@ -735,10 +744,13 @@ class _Manager(QObject):
         
 
     def handleDeviceSchemaUpdated(self, headerHash, config):
-        path = "device." + headerHash.get("deviceId")
-        self.signalDeviceSchemaUpdated.emit(path)
+        deviceId = headerHash.get("deviceId")
+        if deviceId in self.deviceData:
+            self.deviceData[deviceId].schema = None
+        
+        self.signalDeviceSchemaUpdated.emit(deviceId)
         self.handleDeviceSchema(headerHash, config)
-        self.onRefreshInstance(path)
+        self.onRefreshInstance(deviceId)
 
 
     # TODO: This function must be thread-safe!!
