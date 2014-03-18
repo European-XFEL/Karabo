@@ -48,10 +48,6 @@ class EditableNoApplyComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(
-            manager.Manager().onDeviceClassValueChanged)
-
         params['key'].addComponent(self)
 
 
@@ -130,7 +126,6 @@ class EditableNoApplyComponent(BaseComponent):
         self.__editableWidget.valueChanged(key, value, timestamp)
 
 
-    # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
-        self.signalValueChanged.emit(key, value)
+        manager.Manager().onDeviceInstanceValuesChanged([key])
 
