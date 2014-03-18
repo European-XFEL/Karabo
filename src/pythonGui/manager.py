@@ -77,8 +77,7 @@ class _Manager(QObject):
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
-    signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
-    signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
+    signalReconfigure = pyqtSignal(list)
     signalDeviceStateChanged = pyqtSignal(object, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
@@ -282,21 +281,9 @@ class _Manager(QObject):
             dataNotifier.signalUpdateComponent.emit(key, value, None)
 
 
-    def onDeviceInstanceValueChanged(self, box):
-        self.signalReconfigure.emit(box.configuration.path, ".".join(box.path),
-                                    box.value)
+    def onDeviceInstanceValuesChanged(self, boxes):
+        self.signalReconfigure.emit(boxes)
 
-
-    def onDeviceValuesChanged(self, boxes):
-        paths = config.paths()
-        for path in paths:
-            dataNotifier = self._getDataNotifierEditableValue(path)
-            if dataNotifier is not None:
-                dataNotifier.signalUpdateComponent.emit(path, config.get(path),
-                                                        None)
-        config = Hash(config.get(deviceId))
-        self.deviceData[deviceId].configuration = config
-        self.signalReconfigureAsHash.emit(deviceId, config)
 
 
     def onConflictStateChanged(self, key, hasConflict):

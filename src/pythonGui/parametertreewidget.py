@@ -101,8 +101,8 @@ class ParameterTreeWidget(QTreeWidget):
         self._r_updateParameters(self.invisibleRootItem(), state)
 
 
-    def setItemBusy(self, item):
-        """Shows the busy tag on an editable item
+    def applyItem(self, item):
+        """Applies the changed value in an item
 
         Change the apply button of an editable component to show the busy
         flag. Return if that was possible."""
@@ -116,6 +116,7 @@ class ParameterTreeWidget(QTreeWidget):
         
         if editableComponent.applyEnabled:
             editableComponent.changeApplyToBusy(True)
+            item.internalKey.value = editableComponent.value
             return True
         return False
 
@@ -257,18 +258,30 @@ class ParameterTreeWidget(QTreeWidget):
         self.signalApplyChanged.emit(box, result[0], result[1])
 
 
+    def allItems(self):
+        stack = [ ]
+        item = self.invisibleRootItem()
+        while True:
+            stack.extend(item.child(i) for i in xrange(item.childCount()))
+            if not stack:
+                return
+            item = stack.pop()
+            yield item
+
+
+
     def onApplyAll(self):
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
             config = Hash()
             selectedItems = self.selectedItems()
             boxes = [item.internalKey for item in selectedItems
-                     if self.setItemBusy(item)]
+                     if self.applyItem(item)]
         else:
             boxes = [item.internalKey for item in self.allItems()
-                     if self.setItemBusy(item)]
+                     if self.applyItem(item)]
 
-        Manager().onDeviceChanged(boxes)
+        Manager().onDeviceInstanceValuesChanged(boxes)
 
 
     def onApplyAllRemoteChanges(self):
