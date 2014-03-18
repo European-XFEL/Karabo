@@ -35,8 +35,8 @@ class Configuration(object):
     def setSchema(self, schema):
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self._configuration = self.schema.Box("", self.schema, self)
-        self._configuration.value = self.schema.getClass()("", self)
+        self._configuration = self.schema.Box((), self.schema, self)
+        self._configuration.value = self.schema.getClass()((), self)
 
 
     @property

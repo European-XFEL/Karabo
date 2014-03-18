@@ -25,7 +25,7 @@ from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
 class EditableApplyLaterComponent(BaseComponent):
     # signals
     signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
-    signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
+    signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
 
 
     def __init__(self, classAlias, box):
@@ -105,8 +105,6 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer.timeout.connect(self.onTimeOut)
 
         # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(
-            manager.Manager().onDeviceInstanceValueChanged)
         self.signalConflictStateChanged.connect(
             manager.Manager().onConflictStateChanged)
 
@@ -177,7 +175,7 @@ class EditableApplyLaterComponent(BaseComponent):
             self.hasConflict = False
         
         # Broadcast to ConfigurationPanel - treewidget
-        self.signalApplyChanged.emit(self.keys[0], enable)
+        self.signalApplyChanged.emit(self.boxes[0], enable)
     applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
 
 
@@ -277,8 +275,9 @@ class EditableApplyLaterComponent(BaseComponent):
     def onApplyClicked(self):
         self.changeApplyToBusy(True)
         # TODO: KeWe function with key/value pair needed
-        for key in self.__editableWidget.keys:
-            self.signalValueChanged.emit(key, self.__editableWidget.value)
+        for box in self.__editableWidget.boxes:
+            box.value = self.__editableWidget.value
+            manager.Manager().onDeviceInstanceValueChanged(box)
         self.applyEnabled = False
 
 

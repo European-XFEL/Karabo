@@ -23,6 +23,16 @@ import weakref
 
 
 class Box(QObject):
+    """This class represents one value of a device or a device class.
+    It has signals that are emitted whenever the value changes.
+
+    Those signals keep the GUI consistent: all widgets connect to them
+    and are updated.
+
+    Note that the network is *not* connected to those signals, as this
+    would end up in an endless loop as every change coming from the
+    network is returned to it. """
+
     signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
     signalHistoricData = pyqtSignal(object, object)
 
@@ -78,7 +88,7 @@ class Type(hashtypes.Type):
         try:
             item.displayText = self.displayedName
         except AttributeError:
-            item.displayText = box.path.split('.')[-1]
+            item.displayText = box.path[-1]
         self.copyAttr(item, 'allowedStates')
 
         try:
@@ -158,7 +168,7 @@ class Object(object):
     def __init__(self, path, configuration):
         for k, v in type(self).__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                b = v.Box(path + '.' + k, v, configuration)
+                b = v.Box(path + (k,), v, configuration)
                 self.__dict__[k] = b
 
 
@@ -248,8 +258,7 @@ class Schema(hashtypes.Descriptor):
 
             item.enabled = not isClass
 
-            item.displayText = self.attrs.get('displayedName',
-                                              self.key.split('.')[-1])
+            item.displayText = self.attrs.get('displayedName', self.key[-1])
             self.copyAttr(item, 'allowedStates')
         #else:
         #    item = self._createPropertyItem(key, hash, attrs, parent)

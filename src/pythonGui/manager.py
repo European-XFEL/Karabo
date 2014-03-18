@@ -180,25 +180,6 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(paramKey, value)
     
     
-    def _changeDeviceData(self, key, value):
-        deviceIdParamKey = key.split(".")
-        if len(deviceIdParamKey) < 2:
-            return
-
-        deviceId = deviceIdParamKey[0]
-        paramKey = deviceIdParamKey[1]
-        
-        if "@" in paramKey:
-            # Merge attribute value
-            keys = key.split("@")
-            parameterKey = keys[0]
-            attributeKey = keys[1]
-            
-            self.deviceData[deviceId].setAttribute(parameterKey, attributeKey, value)
-        else:
-            self.deviceData[deviceId].set(paramKey, value)
-
-
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
@@ -301,22 +282,12 @@ class _Manager(QObject):
             dataNotifier.signalUpdateComponent.emit(key, value, None)
 
 
-    def onDeviceInstanceValueChanged(self, key, value):
-        self._changeDeviceData(key, value)
-
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier is not None:
-            dataNotifier.signalUpdateComponent.emit(key, value, None)
-        
-        keys = key.split(".")
-        deviceId = keys[0]
-        parameterKey = keys[1]
-
-        # Informs network
-        self.signalReconfigure.emit(deviceId, parameterKey, value)
+    def onDeviceInstanceValueChanged(self, box):
+        self.signalReconfigure.emit(box.configuration.path, ".".join(box.path),
+                                    box.value)
 
 
-    def onDeviceChangedAsHash(self, deviceId, config):
+    def onDeviceValuesChanged(self, boxes):
         paths = config.paths()
         for path in paths:
             dataNotifier = self._getDataNotifierEditableValue(path)
