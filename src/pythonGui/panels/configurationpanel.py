@@ -232,9 +232,9 @@ class ConfigurationPanel(QWidget):
         toolBar.addAction(self.__acFileSaveAs)
 
 
-    def updateApplyAllActions(self, box):
+    def updateApplyAllActions(self, configuration):
         twParameterEditor = self.__swParameterEditor.widget(
-            box.configuration.index)
+            configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbApplyAll.isEnabled() is True) and (nbSelected > 0):
@@ -275,9 +275,9 @@ class ConfigurationPanel(QWidget):
             self.__acApplyAll.setMenu(None)
 
 
-    def updateResetAllActions(self, box):
+    def updateResetAllActions(self, configuration):
         twParameterEditor = self.__swParameterEditor.widget(
-            box.configuration.index)
+            configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.__pbResetAll.isEnabled() is True) and (nbSelected > 0):
@@ -373,16 +373,16 @@ class ConfigurationPanel(QWidget):
     hasConflicts = property(fget=_hasConflicts, fset=_setHasConflicts)
 
 
-    def _setApplyAllEnabled(self, box, enable):
+    def _setApplyAllEnabled(self, configuration, enable):
         self.__pbApplyAll.setEnabled(enable)
         self.__acApplyAll.setEnabled(enable)
-        self.updateApplyAllActions(box)
+        self.updateApplyAllActions(configuration)
 
 
-    def _setResetAllEnabled(self, box, enable):
+    def _setResetAllEnabled(self, configuration, enable):
         self.__pbResetAll.setEnabled(enable)
         self.__acResetAll.setEnabled(enable)
-        self.updateResetAllActions(box)
+        self.updateResetAllActions(configuration)
 
 
     def _setParameterEditorIndex(self, index):
@@ -617,8 +617,8 @@ class ConfigurationPanel(QWidget):
 
     def onApplyChanged(self, box, enable, hasConflicts=False):
         # Called when apply button of ParameterPage changed
-        self._setApplyAllEnabled(box, enable)
-        self._setResetAllEnabled(box, enable)
+        self._setApplyAllEnabled(box.configuration, enable)
+        self._setResetAllEnabled(box.configuration, enable)
         self.hasConflicts = hasConflicts
 
 
