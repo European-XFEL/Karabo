@@ -334,10 +334,10 @@ class Network(QObject):
         self._tcpWriteHashHash(header, Hash())
 
 
-    def onRefreshInstance(self, instanceId):
+    def onRefreshInstance(self, configuration):
         header = Hash()
         header.set("type", "refreshInstance")
-        header.set("deviceId", str(instanceId))
+        header.set("deviceId", configuration.path)
         self._tcpWriteHashHash(header, Hash())
 
 
