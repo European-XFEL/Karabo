@@ -31,10 +31,10 @@ class EditableCheckBox(EditableWidget):
     category = "Switch"
     alias = "Toggle Field"
 
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(EditableCheckBox, self).__init__(box)
         
-        self.__checkBox = QCheckBox()
+        self.__checkBox = QCheckBox(parent)
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
 
         if hasattr(box, 'value'):

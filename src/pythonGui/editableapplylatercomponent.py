@@ -28,18 +28,20 @@ class EditableApplyLaterComponent(BaseComponent):
     signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
 
 
-    def __init__(self, classAlias, box):
+    def __init__(self, classAlias, box, parent):
         super(EditableApplyLaterComponent, self).__init__(classAlias)
 
         self.__isEditableValueInit = True
         
         self.__currentDisplayValue = None
         
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(box)
+        print classAlias
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
 
@@ -257,7 +259,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.classAlias = alias
 
         oldWidget = self.__editableWidget.widget
-        self.__editableWidget = factory.get_class(alias)(self.box)
+        self.__editableWidget = factory.get_class(alias)(
+            self.box, oldWidget.parent())
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)

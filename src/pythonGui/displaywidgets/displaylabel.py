@@ -35,12 +35,12 @@ class DisplayLabel(DisplayWidget):
     category = "Value"
     alias = "Value Field"
   
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(DisplayLabel, self).__init__(box)
         
         self.value = None
         
-        self.__label = QLabel()
+        self.__label = QLabel(parent)
         self.__label.setAutoFillBackground(True)
         self.__label.setAlignment(Qt.AlignCenter)
         self.__label.setMinimumWidth(160)

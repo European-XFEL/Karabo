@@ -35,8 +35,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
 
-        self.displayComponent = DisplayComponent("Value Field",
-                                                 box=self.internalKey)
+        self.displayComponent = DisplayComponent(
+            "Value Field", self.internalKey, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
         # Connect to DisplayComponent to get current value on device for tooltip update

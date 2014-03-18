@@ -32,10 +32,10 @@ class DisplayImageElement(DisplayWidget):
     category = "ImageElement"
     alias = "Image Element"
 
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(DisplayImageElement, self).__init__(box)
         
-        self.__image = QLabel()
+        self.__image = QLabel(parent)
         self.__image.setAutoFillBackground(True)
         self.__image.setAlignment(Qt.AlignCenter)
         self.__image.setMinimumHeight(125)

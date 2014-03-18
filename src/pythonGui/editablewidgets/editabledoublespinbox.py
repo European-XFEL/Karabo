@@ -32,10 +32,10 @@ class EditableDoubleSpinBox(EditableWidget):
     category = "Digit"
     alias = "Float Field"
     
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(EditableDoubleSpinBox, self).__init__(box)
 
-        self.__leDblValue = QLineEdit()
+        self.__leDblValue = QLineEdit(parent)
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
         self.__leDblValue.textChanged.connect(self.onEditingFinished)

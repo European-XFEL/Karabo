@@ -34,10 +34,10 @@ class EditableSpinBox(EditableWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(EditableSpinBox, self).__init__(box)
 
-        self.__spinBox = QSpinBox()
+        self.__spinBox = QSpinBox(parent)
 
         info = iinfo(box.descriptor.numpy)
         self.__spinBox.setRange(info.min, info.max)

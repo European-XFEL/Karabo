@@ -6,11 +6,11 @@ class Slider(EditableWidget):
     category = "Digit"
     alias = "Slider"
 
-    def __init__(self, parent=None, value=None, **params):
-        super(Slider, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(Slider, self).__init__(box)
 
         self.widget = QwtSlider(parent)
-        self.valueChanged(self.keys[0], value)
+        self.valueChanged(self.boxes[0], self.boxes[0].value)
         self.widget.valueChanged.connect(self.onEditingFinished)
 
 
@@ -19,10 +19,7 @@ class Slider(EditableWidget):
         return self.widget.value()
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if value is None:
-            value = 0.0
-
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         block = self.widget.blockSignals(True)
         try:
             self.widget.setValue(value)
@@ -31,4 +28,4 @@ class Slider(EditableWidget):
 
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], float(value))
+        self.signalEditingFinished.emit(self.boxes[0], value)

@@ -32,7 +32,7 @@ class EditableList(EditableWidget):
     category = "List"
     alias = "Histogram"
 
-    def __init__(self, box):
+    def __init__(self, box, parent):
         super(EditableList, self).__init__(box)
         
         self.__label = Label(value="", valueType=box.descriptor.valueType)

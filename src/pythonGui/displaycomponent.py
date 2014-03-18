@@ -24,11 +24,11 @@ class DisplayComponent(BaseComponent):
     factories = DisplayWidget.factories
 
 
-    def __init__(self, classAlias, box, widgetFactory="DisplayWidget"):
+    def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
         super(DisplayComponent, self).__init__(classAlias)
         
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
-            classAlias)(box)
+            classAlias)(box, parent)
         box.addComponent(self)
 
 
