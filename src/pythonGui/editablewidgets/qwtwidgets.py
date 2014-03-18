@@ -1,15 +1,15 @@
 from widget import EditableWidget
 
-from PyQt4.Qwt5.Qwt import QwtSlider
+from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
 
-class Slider(EditableWidget):
+
+class QwtWidget(EditableWidget):
     category = "Digit"
-    alias = "Slider"
 
     def __init__(self, box, parent):
-        super(Slider, self).__init__(box)
+        super(QwtWidget, self).__init__(box)
 
-        self.widget = QwtSlider(parent)
+        self.widget = self.Cls(parent)
         d = box.descriptor
         self.widget.setRange(
             max(getattr(d, 'minInc', None), getattr(d, 'minExc', None), 0),
@@ -33,3 +33,15 @@ class Slider(EditableWidget):
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
+
+
+class Slider(QwtWidget):
+    alias = "Slider"
+
+    Cls = QwtSlider
+
+
+class Knob(QwtWidget):
+    alias = "Knob"
+
+    Cls = QwtKnob
