@@ -25,7 +25,7 @@ from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 class ParameterTreeWidget(QTreeWidget):
     signalApplyChanged = pyqtSignal(object, bool, bool) # internalKey, enable, hasConflicts
-    signalItemSelectionChanged = pyqtSignal(str) # path
+    signalItemSelectionChanged = pyqtSignal(object)
 
 
     def __init__(self, path=None):
