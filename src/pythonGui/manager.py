@@ -77,7 +77,7 @@ class _Manager(QObject):
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
-    signalReconfigure = pyqtSignal(str, str, object) # deviceId, attributeId, attributeValue
+    signalReconfigure = pyqtSignal(str, str, object) # deviceId, property, value
     signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
     signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
@@ -97,7 +97,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
-    signalGetFromPast = pyqtSignal(str, str, str, str)
+    signalGetFromPast = pyqtSignal(str, str, str, str) # deviceId, property, t0, t1
 
 
     def __init__(self, *args, **kwargs):
@@ -245,10 +245,10 @@ class _Manager(QObject):
         dataNotifier.signalHistoricData.connect(slot)
 
 
-    def handleHistoricData(self, headerHash, bodyHash):
-        key = "{}.{}".format(headerHash.get("deviceId"), headerHash.get("property"))
+    def handleHistoricData(self, instanceInfo):
+        key = "{}.{}".format(instanceInfo.get("deviceId"), instanceInfo.get("property"))
         dataNotifier = self._getDataNotifierDisplayValue(key)
-        dataNotifier.signalHistoricData.emit(key, bodyHash.get("data"))
+        dataNotifier.signalHistoricData.emit(key, instanceInfo.get("data"))
 
 
     def _getDeviceIdFromInternalPath(self, internalPath):
@@ -396,10 +396,10 @@ class _Manager(QObject):
         
         keys = key.split(".")
         deviceId = keys[0]
-        parameterKey = keys[1]
+        property = keys[1]
 
         # Informs network
-        self.signalReconfigure.emit(deviceId, parameterKey, value)
+        self.signalReconfigure.emit(deviceId, property, value)
 
 
     def onDeviceChangedAsHash(self, deviceId, config):
@@ -700,10 +700,10 @@ class _Manager(QObject):
         self.signalInstanceGone.emit(instanceId, parentPath)
 
 
-    def handleClassSchema(self, headerHash, config):
-        serverId = headerHash.get('serverId')
-        classId = headerHash.get('classId')
-        schema = config.get('schema')
+    def handleClassSchema(self, classInfo):
+        serverId = classInfo.get('serverId')
+        classId = classInfo.get('classId')
+        schema = classInfo.get('schema')
         
         # Update map for server and class with schema
         self.serverClassData[serverId, classId] = Configuration(schema)
@@ -722,13 +722,13 @@ class _Manager(QObject):
         return None
     
     
-    def handleDeviceSchema(self, headerHash, config):
-        deviceId = headerHash.get('deviceId')
+    def handleDeviceSchema(self, instanceInfo):
+        deviceId = instanceInfo.get('deviceId')
         if (deviceId in self.deviceData) and (self.deviceData[deviceId].schema is not None):
             return
         
         # Add configuration with schema to device data
-        schema = config.get('schema')
+        schema = instanceInfo.get('schema')
         self.deviceData[deviceId] = Configuration(schema)
         
         self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
@@ -745,26 +745,35 @@ class _Manager(QObject):
         return None
         
 
-    def handleDeviceSchemaUpdated(self, headerHash, config):
-        deviceId = headerHash.get("deviceId")
+    def handleDeviceSchemaUpdated(self, instanceInfo):
+        deviceId = instanceInfo.get("deviceId")
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
         
         self.signalDeviceSchemaUpdated.emit(deviceId)
-        self.handleDeviceSchema(headerHash, config)
+        self.handleDeviceSchema(instanceInfo)
         self.onRefreshInstance(deviceId)
 
 
     # TODO: This function must be thread-safe!!
-    def handleConfigurationChanged(self, headerHash, config):
-        deviceId = headerHash.get("deviceId")
+    def handleConfigurationChanged(self, instanceInfo):
+        deviceId = instanceInfo.get("deviceId")
+        config = instanceInfo.get("configuration")
         self._changeHash(deviceId, config)
         # Merge configuration into self.deviceData
         self.deviceData[deviceId].merge(config)
 
 
-    def handleNotification(self, timestamp, type, shortMessage, detailedMessage, deviceId):
-        self.signalNotificationAvailable.emit(timestamp, type, shortMessage, detailedMessage, deviceId)
+    def handleNotification(self, instanceInfo):
+        deviceId = instanceInfo.get("deviceId")
+        timestamp = datetime.now()
+        # TODO: better format for timestamp and timestamp generation in karabo
+        timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        messageType = instanceInfo.get("messageType")
+        shortMsg = instanceInfo.get("shortMsg")
+        detailedMsg = instanceInfo.get("detailedMsg")
+        
+        self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg, detailedMsg, deviceId)
 
 
 manager = _Manager()
