@@ -10,6 +10,10 @@ class Slider(EditableWidget):
         super(Slider, self).__init__(box)
 
         self.widget = QwtSlider(parent)
+        d = box.descriptor
+        self.widget.setRange(
+            max(getattr(d, 'minInc', None), getattr(d, 'minExc', None), 0),
+            max(getattr(d, 'maxInc', None), getattr(d, 'maxExc', None), 100))
         self.valueChanged(self.boxes[0], self.boxes[0].value)
         self.widget.valueChanged.connect(self.onEditingFinished)
 
