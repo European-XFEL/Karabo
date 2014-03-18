@@ -9,6 +9,7 @@
 #define	KARABO_UTIL_EPOCHSTAMP_HH
 
 #include <boost/date_time.hpp>
+#include <boost/regex.hpp>
 #include "Hash.hh"
 #include "TimeDuration.hh"
 
@@ -143,6 +144,10 @@ namespace karabo {
             TimeDuration elapsed(const Epochstamp& other = Epochstamp()) const;
 
 
+            static const bool is_valid_iso8601_date_value(const std::string& timePoint);
+            static const bool isStringValidIso8601(const std::string& timePoint);
+            static const bool isStringKaraboValidIso8601(const std::string& timePoint);
+
             /**
              * Creates an EpochStamp from an ISO 8601 formatted string (or other set of predefined formats)
              * 
@@ -177,8 +182,8 @@ namespace karabo {
              * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
              */
             std::string toIso8601Ext(TIME_UNITS precision = MICROSEC, bool extended = false) const;
-            
-            
+
+
             /**
              * Generates a timestamp as double with seconds.fractions format
              * @return A double value with the decimal point indicating fractions of seconds
@@ -228,6 +233,8 @@ namespace karabo {
              * @return The specified date/time formatted according to the specified time_facet
              */
             static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet);
+
+            static const int count_chars(const char* string, char ch);
 
         };
     }
