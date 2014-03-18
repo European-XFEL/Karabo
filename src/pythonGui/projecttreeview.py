@@ -105,8 +105,10 @@ class ProjectTreeView(QTreeView):
         if index is None: return
         if not index.isValid(): return
 
-        print "path", index.data(ProjectModel.ITEM_PATH)
-
+        if index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY:
+            self.model().editDevice(index.data(ProjectModel.ITEM_PATH))
+        elif index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY:
+            self.model().editScene(index.data(ProjectModel.ITEM_PATH))
 
 
 ### slots ###
@@ -116,26 +118,38 @@ class ProjectTreeView(QTreeView):
         if not index.isValid():
             return
 
-        if index.data(Qt.DisplayRole) == "Devices":
-            # Show devices menu
-            menu = QMenu()
+        menu = None
+        if index.data(Qt.DisplayRole) == ProjectModel.DEVICES_LABEL:
+            # Devices menu
             text = "Add device"
             acImportPlugin = QAction(text, self)
             acImportPlugin.setStatusTip(text)
             acImportPlugin.setToolTip(text)
-            acImportPlugin.triggered.connect(self.model().onAddDevice)
+            acImportPlugin.triggered.connect(self.model().onEditDevice)
 
-            menu.addAction(acImportPlugin)
-            menu.exec_(QCursor.pos())
-        elif index.data(Qt.DisplayRole) == "Scenes":
-            # Show devices menu
             menu = QMenu()
+            menu.addAction(acImportPlugin)
+        elif index.data(Qt.DisplayRole) == ProjectModel.SCENES_LABEL:
+            # Scenes menu
             text = "Add scene"
             acAddScene = QAction(text, self)
             acAddScene.setStatusTip(text)
             acAddScene.setToolTip(text)
-            acAddScene.triggered.connect(self.model().onAddScene)
+            acAddScene.triggered.connect(self.model().onEditScene)
 
+            menu = QMenu()
             menu.addAction(acAddScene)
-            menu.exec_(QCursor.pos())
+        elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY) \
+          or (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+            text = "Remove"
+            acRemove = QAction(text, self)
+            acRemove.setStatusTip(text)
+            acRemove.setToolTip(text)
+            acRemove.triggered.connect(self.model().onRemove)
+            menu = QMenu()
+            menu.addAction(acRemove)
+        
+        if menu is None: return
+        
+        menu.exec_(QCursor.pos())
 
