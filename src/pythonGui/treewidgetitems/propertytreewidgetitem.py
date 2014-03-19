@@ -107,10 +107,15 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     def _updateToolTipDialog(self):
             info = OrderedDict()
             info["Property"] = self.text(0)
-            paramKey = str(self.internalKey).split(".configuration.")
             if self.description is not None:
                 info["Description"] = self.description
-            info["Key"] = paramKey[1]
+            if self.__currentValueOnDevice is not None:
+                # Key consists of deviceId, property key
+                _, property = str(self.internalKey).split(".", 1)
+            else:
+                # Key consists of serverId, classId, property key
+                _, _, property = str(self.internalKey).split(".", 2)
+            info["Key"] = property
             if self.valueType is not None:
                 info["Value Type"] = self.valueType
             if self.defaultValue is not None:

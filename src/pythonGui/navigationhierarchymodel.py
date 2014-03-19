@@ -324,14 +324,15 @@ class NavigationHierarchyModel(QAbstractItemModel):
         self.signalItemChanged.emit(itemInfo)
 
 
-    def onServerConnectionChanged(self):
+    def onServerConnectionChanged(self, isConnected):
         """
         If the server connection is changed, the model needs a reset.
         """
-        self.beginResetModel()
-        self.rootNode.parentNode = None
-        self.rootNode.childNodes = []
-        self.endResetModel()
+        if not isConnected:
+            self.beginResetModel()
+            self.rootNode.parentNode = None
+            self.rootNode.childNodes = []
+            self.endResetModel()
 
 
     def getHierarchyLevel(self, index):
