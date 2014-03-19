@@ -221,7 +221,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
 
-        deviceId = self.keys[0].split('.configuration.')
+        deviceId = self.keys[0].split('.')
         self.signalConflictStateChanged.emit(deviceId[0], hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
