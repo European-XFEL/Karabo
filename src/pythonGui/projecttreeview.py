@@ -49,9 +49,11 @@ class ProjectTreeView(QTreeView):
         """
         projectName = "default_project"
         sceneName = "default_scene"
-        
-        self.model().createNewProject(projectName, "/tmp/", True)
+        directory = "/tmp/"
+
+        self.model().createNewProject(projectName, directory)
         self.model().addScene(projectName, sceneName, sceneName)
+        self.model().saveProject(projectName, directory, True)
 
 
     def newProject(self):
@@ -97,7 +99,8 @@ class ProjectTreeView(QTreeView):
         if directory is None:
             return
         
-        return self.model().saveProject(directory)
+        return self.model().saveProject(self.currentIndex().data(Qt.DisplayRole),
+                                        directory)
 
 
     def mouseDoubleClickEvent(self, event):

@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         self._setupPanels()
 
         # Setup default project
-        self.__projectPanel.setupDefaultProject()
+        self.projectPanel.setupDefaultProject()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)
         self.resize(1200,800)
@@ -179,41 +179,39 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        self.__navigationPanel = NavigationPanel(Manager().systemTopology)
-        self.__network.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
+        self.navigationPanel = NavigationPanel(Manager().systemTopology)
+        self.network.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.__navigationTab = DockTabWindow("Navigation", leftArea)
-        self.__navigationTab.addDockableTab(self.__navigationPanel, "Navigation")
+        self.navigationTab = DockTabWindow("Navigation", leftArea)
+        self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        self.__projectPanel = ProjectPanel(Manager().projectTopology)
-        self.__projectTab = DockTabWindow("Projects", leftArea)
-        self.__projectTab.addDockableTab(self.__projectPanel, "Projects")
-        self.__projectPanel.signalAddScene.connect(self.onAddScene)
-        self.__projectPanel.signalConnectToServer.connect(self.__network.connectToServer)
-        self.__network.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
+        self.projectPanel = ProjectPanel(Manager().projectTopology)
+        self.projectPanel.signalAddScene.connect(self.onAddScene)
+        self.projectPanel.signalConnectToServer.connect(self.network.connectToServer)
+        self.projectTab = DockTabWindow("Projects", leftArea)
+        self.projectTab.addDockableTab(self.projectPanel, "Projects")
+        self.network.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.__customTab = DockTabWindow("Custom view", middleArea)
+        self.middleTab = DockTabWindow("Custom view", middleArea)
         middleArea.setStretchFactor(0, 10)
 
-        self.__loggingPanel = LoggingPanel()
-        self.__scriptingPanel = ScriptingPanel()
-        self.__notificationPanel = NotificationPanel()
-        self.__outputTab = DockTabWindow("Update", middleArea)
-        self.__outputTab.addDockableTab(self.__loggingPanel, "Log")
-        self.__outputTab.addDockableTab(self.__scriptingPanel, "Console")
-        self.__outputTab.addDockableTab(self.__notificationPanel, "Notifications")
+        self.loggingPanel = LoggingPanel()
+        self.scriptingPanel = ScriptingPanel()
+        self.notificationPanel = NotificationPanel()
+        self.outputTab = DockTabWindow("Output", middleArea)
+        self.outputTab.addDockableTab(self.loggingPanel, "Log")
+        self.outputTab.addDockableTab(self.scriptingPanel, "Console")
+        self.outputTab.addDockableTab(self.notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.__configurationPanel = ConfigurationPanel(Manager().systemTopology, \
-                                                       Manager().projectTopology)
+        self.configurationPanel = ConfigurationPanel(Manager().systemTopology, \
+                                                     Manager().projectTopology)
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.__configurationTab = DockTabWindow("Configurator", rightArea)
-        self.__configurationTab.addDockableTab(self.__configurationPanel, "Configurator")
-        self.__configurationPanel.signalAddScene.connect(self.onAddScene)
-        self.__configurationPanel.signalConnectToServer.connect(self.__network.connectToServer)
+        self.configurationTab = DockTabWindow("Configuration", rightArea)
+        self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
         
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,2)
@@ -223,9 +221,9 @@ class MainWindow(QMainWindow):
 
 
     def _setupNetwork(self):
-        self.__network = Network()
-        self.__network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
-        self.__network.signalUserChanged.connect(self.onUpdateAccessLevel)
+        self.network = Network()
+        self.network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
+        self.network.signalUserChanged.connect(self.onUpdateAccessLevel)
 
 
     def _createCustomMiddlePanel(self):
@@ -234,12 +232,12 @@ class MainWindow(QMainWindow):
         connections and returns it.
         """
         customViewPanel = CustomMiddlePanel(self.__acServerConnect.isChecked())
-        self.__network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
+        self.network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
 
     def _quit(self):
-        self.__network.endServerConnection()
+        self.network.endServerConnection()
         Manager().closeDatabaseConnection()
 
 
@@ -260,9 +258,9 @@ class MainWindow(QMainWindow):
 ### slots ###
     def onConnectToServer(self, checked):
         if checked:
-            self.__network.connectToServer()
+            self.network.connectToServer()
         else:
-            self.__network.disconnectFromServer()
+            self.network.disconnectFromServer()
 
 
     def onExit(self):
@@ -276,9 +274,9 @@ class MainWindow(QMainWindow):
 
     def onAddScene(self, sceneName):
         customViewPanel = self._createCustomMiddlePanel()
-        self.__customTab.addDockableTab(customViewPanel, sceneName)
-        if self.__customTab.count()-1 > 0:
-            self.__customTab.updateTabsClosable()
+        self.middleTab.addDockableTab(customViewPanel, sceneName)
+        if self.middleTab.count()-1 > 0:
+            self.middleTab.updateTabsClosable()
 
 
     def onChangeAccessLevel(self, action):

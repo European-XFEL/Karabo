@@ -107,8 +107,6 @@ class _Manager(QObject):
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
-    signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, path, configName
-
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
     signalGetFromPast = pyqtSignal(str, str, str, str) # deviceId, property, t0, t1

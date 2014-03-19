@@ -76,7 +76,7 @@ class ProjectModel(QStandardItemModel):
             return
 
         if categoryKey.startswith(ProjectModel.SCENES_KEY):
-            fileName = config.get("filename")
+            #fileName = config.get("filename")
             alias = config.get("alias")
 
             leafItem = QStandardItem(alias)
@@ -263,7 +263,7 @@ class ProjectModel(QStandardItemModel):
             subDirToDelete.rmpath(subDirPath)
 
 
-    def createNewProject(self, projectName, directory, overwrite=False):
+    def createNewProject(self, projectName, directory):
         """
         This function creates a hash for a new project and saves it to the given
         \directory.
@@ -293,35 +293,7 @@ class ProjectModel(QStandardItemModel):
         projectConfig.set(configurationKey, None)
         projectConfig.setAttribute(configurationKey, "label", ProjectModel.CONFIGURATIONS_LABEL)
 
-        absoluteProjectPath = directory + "/" + projectName
-        dir = QDir()
-        if not QDir(absoluteProjectPath).exists():
-            dir.mkpath(absoluteProjectPath)
-        else:
-            if not overwrite:
-                reply = QMessageBox.question(None, "New project",
-                    "A project folder named \"" + projectName + "\" already exists.<br>"
-                    "Do you want to replace it?",
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-                if reply == QMessageBox.No:
-                    return
-
-                self._clearProjectDir(absoluteProjectPath)
-
-        # Add subfolders
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.DEVICES_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.SCENES_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MACROS_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.MONITORS_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.RESOURCES_LABEL)
-        dir.mkpath(absoluteProjectPath + "/" + ProjectModel.CONFIGURATIONS_LABEL)
-
         self._addNewProject(projectName, directory, projectConfig)
-        
-        # Save project.xml
-        saveToFile(self.projectHash.get(projectName),
-                   "{}/{}/project.xml".format(directory, projectName))
 
 
     def _addNewProject(self, projectName, directory, projectConfig):
@@ -353,10 +325,61 @@ class ProjectModel(QStandardItemModel):
         self.addProjectConfiguration(projectConfig)
 
 
-    def saveProject(self, directory):
-        projectName = self._currentProjectName()
+    def saveProject(self, projectName, directory, overwrite=False):
+        absoluteProjectPath = directory + "/" + projectName
+        dir = QDir()
+        if not QDir(absoluteProjectPath).exists():
+            dir.mkpath(absoluteProjectPath)
+        else:
+            if not overwrite:
+                reply = QMessageBox.question(None, "New project",
+                    "A project folder named \"" + projectName + "\" already exists.<br>"
+                    "Do you want to replace it?",
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+                if reply == QMessageBox.No:
+                    return
+
+                self._clearProjectDir(absoluteProjectPath)
+
         projectConfig = self.projectHash.get(projectName)
-        saveToFile(projectConfig, "{}/{}".format(directory, filename))
+        # Create folder structure and save content
+        for pKey in projectConfig.keys():
+            categoryConfig = projectConfig.get(pKey)
+            for cKey in categoryConfig.keys():
+                if cKey == ProjectModel.DEVICES_KEY:
+                    continue
+
+                # Create folder for label
+                label = categoryConfig.getAttribute(cKey, "label")
+                dir.mkpath(absoluteProjectPath + "/" + label)
+
+                subConfig = categoryConfig.get(cKey)
+                if subConfig is None:
+                    continue
+
+                if cKey == ProjectModel.CONFIGURATIONS_KEY:
+                    # Save configurations
+                    print "configurations"
+                elif cKey == ProjectModel.MACROS_KEY:
+                    # Save macros
+                    print "macros"
+                elif cKey == ProjectModel.MONITORS_KEY:
+                    # Save monitors
+                    print "monitors"
+                elif cKey == ProjectModel.RESOURCES_KEY:
+                    # Save resources
+                    print "resources"
+                elif cKey == ProjectModel.SCENES_KEY:
+                    # Save scenes
+                    for i, sceneConfig in enumerate(subConfig):
+                        filename = sceneConfig.get("filename")
+                        alias = sceneConfig.get("alias")
+                        # Save scene to SVG
+                        print "save to svg", filename
+
+        # Save project.xml
+        saveToFile(projectConfig, "{}/{}/project.xml".format(directory, projectName))
 
 
     def addProjectConfiguration(self, config):
