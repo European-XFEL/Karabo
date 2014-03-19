@@ -43,10 +43,6 @@ class ConfigurationPanel(QWidget):
     ##########################################
 
 
-    # To import a plugin a server connection needs to be established
-    signalConnectToServer = pyqtSignal()
-    signalAddScene = pyqtSignal(str) # scene title
-
     def __init__(self, treeModel, projectModel):
         super(ConfigurationPanel, self).__init__()
         
