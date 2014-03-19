@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 20, 2014
@@ -16,13 +17,14 @@ __all__ = ["ProjectModel"]
 from copy import copy
 from enums import NavigationItemTypes
 import manager
-from hash import Hash, HashMergePolicy
+from hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
+import os.path
 
 
 class ProjectModel(QStandardItemModel):
@@ -289,7 +291,7 @@ class ProjectModel(QStandardItemModel):
         \directory.
         """
         # Project name to lower case
-        projectName = str(projectName).lower()
+        projectName = projectName.lower()
 
         projectConfig = Hash(ProjectModel.PROJECT_KEY, Hash())
         projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
@@ -339,7 +341,9 @@ class ProjectModel(QStandardItemModel):
 
 
     def openProject(self, filename):
-        projectConfig = loadFromFile(str(filename))
+        p = XMLParser()
+        with open(filename, 'r') as file:
+            projectConfig = p.read(file.read())
         # Consider projectName to merge correctly into project hash
         projectName = projectConfig.getAttribute("project", "name")
         projectConfig = Hash(projectName, projectConfig)
@@ -348,7 +352,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def saveProject(self, projectName, directory, overwrite=False):
-        absoluteProjectPath = directory + "/" + projectName
+        absoluteProjectPath = os.path.join(directory, projectName)
         dir = QDir()
         if not QDir(absoluteProjectPath).exists():
             dir.mkpath(absoluteProjectPath)
@@ -402,8 +406,10 @@ class ProjectModel(QStandardItemModel):
                         print "save to svg", filename
 
         # Save project.xml
-        # TODO lost during merge
-        #saveToFile(projectConfig, "{}/{}/project.xml".format(directory, projectName))
+        with open(os.path.join(directory, projectName, 'project.xml'), 'w'
+                  ) as file:
+            w = XMLWriter()
+            w.writeToFile(projectConfig, file)
 
 
     def addProjectConfiguration(self, config):
