@@ -416,7 +416,19 @@ class Any(Type):
 
 
 class None_(Type):
-    pass
+    @staticmethod
+    def read(file):
+        return None
+
+
+    @classmethod
+    def toString(cls, data):
+        return ''
+
+
+    @classmethod
+    def fromstring(self, s):
+        return None
 
 
 class VectorNone(Type):
