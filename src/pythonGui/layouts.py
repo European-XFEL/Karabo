@@ -5,7 +5,7 @@
 #############################################################################
 
 
-from dialogs import TextDialog
+from dialogs.dialogs import TextDialog
 from manager import Manager
 from registry import Loadable, ns_svg, ns_karabo
 

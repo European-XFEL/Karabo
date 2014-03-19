@@ -11,12 +11,10 @@
 
 __all__ = ["ProjectPanel"]
 
-import const
+from projecttreeview import ProjectTreeView
 
-from enums import NavigationItemTypes
-from manager import Manager
-
-from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import (QAction, QIcon, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -33,61 +31,78 @@ class ProjectPanel(QWidget):
     #def onDock(self):
     #    pass
     ##########################################
-    
-    def __init__(self):
+
+    # To import a plugin a server connection needs to be established
+    signalConnectToServer = pyqtSignal()
+    signalAddScene = pyqtSignal(str) # scene title
+
+    def __init__(self, model):
         super(ProjectPanel, self).__init__()
         
         title = "Projects"
         self.setWindowTitle(title)
-        
-        self.__twProject = QTreeWidget(self)
-        self.__twProject.setHeaderLabels([])
-        self.__twProject.itemSelectionChanged.connect(self.projectItemSelectionChanged)
+
+        self.twProject = ProjectTreeView(model, self)
+        model.signalAddScene.connect(self.signalAddScene)
+        model.signalConnectToServer.connect(self.signalConnectToServer)
+        model.signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__twProject)
-        
-        Manager().signalCreateNewProjectConfig.connect(self.onCreateNewProjectConfig)
+        mainLayout.addWidget(self.twProject)
+
+        self.setupActions()
 
 
     def setupActions(self):
-        pass
+        text = "New project"
+        self.acProjectNew = QAction(QIcon(":new"), "&New project", self)
+        self.acProjectNew.setStatusTip(text)
+        self.acProjectNew.setToolTip(text)
+        self.acProjectNew.triggered.connect(self.onProjectNew)
+
+        text = "Open project"
+        self.acProjectOpen = QAction(QIcon(":open"), "&Open project", self)
+        self.acProjectOpen.setStatusTip(text)
+        self.acProjectOpen.setToolTip(text)
+        self.acProjectOpen.triggered.connect(self.onProjectOpen)
+
+        text = "Save project"
+        self.acProjectSave = QAction(QIcon(":save"), "&Save project", self)
+        self.acProjectSave.setStatusTip(text)
+        self.acProjectSave.setToolTip(text)
+        self.acProjectSave.setEnabled(False)
+        self.acProjectSave.triggered.connect(self.onProjectSave)
 
 
-    def setupToolBars(self, toolBar, parent):
-        pass
+    def setupToolBars(self, standardToolBar, parent):
+        standardToolBar.addAction(self.acProjectNew)
+        standardToolBar.addAction(self.acProjectOpen)
+        standardToolBar.addAction(self.acProjectSave)
 
 
-    def projectItemSelectionChanged(self):
-        item = self.__twProject.currentItem()
-        if not item: return
-        Manager().signalProjectItemChanged.emit(dict(type=NavigationItemTypes.CLASS, key=item.data(0, const.INTERNAL_KEY)))
-
-
-    def onCreateNewProjectConfig(self, customItem, path, configName):
-        #print serverId, classId
+    def setupDefaultProject(self):
+        """
         
-        item = QTreeWidgetItem(self.__twProject)
-        item.setData(0, const.INTERNAL_KEY, path)
-        item.setText(0, configName)
-        
-        customItem.signalValueChanged.connect(self.onAdditionalInfoChanged)
-        
-        for i in self.__twProject.selectedItems():
-            i.setSelected(False)
-        
-        item.setSelected(True)
+        """
+        self.twProject.setupDefaultProject()
 
 
-    def onAdditionalInfoChanged(self, key, deviceId):
-        # When deviceId of customItem was changed
-        for i in xrange(self.__twProject.topLevelItemCount()):
-            item = self.__twProject.topLevelItem(i)
-            if (item.data(0, const.INTERNAL_KEY) + ".configuration.deviceId") == key:
-                oldText = item.text(0)
-                splittedText = str(oldText).split("-<")
-                item.setText(0, "{}-<{}>").format(splittedText[0], deviceId)
+### slots ###
+    def onProjectNew(self):
+        self.twProject.newProject()
+
+
+    def onProjectOpen(self):
+        self.twProject.openProject()
+
+
+    def onProjectSave(self):
+        self.twProject.saveProject()
+
+
+    def onSelectionChanged(self, selectedIndexes):
+        self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
 
 
     # virtual function
