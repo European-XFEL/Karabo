@@ -15,6 +15,33 @@ def schemaloader(s):
     ret.name = name
     return ret
 
+def _gettype(data):
+    try:
+        if isinstance(data, numpy.ndarray):
+            return hashtypes.NumpyVector.vstrs[data.dtype.str]
+        else:
+            return hashtypes.Type.strs[data.dtype.str]
+    except AttributeError:
+        if isinstance(data, bool):
+            return hashtypes.Bool
+        elif isinstance(data, numbers.Integral):
+            return hashtypes.Int64
+        elif isinstance(data, numbers.Real):
+            return hashtypes.Double
+        elif isinstance(data, numbers.Complex):
+            return hashtypes.Complex
+        elif isinstance(data, bytes):
+            return hashtypes.VectorChar
+        elif isinstance(data, unicode):
+            return hashtypes.String
+        elif isinstance(data, Hash):
+            return hashtypes.Hash
+        elif isinstance(data, list):
+            return _gettype(data[0])
+        else:
+            raise RuntimeError('unknown datatype {}'.format(data.__class__))
+
+
 class Element(object):
     text = property(lambda self: None, lambda self, value: None)
     tail = text
@@ -30,8 +57,13 @@ class Element(object):
         self.attrs = {k: parse(v) for k, v in attrs.iteritems()
                       if k[:4] != "KRB_"}
 
+
     def items(self):
-        return self.attrs.items()
+        yield "KRB_Type", self.hashname()
+        for k, v in self.attrs.iteritems():
+            t = _gettype(v)
+            yield k, u'KRB_{}:{}'.format(t.hashname(), v)
+
 
 class SimpleElement(Element):
     def __len__(self):
@@ -53,7 +85,7 @@ class SimpleElement(Element):
     @property
     def text(self):
         try:
-            return str(self.data)
+            return _gettype(self.data).toString(self.data)
         except AttributeError:
             return None
 
@@ -63,6 +95,11 @@ class SimpleElement(Element):
             self.data = hashtypes.Type.fromname[self.type].fromstring(value)
         except:
             raise
+
+
+    def hashname(self):
+        return _gettype(self.data).hashname()
+
 
 class HashElement(Element):
     def __init__(self, tag, attrs={}):
@@ -91,6 +128,11 @@ class HashElement(Element):
     @property
     def data(self):
         return self.children
+
+
+    def hashname(self):
+        return "HASH"
+
 
 class Hash(OrderedDict):
     def __init__(self, *args):
@@ -239,21 +281,33 @@ def factory(tag, attrs):
     else:
         return SimpleElement(tag, attrs)
 
-def parseXML(xml):
-    target = ElementTree.TreeBuilder(element_factory=factory)
-    parser = ElementTree.XMLParser(target=target)
-    parser.feed(xml)
-    root = target.close()
-    if hasattr(root, "artificial"):
-        return root.children
-    else:
-        ret = Hash()
-        OrderedDict.__setitem__(ret, root.tag, root)
-        return ret
 
-def writeXML(hash):
-    ret = StringIO()
-    try:
+class XMLParser(object):
+    def read(self, data):
+        target = ElementTree.TreeBuilder(element_factory=factory)
+        parser = ElementTree.XMLParser(target=target)
+        parser.feed(data)
+        root = target.close()
+        if hasattr(root, "artificial"):
+            return root.children
+        else:
+            ret = Hash()
+            OrderedDict.__setitem__(ret, root.tag, root)
+            return ret
+
+
+class Writer(object):
+    def write(self, data):
+        self.file = StringIO()
+        try:
+            self.writeToFile(data, self.file)
+            return self.file.getvalue()
+        finally:
+            self.file.close()
+
+
+class XMLWriter(Writer):
+    def writeToFile(self, hash, file):
         if len(hash) == 1 and isinstance(hash.values()[0], Hash):
             e = OrderedDict.__getitem__(hash, hash.keys()[0])
         else:
@@ -261,11 +315,7 @@ def writeXML(hash):
             e.attrs = dict(KRB_Artificial="", KRB_Type="HASH")
             e.children = hash
         et = ElementTree.ElementTree(e)
-        et.write(ret)
-        rets = ret.getvalue()
-        return rets
-    finally:
-        ret.close()
+        et.write(file)
 
 
 class BinaryParser(object):
@@ -281,61 +331,39 @@ class BinaryParser(object):
         return self.data[self.pos - size:self.pos]
 
 
-    def read(self, file):
+    def read(self, data):
         self.pos = 0
-        self.data = file
+        self.data = data
         return hashtypes.Hash.read(self)
 
 
-class BinaryWriter(object):
+class BinaryWriter(Writer):
     def writeFormat(self, fmt, data):
         s = pack(fmt, data)
         self.file.write(s)
 
 
     def writeKey(self, key):
-        key = str(key)
+        key = key.encode('utf8')
         self.writeFormat('B', len(key))
         self.file.write(key)
 
 
-    def _gettype(self, data):
-        try:
-            return hashtypes.Type.strs[data.dtype.str]
-        except AttributeError:
-            if isinstance(data, numbers.Integral):
-                return hashtypes.Int64
-            elif isinstance(data, numbers.Real):
-                return hashtypes.Double
-            elif isinstance(data, numbers.Complex):
-                return hashtypes.Complex
-            elif isinstance(data, (str, unicode)):
-                return hashtypes.String
-            elif isinstance(data, Hash):
-                return hashtypes.Hash
-            elif isinstance(data, list):
-                return self._gettype(data[0])
-            else:
-                raise RuntimeError('unknown datatype {}'.format(data.__class__))
-
-
-    def writeType(self, type):
-        type = self._gettype(type)
+    def writeType(self, data):
+        type = _gettype(data)
+        if type == hashtypes.VectorChar:
+            print 'writing vc', data
         self.writeFormat('I', type.number)
 
 
     def writeData(self, data):
-        type = self._gettype(data)
+        type = _gettype(data)
         type.write(self, data)
 
 
-    def write(self, data):
-        self.file = StringIO()
-        try:
-            hashtypes.Hash.write(self, data)
-            return self.file.getvalue()
-        finally:
-            self.file.close()
+    def writeToFile(self, data, file):
+        self.file = file
+        hashtypes.Hash.write(self, data)
 
 
 class Schema(object):

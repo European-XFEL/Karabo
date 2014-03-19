@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 #############################################################################
 # Author: <burkhard.heisen@xfel.eu>
 # Created on February 17, 2012
@@ -44,10 +45,10 @@ class Network(QObject):
         self.__hostname = None
         self.__port = None
 
-        self.__brokerHost = str()
-        self.__brokerPort = str()
-        self.__brokerTopic = str()
-        self.__sessionToken = str()
+        self.__brokerHost = ""
+        self.__brokerPort = ""
+        self.__brokerTopic = ""
+        self.__sessionToken = ""
 
         self.__tcpSocket = None
 
@@ -161,10 +162,13 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.__auth = Authenticator(str(self.__username), str(self.__password), 
-                                            str(self.__provider), ipAddress,
-                                            self.__brokerHost, self.__brokerPort,
-                                            self.__brokerTopic)
+                self.__auth = Authenticator(self.__username.encode("utf8"),
+                                            self.__password.encode("utf8"),
+                                            self.__provider.encode("ascii"),
+                                            ipAddress.encode("ascii"),
+                                            self.__brokerHost.encode("ascii"),
+                                            str(self.__brokerPort),
+                                            self.__brokerTopic.encode("utf8"))
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
@@ -255,7 +259,7 @@ class Network(QObject):
             bodyHash = parser.read(bodyBytes)
             Manager().handleConfigurationChanged(headerHash, bodyHash)
         elif type == "log":
-            Manager().onLogDataAvailable(str(bodyBytes))
+            Manager().onLogDataAvailable(bodyBytes)
         elif type == "schemaUpdated":
             bodyHash = parser.read(bodyBytes)
             Manager().handleDeviceSchemaUpdated(headerHash, bodyHash)
@@ -324,30 +328,30 @@ class Network(QObject):
     def onKillDevice(self, deviceId):
         header = Hash()
         header.set("type", "killDevice")
-        header.set("deviceId", str(deviceId));
+        header.set("deviceId", deviceId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onKillServer(self, serverId):
         header = Hash()
         header.set("type", "killServer")
-        header.set("serverId", str(serverId))
+        header.set("serverId", serverId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onRefreshInstance(self, instanceId):
         header = Hash()
         header.set("type", "refreshInstance")
-        header.set("deviceId", str(instanceId))
+        header.set("deviceId", instanceId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onReconfigure(self, deviceId, parameterId, value):
         header = Hash()
         header.set("type", "reconfigure")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         body = Hash()
-        body.set(str(parameterId), value)
+        body.set(parameterId, value)
         self._tcpWriteHashHash(header, body)
 
 
@@ -368,45 +372,45 @@ class Network(QObject):
     def onExecute(self, deviceId, info):
         header = Hash()
         header.set("type", "execute")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
 
         command = info.get('command')
-        body = Hash("command", str(command))
+        body = Hash("command", command)
 
         args = info.get('args')
         if args:
             i = 0
             for arg in args:
                 i = i+1
-                argName = str("a%s" % i)
-                body.set(argName, str(arg))
+                argName = "a%s" % i
+                body.set(argName, arg)
         self._tcpWriteHashHash(header, body)
 
 
     def onNewVisibleDevice(self, deviceId):
         header = Hash()
         header.set("type", "newVisibleDevice")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onRemoveVisibleDevice(self, deviceId):
         header = Hash()
         header.set("type", "removeVisibleDevice")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onGetClassSchema(self, serverId, classId):
         header = Hash("type", "getClassSchema")
-        header.set("serverId", str(serverId))
-        header.set("classId", str(classId))
+        header.set("serverId", serverId)
+        header.set("classId", classId)
         self._tcpWriteHashHash(header, Hash())
 
 
     def onGetDeviceSchema(self, deviceId):
         header = Hash("type", "getDeviceSchema")
-        header.set("deviceId", str(deviceId))
+        header.set("deviceId", deviceId)
         self._tcpWriteHashHash(header, Hash())
 
 
@@ -450,7 +454,7 @@ class Network(QObject):
     def _tcpWriteHashString(self, headerHash, body):
         stream = QByteArray()
         headerString = writeXML(headerHash)
-        bodyString = QByteArray(str(body))
+        bodyString = QByteArray(body)
         nBytesHeader = len(headerString)
         nBytesBody = bodyString.size()
 
@@ -463,7 +467,7 @@ class Network(QObject):
 
     def _handleBrokerInformation(self, headerHash, bodyHash):
         self.__brokerHost = bodyHash.get("host")
-        self.__brokerPort = str(bodyHash.get("port"))
+        self.__brokerPort = bodyHash.get("port")
         self.__brokerTopic = bodyHash.get("topic")
         self._login()
 
