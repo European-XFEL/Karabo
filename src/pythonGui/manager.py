@@ -22,12 +22,14 @@ from configuration import Configuration
 from datetime import datetime
 from hash import Hash, HashMergePolicy, XMLWriter, XMLParser
 from timestamp import Timestamp
-from navigationhierarchymodel import NavigationHierarchyModel
+from navigationtreemodel import NavigationTreeModel
+from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
+useOldVersion = True
 
 class DataNotifier(QObject):
     signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
@@ -38,8 +40,11 @@ class DataNotifier(QObject):
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
 
-        self.signalUpdateComponent.connect(self.onValueChanged)
-        self.signalUpdateDisplayValue.connect(self.onValueChanged)
+        if useOldVersion:
+            self.components = [] # list of components
+        else:
+            self.signalUpdateComponent.connect(self.onValueChanged)
+            self.signalUpdateDisplayValue.connect(self.onValueChanged)
         self.addComponent(key, component)
 
 
@@ -51,9 +56,19 @@ class DataNotifier(QObject):
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
-        if hasattr(self, "value"):
-            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
-            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
+        
+        if useOldVersion:
+            if len(self.components) > 0:
+                value = self.components[0].value
+                self.signalUpdateComponent.emit(key, value)
+                self.signalUpdateDisplayValue.emit(key, value)
+                
+                # Add widget to list
+                self.components.append(component)
+        else:
+            if hasattr(self, "value"):
+                self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+                self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
 
     def updateDisplayValue(self, key, value, timestamp):
@@ -93,9 +108,6 @@ class _Manager(QObject):
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
-    signalCreateNewProjectConfig = pyqtSignal(object, str, str) # customItem, path, configName
-    signalProjectItemChanged = pyqtSignal(dict) # path
-
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
     signalGetFromPast = pyqtSignal(str, str, str, str) # deviceId, property, t0, t1
@@ -103,7 +115,7 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
-        
+
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
         # Map stores all keys and DataNofiers for display widgets
@@ -113,10 +125,15 @@ class _Manager(QObject):
         self.sqlDatabase = SqlDatabase()
         self.sqlDatabase.openConnection()
         
-        # Model for navigationtreeview
-        self.systemTopology = NavigationHierarchyModel()
-        # Model for projecttree TODO: after merge of projectPanel-branch
-        #self.projectTopology = ProjectModel()
+        # Model for navigation views
+        self.systemTopology = NavigationTreeModel(self)
+        self.systemTopology.selectionModel.selectionChanged. \
+                        connect(self.onNavigationTreeModelSelectionChanged)
+        # Model for project views
+        self.projectTopology = ProjectModel(self)
+        self.projectTopology.selectionModel.selectionChanged. \
+                        connect(self.onProjectModelSelectionChanged)
+        
         
         # Map stores { (serverId, class), Configuration }
         self.serverClassData = dict()
@@ -129,11 +146,6 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
-        # Project hash
-        self.__projectHash = Hash("project", Hash(), "project.devices", Hash())
-        self.__projectHash.setAttribute("project", "name", "xfelTest")
-        self.__projectArrayIndices = []
-        
         # Unregister all editable DataNotifiers, if available
         #for key in self.__keyNotifierMapEditableValue:
         #    dataNotifier = self.__keyNotifierMapEditableValue.get(key)
@@ -379,6 +391,7 @@ class _Manager(QObject):
 
 ### Slots ###
     def onDeviceClassValueChanged(self, key, value):
+        print "onDeviceClassValueChanged", key, value
         self._changeClassData(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
@@ -417,10 +430,33 @@ class _Manager(QObject):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
 
+    def onNavigationTreeModelSelectionChanged(self, selected, deselect):
+        """
+        This slot is called whenever something of the navigation panel is selected.
+        If an item was selected, the selection of the project panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.projectTopology.selectionModel.clearSelection()
+
+
+    def onProjectModelSelectionChanged(self, selected, deselected):
+        """
+        This slot is called whenever something of the project panel is selected.
+        If an item was selected, the selection of the navigation panel is cleared.
+        """
+        if len(selected.indexes()) < 1:
+            return
+
+        self.systemTopology.selectionModel.clearSelection()
+
+
+
     def initDevice(self, serverId, classId):
         # Put configuration hash together
         config = Hash(classId, self.serverClassData[serverId, classId].configuration)
-        
+       
         # Send signal to network
         self.signalInitDevice.emit(serverId, config)
         self.__isInitDeviceCurrentlyProcessed = True
@@ -450,39 +486,8 @@ class _Manager(QObject):
         self.signalKillServer.emit(serverId)
 
 
-### TODO: Temporary functions for scientific computing START ###
-    def createNewProjectConfig(self, customItem, path, configCount, classId, schema):
-        
-        configName = "{}-{}-<>".format(configCount, classId)
-        
-        self.signalCreateNewProjectConfig.emit(customItem, path, configName)
-        self.signalSchemaAvailable.emit(dict(key=path, schema=schema, classId=classId, type=NavigationItemTypes.CLASS))
-        self.signalProjectItemChanged.emit(dict(key=path))
-        
-        #print self.__projectHash
-        #print "-----"
-
-
-    def createNewConfigKeyAndCount(self, classId):
-        nbConfigs = len(self.__projectArrayIndices)
-        
-        path = "project.devices.[" + str(nbConfigs) + "]." + str(classId)
-        self.__projectHash.set(path, Hash())
-        
-        self.__projectArrayIndices.append(nbConfigs+1)
-        
-        return (path, nbConfigs)
-
-    # project hash:
-    # project name="test" +
-    #   devices +
-    #     0 +
-    #       classId1 +
-    #         deviceId = s1
-    #     1 +
-    #       classId2 +
-
-### TODO: Temporary functions for scientific computing END ###
+    def selectNavigationItemByKey(self, path):
+        self.signalNavigationItemSelectionChanged.emit(path)
 
 
     def executeCommand(self, itemInfo):
@@ -606,6 +611,8 @@ class _Manager(QObject):
     def handleSystemTopology(self, config):
         # Update navigation treemodel
         self.systemTopology.updateData(config)
+        # Update project model
+        self.projectTopology.systemTopologyChanged(config)
 
 
     def handleInstanceNew(self, config):
@@ -631,7 +638,7 @@ class _Manager(QObject):
             self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
-        self.systemTopology.updateData(config)
+        self.handleSystemTopology(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -644,20 +651,17 @@ class _Manager(QObject):
                 self.potentiallyRefreshVisibleDevice(deviceId)
 
 
-    def handleInstanceUpdated(self, config):
-        self.systemTopology.updateData(config)
-
-
     def handleInstanceGone(self, instanceId):
         """
         Remove instanceId from central hash and update
         """
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
-        if parentPath is None:
-            return
+        if parentPath is not None:
+            self.signalInstanceGone.emit(instanceId, parentPath)
         
-        self.signalInstanceGone.emit(instanceId, parentPath)
+        # Update on/offline status of project
+        self.projectTopology.handleInstanceGone(instanceId)
 
 
     def handleClassSchema(self, classInfo):
