@@ -13,7 +13,7 @@ __all__ = ["Network"]
 
 from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
                              Hash)
-from logindialog import LoginDialog
+from dialogs.logindialog import LoginDialog
 from manager import Manager
 from struct import pack
 
@@ -259,7 +259,7 @@ class Network(QObject):
             elif type == "instanceNew":
                 Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
             elif type == "instanceUpdated":
-                Manager().handleInstanceUpdated(instanceInfo.get("topologyEntry"))
+                Manager().handleSystemTopology(instanceInfo.get("topologyEntry"))
             elif type == "instanceGone":
                 Manager().handleInstanceGone(instanceInfo.get("instanceId"))
             elif type == "classSchema":
@@ -443,4 +443,3 @@ class Network(QObject):
         self.brokerPort = instanceInfo.get("port")
         self.brokerTopic = instanceInfo.get("topic")
         self._login()
-
