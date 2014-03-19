@@ -136,9 +136,12 @@ class HashElement(Element):
 
 class Hash(OrderedDict):
     def __init__(self, *args):
-        OrderedDict.__init__(self)
-        for k, v in zip(args[::2], args[1::2]):
-            self[k] = v
+        if len(args) == 1:
+            OrderedDict.__init__(self, args[0])
+        else:
+            OrderedDict.__init__(self)
+            for k, v in zip(args[::2], args[1::2]):
+                self[k] = v
 
     def _path(self, path, auto=False):
         path = path.split(".")
