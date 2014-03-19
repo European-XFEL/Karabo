@@ -19,6 +19,8 @@ class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
 
     CPPUNIT_TEST(testConstructors);
     //
+    CPPUNIT_TEST(isStringValidIso8601);
+    CPPUNIT_TEST(isStringKaraboValidIso8601);
     CPPUNIT_TEST(testToIso8601String);
     CPPUNIT_TEST(testToIso8601StringExternal);
     CPPUNIT_TEST(testToFormattedString);
@@ -37,6 +39,10 @@ public:
 private:
     void testConstructors();
     //
+    bool isValidIso8601(const std::string& pTimeStr);
+    bool isValidKaraboIso8601(const std::string& pTimeStr);
+    void isStringValidIso8601();
+    void isStringKaraboValidIso8601();
     void testToIso8601String();
     void testToIso8601StringExternal();
     void testToFormattedString();
