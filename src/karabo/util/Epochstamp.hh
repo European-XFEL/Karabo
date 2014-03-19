@@ -22,7 +22,7 @@ namespace karabo {
          * The second expresses the number fractional of a seconds, in atto seconds, since the last time unit (in seconds).
          * 
          * The default constructor initializes a Epochstamp object with the current system time.
-         * To initialize using an arbitrary point in time the static from functions must be used (e.g. fromIso8601)
+         * To initialize using an arbitrary point in time the static from functions must be used (e.g. DateTimeString class)
          * 
          * 
          */
@@ -144,49 +144,6 @@ namespace karabo {
             TimeDuration elapsed(const Epochstamp& other = Epochstamp()) const;
 
 
-            static const bool is_valid_iso8601_date_value(const std::string& timePoint);
-            static const bool isStringValidIso8601(const std::string& timePoint);
-            static const bool isStringKaraboValidIso8601(const std::string& timePoint);
-
-            /**
-             * Creates an EpochStamp from an ISO-8601 formatted string (or other set of predefined formats)
-             * Some examples:
-             * => Extended strings:
-             * - 1985-01-20T23:20:50
-             * - 1985-01-20T23:20:50,123
-             * - 1985-01-20T23:20:50.123
-             * - 1985-01-20T23:20:50.123z
-             * - 1985-01-20T23:20:50.123Z
-             * - 1985-01-20T23:20:50z
-             * - 1985-01-20T23:20:50Z
-             * - 1985-01-20T23:20:50+00:00
-             * - 1985-01-20T23:20:50-07:00
-             * 
-             * => Compact strings:
-             * - 19850120T232050
-             * - 19850120T232050,123
-             * - 19850120T232050.123
-             * - 19850120T232050.123z
-             * - 19850120T232050.123Z
-             * - 19850120T232050z
-             * - 19850120T232050Z
-             * - 19850120T232050+0000
-             * - 19850120T232050-0700
-             * 
-             * @param timePoint ISO 8601 formatted string (see formats locale to more information)
-             * @return EpochStamp object
-             */
-            static const Epochstamp fromIso8601(const std::string& timePoint);
-
-
-            /**
-             * Creates an EpochStamp from an ISO 8601 formatted string (or other set of predefined formats) with a 'Z' in the end. ("Z" means the date time zone is using Coordinated Universal Time - UTC)
-             * 
-             * @param timePoint ISO 8601 formatted string (see formats locale to more information)
-             * @return EpochStamp object
-             */
-            static const Epochstamp fromIso8601Ext(const std::string& timePoint);
-
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
              * 
@@ -240,14 +197,6 @@ namespace karabo {
         private:
 
             /**
-             * Convert a specific boost ptime to the number of seconds since epoch (1970-Jan-1 00:00:00)
-             * 
-             * @param pt specific boost ptime
-             * @return number of seconds since epoch
-             */
-            static const unsigned long long ptToSecondsSinceEpoch(boost::posix_time::ptime& pt);
-
-            /**
              * Returns timestamp string in "ANY SPECIFIED" format
              * 
              * @param pt Boost ptime of a specific moment in time
@@ -255,8 +204,6 @@ namespace karabo {
              * @return The specified date/time formatted according to the specified time_facet
              */
             static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet);
-
-            static const int count_chars(const char* string, char ch);
 
         };
     }
