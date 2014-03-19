@@ -43,7 +43,7 @@ except:
     print "Missing package guiqwt (this is normal under MacOSX and will come later)"
     useGuiQwt = False
 
-from karabo.karathon import Timestamp
+from timestamp import Timestamp
 
 
 class Curve(QObject):

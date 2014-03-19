@@ -22,7 +22,7 @@ __all__ = ["EditableListElement"]
 
 
 from widget import EditableWidget
-from karabo.karathon import *
+from hash import Hash
 from manager import Manager
 from stringlistedit import StringListEdit
 

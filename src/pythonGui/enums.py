@@ -9,6 +9,14 @@
 
 __all__ = ["NavigationItemTypes", "AccessMode", "ConfigChangeTypes"]
 
+class AccessLevel(object):
+    OBSERVER = 0
+    USER = 1
+    OPERATOR = 2
+    EXPERT = 3
+    ADMIN = 4
+
+
 
 class NavigationItemTypes(object):
     UNDEFINED = -1
@@ -19,10 +27,10 @@ class NavigationItemTypes(object):
 
 
 class AccessMode(object): # TODO use INTs?
-    UNDEFINED = "-1"
-    INITONLY = "1"
-    READONLY = "2"
-    RECONFIGURABLE = "4"
+    UNDEFINED = -1
+    INITONLY = 1
+    READONLY = 2
+    RECONFIGURABLE = 4
 
 
 class ConfigChangeTypes(object):

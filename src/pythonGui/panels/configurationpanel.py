@@ -12,8 +12,6 @@
 __all__ = ["ConfigurationPanel"]
 
 
-import const
-
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
 from enums import NavigationItemTypes

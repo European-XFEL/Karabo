@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 1, 2012
@@ -16,11 +17,11 @@
 __all__ = ["Manager"]
 
 
+from enums import NavigationItemTypes, ConfigChangeTypes
 from configuration import Configuration
 from datetime import datetime
-from enums import NavigationItemTypes
-from enums import ConfigChangeTypes
-from karabo.karathon import (Hash, loadFromFile, saveToFile, Timestamp)
+from hash import Hash, HashMergePolicy, XMLWriter, XMLParser
+from timestamp import Timestamp
 from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -321,34 +322,32 @@ class _Manager(QObject):
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
         # Go recursively through Hash
-        self._r_checkHash(devicePath, devicePath, config, configChangeType)
+        self._r_changeHash(devicePath, devicePath, config, configChangeType)
 
 
-    def _r_checkHash(self, path, devicePath, config, configChangeType):
-        topLevelKeys = config.keys()
-        for key in topLevelKeys:
-            value = config.get(key)
+    def _r_changeHash(self, path, devicePath, config, configChangeType):
+        for key, value in config.iteritems():
             try:
                 timestamp = Timestamp.fromHashAttributes(
                     config.getAttributes(key))
-            except RuntimeError as e:
+            except KeyError as e:
                 timestamp = None
 
             if len(path) < 1:
                 internalPath = key
             else:
                 internalPath = path + "." + key
-            
+
             # Check if DataNotifier for key available
-            if configChangeType is ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
+            if configChangeType == ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
+            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
                 dataNotifier = self._getDataNotifierEditableValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType is ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
+            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
                 dataNotifier = self._getDataNotifierDisplayValue(internalPath)
                 if dataNotifier is not None:
                     dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
@@ -365,7 +364,7 @@ class _Manager(QObject):
                         
             # More recursion in case of Hash type
             if isinstance(value, Hash):
-                self._r_checkHash(internalPath, devicePath, value, configChangeType)
+                self._r_changeHash(internalPath, devicePath, value, configChangeType)
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
@@ -539,65 +538,24 @@ class _Manager(QObject):
 
 
     def openAsXml(self, filename, deviceId, classId, serverId):
-        config = loadFromFile(str(filename))
-        # Needs to be copied into new Hash to prevent segmentation fault
-        tmp = Hash(config.get(classId))
-        
-        # TODO: not working correctly yet
-        # Validate against fullSchema - state dependent configurations
-        #fullSchema = Schema()
-        #rules = None
-        
-        # Get full schema of device class
-        #path = internalKey + ".description"
-        #if self.__hash.has(path):
-        #    fullSchema = self.__hash.get(path)
-            
-            # Get current state
-        #    state = None
-        #    statePath = internalKey + ".configuration.state"
-        #    if self.__hash.has(statePath):
-        #        state = self.__hash.get(statePath)
-            
-        #    splitPath = path.split(".")
-        #    if splitPath[0] == "device":
-        #        print "device"
-        #        rules = AssemblyRules(AccessType.WRITE, state)#accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
-        #    else:
-        #        print "class"
-        #        rules = AssemblyRules(AccessType.INIT)#accessMode, state, globals.GLOBAL_ACCESS_LEVEL)
+        r = XMLParser()
+        with open(filename, 'r') as file:
+            config = r.read(file.read())[classId]
 
-        #schema = Schema(classId, rules)
-        #schema.merge(fullSchema)
-        
-        #validationRules = ValidatorValidationRules()
-        #validationRules.allowAdditionalKeys        = True
-        #validationRules.allowMissingKeys           = True
-        #validationRules.allowUnrootedConfiguration = True
-        #validationRules.injectDefaults             = False
-        #validationRules.injectTimestamps           = False
-        #validator = Validator()
-        #validator.setValidationRules(validationRules)
-        # Get validated config
-        #config = validator.validate(schema, config)
-
-        # TODO: Reload XSD in configuration panel
-        # ...
-        
         changeType = None
         if deviceId is not None:
             path = deviceId
             changeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
             # Merge new config into internal datastructure
-            self.deviceData[deviceId].configuration = tmp
+            self.deviceData[deviceId].configuration = config
         elif serverId is not None:
             path = "{}.{}".format(serverId, classId)
             changeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
             # Merge new config into internal datastructure
-            self.serverClassData[serverId, classId].configuration = tmp
+            self.serverClassData[serverId, classId].configuration = config
         
         # Update view with new data for path
-        self._changeHash(path, tmp, changeType)
+        self._changeHash(path, config, changeType)
 
 
     def onFileOpen(self, deviceId, classId, serverId):
@@ -621,7 +579,9 @@ class _Manager(QObject):
         else:
             config = Hash()
 
-        saveToFile(config, filename)
+        w = XMLWriter()
+        with open(filename, 'w') as file:
+            w.writeToFile(config, file)
 
     
     def onSaveAsXml(self, deviceId, classId, serverId):
