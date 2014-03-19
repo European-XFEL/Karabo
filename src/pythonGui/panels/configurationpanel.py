@@ -105,26 +105,14 @@ class ConfigurationPanel(QWidget):
 
         vLayout = QVBoxLayout(topWidget)
         vLayout.setContentsMargins(0,0,0,0)
-        
-        # splitter for navigation + attributeeditor
-        splitTopPanes = QSplitter(Qt.Horizontal, topWidget)
         vLayout.addWidget(splitTopPanes)
-                
-        self.__twNavigation = NavigationTreeView(splitTopPanes, treemodel)
-        treemodel.signalItemChanged.connect(self.onNavigationItemChanged)
-        treemodel.signalInstanceNewReset.connect(self.onInstanceNewReset)
-        self.__twNavigation.hide()
-
-        splitTopPanes.setStretchFactor(0, 1)
-        
+      
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
-        
-        Manager().signalProjectItemChanged.connect(self.onProjectItemChanged)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -133,14 +121,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-
-        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
-        self.__swParameterEditor = QStackedWidget(splitTopPanes)
-        # Initial page
-        twParameterEditorPage = ParameterTreeWidget()
-        twParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
-        self.__swParameterEditor.addWidget(twParameterEditorPage)
-        splitTopPanes.setStretchFactor(1, 3)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
