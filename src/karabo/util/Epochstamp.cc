@@ -185,14 +185,6 @@ namespace karabo {
             std::clog << date << " |T| " << time << " |.| " << fractionalSeconds << " |TZ| " << timezone << endl;
             std::clog << "-----------------------------" << endl;
 
-            //std::vector<std::string> timeParts = karabo::util::fromString<std::string, std::vector > (timePoint, ".");
-
-            //if (timeParts.size() != 2) {
-            //    throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (missing '.' character or/and seconds or/and fractional seconds)");
-            //}
-            //std::string secondsStr = timeParts[0];
-            //std::string fractionalSecondsStr = timeParts[1];
-
             std::string nonFractionalDateTime = date + "T" + time;
 
             // Try to convert String to PTIME taking into consideration the date formats defined above
@@ -341,8 +333,8 @@ namespace karabo {
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
             static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
             using namespace boost::posix_time;
+            
             if (0) {
-
                 // The boost minimum unit is nanosecond:
                 // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
                 boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
@@ -353,6 +345,7 @@ namespace karabo {
                 #endif
                 return extended ? to_iso_extended_string(time_point) : to_iso_string(time_point);
             }
+            
             // Another solution is to print out the time in seconds 
             // and then print the fractional part with the desired precision. 
             // Could be microseconds, nanoseconds, or any thing else we want.
