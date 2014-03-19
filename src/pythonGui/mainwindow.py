@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.__karaboVersion = self._getVersion()
+        self.karaboVersion = self._getVersion()
 
         self._setupActions()
         self._setupMenuBar()
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         # Setup default project
         self.projectPanel.setupDefaultProject()
 
-        self.setWindowTitle("European XFEL - Karabo GUI " + self.__karaboVersion)
+        self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
         self.resize(1200,800)
         self.show()
 
@@ -68,105 +68,96 @@ class MainWindow(QMainWindow):
 
     def _setupActions(self):
         text = "Change access level"
-        self.__tbAccessLevel = QToolButton(self)
-        self.__tbAccessLevel.setIcon(icons.lock)
-        self.__tbAccessLevel.setToolTip(text)
-        self.__tbAccessLevel.setStatusTip(text)
-        self.__tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
-        self.__tbAccessLevel.setEnabled(False)
+        self.tbAccessLevel = QToolButton(self)
+        self.tbAccessLevel.setIcon(icons.lock)
+        self.tbAccessLevel.setToolTip(text)
+        self.tbAccessLevel.setStatusTip(text)
+        self.tbAccessLevel.setPopupMode(QToolButton.InstantPopup)
+        self.tbAccessLevel.setEnabled(False)
         
         text = "Admin"
-        self.__acAdmin = QAction(text, self)
-        self.__acAdmin.setStatusTip(text)
-        self.__acAdmin.setToolTip(text)
-        self.__acAdmin.setCheckable(True)
+        self.acAdmin = QAction(text, self)
+        self.acAdmin.setStatusTip(text)
+        self.acAdmin.setToolTip(text)
+        self.acAdmin.setCheckable(True)
         
         text = "Expert"
-        self.__acExpert = QAction(text, self)
-        self.__acExpert.setStatusTip(text)
-        self.__acExpert.setToolTip(text)
-        self.__acExpert.setCheckable(True)
+        self.acExpert = QAction(text, self)
+        self.acExpert.setStatusTip(text)
+        self.acExpert.setToolTip(text)
+        self.acExpert.setCheckable(True)
 
         text = "Operator"
-        self.__acOperator = QAction(text, self)
-        self.__acOperator.setStatusTip(text)
-        self.__acOperator.setToolTip(text)
-        self.__acOperator.setCheckable(True)
+        self.acOperator = QAction(text, self)
+        self.acOperator.setStatusTip(text)
+        self.acOperator.setToolTip(text)
+        self.acOperator.setCheckable(True)
 
         text = "User"
-        self.__acUser = QAction(text, self)
-        self.__acUser.setStatusTip(text)
-        self.__acUser.setToolTip(text)
-        self.__acUser.setCheckable(True)
+        self.acUser = QAction(text, self)
+        self.acUser.setStatusTip(text)
+        self.acUser.setToolTip(text)
+        self.acUser.setCheckable(True)
 
         text = "Observer"
-        self.__acObserver = QAction(text, self)
-        self.__acObserver.setStatusTip(text)
-        self.__acObserver.setToolTip(text)
-        self.__acObserver.setCheckable(True)
+        self.acObserver = QAction(text, self)
+        self.acObserver.setStatusTip(text)
+        self.acObserver.setToolTip(text)
+        self.acObserver.setCheckable(True)
         
-        self.__agAccessLevel = QActionGroup(self)
-        self.__agAccessLevel.addAction(self.__acAdmin)
-        self.__agAccessLevel.addAction(self.__acExpert)
-        self.__agAccessLevel.addAction(self.__acOperator)
-        self.__agAccessLevel.addAction(self.__acUser)
-        self.__agAccessLevel.addAction(self.__acObserver)
-        self.__agAccessLevel.triggered.connect(self.onChangeAccessLevel)
+        self.agAccessLevel = QActionGroup(self)
+        self.agAccessLevel.addAction(self.acAdmin)
+        self.agAccessLevel.addAction(self.acExpert)
+        self.agAccessLevel.addAction(self.acOperator)
+        self.agAccessLevel.addAction(self.acUser)
+        self.agAccessLevel.addAction(self.acObserver)
+        self.agAccessLevel.triggered.connect(self.onChangeAccessLevel)
         
-        self.__mAccessLevel = QMenu()
+        self.mAccessLevel = QMenu()
         self.onUpdateAccessLevel()
-        self.__tbAccessLevel.setMenu(self.__mAccessLevel)
+        self.tbAccessLevel.setMenu(self.mAccessLevel)
         
         text = "Connect to server"
-        self.__acServerConnect = QAction(icons.remote,
+        self.acServerConnect = QAction(icons.remote,
                                          "&Connect to server", self)
-        self.__acServerConnect.setStatusTip(text)
-        self.__acServerConnect.setToolTip(text)
-        self.__acServerConnect.setCheckable(True)
-        self.__acServerConnect.triggered.connect(self.onConnectToServer)
+        self.acServerConnect.setStatusTip(text)
+        self.acServerConnect.setToolTip(text)
+        self.acServerConnect.setCheckable(True)
+        self.acServerConnect.triggered.connect(self.onConnectToServer)
 
         text = "Exit application"
-        self.__acExit = QAction(icons.exit, '&Exit', self)
-        self.__acExit.setStatusTip(text)
-        self.__acExit.setToolTip(text)
-        self.__acExit.setShortcut('Ctrl+Q')
-        self.__acExit.triggered.connect(self.onExit)
+        self.acExit = QAction(icons.exit, '&Exit', self)
+        self.acExit.setStatusTip(text)
+        self.acExit.setToolTip(text)
+        self.acExit.setShortcut('Ctrl+Q')
+        self.acExit.triggered.connect(self.onExit)
 
-        self.__acEditUndo = QAction(QIcon(":undo"), "Undo", self)
-        self.__acEditUndo.setShortcuts(QKeySequence.Undo)
-
-        self.__acEditRedo = QAction(QIcon(":redo"), "Redo", self)
-        self.__acEditRedo.setShortcuts(QKeySequence.Redo)
-
-        self.__acHelpAbout = QAction("About", self);
-        self.__acHelpAbout.triggered.connect(self.onHelpAbout)
+        self.acHelpAbout = QAction("About", self);
+        self.acHelpAbout.triggered.connect(self.onHelpAbout)
         
-        self.__acHelpAboutQt = QAction("About Qt", self);
+        self.acHelpAboutQt = QAction("About Qt", self);
+        self.acHelpAboutQt.triggered.connect(qApp.aboutQt)
 
 
     def _setupMenuBar(self):
 
         mFileMenu = self.menuBar().addMenu("&File")
-        mFileMenu.addAction(self.__acExit)
-
-        mEditMenu = self.menuBar().addMenu("&Edit")
-        mEditMenu.addAction(self.__acEditUndo)
-        mEditMenu.addAction(self.__acEditRedo)
+        mFileMenu.addAction(self.acExit)
 
         mHelpMenu = self.menuBar().addMenu("&Help")
-        mHelpMenu.addAction(self.__acHelpAbout)
-        mHelpMenu.addAction(self.__acHelpAboutQt)
+        mHelpMenu.addAction(self.acHelpAbout)
+        mHelpMenu.addAction(self.acHelpAboutQt)
 
 
     def _setupToolBar(self):
 
         toolbar = self.addToolBar('Standard')
-        toolbar.addAction(self.__acExit)
+        toolbar.addAction(self.acExit)
 
         toolbar.addSeparator()
-        toolbar.addAction(self.__acServerConnect)
+        toolbar.addAction(self.acServerConnect)
         
-        toolbar.addWidget(self.__tbAccessLevel)
+        toolbar.addWidget(self.tbAccessLevel)
 
 
     def _setupStatusBar(self):
@@ -231,7 +222,7 @@ class MainWindow(QMainWindow):
         This function creates a new CustomMiddlePanel, establishes its necessary
         connections and returns it.
         """
-        customViewPanel = CustomMiddlePanel(self.__acServerConnect.isChecked())
+        customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
         self.network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
@@ -269,6 +260,7 @@ class MainWindow(QMainWindow):
 
     
     def onHelpAbout(self):
+        # TODO: add about dialog for karabo including version etc.
         print "onHelpAbout"
 
 
@@ -280,15 +272,15 @@ class MainWindow(QMainWindow):
 
 
     def onChangeAccessLevel(self, action):
-        if action is self.__acObserver:
+        if action is self.acObserver:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
-        elif action is self.__acUser:
+        elif action is self.acUser:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.USER
-        elif action is self.__acOperator:
+        elif action is self.acOperator:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
-        elif action is self.__acExpert:
+        elif action is self.acExpert:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
-        elif action is self.__acAdmin:
+        elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
         Manager().signalGlobalAccessLevelChanged.emit()
@@ -300,42 +292,42 @@ class MainWindow(QMainWindow):
         else:
             text = "Connect to server"
         
-        self.__acServerConnect.setStatusTip(text)
-        self.__acServerConnect.setToolTip(text)
+        self.acServerConnect.setStatusTip(text)
+        self.acServerConnect.setToolTip(text)
         
-        self.__acServerConnect.blockSignals(True)
-        self.__acServerConnect.setChecked(isConnected)
-        self.__acServerConnect.blockSignals(False)
+        self.acServerConnect.blockSignals(True)
+        self.acServerConnect.setChecked(isConnected)
+        self.acServerConnect.blockSignals(False)
         
-        self.__tbAccessLevel.setEnabled(isConnected)
+        self.tbAccessLevel.setEnabled(isConnected)
 
 
     def onUpdateAccessLevel(self):
-        self.__mAccessLevel.clear()
+        self.mAccessLevel.clear()
         if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.EXPERT:
-            self.__mAccessLevel.addAction(self.__acAdmin)
+            self.mAccessLevel.addAction(self.acAdmin)
         if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OPERATOR:
-            self.__mAccessLevel.addAction(self.__acExpert)
+            self.mAccessLevel.addAction(self.acExpert)
         if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.USER:
-            self.__mAccessLevel.addAction(self.__acOperator)
+            self.mAccessLevel.addAction(self.acOperator)
         if globals.GLOBAL_ACCESS_LEVEL > AccessLevel.OBSERVER:
-            self.__mAccessLevel.addAction(self.__acUser)
-        self.__mAccessLevel.addAction(self.__acObserver)
+            self.mAccessLevel.addAction(self.acUser)
+        self.mAccessLevel.addAction(self.acObserver)
         
         if globals.GLOBAL_ACCESS_LEVEL == AccessLevel.ADMIN:
-            self.__acAdmin.setChecked(True)
+            self.acAdmin.setChecked(True)
         elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.EXPERT:
-            self.__acExpert.setChecked(True)
+            self.acExpert.setChecked(True)
         elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OPERATOR:
-            self.__acOperator.setChecked(True)
+            self.acOperator.setChecked(True)
         elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.USER:
-            self.__acUser.setChecked(True)
+            self.acUser.setChecked(True)
         elif globals.GLOBAL_ACCESS_LEVEL == AccessLevel.OBSERVER:
-            self.__acObserver.setChecked(True)
+            self.acObserver.setChecked(True)
         else:
-            self.__acAdmin.setChecked(False)
-            self.__acExpert.setChecked(False)
-            self.__acOperator.setChecked(False)
-            self.__acUser.setChecked(False)
-            self.__acObserver.setChecked(False)
+            self.acAdmin.setChecked(False)
+            self.acExpert.setChecked(False)
+            self.acOperator.setChecked(False)
+            self.acUser.setChecked(False)
+            self.acObserver.setChecked(False)
 
