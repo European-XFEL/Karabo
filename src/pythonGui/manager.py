@@ -392,6 +392,7 @@ class _Manager(QObject):
 
 ### Slots ###
     def onDeviceClassValueChanged(self, key, value):
+        print "onDeviceClassValueChanged", key, value
         self._changeClassData(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
