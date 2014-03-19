@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="88">
+<configurationDescriptor version="89">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
@@ -241,6 +241,8 @@
       </logicalFolder>
       <logicalFolder name="f6" displayName="Tools" projectFiles="true">
         <logicalFolder name="f1" displayName="Time" projectFiles="true">
+          <itemPath>../../../src/karabo/util/DateTimeString.cc</itemPath>
+          <itemPath>../../../src/karabo/util/DateTimeString.hh</itemPath>
           <itemPath>../../../src/karabo/util/Epochstamp.cc</itemPath>
           <itemPath>../../../src/karabo/util/Epochstamp.hh</itemPath>
           <itemPath>../../../src/karabo/util/TimeDuration.cc</itemPath>
@@ -1521,6 +1523,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Configurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DateTimeString.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DateTimeString.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3214,6 +3226,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Configurator.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DateTimeString.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/DateTimeString.hh"
             ex="false"
             tool="3"
             flavor2="0">
