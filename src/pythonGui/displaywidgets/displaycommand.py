@@ -62,11 +62,11 @@ class DisplayCommand(DisplayWidget):
 
 
 ### slots ###
-    def onDeviceStateChanged(self, internalDeviceId, state):
+    def onDeviceStateChanged(self, deviceId, state):
         isFound = False
         for key in self.keys:
-            deviceId = key.split(".configuration")[0]
-            if deviceId == internalDeviceId:
+            devId = key.split(".", 1)[0]
+            if devId == deviceId:
                 isFound = True
         
         if not isFound:
