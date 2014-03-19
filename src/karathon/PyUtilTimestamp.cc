@@ -42,16 +42,6 @@ void exportPyUtilTimestamp() {
            , bp::arg("attributes"));
     ts.staticmethod("hashAttributesContainTimeInformation");
 
-    ts.def("fromIso8601"
-           , &Timestamp::fromIso8601
-           , bp::arg("timePoint"));
-    ts.staticmethod("fromIso8601");
-
-    ts.def("fromIso8601Ext"
-           , &Timestamp::fromIso8601Ext
-           , bp::arg("timePoint"));
-    ts.staticmethod("fromIso8601Ext");
-
     ts.def("toIso8601"
            , (string(Timestamp::*)(karabo::util::TIME_UNITS, bool) const) (&Timestamp::toIso8601)
            , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));

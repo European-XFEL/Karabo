@@ -68,20 +68,10 @@ void exportPyUtilEpochstamp() {
     e.def("now"
           , (void (Epochstamp::*)())(&Epochstamp::now) );
     
-    e.def("fromIso8601"
-          , &Epochstamp::fromIso8601
-          , bp::arg("timePoint"));
-    e.staticmethod("fromIso8601");
-
     e.def("elapsed"
                 , (TimeDuration (Epochstamp::*)(Epochstamp const &) const)(&Epochstamp::elapsed)
                 , ( bp::arg("other")=karabo::util::Epochstamp() ) );
         
-    e.def("fromIso8601Ext"
-          , &Epochstamp::fromIso8601Ext
-          , bp::arg("timePoint"));
-    e.staticmethod("fromIso8601Ext");
-
     e.def("fromHashAttributes"
           , &Epochstamp::fromHashAttributes
           , bp::arg("attributes"));
