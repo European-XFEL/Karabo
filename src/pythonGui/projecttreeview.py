@@ -82,6 +82,7 @@ class ProjectTreeView(QTreeView):
             return
 
         self.model().createNewProject(projectName, directory)
+        self.model().saveProject(projectName, directory)
 
 
     def openProject(self):
@@ -90,7 +91,7 @@ class ProjectTreeView(QTreeView):
         if len(filename) < 1:
             return
         
-        self.model().openProject(str(filename))
+        self.model().openProject(filename)
 
 
     def saveProject(self):

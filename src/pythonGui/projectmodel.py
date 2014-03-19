@@ -97,7 +97,9 @@ class ProjectModel(QStandardItemModel):
                     leafItem.setData(ProjectModel.DEVICES_KEY, ProjectModel.ITEM_CATEGORY)
                     
                     # Update icon on availability of device
-                    if self.systemTopology.has("device.{}".format(leafKey)):
+
+                    if (self.systemTopology is not None) and \
+                       (self.systemTopology.has("device.{}".format(leafKey))):
                         leafItem.setIcon(QIcon(":device-instance"))
                     else:
                         leafItem.setIcon(QIcon(":offline"))
@@ -163,6 +165,25 @@ class ProjectModel(QStandardItemModel):
         self.updateData()
         if self.pluginDialog is not None:
             self.pluginDialog.updateServerTopology(self.systemTopology)
+
+
+    def checkSystemTopology(self):
+        """
+        This function checks whether the systemTopology is set correctly.
+        If not, a signal to connect to the server is emitted.
+        """
+        if self.systemTopology is not None:
+            return True
+        
+        reply = QMessageBox.question(None, "No server connection",
+                                     "There is no connection to the server.<br>"
+                                     "Do you want to establish a server connection?",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+        if reply == QMessageBox.No:
+            return False
+        self.signalConnectToServer.emit()
+        return False
 
 
     def systemTopologyChanged(self, config):
@@ -319,9 +340,11 @@ class ProjectModel(QStandardItemModel):
 
 
     def openProject(self, filename):
-        projectConfig = loadFromFile(filename)
-        # TODO: this function merges the loaded hash into the current project hash
-        # consider projectName to overwrite path
+        projectConfig = loadFromFile(str(filename))
+        # Consider projectName to merge correctly into project hash
+        projectName = projectConfig.getAttribute("project", "name")
+        projectConfig = Hash(projectName, projectConfig)
+        # Merge loaded hash into the current project hash
         self.addProjectConfiguration(projectConfig)
 
 
@@ -376,6 +399,7 @@ class ProjectModel(QStandardItemModel):
                         filename = sceneConfig.get("filename")
                         alias = sceneConfig.get("alias")
                         # Save scene to SVG
+                        print "path", "{}.{}.{}[{}]".format(projectName, pKey, cKey, i)
                         print "save to svg", filename
 
         # Save project.xml
@@ -403,15 +427,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def editDevice(self, path=None):
-        if self.systemTopology is None:
-            reply = QMessageBox.question(None, "No server connection",
-                                         "There is no connection to the server.<br>"
-                                         "Do you want to establish a server connection?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return
-            self.signalConnectToServer.emit()
+        if not self.checkSystemTopology():
             return
 
         if (path is not None) and self.projectHash.has(path):
@@ -519,7 +535,10 @@ class ProjectModel(QStandardItemModel):
 
         if (serverId is None) or (classId is None) or (deviceId is None):
             return
-        
+
+        if not self.checkSystemTopology():
+            return
+
         # Check whether deviceId is already online
         if self.systemTopology.has("device.{}".format(deviceId)):
             # Get schema

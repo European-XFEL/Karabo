@@ -259,7 +259,7 @@ class Network(QObject):
             elif type == "instanceNew":
                 Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
             elif type == "instanceUpdated":
-                Manager().handleInstanceUpdated(instanceInfo.get("topologyEntry"))
+                Manager().handleSystemTopology(instanceInfo.get("topologyEntry"))
             elif type == "instanceGone":
                 Manager().handleInstanceGone(instanceInfo.get("instanceId"))
             elif type == "classSchema":
