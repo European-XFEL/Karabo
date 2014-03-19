@@ -107,6 +107,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/Base64.o \
 	${OBJECTDIR}/_ext/163016059/ByteSwap.o \
 	${OBJECTDIR}/_ext/163016059/ClassInfo.o \
+	${OBJECTDIR}/_ext/163016059/DateTimeString.o \
 	${OBJECTDIR}/_ext/163016059/Epochstamp.o \
 	${OBJECTDIR}/_ext/163016059/Exception.o \
 	${OBJECTDIR}/_ext/163016059/FromInt.o \
@@ -539,6 +540,11 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo.o: ../../../src/karabo/util/ClassInfo.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} $@.d
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-local-typedefs -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo.o ../../../src/karabo/util/ClassInfo.cc
+
+${OBJECTDIR}/_ext/163016059/DateTimeString.o: ../../../src/karabo/util/DateTimeString.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} $@.d
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-local-typedefs -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/DateTimeString.o ../../../src/karabo/util/DateTimeString.cc
 
 ${OBJECTDIR}/_ext/163016059/Epochstamp.o: ../../../src/karabo/util/Epochstamp.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -1869,6 +1875,19 @@ ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o: ${OBJECTDIR}/_ext/163016059/Clas
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-local-typedefs -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o ../../../src/karabo/util/ClassInfo.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/ClassInfo.o ${OBJECTDIR}/_ext/163016059/ClassInfo_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/DateTimeString_nomain.o: ${OBJECTDIR}/_ext/163016059/DateTimeString.o ../../../src/karabo/util/DateTimeString.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/DateTimeString.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} $@.d;\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  -Wno-unused-local-typedefs -fPIC  -Dmain=__nomain -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/163016059/DateTimeString_nomain.o ../../../src/karabo/util/DateTimeString.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/DateTimeString.o ${OBJECTDIR}/_ext/163016059/DateTimeString_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/Epochstamp_nomain.o: ${OBJECTDIR}/_ext/163016059/Epochstamp.o ../../../src/karabo/util/Epochstamp.cc 
