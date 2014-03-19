@@ -3,6 +3,7 @@ import hash
 from registry import Registry
 
 from struct import unpack, calcsize
+import base64
 import numpy
 
 
@@ -47,6 +48,15 @@ class Vector(object):
 
 
 class NumpyVector(Vector):
+    vstrs = { }
+
+
+    @classmethod
+    def register(cls, name, dict):
+        super(NumpyVector, cls).register(name, dict)
+        cls.vstrs[cls.numpy().dtype.str] = cls
+
+
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
@@ -65,6 +75,11 @@ class NumpyVector(Vector):
         file.writeFormat('I', len(data))
         for d in data:
             super(Vector, cls).write(file, d)
+
+
+    @classmethod
+    def toString(cls, data):
+        return ",".join(unicode(x) for x in data)
 
 
 class Type(Registry):
@@ -87,6 +102,7 @@ class Type(Registry):
 
     @classmethod
     def register(cls, name, dict):
+        super(Type, cls).register(name, dict)
         cls.number = len(cls.types)
         cls.types.append(cls)
         cls.fromname[cls.hashname()] = cls
@@ -94,15 +110,25 @@ class Type(Registry):
             cls.strs[cls.numpy().dtype.str] = cls
 
 
+    @classmethod
+    def toString(cls, data):
+        return str(data)
+
+
 class Bool(Type):
     @classmethod
     def read(cls, file):
-        return Int8.read(file) != 0
+        return bool(Int8.read(file) != 0)
 
 
     @staticmethod
     def fromstring(s):
         return bool(int(s))
+
+
+    @classmethod
+    def toString(cls, data):
+        return '1' if data else '0'
 
 
 class VectorBool(Type):
@@ -116,12 +142,27 @@ class Char(Simple, Type):
         return bytes(file.data[file.pos - 1:file.pos])
 
 
+    @classmethod
+    def toString(cls, data):
+        return base64.b64encode(data)
+
+
+    @classmethod
+    def fromstring(self, s):
+        return base64.b64decode(s)
+
 class VectorChar(Vector, Char):
     @staticmethod
     def read(file):
         size, = file.readFormat('I')
         file.pos += size
         return bytes(file.data[file.pos - size:file.pos])
+
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat('I', len(data))
+        file.file.write(data)
 
 
 class Int8(Integer, Type):
@@ -237,7 +278,7 @@ class String(Type):
     def read(cls, file):
         size, = file.readFormat('I')
         file.pos += size
-        return unicode(file.data[file.pos - size:file.pos])
+        return unicode(file.data[file.pos - size:file.pos], 'utf8')
 
 
     @staticmethod
@@ -247,9 +288,7 @@ class String(Type):
 
     @classmethod
     def write(cls, file, data):
-        data = str(data)
-        file.writeFormat('I', len(data))
-        file.file.write(data)
+        VectorChar.write(file, data.encode('utf8'))
 
 
 class VectorString(Vector, String):
@@ -362,7 +401,7 @@ class Schema(Hash):
     def read(cls, file):
         file.readFormat('I') # ignore length
         size, = file.readFormat('Q')
-        name = unicode(file.data[file.pos:file.pos + size])
+        name = unicode(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)
         return hash.Schema(name, ret)
