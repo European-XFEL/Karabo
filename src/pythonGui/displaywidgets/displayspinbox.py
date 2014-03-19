@@ -20,14 +20,11 @@
 
 __all__ = ["DisplaySpinBox"]
 
-import globals
-
 from widget import DisplayWidget
-
-from karabo.karathon import Types
 
 from PyQt4.QtGui import QSpinBox
 
+from numpy import iinfo
 
 class DisplaySpinBox(DisplayWidget):
     category = "Digit"
@@ -38,26 +35,9 @@ class DisplaySpinBox(DisplayWidget):
 
         self.__spinBox = QSpinBox()
 
-        if valueType == Types.INT8:
-            self.__spinBox.setRange(globals.MIN_INT8, globals.MAX_INT8)
-        elif valueType == Types.UINT8:
-            self.__spinBox.setRange(0, globals.MAX_UINT8)
-        elif valueType == Types.INT16:
-            self.__spinBox.setRange(globals.MIN_INT16, globals.MAX_INT16)
-        elif valueType == Types.UINT16:
-            self.__spinBox.setRange(0, globals.MAX_UINT16)
-        elif valueType == Types.INT32:
-            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
-        elif valueType == Types.UINT32:
-            # TODO: not supported for QSpinBox
-            self.__spinBox.setRange(0, globals.MAX_INT32)
-        elif valueType == Types.INT64:
-            # TODO: not supported for QSpinBox
-            self.__spinBox.setRange(globals.MIN_INT32, globals.MAX_INT32)
-        elif valueType == Types.UINT64:
-            # TODO: not supported for QSpinBox
-            self.__spinBox.setRange(0, globals.MAX_INT32)
-
+        if valueType is not None:
+            info = iinfo(valueType.numpy)
+            self.__spinBox.setRange(info.min, info.max)
         self.__spinBox.setReadOnly(True)
         
         #metricPrefixSymbol = params.get('metricPrefixSymbol')

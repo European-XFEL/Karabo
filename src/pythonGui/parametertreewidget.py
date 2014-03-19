@@ -14,7 +14,7 @@ __all__ = ["ParameterTreeWidget"]
 from editableapplylatercomponent import EditableApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
-from karabo.karathon import Hash
+from hash import Hash
 from manager import Manager
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
