@@ -308,19 +308,15 @@ class _Manager(QObject):
         if self.visibleDeviceIdCount[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
 
-        print "newVisible", self.visibleDeviceIdCount
-        print ""
         return True
 
 
     def removeVisibleDevice(self, deviceId):
         deviceIdCount = self.visibleDeviceIdCount.get(deviceId)
-        print "removeVisibleDevice", deviceId, deviceIdCount
         if deviceIdCount:
             self.visibleDeviceIdCount[deviceId] -= 1
             if self.visibleDeviceIdCount[deviceId] == 0:
                 self.signalRemoveVisibleDevice.emit(deviceId)
-                print "removeVisibleDevice", deviceId
 
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
@@ -388,13 +384,11 @@ class _Manager(QObject):
                 self.signalErrorState.emit(deviceId, False)
             
             self.signalChangingState.emit(deviceId, False)
-            print "emit"
             self.signalDeviceStateChanged.emit(deviceId, value)
 
 
 ### Slots ###
     def onDeviceClassValueChanged(self, key, value):
-        print "onDeviceClassValueChanged", key, value
         self._changeClassData(key, value)
 
         dataNotifier = self._getDataNotifierEditableValue(key)
