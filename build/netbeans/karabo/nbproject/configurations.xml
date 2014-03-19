@@ -388,6 +388,8 @@
         <itemPath>../../../src/karabo/tests/util/ByteSwap_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/ConfigurationTestClasses.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/ConfigurationTestClasses.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/util/DateTimeString_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/util/DateTimeString_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Dims_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/util/Dims_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/util/Epochstamp_Test.cc</itemPath>
@@ -1341,6 +1343,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/DateTimeString_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/DateTimeString_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3047,6 +3059,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/tests/util/ConfigurationTestClasses.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/DateTimeString_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/util/DateTimeString_Test.hh"
             ex="false"
             tool="3"
             flavor2="0">
