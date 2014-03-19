@@ -6,21 +6,20 @@
 
 
 """
-This module contains a class which represents an item of a hierarchical
-navigation model.
+This module contains a class which represents a node of a hierarchical model.
 """
 
-__all__ = ["NavigationHierarchyNode"]
+__all__ = ["TreeNode"]
 
 
 from enums import AccessLevel
 
 
-class NavigationHierarchyNode(object):
+class TreeNode(object):
 
 
     def __init__(self, displayName="", path="", parentNode=None):
-        super(NavigationHierarchyNode, self).__init__()
+        super(TreeNode, self).__init__()
         
         self.parentNode = parentNode
         self.childNodes = list()
@@ -60,20 +59,16 @@ class NavigationHierarchyNode(object):
 
     def getNode(self, displayName):
         for childNode in self.childNodes:
-            if childNode.data(0) == displayName:
+            if childNode.displayName == displayName:
                 return childNode
         return None
 
 
     def hasNode(self, displayName):
         for childNode in self.childNodes:
-            if childNode.data(0) == displayName:
+            if childNode.displayName == displayName:
                 return True
         return False
-
-
-    def data(self, column):
-        return self.displayName
 
 
     def row(self):
@@ -86,6 +81,6 @@ class NavigationHierarchyNode(object):
     def printTree(self, indent=-2):
         indent = indent + 2;
         for childNode in self.childNodes:
-            print " " * indent, childNode.data(0)
+            print " " * indent, childNode.displayName
             childNode.printTree(indent)
-
+        
