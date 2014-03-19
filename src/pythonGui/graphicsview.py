@@ -1235,11 +1235,23 @@ class GraphicsView(QSvgWidget):
                 
                 # Display component
                 if configDisplayComponent:
-                    displayComponent = DisplayComponent(item.classAlias, key=internalKey,
-                                                        enumeration=item.enumeration,
-                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                        unitSymbol=item.unitSymbol,
-                                                        valueType=item.valueType)
+                    # Special treatment for command
+                    if item.classAlias == "Command":
+                        allowedStates = item.allowedStates
+                        displayText = item.displayText
+                        commandEnabled = item.enabled
+                        command = item.command
+                        displayComponent = DisplayComponent(item.classAlias, key=internalKey, \
+                                                            allowedStates=allowedStates, \
+                                                            commandText=displayText, \
+                                                            commandEnabled=commandEnabled, \
+                                                            command=command)
+                    else:
+                        displayComponent = DisplayComponent(item.classAlias, key=internalKey,
+                                                            enumeration=item.enumeration,
+                                                            metricPrefixSymbol=item.metricPrefixSymbol,
+                                                            unitSymbol=item.unitSymbol,
+                                                            valueType=item.valueType)
                     
                     items.append((displayComponent.widget, displayComponent))
                     # Create proxy widget

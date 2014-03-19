@@ -150,7 +150,10 @@ class _Manager(QObject):
         self.__keyNotifierMapDisplayValue = dict()
         
         # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
-        self.__visibleDevInsKeys = dict()
+        if hasattr(self, "visibleDeviceIdCount"):
+            for deviceId in self.visibleDeviceIdCount.keys():
+                self.signalRemoveVisibleDevice.emit(deviceId)
+        self.visibleDeviceIdCount = dict()
         
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
@@ -210,8 +213,6 @@ class _Manager(QObject):
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
-        # Inform others about changes
-        self.handleSystemTopology(Hash())
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
 
@@ -287,24 +288,25 @@ class _Manager(QObject):
         if hasDevice and (self.getDeviceSchema(deviceId) is None):
             return True
 
-        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
+        deviceIdCount = self.visibleDeviceIdCount.get(deviceId)
         if deviceIdCount:
-            self.__visibleDevInsKeys[deviceId] += 1
+            self.visibleDeviceIdCount[deviceId] += 1
         else:
-            self.__visibleDevInsKeys[deviceId] = 1
-        if self.__visibleDevInsKeys[deviceId] == 1:
+            self.visibleDeviceIdCount[deviceId] = 1
+        if self.visibleDeviceIdCount[deviceId] == 1:
             self.signalNewVisibleDevice.emit(deviceId)
-        
-        print "newVisible", self.__visibleDevInsKeys
+
+        print "newVisible", self.visibleDeviceIdCount
         print ""
         return True
 
 
     def removeVisibleDevice(self, deviceId):
-        deviceIdCount = self.__visibleDevInsKeys.get(deviceId)
+        deviceIdCount = self.visibleDeviceIdCount.get(deviceId)
+        print "removeVisibleDevice", deviceId, deviceIdCount
         if deviceIdCount:
-            self.__visibleDevInsKeys[deviceId] -= 1
-            if self.__visibleDevInsKeys[deviceId] == 0:
+            self.visibleDeviceIdCount[deviceId] -= 1
+            if self.visibleDeviceIdCount[deviceId] == 0:
                 self.signalRemoveVisibleDevice.emit(deviceId)
                 print "removeVisibleDevice", deviceId
 
@@ -363,8 +365,7 @@ class _Manager(QObject):
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, devicePath, value):
-        deviceId = devicePath.split('.configuration',1)[0]
+    def _triggerStateChange(self, deviceId, value):
         # Update GUI due to state changes
         if value == "Changing...":
             self.signalChangingState.emit(deviceId, True)
@@ -375,6 +376,7 @@ class _Manager(QObject):
                 self.signalErrorState.emit(deviceId, False)
             
             self.signalChangingState.emit(deviceId, False)
+            print "emit"
             self.signalDeviceStateChanged.emit(deviceId, value)
 
 
@@ -522,8 +524,8 @@ class _Manager(QObject):
 
     def potentiallyRefreshVisibleDevice(self, deviceId):
         # If deviceId is already visible in scene but was offline, force refresh
-        if (deviceId in self.__visibleDevInsKeys) and \
-           (self.__visibleDevInsKeys[deviceId] > 0):
+        if (deviceId in self.visibleDeviceIdCount) and \
+           (self.visibleDeviceIdCount[deviceId] > 0):
             self.signalSelectNewNavigationItem.emit(deviceId)
             self.signalRefreshInstance.emit(deviceId)
 

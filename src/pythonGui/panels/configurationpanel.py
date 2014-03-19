@@ -465,7 +465,6 @@ class ConfigurationPanel(QWidget):
     def showParameterPage(self, type, path):
         # Show correct parameters
         index = self.__navItemInternalKeyIndexMap.get(path)
-        print "+++ showParameterPage", index, path
         if index:
             self._setParameterEditorIndex(index)
 
@@ -507,6 +506,9 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
+        # Reset previous path
+        self.__prevPath = str()
+
         # Reset map
         self.__navItemInternalKeyIndexMap = dict()
 
@@ -593,8 +595,8 @@ class ConfigurationPanel(QWidget):
         self.__twNavigation.selectItem(parentPath)
 
 
-    def onDeviceStateChanged(self, internalKey, state):
-        index = self.__navItemInternalKeyIndexMap.get(internalKey)
+    def onDeviceStateChanged(self, deviceId, state):
+        index = self.__navItemInternalKeyIndexMap.get(deviceId)
         if index:
             twParameterEditor = self.__swParameterEditor.widget(index)
             twParameterEditor.stateUpdated(state)
