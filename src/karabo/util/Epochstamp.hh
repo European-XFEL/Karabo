@@ -149,7 +149,29 @@ namespace karabo {
             static const bool isStringKaraboValidIso8601(const std::string& timePoint);
 
             /**
-             * Creates an EpochStamp from an ISO 8601 formatted string (or other set of predefined formats)
+             * Creates an EpochStamp from an ISO-8601 formatted string (or other set of predefined formats)
+             * Some examples:
+             * => Extended strings:
+             * - 1985-01-20T23:20:50
+             * - 1985-01-20T23:20:50,123
+             * - 1985-01-20T23:20:50.123
+             * - 1985-01-20T23:20:50.123z
+             * - 1985-01-20T23:20:50.123Z
+             * - 1985-01-20T23:20:50z
+             * - 1985-01-20T23:20:50Z
+             * - 1985-01-20T23:20:50+00:00
+             * - 1985-01-20T23:20:50-07:00
+             * 
+             * => Compact strings:
+             * - 19850120T232050
+             * - 19850120T232050,123
+             * - 19850120T232050.123
+             * - 19850120T232050.123z
+             * - 19850120T232050.123Z
+             * - 19850120T232050z
+             * - 19850120T232050Z
+             * - 19850120T232050+0000
+             * - 19850120T232050-0700
              * 
              * @param timePoint ISO 8601 formatted string (see formats locale to more information)
              * @return EpochStamp object
