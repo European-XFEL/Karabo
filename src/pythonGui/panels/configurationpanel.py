@@ -752,9 +752,11 @@ class ConfigurationPanel(QWidget):
     # virtual function
     def onUndock(self):
         self.twNavigation.show()
+        self.twProject.show()
 
 
     # virtual function
     def onDock(self):
         self.twNavigation.hide()
+        self.twProject.hide()
 
