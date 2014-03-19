@@ -38,6 +38,8 @@ def _gettype(data):
             return hashtypes.Hash
         elif isinstance(data, list):
             return _gettype(data[0])
+        elif data is None:
+            return hashtypes.None_
         else:
             raise RuntimeError('unknown datatype {}'.format(data.__class__))
 
@@ -66,6 +68,9 @@ class Element(object):
 
 
 class SimpleElement(Element):
+    data = None
+
+
     def __len__(self):
         return 0
 
@@ -217,7 +222,7 @@ class Hash(OrderedDict):
         merge = attribute_policy == "merge"
         for k, v in other.iteritems():
             if isinstance(v, Hash):
-                if k not in self:
+                if k not in self or self[k] is None:
                     self[k] = Hash()
                 self[k].merge(v, attribute_policy)
             else:
