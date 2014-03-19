@@ -399,8 +399,8 @@ class ProjectModel(QStandardItemModel):
                         filename = sceneConfig.get("filename")
                         alias = sceneConfig.get("alias")
                         # Save scene to SVG
-                        print "path", "{}.{}.{}[{}]".format(projectName, pKey, cKey, i)
-                        print "save to svg", filename
+                        #print "path", "{}.{}.{}[{}]".format(projectName, pKey, cKey, i)
+                        #print "save to svg", filename
 
         # Save project.xml
         saveToFile(projectConfig, "{}/{}/project.xml".format(directory, projectName))
