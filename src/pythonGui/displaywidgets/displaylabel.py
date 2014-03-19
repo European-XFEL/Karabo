@@ -22,7 +22,8 @@ __all__ = ["DisplayLabel"]
 
 
 from widget import DisplayWidget
-from karabo.karathon import *
+from hash import Hash
+import hashtypes
 import decimal
 import re
 
@@ -86,9 +87,9 @@ class DisplayLabel(DisplayWidget):
                     break
 
                 index = value[i]                
-                if self.valueType is Types.VECTOR_FLOAT:
+                if self.valueType is hashtypes.VectorFloat:
                     index = float(decimal.Decimal(str(index)).quantize(decimal.Decimal('.0000000')))
-                elif self.valueType is Types.VECTOR_DOUBLE:
+                elif self.valueType is hashtypes.VectorDouble:
                     index = float(decimal.Decimal(str(index)))
                 valueAsString += str(index)
 
@@ -97,11 +98,11 @@ class DisplayLabel(DisplayWidget):
                 maxLen -= 1
             valueAsString += "]"
             value = valueAsString
-        elif self.valueType is Types.FLOAT:
+        elif self.valueType is hashtypes.Float:
             value = float(decimal.Decimal(str(value)).quantize(decimal.Decimal('.0000000')))
             value = self.toScientificNotation(value)
             
-        elif self.valueType is Types.DOUBLE:
+        elif self.valueType is hashtypes.Double:
             value = float(decimal.Decimal(str(value)))
 
         self.__label.setText(str(value))

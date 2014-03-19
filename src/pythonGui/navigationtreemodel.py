@@ -13,7 +13,7 @@ __all__ = ["NavigationTreeModel"]
 
 from enums import NavigationItemTypes
 import globals
-from karabo.karathon import Hash
+from hash import Hash
 import manager
 from treenode import TreeNode
 

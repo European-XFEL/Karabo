@@ -13,7 +13,7 @@ devices.
 __all__ = ["Configuration"]
 
 
-from karabo.karathon import Hash, HashMergePolicy
+from hash import Hash, HashMergePolicy
 
 
 class Configuration(object):
