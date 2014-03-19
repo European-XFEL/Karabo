@@ -36,6 +36,7 @@ class NavigationPanel(QWidget):
     #    pass
     ##########################################
 
+
     def __init__(self, treemodel):
         super(NavigationPanel, self).__init__()
         
@@ -110,6 +111,7 @@ class NavigationPanel(QWidget):
     #    Manager().onNewNavigationItem(itemInfo)
 
 
+   
     def onGlobalAccessLevelChanged(self):
         self.__twNavigation.model().globalAccessLevelChanged()
 
