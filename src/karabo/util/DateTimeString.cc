@@ -53,13 +53,13 @@ namespace karabo {
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
             }
 
-            //            if (this.isStringValidIso8601(m_dateTimeStringAll) == false) {
-            //                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
-            //            }
+            if (DateTimeString::DateTimeString::isStringValidIso8601(m_dateTimeStringAll) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
+            }
 
-            //            if (this.isStringKaraboValidIso8601(m_dateTimeStringAll) == false) {
-            //                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format)");
-            //            }
+            if (DateTimeString::DateTimeString::isStringKaraboValidIso8601(m_dateTimeStringAll) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format)");
+            }
 
         }
 
