@@ -13,7 +13,7 @@ __all__ = ["DisplayComponent"]
 
 
 from basecomponent import BaseComponent
-from manager import Manager
+import manager
 from widget import DisplayWidget
 
 from PyQt4.QtCore import *
@@ -24,15 +24,12 @@ class DisplayComponent(BaseComponent):
     factories = DisplayWidget.factories
 
 
-    def __init__(self, classAlias, widgetFactory="DisplayWidget", **params):
+    def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
         super(DisplayComponent, self).__init__(classAlias)
         
-        self.__initParams = params
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
-            classAlias)(**params)
-
-        # Use key to register component to manager
-        Manager().registerDisplayComponent(params.get("key"), self)
+            classAlias)(box, parent)
+        box.addComponent(self)
 
 
 ### getter and setter functions ###
@@ -75,13 +72,13 @@ class DisplayComponent(BaseComponent):
 
     def addKey(self, key):
         if self.__displayWidget.addKey(key):
-            Manager().registerDisplayComponent(key, self)
+            manager.Manager().registerDisplayComponent(key, self)
             return True
         return False
 
 
     def removeKey(self, key):
-        Manager().unregisterDisplayComponent(key, self)
+        manager.Manager().unregisterDisplayComponent(key, self)
         self.__displayWidget.removeKey(key)
 
 
@@ -106,7 +103,7 @@ class DisplayComponent(BaseComponent):
         
         # Refresh new widget...
         for key in self.__displayWidget.keys:
-            Manager().onRefreshInstance(key)
+            manager.Manager().onRefreshInstance(key)
 
 
     def onValueChanged(self, key, value, timestamp=None):

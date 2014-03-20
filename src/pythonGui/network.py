@@ -55,7 +55,6 @@ class Network(QObject):
         Manager().signalKillServer.connect(self.onKillServer)
         Manager().signalRefreshInstance.connect(self.onRefreshInstance)
         Manager().signalReconfigure.connect(self.onReconfigure)
-        Manager().signalReconfigureAsHash.connect(self.onReconfigureAsHash)
         Manager().signalInitDevice.connect(self.onInitDevice)
         Manager().signalExecute.connect(self.onExecute)
 
@@ -333,20 +332,18 @@ class Network(QObject):
         self._tcpWriteHash(instanceInfo)
 
 
-    def onRefreshInstance(self, instanceId):
+    def onRefreshInstance(self, configuration):
         instanceInfo = Hash("type", "refreshInstance")
         instanceInfo.set("deviceId", instanceId)
         self._tcpWriteHash(instanceInfo)
 
 
-    def onReconfigure(self, deviceId, property, value):
-        self.onReconfigureAsHash(deviceId, Hash(property, value))
-
-
-    def onReconfigureAsHash(self, deviceId, config):
-        instanceInfo = Hash("type", "reconfigure")
-        instanceInfo.set("deviceId", deviceId)
-        instanceInfo.set("configuration", config)
+    def onReconfigure(self, boxes):
+        header = Hash()
+        header["type"] = "reconfigure"
+        header["deviceId"] = boxes[0].configuration.path
+        for b in boxes:
+            body[".".join(b.path)] = b.value
         self._tcpWriteHash(instanceInfo)
 
 
