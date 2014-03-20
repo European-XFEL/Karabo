@@ -68,9 +68,6 @@ class Element(object):
 
 
 class SimpleElement(Element):
-    data = None
-
-
     def __len__(self):
         return 0
 
@@ -139,6 +136,52 @@ class HashElement(Element):
         return "HASH"
 
 
+class ListElement(Element):
+    def __init__(self, tag, attrs={}):
+        Element.__init__(self, tag, attrs)
+        self.children = [ ]
+
+
+    def __len__(self):
+        return len(self.children)
+
+
+    def append(self, elem):
+        self.children.append(elem)
+
+
+    def __iter__(self):
+        return iter(self.children)
+
+
+    def iter(self, tag=None):
+        if tag == "*":
+            tag = None
+        if tag is None or self.tag == tag:
+            yield self
+        for e in self.children:
+            for ee in e.iter(tag):
+                yield ee
+
+
+    @property
+    def data(self):
+        return [e.data for e in self.children]
+
+
+    @data.setter
+    def data(self, value):
+        self.children = [ ]
+        for c in value:
+            e = HashElement('KRB_Item')
+            e.children = c
+            self.children.append(e)
+
+
+    def hashname(self):
+        return "VECTOR_HASH"
+
+
 class Hash(OrderedDict):
     """This is a replacement for the Karabo C++ Hash
 
@@ -195,6 +238,9 @@ class Hash(OrderedDict):
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
+            elif isinstance(value, list):
+                elem = ListElement(p)
+                elem.data = value
             else:
                 elem = SimpleElement(p)
                 elem.data = value
@@ -211,8 +257,8 @@ class Hash(OrderedDict):
         else:
             try:
                 return self._get(item).data
-            except:
-                raise
+            except AttributeError:
+                return None
 
     def __delitem__(self, item):
         if isinstance(item, tuple):
@@ -308,6 +354,8 @@ class Schema(object):
 def factory(tag, attrs):
     if attrs["KRB_Type"] == "HASH":
         return HashElement(tag, attrs)
+    elif attrs["KRB_Type"] == "VECTOR_HASH":
+        return ListElement(tag, attrs)
     else:
         return SimpleElement(tag, attrs)
 
