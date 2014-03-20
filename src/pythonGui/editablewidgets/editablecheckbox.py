@@ -31,13 +31,14 @@ class EditableCheckBox(EditableWidget):
     category = "Switch"
     alias = "Toggle Field"
 
-    def __init__(self, value=None, **params):
-        super(EditableCheckBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableCheckBox, self).__init__(box)
         
-        self.__checkBox = QCheckBox()
+        self.__checkBox = QCheckBox(parent)
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
-        
-        self.valueChanged(self.keys[0], value)
+
+        if hasattr(box, 'value'):
+            self.valueChanged(box, value)
 
 
     @property
@@ -71,4 +72,4 @@ class EditableCheckBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value == Qt.Checked)
+        self.signalEditingFinished.emit(self.boxes[0], value == Qt.Checked)
