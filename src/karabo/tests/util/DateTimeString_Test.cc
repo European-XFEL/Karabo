@@ -56,29 +56,40 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
         //String constructor
         dts = karabo::util::DateTimeString(pTime);
     }
+    // Constructor complete
+    karabo::util::DateTimeString dts2 = karabo::util::DateTimeString(expectedDate, expectedTime, expectedFractionalSecond, expectedTimeZone);
+    
 
     // Validations
     if (writeToClog) std::clog << "DT => " << dts.getDateString() << " == " << expectedDate << std::endl;
     CPPUNIT_ASSERT(dts.getDateString() == expectedDate);
+    CPPUNIT_ASSERT(dts2.getDateString() == expectedDate);
 
     if (writeToClog) std::clog << "Time => " << dts.getTimeString() << " == " << expectedTime << std::endl;
     CPPUNIT_ASSERT(dts.getTimeString() == expectedTime);
+    CPPUNIT_ASSERT(dts2.getTimeString() == expectedTime);
 
     if (writeToClog) std::clog << "FSec <std::string> => " << dts.getFractionalSecondString<std::string>() << " == " << expectedFractionalSecond << std::endl;
     CPPUNIT_ASSERT(dts.getFractionalSecondString<std::string>() == expectedFractionalSecond);
+    CPPUNIT_ASSERT(dts2.getFractionalSecondString<std::string>() == expectedFractionalSecond);
     if (writeToClog) std::clog << "FSec <unsigned long long> => " << dts.getFractionalSecondString<std::string>() << " == " << expectedFractionalSecond << std::endl;
     CPPUNIT_ASSERT(dts.getFractionalSecondString<unsigned long long>() == boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
+    CPPUNIT_ASSERT(dts2.getFractionalSecondString<unsigned long long>() == boost::lexical_cast<unsigned long long>(expectedFractionalSecond));
 
     if (writeToClog) std::clog << "TZ => " << dts.getTimeZoneString() << " == " << expectedTimeZone << std::endl;
     CPPUNIT_ASSERT(dts.getTimeZoneString() == expectedTimeZone);
+    CPPUNIT_ASSERT(dts2.getTimeZoneString() == expectedTimeZone);
 
     if (writeToClog) std::clog << "DateAndTime => " << dts.getDateTimeString() << " == " << expectedDateTime << std::endl;
     CPPUNIT_ASSERT(dts.getDateTimeString() == expectedDateTime);
+    CPPUNIT_ASSERT(dts2.getDateTimeString() == expectedDateTime);
 
     std::string secondsSinceEpoch = boost::lexical_cast<std::string>(dts.getSecondsSinceEpoch());
+    std::string secondsSinceEpoch2 = boost::lexical_cast<std::string>(dts2.getSecondsSinceEpoch());
     if (writeToClog) std::clog << "SecondsSinceEpoch => " << secondsSinceEpoch << " == " << expectedSecondsSinceEpoch << std::endl;
     CPPUNIT_ASSERT(secondsSinceEpoch == expectedSecondsSinceEpoch);
-
+    CPPUNIT_ASSERT(secondsSinceEpoch2 == expectedSecondsSinceEpoch);
+    
     return;
 }
 

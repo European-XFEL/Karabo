@@ -29,6 +29,7 @@ namespace karabo {
 
             // Extra field that concatenates date with time
             std::string m_dateTimeString; //"2013-01-20T20:30:00"
+            std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456Z"
 
         public:
 
@@ -145,6 +146,9 @@ namespace karabo {
             const unsigned long long getSecondsSinceEpoch();
             //template<typename T>
             //const T getSecondsSinceEpoch();
+            
+            
+            ptime get_local_to_utc(const ptime& t, const time_zone_ptr& localtz);
 
         private:
 

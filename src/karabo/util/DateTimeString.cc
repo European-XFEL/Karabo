@@ -27,7 +27,8 @@ namespace karabo {
         m_timeString("000000"),
         m_fractionalSecondString("0"),
         m_timeZoneString("Z"),
-        m_dateTimeString("19700101T000000") {
+        m_dateTimeString("19700101T000000"),
+        m_dateTimeStringAll("19700101T000000Z") {
         }
 
 
@@ -42,10 +43,22 @@ namespace karabo {
         m_timeString(inputTimeStr),
         m_fractionalSecondString(inputFractionSecondStr),
         m_timeZoneString(inputTimeZoneStr),
-        m_dateTimeString(inputDateStr + "T" + inputTimeStr) {
+        m_dateTimeString(inputDateStr + "T" + inputTimeStr),
+        m_dateTimeStringAll(inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr){
+            
             if (m_fractionalSecondString == "") {
                 m_fractionalSecondString = "0";
+                m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + inputTimeZoneStr;
             }
+            
+            if (this.isStringValidIso8601(m_dateTimeStringAll) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
+            }
+
+            if (this.isStringKaraboValidIso8601(m_dateTimeStringAll) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format)");
+            }
+            
         }
 
 
@@ -186,6 +199,6 @@ namespace karabo {
             //return boost::lexical_cast<T>(ptimeToSecondsSinceEpoch(pt));
             return ptimeToSecondsSinceEpoch(pt);
         }
-
+        
     }
 }
