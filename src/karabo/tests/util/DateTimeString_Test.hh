@@ -20,12 +20,6 @@ class DateTimeString_Test : public CPPUNIT_NS::TestFixture {
     //
     CPPUNIT_TEST(isStringValidIso8601);
     CPPUNIT_TEST(isStringKaraboValidIso8601);
-    //    CPPUNIT_TEST(testToIso8601String);
-    //    CPPUNIT_TEST(testToIso8601StringExternal);
-    //    CPPUNIT_TEST(testToFormattedString);
-    //
-    //    CPPUNIT_TEST(testStrToEpochstamp);
-    //    CPPUNIT_TEST(testStrToEpochstampExternal);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -52,11 +46,6 @@ private:
                              const std::string& expectedTimeZone,
                              const std::string& expectedDateTime,
                              const std::string& expectedSecondsSinceEpoch);
-
-    //    void testToFormattedString();
-    //    //
-    //    void testStrToEpochstamp();
-    //    void testStrToEpochstampExternal();
 
 };
 
