@@ -451,6 +451,11 @@ class None_(Type):
         return None
 
 
+    @classmethod
+    def write(cls, file, data):
+        return
+
+
 class VectorNone(Type):
     pass
 
