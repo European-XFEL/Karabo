@@ -70,6 +70,7 @@
     </logicalFolder>
     <logicalFolder name="f10" displayName="Util Tools" projectFiles="true">
       <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/PyUtilDateTimeString.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
       <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
@@ -102,7 +103,7 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-      </logicalFolder>
+  </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karathon</Elem>
   </sourceRootList>
@@ -241,6 +242,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDateTimeString.cc"
             ex="false"
             tool="1"
             flavor2="0">
@@ -626,6 +632,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/PyUtilClassInfo.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/PyUtilDateTimeString.cc"
             ex="false"
             tool="1"
             flavor2="0">
