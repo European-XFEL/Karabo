@@ -146,9 +146,6 @@ namespace karabo {
             const unsigned long long getSecondsSinceEpoch();
             //template<typename T>
             //const T getSecondsSinceEpoch();
-            
-            
-            ptime get_local_to_utc(const ptime& t, const time_zone_ptr& localtz);
 
         private:
 
