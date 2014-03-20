@@ -402,7 +402,7 @@ class _Manager(QObject):
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value, None)
         
-        keys = key.split(".")
+        keys = key.split(".", 1)
         deviceId = keys[0]
         property = keys[1]
 
@@ -417,6 +417,7 @@ class _Manager(QObject):
             if dataNotifier is not None:
                 dataNotifier.signalUpdateComponent.emit(path, config.get(path),
                                                         None)
+        # TODO: remove copy hash
         config = Hash(config.get(deviceId))
         self.deviceData[deviceId].configuration = config
         self.signalReconfigureAsHash.emit(deviceId, config)
