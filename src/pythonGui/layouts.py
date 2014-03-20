@@ -6,7 +6,7 @@
 
 
 from dialogs.dialogs import TextDialog
-from manager import Manager
+import manager
 from registry import Loadable, ns_svg, ns_karabo
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
@@ -218,7 +218,7 @@ class FixedLayout(Layout, QLayout):
                     else:
                         if p.component is not None:
                             for k in p.component.keys:
-                                Manager().removeVisibleDevice(k)
+                                manager.Manager().removeVisibleDevice(k)
                         p.setParent(None)
                 del self[i]
             else:
@@ -402,13 +402,13 @@ class ProxyWidget(QStackedWidget):
         if component is None:
             return
 
-        self.setToolTip(component.keys[0])
+        #self.setToolTip(component.boxes[0])
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
-            if "state" in component.keys[0]:
-                aliases = aliases + factory.getAliasesViaCategory("State")
+            #if "state" in component.keys[0]:
+            #    aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
                 menu = QMenu(self)
@@ -479,6 +479,6 @@ class ProxyWidget(QStackedWidget):
             return
         for item in source.selectedItems():
             if self.component.addKey(item.internalKey):
-                Manager().newVisibleDevice(item.internalKey)
+                manager.Manager().newVisibleDevice(item.internalKey)
                 event.accept()
 

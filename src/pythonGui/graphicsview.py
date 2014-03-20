@@ -1208,32 +1208,23 @@ class GraphicsView(QSvgWidget):
             selectedItems = source.selectedItems()
             
             for item in selectedItems:
-                # Get internal key
-                internalKey = item.internalKey
-                # Get display name
+                box = item.internalKey
                 displayName = item.text(0)
-                # Use DeviceClass/DeviceInstance-Key if no displayName is set
                 if len(displayName) == 0:
-                    keys = internalKey.split('.')
-                    displayName = keys[1]
+                    displayName = box.path.split('.')[-1]
                 
-                # Display component
                 if source.isColumnHidden(1):
                     configDisplayComponent = None
                 else:
                     configDisplayComponent = item.displayComponent
-                # Editable component
                 configEditableComponent = item.editableComponent
 
-                # List stored all items for layout
                 items = []
 
                 displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
                 if displayNameProxyWidget:
-                    # Add item to itemlist
                     items.append((displayNameProxyWidget, None))
                 
-                # Display component
                 if configDisplayComponent:
                     # Special treatment for command
                     if item.classAlias == "Command":
@@ -1254,34 +1245,23 @@ class GraphicsView(QSvgWidget):
                                                             valueType=item.valueType)
                     
                     items.append((displayComponent.widget, displayComponent))
-                    # Create proxy widget
-                    
-                    # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
                     if unitProxyWidget:
                         items.append((unitProxyWidget, None))
 
-                    # Register as visible device
-                    Manager().newVisibleDevice(internalKey)
+                    box.configuration.addVisible()
 
                 # Editable component
                 if configEditableComponent:
                     if not configDisplayComponent:
-                        editableComponent = EditableNoApplyComponent(item.classAlias, key=internalKey,
-                                                                     enumeration=item.enumeration,
-                                                                     metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                     unitSymbol=item.unitSymbol,
-                                                                     valueType=item.valueType)
+                        editableComponent = EditableNoApplyComponent(
+                            item.classAlias, box, self.inner)
                     else:
-                        editableComponent = EditableApplyLaterComponent(item.classAlias, key=internalKey,
-                                                                        enumeration=item.enumeration,
-                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                        unitSymbol=item.unitSymbol,
-                                                                        valueType=item.valueType)
+                        editableComponent = EditableApplyLaterComponent(
+                            item.classAlias, box, self.inner)
                         editableComponent.isEditableValueInit = False
 
-                        # Register as visible device
-                        Manager().newVisibleDevice(internalKey)
+                        box.configuration.addVisible()
                         
                     items.append((editableComponent.widget, editableComponent))
 

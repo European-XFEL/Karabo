@@ -12,7 +12,7 @@
 __all__ = ["BaseComponent"]
 
 
-from manager import Manager
+import manager
 #from messagebox import MessageBox
 
 from layouts import ProxyWidget
@@ -25,7 +25,7 @@ from PyQt4.QtGui import *
 class BaseComponent(Loadable, QObject):
     factories = EditableWidget.factories
 
-    signalValueChanged = pyqtSignal(str, object) # key, value
+    signalValueChanged = pyqtSignal(object, object) # key, value
 
 
     def __init__(self, classAlias):
@@ -66,11 +66,6 @@ class BaseComponent(Loadable, QObject):
     def _getWidget(self):
         raise NotImplementedError, "BaseComponent._getWidget"
     widget = property(fget=_getWidget)
-
-
-    def _getKeys(self):
-        raise NotImplementedError, "BaseComponent._getKeys"
-    keys = property(fget=_getKeys)
 
 
     def _getValue(self):
@@ -133,7 +128,7 @@ class BaseComponent(Loadable, QObject):
         layout.loadPosition(elem, parent)
         for k in keys[1:]:
             component.addKey(k)
-        online = Manager().newVisibleDevice(component.keys[0])
+        online = manager.Manager().newVisibleDevice(component.keys[0])
         if not online:
             # TODO:
             #print "offline"

@@ -13,7 +13,7 @@ __all__ = ["EditableApplyLaterComponent"]
 
 
 from basecomponent import BaseComponent
-from manager import Manager
+import manager
 from messagebox import MessageBox
 from widget import EditableWidget
 
@@ -25,36 +25,31 @@ from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
 class EditableApplyLaterComponent(BaseComponent):
     # signals
     signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
-    signalApplyChanged = pyqtSignal(str, bool) # key, state of apply button
+    signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box, parent):
         super(EditableApplyLaterComponent, self).__init__(classAlias)
-
-        self.__initParams = params
 
         self.__isEditableValueInit = True
         
         self.__currentDisplayValue = None
         
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
+        print classAlias
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
-        
-        metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get('unitSymbol')
-        
-        # Append unit label, if available
-        unitLabel = str()
-        if metricPrefixSymbol:
-            unitLabel += metricPrefixSymbol
-        if unitSymbol:
-            unitLabel += unitSymbol
-        if len(unitLabel) > 0:
+
+        self.box = box
+        d = box.descriptor
+        unitLabel = (getattr(d, "metricPrefixSymbol", "") +
+                     getattr(d, "unitSymbol", ""))
+        if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
 
         self.__hasConflict = False
@@ -113,11 +108,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer.timeout.connect(self.onTimeOut)
 
         # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-        self.signalConflictStateChanged.connect(Manager().onConflictStateChanged)
+        self.signalConflictStateChanged.connect(
+            manager.Manager().onConflictStateChanged)
 
-        # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
+        box.addComponent(self)
 
 
     def copy(self):
@@ -142,9 +136,9 @@ class EditableApplyLaterComponent(BaseComponent):
     widget = property(fget=_getWidget)
 
 
-    def _getKeys(self):
-        return self.__editableWidget.keys
-    keys = property(fget=_getKeys)
+    @property
+    def boxes(self):
+        return self.__editableWidget.boxes
 
 
     def _getValue(self):
@@ -184,7 +178,7 @@ class EditableApplyLaterComponent(BaseComponent):
             self.hasConflict = False
         
         # Broadcast to ConfigurationPanel - treewidget
-        self.signalApplyChanged.emit(self.keys[0], enable)
+        self.signalApplyChanged.emit(self.boxes[0], enable)
     applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
 
 
@@ -221,8 +215,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
 
-        deviceId = self.keys[0].split('.')
-        self.signalConflictStateChanged.emit(deviceId[0], hasConflict)
+        self.signalConflictStateChanged.emit(self.boxes[0].configuration.path,
+                                             hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
 
@@ -258,15 +252,15 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def destroy(self):
         for key in self.__editableWidget.keys:
-            Manager().unregisterEditableComponent(key, self)
+            manager.Manager().unregisterEditableComponent(key, self)
 
 
     def changeWidget(self, factory, alias):
         self.classAlias = alias
-        self.__initParams['value'] = self.value
 
         oldWidget = self.__editableWidget.widget
-        self.__editableWidget = factory.get_class(alias)(**self.__initParams)
+        self.__editableWidget = factory.get_class(alias)(
+            self.box, oldWidget.parent())
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
@@ -274,9 +268,8 @@ class EditableApplyLaterComponent(BaseComponent):
         oldWidget.setParent(None)
         self.__editableWidget.widget.show()
 
-        # Refresh new widget...
-        for key in self.__editableWidget.keys:
-            Manager().onRefreshInstance(key)
+        for c in {b.configuration for b in self.__editableWidget.boxes}:
+            c.refresh()
 
 
 ### slots ###
@@ -284,8 +277,10 @@ class EditableApplyLaterComponent(BaseComponent):
     def onApplyClicked(self):
         self.changeApplyToBusy(True)
         # TODO: KeWe function with key/value pair needed
-        for key in self.__editableWidget.keys:
-            self.signalValueChanged.emit(key, self.__editableWidget.value)
+        for box in self.__editableWidget.boxes:
+            box.value = self.__editableWidget.value
+        manager.Manager().onDeviceInstanceValuesChanged(
+            self.__editableWidget.boxes)
         self.applyEnabled = False
 
 

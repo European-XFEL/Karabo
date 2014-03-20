@@ -89,7 +89,11 @@ class NumpyVector(Vector):
         return ",".join(unicode(x) for x in data)
 
 
-class Type(Registry):
+class Descriptor(object):
+    pass
+
+
+class Type(Descriptor, Registry):
     """This is the base class for all types in the Karabo type hierarchy.
 
     The sub-classes of this class are an exact correspondance to the

@@ -23,16 +23,15 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 class EditableApplyNowComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box, parent):
         super(EditableApplyNowComponent, self).__init__(classAlias)
 
-        self.__initParams = params
-
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
@@ -48,8 +47,6 @@ class EditableApplyNowComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-
         # Use key to register component to manager
         Manager().registerEditableComponent(params.get('key'), self)
 
@@ -131,5 +128,5 @@ class EditableApplyNowComponent(BaseComponent):
 
     # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
-        self.signalValueChanged.emit(key, value)
+        manager.Manager().onDeviceInstanceValuesChanged([key])
 

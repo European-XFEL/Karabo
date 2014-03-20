@@ -23,8 +23,7 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 
 class NavigationTreeModel(QAbstractItemModel):
-    # signal
-    signalItemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(object)
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
@@ -299,30 +298,21 @@ class NavigationTreeModel(QAbstractItemModel):
             type = NavigationItemTypes.SERVER
             path = index.data()
         elif level == 2:
-            type = NavigationItemTypes.CLASS
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
 
-            schema = manager.Manager().getClassSchema(serverId, classId)
+            conf = manager.Manager().getClass(serverId, classId)
             path = "{}.{}".format(serverId, classId)
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                        type=type, schema=schema))
+            manager.Manager().onSchemaAvailable(conf)
         elif level == 3:
-            type = NavigationItemTypes.DEVICE
             deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
 
-            schema = manager.Manager().getDeviceSchema(deviceId)
+            conf = manager.Manager().getDevice(deviceId)
             path = deviceId
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                           type=type, schema=schema))
+            manager.Manager().onSchemaAvailable(conf)
 
-        itemInfo = dict(key=path, classId=classId, type=type)
-        self.signalItemChanged.emit(itemInfo)
+        self.signalItemChanged.emit(conf)
 
 
     def onServerConnectionChanged(self, isConnected):

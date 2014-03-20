@@ -6,6 +6,7 @@ class Timestamp(object):
     def fromHashAttributes(attrs):
         ret = Timestamp()
         ret.time = attrs['frac'] + attrs['sec'] * 10 ** 18
+        ret.tid = attrs['tid']
         return ret
 
     def toTimestamp(self):

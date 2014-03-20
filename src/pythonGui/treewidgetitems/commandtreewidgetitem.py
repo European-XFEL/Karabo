@@ -13,7 +13,7 @@ __all__ = ["CommandTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from displaycomponent import DisplayComponent
-from manager import Manager
+import manager
 
 #from PyQt4.QtCore import *
 from PyQt4.QtGui import QIcon, QPushButton
@@ -26,12 +26,14 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, QIcon(":slot"))
         
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent(
+            "Value Field", self.internalKey, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
         # Name of command
         self.__command = command
+        self.classAlias = "Command"
         
         self.__isCommandEnabled = False
         self.__pbCommand = QPushButton()
@@ -78,4 +80,6 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 ### slots ###
     def onCommandClicked(self):
         args = [] # TODO slot arguments
-        Manager().executeCommand(dict(path=self.internalKey, command=self.__command, args=args))
+        manager.Manager().executeCommand(
+            dict(path=self.internalKey.configuration.path,
+            command=self.__command, args=args))

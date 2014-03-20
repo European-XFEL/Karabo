@@ -83,26 +83,25 @@ class _Manager(QObject):
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalSchemaAvailable = pyqtSignal(dict) # key, schema
+    signalSchemaAvailable = pyqtSignal(object) # key, schema
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
     signalDeviceSchemaUpdated = pyqtSignal(str) # deviceId
 
-    signalRefreshInstance = pyqtSignal(str) # deviceId
+    signalRefreshInstance = pyqtSignal(object) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
-    signalReconfigure = pyqtSignal(str, str, object) # deviceId, property, value
-    signalReconfigureAsHash = pyqtSignal(str, object) # deviceId, hash
-    signalDeviceStateChanged = pyqtSignal(str, str) # fullDeviceKey, state
-    signalConflictStateChanged = pyqtSignal(str, bool) # key, hasConflict
-    signalChangingState = pyqtSignal(str, bool) # deviceId, isChanging
-    signalErrorState = pyqtSignal(str, bool) # deviceId, inErrorState
+    signalReconfigure = pyqtSignal(list)
+    signalDeviceStateChanged = pyqtSignal(object, str) # fullDeviceKey, state
+    signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
+    signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
+    signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
 
-    signalNewVisibleDevice = pyqtSignal(str) # deviceId
+    signalNewVisibleDevice = pyqtSignal(object) # device
     signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
 
     signalLogDataAvailable = pyqtSignal(str) # logData
@@ -159,14 +158,6 @@ class _Manager(QObject):
         self.sqlDatabase.closeConnection()
 
     
-    def _getDataNotifierEditableValue(self, key):
-        return self.__keyNotifierMapEditableValue.get(key)
-
-
-    def _getDataNotifierDisplayValue(self, key):
-        return self.__keyNotifierMapDisplayValue.get(key)
-
-
     def _changeClassData(self, key, value):
         serverClassIdParamKey = key.split(".")
         if len(serverClassIdParamKey) < 3:
@@ -187,65 +178,11 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(paramKey, value)
     
     
-    def _changeDeviceData(self, key, value):
-        deviceIdParamKey = key.split(".")
-        if len(deviceIdParamKey) < 2:
-            return
-
-        deviceId = deviceIdParamKey[0]
-        paramKey = deviceIdParamKey[1]
-        
-        if "@" in paramKey:
-            # Merge attribute value
-            keys = key.split("@")
-            parameterKey = keys[0]
-            attributeKey = keys[1]
-            
-            self.deviceData[deviceId].setAttribute(parameterKey, attributeKey, value)
-        else:
-            self.deviceData[deviceId].set(paramKey, value)
-
-
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
-
-
-    def registerEditableComponent(self, key, component):
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier is None:
-            self.__keyNotifierMapEditableValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
-
-
-    def unregisterEditableComponent(self, key, component):
-        pass
-
-
-    def registerDisplayComponent(self, key, component):
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        if dataNotifier is None:
-            self.__keyNotifierMapDisplayValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
-
-
-    def unregisterDisplayComponent(self, key, component):
-        pass
-
-
-    def registerHistoricData(self, key, slot):
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        dataNotifier.signalHistoricData.connect(slot)
-
-
-    def handleHistoricData(self, instanceInfo):
-        key = "{}.{}".format(instanceInfo.get("deviceId"), instanceInfo.get("property"))
-        dataNotifier = self._getDataNotifierDisplayValue(key)
-        dataNotifier.signalHistoricData.emit(key, instanceInfo.get("data"))
 
 
     def _getDeviceIdFromInternalPath(self, internalPath):
@@ -262,45 +199,6 @@ class _Manager(QObject):
             return None
 
         return splittedPath[0]
-
-
-    def newVisibleDevice(self, internalPath):
-        """
-        This function registers a new visible instance in a map. If it is the
-        first occurence, a signal is sent to the network to inform the GuiServerDevice.
-        
-        The incoming parameter \internalPath can be either directly a deviceId
-        or an internalPath of an property item which needs to be splitted to get
-        the deviceId.
-        """
-        deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if deviceId is None:
-            return
-        
-        # Check, whether deviceId is in systemTopology (means online)
-        hasDevice = self.systemTopology.has(deviceId)
-        # If schema was not seen, request device schema in function
-        # getDeviceSchema will call newVisibleDevice again
-        if hasDevice and (self.getDeviceSchema(deviceId) is None):
-            return True
-
-        deviceIdCount = self.visibleDeviceIdCount.get(deviceId)
-        if deviceIdCount:
-            self.visibleDeviceIdCount[deviceId] += 1
-        else:
-            self.visibleDeviceIdCount[deviceId] = 1
-        if self.visibleDeviceIdCount[deviceId] == 1:
-            self.signalNewVisibleDevice.emit(deviceId)
-
-        return True
-
-
-    def removeVisibleDevice(self, deviceId):
-        deviceIdCount = self.visibleDeviceIdCount.get(deviceId)
-        if deviceIdCount:
-            self.visibleDeviceIdCount[deviceId] -= 1
-            if self.visibleDeviceIdCount[deviceId] == 0:
-                self.signalRemoveVisibleDevice.emit(deviceId)
 
 
     def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
@@ -355,18 +253,19 @@ class _Manager(QObject):
                     hashValue = value[i]
 
 
-    def _triggerStateChange(self, deviceId, value):
+    def _triggerStateChange(self, box, value, timestamp):
+        configuration = box.configuration
         # Update GUI due to state changes
         if value == "Changing...":
-            self.signalChangingState.emit(deviceId, True)
+            self.signalChangingState.emit(configuration, True)
         else:
             if ("Error" in value) or ("error" in value):
-                self.signalErrorState.emit(deviceId, True)
+                self.signalErrorState.emit(configuration, True)
             else:
-                self.signalErrorState.emit(deviceId, False)
+                self.signalErrorState.emit(configuration, False)
             
-            self.signalChangingState.emit(deviceId, False)
-            self.signalDeviceStateChanged.emit(deviceId, value)
+            self.signalChangingState.emit(configuration, False)
+            self.signalDeviceStateChanged.emit(configuration, value)
 
 
 ### Slots ###
@@ -378,32 +277,9 @@ class _Manager(QObject):
             dataNotifier.signalUpdateComponent.emit(key, value, None)
 
 
-    def onDeviceInstanceValueChanged(self, key, value):
-        self._changeDeviceData(key, value)
+    def onDeviceInstanceValuesChanged(self, boxes):
+        self.signalReconfigure.emit(boxes)
 
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier is not None:
-            dataNotifier.signalUpdateComponent.emit(key, value, None)
-        
-        keys = key.split(".", 1)
-        deviceId = keys[0]
-        property = keys[1]
-
-        # Informs network
-        self.signalReconfigure.emit(deviceId, property, value)
-
-
-    def onDeviceChangedAsHash(self, deviceId, config):
-        paths = config.paths()
-        for path in paths:
-            dataNotifier = self._getDataNotifierEditableValue(path)
-            if dataNotifier is not None:
-                dataNotifier.signalUpdateComponent.emit(path, config.get(path),
-                                                        None)
-        # TODO: remove copy hash
-        config = Hash(config.get(deviceId))
-        self.deviceData[deviceId].configuration = config
-        self.signalReconfigureAsHash.emit(deviceId, config)
 
 
     def onConflictStateChanged(self, key, hasConflict):
@@ -487,11 +363,8 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logData)
 
 
-    def onRefreshInstance(self, internalPath):
-        deviceId = self._getDeviceIdFromInternalPath(internalPath)
-        if deviceId is None:
-            return
-        self.signalRefreshInstance.emit(deviceId)
+    def onRefreshInstance(self, configuration):
+        self.signalRefreshInstance.emit(configuration)
 
    
     def onNewNavigationItem(self, itemInfo):
@@ -649,44 +522,41 @@ class _Manager(QObject):
         classId = classInfo.get('classId')
         schema = classInfo.get('schema')
         
-        # Update map for server and class with schema
-        self.serverClassData[serverId, classId] = Configuration(schema)
-        path = "{}.{}".format(serverId, classId)
-        self.onSchemaAvailable(dict(key=path, classId=classId, 
-                               type=NavigationItemTypes.CLASS, schema=schema))
+        conf = self.serverClassData[serverId, classId]
+        conf.setSchema(schema)
+        self.onSchemaAvailable(conf)
 
 
-    def getClassSchema(self, serverId, classId):
-        # Return class schema, if already existing
-        if (serverId, classId) in self.serverClassData:
-            return self.serverClassData[serverId, classId].schema
-
-        # Else, send network request
-        self.signalGetClassSchema.emit(serverId, classId)
-        return None
+    def getClass(self, serverId, classId):
+        if deviceId not in self.deviceData:
+            path = "{}.{}".format(serverId, classId)
+            self.deviceData[deviceId] = Configuration(path, 'device')
+            self.signalGetDeviceSchema.emit(deviceId)
+        return self.deviceData[deviceId]
     
     
     def handleDeviceSchema(self, instanceInfo):
-        deviceId = instanceInfo.get('deviceId')
-        if (deviceId in self.deviceData) and (self.deviceData[deviceId].schema is not None):
+        deviceId = headerHash['deviceId']
+        if deviceId not in self.deviceData:
+            print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = instanceInfo.get('schema')
-        self.deviceData[deviceId] = Configuration(schema)
+        schema = config['schema']
+        conf = self.deviceData[deviceId]
+        conf.setSchema(schema)
+        conf.configuration.state.signalUpdateComponent.connect(
+            self._triggerStateChange)
         
-        self.onSchemaAvailable(dict(key=deviceId, type=NavigationItemTypes.DEVICE,
-                                    schema=schema))
-        self.newVisibleDevice(deviceId)
+        self.onSchemaAvailable(conf)
+        conf.addVisible()
 
 
-    def getDeviceSchema(self, deviceId):
-        if deviceId in self.deviceData:
-            return self.deviceData[deviceId].schema
-        
-        # Send network request
-        self.signalGetDeviceSchema.emit(deviceId)
-        return None
+    def getDevice(self, deviceId):
+        if deviceId not in self.deviceData:
+            self.deviceData[deviceId] = Configuration(deviceId, 'device')
+            self.signalGetDeviceSchema.emit(deviceId)
+        return self.deviceData[deviceId]
         
 
     def handleDeviceSchemaUpdated(self, instanceInfo):
@@ -703,8 +573,6 @@ class _Manager(QObject):
     def handleConfigurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         config = instanceInfo.get("configuration")
-        self._changeHash(deviceId, config)
-        # Merge configuration into self.deviceData
         self.deviceData[deviceId].merge(config)
 
 

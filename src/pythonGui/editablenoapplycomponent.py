@@ -13,7 +13,7 @@ __all__ = ["EditableNoApplyComponent"]
 
 
 from basecomponent import BaseComponent
-from manager import Manager
+import manager
 from widget import EditableWidget
 
 from PyQt4.QtCore import pyqtSlot
@@ -23,16 +23,15 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 class EditableNoApplyComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box, parent):
         super(EditableNoApplyComponent, self).__init__(classAlias)
         
-        self.__initParams = params
-        
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
         
-        self.__editableWidget = EditableWidget.get_class(classAlias)(**params)
+        self.__editableWidget = EditableWidget.get_class(classAlias)(
+            box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
@@ -48,11 +47,7 @@ class EditableNoApplyComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        # In case of attributes (Hash-V2) connect another function here
-        self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
-        
-        # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
+        params['key'].addComponent(self)
 
 
     def copy(self):
@@ -105,7 +100,7 @@ class EditableNoApplyComponent(BaseComponent):
 
     def destroy(self):
         for key in self.__editableWidget.keys:
-            Manager().unregisterEditableComponent(key, self)
+            manager.Manager().unregisterEditableComponent(key, self)
 
 
     def changeWidget(self, factory, proxyWidget, alias):
@@ -122,7 +117,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         # Refresh new widget...
         for key in self.__editableWidget.keys:
-            Manager().onRefreshInstance(key)
+            manager.Manager().onRefreshInstance(key)
 
 
     @pyqtSlot(str, object)
@@ -130,7 +125,6 @@ class EditableNoApplyComponent(BaseComponent):
         self.__editableWidget.valueChanged(key, value, timestamp)
 
 
-    # Triggered from self.__editableWidget when value was edited
     def onEditingFinished(self, key, value):
-        self.signalValueChanged.emit(key, value)
+        manager.Manager().onDeviceInstanceValuesChanged([key])
 
