@@ -140,6 +140,18 @@ class HashElement(Element):
 
 
 class Hash(OrderedDict):
+    """This is a replacement for the Karabo C++ Hash
+
+    It has most of the C++ functionality, plus some typical
+    python methods.
+
+    The bit difference to normal python containers is the dot-access method.
+    The hash has a built-in knowledge about it containing itself. Thus,
+    one can access subhashes by hash['key.subhash'].
+
+    The other speciality are attributes. In python, these can be accessed
+    using a second parameter to the brackets, as in hash['key', 'attribute'].
+    All attributes at the same time can be accessed by hash['key', ...]."""
     def __init__(self, *args):
         if len(args) == 1:
             OrderedDict.__init__(self, args[0])
@@ -219,6 +231,11 @@ class Hash(OrderedDict):
 
 
     def merge(self, other, attribute_policy):
+        """Merge the hash other into this hash.
+
+        If the attribute_policy is 'merge', the attributes from the other
+        hash are merged with the existing ones, otherwise they are overwritten.
+        """
         merge = attribute_policy == "merge"
         for k, v in other.iteritems():
             if isinstance(v, Hash):
@@ -292,6 +309,7 @@ def factory(tag, attrs):
 
 class XMLParser(object):
     def read(self, data):
+        """Parse the XML in the buffer data and return the hash"""
         target = ElementTree.TreeBuilder(element_factory=factory)
         parser = ElementTree.XMLParser(target=target)
         parser.feed(data)
@@ -306,6 +324,7 @@ class XMLParser(object):
 
 class Writer(object):
     def write(self, data):
+        """Return the written data as a string"""
         self.file = StringIO()
         try:
             self.writeToFile(data, self.file)
@@ -316,6 +335,7 @@ class Writer(object):
 
 class XMLWriter(Writer):
     def writeToFile(self, hash, file):
+        """Write the hash to the file in binary format"""
         if len(hash) == 1 and isinstance(hash.values()[0], Hash):
             e = OrderedDict.__getitem__(hash, hash.keys()[0])
         else:

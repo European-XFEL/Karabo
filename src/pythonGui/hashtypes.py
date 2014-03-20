@@ -7,6 +7,13 @@ import base64
 import numpy
 
 
+""" This module contains the type hierarchy implied by the Karabo hash.
+
+This file closely corresponds to karabo.util.ReferenceType.
+
+The C++ types are mostly implemented by using the corresponding numpy type."""
+
+
 class Simple(object):
     @classmethod
     def read(cls, file):
@@ -83,6 +90,12 @@ class NumpyVector(Vector):
 
 
 class Type(Registry):
+    """This is the base class for all types in the Karabo type hierarchy.
+
+    The sub-classes of this class are an exact correspondance to the
+    types defined in karabo.util.ReferenceType. The order of the
+    sub-classes matters. Do not subclass this class unless the underlying
+    C++ has been changed as well!"""
     types = [ ]
     fromname = { }
     strs = { }
@@ -152,6 +165,10 @@ class Char(Simple, Type):
         return base64.b64decode(s)
 
 class VectorChar(Vector, Char):
+    """A VectorChar is simply some binary data in memory. The corresponding
+    python data type is bytes. Make sure you don't use str for strings,
+    as this will result in the hash creating a VectorChar, and the C++ will
+    not be happy about this."""
     @staticmethod
     def read(file):
         size, = file.readFormat('I')
@@ -274,6 +291,9 @@ class VectorComplexDouble(NumpyVector, ComplexDouble):
 
 
 class String(Type):
+    """This is the type corresponding to unicode strings, which are
+    supposed to be used for all human-readable strings, so for
+    everything except binary data."""
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
