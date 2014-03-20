@@ -28,11 +28,11 @@ class Type(hashtypes.Type):
         component = None
         item.editableComponent = None
         if classtype:
-            if attrs["accessMode"] in (AccessMode.INITONLY,
-                                       AccessMode.RECONFIGURABLE):
+            if attrs['accessMode'] & (
+                    AccessMode.INITONLY | AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
-            if attrs['accessMode'] == AccessMode.RECONFIGURABLE:
+            if attrs['accessMode'] & AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
             item.editableComponent = component(
@@ -253,12 +253,11 @@ class SchemaReader(object):
         component = None
 
         if self.deviceType == NavigationItemTypes.CLASS:
-            if attrs['accessMode'] in (AccessMode.INITONLY,
-                                       AccessMode.RECONFIGURABLE,
-                                       AccessMode.UNDEFINED):
+            if attrs['accessMode'] & (
+                    AccessMode.INITONLY | AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
-            if attrs['accessMode'] == AccessMode.RECONFIGURABLE:
+            if attrs['accessMode'] & AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
             else:
                 component = ChoiceComponent
@@ -267,7 +266,7 @@ class SchemaReader(object):
                 item.classAlias, key=item.internalKey, value=item.defaultValue)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
-                treewidget.onApplyChanged)
+                self.treeWidget.onApplyChanged)
 
         for i, k in enumerate(hash):
             childItem = self.parse(key + "." + k, hash[k], hash[k, ...], item)
