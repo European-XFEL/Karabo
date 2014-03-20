@@ -20,7 +20,7 @@ __all__ = ["Manager"]
 from enums import NavigationItemTypes, ConfigChangeTypes
 from configuration import Configuration
 from datetime import datetime
-from hash import Hash, HashMergePolicy, XMLWriter, XMLParser
+from hash import Hash, XMLWriter, XMLParser
 from timestamp import Timestamp
 from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel
@@ -115,11 +115,6 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
-
-        # Map stores all keys and DataNofiers for editable widgets
-        self.__keyNotifierMapEditableValue = dict()
-        # Map stores all keys and DataNofiers for display widgets
-        self.__keyNotifierMapDisplayValue = dict()
         
         # Initiate database connection
         self.sqlDatabase = SqlDatabase()
@@ -134,31 +129,19 @@ class _Manager(QObject):
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
         
-        
-        # Map stores { (serverId, class), Configuration }
-        self.serverClassData = dict()
-        # Map stores { deviceId, Configuration }
-        self.deviceData = dict()
-        
         # Sets all parameters to start configuration
         self.reset()
 
 
     # Sets all parameters to start configuration
     def reset(self):
-        # Unregister all editable DataNotifiers, if available
-        #for key in self.__keyNotifierMapEditableValue:
-        #    dataNotifier = self.__keyNotifierMapEditableValue.get(key)
-        #    if dataNotifier:
-        #        dataNotifier.removeComponents(key)
+        # Map stores { (serverId, class), Configuration }
+        self.serverClassData = dict()
+        # Map stores { deviceId, Configuration }
+        self.deviceData = dict()
+
         # Map stores all keys and DataNofiers for editable widgets
         self.__keyNotifierMapEditableValue = dict()
-        
-        # Unregister all display DataNotifiers, if available
-        #for key in self.__keyNotifierMapDisplayValue:
-        #    dataNotifier = self.__keyNotifierMapDisplayValue.get(key)
-        #    if dataNotifier:
-        #        dataNotifier.removeComponents(key)
         # Map stores all keys and DataNofiers for display widgets
         self.__keyNotifierMapDisplayValue = dict()
         
