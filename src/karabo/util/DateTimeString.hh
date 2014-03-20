@@ -18,17 +18,32 @@
 namespace karabo {
     namespace util {
 
+        /**
+         * This class expresses a valid date and time information in the form of a char string.
+         * To be a valid date and time char string, it must respect:
+         * - ISO-8601:2000 Second Edition definition (docs available at http://www.qsl.net/g1smd/isopdf.htm)
+         * - Subset (of ISO-8601) defined as Karabo date and time API
+         *   * Compact version: yyyymmddThhmmss[.|,]ffffff[Z|z|±hhmm] (max. digits for ffffff is 18)
+         *   * Extended version: yyyy-mm-ddThh:mm:ss[.|,]ffffff[Z|z|±hh:mm] (max. digits for ffffff is 18)
+         * 
+         * The default constructor initializes a DateTimeString object with the Epoch values ("19700101T000000Z").
+         * 
+         */
         class DateTimeString {
+
             // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
             std::string m_dateString; //"2013-01-20"
             std::string m_timeString; //"20:30:00"
             std::string m_fractionalSecondString; //"123456"
-            std::string m_timeZoneString; //"Z"
+            std::string m_timeZoneString; //"Z" or "+0000" or "-07:00"
 
             // Extra field that concatenates date with time
             std::string m_dateTimeString; //"2013-01-20T20:30:00"
-            std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456Z"
+            std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456+00:00"
+            std::string m_timeZoneSignal;
+            int m_timeZoneHours;
+            int m_timeZoneMinutes;
 
         public:
 
@@ -51,7 +66,7 @@ namespace karabo {
              * @param inputTimeZoneStr String that represents the time zone part of the Karabo agreed ISO-8601 subset API
              */
             DateTimeString(const std::string& inputDateStr, const std::string& inputTimeStr,
-                    const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
+                           const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
 
 
             virtual ~DateTimeString();
@@ -73,7 +88,7 @@ namespace karabo {
             }
 
             /**
-             * Get string that represents the fractional part of the Karabo agreed ISO-8601 subset API (i.e. "123456")
+             * Get string or unsigned long long that represents the fractional part of the Karabo agreed ISO-8601 subset API (i.e. "123456")
              * @return string
              */
             template<typename T>
