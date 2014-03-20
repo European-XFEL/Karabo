@@ -221,7 +221,8 @@ namespace karabo {
             }
 
             boost::posix_time::ptime ptimeUtc;
-            if (m_timeZoneSignal == "-") {
+            if (m_timeZoneSignal == "+") {
+                // Berlin hour - 1h == London hour
                 ptimeUtc = ptimeLocal - boost::posix_time::hours(m_timeZoneHours) - boost::posix_time::minutes(m_timeZoneMinutes);
             } else {
                 ptimeUtc = ptimeLocal + boost::posix_time::hours(m_timeZoneHours) + boost::posix_time::minutes(m_timeZoneMinutes);
