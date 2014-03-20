@@ -13,8 +13,6 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-
-template <class T>
 void exportPyUtilDateTimeString() {
 
     bp::class_<DateTimeString> dts("DateTimeString", bp::init<>());
@@ -23,6 +21,7 @@ void exportPyUtilDateTimeString() {
 
     dts.def(bp::init<string const &, string const &, string const &, string const &>((bp::arg("inputDateStr"), bp::arg("inputTimeStr"), bp::arg("inputFractionSecondStr"), bp::arg("inputTimeZoneStr"))));
 
+    bp::implicitly_convertible< std::string const &, karabo::util::DateTimeString >();
 
     dts.def("getDateString"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDateString)
@@ -33,8 +32,10 @@ void exportPyUtilDateTimeString() {
             , bp::return_value_policy< bp::copy_const_reference >());
 
     dts.def("getFractionalSecondString"
-            , (const T & (DateTimeString::*)() const) (&DateTimeString::getFractionalSecondString)
-            , bp::return_value_policy< bp::copy_const_reference >());
+            , (const std::string(DateTimeString::*)() const) (&DateTimeString::getFractionalSecondString));
+
+    dts.def("getFractionalSecondString"
+            , (const unsigned long long (DateTimeString::*)() const) (&DateTimeString::getFractionalSecondString));
 
     dts.def("getTimeZoneString"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTimeZoneString)
@@ -45,13 +46,13 @@ void exportPyUtilDateTimeString() {
             , bp::return_value_policy< bp::copy_const_reference >());
 
     dts.def("isStringValidIso8601"
-            , (const bool (DateTimeString::*)() const) (&DateTimeString::isStringValidIso8601)
-            , bp::return_value_policy< bp::copy_const_reference >());
+            , (const bool (*)(string const &))(&DateTimeString::isStringValidIso8601)
+            , (bp::arg("timePoint")));
     dts.staticmethod("isStringValidIso8601");
 
     dts.def("isStringKaraboValidIso8601"
-            , (const bool (DateTimeString::*)() const) (&DateTimeString::isStringKaraboValidIso8601)
-            , bp::return_value_policy< bp::copy_const_reference >());
+            , (const bool (*)(string const &))(&DateTimeString::isStringKaraboValidIso8601)
+            , (bp::arg("timePoint")));
     dts.staticmethod("isStringKaraboValidIso8601");
 
     dts.def("getSecondsSinceEpoch"
