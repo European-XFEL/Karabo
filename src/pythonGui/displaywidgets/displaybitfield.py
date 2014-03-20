@@ -1,9 +1,6 @@
 from __future__ import division
-import globals
 
 from widget import DisplayWidget, EditableWidget
-
-from karabo.karathon import Types
 
 from PyQt4.QtCore import QSize, Qt, pyqtSignal
 from PyQt4.QtGui import QWidget, QPainter
@@ -14,9 +11,7 @@ class Bitfield(QWidget):
 
     def __init__(self, type):
         QWidget.__init__(self)
-        self.size = {Types.INT8: 8, Types.UINT8: 8, Types.INT16: 16,
-                     Types.UINT16: 16, Types.INT32: 32, Types.UINT32: 32,
-                     Types.INT64: 64, Types.UINT64: 64}[type]
+        self.size = type.numpy().nbytes * 8
         self.value = 0
         self.readonly = False
 

@@ -1,34 +1,42 @@
 /* 
  * File:   DateTimeString.hh
- * Author: luismaia
+ * Author: <luis.maia@xfel.eu>
  *
  * Created on March 19, 2014, 3:32 AM
+ * 
+ * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
 #ifndef KARABO_UTIL_DATETIMESTRING_HH
 #define	KARABO_UTIL_DATETIMESTRING_HH
 
-
 #include <boost/date_time.hpp>
 #include <boost/regex.hpp>
 
+#include "Exception.hh"
 
 namespace karabo {
     namespace util {
 
         class DateTimeString {
 
-            // Considering the following example: 2013-01-20T20:30:00.123456Z
+            // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
-            std::string m_dateString; //2013-01-20
-            std::string m_timeString; //20:30:00
-            std::string m_fractionalSecondString; //123456
-            std::string m_timeZoneString; //Z
+            std::string m_dateString; //"2013-01-20"
+            std::string m_timeString; //"20:30:00"
+            std::string m_fractionalSecondString; //"123456"
+            std::string m_timeZoneString; //"Z"
 
             // Extra field that concatenates date with time
-            std::string m_dateTimeString; //2013-01-20T20:30:00
+            std::string m_dateTimeString; //"2013-01-20T20:30:00"
+            std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456Z"
 
         public:
+
+            /**
+             * Constructor without parameters, that creates a instance with epoch Timestamp ("19700101T000000Z")
+             */
+            DateTimeString();
 
             /**
              * Constructor from string
@@ -47,39 +55,115 @@ namespace karabo {
                            const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
 
 
-            //            DateTimeString(const DateTimeString& orig);
-
             virtual ~DateTimeString();
 
             /**
-             * Get the second (resp. fractional of a second) part, 
-             * @return unsigned int 64bits
+             * Get string that represents the date part of the Karabo agreed ISO-8601 subset API (i.e. "2013-01-20")
+             * @return string
              */
             inline const std::string& getDateString() const {
                 return m_dateString;
             }
 
-            inline const std::string& getDateTimeString() const {
-                return m_dateTimeString;
-            }
-
-            inline const std::string& getFractionalSecondString() const {
-                return m_fractionalSecondString;
-            }
-
+            /**
+             * Get string that represents the time part of the Karabo agreed ISO-8601 subset API (i.e. "20:30:00")
+             * @return string
+             */
             inline const std::string& getTimeString() const {
                 return m_timeString;
             }
 
+            /**
+             * Get string that represents the fractional part of the Karabo agreed ISO-8601 subset API (i.e. "123456")
+             * @return string
+             */
+            template<typename T>
+            inline const T getFractionalSecondString() const {
+                return boost::lexical_cast<T>(m_fractionalSecondString);
+            }
+
+            /**
+             * Get string that represents the time zone part of the Karabo agreed ISO-8601 subset API (i.e. "Z")
+             * @return string
+             */
             inline const std::string& getTimeZoneString() const {
                 return m_timeZoneString;
             }
 
-            const bool isStringValidIso8601(const std::string& timePoint);
+            /**
+             * Get string that represents the date and time part of the Karabo agreed ISO-8601 subset API (i.e. "2013-01-20T20:30:00")
+             * @return string
+             */
+            inline const std::string& getDateTimeString() const {
+                return m_dateTimeString;
+            }
 
-            const bool isStringKaraboValidIso8601(const std::string& timePoint);
+
+            /**
+             * Validates if a string representing a timestamp is valid according to ISO-8601 definition
+             * 
+             * @param timePoint String that represents a Timestamp
+             * @return boolean (True is string is valid, False otherwise)
+             */
+            static const bool isStringValidIso8601(const std::string& timePoint);
+
+
+            /**
+             * Validates if a string representing a timestamp is valid according to Karabo agreed ISO-8601 subset API definition
+             * Some examples:
+             * => Extended strings:
+             * - 1985-01-20T23:20:50
+             * - 1985-01-20T23:20:50,123
+             * - 1985-01-20T23:20:50.123
+             * - 1985-01-20T23:20:50.123z
+             * - 1985-01-20T23:20:50.123Z
+             * - 1985-01-20T23:20:50z
+             * - 1985-01-20T23:20:50Z
+             * - 1985-01-20T23:20:50+00:00
+             * - 1985-01-20T23:20:50-07:00
+             * => Compact strings:
+             * - 19850120T232050
+             * - 19850120T232050,123
+             * - 19850120T232050.123
+             * - 19850120T232050.123z
+             * - 19850120T232050.123Z
+             * - 19850120T232050z
+             * - 19850120T232050Z
+             * - 19850120T232050+0000
+             * - 19850120T232050-0700
+             * 
+             * @param timePoint String that represents a Timestamp
+             * @return boolean (True is string is valid, False otherwise)
+             */
+            static const bool isStringKaraboValidIso8601(const std::string& timePoint);
+
+
+            /**
+             * Returns the number of seconds elapsed since epoch for this object
+             * 
+             * @return unsigned long long (Seconds elapsed since Epoch)
+             */
+            const unsigned long long getSecondsSinceEpoch();
+            //template<typename T>
+            //const T getSecondsSinceEpoch();
 
         private:
+
+            /**
+             * Convert a specific boost ptime to the number of seconds since epoch (1970-Jan-1 00:00:00)
+             * 
+             * @param pt specific boost ptime
+             * @return number of seconds since epoch
+             */
+            static const unsigned long long ptimeToSecondsSinceEpoch(boost::posix_time::ptime& pt);
+
+            /**
+             * Creates an DateTimeString from an ISO-8601 formatted string (string must be a complete and valid timestamp using Karabo agreed ISO-8601 subset API)
+             * 
+             * @param timePoint ISO 8601 formatted string (see formats locale to more information)
+             * @return DateTimeString object
+             */
+            static const DateTimeString iso8601KaraboApiStringToDateTimeString(const std::string& timePoint);
 
         };
     }
