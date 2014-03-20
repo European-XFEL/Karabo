@@ -19,7 +19,6 @@ namespace karabo {
     namespace util {
 
         class DateTimeString {
-
             // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
             std::string m_dateString; //"2013-01-20"
@@ -52,7 +51,7 @@ namespace karabo {
              * @param inputTimeZoneStr String that represents the time zone part of the Karabo agreed ISO-8601 subset API
              */
             DateTimeString(const std::string& inputDateStr, const std::string& inputTimeStr,
-                           const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
+                    const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
 
 
             virtual ~DateTimeString();
@@ -166,6 +165,17 @@ namespace karabo {
             static const DateTimeString iso8601KaraboApiStringToDateTimeString(const std::string& timePoint);
 
         };
+
+        template<>
+        const std::string DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<std::string>(m_fractionalSecondString);
+        }
+
+        template<>
+        const unsigned long long DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
+        }
+
     }
 }
 
