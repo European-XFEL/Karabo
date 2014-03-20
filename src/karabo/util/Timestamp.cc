@@ -33,16 +33,6 @@ namespace karabo {
         }
 
 
-        const Epochstamp Timestamp::fromIso8601(const std::string& timePoint) {
-            return karabo::util::Epochstamp::fromIso8601(timePoint);
-        }
-
-
-        const Epochstamp Timestamp::fromIso8601Ext(const std::string& timePoint) {
-            return karabo::util::Epochstamp::fromIso8601Ext(timePoint);
-        }
-
-
         std::string Timestamp::toIso8601(TIME_UNITS precision, bool extended) const {
             return m_epochstamp.toIso8601(precision, extended);
         }

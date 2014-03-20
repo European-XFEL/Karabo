@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from karabo.karathon import AccessLevel
+from enums import AccessLevel
 
 # TODO Karabo will support an global access level and an excpetion list which is deviceId specific
 # This requires a function like in SignalSlotable: getAccessLevel(deviceId) in the end
