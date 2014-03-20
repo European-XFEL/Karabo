@@ -168,42 +168,28 @@ class _Manager(QObject):
 
 
     def _changeClassData(self, key, value):
-        serverClassIdParamKey = key.split(".")
-        if len(serverClassIdParamKey) < 3:
-            return
+        serverId, classId, property = key.split(".", 2)
         
-        serverId = serverClassIdParamKey[0]
-        classId = serverClassIdParamKey[1]
-        paramKey = serverClassIdParamKey[2]
-        
-        if "@" in paramKey:
+        if "@" in property:
             # Merge attribute value
-            keys = paramKey.split("@")
-            parameterKey = keys[0]
-            attributeKey = keys[1]
-            
-            self.serverClassData[serverId, classId].setAttribute(parameterKey, attributeKey, value)
+            propertyKey, attributeKey = property.split("@")
+            self.serverClassData[serverId, classId].setAttribute(propertyKey, attributeKey, value)
         else:
-            self.serverClassData[serverId, classId].set(paramKey, value)
+            self.serverClassData[serverId, classId].set(property, value)
     
     
     def _changeDeviceData(self, key, value):
-        deviceIdParamKey = key.split(".")
-        if len(deviceIdParamKey) < 2:
-            return
-
-        deviceId = deviceIdParamKey[0]
-        paramKey = deviceIdParamKey[1]
+        deviceId, property = key.split(".", 1)
         
-        if "@" in paramKey:
+        if "@" in property:
             # Merge attribute value
-            keys = key.split("@")
-            parameterKey = keys[0]
-            attributeKey = keys[1]
-            
-            self.deviceData[deviceId].setAttribute(parameterKey, attributeKey, value)
+            propertyKey, attributeKey = property.split("@")
+            self.deviceData[deviceId].setAttribute(propertyKey, attributeKey, value)
         else:
-            self.deviceData[deviceId].set(paramKey, value)
+            self.deviceData[deviceId].set(property, value)
+            
+        # Inform network
+        self.signalReconfigure.emit(deviceId, property, value)
 
 
     def disconnectedFromServer(self):
@@ -384,13 +370,6 @@ class _Manager(QObject):
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is not None:
             dataNotifier.signalUpdateComponent.emit(key, value, None)
-        
-        keys = key.split(".", 1)
-        deviceId = keys[0]
-        property = keys[1]
-
-        # Informs network
-        self.signalReconfigure.emit(deviceId, property, value)
 
 
     def onDeviceChangedAsHash(self, deviceId, config):
