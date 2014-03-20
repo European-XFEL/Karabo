@@ -229,11 +229,13 @@ namespace karabo {
 
             return ptimeToSecondsSinceEpoch(ptimeUtc);
         }
-        
+
+
         template<>
         const std::string DateTimeString::getFractionalSecondString() const {
             return boost::lexical_cast<std::string>(m_fractionalSecondString);
         }
+
 
         template<>
         const unsigned long long DateTimeString::getFractionalSecondString() const {
