@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 #############################################################################
 # Author: <burkhard.heisen@xfel.eu>
 # Created on February 17, 2012
@@ -11,21 +12,22 @@
 
 __all__ = ["Network"]
 
-from karabo.karathon import (AccessLevel, Authenticator, BinarySerializerHash,
-                             Hash)
 from dialogs.logindialog import LoginDialog
 from manager import Manager
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash, QDataStream,
+from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
+from karabo.karathon import Authenticator
+from hash import Hash, BinaryParser, BinaryWriter
+from enums import AccessLevel
 
 import globals
 import socket
+from struct import unpack
 
-BYTES_MESSAGE_SIZE_TAG = 4
 
 class Network(QObject):
     # signals
@@ -35,8 +37,6 @@ class Network(QObject):
     def __init__(self):
         super(Network, self).__init__()
 
-        self.serializer = BinarySerializerHash.create("Bin")
-
         self.authenticator = None
         self.username = None
         self.password = None
@@ -44,14 +44,12 @@ class Network(QObject):
         self.hostname = None
         self.port = None
 
-        self.brokerHost = str()
-        self.brokerPort = str()
-        self.brokerTopic = str()
-        self.sessionToken = str()
+        self.brokerHost = ""
+        self.brokerPort = ""
+        self.brokerTopic = ""
+        self.sessionToken = ""
 
         self.tcpSocket = None
-        self.dataSize = 0
-        self.dataBytes = bytearray()
 
         Manager().signalKillDevice.connect(self.onKillDevice)
         Manager().signalKillServer.connect(self.onKillServer)
@@ -117,6 +115,8 @@ class Network(QObject):
 
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
+        self.runner = self.processInput()
+        self.bytesNeeded = self.runner.next()
         self.tcpSocket.disconnected.connect(self.onDisconnected)
         self.tcpSocket.readyRead.connect(self.onReadServerData)
         self.tcpSocket.error.connect(self.onSocketError)
@@ -163,10 +163,11 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.authenticator = Authenticator(str(self.username), str(self.password),
-                                                   str(self.provider), ipAddress,
-                                                   self.brokerHost, str(self.brokerPort),
-                                                   self.brokerTopic)
+                self.authenticator = Authenticator(
+                    self.username.encode("utf8"), self.password.encode("utf8"),
+                    self.provider.encode("ascii"), ipAddress.encode("ascii"),
+                    self.brokerHost.encode("ascii"), str(self.brokerPort),
+                    self.brokerTopic.encode("utf8"))
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
@@ -212,77 +213,65 @@ class Network(QObject):
             print "Logout problem. Please verify, if service is running. " + str(e)
 
 
-### Slots ###
     def onReadServerData(self):
-        input = QDataStream(self.tcpSocket)
-        input.setByteOrder(QDataStream.LittleEndian)
-
-        #print self.tcpSocket.bytesAvailable(), " bytes are coming in"
-        while True:
-
-            if self.dataSize == 0:
-
-                if self.tcpSocket.bytesAvailable() < (BYTES_MESSAGE_SIZE_TAG):
-                    break
-
-                self.dataSize = input.readUInt32()
-
-            if len(self.dataBytes) == 0:
-
-                if self.tcpSocket.bytesAvailable() < self.dataSize:
-                    break
-
-                self.dataBytes = bytearray(self.dataSize)
-                self.dataBytes = input.readRawData(self.dataSize)
-                # TODO How to do this nicely?
-                self.dataBytes = bytearray(self.dataBytes)
+        while self.tcpSocket.bytesAvailable() >= self.bytesNeeded:
+            try:
+                self.bytesNeeded = self.runner.send(self.tcpSocket.read(
+                    self.bytesNeeded))
+            except Exception as e:
+                self.runner = self.processInput()
+                self.bytesNeeded = self.runner.next()
+                if not isinstance(e, StopIteration):
+                    raise
 
 
-            # Fork on responseType
-            instanceInfo = self.serializer.load(self.dataBytes)
+    def processInput(self):
+        parser = BinaryParser()
 
-            type = instanceInfo.get("type")
-            #print "Request: ", type
+        dataSize, = unpack('I', (yield 4))
+        dataBytes = yield dataSize
 
-            # "instanceNew" (instanceId, instanceInfo)
-            # "instanceUpdated" (instanceId, instanceInfo)
-            # "instanceGone" (instanceId)
-            # "configurationChanged" (config, instanceId)
-            # "log" (logMessage)
-            # "notification" (type, shortMsg, detailedMsg, instanceId)
-            # "invalidateCache" (instanceId)
+        instanceInfo = parser.read(dataBytes)
 
-            if type == "brokerInformation":
-                self._handleBrokerInformation(instanceInfo)
-            elif type == "systemTopology":
-                Manager().handleSystemTopology(instanceInfo.get("systemTopology"))
-            elif type == "instanceNew":
-                Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
-            elif type == "instanceUpdated":
-                Manager().handleSystemTopology(instanceInfo.get("topologyEntry"))
-            elif type == "instanceGone":
-                Manager().handleInstanceGone(instanceInfo.get("instanceId"))
-            elif type == "classSchema":
-                Manager().handleClassSchema(instanceInfo)
-            elif type == "deviceSchema":
-                Manager().handleDeviceSchema(instanceInfo)
-            elif type == "configurationChanged":
-                Manager().handleConfigurationChanged(instanceInfo)
-            elif type == "log":
-                Manager().onLogDataAvailable(instanceInfo.get("message"))
-            elif type == "schemaUpdated":
-                Manager().handleDeviceSchemaUpdated(instanceInfo)
-            elif type == "notification":
-                Manager().handleNotification(instanceInfo)
-            elif type == "historicData":
-                Manager().handleHistoricData(instanceInfo)
-            elif type == "invalidateCache":
-                print "invalidateCache"
-            else:
-                print "WARN : Got unknown communication token \"", type, "\" from server"
-            # Invalidate variables
-            self.dataSize = 0
-            self.dataBytes = bytearray()
+        type = instanceInfo.get("type")
+        #print "Request: ", type
+
+        # "instanceNew" (instanceId, instanceInfo)
+        # "instanceUpdated" (instanceId, instanceInfo)
+        # "instanceGone" (instanceId)
+        # "configurationChanged" (config, instanceId)
+        # "log" (logMessage)
+        # "notification" (type, shortMsg, detailedMsg, instanceId)
+        # "invalidateCache" (instanceId)
+
+        if type == "brokerInformation":
+            self._handleBrokerInformation(instanceInfo)
+        elif type == "systemTopology":
+            Manager().handleSystemTopology(instanceInfo.get("systemTopology"))
+        elif type == "instanceNew":
+            Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
+        elif type == "instanceUpdated":
+            Manager().handleSystemTopology(instanceInfo.get("topologyEntry"))
+        elif type == "instanceGone":
+            Manager().handleInstanceGone(instanceInfo.get("instanceId"))
+        elif type == "classSchema":
+            Manager().handleClassSchema(instanceInfo)
+        elif type == "deviceSchema":
+            Manager().handleDeviceSchema(instanceInfo)
+        elif type == "configurationChanged":
+            Manager().handleConfigurationChanged(instanceInfo)
+        elif type == "log":
+            Manager().onLogDataAvailable(instanceInfo.get("message"))
+        elif type == "schemaUpdated":
+            Manager().handleDeviceSchemaUpdated(instanceInfo)
+        elif type == "notification":
+            Manager().handleNotification(instanceInfo)
+        elif type == "historicData":
+            Manager().handleHistoricData(instanceInfo)
+        elif type == "invalidateCache":
+            print "invalidateCache"
+        else:
+            print "WARN : Got unknown communication token \"", type, "\" from server"
 
 
     def onSocketError(self, socketError):
@@ -420,11 +409,10 @@ class Network(QObject):
 
 ### private functions ###
     def _tcpWriteHash(self, instanceInfo):
-        dataBytes = QByteArray(self.serializer.save(instanceInfo))
-        dataSize = dataBytes.size()
-
         stream = QByteArray()
-        stream.push_back(QByteArray(pack('I', dataSize)))
+        writer = BinaryWriter()
+        dataBytes = writer.write(instanceInfo)
+        stream.push_back(QByteArray(pack('I', len(dataBytes))))
         stream.push_back(dataBytes)
         self.tcpSocket.write(stream)
 

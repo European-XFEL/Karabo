@@ -25,6 +25,7 @@ void exportPyUtilHash();
 void exportPyUtilSchema();
 void exportPyUtilClassInfo();
 void exportPyUtilTrainstamp();
+template <class T> void exportPyUtilDateTimeString();
 void exportPyUtilEpochstamp();
 void exportPyUtilTimestamp();
 void exportPyUtilTimeDuration();
@@ -105,6 +106,9 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyUtilTimeDuration();
     exportPyUtilDims();
     exportPyUtilSchema();
+    
+    exportPyUtilDateTimeString<std::string>();
+    exportPyUtilDateTimeString<unsigned long long>();
     
     // io
     exportPyIo();
