@@ -201,6 +201,15 @@ namespace karabo {
             //return boost::lexical_cast<T>(ptimeToSecondsSinceEpoch(pt));
             return ptimeToSecondsSinceEpoch(pt);
         }
+        
+        template<>
+        const std::string DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<std::string>(m_fractionalSecondString);
+        }
 
+        template<>
+        const unsigned long long DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
+        }
     }
 }
