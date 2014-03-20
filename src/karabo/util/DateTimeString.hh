@@ -167,14 +167,9 @@ namespace karabo {
         };
 
         template<>
-        const std::string DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<std::string>(m_fractionalSecondString);
-        }
-
+        const std::string DateTimeString::getFractionalSecondString() const;
         template<>
-        const unsigned long long DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
-        }
+        const unsigned long long DateTimeString::getFractionalSecondString() const;
 
     }
 }
