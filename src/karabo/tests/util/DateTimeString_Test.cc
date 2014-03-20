@@ -39,7 +39,7 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
                                               const std::string& expectedTimeZone,
                                               const std::string& expectedDateTime,
                                               const std::string& expectedSecondsSinceEpoch) {
-    bool writeToClog = true;
+    bool writeToClog = false;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -58,7 +58,7 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
     }
     // Constructor complete
     karabo::util::DateTimeString dts2 = karabo::util::DateTimeString(expectedDate, expectedTime, expectedFractionalSecond, expectedTimeZone);
-    
+
 
     // Validations
     if (writeToClog) std::clog << "DT => " << dts.getDateString() << " == " << expectedDate << std::endl;
@@ -89,7 +89,7 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
     if (writeToClog) std::clog << "SecondsSinceEpoch => " << secondsSinceEpoch << " == " << expectedSecondsSinceEpoch << std::endl;
     CPPUNIT_ASSERT(secondsSinceEpoch == expectedSecondsSinceEpoch);
     CPPUNIT_ASSERT(secondsSinceEpoch2 == expectedSecondsSinceEpoch);
-    
+
     return;
 }
 
@@ -97,10 +97,15 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
 void DateTimeString_Test::testConstructors() {
 
     // Validate "empty" constructor
-    validateConstructor("", "19700101", "000000", "0", "Z", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
+    validateConstructor("", "19700101", "000000", "0", "+0000", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
 
     unsigned long long expectedSecondsSinceEpochULL = 475111250;
+    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475086050; //475111250 - (60*60*7);
+    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475123850; //475111250 + (60*60*3.5);
+
     std::string expectedSecondsSinceEpoch = boost::lexical_cast<std::string>(expectedSecondsSinceEpochULL);
+    std::string expectedSecondsSinceEpochMinos7h = boost::lexical_cast<std::string>(expectedSecondsSinceEpochMinos7hULL);
+    std::string expectedSecondsSinceEpochPlus3h30m = boost::lexical_cast<std::string>(expectedSecondsSinceEpochPlus3h30mULL);
 
     // Validate the ISO8601 "string" constructor
     // Validate Extended strings
@@ -115,7 +120,9 @@ void DateTimeString_Test::testConstructors() {
     validateConstructor("1985-01-20T23:20:50z", expectedDateExt, expectedTimeExt, "0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
     validateConstructor("1985-01-20T23:20:50Z", expectedDateExt, expectedTimeExt, "0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
     validateConstructor("1985-01-20T23:20:50+00:00", expectedDateExt, expectedTimeExt, "0", "+00:00", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, "0", "-07:00", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    //
+    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, "0", "-07:00", expectedDateAndTimeExt, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("1985-01-20T23:20:50+03:30", expectedDateExt, expectedTimeExt, "0", "+03:30", expectedDateAndTimeExt, expectedSecondsSinceEpochPlus3h30m);
 
     // Validate Compact strings
     std::string expectedDateCom = "19850120";
@@ -129,12 +136,16 @@ void DateTimeString_Test::testConstructors() {
     validateConstructor("19850120T232050z", expectedDateCom, expectedTimeCom, "0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
     validateConstructor("19850120T232050Z", expectedDateCom, expectedTimeCom, "0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
     validateConstructor("19850120T232050+0000", expectedDateCom, expectedTimeCom, "0", "+0000", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, "0", "-0700", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    //
+    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, "0", "-0700", expectedDateAndTimeCom, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("19850120T232050+0330", expectedDateCom, expectedTimeCom, "0", "+0330", expectedDateAndTimeCom, expectedSecondsSinceEpochPlus3h30m);
 
 }
 
 
 bool DateTimeString_Test::isValidIso8601(const std::string& pTimeStr) {
+
+
     karabo::util::DateTimeString dts = karabo::util::DateTimeString();
     return dts.isStringValidIso8601(pTimeStr);
 }
@@ -149,6 +160,8 @@ void DateTimeString_Test::isStringValidIso8601() {
      * Calendar date
      */
     // Complete representation
+
+
     CPPUNIT_ASSERT(isValidIso8601("19850412") == true); //Basic format: YYYYMMDD
     CPPUNIT_ASSERT(isValidIso8601("1985-04-12") == true); //Extended format: YYYY-MM-DD
 
@@ -515,6 +528,8 @@ void DateTimeString_Test::isStringValidIso8601() {
 
 
 bool DateTimeString_Test::isValidKaraboIso8601(const std::string& pTimeStr) {
+
+
     karabo::util::DateTimeString dts = karabo::util::DateTimeString();
     return dts.isStringKaraboValidIso8601(pTimeStr);
 }
