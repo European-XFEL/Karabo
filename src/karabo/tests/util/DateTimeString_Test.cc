@@ -100,8 +100,8 @@ void DateTimeString_Test::testConstructors() {
     validateConstructor("", "19700101", "000000", "0", "+0000", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
 
     unsigned long long expectedSecondsSinceEpochULL = 475111250;
-    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475086050; //475111250 - (60*60*7);
-    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475123850; //475111250 + (60*60*3.5);
+    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450; //475111250 + (60*60*7)
+    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475098650; //475111250 - (60*60*3.5)
 
     std::string expectedSecondsSinceEpoch = boost::lexical_cast<std::string>(expectedSecondsSinceEpochULL);
     std::string expectedSecondsSinceEpochMinos7h = boost::lexical_cast<std::string>(expectedSecondsSinceEpochMinos7hULL);
