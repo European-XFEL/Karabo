@@ -60,8 +60,8 @@ class DisplayComboBox(DisplayWidget):
     def valueChanged(self, key, value, timestamp=None):
         if value is None:
             return
-        
-        index = self.__comboBox.findText(value)
+
+        index = self.__comboBox.findText(str(value))
         if index < 0 :
             return
         
