@@ -29,7 +29,6 @@ from sqldatabase import SqlDatabase
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
-useOldVersion = True
 
 class DataNotifier(QObject):
     signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
@@ -40,11 +39,8 @@ class DataNotifier(QObject):
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
 
-        if useOldVersion:
-            self.components = [] # list of components
-        else:
-            self.signalUpdateComponent.connect(self.onValueChanged)
-            self.signalUpdateDisplayValue.connect(self.onValueChanged)
+        self.signalUpdateComponent.connect(self.onValueChanged)
+        self.signalUpdateDisplayValue.connect(self.onValueChanged)
         self.addComponent(key, component)
 
 
@@ -56,19 +52,10 @@ class DataNotifier(QObject):
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
-        
-        if useOldVersion:
-            if len(self.components) > 0:
-                value = self.components[0].value
-                self.signalUpdateComponent.emit(key, value)
-                self.signalUpdateDisplayValue.emit(key, value)
-                
-                # Add widget to list
-                self.components.append(component)
-        else:
-            if hasattr(self, "value"):
-                self.signalUpdateComponent.emit(key, self.value, self.timestamp)
-                self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
+
+        if hasattr(self, "value"):
+            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
 
     def updateDisplayValue(self, key, value, timestamp):
@@ -337,7 +324,7 @@ class _Manager(QObject):
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
-                    internalPath = internalPath + "[" + str(i) + "]"
+                    internalPath = "{}[{}]".format(internalPath, i)
                     hashValue = value[i]
 
 

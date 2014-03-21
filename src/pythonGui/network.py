@@ -367,7 +367,7 @@ class Network(QObject):
             i = 0
             for arg in args:
                 i = i+1
-                argName = str("a%s" % i)
+                argName = "a{}".format(i)
                 instanceInfo.set(argName, arg)
 
         self._tcpWriteHash(instanceInfo)

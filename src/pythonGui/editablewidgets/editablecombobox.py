@@ -36,7 +36,7 @@ class EditableComboBox(EditableWidget):
         
         self.__comboBox = QComboBox()
         self.__comboBox.setFrame(False)
-        
+
         self.addItems(enumeration)
         
         self.__comboBox.installEventFilter(self)
@@ -64,7 +64,7 @@ class EditableComboBox(EditableWidget):
                 return int(self.__comboBox.currentText())
             elif self.valueType in ("float", "double"):
                 return float(self.__comboBox.currentText())
-            return str(self.__comboBox.currentText())
+            return self.__comboBox.currentText()
         except Exception, e:
             print e
 
