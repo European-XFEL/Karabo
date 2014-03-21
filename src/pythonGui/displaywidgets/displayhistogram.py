@@ -92,7 +92,6 @@ class DisplayHistogram(DisplayWidget):
 
 
     def valueChanged(self, key, value, timestamp=None):
-        key = str(key)
         self.__keys[key] = value
         
         # Update plot

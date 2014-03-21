@@ -62,7 +62,7 @@ class ConfigurationPanel(QWidget):
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
 
-        self.__prevPath = str() # previous selected DEVICE_INSTANCE internalKey
+        self.__prevPath = "" # previous selected DEVICE_INSTANCE internalKey
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -522,7 +522,7 @@ class ConfigurationPanel(QWidget):
         parameter editor pages need to be cleaned and removed.
         """
         # Reset previous path
-        self.__prevPath = str()
+        self.__prevPath = ""
 
         # Reset maps
         self.__itemPathIndexMap = dict()
@@ -602,7 +602,7 @@ class ConfigurationPanel(QWidget):
 
         if (self.__prevPath != "") and (self.__prevPath != path):
             Manager().removeVisibleDevice(self.__prevPath)
-            self.__prevPath = str()
+            self.__prevPath = ""
         
         self.showParameterPage(type, path)
 

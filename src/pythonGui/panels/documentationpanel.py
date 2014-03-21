@@ -39,7 +39,7 @@ class DocumentationPanel(QWidget):
     def __init__(self):
         super(DocumentationPanel, self).__init__()
         
-        self.__loadedUrl = str()
+        self.__loadedUrl = ""
         
         postParams = QUrl()
         postParams.addQueryItem('username', unicode('wiki'))

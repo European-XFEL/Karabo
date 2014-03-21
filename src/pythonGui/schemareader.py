@@ -1,3 +1,9 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on May 4, 2013
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
 import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
