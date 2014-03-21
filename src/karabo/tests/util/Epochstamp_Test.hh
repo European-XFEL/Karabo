@@ -38,6 +38,13 @@ private:
     void testToIso8601StringExternal();
     void testToFormattedString();
 
+    //Auxiliary Methods
+    void validateStringConstructor(const std::string& pTime,
+                                   const unsigned long long& expectedSeconds,
+                                   const unsigned long long& expectedFractionalSecond,
+                                   bool isCompactString,
+                                   const std::string& expectedToIso8601);
+
 };
 
 #endif	/* TIMESTAMP_TEST_HH */
