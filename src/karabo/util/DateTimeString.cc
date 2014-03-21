@@ -7,15 +7,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#include <CoreServices/CoreServices.h>
-typedef int clockid_t;
-#define CLOCK_REALTIME 0
-#endif
-
 #include "DateTimeString.hh"
 
 namespace karabo {
