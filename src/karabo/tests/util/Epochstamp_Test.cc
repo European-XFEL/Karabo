@@ -33,6 +33,66 @@ void Epochstamp_Test::tearDown() {
 }
 
 
+void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
+                                                const unsigned long long& expectedSeconds,
+                                                const unsigned long long& expectedFractionalSecond,
+                                                bool isCompactString,
+                                                const std::string& expectedToIso8601) {
+    bool writeToClog = true;
+
+    if (writeToClog) {
+        std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
+        std::clog << "Sec => " << expectedSeconds << " |FSec => " << expectedFractionalSecond << std::endl;
+        std::clog << "----------------------------------------------------------" << std::endl;
+    }
+
+    // Constructor
+    karabo::util::Epochstamp epo;
+    if (pTime == "") {
+        //Empty constructor
+        epo = karabo::util::Epochstamp();
+    } else {
+        //String constructor
+        epo = karabo::util::Epochstamp(pTime);
+    }
+    // Constructor complete
+    karabo::util::Epochstamp epo2 = karabo::util::Epochstamp(expectedSeconds, expectedFractionalSecond);
+
+
+    // Validations
+    if (writeToClog) std::clog << "Sec => " << epo.getSeconds() << " == " << expectedSeconds << std::endl;
+    CPPUNIT_ASSERT(epo.getSeconds() == expectedSeconds);
+    CPPUNIT_ASSERT(epo2.getSeconds() == expectedSeconds);
+
+    if (writeToClog) std::clog << "Sec => " << epo.getFractionalSeconds() << " == " << expectedFractionalSecond << std::endl;
+    CPPUNIT_ASSERT(epo.getFractionalSeconds() == expectedFractionalSecond);
+    CPPUNIT_ASSERT(epo2.getFractionalSeconds() == expectedFractionalSecond);
+
+
+    if (expectedToIso8601 != "") {
+        if (isCompactString == true) {
+            // Validate "UNIVERSAL" compact ISO8601 format
+            if (writeToClog) std::clog << "[Compact] toIso8601(ATTOSEC) => " << expectedToIso8601 << " == " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC));
+            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC));
+        } else {
+            // Validate "UNIVERSAL" extended ISO8601 format
+            if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << expectedToIso8601 << " == " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC, true));
+            CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC, true));
+        }
+    }
+
+    if (writeToClog) std::clog << "[Compact] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
+    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC) == epo2.toIso8601(ATTOSEC));
+
+    if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
+    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC, true) == epo2.toIso8601(ATTOSEC, true));
+
+    return;
+}
+
+
 void Epochstamp_Test::testConstructors() {
 
     int sleepDelay = 1;
@@ -62,6 +122,7 @@ void Epochstamp_Test::testConstructors() {
     CPPUNIT_ASSERT(t03.getSeconds() == t05.getSeconds());
     CPPUNIT_ASSERT(t04.getSeconds() == t05.getSeconds());
     CPPUNIT_ASSERT(t05.getFractionalSeconds() == 0);
+    CPPUNIT_ASSERT(t03.getFractionalSeconds() != t05.getFractionalSeconds());
     CPPUNIT_ASSERT(t03.getTime() == t05.getTime());
     CPPUNIT_ASSERT(t04.getTime() == t05.getTime());
 
@@ -71,101 +132,79 @@ void Epochstamp_Test::testConstructors() {
     ts06.tv_nsec = t03.getFractionalSeconds();
     karabo::util::Epochstamp t06 = karabo::util::Epochstamp(ts06);
 
-    /*std::cout << endl << "lmaia: t03.getSeconds() = " << t03.getSeconds();
-    std::cout << endl << "lmaia: t05.getSeconds() = " << t05.getSeconds();
-    std::cout << endl << "lmaia: t06.getSeconds() = " << t06.getSeconds();
-    std::cout << endl << "lmaia: t03.getFractionalSeconds() = " << t03.getFractionalSeconds();
-    std::cout << endl << "lmaia: t05.getFractionalSeconds() = " << t05.getFractionalSeconds();
-    std::cout << endl << "lmaia: t06.getFractionalSeconds() = " << t06.getFractionalSeconds();*/
-
     CPPUNIT_ASSERT(t03.getSeconds() == t06.getSeconds());
     CPPUNIT_ASSERT(t04.getSeconds() == t06.getSeconds());
     CPPUNIT_ASSERT(t05.getSeconds() == t06.getSeconds());
     CPPUNIT_ASSERT(t03.getTime() == t06.getTime());
     CPPUNIT_ASSERT(t04.getTime() == t06.getTime());
     CPPUNIT_ASSERT(t05.getTime() == t06.getTime());
+
+    //TODO - Should this test work?!
+    //std::clog << endl << "lmaia: t03.getFractionalSeconds() = " << t03.getFractionalSeconds();
+    //std::clog << endl << "lmaia: t06.getFractionalSeconds() = " << t06.getFractionalSeconds();
     //CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
-    //CPPUNIT_ASSERT(t04.getFractionalSeconds() == t06.getFractionalSeconds());
 
 
-    // Validate the ISO8601 "string" constructor
-    std::string pTimeStr01 = "20121225T132536.789333123456789123";
-    karabo::util::Epochstamp t07 = karabo::util::Epochstamp(pTimeStr01);
-
-    CPPUNIT_ASSERT(t07.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t07.getFractionalSeconds() == 789333123456789123);
-
-
-    // Validate other "string" constructor
-    std::string pTimeStr02 = "2012-12-25T13:25:36.123456789123456789";
-    karabo::util::Epochstamp t08 = karabo::util::Epochstamp(pTimeStr02);
-
-    CPPUNIT_ASSERT(t08.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t08.getFractionalSeconds() == 123456789123456789);
+    /*
+     * Validate the ISO8601 "string" constructor
+     * 
+     * (Old tests)
+     */
+    validateStringConstructor("20121225T132536.789333123456789123", 1356441936ULL, 789333123456789123ULL, true, "");
+    validateStringConstructor("2012-12-25T13:25:36.123456789123456789", 1356441936ULL, 123456789123456789ULL, false, "");
+    validateStringConstructor("20121225T132536.123456789123456789Z", 1356441936ULL, 123456789123456789ULL, true, "");
+    validateStringConstructor("2012-12-25T13:25:36,123456789123456789z", 1356441936ULL, 123456789123456789ULL, false, "");
+    validateStringConstructor("2012-12-25T13:25:36,123456789123456789+00:00", 1356441936ULL, 123456789123456789ULL, false, "");
+    validateStringConstructor("2012-12-25T13:25:36+00:00", 1356441936ULL, 0ULL, false, "");
 
 
-    // Validate other "string" constructor
-    std::string pTimeStr03 = "20121225T132536.123456789123456789Z";
-    karabo::util::Epochstamp t09 = karabo::util::Epochstamp(pTimeStr03);
+    /*
+     * Validate the ISO8601 "string" constructor
+     * 
+     * (New tests)
+     */
+    unsigned long long expectedSeconds = 475111250ULL;
+    unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450; //475111250 + (60*60*7)
+    unsigned long long expectedSecondsSinceEpochPlus3h30mULL = 475098650; //475111250 - (60*60*3.5)
 
-    CPPUNIT_ASSERT(t09.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t09.getFractionalSeconds() == 123456789123456789);
+    // Validate Extended strings
+    validateStringConstructor("1985-01-20T23:20:50.789333123456789123", expectedSeconds, 789333123456789123ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50", expectedSeconds, 0ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50,123", expectedSeconds, 123ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123", expectedSeconds, 123ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123z", expectedSeconds, 123ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50z", expectedSeconds, 0ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50Z", expectedSeconds, 0ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50+00:00", expectedSeconds, 0ULL, false, "");
+    //
+    validateStringConstructor("1985-01-20T23:20:50-07:00", expectedSecondsSinceEpochMinos7hULL, 0ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50+03:30", expectedSecondsSinceEpochPlus3h30mULL, 0ULL, false, "");
 
-
-    // Validate other "string" constructor
-    std::string pTimeStr04 = "2012-12-25T13:25:36,123456789123456789z";
-    karabo::util::Epochstamp t10 = karabo::util::Epochstamp(pTimeStr04);
-
-    CPPUNIT_ASSERT(t10.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t10.getFractionalSeconds() == 123456789123456789);
-
-
-    // Validate other "string" constructor
-    std::string pTimeStr05 = "2012-12-25T13:25:36,123456789123456789+00:00";
-    karabo::util::Epochstamp t11 = karabo::util::Epochstamp(pTimeStr05);
-
-    CPPUNIT_ASSERT(t11.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t11.getFractionalSeconds() == 123456789123456789);
-
-    // Validate other "string" constructor
-    std::string pTimeStr06 = "2012-12-25T13:25:36+00:00";
-    karabo::util::Epochstamp t12 = karabo::util::Epochstamp(pTimeStr06);
-
-    CPPUNIT_ASSERT(t12.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t12.getFractionalSeconds() == 0);
+    // Validate Compact strings
+    validateStringConstructor("19850120T232050.789333123456789123", expectedSeconds, 789333123456789123ULL, true, "");
+    validateStringConstructor("19850120T232050", expectedSeconds, 0ULL, true, "");
+    validateStringConstructor("19850120T232050,123", expectedSeconds, 123ULL, true, "");
+    validateStringConstructor("19850120T232050.123", expectedSeconds, 123ULL, true, "");
+    validateStringConstructor("19850120T232050.123z", expectedSeconds, 123ULL, true, "");
+    validateStringConstructor("19850120T232050z", expectedSeconds, 0ULL, true, "");
+    validateStringConstructor("19850120T232050Z", expectedSeconds, 0ULL, true, "");
+    validateStringConstructor("19850120T232050+0000", expectedSeconds, 0ULL, true, "");
+    //
+    validateStringConstructor("19850120T232050-0700", expectedSecondsSinceEpochMinos7hULL, 0ULL, true, "");
+    validateStringConstructor("19850120T232050+0330", expectedSecondsSinceEpochPlus3h30mULL, 0ULL, true, "");
 
 }
 
 
 void Epochstamp_Test::testToIso8601String() {
 
-    // ISO8601 compact version
-    std::string pTimeStr01 = "20121225T132536.789333123456789123";
-    karabo::util::Epochstamp t01 = karabo::util::Epochstamp(pTimeStr01);
+    // Validate "UNIVERSAL" compact ISO8601 format 
+    validateStringConstructor("20121225T132536.789333123456789123", 1356441936ULL, 789333123456789123ULL, true, "20121225T132536.789333123456789123");
+    validateStringConstructor("2012-12-25T13:25:36.789333123456789123", 1356441936ULL, 789333123456789123ULL, true, "20121225T132536.789333123456789123");
 
-    CPPUNIT_ASSERT(t01.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t01.getFractionalSeconds() == 789333123456789123);
-
-    // Validate "UNIVERSAL" format
-    std::string pTimeConvertedStr01 = t01.toIso8601(ATTOSEC);
-    CPPUNIT_ASSERT(pTimeConvertedStr01 == pTimeStr01);
-
-
-    /**/
-    // ISO8601 extended version
-    std::string pTimeStr02 = "2012-12-25T13:25:36.123456789123456789";
-    karabo::util::Epochstamp t02 = karabo::util::Epochstamp(pTimeStr02);
-
-    CPPUNIT_ASSERT(t02.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t02.getFractionalSeconds() == 123456789123456789);
-
-    // Validate "UNIVERSAL" format
-    std::string pTimeConvertedStr02 = t02.toIso8601(ATTOSEC, true);
-    CPPUNIT_ASSERT(pTimeConvertedStr02 == pTimeStr02);
-
-    //std::cout << endl << "lmaia: t02.getSeconds() = " << t02.getSeconds();
-    //std::cout << endl << "lmaia: t02.getFractionalSeconds() = " << t02.getFractionalSeconds();
-    //std::cout << endl << "lmaia: pTimeConvertedStr02 = " << pTimeConvertedStr02;
+    // Validate "UNIVERSAL" extended ISO8601 format 
+    validateStringConstructor("2012-12-25T13:25:36.123456789123456789", 1356441936ULL, 123456789123456789ULL, false, "2012-12-25T13:25:36.123456789123456789");
+    validateStringConstructor("20121225T132536.123456789123456789", 1356441936ULL, 123456789123456789ULL, false, "2012-12-25T13:25:36.123456789123456789");
 
 }
 
