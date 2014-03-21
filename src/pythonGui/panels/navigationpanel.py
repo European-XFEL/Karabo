@@ -89,28 +89,6 @@ class NavigationPanel(QWidget):
     def onSelectNewNavigationItem(self, devicePath):
         self.__twNavigation.selectItem(devicePath)
 
-
-    # TODO: this is not working anymore due to change of Model-View-Controller
-    #def onSchemaFromFileAvailable(self):
-    #    #filename
-    #    filename = QFileDialog.getOpenFileName(None, "Open Master Configuration", QDir.tempPath(), "XML-Schema (*.xs *.xsd)")
-    #    file = QFile(filename)
-    #    if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-    #        return
-
-    #    schema = ""
-    #    while file.atEnd() == False:
-    #        schema.append(file.readLine())
-
-    #    fi = QFileInfo(filename)
-    #    rootKey = str(fi.baseName())
-    #    model = self.__twNavigation.model()
-    #    rootItem = model.invisibleRootItem()
-    #    rootItem.fullKey = rootKey
-    #    itemInfo = dict(id=-1, name=rootKey, key=rootKey, schema=schema, type=NavigationItemTypes.CLASS)
-    #    Manager().onNewNavigationItem(itemInfo)
-
-
    
     def onGlobalAccessLevelChanged(self):
         self.__twNavigation.model().globalAccessLevelChanged()
