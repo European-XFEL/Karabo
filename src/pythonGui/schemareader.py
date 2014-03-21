@@ -29,7 +29,6 @@ class Type(hashtypes.Type):
             item.classAlias = "Selection Field"
             item.enumeration = attrs["options"]
             item.setIcon(0, QIcon(":enum"))
-            print "populateItem", item.internalKey, item.enumeration
         else:
             item.enumeration = None
         component = None
