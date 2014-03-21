@@ -1,3 +1,9 @@
+#############################################################################
+# Author: <kerstin.weger@xfel.eu>
+# Created on May 4, 2013
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
 import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
@@ -23,6 +29,7 @@ class Type(hashtypes.Type):
             item.classAlias = "Selection Field"
             item.enumeration = attrs["options"]
             item.setIcon(0, QIcon(":enum"))
+            print "populateItem", item.internalKey, item.enumeration
         else:
             item.enumeration = None
         component = None

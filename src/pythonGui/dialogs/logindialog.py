@@ -71,7 +71,7 @@ class LoginDialog(QDialog):
         self.__leHostname = QLineEdit(hostname)
         formLayout.addRow("Hostname:", self.__leHostname)
         
-        if not port:
+        if port is None:
             port = "44444"
         else:
             port = str(port)
