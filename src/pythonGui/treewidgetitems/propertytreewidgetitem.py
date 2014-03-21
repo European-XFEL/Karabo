@@ -123,7 +123,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.alias is not None:
                 info["Alias"] = self.alias
             if self.tags is not None:
-                tagString = str()
+                tagString = ""
                 nbTags = len(self.tags)
                 for i in xrange(nbTags):
                     tagString += self.tags[i]

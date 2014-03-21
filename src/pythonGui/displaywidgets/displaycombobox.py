@@ -61,7 +61,7 @@ class DisplayComboBox(DisplayWidget):
         if value is None:
             return
         
-        index = self.__comboBox.findText(str(value))
+        index = self.__comboBox.findText(value)
         if index < 0 :
             return
         

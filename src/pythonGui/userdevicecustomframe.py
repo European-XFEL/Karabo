@@ -48,7 +48,7 @@ class UserDeviceCustomFrame(QFrame):
         self.setLineWidth(2)
         
         displayName = params.get('displayName')
-        self.__displayName = str(displayName)
+        self.__displayName = displayName
         
         widthSize = 50
         heightSize = 35

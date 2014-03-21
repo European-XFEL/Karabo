@@ -1,3 +1,10 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on March 19, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
 import hashtypes
 
 from collections import OrderedDict
