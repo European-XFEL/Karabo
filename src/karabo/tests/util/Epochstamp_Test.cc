@@ -38,7 +38,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
                                                 const unsigned long long& expectedFractionalSecond,
                                                 bool isCompactString,
                                                 const std::string& expectedToIso8601) {
-    bool writeToClog = true;
+    bool writeToClog = false;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -69,17 +69,26 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     CPPUNIT_ASSERT(epo2.getFractionalSeconds() == expectedFractionalSecond);
 
 
+    std::string expectedToIso8601Ext = expectedToIso8601 + "Z";
     if (expectedToIso8601 != "") {
         if (isCompactString == true) {
             // Validate "UNIVERSAL" compact ISO8601 format
             if (writeToClog) std::clog << "[Compact] toIso8601(ATTOSEC) => " << expectedToIso8601 << " == " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
             CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC));
             CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC));
+            //
+            if (writeToClog) std::clog << "[Compact] toIso8601Ext(ATTOSEC) => " << expectedToIso8601Ext << " == " << epo.toIso8601Ext(ATTOSEC) << " == " << epo2.toIso8601Ext(ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC));
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC));
         } else {
             // Validate "UNIVERSAL" extended ISO8601 format
             if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << expectedToIso8601 << " == " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
             CPPUNIT_ASSERT(expectedToIso8601 == epo.toIso8601(ATTOSEC, true));
             CPPUNIT_ASSERT(expectedToIso8601 == epo2.toIso8601(ATTOSEC, true));
+            //
+            if (writeToClog) std::clog << "[Extended] toIso8601Ext(ATTOSEC) => " << expectedToIso8601Ext << " == " << epo.toIso8601Ext(ATTOSEC) << " == " << epo2.toIso8601Ext(ATTOSEC) << std::endl;
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC, true));
+            CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
         }
     }
 
@@ -170,9 +179,9 @@ void Epochstamp_Test::testConstructors() {
     // Validate Extended strings
     validateStringConstructor("1985-01-20T23:20:50.789333123456789123", expectedSeconds, 789333123456789123ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50", expectedSeconds, 0ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50,123", expectedSeconds, 123ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50.123", expectedSeconds, 123ULL, false, "");
-    validateStringConstructor("1985-01-20T23:20:50.123z", expectedSeconds, 123ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50,123", expectedSeconds, 123000000000000000ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123", expectedSeconds, 123000000000000000ULL, false, "");
+    validateStringConstructor("1985-01-20T23:20:50.123z", expectedSeconds, 123000000000000000ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50z", expectedSeconds, 0ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50Z", expectedSeconds, 0ULL, false, "");
     validateStringConstructor("1985-01-20T23:20:50+00:00", expectedSeconds, 0ULL, false, "");
@@ -183,9 +192,9 @@ void Epochstamp_Test::testConstructors() {
     // Validate Compact strings
     validateStringConstructor("19850120T232050.789333123456789123", expectedSeconds, 789333123456789123ULL, true, "");
     validateStringConstructor("19850120T232050", expectedSeconds, 0ULL, true, "");
-    validateStringConstructor("19850120T232050,123", expectedSeconds, 123ULL, true, "");
-    validateStringConstructor("19850120T232050.123", expectedSeconds, 123ULL, true, "");
-    validateStringConstructor("19850120T232050.123z", expectedSeconds, 123ULL, true, "");
+    validateStringConstructor("19850120T232050,123", expectedSeconds, 123000000000000000ULL, true, "");
+    validateStringConstructor("19850120T232050.123", expectedSeconds, 123000000000000000ULL, true, "");
+    validateStringConstructor("19850120T232050.123z", expectedSeconds, 123000000000000000ULL, true, "");
     validateStringConstructor("19850120T232050z", expectedSeconds, 0ULL, true, "");
     validateStringConstructor("19850120T232050Z", expectedSeconds, 0ULL, true, "");
     validateStringConstructor("19850120T232050+0000", expectedSeconds, 0ULL, true, "");
@@ -201,78 +210,67 @@ void Epochstamp_Test::testToIso8601String() {
     // Validate "UNIVERSAL" compact ISO8601 format 
     validateStringConstructor("20121225T132536.789333123456789123", 1356441936ULL, 789333123456789123ULL, true, "20121225T132536.789333123456789123");
     validateStringConstructor("2012-12-25T13:25:36.789333123456789123", 1356441936ULL, 789333123456789123ULL, true, "20121225T132536.789333123456789123");
-    //validateStringConstructor("2012-12-25T13:25:36.100", 1356441936ULL, 100ULL, true, "20121225T132536.100000000000000000");
-    //validateStringConstructor("2012-12-25T13:25:36.001", 1356441936ULL, 001ULL, true, "20121225T132536.001000000000000000");
-    //validateStringConstructor("2012-12-25T13:25:36.000000000000000001", 1356441936ULL, 000000000000000001ULL, true, "20121225T132536.000000000000000001");
-    //validateStringConstructor("2012-12-25T13:25:36.000000000000000123", 1356441936ULL, 000000000000000123ULL, true, "20121225T132536.000000000000000123");
-    
+    validateStringConstructor("2012-12-25T13:25:36.100", 1356441936ULL, 100000000000000000ULL, true, "20121225T132536.100000000000000000");
+    validateStringConstructor("2012-12-25T13:25:36.001", 1356441936ULL, 1000000000000000ULL, true, "20121225T132536.001000000000000000");
+    validateStringConstructor("2012-12-25T13:25:36.000000000000000001", 1356441936ULL, 1ULL, true, "20121225T132536.000000000000000001");
+    validateStringConstructor("2012-12-25T13:25:36.000000000000000123", 1356441936ULL, 123ULL, true, "20121225T132536.000000000000000123");
+    validateStringConstructor("2012-12-25T13:25:36.123456789", 1356441936ULL, 123456789000000000ULL, true, "20121225T132536.123456789000000000");
+    validateStringConstructor("2012-12-25T13:25:36.000123456789", 1356441936ULL, 123456789000000ULL, true, "20121225T132536.000123456789000000");
+
     // Validate "UNIVERSAL" extended ISO8601 format 
     validateStringConstructor("2012-12-25T13:25:36.123456789123456789", 1356441936ULL, 123456789123456789ULL, false, "2012-12-25T13:25:36.123456789123456789");
     validateStringConstructor("20121225T132536.123456789123456789", 1356441936ULL, 123456789123456789ULL, false, "2012-12-25T13:25:36.123456789123456789");
-    //validateStringConstructor("20121225T132536.100", 1356441936ULL, 100ULL, false, "2012-12-25T13:25:36.100000000000000000");
-    //validateStringConstructor("20121225T132536.001", 1356441936ULL, 001ULL, false, "2012-12-25T13:25:36.001000000000000000");
-    //validateStringConstructor("20121225T132536.000000000000000001", 1356441936ULL, 000000000000000001ULL, false, "2012-12-25T13:25:36.000000000000000001");
-    //validateStringConstructor("20121225T132536.000000000000000123", 1356441936ULL, 000000000000000123ULL, false, "2012-12-25T13:25:36.000000000000000123");
-
+    validateStringConstructor("20121225T132536.100", 1356441936ULL, 100000000000000000ULL, false, "2012-12-25T13:25:36.100000000000000000");
+    validateStringConstructor("20121225T132536.001", 1356441936ULL, 1000000000000000ULL, false, "2012-12-25T13:25:36.001000000000000000");
+    validateStringConstructor("20121225T132536.000000000000000001", 1356441936ULL, 1ULL, false, "2012-12-25T13:25:36.000000000000000001");
+    validateStringConstructor("20121225T132536.000000000000000123", 1356441936ULL, 123ULL, false, "2012-12-25T13:25:36.000000000000000123");
+    validateStringConstructor("20121225T132536.000123456789", 1356441936ULL, 123456789000000ULL, true, "20121225T132536.000123456789000000");
 }
 
 
-void Epochstamp_Test::testToIso8601StringExternal() {
+void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
+                                                const std::string& format,
+                                                const std::string& expectedStringOutput) {
+    bool writeToClog = false;
 
-    // ISO8601 compact version
-    std::string pTimeStr01 = "20121225T132536.789333123456789123";
-    karabo::util::Epochstamp t01 = karabo::util::Epochstamp(pTimeStr01);
-
-    CPPUNIT_ASSERT(t01.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t01.getFractionalSeconds() == 789333123456789123);
-
-    // Validate "UNIVERSAL" format
-    std::string pTimeConvertedStr01 = t01.toIso8601Ext(ATTOSEC);
-    CPPUNIT_ASSERT(pTimeConvertedStr01 == pTimeStr01 + "Z");
+    if (writeToClog) {
+        std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
+        std::clog << "Format => " << format << " |Expected output => " << expectedStringOutput << std::endl;
+        std::clog << "----------------------------------------------------------" << std::endl;
+    }
 
 
-    /**/
-    // ISO8601 extended version
-    std::string pTimeStr02 = "2012-12-25T13:25:36.123456789123456789";
-    karabo::util::Epochstamp t02 = karabo::util::Epochstamp(pTimeStr02);
+    // Constructor
+    karabo::util::Epochstamp epo;
+    if (pTime == "") {
+        //Empty constructor
+        epo = karabo::util::Epochstamp();
+    } else {
+        //String constructor
+        epo = karabo::util::Epochstamp(pTime);
+    }
 
-    CPPUNIT_ASSERT(t02.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t02.getFractionalSeconds() == 123456789123456789);
+    std::string returnFormatedString;
+    if (format == "") {
+        returnFormatedString = epo.toFormattedString();
+    } else {
+        returnFormatedString = epo.toFormattedString(format);
+    }
 
-    // Validate "UNIVERSAL" format
-    std::string pTimeConvertedStr02 = t02.toIso8601Ext(ATTOSEC, true);
-    CPPUNIT_ASSERT(pTimeConvertedStr02 == pTimeStr02 + "Z");
-
+    if (writeToClog) std::clog << "epo.toFormattedString(" << format << ") => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
+    CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
 }
 
 
 void Epochstamp_Test::testToFormattedString() {
 
-    // ISO8601 compact version
-    std::string pTimeStr01 = "20121225T132536.789333123456789123";
-    karabo::util::Epochstamp t01 = karabo::util::Epochstamp(pTimeStr01);
+    std::string pTime = "20121225T132536.789333123456789123";
 
-    CPPUNIT_ASSERT(t01.getSeconds() == 1356441936);
-    CPPUNIT_ASSERT(t01.getFractionalSeconds() == 789333123456789123);
-
-    // Validate "Human Readable" format "%Y-%b-%d %H:%M:%S"
-    std::string pReadableTime01 = "2012-Dec-25 13:25:36";
-    std::string timestampReadableStr01 = t01.toFormattedString(); //Default format is: "%Y-%b-%d %H:%M:%S"
-    CPPUNIT_ASSERT(pReadableTime01 == timestampReadableStr01);
-
-    // Validate "Human Readable" format "%Y/%m/%d %H:%M:%S"
-    std::string pReadableTime02 = "2012/12/25 13:25:36";
-    std::string timestampReadableStr02 = t01.toFormattedString("%Y/%m/%d %H:%M:%S");
-    CPPUNIT_ASSERT(pReadableTime02 == timestampReadableStr02);
-
-    // Validate "Human Readable" format "%Y/%m/%d"
-    std::string pReadableTime03 = "2012/12/25";
-    std::string timestampReadableStr03 = t01.toFormattedString("%Y/%m/%d");
-    CPPUNIT_ASSERT(pReadableTime03 == timestampReadableStr03);
-
-    // Validate "Human Readable" format "%c" - commented out as it depends on current locale settings
-    //    std::string pReadableTime04 = "Tue 25 Dec 2012 01:25:36 PM ";
-    //    std::string timestampReadableStr04 = t01.toFormattedString("%c");
-    //    CPPUNIT_ASSERT(pReadableTime04 == timestampReadableStr04);
+    validateToFormattedString(pTime, "", "2012-Dec-25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", "2012/12/25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d", "2012/12/25");
+    validateToFormattedString(pTime, "%c", "Tue 25 Dec 2012 01:25:36 PM ");
+    validateToFormattedString(pTime, "%H:%M:%S", "13:25:36");
+    validateToFormattedString(pTime, "%H:%M:%S.%f", "13:25:36.789333");
 }
 
