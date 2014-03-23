@@ -20,7 +20,6 @@ class Epochstamp_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(testConstructors);
     //
     CPPUNIT_TEST(testToIso8601String);
-    CPPUNIT_TEST(testToIso8601StringExternal);
     CPPUNIT_TEST(testToFormattedString);
 
     CPPUNIT_TEST_SUITE_END();
@@ -35,7 +34,6 @@ private:
     void testConstructors();
     //
     void testToIso8601String();
-    void testToIso8601StringExternal();
     void testToFormattedString();
 
     //Auxiliary Methods
@@ -44,6 +42,9 @@ private:
                                    const unsigned long long& expectedFractionalSecond,
                                    bool isCompactString,
                                    const std::string& expectedToIso8601);
+    void validateToFormattedString(const std::string& pTime,
+                                   const std::string& format,
+                                   const std::string& expectedStringOutput);
 
 };
 
