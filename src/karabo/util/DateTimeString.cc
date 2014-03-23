@@ -16,7 +16,7 @@ namespace karabo {
         DateTimeString::DateTimeString() :
         m_dateString("19700101"),
         m_timeString("000000"),
-        m_fractionalSecondString(".0"),
+        m_fractionalSecondString("0"),
         m_timeZoneString("+0000"),
         m_dateTimeString("19700101T000000"),
         m_dateTimeStringAll("19700101T000000+0000"),
@@ -40,7 +40,7 @@ namespace karabo {
         m_dateTimeString(inputDateStr + "T" + inputTimeStr) {
 
             if (m_fractionalSecondString == "") {
-                m_fractionalSecondString = ".0";
+                m_fractionalSecondString = "0";
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + inputTimeZoneStr;
             } else {
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
@@ -132,7 +132,7 @@ namespace karabo {
             // Goal variables
             std::string date = "";
             std::string time = "";
-            std::string fractionalSeconds = ".0";
+            std::string fractionalSeconds = "0";
             std::string timezone = "";
 
             //Auxiliary variables
@@ -170,10 +170,10 @@ namespace karabo {
             //Separate Time (hours, minutes, seconds and fractional seconds) from the string
             if (rest.find('.') != std::string::npos) {
                 pos = rest.find('.');
-                fractionalSeconds = rest.substr(pos, rest.size());
+                fractionalSeconds = rest.substr(pos + 1, rest.size());
                 time = rest.substr(0, pos);
             } else {
-                fractionalSeconds = ".0";
+                fractionalSeconds = "0";
                 time = rest;
             }
 
