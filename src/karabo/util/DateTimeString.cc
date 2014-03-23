@@ -16,7 +16,7 @@ namespace karabo {
         DateTimeString::DateTimeString() :
         m_dateString("19700101"),
         m_timeString("000000"),
-        m_fractionalSecondString("0"),
+        m_fractionalSecondString("000000000000000000"),
         m_timeZoneString("+0000"),
         m_dateTimeString("19700101T000000"),
         m_dateTimeStringAll("19700101T000000+0000"),
@@ -177,6 +177,11 @@ namespace karabo {
                 time = rest;
             }
 
+            //Calculate fractional Atto second
+            std::ostringstream oss;
+            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
+            fractionalSeconds = oss.str();
+
 
             // Create DateTimeString instance to be returned
             return DateTimeString(date, time, fractionalSeconds, timezone);
@@ -186,7 +191,7 @@ namespace karabo {
         const std::locale formats[] = {
             //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S%z")), //2012-12-25T13:25:36-0700
             //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S.%f%z")), //19951231T235959.9942+0000
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%.f")), //19951231T235959.789333123456789123
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%.%f")), //19951231T235959.789333(123456789123)
             std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")) //2012-12-25T13:25:36
         };
         const size_t formats_n = sizeof (formats) / sizeof (formats[0]);

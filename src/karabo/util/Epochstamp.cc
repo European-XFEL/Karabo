@@ -55,7 +55,7 @@ namespace karabo {
             const unsigned long long secondsSinceEpoch = dts.getSecondsSinceEpoch();
             const unsigned long long fractionalSecond = dts.getFractionalSecondString<unsigned long long>(); //[Default is "0"]
 
-            *this = Epochstamp(secondsSinceEpoch, fractionalSecond * 100000000000000000); //Use other constructor
+            *this = Epochstamp(secondsSinceEpoch, fractionalSecond); //Use other constructor
         }
 
 
