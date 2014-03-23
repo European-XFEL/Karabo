@@ -97,7 +97,7 @@ void DateTimeString_Test::validateConstructor(const std::string& pTime,
 void DateTimeString_Test::testConstructors() {
 
     // Validate "empty" constructor
-    validateConstructor("", "19700101", "000000", ".0", "+0000", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
+    validateConstructor("", "19700101", "000000", "0", "+0000", "19700101T000000", boost::lexical_cast<std::string>(0ULL));
 
     unsigned long long expectedSecondsSinceEpochULL = 475111250;
     unsigned long long expectedSecondsSinceEpochMinos7hULL = 475136450; //475111250 + (60*60*7)
@@ -112,33 +112,33 @@ void DateTimeString_Test::testConstructors() {
     std::string expectedDateExt = "1985-01-20";
     std::string expectedTimeExt = "23:20:50";
     std::string expectedDateAndTimeExt = "1985-01-20T23:20:50";
-    validateConstructor("1985-01-20T23:20:50.789333123456789123", expectedDateExt, expectedTimeExt, ".789333123456789123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50", expectedDateExt, expectedTimeExt, ".0", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50,123", expectedDateExt, expectedTimeExt, ".123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50.123", expectedDateExt, expectedTimeExt, ".123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50.123z", expectedDateExt, expectedTimeExt, ".123", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50z", expectedDateExt, expectedTimeExt, ".0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50Z", expectedDateExt, expectedTimeExt, ".0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
-    validateConstructor("1985-01-20T23:20:50+00:00", expectedDateExt, expectedTimeExt, ".0", "+00:00", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50.789333123456789123", expectedDateExt, expectedTimeExt, "789333123456789123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50", expectedDateExt, expectedTimeExt, "0", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50,123", expectedDateExt, expectedTimeExt, "123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50.123", expectedDateExt, expectedTimeExt, "123", "", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50.123z", expectedDateExt, expectedTimeExt, "123", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50z", expectedDateExt, expectedTimeExt, "0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50Z", expectedDateExt, expectedTimeExt, "0", "Z", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
+    validateConstructor("1985-01-20T23:20:50+00:00", expectedDateExt, expectedTimeExt, "0", "+00:00", expectedDateAndTimeExt, expectedSecondsSinceEpoch);
     //
-    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, ".0", "-07:00", expectedDateAndTimeExt, expectedSecondsSinceEpochMinos7h);
-    validateConstructor("1985-01-20T23:20:50+03:30", expectedDateExt, expectedTimeExt, ".0", "+03:30", expectedDateAndTimeExt, expectedSecondsSinceEpochPlus3h30m);
+    validateConstructor("1985-01-20T23:20:50-07:00", expectedDateExt, expectedTimeExt, "0", "-07:00", expectedDateAndTimeExt, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("1985-01-20T23:20:50+03:30", expectedDateExt, expectedTimeExt, "0", "+03:30", expectedDateAndTimeExt, expectedSecondsSinceEpochPlus3h30m);
 
     // Validate Compact strings
     std::string expectedDateCom = "19850120";
     std::string expectedTimeCom = "232050";
     std::string expectedDateAndTimeCom = "19850120T232050";
-    validateConstructor("19850120T232050.789333123456789123", expectedDateCom, expectedTimeCom, ".789333123456789123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050", expectedDateCom, expectedTimeCom, ".0", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050,123", expectedDateCom, expectedTimeCom, ".123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050.123", expectedDateCom, expectedTimeCom, ".123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050.123z", expectedDateCom, expectedTimeCom, ".123", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050z", expectedDateCom, expectedTimeCom, ".0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050Z", expectedDateCom, expectedTimeCom, ".0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
-    validateConstructor("19850120T232050+0000", expectedDateCom, expectedTimeCom, ".0", "+0000", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.789333123456789123", expectedDateCom, expectedTimeCom, "789333123456789123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050", expectedDateCom, expectedTimeCom, "0", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050,123", expectedDateCom, expectedTimeCom, "123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.123", expectedDateCom, expectedTimeCom, "123", "", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050.123z", expectedDateCom, expectedTimeCom, "123", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050z", expectedDateCom, expectedTimeCom, "0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050Z", expectedDateCom, expectedTimeCom, "0", "Z", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
+    validateConstructor("19850120T232050+0000", expectedDateCom, expectedTimeCom, "0", "+0000", expectedDateAndTimeCom, expectedSecondsSinceEpoch);
     //
-    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, ".0", "-0700", expectedDateAndTimeCom, expectedSecondsSinceEpochMinos7h);
-    validateConstructor("19850120T232050+0330", expectedDateCom, expectedTimeCom, ".0", "+0330", expectedDateAndTimeCom, expectedSecondsSinceEpochPlus3h30m);
+    validateConstructor("19850120T232050-0700", expectedDateCom, expectedTimeCom, "0", "-0700", expectedDateAndTimeCom, expectedSecondsSinceEpochMinos7h);
+    validateConstructor("19850120T232050+0330", expectedDateCom, expectedTimeCom, "0", "+0330", expectedDateAndTimeCom, expectedSecondsSinceEpochPlus3h30m);
 
 }
 
