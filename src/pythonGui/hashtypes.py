@@ -443,6 +443,7 @@ class Any(Type):
 class None_(Type):
     @staticmethod
     def read(file):
+        file.readFormat('I') # ignore length
         return None
 
 
@@ -458,7 +459,7 @@ class None_(Type):
 
     @classmethod
     def write(cls, file, data):
-        return
+        file.writeFormat('I', 0)
 
 
 class VectorNone(Type):
