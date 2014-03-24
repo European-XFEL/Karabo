@@ -90,7 +90,8 @@ class EditableChoiceElement(EditableWidget):
             childItem = parentItem.child(i)
             if parentItem.updateNeeded == True:
                 if parentItem.isChoiceElement == True:
-                    if parentItem.defaultValue == childItem.text(0) :
+                    if parentItem.defaultValue is None or \
+                       parentItem.defaultValue == childItem.text(0):
                         childItem.updateNeeded = True
                         childItem.setHidden(False)
                     else:

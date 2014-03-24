@@ -57,7 +57,7 @@ class EditableDirectory(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            value = str()
+            value = ""
 
         self.__lePath.blockSignals(True)
         self.__lePath.setText(value)

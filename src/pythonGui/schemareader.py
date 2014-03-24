@@ -462,7 +462,7 @@ class SchemaReader(object):
         for i, k in enumerate(hash):
             childItem = self.parse(key + "." + k, hash[k], hash[k, ...], item)
 
-            if item.defaultValue:
+            if item.defaultValue is not None:
                 if k != item.defaultValue:
                     childItem.setHidden(True)
             else:
@@ -471,6 +471,9 @@ class SchemaReader(object):
 
             if item.editableComponent is not None:
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
+        # Set default value in choice combobox
+        item.onSetToDefault()
+        
         return item
 
 

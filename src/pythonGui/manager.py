@@ -29,7 +29,6 @@ from sqldatabase import SqlDatabase
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
-useOldVersion = True
 
 class DataNotifier(QObject):
     signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
@@ -40,11 +39,8 @@ class DataNotifier(QObject):
     def __init__(self, key, component):
         super(DataNotifier, self).__init__()
 
-        if useOldVersion:
-            self.components = [] # list of components
-        else:
-            self.signalUpdateComponent.connect(self.onValueChanged)
-            self.signalUpdateDisplayValue.connect(self.onValueChanged)
+        self.signalUpdateComponent.connect(self.onValueChanged)
+        self.signalUpdateDisplayValue.connect(self.onValueChanged)
         self.addComponent(key, component)
 
 
@@ -56,19 +52,10 @@ class DataNotifier(QObject):
     def addComponent(self, key, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
-        
-        if useOldVersion:
-            if len(self.components) > 0:
-                value = self.components[0].value
-                self.signalUpdateComponent.emit(key, value)
-                self.signalUpdateDisplayValue.emit(key, value)
-                
-                # Add widget to list
-                self.components.append(component)
-        else:
-            if hasattr(self, "value"):
-                self.signalUpdateComponent.emit(key, self.value, self.timestamp)
-                self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
+
+        if hasattr(self, "value"):
+            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
+            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
 
 
     def updateDisplayValue(self, key, value, timestamp):
@@ -159,25 +146,19 @@ class _Manager(QObject):
 
     
     def _changeClassData(self, key, value):
-        serverClassIdParamKey = key.split(".")
-        if len(serverClassIdParamKey) < 3:
-            return
+        serverId, classId, property = key.split(".", 2)
         
-        serverId = serverClassIdParamKey[0]
-        classId = serverClassIdParamKey[1]
-        paramKey = serverClassIdParamKey[2]
-        
-        if "@" in paramKey:
+        if "@" in property:
             # Merge attribute value
-            keys = paramKey.split("@")
-            parameterKey = keys[0]
-            attributeKey = keys[1]
-            
-            self.serverClassData[serverId, classId].setAttribute(parameterKey, attributeKey, value)
+            propertyKey, attributeKey = property.split("@")
+            self.serverClassData[serverId, classId].setAttribute(propertyKey, attributeKey, value)
         else:
-            self.serverClassData[serverId, classId].set(paramKey, value)
+            self.serverClassData[serverId, classId].set(property, value)
     
     
+            
+        # Inform network
+        self.signalReconfigure.emit(deviceId, property, value)
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
@@ -249,7 +230,7 @@ class _Manager(QObject):
             elif isinstance(value, list):
                 # TODO: needs to be implemented
                 for i in xrange(len(value)):
-                    internalPath = internalPath + "[" + str(i) + "]"
+                    internalPath = "{}[{}]".format(internalPath, i)
                     hashValue = value[i]
 
 
@@ -536,13 +517,13 @@ class _Manager(QObject):
     
     
     def handleDeviceSchema(self, instanceInfo):
-        deviceId = headerHash['deviceId']
+        deviceId = instanceInfo['deviceId']
         if deviceId not in self.deviceData:
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = config['schema']
+        schema = instanceInfo['schema']
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.configuration.state.signalUpdateComponent.connect(

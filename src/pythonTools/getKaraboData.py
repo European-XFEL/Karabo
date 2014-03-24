@@ -23,6 +23,7 @@ def checkDeviceExists():
 def fromTimeStringToUtcNaiveDate(t):
     date = parser.parse(t)
     if date.tzname() is None:
+        print "Assuming local time:", system_tz
 	date = date.replace(tzinfo=system_tz)
     date_utc = date.astimezone(pytz.utc)
     naive_date = date_utc.replace(tzinfo=None)
@@ -32,10 +33,7 @@ def fromTimeStringToUtcString(t):
     date = parser.parse(t)
     if date.tzname() is None:
         date = date.replace(tzinfo=system_tz)
-    try:
-        date = date.astimezone(pytz.utc)
-    except:
-        print "Assuming UTC time."
+    date = date.astimezone(pytz.utc)
     return date.isoformat() + ".0"
 
 

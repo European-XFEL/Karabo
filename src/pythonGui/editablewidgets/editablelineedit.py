@@ -55,7 +55,7 @@ class EditableLineEdit(EditableWidget):
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
-            value = str()
+            value = ""
         
         self.__lineEdit.blockSignals(True)
         self.__lineEdit.setText(value)

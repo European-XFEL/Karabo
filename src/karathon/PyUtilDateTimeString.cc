@@ -56,7 +56,6 @@ void exportPyUtilDateTimeString() {
     dts.staticmethod("isStringKaraboValidIso8601");
 
     dts.def("getSecondsSinceEpoch"
-            , (const unsigned long long & (DateTimeString::*)() const) (&DateTimeString::getSecondsSinceEpoch)
-            , bp::return_value_policy< bp::copy_const_reference >());
+            , (const unsigned long long (DateTimeString::*)()) (&DateTimeString::getSecondsSinceEpoch));
 
 }

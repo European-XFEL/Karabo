@@ -505,9 +505,9 @@ class LogWidget(QWidget):
             description = model.record(i).value("description")
             additionalDescription = model.record(i).value("additionalDescription")
 
-            logMessage = str(id) + " | " + dateTime + " | " + messageType \
-                               + " | " + instanceId + " | " + description \
-                               + " | " + additionalDescription + "#\n"
+            logMessage = "{} | {} | {} | {} | {} | {}#\n" \
+                         .format(id, dateTime, messageType, instanceId,
+                                 description, additionalDescription)
             out << logMessage
         logFile.close()
 
@@ -594,7 +594,8 @@ class LogSqlQueryModel(QSqlQueryModel):
     signalViewNeedsSortUpdate = pyqtSignal(str) # queryText
     signalRestoreLastSelection = pyqtSignal(object) # modelIndex
 
-    def __init__(self, parent=None, preQueryText=str(), sortByColumn=0, sortOrder=Qt.AscendingOrder):
+    def __init__(self, parent=None, preQueryText="", sortByColumn=0,
+                 sortOrder=Qt.AscendingOrder):
         super(LogSqlQueryModel, self).__init__(parent)
 
         self.preQueryText = preQueryText
@@ -603,7 +604,7 @@ class LogSqlQueryModel(QSqlQueryModel):
         self.lastSelectedId = None
 
 
-    def setLogQuery(self, queryText=str()):
+    def setLogQuery(self, queryText=""):
         if len(queryText) == 0:
             queryText = "SELECT id, dateTime, messageType, instanceId, description, additionalDescription FROM tLog;"
 
@@ -721,7 +722,7 @@ class LogThread(QThread):
 
     def getLogDataBlock(self):
         # Put all data from current queue into string
-        logBlock = str()
+        logBlock = ""
         with QMutexLocker(self.logDataMutex):
             while not self.logDataQueue.empty():
                 logBlock += self.logDataQueue.get()
@@ -749,7 +750,7 @@ class LogThread(QThread):
             if len(logMsgList) > 4:
                 additionalDescription = logMsgList[4]
             else:
-                additionalDescription = str()
+                additionalDescription = ""
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
         # Performance test
@@ -759,7 +760,7 @@ class LogThread(QThread):
         #    i -= 1
 
 
-    def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=str()):
+    def insertInto(self, dateTime, msgType, instanceId, description, additionalDescription=""):
         # Check number of rows in database
         queryText = "SELECT count(1) FROM tLog;"
         query = QSqlQuery(queryText, Manager().sqlDatabase)
