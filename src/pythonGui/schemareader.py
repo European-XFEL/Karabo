@@ -264,7 +264,7 @@ class SchemaReader(object):
                     AccessMode.INITONLY | AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
-            if attrs['accessMode'] & AccessMode.RECONFIGURABLE:
+            if False: #attrs['accessMode'] & AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
             else:
                 component = ChoiceComponent

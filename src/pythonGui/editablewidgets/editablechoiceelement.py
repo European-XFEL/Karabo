@@ -70,7 +70,7 @@ class EditableChoiceElement(EditableWidget):
 
     @property
     def value(self):
-        return Hash(self.__comboBox.currentText(), None)
+        return Hash(self.__comboBox.currentText(), Hash())
 
 
     def _updateChoiceItems(self, index):
