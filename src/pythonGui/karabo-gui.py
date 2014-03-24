@@ -14,12 +14,14 @@ sip.setapi("QVariant", 2)
 
 import sys
 import icons
+import numpy
 
 from mainwindow import MainWindow
 
 from PyQt4.QtGui import *
 
 if __name__ == '__main__':
+    numpy.set_printoptions(threshold=10)
     app = QApplication(sys.argv)
     icons.init()
 
