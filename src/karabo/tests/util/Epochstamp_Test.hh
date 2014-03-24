@@ -44,6 +44,7 @@ private:
                                    const std::string& expectedToIso8601);
     void validateToFormattedString(const std::string& pTime,
                                    const std::string& format,
+                                   const std::string& pTimeDesiredTimeZone,
                                    const std::string& expectedStringOutput);
 
 };

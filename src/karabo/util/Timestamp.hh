@@ -55,8 +55,8 @@ namespace karabo {
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
              * 
-             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
-             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string (extended or compact)
              */
             std::string toIso8601(TIME_UNITS precision = MICROSEC, bool extended = false) const;
@@ -64,8 +64,8 @@ namespace karabo {
             /**
              * Generates a sting (respecting ISO-8601) for object time for EXTERNAL usage ("%Y%m%dT%H%M%S%f%z" => "20121225T132536.789333[123456789123]Z")
              * 
-             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
-             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
              */
             std::string toIso8601Ext(TIME_UNITS precision = MICROSEC, bool extended = false) const;
@@ -73,13 +73,16 @@ namespace karabo {
             /**
              * Formats to specified format time stored in the object
              * 
-             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/)
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
              * @return formated string
              */
-            std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
+            std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
 
             /**
-             * Generates a timestamp as double with seconds.fractions format
+             * Generates a timestamp as double with seconds.fractional format (fractional precision == MICROSEC)
+             * Function necessary to use in graphs plotting in Python code (MICROSEC precision is enough)
+             * 
              * @return A double value with the decimal point indicating fractions of seconds
              */
             double toTimestamp(TIME_UNITS precision = MICROSEC) const;

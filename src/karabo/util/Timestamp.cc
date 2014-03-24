@@ -43,8 +43,8 @@ namespace karabo {
         }
 
 
-        std::string Timestamp::toFormattedString(const std::string& format) const {
-            return m_epochstamp.toFormattedString(format);
+        std::string Timestamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
+            return m_epochstamp.toFormattedString(format, localTimeZone);
         }
 
 

@@ -38,7 +38,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
                                                 const unsigned long long& expectedFractionalSecond,
                                                 bool isCompactString,
                                                 const std::string& expectedToIso8601) {
-    bool writeToClog = false;
+    bool writeToClog = true;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -230,8 +230,10 @@ void Epochstamp_Test::testToIso8601String() {
 
 void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
                                                 const std::string& format,
+                                                const std::string& pTimeDesiredTimeZone,
                                                 const std::string& expectedStringOutput) {
     bool writeToClog = false;
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -252,12 +254,20 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
 
     std::string returnFormatedString;
     if (format == "") {
-        returnFormatedString = epo.toFormattedString();
+        if (pTimeDesiredTimeZone == utcTimeZone) {
+            returnFormatedString = epo.toFormattedString();
+        } else {
+            returnFormatedString = epo.toFormattedString("%Y-%b-%d %H:%M:%S", pTimeDesiredTimeZone);
+        }
     } else {
-        returnFormatedString = epo.toFormattedString(format);
+        if (pTimeDesiredTimeZone == utcTimeZone) {
+            returnFormatedString = epo.toFormattedString(format);
+        } else {
+            returnFormatedString = epo.toFormattedString(format, pTimeDesiredTimeZone);
+        }
     }
 
-    if (writeToClog) std::clog << "epo.toFormattedString(" << format << ") => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
+    if (writeToClog) std::clog << "epo.toFormattedString('" << format << "', '" << pTimeDesiredTimeZone << "') => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
     CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
 }
 
@@ -265,12 +275,28 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
 void Epochstamp_Test::testToFormattedString() {
 
     std::string pTime = "20121225T132536.789333123456789123";
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
-    validateToFormattedString(pTime, "", "2012-Dec-25 13:25:36");
-    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", "2012/12/25 13:25:36");
-    validateToFormattedString(pTime, "%Y/%m/%d", "2012/12/25");
-    validateToFormattedString(pTime, "%c", "Tue 25 Dec 2012 01:25:36 PM ");
-    validateToFormattedString(pTime, "%H:%M:%S", "13:25:36");
-    validateToFormattedString(pTime, "%H:%M:%S.%f", "13:25:36.789333");
+    validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, "2012/12/25");
+    validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM ");
+    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36");
+    validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, "13:25:36.789333");
+
+
+    std::string pTime2 = "1985-01-20T23:20:50-07:00";
+    validateToFormattedString(pTime2, "", utcTimeZone, "1985-Jan-21 06:20:50");
+    validateToFormattedString(pTime2, "", "+03:30", "1985-Jan-21 09:50:50");
+    validateToFormattedString(pTime2, "", "-07:00", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime2, "", "+01:00", "1985-Jan-21 07:20:50");
+
+
+    std::string pTime3 = "1985-01-20T23:20:50+03:30";
+    validateToFormattedString(pTime3, "", utcTimeZone, "1985-Jan-20 19:50:50");
+    validateToFormattedString(pTime3, "", "+03:30", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime3, "", "-07:00", "1985-Jan-20 12:50:50");
+    validateToFormattedString(pTime3, "", "+01:00", "1985-Jan-20 20:50:50");
+
 }
 
