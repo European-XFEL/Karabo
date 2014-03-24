@@ -124,37 +124,75 @@ namespace karabo {
 
 
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
-            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-            using namespace boost::posix_time;
-
-            if (0) {
-                // The boost minimum unit is nanosecond:
-                // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
-                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
-                #if defined(BOOST_DATE_TIME_HAS_NANOSECONDS)
-                time_point += nanoseconds(m_fractionalSeconds / NANOSEC);
-                #else
-                time_point += microseconds(m_fractionalSeconds / MICROSEC);
-                #endif
-                return extended ? to_iso_extended_string(time_point) : to_iso_string(time_point);
-            }
-
-            // Another solution is to print out the time in seconds 
-            // and then print the fractional part with the desired precision. 
-            // Could be microseconds, nanoseconds, or any thing else we want.
-            {
-                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
-
-                ostringstream oss;
-                oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
-                        << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
-                return oss.str();
-            }
+            return this->toIso8601Internal(precision, extended, "");
         }
 
 
         std::string Epochstamp::toIso8601Ext(TIME_UNITS precision, bool extended) const {
-            return this->toIso8601(precision, extended) + "Z";
+            return this->toIso8601Internal(precision, extended, "Z");
+        }
+
+
+        std::string Epochstamp::toIso8601Internal(TIME_UNITS precision, bool extended, const std::string& localTimeZone) const {
+
+            std::string timeZoneSignal;
+            int timeZoneHours;
+            int timeZoneMinutes;
+
+            if (localTimeZone == "Z" || localTimeZone == "z" || localTimeZone == "") {
+                timeZoneSignal = "+";
+                timeZoneHours = 0;
+                timeZoneMinutes = 0;
+            } else {
+
+                std::string timeZoneHour;
+                std::string timeZoneMinute;
+
+                if (localTimeZone.find(':') != std::string::npos) {
+                    size_t pos = localTimeZone.find(':');
+                    timeZoneHour = localTimeZone.substr(1, pos - 1);
+                    timeZoneMinute = localTimeZone.substr(pos + 1, localTimeZone.size());
+                } else {
+                    timeZoneHour = localTimeZone.substr(1, 2);
+                    timeZoneMinute = localTimeZone.substr(3, localTimeZone.size());
+                }
+
+                timeZoneSignal = localTimeZone[0];
+                timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
+                timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
+            }
+            boost::posix_time::time_duration td(timeZoneHours, timeZoneMinutes, 0);
+
+
+
+
+            using namespace boost::posix_time;
+            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+
+
+            // The solution is to print out two separated elements:
+            // 1. The time in seconds
+            // 2. Fractional (second) part with the desired precision
+            boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
+
+            if (timeZoneSignal == "+") {
+                time_point = time_point + td;
+            } else {
+                time_point = time_point - td;
+            }
+
+
+            ostringstream oss;
+            oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
+                    << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
+
+            // If applicable, add information about the time zone
+            // Necessary because of method "toIso8601Ext"
+            if (localTimeZone != "") {
+                oss << localTimeZone;
+            }
+
+            return oss.str();
         }
 
 
@@ -180,23 +218,22 @@ namespace karabo {
         }
 
 
-        std::string Epochstamp::toFormattedString(const std::string& format) const {
+        std::string Epochstamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
 
             const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());
-
-            std::string pTime = this->toIso8601(SECOND, false);
+            std::string pTime = this->toIso8601Internal(SECOND, false, localTimeZone);
             const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
 
             return getPTime2String(pt, facet);
         }
 
 
-        bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
+        bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return (attributes.has("sec") && attributes.has("frac"));
         }
 
 
-        Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes attributes) {
+        Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long seconds, fraction;
             try {
                 attributes.get("sec", seconds);
