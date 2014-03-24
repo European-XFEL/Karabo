@@ -41,7 +41,8 @@ class EditableSpinBox(EditableWidget):
 
         if valueType is not None:
             info = iinfo(valueType.numpy)
-            self.__spinBox.setRange(info.min, info.max)
+            self.__spinBox.setRange(max(-0x80000000, info.min),
+                                    min(info.max, 0x7fffffff))
         self.__spinBox.installEventFilter(self)
         self.__spinBox.valueChanged.connect(self.onEditingFinished)
         
