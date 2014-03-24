@@ -117,7 +117,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                 _, _, property = str(self.internalKey).split(".", 2)
             info["Key"] = property
             if self.valueType is not None:
-                info["Value Type"] = self.valueType
+                info["Value Type"] = self.valueType.hashname()
             if self.defaultValue is not None:
                 info["Default Value"] = self.defaultValue
             if self.alias is not None:
