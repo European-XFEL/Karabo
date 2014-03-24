@@ -27,7 +27,7 @@ class SqlDatabase(QSqlDatabase):
 
         # Use temp path for database stuff
         xfelDir = QDir.tempPath()
-        self.dbName = xfelDir + "/xfelgui-" + str(QCoreApplication.applicationPid()) +".db"
+        self.dbName = "{}/xfelgui-{}.db".format(xfelDir, QCoreApplication.applicationPid())
         #print "database:", self.dbName
         
         # Establish database connection

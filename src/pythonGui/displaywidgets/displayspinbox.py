@@ -43,7 +43,7 @@ class DisplaySpinBox(DisplayWidget):
         #metricPrefixSymbol = params.get('metricPrefixSymbol')
         #unitSymbol = params.get('unitSymbol')
         # Append unit label, if available
-        #unitLabel = str()
+        #unitLabel = ""
         #if metricPrefixSymbol:
         #    unitLabel += metricPrefixSymbol
         #if unitSymbol:
