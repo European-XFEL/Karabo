@@ -199,10 +199,11 @@ class SchemaReader(object):
                 aitem = AttributeTreeWidgetItem(fullPath, self.treeWidget, item)
                 aitem.setText(0, v)
 
-                aitem.classAlias = item.classAlias
                 if item.classAlias == "Integer Field":
+                    aitem.classAlias = "Integer Field"
                     aitem.setIcon(0, QIcon(":int-attribute"))
                 else:
+                    aitem.classAlias = "Float Field"
                     aitem.setIcon(0, QIcon(":float-attribute"))
 
                 editableComponent = None
