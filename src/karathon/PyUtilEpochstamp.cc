@@ -99,8 +99,8 @@ void exportPyUtilEpochstamp() {
           , (bp::arg("precision")=karabo::util::MICROSEC) );
 
     e.def("toFormattedString"
-          , (string (Epochstamp::*)(const string &) const) (&Epochstamp::toFormattedString)
-          , (bp::arg("format") = "%Y-%b-%d %H:%M:%S"));
+          , (string (Epochstamp::*)(const string &, const string &) const) (&Epochstamp::toFormattedString)
+          , (bp::arg("format") = "%Y-%b-%d %H:%M:%S"), (bp::arg("localTimeZone") = "Z"));
 
     e.def( bp::self != bp::self );
     e.def( bp::self + bp::other< karabo::util::TimeDuration >() );

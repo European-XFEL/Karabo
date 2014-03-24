@@ -97,7 +97,7 @@ void Authenticate_Test::testCorrectLogin() {
     string brokerTopic = "topic";
 
     karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
-    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601Ext(karabo::util::ATTOSEC);
 
     // Expected result values
     const long long expectedSoftwareId = 1;
