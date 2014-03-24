@@ -7,15 +7,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#ifdef __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
-#include <CoreServices/CoreServices.h>
-typedef int clockid_t;
-#define CLOCK_REALTIME 0
-#endif
-
 #include "DateTimeString.hh"
 
 namespace karabo {
@@ -25,10 +16,13 @@ namespace karabo {
         DateTimeString::DateTimeString() :
         m_dateString("19700101"),
         m_timeString("000000"),
-        m_fractionalSecondString("0"),
-        m_timeZoneString("Z"),
+        m_fractionalSecondString("000000000000000000"),
+        m_timeZoneString("+0000"),
         m_dateTimeString("19700101T000000"),
-        m_dateTimeStringAll("19700101T000000Z") {
+        m_dateTimeStringAll("19700101T000000+0000"),
+        m_timeZoneSignal("+"),
+        m_timeZoneHours(0),
+        m_timeZoneMinutes(0) {
         }
 
 
@@ -43,14 +37,37 @@ namespace karabo {
         m_timeString(inputTimeStr),
         m_fractionalSecondString(inputFractionSecondStr),
         m_timeZoneString(inputTimeZoneStr),
-        m_dateTimeString(inputDateStr + "T" + inputTimeStr)/*,
-        m_dateTimeStringAll(inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr)*/ {
+        m_dateTimeString(inputDateStr + "T" + inputTimeStr) {
 
             if (m_fractionalSecondString == "") {
                 m_fractionalSecondString = "0";
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + inputTimeZoneStr;
             } else {
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
+            }
+
+            if (inputTimeZoneStr == "Z" || inputTimeZoneStr == "z" || inputTimeZoneStr == "") {
+                m_timeZoneSignal = "+";
+                m_timeZoneHours = 0;
+                m_timeZoneMinutes = 0;
+            } else {
+
+                std::string timeZoneHour;
+                std::string timeZoneMinute;
+
+                if (inputTimeZoneStr.find(':') != std::string::npos) {
+                    size_t pos = inputTimeZoneStr.find(':');
+                    timeZoneHour = inputTimeZoneStr.substr(1, pos - 1);
+                    timeZoneMinute = inputTimeZoneStr.substr(pos + 1, inputTimeZoneStr.size());
+                } else {
+                    timeZoneHour = inputTimeZoneStr.substr(1, 2);
+                    timeZoneMinute = inputTimeZoneStr.substr(3, inputTimeZoneStr.size());
+                }
+
+                m_timeZoneSignal = inputTimeZoneStr[0];
+                m_timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
+                m_timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
+
             }
 
             if (DateTimeString::DateTimeString::isStringValidIso8601(m_dateTimeStringAll) == false) {
@@ -160,6 +177,11 @@ namespace karabo {
                 time = rest;
             }
 
+            //Calculate fractional Atto second
+            std::ostringstream oss;
+            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
+            fractionalSeconds = oss.str();
+
 
             // Create DateTimeString instance to be returned
             return DateTimeString(date, time, fractionalSeconds, timezone);
@@ -167,12 +189,10 @@ namespace karabo {
 
 
         const std::locale formats[] = {
-            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f%z")), //19951231T235959.9942
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%f")), //19951231T235959.789333123456789123
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")), //2012-12-25T13:25:36.123456789123456789
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S")), //2012-12-25 13:25:36.123456789123456789
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y/%m/%d %H:%M:%S")),
-            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%d.%m.%Y %H:%M:%S"))
+            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S%z")), //2012-12-25T13:25:36-0700
+            //std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S.%f%z")), //19951231T235959.9942+0000
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y%m%dT%H%M%S%.%f")), //19951231T235959.789333(123456789123)
+            std::locale(std::locale::classic(), new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%S")) //2012-12-25T13:25:36
         };
         const size_t formats_n = sizeof (formats) / sizeof (formats[0]);
 
@@ -185,22 +205,38 @@ namespace karabo {
 
 
         const unsigned long long DateTimeString::getSecondsSinceEpoch() {
-            //template<typename T>
-            //const T DateTimeString::getSecondsSinceEpoch() {
             std::string dateAndTimeStr = m_dateTimeString;
 
             // Try to convert String to PTIME taking into consideration the date formats defined above
-            boost::posix_time::ptime pt;
+            boost::posix_time::ptime ptimeLocal;
             for (size_t i = 0; i < formats_n; ++i) {
                 std::istringstream is(dateAndTimeStr);
                 is.imbue(formats[i]);
-                is >> pt;
-                if (pt != boost::posix_time::ptime()) break;
+                is >> ptimeLocal;
+                if (ptimeLocal != boost::posix_time::ptime()) break;
             }
 
-            //return boost::lexical_cast<T>(ptimeToSecondsSinceEpoch(pt));
-            return ptimeToSecondsSinceEpoch(pt);
+            boost::posix_time::ptime ptimeUtc;
+            if (m_timeZoneSignal == "+") {
+                // Berlin hour - 1h == London hour
+                ptimeUtc = ptimeLocal - boost::posix_time::hours(m_timeZoneHours) - boost::posix_time::minutes(m_timeZoneMinutes);
+            } else {
+                ptimeUtc = ptimeLocal + boost::posix_time::hours(m_timeZoneHours) + boost::posix_time::minutes(m_timeZoneMinutes);
+            }
+
+            return ptimeToSecondsSinceEpoch(ptimeUtc);
         }
 
+
+        template<>
+        const std::string DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<std::string>(m_fractionalSecondString);
+        }
+
+
+        template<>
+        const unsigned long long DateTimeString::getFractionalSecondString() const {
+            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
+        }
     }
 }
