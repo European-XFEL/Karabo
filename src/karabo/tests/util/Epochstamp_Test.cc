@@ -9,7 +9,6 @@
  */
 
 #include "Epochstamp_Test.hh"
-#include <karabo/util/Epochstamp.hh>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 
@@ -38,7 +37,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
                                                 const unsigned long long& expectedFractionalSecond,
                                                 bool isCompactString,
                                                 const std::string& expectedToIso8601) {
-    bool writeToClog = false;
+    bool writeToClog = true;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -90,15 +89,31 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC, true));
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
         }
+
+        //ONESECOND
+        //toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 17));
+
+        //MILLISEC
+        //toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
+
+        //MICROSEC
+        toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
+
+        //NANOSEC
+        toIso8601Precision(epo, epo2, NANOSEC, "NANOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 9));
+
+        //PICOSEC
+        toIso8601Precision(epo, epo2, PICOSEC, "PICOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 6));
+
+        //FEMTOSEC
+        toIso8601Precision(epo, epo2, FEMTOSEC, "FEMTOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 3));
+
+        //ATTOSEC
+        toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
     }
 
-    if (writeToClog) std::clog << "[Compact] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC) == epo2.toIso8601(ATTOSEC));
 
-    if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC, true) == epo2.toIso8601(ATTOSEC, true));
-
-
+    // toTimestamp Validation
     ostringstream oss;
     oss << epo.getSeconds()
             << '.'
@@ -109,6 +124,39 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     CPPUNIT_ASSERT(epo.toTimestamp() == expectedTimestamp);
     CPPUNIT_ASSERT(epo2.toTimestamp() == expectedTimestamp);
     CPPUNIT_ASSERT(epo.toTimestamp() == epo2.toTimestamp());
+
+    return;
+}
+
+
+void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
+                                         const karabo::util::Epochstamp epo2,
+                                         const karabo::util::TIME_UNITS precision,
+                                         const std::string& precisionDesc,
+                                         const bool isCompactString,
+                                         const bool writeToClog,
+                                         const std::string& expectedToIso8601) {
+
+    //Concatenate function name plus precision description
+    std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
+    ;
+
+    //ATTOSEC
+    if (isCompactString == true) {
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '" << epo2.toIso8601(precision) << "'" << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision) == epo2.toIso8601(precision));
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '" << expectedToIso8601 << "'" << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision) == expectedToIso8601);
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo2.toIso8601(precision) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo2.toIso8601(precision) == expectedToIso8601);
+    } else {
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true) << " == " << epo2.toIso8601(precision, true) << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == epo2.toIso8601(precision, true));
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == expectedToIso8601);
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo2.toIso8601(precision, true) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo2.toIso8601(precision, true) == expectedToIso8601);
+    }
 
     return;
 }
