@@ -38,7 +38,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
                                                 const unsigned long long& expectedFractionalSecond,
                                                 bool isCompactString,
                                                 const std::string& expectedToIso8601) {
-    bool writeToClog = true;
+    bool writeToClog = false;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -98,6 +98,9 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
     CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC, true) == epo2.toIso8601(ATTOSEC, true));
 
+    if (writeToClog) std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp() << " == " << expectedFractionalSecond / 1000000000 << std::endl;
+    CPPUNIT_ASSERT(epo.toTimestamp() == epo2.toTimestamp());
+
     return;
 }
 
@@ -138,7 +141,8 @@ void Epochstamp_Test::testConstructors() {
     // Validate the "timespec" constructor
     timespec ts06;
     ts06.tv_sec = t03.getTime();
-    ts06.tv_nsec = t03.getFractionalSeconds();
+    // Necessary this division because tv_nsec has only Nanosecond (10^9) resolution but getFractionalSeconds() returns Attosecond (10^18) resolution
+    ts06.tv_nsec = t03.getFractionalSeconds() / 1000000000;
     karabo::util::Epochstamp t06 = karabo::util::Epochstamp(ts06);
 
     CPPUNIT_ASSERT(t03.getSeconds() == t06.getSeconds());
@@ -148,10 +152,9 @@ void Epochstamp_Test::testConstructors() {
     CPPUNIT_ASSERT(t04.getTime() == t06.getTime());
     CPPUNIT_ASSERT(t05.getTime() == t06.getTime());
 
-    //TODO - Should this test work?!
-    //std::clog << endl << "lmaia: t03.getFractionalSeconds() = " << t03.getFractionalSeconds();
-    //std::clog << endl << "lmaia: t06.getFractionalSeconds() = " << t06.getFractionalSeconds();
-    //CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t04.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t05.getFractionalSeconds() != t06.getFractionalSeconds());
 
 
     /*
