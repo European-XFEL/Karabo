@@ -135,35 +135,12 @@ namespace karabo {
 
         std::string Epochstamp::toIso8601Internal(TIME_UNITS precision, bool extended, const std::string& localTimeZone) const {
 
-            std::string timeZoneSignal;
-            int timeZoneHours;
-            int timeZoneMinutes;
+            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(localTimeZone);
 
-            if (localTimeZone == "Z" || localTimeZone == "z" || localTimeZone == "") {
-                timeZoneSignal = "+";
-                timeZoneHours = 0;
-                timeZoneMinutes = 0;
-            } else {
-
-                std::string timeZoneHour;
-                std::string timeZoneMinute;
-
-                if (localTimeZone.find(':') != std::string::npos) {
-                    size_t pos = localTimeZone.find(':');
-                    timeZoneHour = localTimeZone.substr(1, pos - 1);
-                    timeZoneMinute = localTimeZone.substr(pos + 1, localTimeZone.size());
-                } else {
-                    timeZoneHour = localTimeZone.substr(1, 2);
-                    timeZoneMinute = localTimeZone.substr(3, localTimeZone.size());
-                }
-
-                timeZoneSignal = localTimeZone[0];
-                timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
-                timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
-            }
-            boost::posix_time::time_duration td(timeZoneHours, timeZoneMinutes, 0);
-
-
+            std::string timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
+            int timeZoneHours = timeZone.get<int>("timeZoneHours");
+            int timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
+            boost::posix_time::time_duration timeZoneDifference(timeZoneHours, timeZoneMinutes, 0);
 
 
             using namespace boost::posix_time;
@@ -176,15 +153,14 @@ namespace karabo {
             boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
 
             if (timeZoneSignal == "+") {
-                time_point = time_point + td;
+                time_point = time_point + timeZoneDifference;
             } else {
-                time_point = time_point - td;
+                time_point = time_point - timeZoneDifference;
             }
-
 
             ostringstream oss;
             oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
-                    << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
+                    << this->fractionalSecondToString(precision);
 
             // If applicable, add information about the time zone
             // Necessary because of method "toIso8601Ext"
@@ -196,10 +172,17 @@ namespace karabo {
         }
 
 
-        double Epochstamp::toTimestamp(TIME_UNITS precision) const {
+        std::string Epochstamp::fractionalSecondToString(TIME_UNITS precision) const {
             ostringstream oss;
-            oss << m_seconds << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
-            return karabo::util::fromString<double>(oss.str());
+            oss << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
+            return oss.str();
+        }
+
+
+        double Epochstamp::toTimestamp() const {
+            ostringstream oss;
+            oss << this->getSeconds() << this->fractionalSecondToString(MICROSEC);
+            return boost::lexical_cast<double>(oss.str());
         }
 
 
@@ -208,9 +191,7 @@ namespace karabo {
 
             // special_locale takes ownership of the p_time_output facet
             std::locale special_locale(std::locale(""), facet);
-
             datetime_ss.imbue(special_locale);
-
             datetime_ss << pt;
 
             // return timestamp as string

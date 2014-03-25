@@ -20,6 +20,7 @@ class DateTimeString_Test : public CPPUNIT_NS::TestFixture {
     //
     CPPUNIT_TEST(isStringValidIso8601);
     CPPUNIT_TEST(isStringKaraboValidIso8601);
+    CPPUNIT_TEST(isStringKaraboValidIso8601TimeZone);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -35,10 +36,12 @@ private:
     void testConstructors();
     bool isValidIso8601(const std::string& pTimeStr);
     bool isValidKaraboIso8601(const std::string& pTimeStr);
+    bool isValidKaraboIso8601TimeZone(const std::string& timeZone);
 
     // Auxiliary Methods
     void isStringValidIso8601();
     void isStringKaraboValidIso8601();
+    void isStringKaraboValidIso8601TimeZone();
     void validateConstructor(const std::string& pTime,
                              const std::string& expectedDate,
                              const std::string& expectedTime,

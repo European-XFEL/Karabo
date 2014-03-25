@@ -14,6 +14,7 @@
 #include <boost/regex.hpp>
 
 #include "Exception.hh"
+#include "Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -123,6 +124,15 @@ namespace karabo {
 
 
             /**
+             * Validates if a string representing a time zone is valid according to ISO-8601 definition
+             * 
+             * @param iso8601TimeZone String that represents a Time Zone (i.e. "+01:00" or "-07:00")
+             * @return boolean (True is string is valid, False otherwise)
+             */
+            static const bool isStringValidIso8601TimeZone(const std::string& iso8601TimeZone);
+
+
+            /**
              * Validates if a string representing a timestamp is valid according to Karabo agreed ISO-8601 subset API definition
              * Some examples:
              * => Extended strings:
@@ -158,8 +168,15 @@ namespace karabo {
              * @return unsigned long long (Seconds elapsed since Epoch)
              */
             const unsigned long long getSecondsSinceEpoch();
-            //template<typename T>
-            //const T getSecondsSinceEpoch();
+
+
+            /**
+             * Split an ISO-8601 valid Time Zone
+             * 
+             * @param iso8601TimeZone String that represents a Time Zone (i.e. "Z" or "+01:00" or "-07:00") [Default: "Z"]
+             * @return Hash containing the Time Zone information in three different keys (<std::string>("timeZoneSignal"), <int>("timeZoneHours"), <int>("timeZoneMinutes"))
+             */
+            static const karabo::util::Hash getTimeDurationFromTimeZone(const std::string& iso8601TimeZone = "Z");
 
         private:
 
