@@ -37,7 +37,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
                                                 const unsigned long long& expectedFractionalSecond,
                                                 bool isCompactString,
                                                 const std::string& expectedToIso8601) {
-    bool writeToClog = true;
+    bool writeToClog = false;
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -90,26 +90,27 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
         }
 
-        //ONESECOND
-        //toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 17));
 
-        //MILLISEC
-        //toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
-
-        //MICROSEC
-        toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
-
-        //NANOSEC
-        toIso8601Precision(epo, epo2, NANOSEC, "NANOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 9));
-
-        //PICOSEC
-        toIso8601Precision(epo, epo2, PICOSEC, "PICOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 6));
+        //ATTOSEC
+        toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
 
         //FEMTOSEC
         toIso8601Precision(epo, epo2, FEMTOSEC, "FEMTOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 3));
 
-        //ATTOSEC
-        toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
+        //PICOSEC
+        toIso8601Precision(epo, epo2, PICOSEC, "PICOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 6));
+
+        //NANOSEC
+        toIso8601Precision(epo, epo2, NANOSEC, "NANOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 9));
+
+        //MICROSEC
+        toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
+
+        //MILLISEC
+        //toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
+
+        //ONESECOND
+        //toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 17));
     }
 
 
