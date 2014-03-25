@@ -52,7 +52,7 @@ void exportPyUtilTimestamp() {
 
     ts.def("toFormattedString"
            , (string(Timestamp::*)(const string &, const string &) const) (&Timestamp::toFormattedString)
-           , (bp::arg("format") = "%Y-%b-%d %H:%M:%S"), (bp::arg("localTimeZone") = "Z"));
+           , (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
     ts.def("toTimestamp"
            , (double (Timestamp::*)(karabo::util::TIME_UNITS) const) (&Timestamp::toTimestamp)
