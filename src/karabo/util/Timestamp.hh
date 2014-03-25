@@ -75,7 +75,7 @@ namespace karabo {
              * 
              * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
              * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
-             * @return formated string
+             * @return formated string in the specified Time Zone
              */
             std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
 
@@ -85,7 +85,7 @@ namespace karabo {
              * 
              * @return A double value with the decimal point indicating fractions of seconds
              */
-            double toTimestamp(TIME_UNITS precision = MICROSEC) const;
+            double toTimestamp() const;
 
             /**
              * Formats as Hash attributes

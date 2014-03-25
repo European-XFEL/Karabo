@@ -48,8 +48,8 @@ namespace karabo {
         }
 
 
-        double Timestamp::toTimestamp(TIME_UNITS precision) const {
-            return m_epochstamp.toTimestamp(precision);
+        double Timestamp::toTimestamp() const {
+            return m_epochstamp.toTimestamp();
         }
 
 

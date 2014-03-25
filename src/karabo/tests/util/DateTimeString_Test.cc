@@ -144,8 +144,6 @@ void DateTimeString_Test::testConstructors() {
 
 
 bool DateTimeString_Test::isValidIso8601(const std::string& pTimeStr) {
-
-
     karabo::util::DateTimeString dts = karabo::util::DateTimeString();
     return dts.isStringValidIso8601(pTimeStr);
 }
@@ -528,8 +526,6 @@ void DateTimeString_Test::isStringValidIso8601() {
 
 
 bool DateTimeString_Test::isValidKaraboIso8601(const std::string& pTimeStr) {
-
-
     karabo::util::DateTimeString dts = karabo::util::DateTimeString();
     return dts.isStringKaraboValidIso8601(pTimeStr);
 }
@@ -919,3 +915,43 @@ void DateTimeString_Test::isStringKaraboValidIso8601() {
     CPPUNIT_ASSERT(isValidKaraboIso8601("") == false);
 }
 
+
+bool DateTimeString_Test::isValidKaraboIso8601TimeZone(const std::string& timeZone) {
+    karabo::util::DateTimeString dts = karabo::util::DateTimeString();
+    return dts.isStringValidIso8601TimeZone(timeZone);
+}
+
+
+void DateTimeString_Test::isStringKaraboValidIso8601TimeZone() {
+
+    // Complete representation
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("Z") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("z") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+00:00") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+0000") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+03:30") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+0330") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-07:00") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-0700") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-23:59") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-2359") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-11:11") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-1111") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+23:59") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+2359") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+11:11") == true);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+1111") == true);
+
+    // Invalid Time Zone's
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("x") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("0000") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("00:00") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-70:00") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-7000") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+2400") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("+24:00") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-2400") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-24:00") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-0060") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-00:60") == false);
+}

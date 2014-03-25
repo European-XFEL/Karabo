@@ -46,29 +46,12 @@ namespace karabo {
                 m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
             }
 
-            if (inputTimeZoneStr == "Z" || inputTimeZoneStr == "z" || inputTimeZoneStr == "") {
-                m_timeZoneSignal = "+";
-                m_timeZoneHours = 0;
-                m_timeZoneMinutes = 0;
-            } else {
 
-                std::string timeZoneHour;
-                std::string timeZoneMinute;
+            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(inputTimeZoneStr);
+            m_timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
+            m_timeZoneHours = timeZone.get<int>("timeZoneHours");
+            m_timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
 
-                if (inputTimeZoneStr.find(':') != std::string::npos) {
-                    size_t pos = inputTimeZoneStr.find(':');
-                    timeZoneHour = inputTimeZoneStr.substr(1, pos - 1);
-                    timeZoneMinute = inputTimeZoneStr.substr(pos + 1, inputTimeZoneStr.size());
-                } else {
-                    timeZoneHour = inputTimeZoneStr.substr(1, 2);
-                    timeZoneMinute = inputTimeZoneStr.substr(3, inputTimeZoneStr.size());
-                }
-
-                m_timeZoneSignal = inputTimeZoneStr[0];
-                m_timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
-                m_timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
-
-            }
 
             if (DateTimeString::DateTimeString::isStringValidIso8601(m_dateTimeStringAll) == false) {
                 throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
@@ -99,6 +82,16 @@ namespace karabo {
         }
 
 
+        const bool DateTimeString::isStringValidIso8601TimeZone(const std::string& iso8601TimeZone) {
+            // Original regular expression:
+            // ^([zZ]|([\+-])([01]\d|2[0-3])(:?)([0-5]\d))?$
+            // Regex visualizer: https://www.debuggex.com/
+            // Converted using online Java converter: http://www.regexplanet.com/advanced/java/index.html
+            static const boost::regex e("^([zZ]|([\\+-])([01]\\d|2[0-3])(:?)([0-5]\\d))?$");
+            return boost::regex_match(iso8601TimeZone, e);
+        }
+
+
         const bool DateTimeString::isStringKaraboValidIso8601(const std::string& timePoint) {
             // Original regular expression:
             // ^((\d{4})-(0[1-9]|1[0-2])-([12]\d|0[1-9]|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)([\.,]\d+(?!:))?([zZ]|([\+-])([01]\d|2[0-3]):([0-5]\d))?|(\d{4})(0[1-9]|1[0-2])([12]\d|0[1-9]|3[01])T([01]\d|2[0-3])([0-5]\d)([0-5]\d)([\.,]\d+(?!:))?([zZ]|([\+-])([01]\d|2[0-3])([0-5]\d))?)$
@@ -117,11 +110,11 @@ namespace karabo {
 
             karabo::util::DateTimeString t = karabo::util::DateTimeString();
             if (t.isStringValidIso8601(timePoint) == false) {
-                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format) => '" + timePoint + "'");
             }
 
             if (t.isStringKaraboValidIso8601(timePoint) == false) {
-                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format)");
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format) => '" + timePoint + "'");
             }
 
             // Copy current string and replace some characters to allow a cleaner code
@@ -139,13 +132,11 @@ namespace karabo {
             size_t pos = 0;
             std::string rest = "";
 
-
             //Separate Date (years, months and days) from the string
             // NOTE: This must be the first operation because the character '-' is use to separate the date and also in the Time Zone
             pos = currentTimePoint.find('T');
             date = currentTimePoint.substr(0, pos);
             rest = currentTimePoint.substr(pos + 1, currentTimePoint.size());
-
 
             //Separate Fractional seconds and Time zone from the string
             if (rest.find('Z') != std::string::npos ||
@@ -166,7 +157,6 @@ namespace karabo {
                 rest = rest;
             }
 
-
             //Separate Time (hours, minutes, seconds and fractional seconds) from the string
             if (rest.find('.') != std::string::npos) {
                 pos = rest.find('.');
@@ -181,7 +171,6 @@ namespace karabo {
             std::ostringstream oss;
             oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
             fractionalSeconds = oss.str();
-
 
             // Create DateTimeString instance to be returned
             return DateTimeString(date, time, fractionalSeconds, timezone);
@@ -216,15 +205,60 @@ namespace karabo {
                 if (ptimeLocal != boost::posix_time::ptime()) break;
             }
 
+            boost::posix_time::time_duration timeZoneDifference(m_timeZoneHours, m_timeZoneMinutes, 0);
             boost::posix_time::ptime ptimeUtc;
             if (m_timeZoneSignal == "+") {
-                // Berlin hour - 1h == London hour
-                ptimeUtc = ptimeLocal - boost::posix_time::hours(m_timeZoneHours) - boost::posix_time::minutes(m_timeZoneMinutes);
+                ptimeUtc = ptimeLocal - timeZoneDifference; //Berlin hour - 1h == London hour
             } else {
-                ptimeUtc = ptimeLocal + boost::posix_time::hours(m_timeZoneHours) + boost::posix_time::minutes(m_timeZoneMinutes);
+                ptimeUtc = ptimeLocal + timeZoneDifference; //Azores hour + 1h == London hour
             }
 
             return ptimeToSecondsSinceEpoch(ptimeUtc);
+        }
+
+
+        const karabo::util::Hash DateTimeString::getTimeDurationFromTimeZone(const std::string& iso8601TimeZone) {
+
+            // Attention that "" (empty string) is a valid time zone format in the validation REGEX
+            karabo::util::DateTimeString t = karabo::util::DateTimeString();
+            if (t.isStringValidIso8601TimeZone(iso8601TimeZone) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal Time Zone string sent by user (not a valid ISO-8601 format) => '" + iso8601TimeZone + "'");
+            }
+
+            std::string timeZoneSignal;
+            int timeZoneHours;
+            int timeZoneMinutes;
+
+            if (iso8601TimeZone == "Z" || iso8601TimeZone == "z" || iso8601TimeZone == "") {
+                timeZoneSignal = "+";
+                timeZoneHours = 0;
+                timeZoneMinutes = 0;
+            } else {
+
+                std::string timeZoneHour;
+                std::string timeZoneMinute;
+
+                if (iso8601TimeZone.find(':') != std::string::npos) {
+                    size_t pos = iso8601TimeZone.find(':');
+                    timeZoneHour = iso8601TimeZone.substr(1, pos - 1);
+                    timeZoneMinute = iso8601TimeZone.substr(pos + 1, iso8601TimeZone.size());
+                } else {
+                    timeZoneHour = iso8601TimeZone.substr(1, 2);
+                    timeZoneMinute = iso8601TimeZone.substr(3, iso8601TimeZone.size());
+                }
+
+                timeZoneSignal = iso8601TimeZone[0];
+                timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
+                timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
+            }
+
+            //const karabo::util::Hash h("timeZoneSignal", timeZoneSignal, "timeZoneHours", timeZoneHours, "timeZoneMinutes", timeZoneMinutes);
+            karabo::util::Hash h;
+            h.set<std::string>("timeZoneSignal", timeZoneSignal);
+            h.set<int>("timeZoneHours", timeZoneHours);
+            h.set<int>("timeZoneMinutes", timeZoneMinutes);
+
+            return h;
         }
 
 

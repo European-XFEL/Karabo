@@ -55,8 +55,7 @@ void exportPyUtilTimestamp() {
            , (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
     ts.def("toTimestamp"
-           , (double (Timestamp::*)(karabo::util::TIME_UNITS) const) (&Timestamp::toTimestamp)
-           , (bp::arg("precision") = karabo::util::MICROSEC));
+           , (double (Timestamp::*)() const) (&Timestamp::toTimestamp));
 
     ts.def("toHashAttributes"
            , (void (Timestamp::*)(Hash::Attributes &) const) (&Timestamp::toHashAttributes)
