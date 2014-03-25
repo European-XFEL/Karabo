@@ -14,11 +14,11 @@ namespace karabo {
 
 
         DateTimeString::DateTimeString() :
-        m_dateString("19700101"),
-        m_timeString("000000"),
-        m_fractionalSecondString("000000000000000000"),
-        m_timeZoneString("+0000"),
-        m_dateTimeString("19700101T000000"),
+        m_date("19700101"),
+        m_time("000000"),
+        m_fractionalSeconds("000000000000000000"),
+        m_timeZone("+0000"),
+        m_dateTime("19700101T000000"),
         m_dateTimeStringAll("19700101T000000+0000"),
         m_timeZoneSignal("+"),
         m_timeZoneHours(0),
@@ -31,23 +31,23 @@ namespace karabo {
         }
 
 
-        DateTimeString::DateTimeString(const std::string& inputDateStr, const std::string& inputTimeStr,
-                                       const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr) :
-        m_dateString(inputDateStr),
-        m_timeString(inputTimeStr),
-        m_fractionalSecondString(inputFractionSecondStr),
-        m_timeZoneString(inputTimeZoneStr),
-        m_dateTimeString(inputDateStr + "T" + inputTimeStr) {
+        DateTimeString::DateTimeString(const std::string& inputDate, const std::string& inputTime,
+                                       const std::string& inputFractionSecond, const std::string& inputTimeZone) :
+        m_date(inputDate),
+        m_time(inputTime),
+        m_fractionalSeconds(inputFractionSecond),
+        m_timeZone(inputTimeZone),
+        m_dateTime(inputDate + "T" + inputTime) {
 
-            if (m_fractionalSecondString == "") {
-                m_fractionalSecondString = "0";
-                m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + inputTimeZoneStr;
+            if (m_fractionalSeconds == "") {
+                m_fractionalSeconds = "0";
+                m_dateTimeStringAll = inputDate + "T" + inputTime + inputTimeZone;
             } else {
-                m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
+                m_dateTimeStringAll = inputDate + "T" + inputTime + "." + inputFractionSecond + inputTimeZone;
             }
 
 
-            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(inputTimeZoneStr);
+            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(inputTimeZone);
             m_timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
             m_timeZoneHours = timeZone.get<int>("timeZoneHours");
             m_timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
@@ -192,12 +192,12 @@ namespace karabo {
 
 
         const unsigned long long DateTimeString::getSecondsSinceEpoch() {
-            std::string dateAndTimeStr = m_dateTimeString;
+            std::string dateAndTime = m_dateTime;
 
             // Try to convert String to PTIME taking into consideration the date formats defined above
             boost::posix_time::ptime ptimeLocal;
             for (size_t i = 0; i < formats_n; ++i) {
-                std::istringstream is(dateAndTimeStr);
+                std::istringstream is(dateAndTime);
                 is.imbue(formats[i]);
                 is >> ptimeLocal;
                 if (ptimeLocal != boost::posix_time::ptime()) break;
@@ -218,8 +218,8 @@ namespace karabo {
         const karabo::util::Hash DateTimeString::getTimeDurationFromTimeZone(const std::string& iso8601TimeZone) {
 
             // Attention that "" (empty string) is a valid time zone format in the validation REGEX
-            karabo::util::DateTimeString t = karabo::util::DateTimeString();
-            if (t.isStringValidIso8601TimeZone(iso8601TimeZone) == false) {
+            karabo::util::DateTimeString dts = karabo::util::DateTimeString();
+            if (dts.isStringValidIso8601TimeZone(iso8601TimeZone) == false) {
                 throw KARABO_PARAMETER_EXCEPTION("Illegal Time Zone string sent by user (not a valid ISO-8601 format) => '" + iso8601TimeZone + "'");
             }
 
@@ -276,14 +276,14 @@ namespace karabo {
 
 
         template<>
-        const std::string DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<std::string>(m_fractionalSecondString);
+        const std::string DateTimeString::getFractionalSeconds() const {
+            return boost::lexical_cast<std::string>(m_fractionalSeconds);
         }
 
 
         template<>
-        const unsigned long long DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
+        const unsigned long long DateTimeString::getFractionalSeconds() const {
+            return boost::lexical_cast<unsigned long long>(m_fractionalSeconds);
         }
     }
 }
