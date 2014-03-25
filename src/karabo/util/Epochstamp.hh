@@ -169,7 +169,7 @@ namespace karabo {
              * 
              * @return A double value with the decimal point indicating fractions of seconds
              */
-            double toTimestamp() const;
+            const double toTimestamp() const;
 
             /**
              * Formats to specified format time stored in the object
@@ -220,12 +220,14 @@ namespace karabo {
 
 
             /**
-             * Generates a sting (respecting ISO-8601) for object time for EXTERNAL usage ("%Y%m%dT%H%M%S%f%z" => "20121225T132536.789333[123456789123]Z")
+             * Concatenates date and time information with instance fractional seconds within a specified precision
              * 
+             * @param dateTime - Date and time information
              * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
-             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             * @return Concatenation result
              */
-            std::string fractionalSecondToString(TIME_UNITS precision = MICROSEC) const;
+            template<typename To, typename PT1>
+            const To concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const;
 
         };
     }

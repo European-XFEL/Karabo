@@ -98,7 +98,16 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
     CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC, true) == epo2.toIso8601(ATTOSEC, true));
 
-    if (writeToClog) std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp() << " == " << expectedFractionalSecond / 1000000000 << std::endl;
+
+    ostringstream oss;
+    oss << epo.getSeconds()
+            << '.'
+            << setw(18 - std::log10((long double) MICROSEC)) << setfill('0') << epo.getFractionalSeconds() / MICROSEC;
+    double expectedTimestamp = boost::lexical_cast<double>(oss.str());
+
+    if (writeToClog) std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp() << " == " << expectedTimestamp << std::endl;
+    CPPUNIT_ASSERT(epo.toTimestamp() == expectedTimestamp);
+    CPPUNIT_ASSERT(epo2.toTimestamp() == expectedTimestamp);
     CPPUNIT_ASSERT(epo.toTimestamp() == epo2.toTimestamp());
 
     return;

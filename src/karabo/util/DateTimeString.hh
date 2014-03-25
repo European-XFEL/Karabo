@@ -13,6 +13,7 @@
 #include <boost/date_time.hpp>
 #include <boost/regex.hpp>
 
+#include "TimeDuration.hh"
 #include "Exception.hh"
 #include "Hash.hh"
 
@@ -171,12 +172,36 @@ namespace karabo {
 
 
             /**
+             * Converts a fractional second value into it's value with a smaller precision
+             * Because fractional seconds are received as an UNSIGNED LONG LONG, this function assumes the algarisms are the right most algarisms.
+             * Due to this reason, if there are missing algarisms to perform the desired precision resolution, zeros will be added to this left of the fractional seconds number received.
+             * 
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param fractionalSeconds - Fractional seconds to be return with the correct desired precision
+             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             */
+            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC, const unsigned long long fractionalSeconds = 0);
+
+
+            /**
+             * Converts a STRING fractional second value into it's value in ATTOSEC precision
+             * Because fractional seconds are received as a STRING, this function assumes the algarisms are the left most algarisms.
+             * Due to this reason, if there are missing algarisms to perform ATTOSEC resolution, zeros will be added to this right of the fractional seconds number received.
+             * 
+             * @param fractionalSeconds - Fractional seconds to be return with ATTOSEC precision
+             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             */
+            static const std::string fractionalStringToAttoFractionalString(const std::string& fractionalSeconds);
+
+
+            /**
              * Split an ISO-8601 valid Time Zone
              * 
              * @param iso8601TimeZone String that represents a Time Zone (i.e. "Z" or "+01:00" or "-07:00") [Default: "Z"]
              * @return Hash containing the Time Zone information in three different keys (<std::string>("timeZoneSignal"), <int>("timeZoneHours"), <int>("timeZoneMinutes"))
              */
             static const karabo::util::Hash getTimeDurationFromTimeZone(const std::string& iso8601TimeZone = "Z");
+
 
         private:
 
