@@ -50,10 +50,10 @@ namespace karabo {
         }
 
 
-        Epochstamp::Epochstamp(const std::string& pTimeStr) {
-            karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTimeStr);
+        Epochstamp::Epochstamp(const std::string& pTime) {
+            karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTime);
             const unsigned long long secondsSinceEpoch = dts.getSecondsSinceEpoch();
-            const unsigned long long fractionalSecond = dts.getFractionalSecondString<unsigned long long>(); //[Default is "0"]
+            const unsigned long long fractionalSecond = dts.getFractionalSeconds<unsigned long long>();
 
             *this = Epochstamp(secondsSinceEpoch, fractionalSecond); //Use other constructor
         }

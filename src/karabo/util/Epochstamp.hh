@@ -57,7 +57,7 @@ namespace karabo {
             explicit Epochstamp(const time_t& tm);
             explicit Epochstamp(const timeval& tv);
             explicit Epochstamp(const timespec& ts);
-            explicit Epochstamp(const std::string& pTimeStr);
+            explicit Epochstamp(const std::string& pTime);
 
             virtual ~Epochstamp();
 
