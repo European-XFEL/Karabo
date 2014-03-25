@@ -11,6 +11,7 @@
 #define	DATETIMESTRING_TEST_HH
 
 #include <cppunit/extensions/HelperMacros.h>
+#include <karabo/util/TimeDuration.hh>
 
 class DateTimeString_Test : public CPPUNIT_NS::TestFixture {
 
@@ -21,6 +22,7 @@ class DateTimeString_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST(isStringValidIso8601);
     CPPUNIT_TEST(isStringKaraboValidIso8601);
     CPPUNIT_TEST(isStringKaraboValidIso8601TimeZone);
+    CPPUNIT_TEST(validateFractionalSecondToString);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -37,11 +39,13 @@ private:
     bool isValidIso8601(const std::string& pTimeStr);
     bool isValidKaraboIso8601(const std::string& pTimeStr);
     bool isValidKaraboIso8601TimeZone(const std::string& timeZone);
+    void validateFractionalSecondToString();
 
     // Auxiliary Methods
     void isStringValidIso8601();
     void isStringKaraboValidIso8601();
     void isStringKaraboValidIso8601TimeZone();
+
     void validateConstructor(const std::string& pTime,
                              const std::string& expectedDate,
                              const std::string& expectedTime,
@@ -49,6 +53,10 @@ private:
                              const std::string& expectedTimeZone,
                              const std::string& expectedDateTime,
                              const std::string& expectedSecondsSinceEpoch);
+
+    void isValidateFractionalSecondToString(const unsigned long long fractionalSeconds,
+                                            const std::string& expectedAttoFractionalSeconds,
+                                            const bool writeToClog);
 
 };
 

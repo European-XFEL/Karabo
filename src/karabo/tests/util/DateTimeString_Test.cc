@@ -955,3 +955,67 @@ void DateTimeString_Test::isStringKaraboValidIso8601TimeZone() {
     CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-0060") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601TimeZone("-00:60") == false);
 }
+
+
+void DateTimeString_Test::isValidateFractionalSecondToString(const unsigned long long fractionalSeconds,
+                                                             const std::string& expectedAttoFractionalSeconds,
+                                                             const bool writeToClog) {
+
+    karabo::util::DateTimeString dts = karabo::util::DateTimeString();
+    std::string expectedFractionalSeconds = "." + expectedAttoFractionalSeconds;
+
+    //ATTOSEC
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::ATTOSEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::ATTOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ATTOSEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //FEMTOSEC
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::FEMTOSEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::FEMTOSEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //PICOSEC
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::PICOSEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::PICOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::PICOSEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //NANOSEC
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::NANOSEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::NANOSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::NANOSEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //MICROSEC
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::MICROSEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MICROSEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //MILLISEC
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::MILLISEC, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    //CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) == expectedFractionalSeconds);
+
+    //ONESECOND
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 2);
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::ONESECOND, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) == expectedFractionalSeconds);
+
+    return;
+}
+
+
+void DateTimeString_Test::validateFractionalSecondToString() {
+
+    bool writeToClog = true;
+
+    isValidateFractionalSecondToString(1000000000000000ULL, "001000000000000000", writeToClog);
+    isValidateFractionalSecondToString(101000000000000000ULL, "101000000000000000", writeToClog);
+
+
+
+}
