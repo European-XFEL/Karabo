@@ -261,8 +261,20 @@ namespace karabo {
 
 
         const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision, const unsigned long long fractionalSeconds) {
+
+            std::clog << " ************************************************************************** " << std::endl;
+            std::clog << "std::log10((long double) precision) => " << std::log10((long double) precision) << std::endl;
+            std::clog << "fractionalSeconds => " << fractionalSeconds << std::endl;
+            std::clog << "precision => " << precision << std::endl;
+            std::clog << "fractionalSeconds / precision => " << fractionalSeconds / precision << std::endl;
+
             ostringstream oss;
             oss << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << fractionalSeconds / precision;
+
+            std::clog << "oss.str() => " << oss.str() << std::endl;
+            std::clog << " ************************************************************************** " << std::endl;
+            std::clog << std::endl;
+
             return oss.str();
         }
 
