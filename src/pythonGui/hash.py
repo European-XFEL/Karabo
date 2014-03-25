@@ -44,7 +44,7 @@ def _gettype(data):
         elif isinstance(data, Hash):
             return hashtypes.Hash
         elif isinstance(data, list):
-            return _gettype(data[0])
+            return _gettype(data[0]).vectortype
         elif data is None:
             return hashtypes.None_
         else:
