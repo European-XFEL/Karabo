@@ -158,31 +158,29 @@ namespace karabo {
                 time_point = time_point - timeZoneDifference;
             }
 
-            ostringstream oss;
-            oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
-                    << this->fractionalSecondToString(precision);
+            std::string dateTime = (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point));
+            std::string dateTimeWithFractional = this->concatDateTimeWithFractional<std::string, std::string&>(dateTime, precision);
 
             // If applicable, add information about the time zone
             // Necessary because of method "toIso8601Ext"
             if (localTimeZone != "") {
-                oss << localTimeZone;
+                dateTimeWithFractional = dateTimeWithFractional + localTimeZone;
             }
 
-            return oss.str();
+            return dateTimeWithFractional;
         }
 
 
-        std::string Epochstamp::fractionalSecondToString(TIME_UNITS precision) const {
+        template<typename To, typename PT1>
+        const To Epochstamp::concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const {
             ostringstream oss;
-            oss << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
-            return oss.str();
+            oss << dateTime << karabo::util::DateTimeString::fractionalSecondToString(precision, m_fractionalSeconds);
+            return boost::lexical_cast<To>(oss.str());
         }
 
 
-        double Epochstamp::toTimestamp() const {
-            ostringstream oss;
-            oss << this->getSeconds() << this->fractionalSecondToString(MICROSEC);
-            return boost::lexical_cast<double>(oss.str());
+        const double Epochstamp::toTimestamp() const {
+            return this->concatDateTimeWithFractional<double, unsigned long long>(m_seconds, MICROSEC);
         }
 
 

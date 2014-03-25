@@ -168,9 +168,7 @@ namespace karabo {
             }
 
             //Calculate fractional Atto second
-            std::ostringstream oss;
-            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
-            fractionalSeconds = oss.str();
+            fractionalSeconds = karabo::util::DateTimeString::fractionalStringToAttoFractionalString(fractionalSeconds);
 
             // Create DateTimeString instance to be returned
             return DateTimeString(date, time, fractionalSeconds, timezone);
@@ -259,6 +257,21 @@ namespace karabo {
             h.set<int>("timeZoneMinutes", timeZoneMinutes);
 
             return h;
+        }
+
+
+        const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision, const unsigned long long fractionalSeconds) {
+            ostringstream oss;
+            oss << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << fractionalSeconds / precision;
+            return oss.str();
+        }
+
+
+        const std::string DateTimeString::fractionalStringToAttoFractionalString(const std::string& fractionalSeconds) {
+            //Calculate fractional Atto second value (read method description for more information)
+            std::ostringstream oss;
+            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
+            return oss.str();
         }
 
 
