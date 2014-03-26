@@ -132,6 +132,10 @@ class Type(Descriptor, Registry):
         return str(data)
 
 
+    def toHash(self, data):
+        return data
+
+
 class Bool(Type):
     @classmethod
     def read(cls, file):

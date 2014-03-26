@@ -87,6 +87,7 @@ class ConfigurationPanel(QWidget):
         twInitalParameterEditorPage = ParameterTreeWidget()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+        self.prevConfiguration = None
 
         topWidget = QWidget(mainSplitter)
 
@@ -467,21 +468,14 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, configuration):
         """ Show the parameters for configuration """
-        if hasattr(configuration, 'index'):
-            self._setParameterEditorIndex(configuration.index)
+        if not hasattr(configuration, 'index'):
+            configuration.index = self._createNewParameterPage(configuration)
+        self._setParameterEditorIndex(configuration.index)
 
-            if (configuration.type == "device" and
-                    self.prevConfiguration is not configuration):
-                configuration.addVisible()
-                self.prevConfiguration = configuration
-        else:
-            self._setParameterEditorIndex(0)
-            
-            #if type is NavigationItemTypes.SERVER:
-            #    return ########################### TODO
-            
-            # Hide buttons and actions
-            self._hideAllButtons()
+        if (configuration.type == "device" and
+            self.prevConfiguration is not configuration):
+            configuration.addVisible()
+            self.prevConfiguration = configuration
 
 
     def _removeParameterEditorPage(self, twParameterEditor):
@@ -547,22 +541,13 @@ class ConfigurationPanel(QWidget):
         if hasattr(configuration, 'index'):
             twParameterEditor = self.__swParameterEditor.widget(
                 configuration.index)
-            if configuration.schema is None:
-                self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
-                twParameterEditor.clear()
-            else:
+            self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
+            twParameterEditor.clear()
+            if configuration.schema is not None:
                 configuration.fillWidget(twParameterEditor)
-            if projNaviPathTuple is not None:
-                self.__itemProjectPathMap[projNaviPathTuple[0]] = projNaviPathTuple[1]
         else:
             configuration.index = self._createNewParameterPage(configuration)
         
-        # Load schema for project path, if existing
-        projectPath = self.__itemProjectPathMap.get(paramPageKey)
-        if (projectPath is not None) and (projectPath in self.__pathSchemaLoadedMap):
-            if not self.__pathSchemaLoadedMap.get(projectPath):
-                self.onSchemaAvailable(dict(key=projectPath, schema=itemInfo.get('schema')))
-
 
     def onDeviceItemChanged(self, configuration):
         self.updateButtonsVisibility = configuration.type == 'class'
