@@ -105,7 +105,7 @@ namespace karabo {
              * @return reference to the SimpleElement to use chaining
              */
             SimpleElement& hex() {
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Hexadecimal");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "hex");
                 return *this;
             }
 
@@ -114,7 +114,7 @@ namespace karabo {
              * @return reference to the SimpleElement to use chaining
              */
             SimpleElement& oct() {
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Octal");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "oct");
                 return *this;
             }
 
@@ -123,9 +123,15 @@ namespace karabo {
              * @return reference to the SimpleElement to use chaining
              */
             SimpleElement& bin() {
-                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Binary");
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "bin");
                 return *this;
             }
+            
+            SimpleElement& bin(const std::string& meaning) {
+                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "bin|" + meaning);
+                return *this;
+            }
+            
 
         protected:
 
