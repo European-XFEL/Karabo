@@ -339,11 +339,11 @@ class Network(QObject):
 
 
     def onReconfigure(self, boxes):
-        header = Hash()
-        header["type"] = "reconfigure"
-        header["deviceId"] = boxes[0].configuration.path
+        instanceInfo = Hash()
+        instanceInfo["type"] = "reconfigure"
+        instanceInfo["deviceId"] = boxes[0].configuration.path
         for b in boxes:
-            body[".".join(b.path)] = b.value
+            instanceInfo["configuration." + ".".join(b.path)] = b.value
         self._tcpWriteHash(instanceInfo)
 
 
