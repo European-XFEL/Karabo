@@ -28,48 +28,116 @@ class PythonDevice(BaseFsm):
     
     @staticmethod
     def expectedParameters(expected):
-
-        e = STRING_ELEMENT(expected).key("version")
-        e.displayedName("Version").description("The version of this device class")
-        e.expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
-        
-        e = INT32_ELEMENT(expected).key("visibility")
-        e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
-        e.assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-        e.expertAccess().reconfigurable().commit()
-        
-        e = STRING_ELEMENT(expected).key("classId")
-        e.displayedName("ClassID").description("The (factory)-name of the class of this device")
-        e.expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
-        
-        e = STRING_ELEMENT(expected).key("serverId")
-        e.displayedName("ServerID").description("The device-server on which this device is running on")
-        e.expertAccess().assignmentInternal().noDefaultValue().init().commit()
-
-        e = STRING_ELEMENT(expected).key("deviceId")
-        e.displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
-        e.assignmentOptional().noDefaultValue().init().commit()
-            
-        e = INT32_ELEMENT(expected).key("progress")
-        e.displayedName("Progress").description("The progress of the current action")
-        e.readOnly().initialValue(0).commit()
-            
-        e = STRING_ELEMENT(expected).key("state")
-        e.displayedName("State").description("The current state the device is in")
-        e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
-        
-        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
-        e.description("Logging settings").expertAccess()
-        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
-    
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
-        e.setNewDefaultValue("Ostream").commit()
-        
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
-        e.setNewDefaultValue("Pattern").commit()
-        
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
-        e.setNewDefaultValue("%p  %c  : %m%n").commit()
+        (
+            STRING_ELEMENT(expected).key("version")
+                    .displayedName("Version").description("The version of this device class")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
+                    ,
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility").description("Configures who is allowed to see this device at all")
+                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
+                    .expertAccess().reconfigurable().commit()
+                    ,
+            STRING_ELEMENT(expected).key("classId")
+                    .displayedName("ClassID").description("The (factory)-name of the class of this device")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
+                    ,
+            STRING_ELEMENT(expected).key("serverId")
+                    .displayedName("ServerID").description("The device-server on which this device is running on")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    ,
+            STRING_ELEMENT(expected).key("deviceId")
+                    .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+                    .assignmentOptional().noDefaultValue().init().commit()
+                    ,
+            INT32_ELEMENT(expected).key("progress")
+                    .displayedName("Progress").description("The progress of the current action")
+                    .readOnly().initialValue(0).commit()
+                    ,
+            STRING_ELEMENT(expected).key("state")
+                    .displayedName("State").description("The current state the device is in")
+                    .assignmentOptional().defaultValue("uninitialized").readOnly().commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger")
+                    .description("Logging settings")
+                    .displayedName("Logger")
+                    .appendParametersOfConfigurableClass(Logger,"Logger")
+                    .commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger.rollingFile")
+                    .description("Log Appender settings for file")
+                    .displayedName("Rolling File Appender")
+                    .appendParametersOfConfigurableClass(AppenderConfigurator,"RollingFile")
+                    .advanced()
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout.Pattern.format")
+                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
+                    .setNewDefaultValue("device.log")
+                    .commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger.network")
+                    .description("Log Appender settings for Network")
+                    .displayedName("Network Appender")
+                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Network")
+                    .advanced()
+                    .commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger.ostream")
+                    .description("Log Appender settings for terminal")
+                    .displayedName("Ostream Appender")
+                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Ostream")
+                    .advanced()
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout.Pattern.format")
+                    .setNewDefaultValue("%p  %c  : %m%n")
+                    .commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger.karabo")
+                    .description("Logger category for karabo framework")
+                    .displayedName("Karabo framework logger")
+                    .appendParametersOfConfigurableClass(CategoryConfigurator, "Category")
+                    .advanced()
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
+                    .setNewAssignmentOptional()
+                    .setNewDefaultValue("karabo")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
+                    .setNewDefaultValue(False)
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders")
+                    .setNewDefaultValue("RollingFile")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout")
+                    .setNewDefaultValue("Pattern")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout.Pattern.format")
+                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
+                    .commit()
+                    ,
+            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
+                    .setNewDefaultValue("device.log")
+                    .commit()
+                    ,
+        )
         
     def __init__(self, configuration):
         if configuration is None:
@@ -112,22 +180,14 @@ class PythonDevice(BaseFsm):
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
-        
+
         # Instantiate SignalSlotable object without starting event loop
-        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
-        
+        try:
+            self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
+        except RuntimeError as e:
+            raise RuntimeError,"PythonDevice.__init__: SignalSlotable.create Exception -- " + str(e)
         # Setup device logger
-        #logcfg = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
-        #            "appenders[0].Ostream.layout", "Pattern")
-        logcfg = configuration["Logger"]
-        logcfg["categories[0].Category.name"] = self.deviceid
-        logcfg["categories[0].Category.appenders[0].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
-        logcfg["categories[0].Category.additivity"] = False
-        logcfg["categories[0].Category.appenders[1].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
-        if "connection" in configuration:
-            logcfg["categories[0].Category.appenders[1].Network.connection"] = configuration["connection"]
-        #logcfg["priority"] = "DEBUG"
-        Logger.configure(logcfg)
+        self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
 
         # Initialize FSM slots for user defined FSM (polymorphic call) 
@@ -135,6 +195,42 @@ class PythonDevice(BaseFsm):
         
         # Initialize Device slots
         self._initDeviceSlots()
+        
+    def loadLogger(self,input):
+        config = input["Logger"]
+
+        # make a copy of additional appenders defined by user
+        appenders = config["appenders"]
+
+        # handle predefined Device appenders
+        newAppenders = [Hash(), Hash(), Hash()]
+        newAppenders[0].set("Ostream", config["ostream"])
+        newAppenders[1].set("RollingFile", config["rollingFile"])
+        newAppenders[2].set("Network", config["network"])
+            
+        del config["ostream"]
+        del config["rollingFile"]
+        del config["network"]
+
+        for a in appenders:
+            if a.has("Ostream"):
+                if a["Ostream.name"] == "default":
+                    continue
+            newAppenders.append(a)
+                
+        config.set("appenders", newAppenders)
+            
+        config["appenders[2].Network.layout"] = Hash()
+        config["appenders[2].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        if "connection" in input:
+            config["appenders[2].Network.connection"] = input["connection"]
+            
+        category = config["karabo"]
+        category["name"] = "karabo"
+        config["categories[0].Category"] = category
+        del config["karabo"]
+#        print "loadLogger final:\n", config
+        Logger.configure(config)
         
     def run(self):
         self.initClassId()
