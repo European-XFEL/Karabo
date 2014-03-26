@@ -38,7 +38,7 @@ class EditableCheckBox(EditableWidget):
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
 
         if hasattr(box, 'value'):
-            self.valueChanged(box, value)
+            self.valueChanged(box, box.value)
 
 
     @property

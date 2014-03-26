@@ -292,7 +292,8 @@ class _Manager(QObject):
 
     def initDevice(self, serverId, classId):
         # Put configuration hash together
-        config = Hash(classId, self.serverClassData[serverId, classId].configuration)
+        config = Hash(classId,
+            self.serverClassData[serverId, classId].toHash())
        
         # Send signal to network
         self.signalInitDevice.emit(serverId, config)
@@ -505,15 +506,17 @@ class _Manager(QObject):
         
         conf = self.serverClassData[serverId, classId]
         conf.setSchema(schema)
+        conf.setDefault()
         self.onSchemaAvailable(conf)
 
 
     def getClass(self, serverId, classId):
-        if deviceId not in self.deviceData:
+        if (serverId, classId) not in self.serverClassData:
             path = "{}.{}".format(serverId, classId)
-            self.deviceData[deviceId] = Configuration(path, 'device')
-            self.signalGetDeviceSchema.emit(deviceId)
-        return self.deviceData[deviceId]
+            self.serverClassData[serverId, classId] = Configuration(path,
+                                                                    'class')
+            self.signalGetClassSchema.emit(serverId, classId)
+        return self.serverClassData[serverId, classId]
     
     
     def handleDeviceSchema(self, instanceInfo):

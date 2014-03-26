@@ -334,7 +334,7 @@ class Network(QObject):
 
     def onRefreshInstance(self, configuration):
         instanceInfo = Hash("type", "refreshInstance")
-        instanceInfo.set("deviceId", instanceId)
+        instanceInfo.set("deviceId", configuration.path)
         self._tcpWriteHash(instanceInfo)
 
 

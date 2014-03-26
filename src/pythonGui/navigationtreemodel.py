@@ -304,13 +304,11 @@ class NavigationTreeModel(QAbstractItemModel):
 
             conf = manager.Manager().getClass(serverId, classId)
             path = "{}.{}".format(serverId, classId)
-            manager.Manager().onSchemaAvailable(conf)
         elif level == 3:
             deviceId = index.data()
 
             conf = manager.Manager().getDevice(deviceId)
             path = deviceId
-            manager.Manager().onSchemaAvailable(conf)
 
         self.signalItemChanged.emit(conf)
 
