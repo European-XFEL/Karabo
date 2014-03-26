@@ -473,6 +473,28 @@ void Schema_Test::testPerKeyFunctionality() {
             CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
             CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
         }
+
+        if (keys[i] == "exampleKey6") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == false);
+            CPPUNIT_ASSERT(m_schema.getDisplayType(keys[i]) == "hex");
+        }
+
+        if (keys[i] == "exampleKey7") {
+            CPPUNIT_ASSERT(m_schema.hasDefaultValue(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAssignment(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAssignmentOptional(keys[i]) == true);
+
+            CPPUNIT_ASSERT(m_schema.hasAccessMode(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.isAccessReadOnly(keys[i]) == true);
+            CPPUNIT_ASSERT(m_schema.getDisplayType(keys[i]) == "bin|0:isError,1:isMoving,2:isBusy,15:isOn");
+        }
     }
 
 }
