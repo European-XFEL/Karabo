@@ -109,7 +109,8 @@ class BaseComponent(Loadable, QObject):
             d[ns_karabo + "allowedStates"] = ",".join(
                 self.widgetFactory.allowedStates)
             d[ns_karabo + "command"] = self.widgetFactory.command
-        d[ns_karabo + "keys"] = ",".join(self.keys)
+        d[ns_karabo + "keys"] = ",".join(b.key()
+                                         for b in self.widgetFactory.boxes)
         return d
 
 
