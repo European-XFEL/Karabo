@@ -403,10 +403,10 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22-06:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22+06:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("20090519T143922+0600") == true);
-    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22+0600") == true);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22+06:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22-01") == true);
     CPPUNIT_ASSERT(isValidIso8601("20090621T0545Z") == true);
-    CPPUNIT_ASSERT(isValidIso8601("20090621T0545:01Z") == true);
+    CPPUNIT_ASSERT(isValidIso8601("20090621T054501Z") == true);
     CPPUNIT_ASSERT(isValidIso8601("2007-04-06T00:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2007-04-06T00:00:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2007-04-05T24:00") == true);
@@ -418,14 +418,16 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23:33.4") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23,25") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23:44,25") == true);
-    CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23.33+0600") == true);
-    CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23:52.33+0600") == true);
+    CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23.33+06:00") == true);
+    CPPUNIT_ASSERT(isValidIso8601("20100218T162352.33+0600") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16.23334444") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:17:18.23334444") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16,2283") == true);
     CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:17:18,2283") == true);
-    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T143922.500") == true);
-    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T1439,55") == true);
+    CPPUNIT_ASSERT(isValidIso8601("20090519T143922.500") == true);
+    CPPUNIT_ASSERT(isValidIso8601("20090519T1439,55") == true);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22.500") == true);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39,55") == true);
 
     CPPUNIT_ASSERT(isValidIso8601("1994-11-05T08:15:30-05:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("1994-11-05T13:15:30Z") == true);
@@ -443,24 +445,43 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("2008-09-15T15:53:00+05:00") == true);
     CPPUNIT_ASSERT(isValidIso8601("2008-09-15") == true);
     CPPUNIT_ASSERT(isValidIso8601("20121225T132536.789333123456789123") == true);
+    CPPUNIT_ASSERT(isValidIso8601("200905") == true); //Year + Month
+    CPPUNIT_ASSERT(isValidIso8601("200913") == true); //Year + Day
+    CPPUNIT_ASSERT(isValidIso8601("2007-04-05T23:50") == true);
+    CPPUNIT_ASSERT(isValidIso8601("2009-0519") == true); // Year - Time zone
+    CPPUNIT_ASSERT(isValidIso8601("200912-01") == true); // Year + Month - Time zone
 
     // Strings that shouldn't be valid
+
+    // This String should be false, but for convenience, it will be ignored.
+    CPPUNIT_ASSERT(isValidIso8601("T200159") == true);
+    CPPUNIT_ASSERT(isValidIso8601("T20:01:59") == true);
+
+    //
     CPPUNIT_ASSERT(isValidIso8601("Wed Feb 26 17:11:26 CET 2014") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("200905") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009367") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2007-04-05T24:50") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2007-04-05T24:50") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-000") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-M511") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009M511") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14a39r") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2009-05-19T14:3924") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2009-0519") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:39:22+0600") == false);
+    CPPUNIT_ASSERT(isValidIso8601("20090621T0545:01Z") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2010-02-18T16:23.33+0600") == false);
+    CPPUNIT_ASSERT(isValidIso8601("20100218T162352.33+06:00") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T143922.500") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T1439,55") == false);
+    CPPUNIT_ASSERT(isValidIso8601("20090519T14:39:22.500") == false);
+    CPPUNIT_ASSERT(isValidIso8601("20090519T14:39,55") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-05-19T14:3924") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-2519T") == false);
+    CPPUNIT_ASSERT(isValidIso8601("2009-2519") == false); // Year - Time zone that doesn't exist
+    CPPUNIT_ASSERT(isValidIso8601("200912-30") == false); //Year + Month - Time zone that doesn't exist
     CPPUNIT_ASSERT(isValidIso8601("2009-05-1914:39") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19 14:") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19r14:39") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19 14a39a22") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("200912-01") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19 14:39:22+06a00") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19 144922.500") == false);
     CPPUNIT_ASSERT(isValidIso8601("2009-05-19T146922.500") == false);
@@ -483,8 +504,6 @@ void DateTimeString_Test::isStringValidIso8601() {
     CPPUNIT_ASSERT(isValidIso8601("T") == false);
     CPPUNIT_ASSERT(isValidIso8601("20120120T") == false);
     CPPUNIT_ASSERT(isValidIso8601("2012-01-20T") == false);
-    CPPUNIT_ASSERT(isValidIso8601("T200159") == false);
-    CPPUNIT_ASSERT(isValidIso8601("T20:01:59") == false);
     CPPUNIT_ASSERT(isValidIso8601("20080915 ") == false);
     CPPUNIT_ASSERT(isValidIso8601(" 20080915") == false);
 
@@ -837,21 +856,23 @@ void DateTimeString_Test::isStringKaraboValidIso8601() {
 
     // Strings that shouldn't be valid
     CPPUNIT_ASSERT(isValidKaraboIso8601("Wed Feb 26 17:11:26 CET 2014") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("200905") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("200913") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("200905") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009367") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2007-04-05T24:50") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2007-04-05T24:50") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2007-04-05T23:50") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-000") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-M511") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009M511") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19T14a39r") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2009-05-19T14:3924") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("2009-0519") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19T14:3924") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("2009-0519") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-1914:39") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19 14:") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19r14:39") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19 14a39a22") == false);
-    //CPPUNIT_ASSERT(isStringValidIso8601("200912-01") == false);
+    CPPUNIT_ASSERT(isValidKaraboIso8601("200912-01") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19 14:39:22+06a00") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19 144922.500") == false);
     CPPUNIT_ASSERT(isValidKaraboIso8601("2009-05-19T146922.500") == false);
@@ -997,13 +1018,19 @@ void DateTimeString_Test::isValidateFractionalSecondToString(const unsigned long
     expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3);
     if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::MILLISEC, " << fractionalSeconds << ") => '"
             << dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
-    //CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) == expectedFractionalSeconds);
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::MILLISEC, fractionalSeconds) == expectedFractionalSeconds);
 
     //ONESECOND
-    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 2);
+    expectedFractionalSeconds = expectedFractionalSeconds.substr(0, expectedFractionalSeconds.size() - 3) + "0";
     if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::ONESECOND, " << fractionalSeconds << ") => '"
             << dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
     CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::ONESECOND, fractionalSeconds) == expectedFractionalSeconds);
+
+    //NOFRACTION
+    expectedFractionalSeconds = "";
+    if (writeToClog) std::clog << "fractionalSecondToString(karabo::util::NOFRACTION, " << fractionalSeconds << ") => '"
+            << dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) << "' == '" << expectedFractionalSeconds << "'" << std::endl;
+    CPPUNIT_ASSERT(dts.fractionalSecondToString(karabo::util::NOFRACTION, fractionalSeconds) == expectedFractionalSeconds);
 
     return;
 }
@@ -1011,11 +1038,45 @@ void DateTimeString_Test::isValidateFractionalSecondToString(const unsigned long
 
 void DateTimeString_Test::validateFractionalSecondToString() {
 
-    bool writeToClog = true;
+    bool writeToClog = false;
 
+    isValidateFractionalSecondToString(100000000000000000ULL, "100000000000000000", writeToClog);
+    isValidateFractionalSecondToString(10000000000000000ULL, "010000000000000000", writeToClog);
     isValidateFractionalSecondToString(1000000000000000ULL, "001000000000000000", writeToClog);
+    isValidateFractionalSecondToString(100000000000000ULL, "000100000000000000", writeToClog);
+    isValidateFractionalSecondToString(10000000000000ULL, "000010000000000000", writeToClog);
+    isValidateFractionalSecondToString(1000000000000ULL, "000001000000000000", writeToClog);
+    isValidateFractionalSecondToString(100000000000ULL, "000000100000000000", writeToClog);
+    isValidateFractionalSecondToString(10000000000ULL, "000000010000000000", writeToClog);
+    isValidateFractionalSecondToString(1000000000ULL, "000000001000000000", writeToClog);
+    isValidateFractionalSecondToString(100000000ULL, "000000000100000000", writeToClog);
+    isValidateFractionalSecondToString(10000000ULL, "000000000010000000", writeToClog);
+    isValidateFractionalSecondToString(1000000ULL, "000000000001000000", writeToClog);
+    isValidateFractionalSecondToString(100000ULL, "000000000000100000", writeToClog);
+    isValidateFractionalSecondToString(10000ULL, "000000000000010000", writeToClog);
+    isValidateFractionalSecondToString(1000ULL, "000000000000001000", writeToClog);
+    isValidateFractionalSecondToString(100ULL, "000000000000000100", writeToClog);
+    isValidateFractionalSecondToString(10ULL, "000000000000000010", writeToClog);
+    isValidateFractionalSecondToString(1ULL, "000000000000000001", writeToClog);
+
+    //
     isValidateFractionalSecondToString(101000000000000000ULL, "101000000000000000", writeToClog);
-
-
+    isValidateFractionalSecondToString(10100000000000000ULL, "010100000000000000", writeToClog);
+    isValidateFractionalSecondToString(1010000000000000ULL, "001010000000000000", writeToClog);
+    isValidateFractionalSecondToString(101000000000000ULL, "000101000000000000", writeToClog);
+    isValidateFractionalSecondToString(10100000000000ULL, "000010100000000000", writeToClog);
+    isValidateFractionalSecondToString(1010000000000ULL, "000001010000000000", writeToClog);
+    isValidateFractionalSecondToString(101000000000ULL, "000000101000000000", writeToClog);
+    isValidateFractionalSecondToString(10100000000ULL, "000000010100000000", writeToClog);
+    isValidateFractionalSecondToString(1010000000ULL, "000000001010000000", writeToClog);
+    isValidateFractionalSecondToString(101000000ULL, "000000000101000000", writeToClog);
+    isValidateFractionalSecondToString(10100000ULL, "000000000010100000", writeToClog);
+    isValidateFractionalSecondToString(1010000ULL, "000000000001010000", writeToClog);
+    isValidateFractionalSecondToString(101000ULL, "000000000000101000", writeToClog);
+    isValidateFractionalSecondToString(10100ULL, "000000000000010100", writeToClog);
+    isValidateFractionalSecondToString(1010ULL, "000000000000001010", writeToClog);
+    isValidateFractionalSecondToString(101ULL, "000000000000000101", writeToClog);
+    isValidateFractionalSecondToString(10ULL, "000000000000000010", writeToClog);
+    isValidateFractionalSecondToString(1ULL, "000000000000000001", writeToClog);
 
 }
