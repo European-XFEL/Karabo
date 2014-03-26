@@ -377,7 +377,7 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 .def("tags"\
 , (T & (T::*)(std::vector<std::string> const &))(&T::tags)\
 , (bp::arg("tags"))\
-, bp::return_internal_reference<> ())\
+, bp::return_internal_reference<> ())
 
 
 #define KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
