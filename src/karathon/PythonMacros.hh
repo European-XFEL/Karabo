@@ -396,7 +396,9 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 , bp::return_internal_reference<> ())\
 .def("oct", &T::oct\
 , bp::return_internal_reference<> ())\
-.def("bin", &T::bin\
+.def("bin", (T& (T::*)())&T::bin\
+, bp::return_internal_reference<> ())\
+.def("bin", (T& (T::*)(const std::string&))&T::bin, (bp::arg("meaning"))\
 , bp::return_internal_reference<> ())\
 .def("maxExc", &T::maxExc\
 , bp::return_internal_reference<> ())\
@@ -406,17 +408,6 @@ KARABO_PYTHON_NUMERIC_ATTRIBUTES(T) \
 , bp::return_internal_reference<> ())\
 .def("minInc", &T::minInc\
 , bp::return_internal_reference<> ())
-
-#define KARABO_PYTHON_BITSET(t, e)\
-{\
-typedef t EType;\
-typedef BitsetElement< EType > T;\
-bp::implicitly_convertible< Schema &, T >();\
-bp::class_< T, boost::noncopyable >( #e"_ELEMENT", bp::init< Schema & >((bp::arg("expected"))) )\
-KARABO_PYTHON_COMMON_ATTRIBUTES(T) \
-KARABO_PYTHON_OPTIONS_NONVECTOR(T) \
-;\
-}
 
 
 /**
