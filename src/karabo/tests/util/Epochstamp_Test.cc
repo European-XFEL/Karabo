@@ -9,6 +9,7 @@
  */
 
 #include "Epochstamp_Test.hh"
+#include "karabo/util/DateTimeString.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 
@@ -90,7 +91,7 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
         }
 
-
+        // (i.e. expectedToIso8601 => 20121225T132536.789333123456789123)
         //ATTOSEC
         toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
 
@@ -107,18 +108,21 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
         toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
 
         //MILLISEC
-        //toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
+        toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
 
         //ONESECOND
-        //toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 17));
+        toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 18) + "0");
+
+        //NOFRACTION
+        toIso8601Precision(epo, epo2, NOFRACTION, "NOFRACTION", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 19));
     }
 
 
     // toTimestamp Validation
     ostringstream oss;
     oss << epo.getSeconds()
-            << '.'
-            << setw(18 - std::log10((long double) MICROSEC)) << setfill('0') << epo.getFractionalSeconds() / MICROSEC;
+            << karabo::util::DateTimeString::fractionalSecondToString(MICROSEC, epo.getFractionalSeconds());
+
     double expectedTimestamp = boost::lexical_cast<double>(oss.str());
 
     if (writeToClog) std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp() << " == " << expectedTimestamp << std::endl;
@@ -140,7 +144,6 @@ void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
 
     //Concatenate function name plus precision description
     std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
-    ;
 
     //ATTOSEC
     if (isCompactString == true) {
