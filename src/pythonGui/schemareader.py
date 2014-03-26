@@ -44,6 +44,10 @@ class Box(QObject):
         self.timestamp = None
 
 
+    def key(self):
+        return self.configuration.path + '.' + '.'.join(self.path)
+
+
     configuration = Weak()
 
 
