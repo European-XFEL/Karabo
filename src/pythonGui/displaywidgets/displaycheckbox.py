@@ -32,10 +32,10 @@ class DisplayCheckBox(DisplayWidget):
     alias = "Toggle Field"
 
     
-    def __init__(self, **params):
-        super(DisplayCheckBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayCheckBox, self).__init__(box)
         
-        self.__checkBox = QCheckBox()
+        self.__checkBox = QCheckBox(parent)
         self.__checkBox.setEnabled(False)
 
         self.box.addWidget(self)
@@ -50,18 +50,7 @@ class DisplayCheckBox(DisplayWidget):
         return self.__checkBox.checkState() == Qt.Checked
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
-        
-        value = bool(value) # could be 0 or 1
-        
-        checkState = Qt.Checked
-        if value is True:
-            checkState = Qt.Checked
-        else :
-            checkState = Qt.Unchecked
-        
+    def valueChanged(self, box, value, timestamp=None):
         self.__checkBox.blockSignals(True)
-        self.__checkBox.setCheckState(checkState)
+        self.__checkBox.setCheckState(Qt.Checked if value else Qt.Unchecked)
         self.__checkBox.blockSignals(False)
