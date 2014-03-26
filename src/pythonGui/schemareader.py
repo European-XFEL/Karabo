@@ -191,8 +191,8 @@ class NodeBox(Box):
             try:
                 vv = getattr(self._value, k)
             except AttributeError:
-                print 'schemaset: no {} in {}'.format(k, self._value)
-                raise
+                print 'schemaset: no {} in {} (to {})'.format(k, self._value, v)
+                continue
             try:
                 ts = Timestamp.fromHashAttributes(a)
             except KeyError:
