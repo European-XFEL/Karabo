@@ -24,11 +24,11 @@ void exportPyUtilDateTimeString() {
 
     bp::implicitly_convertible< std::string const &, karabo::util::DateTimeString >();
 
-    dts.def("getDateString"
+    dts.def("getDate"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDate)
             , bp::return_value_policy< bp::copy_const_reference >());
 
-    dts.def("getTimeString"
+    dts.def("getTime"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTime)
             , bp::return_value_policy< bp::copy_const_reference >());
 
@@ -38,11 +38,11 @@ void exportPyUtilDateTimeString() {
     dts.def("getFractionalSeconds"
             , (const unsigned long long (DateTimeString::*)() const) (&DateTimeString::getFractionalSeconds));
 
-    dts.def("getTimeZoneString"
+    dts.def("getTimeZone"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTimeZone)
             , bp::return_value_policy< bp::copy_const_reference >());
 
-    dts.def("getDateTimeString"
+    dts.def("getDateTime"
             , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDateTime)
             , bp::return_value_policy< bp::copy_const_reference >());
 
