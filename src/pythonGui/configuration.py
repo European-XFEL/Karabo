@@ -13,9 +13,7 @@ devices.
 __all__ = ["Configuration"]
 
 
-from hash import Hash, HashMergePolicy
 from schemareader import SchemaReader
-import weakref
 import manager
 
 
@@ -44,12 +42,20 @@ class Configuration(object):
         return self._configuration.value
 
 
+    def toHash(self):
+        return self._configuration.descriptor.toHash(self.configuration)
+
+
     def merge(self, config):
         self._configuration.set(config)
 
 
     def set(self, parameterKey, value):
         self._configuration.set(parameterKey, value)
+
+
+    def setDefault(self):
+        self._configuration.setDefault()
 
 
     def setAttribute(self, parameterKey, attributeKey, value):

@@ -31,20 +31,18 @@ class EditableComboBox(EditableWidget):
     category = "Selection"
     alias = "Selection Field"
 
-    def __init__(self, value=None, valueType=None, enumeration=None, **params):
-        super(EditableComboBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableComboBox, self).__init__(box)
         
-        self.__comboBox = QComboBox()
+        self.__comboBox = QComboBox(parent)
         self.__comboBox.setFrame(False)
 
-        self.addItems(enumeration)
+        self.addItems(box.descriptor.options)
         
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
         
-        self.valueType = valueType
-        
-        self.valueChanged(self.keys[0], value)
+        self.valueChanged(box, box.value)
 
 
     def eventFilter(self, object, event):

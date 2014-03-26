@@ -1,4 +1,4 @@
-from hash import Schema
+from hash import Schema, Hash
 import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
@@ -41,6 +41,7 @@ class Box(QObject):
         self.path = path
         self.descriptor = descriptor
         self.configuration = configuration
+        self.timestamp = None
 
 
     configuration = Weak()
@@ -49,6 +50,10 @@ class Box(QObject):
     @property
     def value(self):
         return self._value
+
+
+    def toHash(self):
+        return self.value
 
 
     def set(self, value, timestamp=None):
@@ -69,18 +74,22 @@ class Box(QObject):
             self.signalUpdateComponent.emit(self, self._value, self.timestamp)
 
 
+    def setDefault(self):
+        self.set(self.descriptor.defaultValue)
+
+
+def _copyAttr(self, item, out, ain=None):
+    if ain is None:
+        ain = out
+    if hasattr(self, ain):
+        setattr(item, out, getattr(self, ain))
+
+
 
 class Type(hashtypes.Type):
     __metaclass__ = Monkey
     Box = Box
     icon = icons.undefined
-
-
-    def copyAttr(self, item, out, ain=None):
-        if ain is None:
-            ain = out
-        if hasattr(self, ain):
-            setattr(item, out, getattr(self, ain))
 
 
     def item(self, treeWidget, parent, box, isClass):
@@ -89,7 +98,7 @@ class Type(hashtypes.Type):
             item.displayText = self.displayedName
         except AttributeError:
             item.displayText = box.path[-1]
-        self.copyAttr(item, 'allowedStates')
+        _copyAttr(self, item, 'allowedStates')
 
         try:
             item.enumeration = self.options
@@ -129,7 +138,7 @@ class String(hashtypes.String):
 
         try:
             ca = dict(directory='Directory', fileIn='File In',
-                      fileOut='fileOut')[self.displayType]
+                      fileOut='File Out')[self.displayType]
             item.classAlias = ca
             item.setIcon(0, icons.path)
         except AttributeError:
@@ -176,21 +185,14 @@ class Object(object):
         getattr(self, key).set(value)
 
 
-class SchemaBox(Box):
-    def __init__(self, path, descriptor, configuration):
-        Box.__init__(self, path, descriptor, configuration)
-        self.set(descriptor.getClass()(path, configuration))
-
-
+class NodeBox(Box):
     def set(self, value, timestamp=None):
-        if isinstance(value, self.descriptor.getClass()):
-            Box.set(self, value, timestamp)
-            return
         for k, v, a in value.iterall():
             try:
                 vv = getattr(self._value, k)
             except AttributeError:
                 print 'schemaset: no {} in {}'.format(k, self._value)
+                raise
             try:
                 ts = Timestamp.fromHashAttributes(a)
             except KeyError:
@@ -203,26 +205,46 @@ class SchemaBox(Box):
         Box.set(self, self._value, timestamp)
 
 
+class SchemaBox(NodeBox):
+    def __init__(self, path, descriptor, configuration):
+        NodeBox.__init__(self, path, descriptor, configuration)
+        self.set(descriptor.getClass()(path, configuration))
+
+
+    def set(self, value, timestamp=None):
+        if isinstance(value, self.descriptor.getClass()):
+            Box.set(self, value, timestamp)
+        else:
+            NodeBox.set(self, value, timestamp)
+
+
+    def setDefault(self):
+        for k, v in self.descriptor.dict.iteritems():
+            getattr(self._value, k).setDefault()
+
+
 class Schema(hashtypes.Descriptor):
     Box = SchemaBox
 
 
-    def __init__(self):
+    def __init__(self, name='DUNNO'):
         self.dict = OrderedDict()
         self.cls = None
-        self.name = 'DUNNO'
+        self.name = name
 
 
     @staticmethod
     def parse(key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  Schema.parse)
-        self = Schema()
+        self = Schema(key)
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
         for k, h, a in hash.iterall():
             self.dict[k] = nodes[a['nodeType']](k, h, a, self)
-        self.attrs = attrs
+        self.displayedName = key
+        for k, v in attrs.iteritems():
+            setattr(self, k, v)
         self.classAlias = dict(Image="Image View", Slot="Command").get(
             attrs.get('displayType', None), "Value Field")
         self.key = key
@@ -232,38 +254,27 @@ class Schema(hashtypes.Descriptor):
     @staticmethod
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
+        ret.defaultValue = None
+        ret.displayedName = key
         for k, v in attrs.iteritems():
             setattr(ret, k, v)
         return ret
 
 
-    def copyAttr(self, item, out, ain=None):
-        if ain is None:
-            ain = out
-        if ain in self.attrs:
-            setattr(item, out, self.attrs[ain])
-
-
     def item(self, treeWidget, parent, configuration, isClass):
-        if self.attrs['displayType'] == "Image":
+        if self.displayType == "Image":
             item = ImageTreeWidgetItem(configuration, treeWidget, parent)
 
             item.enabled = not isClass
-
-            self.copyAttr(item, 'displayText', 'displayedName')
-            self.copyAttr(item, 'allowedStates')
-        elif self.attrs['displayType'] == "Slot":
+        elif self.displayType == "Slot":
             item = CommandTreeWidgetItem(self.key, configuration,
                                          treeWidget, parent)
 
             item.enabled = not isClass
-
-            item.displayText = self.attrs.get('displayedName', self.key[-1])
-            self.copyAttr(item, 'allowedStates')
-        #else:
-        #    item = self._createPropertyItem(key, hash, attrs, parent)
         else:
-            return None
+            item = PropertyTreeWidgetItem(configuration, treeWidget, parent)
+        item.displayText = self.displayedName
+        _copyAttr(self, item, 'allowedStates')
         self._item(treeWidget, item, configuration, isClass)
         return item
 
@@ -290,10 +301,108 @@ class Schema(hashtypes.Descriptor):
         return self.cls
 
 
+    def toHash(self, schema):
+        ret = Hash()
+        for k, v in schema.__dict__.iteritems():
+            try:
+                ret[k] = v.descriptor.toHash(v.value)
+            except AttributeError as e:
+                print 'tH', k, e
+                pass
+        return ret
+
+
+class ChoiceBox(NodeBox):
+    def __init__(self, path, descriptor, configuration):
+        NodeBox.__init__(self, path, descriptor, configuration)
+        self.choices = { }
+        for k, v in descriptor.choices.iteritems():
+            box = SchemaBox(path + (k,), v, configuration)
+            box.set(v.getClass()(path, configuration))
+            self.choices[k] = box
+
+
+    def set(self, value, timestamp=None):
+        try:
+            c = value in self.choices
+        except TypeError:
+            c = False
+        if c:
+            self._value = self.choices[value]
+            return
+        for k, v, a in value.iterall():
+            self._value = self.choices[k]
+            self._value.set(v, timestamp)
+            return # there should be only one entry in the hash
+
+    def setDefault(self):
+        self._value = self.choices[self.descriptor.defaultValue]
+        for k, v in self.descriptor.choices[self.descriptor.defaultValue
+                                            ].dict.iteritems():
+            getattr(self._value.value, k).setDefault()
+
+
 class ChoiceOfNodes(hashtypes.Descriptor):
+    Box = ChoiceBox
+
+
     @staticmethod
     def parse(key, hash, attrs, parent=None):
-        return None
+        self = ChoiceOfNodes()
+        self.assignment = None
+        for k, v in attrs.iteritems():
+            setattr(self, k, v)
+        self.choices = {k: Schema.parse(k, h, a) for k, h, a in hash.iterall()}
+        return self
+
+
+    def item(self, treeWidget, parent, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+        try:
+            item.displayText = self.displayedName
+        except AttributeError:
+            item.displayText = box.path[-1]
+        _copyAttr(self, item, 'allowedStates')
+        if self.assignment == 1: # Mandatory
+            f = item.font(0)
+            f.setBold(True)
+            item.setFont(0, f)
+        _copyAttr(self, item, 'defaultValue')
+
+        item.isChoiceElement = True
+        item.classAlias = "Choice Element"
+
+        item.editableComponent = None
+        component = None
+
+        if isClass:
+            if self.accessMode & (AccessMode.INITONLY |
+                                  AccessMode.RECONFIGURABLE):
+                component = EditableNoApplyComponent
+        else:
+            if False: #attrs['accessMode'] & AccessMode.RECONFIGURABLE:
+                component = EditableApplyLaterComponent
+            else:
+                component = ChoiceComponent
+        if component is not None:
+            item.editableComponent = component(item.classAlias, box, treeWidget)
+        if component is EditableApplyLaterComponent:
+            item.editableComponent.signalApplyChanged.connect(
+                self.treeWidget.onApplyChanged)
+
+        defaultValue = item.defaultValue
+        for k, v in self.choices.iteritems():
+            childItem = v.item(treeWidget, item, box.choices[k], isClass)
+
+            if defaultValue is None:
+                childItem.setHidden(True)
+                defaultValue = False
+            elif  k != defaultValue:
+                childItem.setHidden(True)
+
+            if item.editableComponent is not None:
+                item.editableComponent.addParameters(itemToBeAdded=childItem)
+        return item
 
 
 class SchemaReader(object):
@@ -304,8 +413,7 @@ class SchemaReader(object):
     def readSchema(self, schema):
         if schema is None:
             return
-        ret = Schema.parse('', schema.hash, {})
-        ret.name = schema.name
+        ret = Schema.parse(schema.name, schema.hash, {})
         return ret
 
 

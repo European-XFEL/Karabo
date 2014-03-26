@@ -23,17 +23,13 @@ from PyQt4.QtGui import *
 class ChoiceComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, **params):
+    def __init__(self, classAlias, box, parent):
         super(ChoiceComponent, self).__init__(classAlias)
         
-        self.__classAlias = classAlias
-        self.__initParams = params
-        
-        self.__choiceWidget = EditableWidget.get_class(classAlias)(**params)
+        self.__choiceWidget = EditableWidget.get_class(classAlias)(box, parent)
         self.widget.setEnabled(False)
 
-        # Use key to register component to manager
-        manager.Manager().registerEditableComponent(params.get('key'), self)
+        box.addComponent(self)
 
 
     def copy(self):

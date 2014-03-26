@@ -31,16 +31,15 @@ class EditableLineEdit(EditableWidget):
     category = "String"
     alias = "Text Field"
 
-    def __init__(self, value=None, **params):
-        super(EditableLineEdit, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableLineEdit, self).__init__(box)
         
-        self.__lineEdit = QLineEdit()
+        self.__lineEdit = QLineEdit(parent)
         self.__lineEdit.textChanged.connect(self.onEditingFinished)
         
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.__lastCursorPos = 0
-        
-        self.valueChanged(self.keys[0], value)
+        box.addWidget(self)
 
 
     @property
@@ -68,11 +67,6 @@ class EditableLineEdit(EditableWidget):
             self.onEditingFinished(value)
 
 
-### slots ###
     def onEditingFinished(self, value):
-        #if "." in value:
-         #   QMessageBox.critical(None, "Invalid input", "Your input contains '.' characters.<br>Please choose something else.")
-         #   self.__lineEdit.setText("")
-         #   return
         self.__lastCursorPos = self.__lineEdit.cursorPosition()
-        self.signalEditingFinished.emit(self.keys[0], value)
+        EditableWidget.onEditingFinished(self, value)

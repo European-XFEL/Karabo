@@ -38,6 +38,7 @@ class DisplayCheckBox(DisplayWidget):
         self.__checkBox = QCheckBox()
         self.__checkBox.setEnabled(False)
 
+        self.box.addWidget(self)
 
     @property
     def widget(self):

@@ -35,8 +35,8 @@ class EditableNoApplyComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
         
-        metricPrefixSymbol = params.get('metricPrefixSymbol')
-        unitSymbol = params.get('unitSymbol')
+        metricPrefixSymbol = getattr(box.descriptor, "metricPrefixSymbol", None)
+        unitSymbol = getattr(box.descriptor, "unitSymbol", None)
         
         # Append unit label, if available
         unitLabel = ""
@@ -47,7 +47,7 @@ class EditableNoApplyComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        params['key'].addComponent(self)
+        box.addComponent(self)
 
 
     def copy(self):
