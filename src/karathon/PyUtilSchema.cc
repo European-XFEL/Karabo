@@ -1705,14 +1705,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
-//    KARABO_PYTHON_BITSET(unsigned char,      BITSET8)
-//    KARABO_PYTHON_BITSET(unsigned short,     BITSET16)
-//    KARABO_PYTHON_BITSET(unsigned int,       BITSET32)
-//    KARABO_PYTHON_BITSET(unsigned long long, BITSET64)
-    
-            //////////////////////////////////////////////////////////////////////
-            // Binding karabo::util::PathElement       
-            // In Python : PATH_ELEMENT
+    //////////////////////////////////////////////////////////////////////
+    // Binding karabo::util::PathElement       
+    // In Python : PATH_ELEMENT
     {
         bp::implicitly_convertible< Schema &, PathElement >();
         bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
