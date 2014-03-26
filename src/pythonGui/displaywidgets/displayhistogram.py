@@ -44,8 +44,8 @@ class DisplayHistogram(DisplayWidget):
     alias = "Histogram"
     minMaxAssociatedKeys = 1, 10
 
-    def __init__(self, key, **params):
-        super(DisplayHistogram, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayHistogram, self).__init__(box)
         
         if useGuiQwt:
             self.__histogramWidget = CurveDialog(edit=False, toolbar=True, wintitle="Histogram")
@@ -66,18 +66,9 @@ class DisplayHistogram(DisplayWidget):
         # Default colors
         self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
             
-        # Stores key/value pair
-        self.__keys = {key: None}
-
-
     @property
     def widget(self):
         return self.__histogramWidget
-
-
-    @property
-    def keys(self):
-        return self.__keys.keys()
 
 
     value = None
@@ -91,22 +82,18 @@ class DisplayHistogram(DisplayWidget):
             self.__keys.pop(key)
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        self.__keys[key] = value
-        
-        # Update plot
+    def valueChanged(self, box, value, timestamp=None):
         if useGuiQwt:
             while len(self.__plotCurves) > 0:
                 self.__plot.del_item(self.__plotCurves.pop())
 
-            index = -1
-            for key in self.__keys:
-                value = self.__keys.get(key)
+            for index, box in enumerate(self.boxes):
+                value = box.value
                 if value is None:
                     continue
                 
-                index += 1
-                curveItem = make.curve(range(0, len(value), 1), value, self.__colorList[index])
+                curveItem = make.curve(range(0, len(value), 1), value,
+                                       self.__colorList[index])
                 
                 self.__plot.add_item(curveItem)
                 
