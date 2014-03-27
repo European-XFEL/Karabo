@@ -120,20 +120,19 @@ class BaseComponent(Loadable, QObject):
         if elem.get(ns_karabo + "classAlias") == "Command":
             ks += "command", "allowedStates", "commandText"
         d = {k: elem.get(ns_karabo + k) for k in ks}
-        keys = d['keys'].split(",")
-        component = cls(commandEnabled=elem.get(
-                            ns_karabo + "commandEnabled") == "True",
-                        key=keys[0], **d)
-        parent = ProxyWidget(layout.parentWidget(), component)
-        parent.setWidget(component.widget)
+        boxes = []
+        for k in d['keys'].split(","):
+            deviceId, path = k.split('.', 1)
+            conf = manager.Manager().getDevice(deviceId)
+            conf.addVisible()
+            boxes.append(conf.getBox(path.split(".")))
+        #commandEnabled=elem.get(ns_karabo + "commandEnabled") == "True"
+        parent = ProxyWidget(layout.parentWidget())
+        component = cls(d['classAlias'], boxes[0], parent, d['widgetFactory'])
+        parent.setComponent(component)
         layout.loadPosition(elem, parent)
-        for k in keys[1:]:
-            component.addKey(k)
-        online = manager.Manager().newVisibleDevice(component.keys[0])
-        if not online:
-            # TODO:
-            #print "offline"
-            pass
+        for b in boxes[1:]:
+            component.addBox(b)
         component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         return component
 
