@@ -20,7 +20,7 @@ using namespace std;
 
 void exportPyWebAuthenticator() {
 
-    bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, string const &, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("brokerHostname"), bp::arg("brokerPortNumber"), bp::arg("brokerTopic"))));
+    bp::class_<Authenticator> a("Authenticator", bp::init<string const &, string const &, string const &, string const &, string const &, int const, string const & >((bp::arg("username"), bp::arg("password"), bp::arg("provider"), bp::arg("ipAddress"), bp::arg("brokerHostname"), bp::arg("brokerPortNumber"), bp::arg("brokerTopic"))));
 
     a.def("login"
           , (bool (Authenticator::*)())(&Authenticator::login));
@@ -40,8 +40,7 @@ void exportPyWebAuthenticator() {
           , bp::return_value_policy<bp::copy_const_reference > ());
 
     a.def("getBrokerPortNumber"
-          , (string const & (Authenticator::*)() const) (&Authenticator::getBrokerPortNumber)
-          , bp::return_value_policy<bp::copy_const_reference > ());
+          , (int const (Authenticator::*)() const) (&Authenticator::getBrokerPortNumber));
 
     a.def("getBrokerHostname"
           , (string const & (Authenticator::*)() const) (&Authenticator::getBrokerHostname)

@@ -88,7 +88,7 @@ namespace karabo {
         bool SignalSlotable::login(const std::string& username, const std::string& password, const std::string& provider) {
 
             string brokerHostname = getConnection()->getBrokerHostname();
-            string brokerPort = karabo::util::toString(getConnection()->getBrokerPort());
+            int brokerPort = getConnection()->getBrokerPort();
             string brokerTopic = getConnection()->getBrokerTopic();
 
             m_authenticator = Authenticator::Pointer(new Authenticator(username, password, provider, boost::asio::ip::host_name(), brokerHostname, brokerPort, brokerTopic));
@@ -930,7 +930,7 @@ namespace karabo {
                             countDown--;
                             if (entry.get<bool>("isExplicitlyTracked") == true) {
                                 Hash instanceInfo;
-                                if (entry.has("instanceInfo")) entry.get("instanceInfo", instanceInfo);                                
+                                if (entry.has("instanceInfo")) entry.get("instanceInfo", instanceInfo);
                                 instanceNotAvailable(it->getKey()); // DEPRECATE
                                 if (m_instanceNotAvailableHandler) m_instanceNotAvailableHandler(it->getKey(), instanceInfo); // Inform via callback
                             }

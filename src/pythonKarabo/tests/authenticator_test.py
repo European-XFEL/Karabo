@@ -22,7 +22,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         provider = "LOCAL";
         ipAddress = "PythonUnitTestsIpAddress";
         brokerHostname = "127.0.0.1";
-        brokerPortNumber = "4444";
+        brokerPortNumber = 4444;
         brokerTopic = "topic";
         software = "Karabo";
         #
@@ -114,7 +114,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         provider = "LOCAL";
         ipAddress = "PythonUnitTestsIpAddress";
         brokerHostname = "127.0.0.1";
-        brokerPortNumber = "4444";
+        brokerPortNumber = 4444;
         brokerTopic = "topic";
         software = "Karabo";
         #
@@ -183,7 +183,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         ipAddress = "PythonUnitTestsIpAddress";
         ipAddressWrong = "PythonUnitTestsIpAddressXXXXXXXXXXX";
         brokerHostname = "127.0.0.1";
-        brokerPortNumber = "4444";
+        brokerPortNumber = 4444;
         brokerTopic = "topic";
         #
         #timeStr = "20130120T122059.259188123";
