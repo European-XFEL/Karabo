@@ -64,79 +64,6 @@ class PythonDevice(BaseFsm):
                     .appendParametersOfConfigurableClass(Logger,"Logger")
                     .commit()
                     ,
-            NODE_ELEMENT(expected).key("Logger.rollingFile")
-                    .description("Log Appender settings for file")
-                    .displayedName("Rolling File Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"RollingFile")
-                    .advanced()
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
-                    .setNewDefaultValue("device.log")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.network")
-                    .description("Log Appender settings for Network")
-                    .displayedName("Network Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Network")
-                    .advanced()
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.ostream")
-                    .description("Log Appender settings for terminal")
-                    .displayedName("Ostream Appender")
-                    .appendParametersOfConfigurableClass(AppenderConfigurator,"Ostream")
-                    .advanced()
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout.Pattern.format")
-                    .setNewDefaultValue("%p  %c  : %m%n")
-                    .commit()
-                    ,
-            NODE_ELEMENT(expected).key("Logger.karabo")
-                    .description("Logger category for karabo framework")
-                    .displayedName("Karabo framework logger")
-                    .appendParametersOfConfigurableClass(CategoryConfigurator, "Category")
-                    .advanced()
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
-                    .setNewAssignmentOptional()
-                    .setNewDefaultValue("karabo")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
-                    .setNewDefaultValue(False)
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders")
-                    .setNewDefaultValue("RollingFile")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout")
-                    .setNewDefaultValue("Pattern")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.layout.Pattern.format")
-                    .setNewDefaultValue("%d{%F %H:%M:%S} %p  %c  : %m%n")
-                    .commit()
-                    ,
-            OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
-                    .setNewDefaultValue("device.log")
-                    .commit()
-                    ,
         )
         
     def __init__(self, configuration):
@@ -201,34 +128,10 @@ class PythonDevice(BaseFsm):
 
         # make a copy of additional appenders defined by user
         appenders = config["appenders"]
-
-        # handle predefined Device appenders
-        newAppenders = [Hash(), Hash(), Hash()]
-        newAppenders[0].set("Ostream", config["ostream"])
-        newAppenders[1].set("RollingFile", config["rollingFile"])
-        newAppenders[2].set("Network", config["network"])
-            
-        del config["ostream"]
-        del config["rollingFile"]
-        del config["network"]
-
-        for a in appenders:
-            if a.has("Ostream"):
-                if a["Ostream.name"] == "default":
-                    continue
-            newAppenders.append(a)
-                
-        config.set("appenders", newAppenders)
-            
         config["appenders[2].Network.layout"] = Hash()
         config["appenders[2].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
         if "connection" in input:
             config["appenders[2].Network.connection"] = input["connection"]
-            
-        category = config["karabo"]
-        category["name"] = "karabo"
-        config["categories[0].Category"] = category
-        del config["karabo"]
 #        print "loadLogger final:\n", config
         Logger.configure(config)
         
