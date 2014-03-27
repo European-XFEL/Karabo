@@ -64,6 +64,13 @@ class Configuration(object):
         self.configuration.setAttribute(parameterKey, attributeKey, value)
 
 
+    def getBox(self, path):
+        box = self._configuration
+        for p in path:
+            box = getattr(box.value, p)
+        return box
+
+
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
         self.schema.fillWidget(parameterEditor, self._configuration,
