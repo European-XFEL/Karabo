@@ -13,7 +13,7 @@ devices.
 __all__ = ["Configuration"]
 
 
-from schemareader import SchemaReader
+from schemareader import SchemaReader, Box
 import manager
 
 
@@ -28,13 +28,13 @@ class Configuration(object):
         self.path = path
         self.schema = None
         self.visible = 0
+        self._configuration = Box((), None, self)
 
 
     def setSchema(self, schema):
         r = SchemaReader()
         self.schema = r.readSchema(schema)
-        self._configuration = self.schema.Box((), self.schema, self)
-        self._configuration.value = self.schema.getClass()((), self)
+        self._configuration.descriptor = self.schema
 
 
     @property
@@ -47,7 +47,7 @@ class Configuration(object):
 
 
     def merge(self, config):
-        self._configuration.set(config)
+        self._configuration.fromHash(config)
 
 
     def set(self, parameterKey, value):

@@ -20,6 +20,7 @@ from PyQt4.QtGui import QIcon
 
 from collections import OrderedDict
 import weakref
+from functools import partial
 
 
 class Box(QObject):
@@ -42,6 +43,7 @@ class Box(QObject):
         self.descriptor = descriptor
         self.configuration = configuration
         self.timestamp = None
+        self._value = Dummy(path, configuration)
 
 
     def key(self):
@@ -56,14 +58,8 @@ class Box(QObject):
         return self._value
 
 
-    def toHash(self):
-        return self.value
-
-
-    def set(self, value, timestamp=None):
-        self._value = value
-        self.timestamp = timestamp
-        self.signalUpdateComponent.emit(self, value, timestamp)
+    def __getattr__(self, attr):
+        return partial(getattr(self.descriptor, attr), self)
 
 
     @value.setter
@@ -74,12 +70,8 @@ class Box(QObject):
     def addComponent(self, component):
         self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateComponent.connect(component.onDisplayValueChanged)
-        if hasattr(self, "_value"):
+        if not isinstance(self._value, Dummy):
             self.signalUpdateComponent.emit(self, self._value, self.timestamp)
-
-
-    def setDefault(self):
-        self.set(self.descriptor.defaultValue)
 
 
 def _copyAttr(self, item, out, ain=None):
@@ -89,11 +81,19 @@ def _copyAttr(self, item, out, ain=None):
         setattr(item, out, getattr(self, ain))
 
 
-
 class Type(hashtypes.Type):
     __metaclass__ = Monkey
-    Box = Box
     icon = icons.undefined
+
+
+    def set(self, box, value, timestamp=None):
+        box._value = value
+        box.timestamp = timestamp
+        box.signalUpdateComponent.emit(box, value, timestamp)
+
+
+    def setDefault(self, box):
+        self.set(box, self.defaultValue)
 
 
     def item(self, treeWidget, parent, box, isClass):
@@ -178,10 +178,14 @@ class Vector(hashtypes.Vector):
 
 
 class Object(object):
-    def __init__(self, path, configuration):
+    def __init__(self, box):
         for k, v in type(self).__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                b = v.Box(path + (k,), v, configuration)
+                b = getattr(box.value, k, None)
+                if b is None:
+                    b = Box(box.path + (k,), v, box.configuration)
+                else:
+                    b.descriptor = v
                 self.__dict__[k] = b
 
 
@@ -189,48 +193,22 @@ class Object(object):
         getattr(self, key).set(value)
 
 
-class NodeBox(Box):
-    def set(self, value, timestamp=None):
-        for k, v, a in value.iterall():
-            try:
-                vv = getattr(self._value, k)
-            except AttributeError:
-                print 'schemaset: no {} in {} (to {})'.format(k, self._value, v)
-                continue
-            try:
-                ts = Timestamp.fromHashAttributes(a)
-            except KeyError:
-                ts = None
-            try:
-                s = vv.set
-            except AttributeError:
-                print 'bullshit in ', self, k, vv
-            s(v, ts)
-        Box.set(self, self._value, timestamp)
+class Dummy(object):
+    """this class represents a not-yet-loaded value.
+    it seems to contain all possible attributes, as we don't know yet
+    which attributes might come..."""
+    def __init__(self, path, configuration):
+        self._path = path
+        self._configuration = configuration
 
 
-class SchemaBox(NodeBox):
-    def __init__(self, path, descriptor, configuration):
-        NodeBox.__init__(self, path, descriptor, configuration)
-        self.set(descriptor.getClass()(path, configuration))
-
-
-    def set(self, value, timestamp=None):
-        if isinstance(value, self.descriptor.getClass()):
-            Box.set(self, value, timestamp)
-        else:
-            NodeBox.set(self, value, timestamp)
-
-
-    def setDefault(self):
-        for k, v in self.descriptor.dict.iteritems():
-            getattr(self._value, k).setDefault()
+    def __getattr__(self, attr):
+        r = Box(self._path + (attr,), None, self._configuration)
+        setattr(self, attr, r)
+        return r
 
 
 class Schema(hashtypes.Descriptor):
-    Box = SchemaBox
-
-
     def __init__(self, name='DUNNO'):
         self.dict = OrderedDict()
         self.cls = None
@@ -316,7 +294,34 @@ class Schema(hashtypes.Descriptor):
         return ret
 
 
-class ChoiceBox(NodeBox):
+    def fromHash(self, box, value, timestamp=None):
+        if isinstance(box._value, Dummy):
+            box._value = self.getClass()(box)
+        for k, v, a in value.iterall():
+            try:
+                vv = getattr(box._value, k)
+            except AttributeError:
+                print 'schemaset: no {} in {} (to {})'.format(k, box._value, v)
+                continue
+            try:
+                ts = Timestamp.fromHashAttributes(a)
+            except KeyError:
+                ts = None
+            try:
+                s = vv.fromHash
+            except AttributeError:
+                print 'bullshit in', k, vv, vv.descriptor
+            else:
+                s(v, ts)
+        box.timestamp = timestamp
+
+
+    def setDefault(self, box):
+        for k, v in self.dict.iteritems():
+            getattr(box._value, k).setDefault()
+
+
+class ChoiceBox(Box):
     def __init__(self, path, descriptor, configuration):
         NodeBox.__init__(self, path, descriptor, configuration)
         self.choices = { }
@@ -339,17 +344,8 @@ class ChoiceBox(NodeBox):
             self._value.set(v, timestamp)
             return # there should be only one entry in the hash
 
-    def setDefault(self):
-        self._value = self.choices[self.descriptor.defaultValue]
-        for k, v in self.descriptor.choices[self.descriptor.defaultValue
-                                            ].dict.iteritems():
-            getattr(self._value.value, k).setDefault()
-
 
 class ChoiceOfNodes(hashtypes.Descriptor):
-    Box = ChoiceBox
-
-
     @staticmethod
     def parse(key, hash, attrs, parent=None):
         self = ChoiceOfNodes()
@@ -396,7 +392,7 @@ class ChoiceOfNodes(hashtypes.Descriptor):
 
         defaultValue = item.defaultValue
         for k, v in self.choices.iteritems():
-            childItem = v.item(treeWidget, item, box.choices[k], isClass)
+            childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
 
             if defaultValue is None:
                 childItem.setHidden(True)
@@ -407,6 +403,13 @@ class ChoiceOfNodes(hashtypes.Descriptor):
             if item.editableComponent is not None:
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
         return item
+
+
+    def setDefault(self, box):
+        box._value = box.choices[self.defaultValue]
+        for k, v in self.descriptor.choices[self.descriptor.defaultValue
+                                            ].dict.iteritems():
+            getattr(self._value.value, k).setDefault()
 
 
 class SchemaReader(object):
