@@ -1213,7 +1213,7 @@ class GraphicsView(QSvgWidget):
                 box = item.internalKey
                 displayName = item.text(0)
                 if len(displayName) == 0:
-                    displayName = box.path.split('.')[-1]
+                    displayName = box.path[-1]
                 
                 if source.isColumnHidden(1):
                     configDisplayComponent = None
