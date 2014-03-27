@@ -18,6 +18,9 @@ from registry import Loadable, Registry
 
 
 class Widget(QObject, Registry):
+    valueChanged = None
+    typeChanged = None
+
     @classmethod
     def register(cls, name, dict):
         super(Widget, cls).register(name, dict)

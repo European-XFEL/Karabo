@@ -34,6 +34,7 @@ class Box(QObject):
     would end up in an endless loop as every change coming from the
     network is returned to it. """
 
+    signalNewDescriptor = pyqtSignal(object)
     signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
     signalHistoricData = pyqtSignal(object, object)
 
@@ -58,6 +59,17 @@ class Box(QObject):
         return self._value
 
 
+    @property
+    def descriptor(self):
+        return self._descriptor
+
+
+    @descriptor.setter
+    def descriptor(self, d):
+        self._descriptor = d
+        self.signalNewDescriptor.emit(self)
+
+
     def __getattr__(self, attr):
         return partial(getattr(self.descriptor, attr), self)
 
@@ -66,6 +78,21 @@ class Box(QObject):
         self._value = value
         self.timestamp = timestamp
         self.signalUpdateComponent.emit(self, value, timestamp)
+
+
+    def hasValue(self):
+        return not isinstance(self._value, Dummy)
+
+
+    def addWidget(self, widget):
+        if widget.typeChanged is not None:
+            self.signalNewDescriptor.connect(widget.typeChanged)
+            if self.descriptor is not None:
+                widget.typeChanged(self)
+        if widget.valueChanged is not None:
+            self.signalUpdateComponent.connect(widget.valueChanged)
+            if self.hasValue():
+                widget.valueChanged(self, self.value, self.timestamp)
 
 
     def addComponent(self, component):
