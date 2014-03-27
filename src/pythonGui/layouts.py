@@ -395,14 +395,15 @@ class GridLayout(Layout, QGridLayout):
 
 
 class ProxyWidget(QStackedWidget):
-    def __init__(self, parent, component):
+    def __init__(self, parent):
         QStackedWidget.__init__(self, parent)
         self.selected = False
-        self.component = component
-        if component is None:
-            return
+        self.component = None
 
         #self.setToolTip(component.boxes[0])
+
+    def setComponent(self, component):
+        self.component = component
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(

@@ -386,7 +386,7 @@ class Label(Action, Loadable):
 
 
     def mousePressEvent(self, parent, event):
-        p = ProxyWidget(parent.inner, None)
+        p = ProxyWidget(parent.inner)
         label = QLabel('', p)
         p.setWidget(label)
         dialog = TextDialog(label)
@@ -406,7 +406,7 @@ class Label(Action, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget(), None)
+        proxy = ProxyWidget(layout.parentWidget())
         label = QLabel(elem.get(ns_karabo + "text"), proxy)
         proxy.setWidget(label)
         layout.loadPosition(elem, proxy)
@@ -1118,7 +1118,9 @@ class GraphicsView(QSvgWidget):
                            QBoxLayout.TopToBottom)
 
         for item, component in items:
-            proxy = ProxyWidget(self.inner, component)
+            proxy = ProxyWidget(self.inner)
+            if component is not None:
+                proxy.setComponent(component)
             proxy.addWidget(item)
             layout.addWidget(proxy)
             proxy.show()
