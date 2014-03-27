@@ -62,9 +62,10 @@ class Box(QObject):
         return partial(getattr(self.descriptor, attr), self)
 
 
-    @value.setter
-    def value(self, value):
-        self.set(value)
+    def _set(self, value, timestamp):
+        self._value = value
+        self.timestamp = timestamp
+        self.signalUpdateComponent.emit(self, value, timestamp)
 
 
     def addComponent(self, component):
@@ -313,7 +314,7 @@ class Schema(hashtypes.Descriptor):
                 print 'bullshit in', k, vv, vv.descriptor
             else:
                 s(v, ts)
-        box.timestamp = timestamp
+        box._set(box._value, timestamp)
 
 
     def setDefault(self, box):

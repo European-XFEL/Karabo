@@ -137,8 +137,7 @@ class Type(Descriptor, Registry):
 
 
     def fromHash(self, box, data, timestamp=None):
-        box._value = data
-        box.timestamp = timestamp
+        box._set(data, timestamp)
 
 
 class Bool(Type):
