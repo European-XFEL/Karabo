@@ -90,16 +90,6 @@ namespace karabo {
                 return *this;
             }
 
-//            /**
-//             * The <b>displayType</b> sets the string that may be specifically interpreted by GUI.
-//             * @param typeString a string telling GUI how to represent this parameter type
-//             * @return reference to the SimpleElement
-//             */
-//            SimpleElement& displayType(const std::string& typeString) {
-//                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, typeString);
-//                return *this;
-//            }
-
             /**
              * The <b>hex</b> tells the GUI to interpret the numeric value as a hex string.
              * @return reference to the SimpleElement to use chaining
@@ -268,97 +258,6 @@ namespace karabo {
         typedef SimpleElement<double> DOUBLE_ELEMENT;
         typedef SimpleElement<std::string> STRING_ELEMENT;
 
-//#include <boost/algorithm/string.hpp>
-//#include <boost/foreach.hpp>
-//#include <boost/lexical_cast.hpp>
-//#include <cassert>
-//
-//        template <typename ValueType>
-//        class BitsetElement : public LeafElement<BitsetElement<ValueType>, ValueType > {
-//        public:
-//
-//            BitsetElement(Schema& expected) : LeafElement<BitsetElement<ValueType>, ValueType > (expected) {
-//            }
-//            
-//            /**
-//             * The <b>options</b> method specifies values allowed for the parameter.
-//             * @param opts A string with <b>sep</b> separated pairs: <b>index:description</b>.
-//             *  The index is casted to int. The description is string that may contain space inside.
-//             * @param sep  A separator symbols. Default values are ",;"
-//             * @return reference to the BitsetElement
-//             */
-//            BitsetElement& options(const std::string& opts, const std::string& sep = " ,;") {
-//                const unsigned int maxValueBits = sizeof (ValueType) * 8;
-//                std::vector<std::string> meaning(maxValueBits);   // entry per bit
-//                try {
-//                    std::vector<std::string> tmp = karabo::util::fromString<std::string, std::vector > (opts, sep);
-//
-//                    BOOST_FOREACH(const std::string& opt, tmp) {
-//                        std::vector<std::string> elements;
-//                        boost::split(elements, opt, boost::is_any_of(":"));
-//                        assert(elements.size() == 2);
-//                        std::string idxstr = elements[0];
-//                        std::string bitname = elements[1];
-//                        boost::trim(idxstr);
-//                        boost::trim(bitname);
-//                        int index = boost::lexical_cast<int>(idxstr);
-//                        assert(index < maxValueBits);
-//                        meaning[index] = bitname;
-//                    } 
-//                } catch (...) {
-//                    KARABO_RETHROW;
-//                }
-//                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, meaning);
-//                return *this;
-//            }
-//
-//            /**
-//             * The <b>options</b> method specifies values allowed for this parameter. Each value is an element of the vector.
-//             * This function can be used when space cannot be used as a separator.
-//             * @param opts vector of strings. The values are casted to the proper type.
-//             * @return reference to the BitsetElement
-//             */
-//            BitsetElement& options(const std::vector<std::string>& opts) {
-//                const unsigned int maxValueBits = sizeof (ValueType) * 8;
-//                std::vector<std::string> meaning = opts; // copy
-//                meaning.resize(maxValueBits);
-//                this->m_node->setAttribute(KARABO_SCHEMA_OPTIONS, meaning);
-//                return *this;
-//            }
-//
-//        protected:
-//
-//            void beforeAddition() {
-//
-//                this->m_node->template setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::LEAF);
-//                this->m_node->template setAttribute<int>(KARABO_SCHEMA_LEAF_TYPE, karabo::util::Schema::PROPERTY);
-//                this->m_node->template setAttribute(KARABO_SCHEMA_VALUE_TYPE, Types::to<ToLiteral>(Types::from<ValueType > ()));
-//                this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Bitset"); // Reserved displayType for commands
-//
-//                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->init(); // This is the default
-//
-//                if (!this->m_node->hasAttribute(KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL)) {
-//
-//                    //for init, reconfigurable elements - set default value of requiredAccessLevel to USER
-//                    if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE) ||
-//                            this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == INIT ||
-//                            this->m_node->template getAttribute<int>(KARABO_SCHEMA_ACCESS_MODE) == WRITE) {
-//
-//                        this->userAccess();
-//
-//                    } else { //else set default value of requiredAccessLevel to OBSERVER 
-//                        this->observerAccess();
-//                    }
-//
-//                }
-//            }
-//
-//        };
-//
-//        typedef BitsetElement<unsigned char> BITSET8_ELEMENT;
-//        typedef BitsetElement<unsigned short> BITSET16_ELEMENT;
-//        typedef BitsetElement<unsigned int> BITSET32_ELEMENT;
-//        typedef BitsetElement<unsigned long long> BITSET64_ELEMENT;
     }
 }
 
