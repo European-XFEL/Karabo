@@ -278,7 +278,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.changeApplyToBusy(True)
         # TODO: KeWe function with key/value pair needed
         for box in self.__editableWidget.boxes:
-            box.value = self.__editableWidget.value
+            box.set(self.__editableWidget.value, None)
         manager.Manager().onDeviceInstanceValuesChanged(
             self.__editableWidget.boxes)
         self.applyEnabled = False
