@@ -231,7 +231,7 @@ class Dummy(object):
 
 
     def __getattr__(self, attr):
-        r = Box(self._path + (attr,), None, self._configuration)
+        r = Box(self._path + (unicode(attr),), None, self._configuration)
         setattr(self, attr, r)
         return r
 
