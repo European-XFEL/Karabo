@@ -62,6 +62,7 @@ class PythonDevice(BaseFsm):
                     .description("Logging settings")
                     .displayedName("Logger")
                     .appendParametersOfConfigurableClass(Logger,"Logger")
+                    .expertAccess()
                     .commit()
                     ,
         )
