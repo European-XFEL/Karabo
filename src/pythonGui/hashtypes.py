@@ -136,6 +136,11 @@ class Type(Descriptor, Registry):
         return data
 
 
+    def fromHash(self, box, data, timestamp=None):
+        box._value = data
+        box.timestamp = timestamp
+
+
 class Bool(Type):
     @classmethod
     def read(cls, file):
