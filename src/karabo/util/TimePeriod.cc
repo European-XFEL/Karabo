@@ -20,7 +20,7 @@ namespace karabo {
         }
 
         TimePeriod::TimePeriod(const Epochstamp& start, const Epochstamp& stop) :
-        m_Start(start), m_Stop(stop), m_Open(false) {
+        m_Open(false), m_Start(start), m_Stop(stop) {
         }
 
 

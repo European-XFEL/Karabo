@@ -21,7 +21,7 @@ namespace karabo {
         TimeProfiler::~TimeProfiler() {
         }
 
-        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try : m_periods(hash), m_name(hash.get<string>("KRB_name")) {
+        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try : m_name(hash.get<string>("KRB_name")), m_periods(hash) {
         } catch (Exception& e) {
             m_name = "Profiler";
             m_periods = hash;
