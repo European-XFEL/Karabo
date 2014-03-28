@@ -6,6 +6,7 @@ __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
 import os
 import sys
+import copy
 import socket
 import platform
 import threading
@@ -262,6 +263,7 @@ class DeviceServer(object):
         category = config["karabo"]
         category["name"] = "karabo"
         config["categories[0].Category"] = category
+        config["categories[0].Category.appenders[1].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
         del config["karabo"]
 #        print "loadLogger final:\n", config
         self.loggerConfiguration = Hash()
@@ -373,11 +375,11 @@ class DeviceServer(object):
         pass
 
     def startDeviceAction(self, config):
+        # Input 'config' parameter comes from GUI or DeviceClient
         classid = iter(config).next().getKey()
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(config))
-        modified = Hash()
-        modified += config 
+        modified = copy.copy(config) 
         configuration = modified[classid]
         configuration["serverId"] = self.serverid
         if "deviceId" in configuration:
@@ -386,8 +388,7 @@ class DeviceServer(object):
             deviceid = self._generateDefaultDeviceInstanceId(classid)
             configuration["deviceId"] = deviceid
         # Add logger configuration from DeviceServer:
-        configuration["Logger"] = Hash()
-        configuration["Logger"] += self.loggerConfiguration
+        configuration["Logger"] = copy.copy(self.loggerConfiguration)
         # create temporary instance to check the configuration parameters are valid
         try:
             pluginDir = self.pluginLoader.getPluginDirectory()
