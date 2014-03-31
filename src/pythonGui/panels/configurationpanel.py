@@ -457,15 +457,6 @@ class ConfigurationPanel(QWidget):
     updateButtonsVisibility = property(fset=_updateButtonsVisibility)
 
 
-    def _r_unregisterComponents(self, item):
-        # Go recursively through tree and unregister Widgets in Manager
-        for i in range(item.childCount()):
-            childItem = item.child(i)
-            childItem.unregisterEditableComponent()
-            childItem.unregisterDisplayComponent()
-            self._r_unregisterComponents(childItem)
-
-
     def showParameterPage(self, configuration):
         """ Show the parameters for configuration """
         if not hasattr(configuration, 'index'):
@@ -486,8 +477,6 @@ class ConfigurationPanel(QWidget):
         if twParameterEditor is None:
             return
 
-        # Unregister all widgets of TreeWidget from DataNotifier in Manager before clearing..
-        self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
         # Clear page
         twParameterEditor.clear()
         # Remove widget completely
@@ -541,7 +530,6 @@ class ConfigurationPanel(QWidget):
         if hasattr(configuration, 'index'):
             twParameterEditor = self.__swParameterEditor.widget(
                 configuration.index)
-            self._r_unregisterComponents(twParameterEditor.invisibleRootItem())
             twParameterEditor.clear()
             if configuration.schema is not None:
                 configuration.fillWidget(twParameterEditor)

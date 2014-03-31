@@ -175,19 +175,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     enumeration = property(fget=_enumeration, fset=_setEnumeration)
 
 
-### public functions ###
-    def unregisterEditableComponent(self):
-        if self.editableComponent:
-            manager.Manager().unregisterEditableComponent(
-                self.internalKey, self.editableComponent)
-
-
-    def unregisterDisplayComponent(self):
-        if self.displayComponent:
-            manager.Manager().unregisterDisplayComponent(
-                self.internalKey, self.displayComponent)
-
-
     def updateState(self, state):
         if self.allowedStates is None or len(self.allowedStates) < 1:
             return
