@@ -91,11 +91,6 @@ class BaseComponent(Loadable, QObject):
         raise NotImplementedError, "BaseComponent.changeWidget"
 
 
-    @pyqtSlot(str, object)
-    def onDisplayValueChanged(self, key, value):
-        pass
-
-
     def attributes(self):
         """ returns a dict of attibutes for saving """
         d = { }

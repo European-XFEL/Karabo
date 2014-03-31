@@ -96,10 +96,9 @@ class Box(QObject):
 
 
     def addComponent(self, component):
-        self.signalUpdateComponent.connect(component.onValueChanged)
         self.signalUpdateComponent.connect(component.onDisplayValueChanged)
-        if not isinstance(self._value, Dummy):
-            self.signalUpdateComponent.emit(self, self._value, self.timestamp)
+        if self.hasValue():
+            component.onDisplayValueChanged(self, self.value)
 
 
 def _copyAttr(self, item, out, ain=None):
