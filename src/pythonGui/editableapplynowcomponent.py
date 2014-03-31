@@ -23,7 +23,7 @@ from PyQt4.QtGui import QHBoxLayout, QLabel, QWidget
 class EditableApplyNowComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, box, parent):
+    def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(EditableApplyNowComponent, self).__init__(classAlias)
 
         self.__compositeWidget = QWidget(parent)
