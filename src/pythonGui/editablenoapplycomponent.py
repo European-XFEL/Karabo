@@ -123,6 +123,7 @@ class EditableNoApplyComponent(BaseComponent):
             manager.Manager().onRefreshInstance(key)
 
 
-    def onEditingFinished(self, key, value):
-        manager.Manager().onDeviceInstanceValuesChanged([key])
+    def onEditingFinished(self, box, value):
+        box.set(value, None)
+        manager.Manager().onDeviceInstanceValuesChanged([box])
 
