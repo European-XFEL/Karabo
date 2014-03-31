@@ -45,6 +45,7 @@ class Box(QObject):
         self.configuration = configuration
         self.timestamp = None
         self._value = Dummy(path, configuration)
+        self.current = None # Support for choice of nodes
 
 
     def key(self):
@@ -242,11 +243,11 @@ class Schema(hashtypes.Descriptor):
         self.name = name
 
 
-    @staticmethod
-    def parse(key, hash, attrs, parent=None):
+    @classmethod
+    def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  Schema.parse)
-        self = Schema(key)
+        self = cls(key)
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
         for k, h, a in hash.iterall():
@@ -344,8 +345,9 @@ class Schema(hashtypes.Descriptor):
 
 
     def setDefault(self, box):
+        box._set(self.getClass()(box), None)
         for k, v in self.dict.iteritems():
-            getattr(box._value, k).setDefault()
+            getattr(box.value, k).setDefault()
 
 
 class ChoiceBox(Box):
@@ -372,14 +374,12 @@ class ChoiceBox(Box):
             return # there should be only one entry in the hash
 
 
-class ChoiceOfNodes(hashtypes.Descriptor):
-    @staticmethod
-    def parse(key, hash, attrs, parent=None):
-        self = ChoiceOfNodes()
-        self.assignment = None
-        for k, v in attrs.iteritems():
-            setattr(self, k, v)
-        self.choices = {k: Schema.parse(k, h, a) for k, h, a in hash.iterall()}
+class ChoiceOfNodes(Schema):
+    @classmethod
+    def parse(cls, key, hash, attrs, parent=None):
+        self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
+        self.classAlias = 'Choice Element'
+        print type(self)
         return self
 
 
@@ -418,7 +418,7 @@ class ChoiceOfNodes(hashtypes.Descriptor):
                 self.treeWidget.onApplyChanged)
 
         defaultValue = item.defaultValue
-        for k, v in self.choices.iteritems():
+        for k, v in self.dict.iteritems():
             childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
 
             if defaultValue is None:
@@ -432,16 +432,27 @@ class ChoiceOfNodes(hashtypes.Descriptor):
         return item
 
 
+    def fromHash(self, box, value, timestamp=None):
+        for k in value:
+            box.current = k
+            break # there should be only one entry in the hash
+        Schema.fromHash(self, box, value, timestamp)
+
+
     def setDefault(self, box):
-        box._value = box.choices[self.defaultValue]
-        for k, v in self.descriptor.choices[self.descriptor.defaultValue
-                                            ].dict.iteritems():
-            getattr(self._value.value, k).setDefault()
+        if hasattr(self, 'defaultValue'):
+            box.current = self.defaultValue
+        Schema.setDefault(self, box)
 
 
     def toHash(self, box):
         ret = Schema.toHash(self, box)
         return Hash(box.current, ret[box.current])
+
+
+    def set(self, box, value, timestamp=None):
+        box.current = value
+        box._set(box.value, timestamp)
 
 
 class SchemaReader(object):
