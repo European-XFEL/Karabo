@@ -31,14 +31,14 @@ namespace karabo {
 
 
         Authenticator::Authenticator(const std::string& username, const std::string& password, const std::string& provider,
-                                     const std::string& ipAddress, const std::string& brokerHostname, const std::string& brokerPortNumber,
+                                     const std::string& ipAddress, const std::string& brokerHostname, const int brokerPortNumber,
                                      const std::string& brokerTopic)
         : m_username(username),
         m_password(password),
         m_provider(provider),
         m_ipAddress(ipAddress),
         m_brokerHostname(brokerHostname),
-        m_brokerPortNumber(brokerPortNumber),
+        m_brokerPortNumber(karabo::util::toString(brokerPortNumber)),
         m_brokerTopic(brokerTopic),
         m_software(KARABO_SOFTWARE_DESC),
         //m_service(new AuthenticationPortBindingProxy),
@@ -333,108 +333,8 @@ namespace karabo {
         /*
          * Getters
          */
-        const karabo::util::Hash& Authenticator::getAccessHash() const {
-            return m_accessHash;
-        }
-
-
-        const std::string& Authenticator::getAccessList() const {
-            return m_accessList;
-        }
-
-
-        const std::string& Authenticator::getBrokerHostname() const {
-            return m_brokerHostname;
-        }
-
-
-        const std::string& Authenticator::getBrokerPortNumber() const {
-            return m_brokerPortNumber;
-        }
-
-
-        const std::string& Authenticator::getBrokerTopic() const {
-            return m_brokerTopic;
-        }
-
-
         const std::string& Authenticator::getDefaultAccessLevelDesc() const {
             return m_defaultAccessLevelDesc;
-        }
-
-
-        const int Authenticator::getDefaultAccessLevelId() const {
-            return m_defaultAccessLevelId;
-        }
-
-
-        const std::string& Authenticator::getFamilyName() const {
-            return m_familyName;
-        }
-
-
-        const std::string& Authenticator::getFirstName() const {
-            return m_firstName;
-        }
-
-
-        const std::string& Authenticator::getIpAddress() const {
-            return m_ipAddress;
-        }
-
-
-        const std::string& Authenticator::getNonce() const {
-            return m_nonce;
-        }
-
-
-        const std::string& Authenticator::getPassword() const {
-            return m_password;
-        }
-
-
-        const std::string& Authenticator::getProvider() const {
-            return m_provider;
-        }
-
-
-        const boost::shared_ptr<AuthenticationPortBindingProxy> Authenticator::getService() const {
-            return m_service;
-        }
-
-
-        const std::string& Authenticator::getSessionToken() const {
-            return m_sessionToken;
-        }
-
-
-        const std::string& Authenticator::getSoftware() const {
-            return m_software;
-        }
-
-
-        const std::string& Authenticator::getSoftwareDesc() const {
-            return m_softwareDesc;
-        }
-
-
-        const long long Authenticator::getSoftwareId() const {
-            return m_softwareId;
-        }
-
-
-        const long long Authenticator::getUserId() const {
-            return m_userId;
-        }
-
-
-        const std::string& Authenticator::getUsername() const {
-            return m_username;
-        }
-
-
-        const std::string& Authenticator::getWelcomeMessage() const {
-            return m_welcomeMessage;
         }
 
 

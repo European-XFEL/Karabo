@@ -83,7 +83,7 @@ namespace karabo {
              * @param brokerTopic
              */
             Authenticator(const std::string& username, const std::string& password, const std::string& provider,
-                          const std::string& ipAddress, const std::string& brokerHostname, const std::string& brokerPortNumber,
+                          const std::string& ipAddress, const std::string& brokerHostname, const int brokerPortNumber,
                           const std::string& brokerTopic);
 
             /**
@@ -115,31 +115,183 @@ namespace karabo {
                 cleanup();
             }
 
-
-            /*
-             * Getters
+            /**
+             * Gets the Broker Hostname
+             * 
+             * @return string with brokerHostname
              */
-            const std::string& getBrokerHostname() const;
-            const std::string& getBrokerPortNumber() const;
-            const std::string& getBrokerTopic() const;
+            inline const std::string& getBrokerHostname() const {
+                return m_brokerHostname;
+            }
+
+            /**
+             * Gets the Broker Port Number
+             * 
+             * @return templated brokerPortNumber
+             */
+            const int getBrokerPortNumber() const {
+                return boost::lexical_cast<int>(m_brokerPortNumber);
+            }
+
+            /**
+             * Gets the Broker Topic
+             * 
+             * @return string with brokerTopic
+             */
+            inline const std::string& getBrokerTopic() const {
+                return m_brokerTopic;
+            }
+
+            /**
+             * Gets the User Default Access Level description
+             * 
+             * @return string with defaultAccessLevelDesc
+             */
             const std::string& getDefaultAccessLevelDesc() const;
-            const int getDefaultAccessLevelId() const;
-            const std::string& getFamilyName() const;
-            const std::string& getFirstName() const;
-            const std::string& getIpAddress() const;
-            const std::string& getNonce() const;
-            const std::string& getPassword() const;
-            const std::string& getProvider() const;
-            const std::string& getSessionToken() const;
-            const std::string& getSoftware() const;
-            const std::string& getSoftwareDesc() const;
-            const long long getSoftwareId() const;
-            const long long getUserId() const;
-            const std::string& getUsername() const;
-            const std::string& getWelcomeMessage() const;
-            //
-            const boost::shared_ptr<AuthenticationPortBindingProxy> getService() const;
-            const karabo::util::Hash& getAccessHash() const;
+
+            /**
+             * Gets the User Default Access Level identifier
+             * 
+             * @return string with defaultAccessLevelId
+             */
+            inline const int getDefaultAccessLevelId() const {
+                return m_defaultAccessLevelId;
+            }
+
+            /**
+             * Gets the User Family name
+             * 
+             * @return string with familyName
+             */
+            inline const std::string& getFamilyName() const {
+                return m_familyName;
+            }
+
+            /**
+             * Gets the User First name
+             * 
+             * @return string with firstName
+             */
+            inline const std::string& getFirstName() const {
+                return m_firstName;
+            }
+
+            /**
+             * Gets the Current login (connection) Ip address
+             * 
+             * @return string with ipAddress
+             */
+            inline const std::string& getIpAddress() const {
+                return m_ipAddress;
+            }
+
+            /**
+             * Gets a connection (new) Nonce that is valid for the following 5 minutes (default configuration)
+             * 
+             * @return string with nonce
+             */
+            inline const std::string& getNonce() const {
+                return m_nonce;
+            }
+
+            /**
+             * Gets user encrypted password (excluding the salt)
+             * 
+             * @return string with password
+             */
+            inline const std::string& getPassword() const {
+                return m_password;
+            }
+
+            /**
+             * Gets Provider to be used to validate user credentials
+             * 
+             * @return string with provider
+             */
+            inline const std::string& getProvider() const {
+                return m_provider;
+            }
+
+            /**
+             * Gets user's current session (connection) token that can be used for guarantee user authenticity without reintroduce it's password
+             * 
+             * @return string with sessionToken
+             */
+            inline const std::string& getSessionToken() const {
+                return m_sessionToken;
+            }
+
+            /**
+             * Gets Software Identifier to which the user wants to authenticate
+             * 
+             * @return string with software identifier
+             */
+            inline const std::string& getSoftware() const {
+                return m_software;
+            }
+
+            /**
+             * Gets Software Description to which the user wants to authenticate
+             * 
+             * @return string with software Description
+             */
+            inline const std::string& getSoftwareDesc() const {
+                return m_softwareDesc;
+            }
+
+            /**
+             * Gets Software Identifier to which the user wants to authenticate
+             * 
+             * @return long long with software identifier
+             */
+            inline const long long getSoftwareId() const {
+                return m_softwareId;
+            }
+
+            /**
+             * Gets authenticated User Identifier
+             * 
+             * @return long long with user identifier
+             */
+            inline const long long getUserId() const {
+                return m_userId;
+            }
+
+            /**
+             * Gets authenticated User username
+             * 
+             * @return string with user username
+             */
+            inline const std::string& getUsername() const {
+                return m_username;
+            }
+
+            /**
+             * Gets authenticated User personalized welcome message
+             * 
+             * @return string with welcomeMessage
+             */
+            inline const std::string& getWelcomeMessage() const {
+                return m_welcomeMessage;
+            }
+
+            /**
+             * Gets the connection to the Web Service Server
+             * 
+             * @return boost::shared_ptr<AuthenticationPortBindingProxy> the server information
+             */
+            inline const boost::shared_ptr<AuthenticationPortBindingProxy> getService() const {
+                return m_service;
+            }
+
+            /**
+             * Gets the hash that contains all the exceptions to the default access level
+             * 
+             * @return karabo::util::Hash with access exceptions
+             */
+            inline const karabo::util::Hash& getAccessHash() const {
+                return m_accessHash;
+            }
 
         private:
 
@@ -186,7 +338,9 @@ namespace karabo {
             /*
              * Getters
              */
-            const std::string& getAccessList() const;
+            inline const std::string& getAccessList() const {
+                return m_accessList;
+            }
 
             /*
              * Setters
