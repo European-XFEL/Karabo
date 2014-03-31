@@ -346,7 +346,7 @@ class ConfigurationPanel(QWidget):
         if type is NavigationItemTypes.CLASS:
             twParameterEditor.hideColumn(1)
 
-        if configuration.schema is not None:
+        if configuration is not None and configuration.schema is not None:
             configuration.fillWidget(twParameterEditor)
         return self.__swParameterEditor.addWidget(twParameterEditor)
 
@@ -459,14 +459,19 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, configuration):
         """ Show the parameters for configuration """
-        if not hasattr(configuration, 'index'):
-            configuration.index = self._createNewParameterPage(configuration)
-        self._setParameterEditorIndex(configuration.index)
+        if configuration is None:
+            self._setParameterEditorIndex(0)
+        else:
+            if not hasattr(configuration, 'index'):
+                configuration.index = self._createNewParameterPage(
+                    configuration)
+            self._setParameterEditorIndex(configuration.index)
 
-        if (configuration.type == "device" and
-            self.prevConfiguration is not configuration):
+        if (configuration is not None and
+                configuration.type == "device" and
+                self.prevConfiguration is not configuration):
             configuration.addVisible()
-            self.prevConfiguration = configuration
+        self.prevConfiguration = configuration
 
 
     def _removeParameterEditorPage(self, twParameterEditor):
@@ -538,10 +543,10 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, configuration):
-        self.updateButtonsVisibility = configuration.type == 'class'
+        self.updateButtonsVisibility = configuration is not None and configuration.type == 'class'
 
         if self.prevConfiguration not in (None, configuration):
-            configuration.removeVisible()
+            self.prevConfiguration.removeVisible()
             self.prevConfiguration = None
         
         self.showParameterPage(configuration)
