@@ -292,23 +292,16 @@ class NavigationTreeModel(QAbstractItemModel):
         classId = None
         path = ""
 
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            path = index.data()
-        elif level == 2:
+        if level == 2:
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-
             conf = manager.Manager().getClass(serverId, classId)
-            path = "{}.{}".format(serverId, classId)
         elif level == 3:
             deviceId = index.data()
-
             conf = manager.Manager().getDevice(deviceId)
-            path = deviceId
+        else:
+            conf = None
 
         self.signalItemChanged.emit(conf)
 
