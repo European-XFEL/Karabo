@@ -41,7 +41,7 @@ class Box(QObject):
     def __init__(self, path, descriptor, configuration):
         QObject.__init__(self)
         self.path = path
-        self.descriptor = descriptor
+        self._descriptor = descriptor
         self.configuration = configuration
         self.timestamp = None
         self._value = Dummy(path, configuration)
@@ -67,6 +67,8 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
+        if self.hasValue() and isinstance(d, Schema):
+            self._value = d.getClass()(self)
         self.signalNewDescriptor.emit(self)
 
 
@@ -114,9 +116,7 @@ class Type(hashtypes.Type):
 
 
     def set(self, box, value, timestamp=None):
-        box._value = value
-        box.timestamp = timestamp
-        box.signalUpdateComponent.emit(box, value, timestamp)
+        box._set(value, timestamp)
 
 
     def setDefault(self, box):
