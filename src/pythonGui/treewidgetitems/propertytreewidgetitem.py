@@ -110,13 +110,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             info["Property"] = self.text(0)
             if self.description is not None:
                 info["Description"] = self.description
-            if self.__currentValueOnDevice is not None:
-                # Key consists of deviceId, property key
-                _, property = str(self.internalKey).split(".", 1)
-            else:
-                # Key consists of serverId, classId, property key
-                _, _, property = str(self.internalKey).split(".", 2)
-            info["Key"] = property
+
+            info["Key"] = '.'.join(self.internalKey.path)
             if self.valueType is not None:
                 info["Value Type"] = self.valueType
             if self.defaultValue is not None:
