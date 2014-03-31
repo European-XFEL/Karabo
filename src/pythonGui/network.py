@@ -343,7 +343,7 @@ class Network(QObject):
         instanceInfo["type"] = "reconfigure"
         instanceInfo["deviceId"] = boxes[0].configuration.path
         for b in boxes:
-            instanceInfo["configuration." + ".".join(b.path)] = b.value
+            instanceInfo["configuration." + ".".join(b.path)] = b.toHash()
         self._tcpWriteHash(instanceInfo)
 
 

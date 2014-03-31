@@ -43,7 +43,7 @@ class Configuration(object):
 
 
     def toHash(self):
-        return self._configuration.descriptor.toHash(self.configuration)
+        return self._configuration.toHash()
 
 
     def merge(self, config):
