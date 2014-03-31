@@ -39,6 +39,7 @@ from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
+import xmlparser
 from functools import partial
 import os.path
 from itertools import chain
@@ -991,7 +992,7 @@ class GraphicsView(QSvgWidget):
     # Helper function opens *.scene file
     # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
     def openScene(self, filename):
-        self.tree = ElementTree.parse(filename)
+        self.tree = xmlparser.parse(filename)
         root = self.tree.getroot()
         self.clean()
         self.ilayout = FixedLayout.load(root, widget=self.inner)
