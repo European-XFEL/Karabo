@@ -47,8 +47,6 @@ class EditableNoApplyComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        box.addComponent(self)
-
 
     def copy(self):
         copyComponent = EditableNoApplyComponent(self.classAlias, **self.__initParams)
@@ -75,6 +73,11 @@ class EditableNoApplyComponent(BaseComponent):
     def _getKeys(self):
         return self.__editableWidget.keys
     keys = property(fget=_getKeys)
+
+
+    @property
+    def boxes(self):
+        return self.__editableWidget.boxes
 
 
     def _getValue(self):

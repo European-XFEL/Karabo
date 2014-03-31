@@ -29,7 +29,6 @@ class DisplayComponent(BaseComponent):
         
         self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
             classAlias)(box, parent)
-        box.addComponent(self)
 
 
 ### getter and setter functions ###
@@ -57,6 +56,11 @@ class DisplayComponent(BaseComponent):
     def _getKeys(self):
         return self.__displayWidget.keys
     keys = property(fget=_getKeys)
+
+
+    @property
+    def boxes(self):
+        return self.__displayWidget.boxes
 
 
     def _getValue(self):

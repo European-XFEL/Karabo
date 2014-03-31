@@ -47,9 +47,6 @@ class EditableApplyNowComponent(BaseComponent):
         if len(unitLabel) > 0:
             hLayout.addWidget(QLabel(unitLabel))
         
-        # Use key to register component to manager
-        Manager().registerEditableComponent(params.get('key'), self)
-
 
     def copy(self):
         copyComponent = EditableApplyNowComponent(self.classAlias, **self.__initParams)
@@ -71,6 +68,11 @@ class EditableApplyNowComponent(BaseComponent):
     def _getWidget(self):
         return self.__compositeWidget
     widget = property(fget=_getWidget)
+
+
+    @property
+    def boxes(self):
+        return self.__editableWidget.boxes
 
 
     def _getKeys(self):
