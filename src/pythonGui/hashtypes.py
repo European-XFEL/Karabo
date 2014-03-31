@@ -146,6 +146,11 @@ class Bool(Type):
         return bool(Int8.read(file) != 0)
 
 
+    @classmethod
+    def write(cls, file, data):
+        Int8.write(file, 1 if data else 0)
+
+
     @staticmethod
     def fromstring(s):
         return bool(int(s))
