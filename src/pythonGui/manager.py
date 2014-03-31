@@ -156,9 +156,6 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(property, value)
     
     
-            
-        # Inform network
-        self.signalReconfigure.emit(deviceId, property, value)
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
