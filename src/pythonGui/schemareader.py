@@ -310,11 +310,11 @@ class Schema(hashtypes.Descriptor):
         return self.cls
 
 
-    def toHash(self, schema):
+    def toHash(self, box):
         ret = Hash()
-        for k, v in schema.__dict__.iteritems():
+        for k, v in box.value.__dict__.iteritems():
             try:
-                ret[k] = v.descriptor.toHash(v.value)
+                ret[k] = v.toHash()
             except AttributeError as e:
                 print 'tH', k, e
                 pass
@@ -437,6 +437,11 @@ class ChoiceOfNodes(hashtypes.Descriptor):
         for k, v in self.descriptor.choices[self.descriptor.defaultValue
                                             ].dict.iteritems():
             getattr(self._value.value, k).setDefault()
+
+
+    def toHash(self, box):
+        ret = Schema.toHash(self, box)
+        return Hash(box.current, ret[box.current])
 
 
 class SchemaReader(object):

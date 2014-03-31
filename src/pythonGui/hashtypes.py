@@ -132,8 +132,8 @@ class Type(Descriptor, Registry):
         return str(data)
 
 
-    def toHash(self, data):
-        return data
+    def toHash(self, box):
+        return box.value
 
 
     def fromHash(self, box, data, timestamp=None):
