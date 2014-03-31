@@ -28,7 +28,7 @@ class EditableApplyLaterComponent(BaseComponent):
     signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
 
 
-    def __init__(self, classAlias, box, parent):
+    def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(EditableApplyLaterComponent, self).__init__(classAlias)
 
         self.__isEditableValueInit = True
