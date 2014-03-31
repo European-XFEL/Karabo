@@ -104,9 +104,3 @@ class DisplayComponent(BaseComponent):
         # Refresh new widget...
         for key in self.__displayWidget.keys:
             manager.Manager().onRefreshInstance(key)
-
-
-    def onValueChanged(self, key, value, timestamp=None):
-        self.__displayWidget.valueChanged(key, value, timestamp)
-        # Emit signal to update possible tooltips in ParameterTreeWidget
-        self.signalValueChanged.emit(key, value)
