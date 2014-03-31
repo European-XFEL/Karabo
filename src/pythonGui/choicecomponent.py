@@ -29,8 +29,6 @@ class ChoiceComponent(BaseComponent):
         self.__choiceWidget = EditableWidget.get_class(classAlias)(box, parent)
         self.widget.setEnabled(False)
 
-        box.addComponent(self)
-
 
     def copy(self):
         copyComponent = ChoiceComponent(self.__classAlias, **self.__initParams)
@@ -52,6 +50,11 @@ class ChoiceComponent(BaseComponent):
     def _getWidget(self):
         return self.__choiceWidget.widget
     widget = property(fget=_getWidget)
+
+
+    @property
+    def boxes(self):
+        return self.__choiceWidget.boxes
 
 
     def _getValue(self):

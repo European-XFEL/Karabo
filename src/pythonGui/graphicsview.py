@@ -926,8 +926,8 @@ class GraphicsView(QSvgWidget):
         """Remove all child widgets"""
         for c in self.inner.children():
             if isinstance(c, ProxyWidget) and c.component is not None:
-                for k in c.component.keys:
-                    Manager().removeVisibleDevice(k)
+                for b in c.component.boxes:
+                    b.configuration.removeVisible()
             c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)

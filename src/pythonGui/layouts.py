@@ -217,8 +217,8 @@ class FixedLayout(Layout, QLayout):
                         stack.extend(p)
                     else:
                         if p.component is not None:
-                            for k in p.component.keys:
-                                manager.Manager().removeVisibleDevice(k)
+                            for b in p.component.boxes:
+                                b.configuration.removeVisible()
                         p.setParent(None)
                 del self[i]
             else:
