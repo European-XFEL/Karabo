@@ -23,7 +23,7 @@ from PyQt4.QtGui import *
 class ChoiceComponent(BaseComponent):
 
 
-    def __init__(self, classAlias, box, parent):
+    def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(ChoiceComponent, self).__init__(classAlias)
         
         self.__choiceWidget = EditableWidget.get_class(classAlias)(box, parent)
