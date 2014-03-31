@@ -25,8 +25,8 @@ from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 
-    def __init__(self, path, parent, parentItem=None):
-        super(PropertyTreeWidgetItem, self).__init__(path, parent, parentItem)
+    def __init__(self, box, parent, parentItem=None):
+        super(PropertyTreeWidgetItem, self).__init__(box, parent, parentItem)
         
         # Popup widget for tooltip info
         self.__popupWidget = None
@@ -39,8 +39,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             "Value Field", self.internalKey, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
-        # Connect to DisplayComponent to get current value on device for tooltip update
-        self.displayComponent.signalValueChanged.connect(self.onDisplayValueChanged)
+
+        box.signalUpdateComponent.connect(self.onDisplayValueChanged)
 
 
     def setupContextMenu(self):
