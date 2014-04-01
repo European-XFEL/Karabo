@@ -551,7 +551,7 @@ void H5File_Test::testBufferWrite() {
         Hash data;
 
         TimeProfiler p("VectorBufferWrite");
-
+        p.open(); 
         p.startPeriod("format");
         Format::Pointer format = Format::createEmptyFormat();
 
@@ -844,7 +844,7 @@ void H5File_Test::testBufferWrite() {
         p.startPeriod("close");
         file.close();
         p.stopPeriod("close");
-       
+        p.close();
         TimeDuration formatTime = p.getPeriod("format").getDuration();
         TimeDuration initializeTime = p.getPeriod("initialize").getDuration();
         TimeDuration createTime = p.getPeriod("create").getDuration();
@@ -859,10 +859,10 @@ void H5File_Test::testBufferWrite() {
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
             clog << "written data size                : " << totalSize << " [MB]" << endl;
-            //clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl; //TODO
+            clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl; //TODO
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            //clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl; //TODO
+            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl; //TODO
         }
 
 
@@ -884,9 +884,9 @@ void H5File_Test::testBufferRead() {
     try {
 
 
-        TimeProfiler p("VectorBufferRead");
+        //TimeProfiler p("VectorBufferRead");
 
-        p.startPeriod("format");
+        //p.startPeriod("format");
         //        Format::Pointer format = Format::createEmptyFormat();
         //        {
         //            Hash h1(
@@ -1164,7 +1164,7 @@ void H5File_Test::testWriteFailure() {
 
 void H5File_Test::testManyTables() {
     TimeProfiler p("ManyTables");
-
+    p.open();
 
     try {
 
@@ -1251,7 +1251,7 @@ void H5File_Test::testManyTables() {
         p.startPeriod("close");
         file.close();
         p.stopPeriod("close");
-        
+        p.close();
         TimeDuration formatTime = p.getPeriod("format").getDuration();
         //        TimeDuration discoverTime = p.getPeriod("discover").getDuration();
         TimeDuration createTime = p.getPeriod("create").getDuration();
@@ -1266,10 +1266,10 @@ void H5File_Test::testManyTables() {
             clog << "open/prepare file                : " << createTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
             //            clog << "written data size                : " << totalSize << " [kB]" << endl;
-            //            clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl;
+            //            clog << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]" << endl;
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            //            clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl;
+            //            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]" << endl;
         }
 
 
@@ -1283,7 +1283,7 @@ void H5File_Test::testManyTables() {
 
 void H5File_Test::testManyGroups() {
     TimeProfiler p("ManyGroups");
-
+    p.open();
     Format::createEmptyFormat();
 
     KARABO_LOG_FRAMEWORK_TRACE_CF << "start ManyGroups";
@@ -1587,7 +1587,7 @@ void H5File_Test::testManyGroups() {
             }
         }
         #endif
-
+        p.close();
         TimeDuration formatTime = p.getPeriod("format").getDuration();
         TimeDuration createTime = p.getPeriod("create").getDuration();
         TimeDuration attributeTime = p.getPeriod("attribute").getDuration();
@@ -1609,10 +1609,10 @@ void H5File_Test::testManyGroups() {
             clog << "write attributes                 : " << attributeTime << " [s]" << endl;
             clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
             clog << "written data size                : " << totalSize << " [kB]" << endl;
-            //clog << "writing speed                    : " << totalSize / writeTime << " [kB/s]" << endl; //TODO
+            clog << "writing speed                    : " << totalSize / double(writeTime) << " [kB/s]" << endl; //TODO
             clog << "close                            : " << closeTime << " [s]" << endl;
             clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-            //clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [kB/s]" << endl; //TODO
+            clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [kB/s]" << endl; //TODO
             clog << "Total write time                 : " << formatTime + createTime + attributeTime + writeTime + closeTime << " [s]" << endl;
             clog << "open for reading                 : " << openTime << " [s]" << endl;
             clog << "bind                             : " << bindTime << " [s]" << endl;
@@ -1634,6 +1634,7 @@ void H5File_Test::testManyGroups() {
 void H5File_Test::testVLWrite() {
 
     TimeProfiler p("VLWrite");
+    p.open();
     Hash data;
     try {
 
@@ -1720,6 +1721,7 @@ void H5File_Test::testVLWrite() {
         p.startPeriod("close");
         file.close();
         p.stopPeriod("close");
+        p.close();
 
     } catch (Exception& ex) {
         clog << ex << endl;
@@ -1759,6 +1761,7 @@ void H5File_Test::testTrainFormat() {
         unsigned short detectorDataSize = dataset.get<unsigned short>("detectorDataSize");
 
         TimeProfiler p("train");
+        p.open();
         // 
         string filename = "/dev/shm/train.h5";
         //        filename = resourcePath("train.h5");
@@ -1882,9 +1885,10 @@ void H5File_Test::testTrainFormat() {
         }
 
         p.stopPeriod("writeData");
+        p.close();
         //clog << "writeData: " << p.getPeriod("writeData").getDuration() << endl;
         file.close();
-
+        
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Error");
