@@ -307,3 +307,4 @@ class SchemaReader(object):
         item = self._createPropertyItem(key, hash, attrs, parent)
         for k in hash:
             self.parse(key + "." + k, hash[k], hash[k, ...], item)
+        return item
