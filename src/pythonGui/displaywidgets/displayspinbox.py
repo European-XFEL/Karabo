@@ -30,26 +30,12 @@ class DisplaySpinBox(DisplayWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, valueType=None, **params):
-        super(DisplaySpinBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplaySpinBox, self).__init__(box)
 
-        self.__spinBox = QSpinBox()
-
-        if valueType is not None:
-            info = iinfo(valueType.numpy)
-            self.__spinBox.setRange(info.min, info.max)
+        self.__spinBox = QSpinBox(parent)
         self.__spinBox.setReadOnly(True)
-        
-        #metricPrefixSymbol = params.get('metricPrefixSymbol')
-        #unitSymbol = params.get('unitSymbol')
-        # Append unit label, if available
-        #unitLabel = ""
-        #if metricPrefixSymbol:
-        #    unitLabel += metricPrefixSymbol
-        #if unitSymbol:
-        #    unitLabel += unitSymbol
-        #if len(unitLabel) > 0:
-        #    self.__spinBox.setSuffix(" %s" %unitLabel)
+        box.addWidget(self)
 
 
     @property
