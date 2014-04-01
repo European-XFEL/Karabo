@@ -39,6 +39,7 @@ class DisplayDoubleSpinBox(DisplayWidget):
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
         self.__leDblValue.setReadOnly(True)
+        box.addWidget(self)
 
 
     @property

@@ -44,6 +44,7 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
+        box.addWidget(self)
         
 
     @property
@@ -60,7 +61,8 @@ class DisplayImageElement(DisplayWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if self.value is None or value is not self.value:
-            # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
+            if len(value.dims.value) != 2:
+                return
 
             dimX, dimY = value.dims.value
             data = value.data.value
