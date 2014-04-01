@@ -361,6 +361,23 @@ namespace configurationTest {
                     .alarmLow(-20).alarmHigh(20)
                     .commit();
 
+            UINT32_ELEMENT(expected).key("exampleKey6").alias("key6")
+                    .displayedName("IP address")
+                    .description("This is IP address presented in hex")
+                    .hex()
+                    .reconfigurable()
+                    .operatorAccess()
+                    .assignmentOptional().defaultValue(0x0100007f) // 127.0.0.1 == localhost
+                    .commit();
+            
+            UINT16_ELEMENT(expected).key("exampleKey7").alias("key7")
+                    .displayedName("Bit string")
+                    .description("Example key 7 description")
+                    .bin("0:isError,1:isMoving,2:isBusy,15:isOn")
+                    .readOnly()
+                    .initialValue(0)
+                    .commit();
+                    
             INT32_ELEMENT(expected).key("sampleKey")
                     .assignmentOptional().defaultValueFromString("10")
                     .reconfigurable()

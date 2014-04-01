@@ -36,20 +36,27 @@ void HashBinarySerializer_Test::setUp() {
     m_rootedHash = rooted;
 
     TimeProfiler p("binary");
+    p.open();
     p.startPeriod("create");
     Hash big("a.b", std::vector<double>(20 * 1024 * 1024, 1.0));
     p.stopPeriod("create");
-//    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
+    
+//Old:    cout << "\nCreation time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("create")) << endl;
 
     p.startPeriod("ref");
     const vector<double>& vect = big.get<vector<double> >("a.b");
     p.stopPeriod("ref");
-//    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
+//Old:    cout << "\nReference time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("ref")) << endl;
 
     p.startPeriod("copy");
     vector<double> vect1 = vect;
     p.stopPeriod("copy");
-//    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
+    p.close();
+    //cout << "\nCreation time: " << p.getPeriod("create").getDuration() << endl;
+    //cout << "\nReference time: " << p.getPeriod(ref).getDuration() << endl;
+    //cout << "\nCopy time: " << p.getPeriod("copy").getDuration() << endl;
+
+//Old:    cout << "\nCopy time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(p.getTime("copy")) << endl;
 
     vector<Hash>& tmp = big.bindReference<vector<Hash> >("a.c");
     tmp.resize(1);
@@ -114,13 +121,13 @@ void HashBinarySerializer_Test::testSerialization() {
 
         //cout << "\nSerialize start ----------------------------\n";
         TimeProfiler pr("binary");
+        pr.open();
         pr.startPeriod("serialize");
 
         p->save(m_bigHash, archive1);
         pr.stopPeriod("serialize");
-
-//        cout << "\nSerialize time: " << std::fixed << karabo::util::HighResolutionTimer::time2double(pr.getTime("serialize")) << endl;
-
+        pr.close();
+        //cout << "\nSerialize time: " << pr.getPeriod("serialize").getDuration() << endl;
         //cout << "\n\n Archive size: " << archive1.size() << " bytes" << endl;
 
         Hash h;

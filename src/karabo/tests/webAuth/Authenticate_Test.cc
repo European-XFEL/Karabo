@@ -36,7 +36,7 @@ void Authenticate_Test::tearDown() {
 
 void Authenticate_Test::testNotLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
                                              const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
-                                             const std::string& brokerPortNumber, const std::string& brokerTopic) {
+                                             const int brokerPortNumber, const std::string& brokerTopic) {
 
     // Variables that should be correctly assigned
     CPPUNIT_ASSERT(a.getUsername() == username);
@@ -62,7 +62,7 @@ void Authenticate_Test::testNotLoggedContext(karabo::webAuth::Authenticator a, c
 
 void Authenticate_Test::testSuccessfulLoggedContext(karabo::webAuth::Authenticator a, const std::string& username, const std::string& password,
                                                     const std::string& provider, const std::string& ipAddress, const std::string& brokerHostname,
-                                                    const std::string& brokerPortNumber, const std::string& brokerTopic, const long long expectedSoftwareId,
+                                                    const int brokerPortNumber, const std::string& brokerTopic, const long long expectedSoftwareId,
                                                     const long long expectedUserId, const int expectedDefaultAccessLevelId) {
 
     // Variables that should be correctly assigned
@@ -91,13 +91,12 @@ void Authenticate_Test::testCorrectLogin() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    //string ipAddress =  "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
-    string brokerPortNumber = "4444";
+    int brokerPortNumber = 4444;
     string brokerTopic = "topic";
 
     karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
-    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601(karabo::util::ATTOSEC);
+    string ipAddress = "c++UnitTestsIpAddress" + current_epochstamp.toIso8601Ext(karabo::util::ATTOSEC);
 
     // Expected result values
     const long long expectedSoftwareId = 1;
@@ -134,9 +133,8 @@ void Authenticate_Test::testCorrectLoginAccessLevelZero() {
     string username = "observer";
     string password = "karabo";
     string provider = "LOCAL";
-    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
-    string brokerPortNumber = "4444";
+    int brokerPortNumber = 4444;
     string brokerTopic = "topic";
 
     karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
@@ -177,9 +175,8 @@ void Authenticate_Test::testIncorrectLogin() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass222";
     string provider = "LOCAL";
-    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
-    string brokerPortNumber = "4444";
+    int brokerPortNumber = 4444;
     string brokerTopic = "topic";
 
     karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
@@ -226,9 +223,8 @@ void Authenticate_Test::testIncorrectUsername() {
     string username = "unitaryTests2";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    //string ipAddress = "c++UnitTestsIpAddress";
     string brokerHostname = "127.0.0.1";
-    string brokerPortNumber = "4444";
+    int brokerPortNumber = 4444;
     string brokerTopic = "topic";
 
     karabo::util::Epochstamp current_epochstamp = karabo::util::Epochstamp();
@@ -254,9 +250,8 @@ void Authenticate_Test::testSingleSignOn() {
     string username = "unitaryTests";
     string password = "karaboUnitaryTestsPass";
     string provider = "LOCAL";
-    //string ipAddress = "c++UnitTestsIpAddress";
-    string hostname = "127.0.0.1";
-    string portNumber = "4444";
+    string brokerHostname = "127.0.0.1";
+    int brokerPortNumber = 4444;
     string brokerTopic = "topic";
     std::string sessionToken, sessionTokenOrig;
 
@@ -265,7 +260,7 @@ void Authenticate_Test::testSingleSignOn() {
     string equalIpAddress = ipAddress;
     string differentIpAddress = "c++UnitTestsIpAddressXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
-    Authenticator a = Authenticator(username, password, provider, ipAddress, hostname, portNumber, brokerTopic);
+    Authenticator a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Successful login
     CPPUNIT_ASSERT(a.login() == true);

@@ -50,10 +50,10 @@ namespace karabo {
         }
 
 
-        Epochstamp::Epochstamp(const std::string& pTimeStr) {
-            karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTimeStr);
+        Epochstamp::Epochstamp(const std::string& pTime) {
+            karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTime);
             const unsigned long long secondsSinceEpoch = dts.getSecondsSinceEpoch();
-            const unsigned long long fractionalSecond = dts.getFractionalSecondString<unsigned long long>(); //[Default is "0"]
+            const unsigned long long fractionalSecond = dts.getFractionalSeconds<unsigned long long>();
 
             *this = Epochstamp(secondsSinceEpoch, fractionalSecond); //Use other constructor
         }
@@ -124,44 +124,63 @@ namespace karabo {
 
 
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
-            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-            using namespace boost::posix_time;
-
-            if (0) {
-                // The boost minimum unit is nanosecond:
-                // A nanosecond (ns) is one billionth of a second (10−9 or 1/1,000,000,000 s).
-                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
-                #if defined(BOOST_DATE_TIME_HAS_NANOSECONDS)
-                time_point += nanoseconds(m_fractionalSeconds / NANOSEC);
-                #else
-                time_point += microseconds(m_fractionalSeconds / MICROSEC);
-                #endif
-                return extended ? to_iso_extended_string(time_point) : to_iso_string(time_point);
-            }
-
-            // Another solution is to print out the time in seconds 
-            // and then print the fractional part with the desired precision. 
-            // Could be microseconds, nanoseconds, or any thing else we want.
-            {
-                boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
-
-                ostringstream oss;
-                oss << (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point))
-                        << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
-                return oss.str();
-            }
+            return this->toIso8601Internal(precision, extended, "");
         }
 
 
         std::string Epochstamp::toIso8601Ext(TIME_UNITS precision, bool extended) const {
-            return this->toIso8601(precision, extended) + "Z";
+            return this->toIso8601Internal(precision, extended, "Z");
         }
 
 
-        double Epochstamp::toTimestamp(TIME_UNITS precision) const {
+        std::string Epochstamp::toIso8601Internal(TIME_UNITS precision, bool extended, const std::string& localTimeZone) const {
+
+            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(localTimeZone);
+
+            std::string timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
+            int timeZoneHours = timeZone.get<int>("timeZoneHours");
+            int timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
+            boost::posix_time::time_duration timeZoneDifference(timeZoneHours, timeZoneMinutes, 0);
+
+
+            using namespace boost::posix_time;
+            static boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+
+
+            // The solution is to print out two separated elements:
+            // 1. The time in seconds
+            // 2. Fractional (second) part with the desired precision
+            boost::posix_time::ptime time_point = epoch + seconds(m_seconds);
+
+            if (timeZoneSignal == "+") {
+                time_point = time_point + timeZoneDifference;
+            } else {
+                time_point = time_point - timeZoneDifference;
+            }
+
+            std::string dateTime = (extended ? to_iso_extended_string(time_point) : to_iso_string(time_point));
+            std::string dateTimeWithFractional = this->concatDateTimeWithFractional<std::string, std::string&>(dateTime, precision);
+
+            // If applicable, add information about the time zone
+            // Necessary because of method "toIso8601Ext"
+            if (localTimeZone != "") {
+                dateTimeWithFractional = dateTimeWithFractional + localTimeZone;
+            }
+
+            return dateTimeWithFractional;
+        }
+
+
+        template<typename To, typename PT1>
+        const To Epochstamp::concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const {
             ostringstream oss;
-            oss << m_seconds << '.' << setw(18 - std::log10((long double) precision)) << setfill('0') << m_fractionalSeconds / precision;
-            return karabo::util::fromString<double>(oss.str());
+            oss << dateTime << karabo::util::DateTimeString::fractionalSecondToString(precision, m_fractionalSeconds);
+            return boost::lexical_cast<To>(oss.str());
+        }
+
+
+        const double Epochstamp::toTimestamp() const {
+            return this->concatDateTimeWithFractional<double, unsigned long long>(m_seconds, MICROSEC);
         }
 
 
@@ -170,9 +189,7 @@ namespace karabo {
 
             // special_locale takes ownership of the p_time_output facet
             std::locale special_locale(std::locale(""), facet);
-
             datetime_ss.imbue(special_locale);
-
             datetime_ss << pt;
 
             // return timestamp as string
@@ -180,23 +197,22 @@ namespace karabo {
         }
 
 
-        std::string Epochstamp::toFormattedString(const std::string& format) const {
+        std::string Epochstamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
 
             const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());
-
-            std::string pTime = this->toIso8601(SECOND, false);
+            std::string pTime = this->toIso8601Internal(SECOND, false, localTimeZone);
             const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
 
             return getPTime2String(pt, facet);
         }
 
 
-        bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes attributes) {
+        bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return (attributes.has("sec") && attributes.has("frac"));
         }
 
 
-        Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes attributes) {
+        Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long seconds, fraction;
             try {
                 attributes.get("sec", seconds);

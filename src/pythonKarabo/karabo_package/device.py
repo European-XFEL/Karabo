@@ -28,48 +28,44 @@ class PythonDevice(BaseFsm):
     
     @staticmethod
     def expectedParameters(expected):
-
-        e = STRING_ELEMENT(expected).key("version")
-        e.displayedName("Version").description("The version of this device class")
-        e.expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
-        
-        e = INT32_ELEMENT(expected).key("visibility")
-        e.displayedName("Visibility").description("Configures who is allowed to see this device at all")
-        e.assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-        e.expertAccess().reconfigurable().commit()
-        
-        e = STRING_ELEMENT(expected).key("classId")
-        e.displayedName("ClassID").description("The (factory)-name of the class of this device")
-        e.expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
-        
-        e = STRING_ELEMENT(expected).key("serverId")
-        e.displayedName("ServerID").description("The device-server on which this device is running on")
-        e.expertAccess().assignmentInternal().noDefaultValue().init().commit()
-
-        e = STRING_ELEMENT(expected).key("deviceId")
-        e.displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
-        e.assignmentOptional().noDefaultValue().init().commit()
-            
-        e = INT32_ELEMENT(expected).key("progress")
-        e.displayedName("Progress").description("The progress of the current action")
-        e.readOnly().initialValue(0).commit()
-            
-        e = STRING_ELEMENT(expected).key("state")
-        e.displayedName("State").description("The current state the device is in")
-        e.assignmentOptional().defaultValue("uninitialized").readOnly().commit()
-        
-        e = NODE_ELEMENT(expected).key("Logger").displayedName("Logger")
-        e.description("Logging settings").expertAccess()
-        e.appendParametersOfConfigurableClass(Logger, "Logger").commit()
-    
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders")
-        e.setNewDefaultValue("Ostream").commit()
-        
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout")
-        e.setNewDefaultValue("Pattern").commit()
-        
-        e = OVERWRITE_ELEMENT(expected).key("Logger.appenders.Ostream.layout.Pattern.format")
-        e.setNewDefaultValue("%p  %c  : %m%n").commit()
+        (
+            STRING_ELEMENT(expected).key("version")
+                    .displayedName("Version").description("The version of this device class")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
+                    ,
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility").description("Configures who is allowed to see this device at all")
+                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
+                    .expertAccess().reconfigurable().commit()
+                    ,
+            STRING_ELEMENT(expected).key("classId")
+                    .displayedName("ClassID").description("The (factory)-name of the class of this device")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
+                    ,
+            STRING_ELEMENT(expected).key("serverId")
+                    .displayedName("ServerID").description("The device-server on which this device is running on")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    ,
+            STRING_ELEMENT(expected).key("deviceId")
+                    .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+                    .assignmentOptional().noDefaultValue().init().commit()
+                    ,
+            INT32_ELEMENT(expected).key("progress")
+                    .displayedName("Progress").description("The progress of the current action")
+                    .readOnly().initialValue(0).commit()
+                    ,
+            STRING_ELEMENT(expected).key("state")
+                    .displayedName("State").description("The current state the device is in")
+                    .assignmentOptional().defaultValue("uninitialized").readOnly().commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger")
+                    .description("Logging settings")
+                    .displayedName("Logger")
+                    .appendParametersOfConfigurableClass(Logger,"Logger")
+                    .expertAccess()
+                    .commit()
+                    ,
+        )
         
     def __init__(self, configuration):
         if configuration is None:
@@ -112,22 +108,14 @@ class PythonDevice(BaseFsm):
         rules.injectTimestamps = True
         self.validatorIntern.setValidationRules(rules)
         self.validatorExtern.setValidationRules(rules)
-        
+
         # Instantiate SignalSlotable object without starting event loop
-        self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
-        
+        try:
+            self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
+        except RuntimeError as e:
+            raise RuntimeError,"PythonDevice.__init__: SignalSlotable.create Exception -- " + str(e)
         # Setup device logger
-        #logcfg = Hash("categories[0]", Hash("Category.name", self.deviceid, "Category.priority", "DEBUG"),
-        #            "appenders[0].Ostream.layout", "Pattern")
-        logcfg = configuration["Logger"]
-        logcfg["categories[0].Category.name"] = self.deviceid
-        logcfg["categories[0].Category.appenders[0].Ostream.layout.Pattern.format"] = "%p  %c  : %m%n"
-        logcfg["categories[0].Category.additivity"] = False
-        logcfg["categories[0].Category.appenders[1].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
-        if "connection" in configuration:
-            logcfg["categories[0].Category.appenders[1].Network.connection"] = configuration["connection"]
-        #logcfg["priority"] = "DEBUG"
-        Logger.configure(logcfg)
+        self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
 
         # Initialize FSM slots for user defined FSM (polymorphic call) 
@@ -135,6 +123,18 @@ class PythonDevice(BaseFsm):
         
         # Initialize Device slots
         self._initDeviceSlots()
+        
+    def loadLogger(self,input):
+        config = input["Logger"]
+
+        # make a copy of additional appenders defined by user
+        appenders = config["appenders"]
+        config["appenders[2].Network.layout"] = Hash()
+        config["appenders[2].Network.layout.Pattern.format"] = "%d{%F %H:%M:%S} | %p | %c | %m"
+        if "connection" in input:
+            config["appenders[2].Network.connection"] = input["connection"]
+#        print "loadLogger final:\n", config
+        Logger.configure(config)
         
     def run(self):
         self.initClassId()

@@ -26,6 +26,7 @@ namespace karabo {
             MICROSEC = 1000ULL * NANOSEC,
             MILLISEC = 1000ULL * MICROSEC,
             ONESECOND = 1000ULL * MILLISEC,
+            NOFRACTION = -1,
 
             SECOND = 1ULL, // Base unit
             // Multiples
@@ -47,7 +48,7 @@ namespace karabo {
         class TimeDuration {
 
         public:
-            
+
             /**
              * Default constructor creates an empty time duration
              */
@@ -61,14 +62,14 @@ namespace karabo {
              */
 
             TimeDuration(const karabo::util::Hash& hash);
-            
+
             /**
              * Construct a time duration from separate seconds and fractions of seconds. 
              * @param seconds
              * @param fractions in Atto seconds
              */
             TimeDuration(const TimeValue seconds, const TimeValue fractions);
-            
+
             /**
              * Construct a time duration that expand over days, hours, ...
              * @param days
@@ -127,7 +128,7 @@ namespace karabo {
              * @return long double
              */
             long double operator /(const TimeDuration& other) const;
-            
+
             operator double() const {
                 return boost::lexical_cast<double>(this->format(TimeDuration::DEFAULT_FORMAT));
             }

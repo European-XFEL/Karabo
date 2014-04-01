@@ -134,7 +134,8 @@ class _Manager(QObject):
         # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
         if hasattr(self, "visibleDeviceIdCount"):
             for deviceId in self.visibleDeviceIdCount.keys():
-                self.signalRemoveVisibleDevice.emit(deviceId)
+                if self.visibleDeviceIdCount[deviceId] > 0:
+                    self.signalRemoveVisibleDevice.emit(deviceId)
         self.visibleDeviceIdCount = dict()
         
         # State, if initiate device is currently processed

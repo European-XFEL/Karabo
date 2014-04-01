@@ -7,21 +7,21 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=GNU-MacOSX
-CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-MacOSX/bin
+CND_PLATFORM_Debug=GNU_MacPorts-MacOSX
+CND_ARTIFACT_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin
 CND_ARTIFACT_NAME_Debug=karabo-deviceserver
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-MacOSX/bin/karabo-deviceserver
-CND_PACKAGE_DIR_Debug=dist/Debug/GNU-MacOSX/package
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/bin/karabo-deviceserver
+CND_PACKAGE_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Debug=deviceserver.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-MacOSX/package/deviceserver.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/package/deviceserver.tar
 # Release configuration
-CND_PLATFORM_Release=GNU-MacOSX
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-MacOSX/bin
+CND_PLATFORM_Release=GNU_MacPorts-MacOSX
+CND_ARTIFACT_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/bin
 CND_ARTIFACT_NAME_Release=karabo-deviceserver
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-MacOSX/bin/karabo-deviceserver
-CND_PACKAGE_DIR_Release=dist/Release/GNU-MacOSX/package
+CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/bin/karabo-deviceserver
+CND_PACKAGE_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Release=deviceserver.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/deviceserver.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/package/deviceserver.tar
 #
 # include compiler specific variables
 #

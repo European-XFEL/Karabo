@@ -13,7 +13,9 @@
 #include <boost/date_time.hpp>
 #include <boost/regex.hpp>
 
+#include "TimeDuration.hh"
 #include "Exception.hh"
+#include "Hash.hh"
 
 namespace karabo {
     namespace util {
@@ -33,13 +35,13 @@ namespace karabo {
 
             // Considering the following example: "2013-01-20T20:30:00.123456Z"
             // each string should contain the following values:
-            std::string m_dateString; //"2013-01-20"
-            std::string m_timeString; //"20:30:00"
-            std::string m_fractionalSecondString; //"123456"
-            std::string m_timeZoneString; //"Z" or "+0000" or "-07:00"
+            std::string m_date; //"2013-01-20"
+            std::string m_time; //"20:30:00"
+            std::string m_fractionalSeconds; //"123456"
+            std::string m_timeZone; //"Z" or "+0000" or "-07:00"
 
             // Extra field that concatenates date with time
-            std::string m_dateTimeString; //"2013-01-20T20:30:00"
+            std::string m_dateTime; //"2013-01-20T20:30:00"
             std::string m_dateTimeStringAll; //"2013-01-20T20:30:00.123456+00:00"
             std::string m_timeZoneSignal;
             int m_timeZoneHours;
@@ -65,8 +67,8 @@ namespace karabo {
              * @param inputFractionSecondStr String that represents the fractional part of the Karabo agreed ISO-8601 subset API
              * @param inputTimeZoneStr String that represents the time zone part of the Karabo agreed ISO-8601 subset API
              */
-            DateTimeString(const std::string& inputDateStr, const std::string& inputTimeStr,
-                           const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr);
+            DateTimeString(const std::string& inputDate, const std::string& inputTime,
+                           const std::string& inputFractionSecond, const std::string& inputTimeZone);
 
 
             virtual ~DateTimeString();
@@ -75,16 +77,16 @@ namespace karabo {
              * Get string that represents the date part of the Karabo agreed ISO-8601 subset API (i.e. "2013-01-20")
              * @return string
              */
-            inline const std::string& getDateString() const {
-                return m_dateString;
+            inline const std::string& getDate() const {
+                return m_date;
             }
 
             /**
              * Get string that represents the time part of the Karabo agreed ISO-8601 subset API (i.e. "20:30:00")
              * @return string
              */
-            inline const std::string& getTimeString() const {
-                return m_timeString;
+            inline const std::string& getTime() const {
+                return m_time;
             }
 
             /**
@@ -92,24 +94,24 @@ namespace karabo {
              * @return string
              */
             template<typename T>
-            inline const T getFractionalSecondString() const {
-                return boost::lexical_cast<T>(m_fractionalSecondString);
+            inline const T getFractionalSeconds() const {
+                return boost::lexical_cast<T>(m_fractionalSeconds);
             }
 
             /**
              * Get string that represents the time zone part of the Karabo agreed ISO-8601 subset API (i.e. "Z")
              * @return string
              */
-            inline const std::string& getTimeZoneString() const {
-                return m_timeZoneString;
+            inline const std::string& getTimeZone() const {
+                return m_timeZone;
             }
 
             /**
              * Get string that represents the date and time part of the Karabo agreed ISO-8601 subset API (i.e. "2013-01-20T20:30:00")
              * @return string
              */
-            inline const std::string& getDateTimeString() const {
-                return m_dateTimeString;
+            inline const std::string& getDateTime() const {
+                return m_dateTime;
             }
 
 
@@ -120,6 +122,15 @@ namespace karabo {
              * @return boolean (True is string is valid, False otherwise)
              */
             static const bool isStringValidIso8601(const std::string& timePoint);
+
+
+            /**
+             * Validates if a string representing a time zone is valid according to ISO-8601 definition
+             * 
+             * @param iso8601TimeZone String that represents a Time Zone (i.e. "+01:00" or "-07:00")
+             * @return boolean (True is string is valid, False otherwise)
+             */
+            static const bool isStringValidIso8601TimeZone(const std::string& iso8601TimeZone);
 
 
             /**
@@ -158,8 +169,39 @@ namespace karabo {
              * @return unsigned long long (Seconds elapsed since Epoch)
              */
             const unsigned long long getSecondsSinceEpoch();
-            //template<typename T>
-            //const T getSecondsSinceEpoch();
+
+
+            /**
+             * Converts a fractional second value into it's value with a smaller precision
+             * Because fractional seconds are received as an UNSIGNED LONG LONG, this function assumes the algarisms are the right most algarisms.
+             * Due to this reason, if there are missing algarisms to perform the desired precision resolution, zeros will be added to this left of the fractional seconds number received.
+             * 
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param fractionalSeconds - Fractional seconds to be return with the correct desired precision
+             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             */
+            static const std::string fractionalSecondToString(const TIME_UNITS precision = MICROSEC, const unsigned long long fractionalSeconds = 0);
+
+
+            /**
+             * Converts a STRING fractional second value into it's value in ATTOSEC precision
+             * Because fractional seconds are received as a STRING, this function assumes the algarisms are the left most algarisms.
+             * Due to this reason, if there are missing algarisms to perform ATTOSEC resolution, zeros will be added to this right of the fractional seconds number received.
+             * 
+             * @param fractionalSeconds - Fractional seconds to be return with ATTOSEC precision
+             * @return String started with a "." (dot) and followed by the fractional second till the desired precision
+             */
+            static const std::string fractionalStringToAttoFractionalString(const std::string& fractionalSeconds);
+
+
+            /**
+             * Split an ISO-8601 valid Time Zone
+             * 
+             * @param iso8601TimeZone String that represents a Time Zone (i.e. "Z" or "+01:00" or "-07:00") [Default: "Z"]
+             * @return Hash containing the Time Zone information in three different keys (<std::string>("timeZoneSignal"), <int>("timeZoneHours"), <int>("timeZoneMinutes"))
+             */
+            static const karabo::util::Hash getTimeDurationFromTimeZone(const std::string& iso8601TimeZone = "Z");
+
 
         private:
 
@@ -182,9 +224,9 @@ namespace karabo {
         };
 
         template<>
-        const std::string DateTimeString::getFractionalSecondString() const;
+        const std::string DateTimeString::getFractionalSeconds() const;
         template<>
-        const unsigned long long DateTimeString::getFractionalSecondString() const;
+        const unsigned long long DateTimeString::getFractionalSeconds() const;
 
     }
 }

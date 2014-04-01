@@ -14,11 +14,11 @@ namespace karabo {
 
 
         DateTimeString::DateTimeString() :
-        m_dateString("19700101"),
-        m_timeString("000000"),
-        m_fractionalSecondString("000000000000000000"),
-        m_timeZoneString("+0000"),
-        m_dateTimeString("19700101T000000"),
+        m_date("19700101"),
+        m_time("000000"),
+        m_fractionalSeconds("000000000000000000"),
+        m_timeZone("+0000"),
+        m_dateTime("19700101T000000"),
         m_dateTimeStringAll("19700101T000000+0000"),
         m_timeZoneSignal("+"),
         m_timeZoneHours(0),
@@ -31,44 +31,27 @@ namespace karabo {
         }
 
 
-        DateTimeString::DateTimeString(const std::string& inputDateStr, const std::string& inputTimeStr,
-                                       const std::string& inputFractionSecondStr, const std::string& inputTimeZoneStr) :
-        m_dateString(inputDateStr),
-        m_timeString(inputTimeStr),
-        m_fractionalSecondString(inputFractionSecondStr),
-        m_timeZoneString(inputTimeZoneStr),
-        m_dateTimeString(inputDateStr + "T" + inputTimeStr) {
+        DateTimeString::DateTimeString(const std::string& inputDate, const std::string& inputTime,
+                                       const std::string& inputFractionSecond, const std::string& inputTimeZone) :
+        m_date(inputDate),
+        m_time(inputTime),
+        m_fractionalSeconds(inputFractionSecond),
+        m_timeZone(inputTimeZone),
+        m_dateTime(inputDate + "T" + inputTime) {
 
-            if (m_fractionalSecondString == "") {
-                m_fractionalSecondString = "0";
-                m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + inputTimeZoneStr;
+            if (m_fractionalSeconds == "") {
+                m_fractionalSeconds = "0";
+                m_dateTimeStringAll = inputDate + "T" + inputTime + inputTimeZone;
             } else {
-                m_dateTimeStringAll = inputDateStr + "T" + inputTimeStr + "." + inputFractionSecondStr + inputTimeZoneStr;
+                m_dateTimeStringAll = inputDate + "T" + inputTime + "." + inputFractionSecond + inputTimeZone;
             }
 
-            if (inputTimeZoneStr == "Z" || inputTimeZoneStr == "z" || inputTimeZoneStr == "") {
-                m_timeZoneSignal = "+";
-                m_timeZoneHours = 0;
-                m_timeZoneMinutes = 0;
-            } else {
 
-                std::string timeZoneHour;
-                std::string timeZoneMinute;
+            const karabo::util::Hash timeZone = karabo::util::DateTimeString::getTimeDurationFromTimeZone(inputTimeZone);
+            m_timeZoneSignal = timeZone.get<std::string>("timeZoneSignal");
+            m_timeZoneHours = timeZone.get<int>("timeZoneHours");
+            m_timeZoneMinutes = timeZone.get<int>("timeZoneMinutes");
 
-                if (inputTimeZoneStr.find(':') != std::string::npos) {
-                    size_t pos = inputTimeZoneStr.find(':');
-                    timeZoneHour = inputTimeZoneStr.substr(1, pos - 1);
-                    timeZoneMinute = inputTimeZoneStr.substr(pos + 1, inputTimeZoneStr.size());
-                } else {
-                    timeZoneHour = inputTimeZoneStr.substr(1, 2);
-                    timeZoneMinute = inputTimeZoneStr.substr(3, inputTimeZoneStr.size());
-                }
-
-                m_timeZoneSignal = inputTimeZoneStr[0];
-                m_timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
-                m_timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
-
-            }
 
             if (DateTimeString::DateTimeString::isStringValidIso8601(m_dateTimeStringAll) == false) {
                 throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
@@ -87,15 +70,25 @@ namespace karabo {
 
         const bool DateTimeString::isStringValidIso8601(const std::string& timePoint) {
             // Original regular expression:
-            // ^((((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|-\d?)((-?)((0[1-9]|1[0-2])((-?)([12]\d|0[1-9]|3[01]))?|W(((-?[1-7]))|([0-4]\d|5[0-2])(-?[1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)([T]((((\+?|-{0,3})(([01]\d|2[0-3])((:?)([0-5]\d)?)((:?)([0-5]\d)?)|24\:?(00)?:?(00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?)))([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?|(((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|(-\d)?)((-?)((0[1-9]|1[0-2])((-?)([12]\d|0[1-9]|3[01]))?|W(((-?[1-7]))|([0-4]\d|5[0-2])(-?[1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)|((((\+?|-{0,3})(([01]\d|2[0-3])((:?)([0-5]\d)?)((:?)([0-5]\d)?)|24\:?(00)?:?(00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?))([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)$
+            // ^(((((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|(-\d)?)((-?)((0[1-9]|1[0-2])(-([12]\d|0[1-9]|3[01]))?|W(((-[1-7]))|([0-4]\d|5[0-2])(-[1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)([T]((((\+?|-{0,3})(([01]\d|2[0-3])((:[0-5]\d)?)((:[0-5]\d)?)|24(:00)?(:00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?)))([zZ]|([\+-])([01]\d|2[0-3])(:[0-5]\d)?)?|(((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|(-\d)?)((-?)((0[1-9]|1[0-2])(-([12]\d|0[1-9]|3[01]))?|W(((-[1-7]))|([0-4]\d|5[0-2])(-[1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)|((((\+?|-{0,3})(([01]\d|2[0-3])((:[0-5]\d)?)((:[0-5]\d)?)|24(:00)?(:00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?))([zZ]|([\+-])([01]\d|2[0-3])(:[0-5]\d)?)?)|((((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|(-\d)?)((-?)((0[1-9]|1[0-2])(([12]\d|0[1-9]|3[01]))?|W((([1-7]))|([0-4]\d|5[0-2])([1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)([T]((((\+?|-{0,3})(([01]\d|2[0-3])(([0-5]\d)?)(([0-5]\d)?)|24(00)?(00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?)))([zZ]|([\+-])([01]\d|2[0-3])([0-5]\d)?)?|(((\+?|-{0,3})(\d{4}|\d{2})(?!\d{2}\b)|(-\d)?)((-?)((0[1-9]|1[0-2])(([12]\d|0[1-9]|3[01]))?|W((([1-7]))|([0-4]\d|5[0-2])([1-7])?)|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6]))))?)|((((\+?|-{0,3})(([01]\d|2[0-3])(([0-5]\d)?)(([0-5]\d)?)|24(00)?(00)?)|([-]{1,2}[0-5]\d([\.,]\d+)?))([\.,]\d+(?!:))?))([zZ]|([\+-])([01]\d|2[0-3])([0-5]\d)?)?))$
             // Regex visualizer: https://www.debuggex.com/
             // Converted using online Java converter: http://www.regexplanet.com/advanced/java/index.html
-            static const boost::regex e("^((((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|-\\d?)((-?)((0[1-9]|1[0-2])((-?)([12]\\d|0[1-9]|3[01]))?|W(((-?[1-7]))|([0-4]\\d|5[0-2])(-?[1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)([T]((((\\+?|-{0,3})(([01]\\d|2[0-3])((:?)([0-5]\\d)?)((:?)([0-5]\\d)?)|24\\:?(00)?:?(00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?)))([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?|(((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|(-\\d)?)((-?)((0[1-9]|1[0-2])((-?)([12]\\d|0[1-9]|3[01]))?|W(((-?[1-7]))|([0-4]\\d|5[0-2])(-?[1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)|((((\\+?|-{0,3})(([01]\\d|2[0-3])((:?)([0-5]\\d)?)((:?)([0-5]\\d)?)|24\\:?(00)?:?(00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?))([zZ]|([\\+-])([01]\\d|2[0-3]):?([0-5]\\d)?)?)$");
+            static const boost::regex e("^(((((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|(-\\d)?)((-?)((0[1-9]|1[0-2])(-([12]\\d|0[1-9]|3[01]))?|W(((-[1-7]))|([0-4]\\d|5[0-2])(-[1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)([T]((((\\+?|-{0,3})(([01]\\d|2[0-3])((:[0-5]\\d)?)((:[0-5]\\d)?)|24(:00)?(:00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?)))([zZ]|([\\+-])([01]\\d|2[0-3])(:[0-5]\\d)?)?|(((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|(-\\d)?)((-?)((0[1-9]|1[0-2])(-([12]\\d|0[1-9]|3[01]))?|W(((-[1-7]))|([0-4]\\d|5[0-2])(-[1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)|((((\\+?|-{0,3})(([01]\\d|2[0-3])((:[0-5]\\d)?)((:[0-5]\\d)?)|24(:00)?(:00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?))([zZ]|([\\+-])([01]\\d|2[0-3])(:[0-5]\\d)?)?)|((((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|(-\\d)?)((-?)((0[1-9]|1[0-2])(([12]\\d|0[1-9]|3[01]))?|W((([1-7]))|([0-4]\\d|5[0-2])([1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)([T]((((\\+?|-{0,3})(([01]\\d|2[0-3])(([0-5]\\d)?)(([0-5]\\d)?)|24(00)?(00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?)))([zZ]|([\\+-])([01]\\d|2[0-3])([0-5]\\d)?)?|(((\\+?|-{0,3})(\\d{4}|\\d{2})(?!\\d{2}\\b)|(-\\d)?)((-?)((0[1-9]|1[0-2])(([12]\\d|0[1-9]|3[01]))?|W((([1-7]))|([0-4]\\d|5[0-2])([1-7])?)|(00[1-9]|0[1-9]\\d|[12]\\d{2}|3([0-5]\\d|6[1-6]))))?)|((((\\+?|-{0,3})(([01]\\d|2[0-3])(([0-5]\\d)?)(([0-5]\\d)?)|24(00)?(00)?)|([-]{1,2}[0-5]\\d([\\.,]\\d+)?))([\\.,]\\d+(?!:))?))([zZ]|([\\+-])([01]\\d|2[0-3])([0-5]\\d)?)?))$");
             if (timePoint != "") {
                 return boost::regex_match(timePoint, e);
             } else {
                 return false;
             }
+        }
+
+
+        const bool DateTimeString::isStringValidIso8601TimeZone(const std::string& iso8601TimeZone) {
+            // Original regular expression:
+            // ^([zZ]|([\+-])([01]\d|2[0-3])(:?)([0-5]\d))?$
+            // Regex visualizer: https://www.debuggex.com/
+            // Converted using online Java converter: http://www.regexplanet.com/advanced/java/index.html
+            static const boost::regex e("^([zZ]|([\\+-])([01]\\d|2[0-3])(:?)([0-5]\\d))?$");
+            return boost::regex_match(iso8601TimeZone, e);
         }
 
 
@@ -117,11 +110,11 @@ namespace karabo {
 
             karabo::util::DateTimeString t = karabo::util::DateTimeString();
             if (t.isStringValidIso8601(timePoint) == false) {
-                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format)");
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid ISO-8601 format) => '" + timePoint + "'");
             }
 
             if (t.isStringKaraboValidIso8601(timePoint) == false) {
-                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format)");
+                throw KARABO_PARAMETER_EXCEPTION("Illegal time string sent by user (not a valid KARABO API ISO-8601 format) => '" + timePoint + "'");
             }
 
             // Copy current string and replace some characters to allow a cleaner code
@@ -139,13 +132,11 @@ namespace karabo {
             size_t pos = 0;
             std::string rest = "";
 
-
             //Separate Date (years, months and days) from the string
             // NOTE: This must be the first operation because the character '-' is use to separate the date and also in the Time Zone
             pos = currentTimePoint.find('T');
             date = currentTimePoint.substr(0, pos);
             rest = currentTimePoint.substr(pos + 1, currentTimePoint.size());
-
 
             //Separate Fractional seconds and Time zone from the string
             if (rest.find('Z') != std::string::npos ||
@@ -166,7 +157,6 @@ namespace karabo {
                 rest = rest;
             }
 
-
             //Separate Time (hours, minutes, seconds and fractional seconds) from the string
             if (rest.find('.') != std::string::npos) {
                 pos = rest.find('.');
@@ -178,10 +168,7 @@ namespace karabo {
             }
 
             //Calculate fractional Atto second
-            std::ostringstream oss;
-            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
-            fractionalSeconds = oss.str();
-
+            fractionalSeconds = karabo::util::DateTimeString::fractionalStringToAttoFractionalString(fractionalSeconds);
 
             // Create DateTimeString instance to be returned
             return DateTimeString(date, time, fractionalSeconds, timezone);
@@ -205,38 +192,114 @@ namespace karabo {
 
 
         const unsigned long long DateTimeString::getSecondsSinceEpoch() {
-            std::string dateAndTimeStr = m_dateTimeString;
+            std::string dateAndTime = m_dateTime;
 
             // Try to convert String to PTIME taking into consideration the date formats defined above
             boost::posix_time::ptime ptimeLocal;
             for (size_t i = 0; i < formats_n; ++i) {
-                std::istringstream is(dateAndTimeStr);
+                std::istringstream is(dateAndTime);
                 is.imbue(formats[i]);
                 is >> ptimeLocal;
                 if (ptimeLocal != boost::posix_time::ptime()) break;
             }
 
+            boost::posix_time::time_duration timeZoneDifference(m_timeZoneHours, m_timeZoneMinutes, 0);
             boost::posix_time::ptime ptimeUtc;
             if (m_timeZoneSignal == "+") {
-                // Berlin hour - 1h == London hour
-                ptimeUtc = ptimeLocal - boost::posix_time::hours(m_timeZoneHours) - boost::posix_time::minutes(m_timeZoneMinutes);
+                ptimeUtc = ptimeLocal - timeZoneDifference; //Berlin hour - 1h == London hour
             } else {
-                ptimeUtc = ptimeLocal + boost::posix_time::hours(m_timeZoneHours) + boost::posix_time::minutes(m_timeZoneMinutes);
+                ptimeUtc = ptimeLocal + timeZoneDifference; //Azores hour + 1h == London hour
             }
 
             return ptimeToSecondsSinceEpoch(ptimeUtc);
         }
 
 
-        template<>
-        const std::string DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<std::string>(m_fractionalSecondString);
+        const karabo::util::Hash DateTimeString::getTimeDurationFromTimeZone(const std::string& iso8601TimeZone) {
+
+            // Attention that "" (empty string) is a valid time zone format in the validation REGEX
+            karabo::util::DateTimeString dts = karabo::util::DateTimeString();
+            if (dts.isStringValidIso8601TimeZone(iso8601TimeZone) == false) {
+                throw KARABO_PARAMETER_EXCEPTION("Illegal Time Zone string sent by user (not a valid ISO-8601 format) => '" + iso8601TimeZone + "'");
+            }
+
+            std::string timeZoneSignal;
+            int timeZoneHours;
+            int timeZoneMinutes;
+
+            if (iso8601TimeZone == "Z" || iso8601TimeZone == "z" || iso8601TimeZone == "") {
+                timeZoneSignal = "+";
+                timeZoneHours = 0;
+                timeZoneMinutes = 0;
+            } else {
+
+                std::string timeZoneHour;
+                std::string timeZoneMinute;
+
+                if (iso8601TimeZone.find(':') != std::string::npos) {
+                    size_t pos = iso8601TimeZone.find(':');
+                    timeZoneHour = iso8601TimeZone.substr(1, pos - 1);
+                    timeZoneMinute = iso8601TimeZone.substr(pos + 1, iso8601TimeZone.size());
+                } else {
+                    timeZoneHour = iso8601TimeZone.substr(1, 2);
+                    timeZoneMinute = iso8601TimeZone.substr(3, iso8601TimeZone.size());
+                }
+
+                timeZoneSignal = iso8601TimeZone[0];
+                timeZoneHours = boost::lexical_cast<int>(timeZoneHour);
+                timeZoneMinutes = boost::lexical_cast<int>(timeZoneMinute);
+            }
+
+            //const karabo::util::Hash h("timeZoneSignal", timeZoneSignal, "timeZoneHours", timeZoneHours, "timeZoneMinutes", timeZoneMinutes);
+            karabo::util::Hash h;
+            h.set<std::string>("timeZoneSignal", timeZoneSignal);
+            h.set<int>("timeZoneHours", timeZoneHours);
+            h.set<int>("timeZoneMinutes", timeZoneMinutes);
+
+            return h;
+        }
+
+
+        const std::string DateTimeString::fractionalSecondToString(const TIME_UNITS precision, const unsigned long long fractionalSeconds) {
+
+            if (precision == NOFRACTION) return "";
+
+            ostringstream oss;
+
+            // Be carefully with std::log10 calculation
+            // The explicit conversion to "double" is necessary, if used smaller types like:
+            // "long double"
+            // (i.e. [(int) "18 - std::log10((long double) 15)"] == 2)
+            // (i.e. [(double) "18 - std::log10((long double) 15)"] == 3)
+            // unsigned long long
+            // (i.e. [(int) "18 - std::log10((unsigned long long) 15)"] == 3)
+            // (i.e. [(double) "18 - std::log10((unsigned long long) 15)"] == 3)
+            // Alternatively the best option is to do:
+            // ["std::log10(ONESECOND / precision)"] == 3
+            int numDigits = std::log10(ONESECOND / precision);
+            oss << '.' << setw(numDigits) << setfill('0') << fractionalSeconds / precision;
+
+            return oss.str();
+        }
+
+
+        const std::string DateTimeString::fractionalStringToAttoFractionalString(const std::string& fractionalSeconds) {
+            //Calculate fractional Atto second value (read method description for more information)
+            std::ostringstream oss;
+            oss << std::setiosflags(std::ios::left) << std::setw(18) << std::setfill('0') << fractionalSeconds;
+            return oss.str();
         }
 
 
         template<>
-        const unsigned long long DateTimeString::getFractionalSecondString() const {
-            return boost::lexical_cast<unsigned long long>(m_fractionalSecondString);
+        const std::string DateTimeString::getFractionalSeconds() const {
+            return boost::lexical_cast<std::string>(m_fractionalSeconds);
+        }
+
+
+        template<>
+        const unsigned long long DateTimeString::getFractionalSeconds() const {
+            return boost::lexical_cast<unsigned long long>(m_fractionalSeconds);
         }
     }
 }

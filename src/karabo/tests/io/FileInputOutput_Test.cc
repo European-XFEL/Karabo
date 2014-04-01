@@ -231,6 +231,7 @@ void FileInputOutput_Test::tearDown() {
 
 void FileInputOutput_Test::writeTextFile() {
     TimeProfiler p("writeTextFile");
+    p.open();
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file1.xml")));
     out->write(m_rootedHash);
@@ -238,7 +239,8 @@ void FileInputOutput_Test::writeTextFile() {
     p.startPeriod("bigHash");
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file2.xml"), "format.Xml.indentation", -1));
     out->write(m_bigHash);
-    p.stopPeriod("bigHash");
+    p.stopPeriod("bigHash"); //p.stopPeriod(); 
+    p.close();
     if (false) clog << "writing big Hash (text) took " <<  p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("TextFile", Hash("filename", resourcePath("file3.xml"), "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
@@ -345,7 +347,7 @@ void FileInputOutput_Test::readSequenceFromTextFile() {
 void FileInputOutput_Test::writeBinaryFile() {
 
     TimeProfiler p("writeBinaryFile");
-
+    p.open();
     // Using the Factory interface
     Output<Hash>::Pointer out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file1.bin")));
     out->write(m_rootedHash);
@@ -353,7 +355,8 @@ void FileInputOutput_Test::writeBinaryFile() {
     p.startPeriod("bigHash");
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file2.bin")));
     out->write(m_bigHash);
-    p.stopPeriod("bigHash");
+    p.stopPeriod(); //p.stopPeriod("bigHash"); TODO
+    p.close();
     if (false) clog << "writing big Hash (binary) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
     out = Output<Hash>::create("BinaryFile", Hash("filename", resourcePath("file3.bin")));
@@ -463,7 +466,7 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
 void FileInputOutput_Test::writeHdf5File() {
 
     TimeProfiler p("writeHdf5File");
-
+    
     try {
 
         Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));

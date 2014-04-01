@@ -125,8 +125,8 @@ namespace karabo {
 
         private:
             std::string m_name;
-            std::stack<karabo::util::Hash*> m_stack;
             karabo::util::Hash m_periods;
+            std::stack<karabo::util::Hash*> m_stack;
 
             static void sql(std::ostream& os, const std::string& name, const karabo::util::Hash& period, const int parent_key);
 

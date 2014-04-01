@@ -21,6 +21,9 @@ from PyQt4.QtCore import pyqtSignal, pyqtSlot, QSize, QTimer, Qt
 from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
                         QToolButton, QWidget
 
+import numpy
+import numbers
+
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
@@ -305,7 +308,8 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__currentDisplayValue = value
 
         EPSILON = 1e-4
-        if isinstance(value, float):
+        if (isinstance(value, (numbers.Complex, numpy.inexact))
+                and not isinstance(value, numbers.Integral)):
             diff = abs(value - self.__editableWidget.value)
             isEqualEditable = diff < EPSILON
         elif isinstance(value, list):

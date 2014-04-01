@@ -57,7 +57,7 @@ namespace karabo {
             explicit Epochstamp(const time_t& tm);
             explicit Epochstamp(const timeval& tv);
             explicit Epochstamp(const timespec& ts);
-            explicit Epochstamp(const std::string& pTimeStr);
+            explicit Epochstamp(const std::string& pTime);
 
             virtual ~Epochstamp();
 
@@ -147,8 +147,8 @@ namespace karabo {
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
              * 
-             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
-             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string (extended or compact)
              */
             std::string toIso8601(TIME_UNITS precision = MICROSEC, bool extended = false) const;
@@ -156,29 +156,32 @@ namespace karabo {
             /**
              * Generates a sting (respecting ISO-8601) for object time for EXTERNAL usage ("%Y%m%dT%H%M%S%f%z" => "20121225T132536.789333[123456789123]Z")
              * 
-             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC)
-             * @param extended - "Yes" returns ISO8601 extended string; "No" returns ISO8601 compact string
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
              * @return ISO 8601 formatted string with "Z" in the string end ("Z" means the date time zone is using Coordinated Universal Time - UTC)
              */
             std::string toIso8601Ext(TIME_UNITS precision = MICROSEC, bool extended = false) const;
 
 
             /**
-             * Generates a timestamp as double with seconds.fractions format
+             * Generates a timestamp as double with seconds.fractional format (fractional precision == MICROSEC)
+             * Function necessary to use in graphs plotting in Python code (MICROSEC precision is enough)
+             * 
              * @return A double value with the decimal point indicating fractions of seconds
              */
-            double toTimestamp(TIME_UNITS precision = MICROSEC) const;
+            const double toTimestamp() const;
 
             /**
              * Formats to specified format time stored in the object
              * 
-             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/)
-             * @return formated string
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
+             * @return formated string in the specified Time Zone
              */
-            std::string toFormattedString(const std::string& format = "%Y-%b-%d %H:%M:%S") const;
+            std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
 
 
-            static bool hashAttributesContainTimeInformation(const Hash::Attributes attributes);
+            static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
 
             /**
              * Creates an EpochStamp from two Hash attributes
@@ -186,7 +189,7 @@ namespace karabo {
              * @param attributes Hash attributes
              * @return EpochStamp object
              */
-            static Epochstamp fromHashAttributes(const Hash::Attributes attributes);
+            static Epochstamp fromHashAttributes(const Hash::Attributes& attributes);
 
             /**
              * Formats as Hash attributes
@@ -197,13 +200,34 @@ namespace karabo {
         private:
 
             /**
-             * Returns timestamp string in "ANY SPECIFIED" format
+             * Returns timestamp string in "ANY SPECIFIED" format (format must be a valid format)
              * 
              * @param pt Boost ptime of a specific moment in time
              * @param facet Boost time_facet to be applied
              * @return The specified date/time formatted according to the specified time_facet
              */
             static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet);
+
+            /**
+             * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")
+             * 
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @param extended - "true" returns ISO8601 extended string; "false" returns ISO8601 compact string [Default: false]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
+             * @return ISO 8601 formatted string (extended or compact)
+             */
+            std::string toIso8601Internal(TIME_UNITS precision = MICROSEC, bool extended = false, const std::string& localTimeZone = std::string("Z")) const;
+
+
+            /**
+             * Concatenates date and time information with instance fractional seconds within a specified precision
+             * 
+             * @param dateTime - Date and time information
+             * @param precision - Indicates the precision of the fractional seconds (e.g. MILLISEC, MICROSEC, NANOSEC, PICOSEC, FEMTOSEC, ATTOSEC) [Default: MICROSEC]
+             * @return Concatenation result
+             */
+            template<typename To, typename PT1>
+            const To concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const;
 
         };
     }
@@ -232,7 +256,7 @@ namespace karabo {
 
         inline Epochstamp& Epochstamp::operator =(const timespec& ts) {
             m_seconds = ts.tv_sec;
-            m_fractionalSeconds = ts.tv_nsec * NANOSEC;
+            m_fractionalSeconds = static_cast<unsigned long long> (ts.tv_nsec) * NANOSEC;
             return *this;
         }
 
