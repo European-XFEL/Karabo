@@ -764,16 +764,19 @@ void Hdf5_Test::testSerializer() {
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test1.h5")));
             out->write(data);
             p.stopPeriod("all");
+            p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
 //            clog << "Write time: " << allTime << endl;
 
 
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test1.h5")));
+            p.open();
             p.startPeriod("read");
             Hash rdata;
             in->read(rdata);
             p.stopPeriod("read");
+            p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
 //            clog << "Read time: " << readTime << endl;
 //            clog << "Read Hash\n" << rdata << endl;
@@ -800,6 +803,7 @@ void Hdf5_Test::testSerializer() {
                 path = "a.b." + toString(i + 5) + ".d.e" + toString(i + 5);
                 data.set(path, std::vector<long long> (8, 2));
             }
+            p.open();
             p.startPeriod("all");
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test2.h5")));
             out->write(data);
