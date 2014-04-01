@@ -43,7 +43,8 @@ class Label(QLabel):
 
         l = [ ]
         for v in self.box.value[:10]:
-            if isinstance(v, (numbers.Real, numpy.floating)):
+            if (isinstance(v, (numbers.Real, numpy.floating)) and
+                    not isinstance(v, numbers.Integral)):
                 l.append("{:.6}".format(v))
             else:
                 l.append("{}".format(v))
