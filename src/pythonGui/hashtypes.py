@@ -148,7 +148,7 @@ class Bool(Type):
         return '1' if data else '0'
 
 
-class VectorBool(Type):
+class VectorBool(Vector, Bool):
     pass
 
 
