@@ -117,6 +117,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/163016059/HashFilter.o \
 	${OBJECTDIR}/_ext/163016059/PluginLoader.o \
 	${OBJECTDIR}/_ext/163016059/Schema.o \
+	${OBJECTDIR}/_ext/163016059/SignalHandler.o \
 	${OBJECTDIR}/_ext/163016059/StringTools.o \
 	${OBJECTDIR}/_ext/163016059/TimeDuration.o \
 	${OBJECTDIR}/_ext/163016059/TimePeriod.o \
@@ -590,6 +591,11 @@ ${OBJECTDIR}/_ext/163016059/Schema.o: ../../../src/karabo/util/Schema.cc
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Schema.o ../../../src/karabo/util/Schema.cc
+
+${OBJECTDIR}/_ext/163016059/SignalHandler.o: ../../../src/karabo/util/SignalHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/SignalHandler.o ../../../src/karabo/util/SignalHandler.cc
 
 ${OBJECTDIR}/_ext/163016059/StringTools.o: ../../../src/karabo/util/StringTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
@@ -2011,6 +2017,19 @@ ${OBJECTDIR}/_ext/163016059/Schema_nomain.o: ${OBJECTDIR}/_ext/163016059/Schema.
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o ../../../src/karabo/util/Schema.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163016059/Schema.o ${OBJECTDIR}/_ext/163016059/Schema_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163016059/SignalHandler_nomain.o: ${OBJECTDIR}/_ext/163016059/SignalHandler.o ../../../src/karabo/util/SignalHandler.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163016059
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163016059/SignalHandler.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163016059/SignalHandler_nomain.o ../../../src/karabo/util/SignalHandler.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163016059/SignalHandler.o ${OBJECTDIR}/_ext/163016059/SignalHandler_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163016059/StringTools_nomain.o: ${OBJECTDIR}/_ext/163016059/StringTools.o ../../../src/karabo/util/StringTools.cc 
