@@ -52,6 +52,16 @@ class Type(hashtypes.Type):
                 treewidget.onApplyChanged)
 
 
+class Char(hashtypes.Char):
+    __metaclass__ = Monkey
+
+    @classmethod
+    def populateItem(cls, item, attrs, classtype, treewidget):
+        item.classAlias = "Text Field"
+        item.setIcon(0, QIcon(":string"))
+        super(Char, cls).populateItem(item, attrs, classtype, treewidget)
+
+
 class String(hashtypes.String):
     __metaclass__ = Monkey
 
@@ -294,5 +304,6 @@ class SchemaReader(object):
 
 
     def parseListOfNodes(self, key, hash, attrs, parent):
+        item = self._createPropertyItem(key, hash, attrs, parent)
         for k in hash:
-            self.parse(key + "." + k, hash[k], hash[k, ...], parent)
+            self.parse(key + "." + k, hash[k], hash[k, ...], item)
