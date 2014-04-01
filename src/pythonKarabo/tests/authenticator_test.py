@@ -20,14 +20,13 @@ class  Authenticator_TestCase(unittest.TestCase):
         username = "unitaryTests";
         password = "karaboUnitaryTestsPass";
         provider = "LOCAL";
-        ipAddress = "PythonUnitTestsIpAddress";
         brokerHostname = "127.0.0.1";
         brokerPortNumber = 4444;
         brokerTopic = "topic";
         software = "Karabo";
         #
-        #timeStr = "20130120T122059.259188123";
-        #karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);        
+        current_epo = Epochstamp();
+        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);
         
         # Helper variables
         emptyString = ""
@@ -112,14 +111,13 @@ class  Authenticator_TestCase(unittest.TestCase):
         username = "unitaryTests";
         password = "karaboUnitaryTestsPass222";
         provider = "LOCAL";
-        ipAddress = "PythonUnitTestsIpAddress";
         brokerHostname = "127.0.0.1";
         brokerPortNumber = 4444;
         brokerTopic = "topic";
         software = "Karabo";
         #
-        #timeStr = "20130120T122059.259188123";
-        #karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);        
+        current_epo = Epochstamp();
+        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);      
         
         # Helper variables
         emptyString = ""
@@ -180,14 +178,13 @@ class  Authenticator_TestCase(unittest.TestCase):
         username = "unitaryTests";
         password = "karaboUnitaryTestsPass";
         provider = "LOCAL";
-        ipAddress = "PythonUnitTestsIpAddress";
         ipAddressWrong = "PythonUnitTestsIpAddressXXXXXXXXXXX";
         brokerHostname = "127.0.0.1";
         brokerPortNumber = 4444;
         brokerTopic = "topic";
         #
-        #timeStr = "20130120T122059.259188123";
-        #karabo::util::Timestamp time = karabo::util::Timestamp(timeStr);        
+        current_epo = Epochstamp();
+        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);   
         
         # Helper variables
         functionName = "test_authenticator_single_sign_on"
