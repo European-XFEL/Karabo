@@ -88,6 +88,7 @@ void Hdf5_Test::testPureHdf5() {
     unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
     TimeProfiler p("write");
+    p.open();
     p.startPeriod("allocate");
     //allocate memory for one image and set the data value
     data = (unsigned short*) malloc(sizeof (unsigned short) *imageSize);
@@ -170,7 +171,7 @@ void Hdf5_Test::testPureHdf5() {
     H5Fclose(fid);
 
     p.stopPeriod("close");
-
+    p.close();
     free(data);
 
     TimeDuration allocateTime = p.getPeriod("allocate").getDuration();
@@ -219,7 +220,7 @@ void Hdf5_Test::testKaraboHdf5() {
 
 
     TimeProfiler p("writeKarabo");
-
+    p.open();
     p.startPeriod("allocate");
     //allocate memory for one image and set the data value   
 
@@ -262,7 +263,7 @@ void Hdf5_Test::testKaraboHdf5() {
     file.close();
 
     p.stopPeriod("close");
-
+    p.close(); 
     TimeDuration allocateTime = p.getPeriod("allocate").getDuration();
     TimeDuration createTime = p.getPeriod("create").getDuration();
     TimeDuration writeTime = p.getPeriod("write").getDuration();
@@ -277,10 +278,10 @@ void Hdf5_Test::testKaraboHdf5() {
         clog << "open/prepare file                : " << createTime << " [s]" << endl;
         clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
         clog << "written data size                : " << totalSize << " [MB]" << endl;
-        //clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl; //TODO
+        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
         clog << "close                            : " << closeTime << " [s]" << endl;
         clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        //clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl; //TODO
+        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
     }
 
 }
@@ -321,6 +322,7 @@ void Hdf5_Test::testManyDatasets() {
 //    unsigned long long totalSize = imageSize * m_numImages * sizeof (unsigned short) / 1024 / 1024;
 
     TimeProfiler p("write");
+    p.open();
     p.startPeriod("allocate");
     //allocate memory for one image and set the data value
     data = (unsigned short*) malloc(sizeof (unsigned short) *imageSize);
@@ -462,7 +464,7 @@ void Hdf5_Test::testManyDatasets() {
         H5Sclose(scalar_id);
     }
     p.stopPeriod("open");
-
+    p.close();
 
     H5Fclose(fid);
 
@@ -478,11 +480,11 @@ void Hdf5_Test::testManyDatasets() {
         clog << "open/prepare file                : " << createTime << " [s]" << endl;
         clog << "write data (may use memory cache): " << writeTime << " [s]" << endl;
         //        clog << "written data size                : " << totalSize << " [MB]" << endl;
-        //        clog << "writing speed                    : " << totalSize / writeTime << " [MB/s]" << endl;
+        //        clog << "writing speed                    : " << totalSize / double(writeTime) << " [MB/s]" << endl;
         clog << "close                            : " << closeTime << " [s]" << endl;
         clog << "open                             : " << openTime << " [s]" << endl;
         //        clog << "write+close(flush to disk)       : " << writeTime + closeTime << " [s]" << endl;
-        //        clog << "write+close(flush to disk) speed : " << totalSize / (writeTime + closeTime) << " [MB/s]" << endl;
+        //        clog << "write+close(flush to disk) speed : " << totalSize / double(writeTime + closeTime) << " [MB/s]" << endl;
 
     }
 
@@ -504,6 +506,7 @@ void Hdf5_Test::testManyDatasets1() {
 
 
     TimeProfiler p("write");
+    p.open();
     p.startPeriod("all");
 
     //create data file
@@ -551,6 +554,7 @@ void Hdf5_Test::testManyDatasets1() {
     H5Sclose(fsid);
     H5Fclose(fid);
     p.stopPeriod("all");
+    p.close();
     TimeDuration allTime = p.getPeriod("all").getDuration();
 //    clog << "Time: " << allTime << endl;
     //
@@ -682,6 +686,7 @@ void Hdf5_Test::testSerializer() {
     try {
 
         TimeProfiler p("Hdf5Serializer");
+        p.open();
         {
             Hash data;
 
@@ -799,14 +804,17 @@ void Hdf5_Test::testSerializer() {
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test2.h5")));
             out->write(data);
             p.stopPeriod("all");
+            p.close();
             TimeDuration allTime = p.getPeriod("all").getDuration();
 //            clog << "Write time: " << allTime << endl;
 
             Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test2.h5")));
+            p.open();
             p.startPeriod("read");
             Hash rdata;
             in->read(rdata);
             p.stopPeriod("read");
+            p.close();
             TimeDuration readTime = p.getPeriod("read").getDuration();
 //            clog << "Read time: " << readTime << endl;
 //            clog << "Read Hash\n" << rdata << endl;
@@ -824,7 +832,7 @@ void Hdf5_Test::testSerializer() {
             data.set("a.05", static_cast<unsigned short> (87));
             data.set("a.06", static_cast<int> (8));
             data.set("a.07", static_cast<unsigned int> (8));
-
+            p.open();
             p.startPeriod("write");
             Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test4.h5"), "enableAppendMode", true));
             for (size_t i = 0; i < 10; ++i) {
@@ -833,6 +841,7 @@ void Hdf5_Test::testSerializer() {
             }
             out->update();
             p.stopPeriod("write");
+            p.close();
             TimeDuration allTime = p.getPeriod("write").getDuration();
 //            clog << "Write time: " << allTime << endl;
 
@@ -842,9 +851,11 @@ void Hdf5_Test::testSerializer() {
 
             for (size_t i = 0; i < size; ++i) {
                 Hash rdata;
+                p.open();
                 p.startPeriod("read");
                 in->read(rdata, i);
                 p.stopPeriod("read");
+                p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
 //                clog << "Read time: " << readTime << endl;
              //   clog << "Read Hash\n" << rdata << endl;
@@ -864,6 +875,7 @@ void Hdf5_Test::testSerializer() {
             Hash m_rootedHash = rooted;
 
             TimeProfiler p("a");
+            p.open();
             p.startPeriod("vec");
             //    Hash big("a.b", std::vector<double>(20*1024*1024, 1.0));
             Hash big("a.b", std::vector<double>(1000, 1.0));
@@ -882,16 +894,19 @@ void Hdf5_Test::testSerializer() {
                 p.startPeriod("all");
                 Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
                 out->write(m_bigHash);
-                p.stopPeriod("all");        
+                p.stopPeriod("all");  
+                p.close();
                 TimeDuration allTime = p.getPeriod("all").getDuration();
 //                clog << "Write time: " << allTime << endl;
-
+     
 
                 Input<Hash>::Pointer in = Input<Hash>::create("Hdf5File", Hash("filename", resourcePath("test3.h5")));
+                p.open();
                 p.startPeriod("read");
                 Hash rdata;
                 in->read(rdata);
                 p.stopPeriod("read");
+                p.close();
                 TimeDuration readTime = p.getPeriod("read").getDuration();
                 
 //                clog << "Read time: " << readTime << endl;
