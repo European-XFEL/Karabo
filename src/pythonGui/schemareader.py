@@ -162,11 +162,8 @@ class Type(hashtypes.Type):
 class Char(hashtypes.Char):
     __metaclass__ = Monkey
 
-    @classmethod
-    def populateItem(cls, item, attrs, classtype, treewidget):
-        item.classAlias = "Text Field"
-        item.setIcon(0, QIcon(":string"))
-        super(Char, cls).populateItem(item, attrs, classtype, treewidget)
+    classAlias = "Text Field"
+    icon = icons.string
 
 
 class String(hashtypes.String):
