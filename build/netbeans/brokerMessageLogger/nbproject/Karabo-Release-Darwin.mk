@@ -21,7 +21,7 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=GNU-MacOSX
+CND_PLATFORM=GNU_MacPorts-MacOSX
 CND_DLIB_EXT=dylib
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -52,13 +52,13 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L${KARABO}/extern/lib -L../karabo/dist/Release/GNU-MacOSX/lib -lkarabo `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
+LDLIBSOPTIONS=-L${KARABO}/extern/lib -L../karabo/dist/Release/GNU_MacPorts-MacOSX/lib -lkarabo `pkg-config --libs karaboDependencies-${CND_PLATFORM}`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../karabo/dist/Release/GNU-MacOSX/lib/libkarabo.dylib
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ../karabo/dist/Release/GNU_MacPorts-MacOSX/lib/libkarabo.dylib
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin
@@ -66,8 +66,8 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-brokermessagelogger: ${OBJ
 
 ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o: ../../../src/brokerMessageLogger/brokerMessageLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/496226620
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -I../../../src -I${KARABO}/include -I${KARABO}/extern/include `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/496226620/brokerMessageLogger.o ../../../src/brokerMessageLogger/brokerMessageLogger.cc
 
 # Subprojects
 .build-subprojects:

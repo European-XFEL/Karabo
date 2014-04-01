@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="88">
+<configurationDescriptor version="94">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
@@ -264,6 +264,8 @@
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
+        <itemPath>../../../src/karabo/util/SignalHandler.cc</itemPath>
+        <itemPath>../../../src/karabo/util/SignalHandler.hh</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.cc</itemPath>
         <itemPath>../../../src/karabo/util/StringTools.hh</itemPath>
         <itemPath>../../../src/karabo/util/Units.hh</itemPath>
@@ -443,17 +445,11 @@
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>GNU|GNU</compilerSet>
+        <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
-        <cTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </cTool>
         <ccTool>
           <commandlineTool>g++</commandlineTool>
           <incDir>
@@ -1694,6 +1690,16 @@
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/SignalHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/SignalHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
             ex="false"
             tool="3"
@@ -2146,7 +2152,6 @@
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -3406,6 +3411,16 @@
       <item path="../../../src/karabo/util/Schema.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Schema.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/SignalHandler.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/util/SignalHandler.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/util/SimpleElement.hh"
             ex="false"

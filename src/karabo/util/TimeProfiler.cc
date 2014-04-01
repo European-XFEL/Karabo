@@ -21,7 +21,7 @@ namespace karabo {
         TimeProfiler::~TimeProfiler() {
         }
 
-        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try : m_periods(hash), m_name(hash.get<string>("KRB_name")) {
+        TimeProfiler::TimeProfiler(const karabo::util::Hash& hash) try : m_name(hash.get<string>("KRB_name")), m_periods(hash) {
         } catch (Exception& e) {
             m_name = "Profiler";
             m_periods = hash;
@@ -122,11 +122,6 @@ namespace karabo {
         void TimeProfiler::stopPeriod(const std::string& periodname) {
             Hash::Attributes now;
             Epochstamp().toHashAttributes(now);
-            boost::optional<Hash::Node&> node = m_periods.find("root." + periodname);
-            if (!node) return;
-
-            const Hash& period = node->getValue<Hash>();
-            if (period.has("KRB_stop")) return;
 
             while (!m_stack.empty()) {
                 Hash* current = m_stack.top();
@@ -138,7 +133,7 @@ namespace karabo {
                     details.back().setAttributes("KRB_stop", now);
                 }
                 m_stack.pop();
-                if (current == &period) break;
+                if (current->get<string>("KRB_name") == periodname) break;
             }
         }
 

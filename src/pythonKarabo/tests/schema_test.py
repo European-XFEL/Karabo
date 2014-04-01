@@ -333,6 +333,16 @@ class  Schema_TestCase(unittest.TestCase):
         except Exception as e:
             self.fail("test_getAllowedStates exception: " + str(e))
     
+    def test_getDisplatType(self):
+        try:
+            schema = TestStruct1.getSchema("TestStruct1")
+            self.assertEqual(schema.getDisplayType("exampleBitsKey1"), "bin")
+            self.assertEqual(schema.getDisplayType("exampleBitsKey2"), "bin|10:In Error, 21:Busy, 35:HV On, 55:Crate On")
+            self.assertEqual(schema.getDisplayType("exampleBitsKey3"), "oct")
+            self.assertEqual(schema.getDisplayType("exampleBitsKey4"), "hex")
+        except Exception as e:
+            self.fail("test_getDisplatType exception: " + str(e))
+    
     def test_getUnit(self):
         try:
             schema = TestStruct1.getSchema("TestStruct1")

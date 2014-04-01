@@ -165,7 +165,7 @@ class Network(QObject):
                 self.authenticator = Authenticator(
                     self.username.encode("utf8"), self.password.encode("utf8"),
                     self.provider.encode("ascii"), ipAddress.encode("ascii"),
-                    self.brokerHost.encode("ascii"), str(self.brokerPort),
+                    self.brokerHost.encode("ascii"), int(self.brokerPort),
                     self.brokerTopic.encode("utf8"))
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))

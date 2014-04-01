@@ -26,8 +26,19 @@ if [ "$VERSION" = "trunk" ]; then
     VERSION=r${tmp##*: }
 fi
 
+if [ -z $KARABO ]; then
+    if [ -e $HOME/.karabo/karaboFramework ]; then
+        KARABO=$(cat $HOME/.karabo/karaboFramework)
+        KARABOVERSION=$(cat $KARABO/VERSION)
+    else
+      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
+      exit 1
+    fi
+fi
+
 PLUGINNAME=`basename $(pwd)`
-PACKAGENAME=$PLUGINNAME-$VERSION
+PACKAGENAME=$PLUGINNAME-$VERSION-$KARABOVERSION
+echo PACKAGENAME $PACKAGENAME
 
 NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
@@ -40,14 +51,6 @@ elif [ "$OS" = "Darwin" ]; then
     NUM_CORES=`sysctl hw.ncpu | awk '{print $2}'`
 fi
 
-if [ -z $KARABO ]; then
-    if [ -e $HOME/.karabo/karaboFramework ]; then
-        KARABO=$(cat $HOME/.karabo/karaboFramework)
-    else
-      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
-      exit 1
-    fi
-fi
 EXTRACT_SCRIPT=$KARABO/bin/.extract-cppplugin.sh
 PACKAGEDIR=$(pwd)/package/$CONF/$DISTRO_ID/$DISTRO_RELEASE/$MACHINE/$PACKAGENAME
 INSTALLSCRIPT=${PACKAGENAME}-${CONF}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
@@ -58,15 +61,17 @@ rm -rf $PACKAGEDIR
 # Start fresh
 mkdir -p $PACKAGEDIR
 
-
-#cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR
+# cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR
 find $DISTDIR/$CONF/$PLATFORM -maxdepth 1 -type f -name \*.so -exec cp {} $PACKAGEDIR \;
+
+# run custom script
+if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
 cd $PACKAGEDIR/../
 safeRunCommand "tar -zcf ${PACKAGENAME}.tar.gz $PACKAGENAME"
 
 # Create installation script
-echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
+echo -e '#!/bin/bash\n'"VERSION=$VERSION\nPLUGINNAME=$PLUGINNAME\nKARABOVERSION=$KARABOVERSION" | cat - $EXTRACT_SCRIPT ${PACKAGENAME}.tar.gz > $INSTALLSCRIPT
 chmod a+x $INSTALLSCRIPT
 
 
