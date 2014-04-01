@@ -85,7 +85,20 @@ echo
 echo -n " Running post install script..."
 mkdir -p $HOME/.karabo
 echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
-echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
+#echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
+# change sipconfig.py
+#
+cd $installDir/karabo-$VERSION/extern/lib/python2.7/site-packages
+sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/bin'," sipconfig.py
+sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/site-packages'," sipconfig.py
+sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/share/sip'," sipconfig.py
+sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
+sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
+sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/config'," sipconfig.py
+sed -i "/'sip_bin'/c\    'sip_bin':            '`cat $HOME/.karabo/karaboFramework`/extern/bin/sip'," sipconfig.py
+sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
+sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/site-packages'," sipconfig.py
+cd -
 echo " done."
 echo
 echo
