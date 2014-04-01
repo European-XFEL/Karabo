@@ -6,6 +6,7 @@
 
 
 import hashtypes
+import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
@@ -371,7 +372,7 @@ class XMLParser(object):
     def read(self, data):
         """Parse the XML in the buffer data and return the hash"""
         target = ElementTree.TreeBuilder(element_factory=factory)
-        parser = ElementTree.XMLParser(target=target)
+        parser = xmlparser.Parser(target=target)
         parser.feed(data)
         root = target.close()
         if hasattr(root, "artificial"):
