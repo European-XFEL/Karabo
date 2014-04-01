@@ -159,6 +159,16 @@ class Type(hashtypes.Type):
         return item
 
 
+class Char(hashtypes.Char):
+    __metaclass__ = Monkey
+
+    @classmethod
+    def populateItem(cls, item, attrs, classtype, treewidget):
+        item.classAlias = "Text Field"
+        item.setIcon(0, QIcon(":string"))
+        super(Char, cls).populateItem(item, attrs, classtype, treewidget)
+
+
 class String(hashtypes.String):
     __metaclass__ = Monkey
 
@@ -542,10 +552,11 @@ class SchemaReader(object):
                 aitem = AttributeTreeWidgetItem(fullPath, self.treeWidget, item)
                 aitem.setText(0, v)
 
-                aitem.classAlias = item.classAlias
                 if item.classAlias == "Integer Field":
+                    aitem.classAlias = "Integer Field"
                     aitem.setIcon(0, QIcon(":int-attribute"))
                 else:
+                    aitem.classAlias = "Float Field"
                     aitem.setIcon(0, QIcon(":float-attribute"))
 
                 editableComponent = None
@@ -606,7 +617,7 @@ class SchemaReader(object):
                     AccessMode.INITONLY | AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
-            if attrs['accessMode'] & AccessMode.RECONFIGURABLE:
+            if False: #attrs['accessMode'] & AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
             else:
                 component = ChoiceComponent
@@ -636,5 +647,6 @@ class SchemaReader(object):
 
 
     def parseListOfNodes(self, key, hash, attrs, parent):
+        item = self._createPropertyItem(key, hash, attrs, parent)
         for k in hash:
-            self.parse(key + "." + k, hash[k], hash[k, ...], parent)
+            self.parse(key + "." + k, hash[k], hash[k, ...], item)

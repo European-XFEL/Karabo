@@ -7,21 +7,21 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=GNU-MacOSX
-CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-MacOSX/lib
+CND_PLATFORM_Debug=GNU_MacPorts-MacOSX
+CND_ARTIFACT_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/lib
 CND_ARTIFACT_NAME_Debug=karathon.dylib
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-MacOSX/lib/karathon.dylib
-CND_PACKAGE_DIR_Debug=dist/Debug/GNU-MacOSX/package
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/lib/karathon.dylib
+CND_PACKAGE_DIR_Debug=dist/Debug/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Debug=libkarathon.dylib.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-MacOSX/package/libkarathon.dylib.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU_MacPorts-MacOSX/package/libkarathon.dylib.tar
 # Release configuration
-CND_PLATFORM_Release=GNU-MacOSX
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-MacOSX/lib
+CND_PLATFORM_Release=GNU_MacPorts-MacOSX
+CND_ARTIFACT_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/lib
 CND_ARTIFACT_NAME_Release=karathon.dylib
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-MacOSX/lib/karathon.dylib
-CND_PACKAGE_DIR_Release=dist/Release/GNU-MacOSX/package
+CND_ARTIFACT_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/lib/karathon.dylib
+CND_PACKAGE_DIR_Release=dist/Release/GNU_MacPorts-MacOSX/package
 CND_PACKAGE_NAME_Release=libkarathon.dylib.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-MacOSX/package/libkarathon.dylib.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU_MacPorts-MacOSX/package/libkarathon.dylib.tar
 #
 # include compiler specific variables
 #

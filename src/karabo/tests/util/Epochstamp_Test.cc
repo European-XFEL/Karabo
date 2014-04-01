@@ -9,7 +9,7 @@
  */
 
 #include "Epochstamp_Test.hh"
-#include <karabo/util/Epochstamp.hh>
+#include "karabo/util/DateTimeString.hh"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 
@@ -90,13 +90,77 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo.toIso8601Ext(ATTOSEC, true));
             CPPUNIT_ASSERT(expectedToIso8601Ext == epo2.toIso8601Ext(ATTOSEC, true));
         }
+
+        // (i.e. expectedToIso8601 => 20121225T132536.789333123456789123)
+        //ATTOSEC
+        toIso8601Precision(epo, epo2, ATTOSEC, "ATTOSEC", isCompactString, writeToClog, expectedToIso8601);
+
+        //FEMTOSEC
+        toIso8601Precision(epo, epo2, FEMTOSEC, "FEMTOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 3));
+
+        //PICOSEC
+        toIso8601Precision(epo, epo2, PICOSEC, "PICOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 6));
+
+        //NANOSEC
+        toIso8601Precision(epo, epo2, NANOSEC, "NANOSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 9));
+
+        //MICROSEC
+        toIso8601Precision(epo, epo2, MICROSEC, "MICROSEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 12));
+
+        //MILLISEC
+        toIso8601Precision(epo, epo2, MILLISEC, "MILLISEC", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 15));
+
+        //ONESECOND
+        toIso8601Precision(epo, epo2, ONESECOND, "ONESECOND", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 18) + "0");
+
+        //NOFRACTION
+        toIso8601Precision(epo, epo2, NOFRACTION, "NOFRACTION", isCompactString, writeToClog, expectedToIso8601.substr(0, expectedToIso8601.size() - 19));
     }
 
-    if (writeToClog) std::clog << "[Compact] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC) == epo2.toIso8601(ATTOSEC));
 
-    if (writeToClog) std::clog << "[Extended] toIso8601(ATTOSEC) => " << epo.toIso8601(ATTOSEC) << " == " << epo2.toIso8601(ATTOSEC) << std::endl;
-    CPPUNIT_ASSERT(epo.toIso8601(ATTOSEC, true) == epo2.toIso8601(ATTOSEC, true));
+    // toTimestamp Validation
+    ostringstream oss;
+    oss << epo.getSeconds()
+            << karabo::util::DateTimeString::fractionalSecondToString(MICROSEC, epo.getFractionalSeconds());
+
+    double expectedTimestamp = boost::lexical_cast<double>(oss.str());
+
+    if (writeToClog) std::clog << "toTimezone (MICROSEC) => " << epo.toTimestamp() << " == " << epo2.toTimestamp() << " == " << expectedTimestamp << std::endl;
+    CPPUNIT_ASSERT(epo.toTimestamp() == expectedTimestamp);
+    CPPUNIT_ASSERT(epo2.toTimestamp() == expectedTimestamp);
+    CPPUNIT_ASSERT(epo.toTimestamp() == epo2.toTimestamp());
+
+    return;
+}
+
+
+void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
+                                         const karabo::util::Epochstamp epo2,
+                                         const karabo::util::TIME_UNITS precision,
+                                         const std::string& precisionDesc,
+                                         const bool isCompactString,
+                                         const bool writeToClog,
+                                         const std::string& expectedToIso8601) {
+
+    //Concatenate function name plus precision description
+    std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
+
+    //ATTOSEC
+    if (isCompactString == true) {
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '" << epo2.toIso8601(precision) << "'" << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision) == epo2.toIso8601(precision));
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo.toIso8601(precision) << "' == '" << expectedToIso8601 << "'" << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision) == expectedToIso8601);
+        if (writeToClog) std::clog << "[Compact] " << functionDesc << epo2.toIso8601(precision) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo2.toIso8601(precision) == expectedToIso8601);
+    } else {
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true) << " == " << epo2.toIso8601(precision, true) << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == epo2.toIso8601(precision, true));
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo.toIso8601(precision, true) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo.toIso8601(precision, true) == expectedToIso8601);
+        if (writeToClog) std::clog << "[Extended] " << functionDesc << epo2.toIso8601(precision, true) << " == " << expectedToIso8601 << std::endl;
+        CPPUNIT_ASSERT(epo2.toIso8601(precision, true) == expectedToIso8601);
+    }
 
     return;
 }
@@ -138,7 +202,8 @@ void Epochstamp_Test::testConstructors() {
     // Validate the "timespec" constructor
     timespec ts06;
     ts06.tv_sec = t03.getTime();
-    ts06.tv_nsec = t03.getFractionalSeconds();
+    // Necessary this division because tv_nsec has only Nanosecond (10^9) resolution but getFractionalSeconds() returns Attosecond (10^18) resolution
+    ts06.tv_nsec = t03.getFractionalSeconds() / 1000000000;
     karabo::util::Epochstamp t06 = karabo::util::Epochstamp(ts06);
 
     CPPUNIT_ASSERT(t03.getSeconds() == t06.getSeconds());
@@ -148,10 +213,9 @@ void Epochstamp_Test::testConstructors() {
     CPPUNIT_ASSERT(t04.getTime() == t06.getTime());
     CPPUNIT_ASSERT(t05.getTime() == t06.getTime());
 
-    //TODO - Should this test work?!
-    //std::clog << endl << "lmaia: t03.getFractionalSeconds() = " << t03.getFractionalSeconds();
-    //std::clog << endl << "lmaia: t06.getFractionalSeconds() = " << t06.getFractionalSeconds();
-    //CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t03.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t04.getFractionalSeconds() == t06.getFractionalSeconds());
+    CPPUNIT_ASSERT(t05.getFractionalSeconds() != t06.getFractionalSeconds());
 
 
     /*
@@ -230,8 +294,10 @@ void Epochstamp_Test::testToIso8601String() {
 
 void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
                                                 const std::string& format,
+                                                const std::string& pTimeDesiredTimeZone,
                                                 const std::string& expectedStringOutput) {
     bool writeToClog = false;
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -252,12 +318,20 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
 
     std::string returnFormatedString;
     if (format == "") {
-        returnFormatedString = epo.toFormattedString();
+        if (pTimeDesiredTimeZone == utcTimeZone) {
+            returnFormatedString = epo.toFormattedString();
+        } else {
+            returnFormatedString = epo.toFormattedString("%Y-%b-%d %H:%M:%S", pTimeDesiredTimeZone);
+        }
     } else {
-        returnFormatedString = epo.toFormattedString(format);
+        if (pTimeDesiredTimeZone == utcTimeZone) {
+            returnFormatedString = epo.toFormattedString(format);
+        } else {
+            returnFormatedString = epo.toFormattedString(format, pTimeDesiredTimeZone);
+        }
     }
 
-    if (writeToClog) std::clog << "epo.toFormattedString(" << format << ") => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
+    if (writeToClog) std::clog << "epo.toFormattedString('" << format << "', '" << pTimeDesiredTimeZone << "') => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
     CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
 }
 
@@ -265,12 +339,28 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
 void Epochstamp_Test::testToFormattedString() {
 
     std::string pTime = "20121225T132536.789333123456789123";
+    std::string utcTimeZone = "Z"; //"UTC" == "Z"
 
-    validateToFormattedString(pTime, "", "2012-Dec-25 13:25:36");
-    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", "2012/12/25 13:25:36");
-    validateToFormattedString(pTime, "%Y/%m/%d", "2012/12/25");
-    validateToFormattedString(pTime, "%c", "Tue 25 Dec 2012 01:25:36 PM ");
-    validateToFormattedString(pTime, "%H:%M:%S", "13:25:36");
-    validateToFormattedString(pTime, "%H:%M:%S.%f", "13:25:36.789333");
+    validateToFormattedString(pTime, "", utcTimeZone, "2012-Dec-25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d %H:%M:%S", utcTimeZone, "2012/12/25 13:25:36");
+    validateToFormattedString(pTime, "%Y/%m/%d", utcTimeZone, "2012/12/25");
+    validateToFormattedString(pTime, "%c", utcTimeZone, "Tue 25 Dec 2012 01:25:36 PM ");
+    validateToFormattedString(pTime, "%H:%M:%S", utcTimeZone, "13:25:36");
+    validateToFormattedString(pTime, "%H:%M:%S.%f", utcTimeZone, "13:25:36.789333");
+
+
+    std::string pTime2 = "1985-01-20T23:20:50-07:00";
+    validateToFormattedString(pTime2, "", utcTimeZone, "1985-Jan-21 06:20:50");
+    validateToFormattedString(pTime2, "", "+03:30", "1985-Jan-21 09:50:50");
+    validateToFormattedString(pTime2, "", "-07:00", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime2, "", "+01:00", "1985-Jan-21 07:20:50");
+
+
+    std::string pTime3 = "1985-01-20T23:20:50+03:30";
+    validateToFormattedString(pTime3, "", utcTimeZone, "1985-Jan-20 19:50:50");
+    validateToFormattedString(pTime3, "", "+03:30", "1985-Jan-20 23:20:50");
+    validateToFormattedString(pTime3, "", "-07:00", "1985-Jan-20 12:50:50");
+    validateToFormattedString(pTime3, "", "+01:00", "1985-Jan-20 20:50:50");
+
 }
 

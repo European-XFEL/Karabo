@@ -42,6 +42,12 @@ class Number(Simple):
 
 class Vector(object):
     @classmethod
+    def register(cls, name, dict):
+        super(Vector, cls).register(name, dict)
+        cls.__bases__[-1].vectortype = cls
+
+
+    @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
         return [super(Vector, cls).read(file) for i in xrange(size)]
@@ -75,13 +81,6 @@ class NumpyVector(Vector):
     @classmethod
     def fromstring(cls, s):
         return numpy.array([cls.numpy(x) for x in s.split(',')])
-
-
-    @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
-        for d in data:
-            super(Vector, cls).write(file, d)
 
 
     @classmethod
@@ -161,7 +160,7 @@ class Bool(Type):
         return '1' if data else '0'
 
 
-class VectorBool(Type):
+class VectorBool(Vector, Bool):
     pass
 
 

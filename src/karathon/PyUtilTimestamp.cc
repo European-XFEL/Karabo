@@ -51,12 +51,11 @@ void exportPyUtilTimestamp() {
            , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));
 
     ts.def("toFormattedString"
-           , (string(Timestamp::*)(const string &) const) (&Timestamp::toFormattedString)
-           , (bp::arg("format") = "%Y-%b-%d %H:%M:%S"));
+           , (string(Timestamp::*)(const string &, const string &) const) (&Timestamp::toFormattedString)
+           , (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
     ts.def("toTimestamp"
-           , (double (Timestamp::*)(karabo::util::TIME_UNITS) const) (&Timestamp::toTimestamp)
-           , (bp::arg("precision") = karabo::util::MICROSEC));
+           , (double (Timestamp::*)() const) (&Timestamp::toTimestamp));
 
     ts.def("toHashAttributes"
            , (void (Timestamp::*)(Hash::Attributes &) const) (&Timestamp::toHashAttributes)

@@ -17,7 +17,35 @@ using namespace log4cpp;
 using namespace std;
 
 
+namespace karathon {
+    
+    // make 'create' to be public
+    struct AppenderConfiguratorWrap1 : AppenderConfigurator {
+        log4cpp::Appender* create() = 0;
+    };
+    
+    struct AppenderConfiguratorWrap : AppenderConfiguratorWrap1, bp::wrapper<AppenderConfiguratorWrap1> {
+        log4cpp::Appender* create() {
+            return this->get_override("create")();
+        }
+    };
+}
+
 void exportPyLogLogger() {
+    { // AppenderConfigurator
+        bp::class_<karathon::AppenderConfiguratorWrap, boost::noncopyable>("AppenderConfigurator", bp::no_init)
+                .def("create", bp::pure_virtual((log4cpp::Appender* (karathon::AppenderConfiguratorWrap1::*)())&karathon::AppenderConfiguratorWrap1::create), bp::return_internal_reference<>())
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(AppenderConfigurator)
+                ;
+    }
+    
+    { // CategoryConfigurator
+        bp::class_<CategoryConfigurator>("CategoryConfigurator", bp::init<const Hash&>())
+                .def("setup", &CategoryConfigurator::setup)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(CategoryConfigurator)
+                ;
+    }
+    
 
     {//log4cpp::Category
         bp::class_< log4cpp::Category, boost::noncopyable > ct("Category", bp::no_init)

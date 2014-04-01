@@ -13,6 +13,7 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
+
 void exportPyUtilDateTimeString() {
 
     bp::class_<DateTimeString> dts("DateTimeString", bp::init<>());
@@ -23,26 +24,26 @@ void exportPyUtilDateTimeString() {
 
     bp::implicitly_convertible< std::string const &, karabo::util::DateTimeString >();
 
-    dts.def("getDateString"
-            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDateString)
+    dts.def("getDate"
+            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDate)
             , bp::return_value_policy< bp::copy_const_reference >());
 
-    dts.def("getTimeString"
-            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTimeString)
+    dts.def("getTime"
+            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTime)
             , bp::return_value_policy< bp::copy_const_reference >());
 
-    dts.def("getFractionalSecondString"
-            , (const std::string(DateTimeString::*)() const) (&DateTimeString::getFractionalSecondString));
+    dts.def("getFractionalSeconds"
+            , (const std::string(DateTimeString::*)() const) (&DateTimeString::getFractionalSeconds));
 
-    dts.def("getFractionalSecondString"
-            , (const unsigned long long (DateTimeString::*)() const) (&DateTimeString::getFractionalSecondString));
+    dts.def("getFractionalSeconds"
+            , (const unsigned long long (DateTimeString::*)() const) (&DateTimeString::getFractionalSeconds));
 
-    dts.def("getTimeZoneString"
-            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTimeZoneString)
+    dts.def("getTimeZone"
+            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getTimeZone)
             , bp::return_value_policy< bp::copy_const_reference >());
 
-    dts.def("getDateTimeString"
-            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDateTimeString)
+    dts.def("getDateTime"
+            , (const std::string & (DateTimeString::*)() const) (&DateTimeString::getDateTime)
             , bp::return_value_policy< bp::copy_const_reference >());
 
     dts.def("isStringValidIso8601"
