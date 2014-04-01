@@ -47,6 +47,7 @@ class DisplayLabel(DisplayWidget):
         self.__label.setMinimumHeight(32)
         self.__label.setWordWrap(True)
         self.setErrorState(False)
+        box.addWidget(self)
         
 
     @property
