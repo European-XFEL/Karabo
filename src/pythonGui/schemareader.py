@@ -254,7 +254,7 @@ class Schema(hashtypes.Descriptor):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
-                 Schema.parse)
+                 ListOfNodes.parse)
         self = cls(key)
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
@@ -460,6 +460,28 @@ class ChoiceOfNodes(Schema):
     def set(self, box, value, timestamp=None):
         box.current = value
         box._set(box.value, timestamp)
+
+
+class ListOfNodes(hashtypes.Descriptor):
+    @classmethod
+    def parse(cls, key, hash, attrs, parent=None):
+        return ListOfNodes()
+
+
+    def setDefault(self, box):
+        return
+
+
+    def toHash(self, box):
+        return [ ]
+
+
+    def item(self, treeWidget, parent, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+        try:
+            item.displayText = self.displayedName
+        except AttributeError:
+            item.displayText = box.path[-1]
 
 
 class SchemaReader(object):
