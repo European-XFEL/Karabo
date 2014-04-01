@@ -9,9 +9,9 @@ class Bitfield(QWidget):
     valueChanged = pyqtSignal(int)
 
 
-    def __init__(self, type):
-        QWidget.__init__(self)
-        self.size = type.numpy().nbytes * 8
+    def __init__(self, parent):
+        QWidget.__init__(self, parent)
+        self.size = 16
         self.value = 0
         self.readonly = False
 
@@ -58,12 +58,16 @@ class EditableBitfield(EditableWidget):
     category = "Digit"
     alias = "Bit Field"
 
-    def __init__(self, value, valueType, **params):
-        super(EditableBitfield, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableBitfield, self).__init__(box)
 
-        self.widget = Bitfield(valueType)
-        self.widget.value = value
-        self.widget.valueChanged.connect(self.onEditingFinished)
+        self.widget = Bitfield(parent)
+        box.addWidget(self)
+
+
+    def typeChanged(self, box):
+        self.widget.size = box.descriptor.numpy().nbytes * 8
+        self.widget.update()
 
 
     @property
