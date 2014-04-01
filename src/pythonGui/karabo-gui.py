@@ -19,7 +19,10 @@ from mainwindow import MainWindow
 
 from PyQt4.QtGui import *
 
+import numpy
+
 if __name__ == '__main__':
+    numpy.set_printoptions(suppress=True, threshold=10)
     app = QApplication(sys.argv)
     icons.init()
 
