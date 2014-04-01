@@ -304,5 +304,6 @@ class SchemaReader(object):
 
 
     def parseListOfNodes(self, key, hash, attrs, parent):
+        item = self._createPropertyItem(key, hash, attrs, parent)
         for k in hash:
-            self.parse(key + "." + k, hash[k], hash[k, ...], parent)
+            self.parse(key + "." + k, hash[k], hash[k, ...], item)
