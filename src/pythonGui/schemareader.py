@@ -121,7 +121,8 @@ class Type(hashtypes.Type):
 
 
     def setDefault(self, box):
-        self.set(box, self.defaultValue)
+        if hasattr(self, "defaultValue"):
+            self.set(box, self.defaultValue)
 
 
     def item(self, treeWidget, parent, box, isClass):
@@ -264,7 +265,6 @@ class Schema(hashtypes.Descriptor):
     @staticmethod
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
-        ret.defaultValue = None
         ret.displayedName = key
         for k, v in attrs.iteritems():
             setattr(ret, k, v)
