@@ -322,7 +322,8 @@ class Schema(hashtypes.Descriptor):
         ret = Hash()
         for k, v in box.value.__dict__.iteritems():
             try:
-                ret[k] = v.toHash()
+                if v.hasValue():
+                    ret[k] = v.toHash()
             except AttributeError as e:
                 print 'tH', k, e
                 pass
