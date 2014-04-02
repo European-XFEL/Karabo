@@ -100,6 +100,7 @@ namespace karabo {
             void write(const T& data) {
                 using namespace std;
                 karabo::util::TimeProfiler p("Output");
+                p.open();
                 try {
                     if (m_enableAppendMode) {
                         m_serializer->save(data, m_h5file, karabo::util::toString(m_idx));
@@ -110,6 +111,7 @@ namespace karabo {
                         m_serializer->save(data, m_h5file, "0");
                         closeFile();
                         p.stopPeriod("write");
+                        p.close();
                         if (false) {
                             std::clog << std::endl;
                             std::clog << "write data                       : " << p.getPeriod("write").getDuration() << " [s]" << std::endl;

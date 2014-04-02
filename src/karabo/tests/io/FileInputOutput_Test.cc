@@ -466,9 +466,11 @@ void FileInputOutput_Test::readSequenceFromBinaryFile() {
 void FileInputOutput_Test::writeHdf5File() {
 
     TimeProfiler p("writeHdf5File");
-    
+        
     try {
 
+        p.open();
+        
         Output<Hash>::Pointer out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS1.h5")));
         out->write(m_rootedHash);
 
@@ -477,6 +479,7 @@ void FileInputOutput_Test::writeHdf5File() {
         out = Output<Hash>::create("Hdf5File", Hash("filename", resourcePath("fileS2.h5")));
         out->write(m_bigHash);
         p.stopPeriod("bigHash");
+        p.close();
         if (false) clog << "writing big Hash (Hdf5) took " << p.getPeriod("bigHash").getDuration() << " [s]" << endl;
 
         for (unsigned long long i = 0; i < 1L; ++i) {
