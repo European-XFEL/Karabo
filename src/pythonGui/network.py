@@ -20,7 +20,8 @@ from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
-from karabo.karathon import Authenticator
+#from karabo.karathon import Authenticator
+from karabo import PyAuthenticator as krb
 from hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
@@ -163,7 +164,7 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.authenticator = Authenticator(
+                self.authenticator = PyAuthenticator(
                     self.username.encode("utf8"), self.password.encode("utf8"),
                     self.provider.encode("ascii"), ipAddress.encode("ascii"),
                     self.brokerHost.encode("ascii"), int(self.brokerPort),
