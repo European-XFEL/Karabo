@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.karaboVersion = self._getVersion()
+        print "version", self.karaboVersion
 
         self._setupActions()
         self._setupMenuBar()
@@ -59,9 +60,16 @@ class MainWindow(QMainWindow):
 
 ### initializations ###
     def _getVersion(self):
-        filePath = os.environ['HOME'] + "/.karabo/karaboVersion"
+        filePath = os.environ['HOME'] + "/.karabo/karaboFramework"
         try:
             with open(filePath, 'r') as file:
+                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
+        except IOError, e:
+            print e
+            return ""
+
+        try:
+            with open(karaboVersionPath, 'r') as file:
                 return file.readline()
         except IOError:
             return ""
