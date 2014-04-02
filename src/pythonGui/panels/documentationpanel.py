@@ -54,7 +54,7 @@ class DocumentationPanel(QWidget):
         self.__wikiView.show()
 
         self.__reportView = QWebView()
-        self.__reportView.load(QUrl("http://www-exfel-wp76.desy.de/static/mantisbt/login_select_proj_page.php?ref=bug_report_page.php"))
+        self.__reportView.load(QUrl("https://in.xfel.eu/redmine"))
         
         self.__tabWidget = QTabWidget(self)
         
