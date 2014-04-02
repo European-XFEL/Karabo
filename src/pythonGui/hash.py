@@ -30,7 +30,9 @@ def _gettype(data):
         else:
             return hashtypes.Type.strs[data.dtype.str]
     except AttributeError:
-        if isinstance(data, bool):
+        if isinstance(data, hashtypes.Special):
+            return data.hashtype
+        elif isinstance(data, bool):
             return hashtypes.Bool
         elif isinstance(data, numbers.Integral):
             return hashtypes.Int64
@@ -45,7 +47,10 @@ def _gettype(data):
         elif isinstance(data, Hash):
             return hashtypes.Hash
         elif isinstance(data, list):
-            return _gettype(data[0]).vectortype
+            if data:
+                return _gettype(data[0]).vectortype
+            else:
+                return hashtypes.VectorHash
         elif data is None:
             return hashtypes.None_
         else:
@@ -246,7 +251,8 @@ class Hash(OrderedDict):
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
-            elif isinstance(value, list):
+            elif (isinstance(value, list) and
+                  not isinstance(value, hashtypes.Special)):
                 elem = ListElement(p)
                 elem.data = value
             else:
