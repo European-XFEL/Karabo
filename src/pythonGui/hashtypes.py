@@ -50,7 +50,7 @@ class Vector(object):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        return [super(Vector, cls).read(file) for i in xrange(size)]
+        return (super(Vector, cls).read(file) for i in xrange(size))
 
 
     @classmethod
@@ -90,6 +90,11 @@ class NumpyVector(Vector):
 
 class Descriptor(object):
     pass
+
+
+class Special(object):
+    """These is the base class for special types, which neither have
+    a python nor numpy equivalent"""
 
 
 class Type(Descriptor, Registry):
@@ -160,15 +165,15 @@ class Bool(Type):
         return '1' if data else '0'
 
 
-class VectorBool(Vector, Bool):
-    pass
+class VectorBool(NumpyVector, Bool):
+    numpy = numpy.bool_
 
 
 class Char(Simple, Type):
     @staticmethod
     def read(file):
         file.pos += 1
-        return bytes(file.data[file.pos - 1:file.pos])
+        return Byte(file.data[file.pos - 1:file.pos])
 
 
     @classmethod
@@ -179,6 +184,23 @@ class Char(Simple, Type):
     @classmethod
     def fromstring(self, s):
         return base64.b64decode(s)
+
+
+    @classmethod
+    def write(cls, file, data):
+        assert len(data) == 1
+        file.file.write(data)
+
+
+class Byte(Special, bytes):
+    """This represents just one byte, so that we can distinguish
+    CHAR and VECTOR_CHAR."""
+    hashtype = Char
+
+
+    def __repr__(self):
+        return "${:x}".format(ord(self))
+
 
 class VectorChar(Vector, Char):
     """A VectorChar is simply some binary data in memory. The corresponding
@@ -330,7 +352,21 @@ class String(Type):
 class VectorString(Vector, String):
     @staticmethod
     def fromstring(s):
-        return unicode(s).split(',')
+        return StringList(s.split(','))
+
+
+    @classmethod
+    def read(cls, file):
+        return StringList(super(VectorString, cls).read(file))
+
+
+class StringList(Special, list):
+    """ This class represents a vector of strings """
+    hashtype = VectorString
+
+
+    def __repr__(self):
+        return "$" + list.__repr__(self)
 
 
 class Hash(Type):
@@ -369,7 +405,9 @@ class Hash(Type):
 
 
 class VectorHash(Vector, Hash):
-    pass
+    @classmethod
+    def read(cls, file):
+        return list(super(VectorString, cls).read(file))
 
 
 class PtrBool(Type):
