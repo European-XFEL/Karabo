@@ -427,7 +427,7 @@ void Hdf5_Test::testManyDatasets() {
     //
     //    }
 
-    p.stopPeriod("write");
+    //p.stopPeriod("write");
 
 
     p.startPeriod("close");
