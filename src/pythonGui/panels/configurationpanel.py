@@ -343,7 +343,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.signalItemSelectionChanged.connect(self.onSelectionChanged)
         
-        if type is NavigationItemTypes.CLASS:
+        if configuration.type == "class":
             twParameterEditor.hideColumn(1)
 
         if configuration is not None and configuration.schema is not None:
