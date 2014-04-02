@@ -40,7 +40,6 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.karaboVersion = self._getVersion()
-        print "version", self.karaboVersion
 
         self._setupActions()
         self._setupMenuBar()
