@@ -24,8 +24,8 @@ __all__ = ["EditableComboBox"]
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QEvent
+from PyQt4.QtGui import QComboBox
 
 
 class EditableComboBox(EditableWidget):
@@ -35,53 +35,40 @@ class EditableComboBox(EditableWidget):
     def __init__(self, box, parent):
         super(EditableComboBox, self).__init__(box)
         
-        self.__comboBox = QComboBox(parent)
-        self.__comboBox.setFrame(False)
+        self.widget = QComboBox(parent)
+        self.widget.setFrame(False)
 
-        self.__comboBox.installEventFilter(self)
-        self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
+        self.widget.installEventFilter(self)
+        self.widget.currentIndexChanged[str].connect(self.onEditingFinished)
         box.addWidget(self)
 
 
     def typeChanged(self, box):
-        with SignalBlocker(self.__comboBox):
-            self.__comboBox.clear()
-            self.__comboBox.addItems(box.descriptor.options)
+        with SignalBlocker(self.widget):
+            self.widget.clear()
+            self.widget.addItems(box.descriptor.options)
 
 
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
-        return event.type() == QEvent.Wheel and object == self.__comboBox
-
-
-    @property
-    def widget(self):
-        return self.__comboBox
+        return event.type() == QEvent.Wheel and object is self.widget
 
 
     @property
     def value(self):
-        try:
-            if self.valueType == "int":
-                return int(self.__comboBox.currentText())
-            elif self.valueType in ("float", "double"):
-                return float(self.__comboBox.currentText())
-            return self.__comboBox.currentText()
-        except Exception, e:
-            print e
+        self.boxes[0].descriptor.fromstring(self.widget.currentText())
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
 
-        index = self.__comboBox.findText(str(value))
+        index = self.widget.findText(unicode(value))
         if index < 0:
             return
 
-        self.__comboBox.blockSignals(True)
-        self.__comboBox.setCurrentIndex(index)
-        self.__comboBox.blockSignals(False)
+        with SignalBlocker(self.widget):
+            self.widget.setCurrentIndex(index)
 
         if forceRefresh:
             # Needs to be called to update possible apply buttons
