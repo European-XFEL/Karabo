@@ -21,6 +21,7 @@
 __all__ = ["EditableComboBox"]
 
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtCore import *
@@ -37,12 +38,15 @@ class EditableComboBox(EditableWidget):
         self.__comboBox = QComboBox(parent)
         self.__comboBox.setFrame(False)
 
-        self.addItems(box.descriptor.options)
-        
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged[str].connect(self.onEditingFinished)
-        
-        self.valueChanged(box, box.value)
+        box.addWidget(self)
+
+
+    def typeChanged(self, box):
+        with SignalBlocker(self.__comboBox):
+            self.__comboBox.clear()
+            self.__comboBox.addItems(box.descriptor.options)
 
 
     def eventFilter(self, object, event):
@@ -65,12 +69,6 @@ class EditableComboBox(EditableWidget):
             return self.__comboBox.currentText()
         except Exception, e:
             print e
-
-
-    def addItems(self, texts):
-        self.__comboBox.blockSignals(True)
-        self.__comboBox.addItems(texts)
-        self.__comboBox.blockSignals(False)
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
