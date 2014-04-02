@@ -229,8 +229,8 @@ class Hash(OrderedDict):
         return OrderedDict.__getitem__(*self._path(path, auto))
 
 
-    def __str__(self):
-        r = ', '.join('{}{}: {}'.format(k, self[k, ...], self[k])
+    def __repr__(self):
+        r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
                       for k in self)
         return '<' + r + '>'
 
