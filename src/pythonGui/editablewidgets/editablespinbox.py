@@ -41,6 +41,7 @@ class EditableSpinBox(EditableWidget):
         self.widget = QSpinBox(parent)
         self.widget.installEventFilter(self)
         self.widget.valueChanged.connect(self.onEditingFinished)
+        box.addWidget(self)
 
 
     def eventFilter(self, object, event):
@@ -75,9 +76,9 @@ class EditableSpinBox(EditableWidget):
         else:
             max -= 1
         if max > 0x7fffffff:
-            min = 0x7fffffff
+            max = 0x7fffffff
 
-        self.widget.setRange(info.min, info.max)
+        self.widget.setRange(min, max)
 
 
 
