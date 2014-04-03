@@ -58,15 +58,15 @@ class PyAuthenticator:
         
         
     def update_instance(self, resultHash):
-        self.accessList = resultHash.accessList if hasattr(resultHash, 'accessList') else ''
-        self.defaultAccessLevelDesc = resultHash.defaultAccessLevelDesc if hasattr(resultHash, 'defaultAccessLevelDesc') else ''
-        self.defaultAccessLevelId = resultHash.defaultAccessLevelId if hasattr(resultHash, 'defaultAccessLevelId') else '-100'
-        self.operationResultMsg = resultHash.operationResultMsg if hasattr(resultHash, 'operationResultMsg') else ''
-        self.operationSuccess = resultHash.operationSuccess if hasattr(resultHash, 'operationSuccess') else ''
-        self.sessionToken = resultHash.sessionToken if hasattr(resultHash, 'sessionToken') else ''
-        self.softwareId = resultHash.softwareId if hasattr(resultHash, 'softwareId') else '-100'
-        self.userId = resultHash.userId if hasattr(resultHash, 'userId') else '-100'
-        self.welcomeMessage = resultHash.welcomeMessage if hasattr(resultHash, 'welcomeMessage') else ''
+        self.accessList = getattr(resultHash, 'accessList', '')
+        self.defaultAccessLevelDesc = getattr(resultHash, 'defaultAccessLevelDesc', '')
+        self.defaultAccessLevelId = getattr(resultHash, 'defaultAccessLevelId', '-100')
+        self.operationResultMsg = getattr(resultHash, 'operationResultMsg', '')
+        self.operationSuccess = getattr(resultHash, 'operationSuccess', '')
+        self.sessionToken = getattr(resultHash, 'sessionToken', '')
+        self.softwareId = getattr(resultHash, 'softwareId', '-100')
+        self.userId = getattr(resultHash, 'userId', '-100')
+        self.welcomeMessage = getattr(resultHash, 'welcomeMessage', '')
 
 
     def getUsername(self):
