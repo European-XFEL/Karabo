@@ -408,8 +408,8 @@ class ProxyWidget(QStackedWidget):
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
-            #if "state" in component.keys[0]:
-            #    aliases = aliases + factory.getAliasesViaCategory("State")
+            if component.boxes[0].path == ('state',):
+                aliases = aliases + factory.getAliasesViaCategory("State")
             if aliases:
                 aa = QAction(text, self)
                 menu = QMenu(self)
