@@ -180,58 +180,6 @@ class _Manager(QObject):
         return splittedPath[0]
 
 
-    def _changeHash(self, devicePath, config, configChangeType=ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED):
-        # Go recursively through Hash
-        self._r_changeHash(devicePath, devicePath, config, configChangeType)
-
-
-    def _r_changeHash(self, path, devicePath, config, configChangeType):
-        for key, value in config.iteritems():
-            try:
-                timestamp = Timestamp.fromHashAttributes(
-                    config.getAttributes(key))
-            except KeyError as e:
-                timestamp = None
-
-            if len(path) < 1:
-                internalPath = key
-            else:
-                internalPath = path + "." + key
-
-            # Check if DataNotifier for key available
-            if configChangeType == ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED:
-                dataNotifier = self._getDataNotifierEditableValue(internalPath)
-                if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED:
-                dataNotifier = self._getDataNotifierEditableValue(internalPath)
-                if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-            elif configChangeType == ConfigChangeTypes.DEVICE_INSTANCE_CURRENT_VALUES_CHANGED:
-                dataNotifier = self._getDataNotifierDisplayValue(internalPath)
-                if dataNotifier is not None:
-                    dataNotifier.signalUpdateComponent.emit(internalPath, value, timestamp)
-                
-                # Notify editable widget of display value change
-                dataNotifier = self._getDataNotifierEditableValue(internalPath)
-                if dataNotifier is not None:
-                    # Broadcast new displayValue to all editable widgets
-                    dataNotifier.updateDisplayValue(internalPath, value, timestamp)
-                
-                # Check state
-                if key == "state":
-                    self._triggerStateChange(devicePath, value)
-                        
-            # More recursion in case of Hash type
-            if isinstance(value, Hash):
-                self._r_changeHash(internalPath, devicePath, value, configChangeType)
-            elif isinstance(value, list):
-                # TODO: needs to be implemented
-                for i in xrange(len(value)):
-                    internalPath = "{}[{}]".format(internalPath, i)
-                    hashValue = value[i]
-
-
     def _triggerStateChange(self, box, value, timestamp):
         configuration = box.configuration
         # Update GUI due to state changes
@@ -379,20 +327,10 @@ class _Manager(QObject):
         with open(filename, 'r') as file:
             config = r.read(file.read())[classId]
 
-        changeType = None
         if deviceId is not None:
-            path = deviceId
-            changeType = ConfigChangeTypes.DEVICE_INSTANCE_CONFIG_CHANGED
-            # Merge new config into internal datastructure
-            self.deviceData[deviceId].configuration = config
+            self.deviceData[deviceId].merge(config)
         elif serverId is not None:
-            path = "{}.{}".format(serverId, classId)
-            changeType = ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED
-            # Merge new config into internal datastructure
-            self.serverClassData[serverId, classId].configuration = config
-        
-        # Update view with new data for path
-        self._changeHash(path, config, changeType)
+            self.serverClassData[serverId, classId].merge(config)
 
 
     def onFileOpen(self, deviceId, classId, serverId):
@@ -410,9 +348,10 @@ class _Manager(QObject):
 
     def saveAsXml(self, filename, deviceId, classId, serverId=None):
         if deviceId is not None:
-            config = Hash(classId, self.deviceData[deviceId].configuration)
+            config = Hash(classId, self.deviceData[deviceId].toHash())
         elif serverId is not None:
-            config = Hash(classId, self.serverClassData[serverId, classId].configuration)
+            config = Hash(classId,
+                          self.serverClassData[serverId, classId].toHash())
         else:
             config = Hash()
 
