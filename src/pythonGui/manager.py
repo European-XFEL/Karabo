@@ -36,12 +36,11 @@ class DataNotifier(QObject):
     signalHistoricData = pyqtSignal(str, object)
 
 
-    def __init__(self, key, component):
+    def __init__(self, key):
         super(DataNotifier, self).__init__()
 
         self.signalUpdateComponent.connect(self.onValueChanged)
         self.signalUpdateDisplayValue.connect(self.onValueChanged)
-        self.addComponent(key, component)
 
 
     def onValueChanged(self, key, value, timestamp=None):
@@ -190,9 +189,9 @@ class _Manager(QObject):
     def registerEditableComponent(self, key, component):
         dataNotifier = self._getDataNotifierEditableValue(key)
         if dataNotifier is None:
-            self.__keyNotifierMapEditableValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
+            dataNotifier = self.__keyNotifierMapEditableValue[key] = \
+                DataNotifier(key)
+        dataNotifier.addComponent(key, component)
 
 
     def unregisterEditableComponent(self, key, component):
@@ -202,9 +201,9 @@ class _Manager(QObject):
     def registerDisplayComponent(self, key, component):
         dataNotifier = self._getDataNotifierDisplayValue(key)
         if dataNotifier is None:
-            self.__keyNotifierMapDisplayValue[key] = DataNotifier(key, component)
-        else:
-            dataNotifier.addComponent(key, component)
+            dataNotifier = self.__keyNotifierMapDisplayValue[key] = \
+                DataNotifier(key)
+        dataNotifier.addComponent(key, component)
 
 
     def unregisterDisplayComponent(self, key, component):
@@ -213,6 +212,9 @@ class _Manager(QObject):
 
     def registerHistoricData(self, key, slot):
         dataNotifier = self._getDataNotifierDisplayValue(key)
+        if dataNotifier is None:
+            dataNotifier = self.__keyNotifierMapDisplayValue[key] = \
+                DataNotifier(key)
         dataNotifier.signalHistoricData.connect(slot)
 
 
