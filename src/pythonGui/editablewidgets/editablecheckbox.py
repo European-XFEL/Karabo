@@ -23,8 +23,8 @@ __all__ = ["EditableCheckBox"]
 
 from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QCheckBox
 
 
 class EditableCheckBox(EditableWidget):
@@ -36,9 +36,7 @@ class EditableCheckBox(EditableWidget):
         
         self.__checkBox = QCheckBox(parent)
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
-
-        if hasattr(box, 'value'):
-            self.valueChanged(box, box.value)
+        box.addWidget(self)
 
 
     @property
