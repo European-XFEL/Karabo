@@ -21,32 +21,27 @@
 __all__ = ["DisplayLineEdit"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QLineEdit
 
 
 class DisplayLineEdit(DisplayWidget):
     category = "String"
     alias = "Text Field"
 
-    def __init__(self, **params):
-        super(DisplayLineEdit, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayLineEdit, self).__init__(box)
         
-        self.__lineEdit = QLineEdit()
-        self.__lineEdit.setMinimumSize(160, 24)
-        self.__lineEdit.setReadOnly(True)
+        self.widget = QLineEdit(parent)
+        self.widget.setMinimumSize(160, 24)
+        self.widget.setReadOnly(True)
         
-
-    @property
-    def widget(self):
-        return self.__lineEdit
-
 
     @property
     def value(self):
-        return self.__lineEdit.text()
+        return self.widget.text()
 
 
     def valueChanged(self, key, value, timestamp=None):
@@ -54,6 +49,5 @@ class DisplayLineEdit(DisplayWidget):
             return
         
         if value != self.value:
-            self.__lineEdit.blockSignals(True)
-            self.__lineEdit.setText(value)
-            self.__lineEdit.blockSignals(False)
+            with SignalBlocker(self.widget):
+                self.widget.setText(value)
