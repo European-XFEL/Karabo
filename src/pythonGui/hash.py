@@ -54,7 +54,7 @@ def _gettype(data):
         elif data is None:
             return hashtypes.None_
         else:
-            raise RuntimeError('unknown datatype {}'.format(data.__class__))
+            raise TypeError('unknown datatype {}'.format(data.__class__))
 
 
 class Element(object):

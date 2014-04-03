@@ -32,6 +32,13 @@ class Simple(object):
         file.writeFormat(cls.format, data)
 
 
+    def cast(self, other):
+        if isinstance(other, self.numpy):
+            return other
+        else:
+            return self.numpy(other)
+
+
 class Integer(Simple):
     pass
 
@@ -88,6 +95,13 @@ class NumpyVector(Vector):
         return ",".join(unicode(x) for x in data)
 
 
+    def cast(self, other):
+        if isinstance(other, numpy.ndarray) and other.dtype == self.numpy:
+            return other
+        else:
+            return array(other, dtype=self.numpy)
+
+
 class Descriptor(object):
     pass
 
@@ -133,7 +147,7 @@ class Type(Descriptor, Registry):
 
     @classmethod
     def toString(cls, data):
-        return str(data)
+        return unicode(data)
 
 
     def toHash(self, box):
@@ -165,6 +179,10 @@ class Bool(Type):
         return '1' if data else '0'
 
 
+    def cast(self, other):
+        return bool(other)
+
+
 class VectorBool(NumpyVector, Bool):
     numpy = numpy.bool_
 
@@ -190,6 +208,11 @@ class Char(Simple, Type):
     def write(cls, file, data):
         assert len(data) == 1
         file.file.write(data)
+
+
+    def cast(self, other):
+        if len(bytes(other)) == 1:
+            return Byte(other)
 
 
 class Byte(Special, bytes):
@@ -218,6 +241,13 @@ class VectorChar(Vector, Char):
     def write(cls, file, data):
         file.writeFormat('I', len(data))
         file.file.write(data)
+
+
+    def cast(self, other):
+        if isinstance(other, bytes):
+            return other
+        else:
+            return bytes(other)
 
 
 class Int8(Integer, Type):
@@ -349,6 +379,13 @@ class String(Type):
         VectorChar.write(file, data.encode('utf8'))
 
 
+    def cast(self, other):
+        if isinstance(other, unicode):
+            return other
+        else:
+            return unicode(other)
+
+
 class VectorString(Vector, String):
     @staticmethod
     def fromstring(s):
@@ -358,6 +395,18 @@ class VectorString(Vector, String):
     @classmethod
     def read(cls, file):
         return StringList(super(VectorString, cls).read(file))
+
+
+    @classmethod
+    def toString(cls, data):
+        return ",".join(unicode(x) for x in data)
+
+
+    def cast(self, other):
+        if isinstance(other, StringList):
+            return other
+        else:
+            return StringList(unicode(s) for s in other)
 
 
 class StringList(Special, list):
@@ -404,10 +453,22 @@ class Hash(Type):
             file.writeData(v)
 
 
+    def cast(self, other):
+        if isinstance(other, Hash):
+            return other
+        else:
+            raise TypeError(
+                'cannot cast anything to Hash (was {})'.format(other))
+
+
 class VectorHash(Vector, Hash):
     @classmethod
     def read(cls, file):
         return list(super(VectorString, cls).read(file))
+
+
+    def cast(self, other):
+        return [Hash.cast(self, o) for o in other]
 
 
 class PtrBool(Type):
@@ -509,6 +570,11 @@ class None_(Type):
     @classmethod
     def write(cls, file, data):
         file.writeFormat('I', 0)
+
+
+    def cast(self, other):
+        if other is not None:
+            raise TypeError('cannot cast to None (was {})'.format(other))
 
 
 class VectorNone(Type):

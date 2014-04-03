@@ -78,7 +78,7 @@ class Box(QObject):
 
 
     def _set(self, value, timestamp):
-        self._value = value
+        self._value = self.descriptor.cast(value)
         self.timestamp = timestamp
         self.signalUpdateComponent.emit(self, value, timestamp)
 
@@ -316,6 +316,14 @@ class Schema(hashtypes.Descriptor):
         if self.cls is None:
             self.cls = type(str(self.name), (Object,), self.dict)
         return self.cls
+
+
+    def cast(self, other):
+        if isinstance(other, self.getClass()):
+            return other
+        else:
+            raise TypeError('cannot cast to {}, (was {})'.format(
+                self.name, other))
 
 
     def toHash(self, box):
