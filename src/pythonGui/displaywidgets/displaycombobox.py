@@ -21,51 +21,44 @@
 __all__ = ["DisplayComboBox"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QComboBox
 
 
 class DisplayComboBox(DisplayWidget):
     category = "Selection"
     alias = "Selection Field"
     
-    def __init__(self, enumeration=None, **params):
-        super(DisplayComboBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayComboBox, self).__init__(box)
         
-        self.__comboBox = QComboBox()
-        self.__comboBox.setFrame(False)
-        self.__comboBox.setEnabled(False)
+        self.widget = QComboBox(parent)
+        self.widget.setFrame(False)
+        self.widget.setEnabled(False)
         
         self.addItems(enumeration)
 
 
     @property
-    def widget(self):
-        return self.__comboBox
-
-
-    @property
     def value(self):
-        return self.__comboBox.currentText()
+        return self.widget.currentText()
 
 
     def addItems(self, texts):
-        self.__comboBox.blockSignals(True)
-        self.__comboBox.addItems(texts)
-        self.__comboBox.blockSignals(False)
+        with SignalBlocker(self.widget):
+            self.widget.addItems(texts)
 
 
     def valueChanged(self, key, value, timestamp=None):
         if value is None:
             return
 
-        index = self.__comboBox.findText(str(value))
-        if index < 0 :
+        index = self.widget.findText(unicode(value))
+        if index < 0:
             return
         
         if value != self.value:
-            self.__comboBox.blockSignals(True)
-            self.__comboBox.setCurrentIndex(index)
-            self.__comboBox.blockSignals(False)
+            with SignalBlocker(self.widget):
+                self.widget.setCurrentIndex(index)
