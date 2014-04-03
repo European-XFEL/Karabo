@@ -10,12 +10,16 @@ class QwtWidget(EditableWidget):
         super(QwtWidget, self).__init__(box)
 
         self.widget = self.Cls(parent)
+        self.valueChanged(self.boxes[0], self.boxes[0].value)
+        self.widget.valueChanged.connect(self.onEditingFinished)
+        box.addWidget(self)
+
+
+    def typeChanged(self, box):
         d = box.descriptor
         self.widget.setRange(
             max(getattr(d, 'minInc', None), getattr(d, 'minExc', None), 0),
             max(getattr(d, 'maxInc', None), getattr(d, 'maxExc', None), 100))
-        self.valueChanged(self.boxes[0], self.boxes[0].value)
-        self.widget.valueChanged.connect(self.onEditingFinished)
 
 
     @property
