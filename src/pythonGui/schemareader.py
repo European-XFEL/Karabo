@@ -297,8 +297,6 @@ class SchemaReader(object):
 
             if item.editableComponent is not None:
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
-        # Set default value in choice combobox
-        item.onSetToDefault()
         
         return item
 
