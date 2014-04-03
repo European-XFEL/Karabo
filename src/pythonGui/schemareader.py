@@ -458,7 +458,7 @@ class ChoiceOfNodes(Schema):
     def setDefault(self, box):
         if hasattr(self, 'defaultValue'):
             box.current = self.defaultValue
-        Schema.setDefault(self, box)
+            Schema.setDefault(self, box)
 
 
     def toHash(self, box):
