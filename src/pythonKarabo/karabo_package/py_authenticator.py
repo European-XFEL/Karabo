@@ -2,10 +2,7 @@ __author__="luis.maia@xfel.eu"
 __date__ ="April 2, 2014"
 
 from suds.client import Client
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO('PyAuthenticator', '1.0')
 class PyAuthenticator:
     
     url = 'https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication?WSDL'

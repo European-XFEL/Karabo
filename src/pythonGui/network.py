@@ -21,7 +21,7 @@ from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 #from karabo.karathon import Authenticator
-from karabo import PyAuthenticator as krb
+from karabo import py_authenticator as krb
 from hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
