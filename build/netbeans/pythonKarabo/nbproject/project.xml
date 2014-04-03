@@ -7,7 +7,9 @@
             <sources>
                 <root id="pythonKarabo.dir" name="KaraboSources"/>
             </sources>
-            <tests/>
+            <tests>
+                <root id="pythonKaraboTests.dir" name="KaraboTests"/>
+            </tests>
         </data>
     </configuration>
 </project>
