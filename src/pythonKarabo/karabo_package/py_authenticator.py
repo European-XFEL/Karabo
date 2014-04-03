@@ -18,7 +18,7 @@ class PyAuthenticator:
         self.brokerHostname = brokerHostname
         self.brokerPortNumber = str(brokerPortNumber)
         self.brokerTopic = brokerTopic
-        self.softwareDesc = 'karabo'
+        self.softwareDesc = 'Karabo'
         
         self.update_instance(None)
         
@@ -57,12 +57,12 @@ class PyAuthenticator:
     def update_instance(self, resultHash):
         self.accessList = getattr(resultHash, 'accessList', '')
         self.defaultAccessLevelDesc = getattr(resultHash, 'defaultAccessLevelDesc', '')
-        self.defaultAccessLevelId = getattr(resultHash, 'defaultAccessLevelId', '-100')
+        self.defaultAccessLevelId = getattr(resultHash, 'defaultAccessLevelId', -100)
         self.operationResultMsg = getattr(resultHash, 'operationResultMsg', '')
         self.operationSuccess = getattr(resultHash, 'operationSuccess', '')
         self.sessionToken = getattr(resultHash, 'sessionToken', '')
-        self.softwareId = getattr(resultHash, 'softwareId', '-100')
-        self.userId = getattr(resultHash, 'userId', '-100')
+        self.softwareId = getattr(resultHash, 'softwareId', -100)
+        self.userId = getattr(resultHash, 'userId', -100)
         self.welcomeMessage = getattr(resultHash, 'welcomeMessage', '')
 
 

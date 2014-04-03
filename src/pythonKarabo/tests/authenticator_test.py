@@ -17,20 +17,20 @@ class  Authenticator_TestCase(unittest.TestCase):
     def test_authenticator_correct_login(self):
         
         # Variables definition
-        username = "unitaryTests";
-        password = "karaboUnitaryTestsPass";
-        provider = "LOCAL";
-        brokerHostname = "127.0.0.1";
-        brokerPortNumber = 4444;
-        brokerTopic = "topic";
-        software = "Karabo";
+        username = 'unitaryTests'
+        password = 'karaboUnitaryTestsPass'
+        provider = 'LOCAL'
+        brokerHostname = '127.0.0.1'
+        brokerPortNumber = 4444
+        brokerTopic = 'topic'
+        software = 'Karabo'
         #
-        current_epo = Epochstamp();
-        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);
+        current_epo = Epochstamp()
+        ipAddress = 'PythonUnitTestsIpAddress' + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC)
         
         # Helper variables
-        emptyString = ""
-        functionName = "test_authenticator_correct_login"
+        emptyString = ''
+        functionName = 'test_authenticator_correct_login'
         
         # Check properties of empty Authenticator
         try:
@@ -108,20 +108,20 @@ class  Authenticator_TestCase(unittest.TestCase):
     def test_authenticator_incorrect_login(self):
         
         # Variables definition
-        username = "unitaryTests";
-        password = "karaboUnitaryTestsPass222";
-        provider = "LOCAL";
-        brokerHostname = "127.0.0.1";
-        brokerPortNumber = 4444;
-        brokerTopic = "topic";
-        software = "Karabo";
+        username = 'unitaryTests'
+        password = 'karaboUnitaryTestsPass222'
+        provider = 'LOCAL'
+        brokerHostname = '127.0.0.1'
+        brokerPortNumber = 4444
+        brokerTopic = 'topic'
+        software = 'Karabo'
         #
-        current_epo = Epochstamp();
-        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);      
+        current_epo = Epochstamp()
+        ipAddress = 'PythonUnitTestsIpAddress' + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC)
         
         # Helper variables
-        emptyString = ""
-        functionName = "test_authenticator_incorrect_login"
+        emptyString = ''
+        functionName = 'test_authenticator_incorrect_login'
         
         # Check properties of empty Authenticator
         try:
@@ -175,19 +175,19 @@ class  Authenticator_TestCase(unittest.TestCase):
     def test_authenticator_single_sign_on(self):
         
         # Variables definition
-        username = "unitaryTests";
-        password = "karaboUnitaryTestsPass";
-        provider = "LOCAL";
-        ipAddressWrong = "PythonUnitTestsIpAddressXXXXXXXXXXX";
-        brokerHostname = "127.0.0.1";
-        brokerPortNumber = 4444;
-        brokerTopic = "topic";
+        username = 'unitaryTests'
+        password = 'karaboUnitaryTestsPass'
+        provider = 'LOCAL'
+        ipAddressWrong = 'PythonUnitTestsIpAddressXXXXXXXXXXX'
+        brokerHostname = '127.0.0.1'
+        brokerPortNumber = 4444
+        brokerTopic = 'topic'
         #
-        current_epo = Epochstamp();
-        ipAddress = "PythonUnitTestsIpAddress" + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC);   
+        current_epo = Epochstamp()
+        ipAddress = 'PythonUnitTestsIpAddress' + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC)
         
         # Helper variables
-        functionName = "test_authenticator_single_sign_on"
+        functionName = 'test_authenticator_single_sign_on'
         
         # Check properties of empty Authenticator (already validated in previous functions)
         try:
