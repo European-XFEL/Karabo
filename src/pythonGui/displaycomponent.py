@@ -93,10 +93,11 @@ class DisplayComponent(BaseComponent):
 
     def changeWidget(self, factory, alias):
         self.classAlias = alias
-        self.__initParams['value'] = self.value
-        
         oldWidget = self.__displayWidget.widget
-        self.__displayWidget = factory.get_class(alias)(**self.__initParams)
+        self.__displayWidget = factory.get_class(alias)(
+            self.boxes[0], oldWidget.parent())
+        for b in self.boxes[1:]:
+            self.__displayWidget.addBox(b)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         oldWidget.parent().addWidget(self.__displayWidget.widget)
@@ -104,7 +105,3 @@ class DisplayComponent(BaseComponent):
         oldWidget.parent().setCurrentWidget(self.__displayWidget.widget)
         oldWidget.setParent(None)
         self.__displayWidget.widget.show()
-        
-        # Refresh new widget...
-        for key in self.__displayWidget.keys:
-            manager.Manager().onRefreshInstance(key)
