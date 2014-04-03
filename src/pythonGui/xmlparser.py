@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from xml.etree import ElementTree
 
 
@@ -8,6 +9,12 @@ class Parser(ElementTree.XMLParser):
         return text
 
 
+class TreeBuilder(ElementTree.TreeBuilder):
+    def _flush(self):
+        super(TreeBuilder, self)._flush()
+        if self._last is not None and self._last.text is None:
+            self._last.text = ''
+
+
 def parse(source):
-    return ElementTree.parse(source,
-                             parser=Parser(target=ElementTree.TreeBuilder()))
+    return ElementTree.parse(source, parser=Parser(target=TreeBuilder()))

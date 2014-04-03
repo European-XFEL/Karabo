@@ -269,10 +269,7 @@ class Hash(OrderedDict):
             else:
                 return self._get(key).attrs[attr]
         else:
-            try:
-                return self._get(item).data
-            except AttributeError:
-                return None
+            return self._get(item).data
 
     def __delitem__(self, item):
         if isinstance(item, tuple):
@@ -377,7 +374,7 @@ def factory(tag, attrs):
 class XMLParser(object):
     def read(self, data):
         """Parse the XML in the buffer data and return the hash"""
-        target = ElementTree.TreeBuilder(element_factory=factory)
+        target = xmlparser.TreeBuilder(element_factory=factory)
         parser = xmlparser.Parser(target=target)
         parser.feed(data)
         root = target.close()
