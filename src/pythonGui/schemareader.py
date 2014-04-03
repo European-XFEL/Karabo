@@ -140,7 +140,7 @@ class Type(hashtypes.Type):
         except AttributeError:
             item.enumeration = None
             item.classAlias = self.classAlias
-            item.icon = self.icon
+            item.setIcon(0, self.icon)
 
         component = None
         item.editableComponent = None
