@@ -22,8 +22,8 @@ __all__ = ["DisplayLabel"]
 
 
 from widget import DisplayWidget
-from hash import Hash
-import hashtypes
+from karabo.hash import Hash
+from karabo import hashtypes
 import decimal
 import re
 

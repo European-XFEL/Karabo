@@ -20,7 +20,7 @@ __all__ = ["Manager"]
 from enums import NavigationItemTypes, ConfigChangeTypes
 from configuration import Configuration
 from datetime import datetime
-from hash import Hash, XMLWriter, XMLParser
+from karabo.hash import Hash, XMLWriter, XMLParser
 from timestamp import Timestamp
 from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel

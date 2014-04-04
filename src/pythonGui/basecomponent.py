@@ -16,7 +16,8 @@ from manager import Manager
 #from messagebox import MessageBox
 
 from layouts import ProxyWidget
-from registry import Loadable, ns_karabo
+from registry import Loadable
+from const import ns_karabo
 from widget import EditableWidget
 
 from PyQt4.QtCore import *
