@@ -59,42 +59,20 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__hasConflict = False
 
         text = "Apply"
-        self.__tbApply = QToolButton()
-        self.__tbApply.setStatusTip(text)
-        self.__tbApply.setToolTip(text)
-        self.__tbApply.setIconSize(QSize(24,24))
-        self.__tbApply.setIcon(icons.apply)
-        self.__tbApply.setEnabled(False)
-        # Use action for button to reuse
         self.__acApply = QAction(icons.apply, text, self)
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
         self.__acApply.setEnabled(False)
         self.__acApply.triggered.connect(self.onApplyClicked)
-        self.__tbApply.clicked.connect(self.__acApply.triggered)
-        # Add to layout
-        hLayout.addWidget(self.__tbApply)
-
-        text = "Reset"
-        self.__tbReset = QToolButton()
-        self.__tbReset.setStatusTip(text)
-        self.__tbReset.setToolTip(text)
-        self.__tbReset.setIconSize(QSize(24,24))
-        self.__tbReset.setIcon(icons.no)
-        self.__tbReset.setEnabled(False)
-        # Use action for button to reuse
-        self.__acReset = QAction(icons.no, text, self)
-        self.__acReset.setStatusTip(text)
-        self.__acReset.setToolTip(text)
-        self.__acReset.setEnabled(False)
-        self.__acReset.triggered.connect(self.onApplyRemoteChanges)
-        self.__tbReset.clicked.connect(self.__acReset.triggered)
-        # Add to layout
-        hLayout.addWidget(self.__tbReset)
+        tb = QToolButton()
+        tb.setDefaultAction(self.__acApply)
+        tb.setPopupMode(QToolButton.InstantPopup)
+        tb.setIconSize(QSize(24, 24))
+        hLayout.addWidget(tb)
 
         # Add menu to toolbutton
         text = "Apply local changes"
-        self.__mApply = QMenu(self.__tbApply)
+        self.__mApply = QMenu(tb)
         self.__acApplyChanges = QAction(text, self)
         self.__acApplyChanges.setStatusTip(text)
         self.__acApplyChanges.setToolTip(text)
@@ -107,7 +85,19 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__acApplyRemoteChanges.setToolTip(text)
         self.__acApplyRemoteChanges.triggered.connect(self.onApplyRemoteChanges)
         self.__mApply.addAction(self.__acApplyRemoteChanges)
-        
+
+        text = "Reset"
+        self.__acReset = QAction(icons.no, text, self)
+        self.__acReset.setStatusTip(text)
+        self.__acReset.setToolTip(text)
+        self.__acReset.setEnabled(False)
+        self.__acReset.triggered.connect(self.onApplyRemoteChanges)
+        tb = QToolButton()
+        tb.setDefaultAction(self.__acReset)
+        tb.setIconSize(QSize(24, 24))
+        # Add to layout
+        hLayout.addWidget(tb)
+
         self.__busyTimer = QTimer(self)
         self.__busyTimer.timeout.connect(self.onTimeOut)
 
@@ -167,14 +157,11 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def _applyEnabled(self):
-        return self.__tbApply.isEnabled()
+        return self.__acApply.isEnabled()
     def _setApplyEnabled(self, enable):
-        if self.__tbApply.isEnabled() is enable:
+        if self.__acApply.isEnabled() is enable:
             return
-        
-        self.__tbApply.setEnabled(enable)
-        self.__tbReset.setEnabled(enable)
-        
+
         self.__acApply.setEnabled(enable)
         self.__acReset.setEnabled(enable)
 
@@ -196,26 +183,16 @@ class EditableApplyLaterComponent(BaseComponent):
         if hasConflict is True:
             self.changeColor = QColor(204,240,255,128) # blue
             text = "Resolve conflict"
-            self.__tbApply.setIcon(icons.applyConflict)
-            self.__tbApply.setPopupMode(QToolButton.InstantPopup)
-            self.__tbApply.setMenu(self.__mApply)
-            
             self.__acApply.setIcon(icons.applyConflict)
             self.__acApply.setMenu(self.__mApply)
-            
-            self.__tbReset.setEnabled(False)
             self.__acReset.setEnabled(False)
         else:
             self.changeColor = QColor(255,255,255,128) # white
             text = "Apply local changes"
-            self.__tbApply.setIcon(icons.apply)
-            self.__tbApply.setPopupMode(QToolButton.DelayedPopup)
-            self.__tbApply.setMenu(None)
-            
             self.__acApply.setIcon(icons.apply)
             self.__acApply.setMenu(None)
-        self.__tbApply.setStatusTip(text)
-        self.__tbApply.setToolTip(text)
+        self.__acApply.setStatusTip(text)
+        self.__acApply.setToolTip(text)
 
         self.signalConflictStateChanged.emit(self.boxes[0].configuration.path,
                                              hasConflict)
