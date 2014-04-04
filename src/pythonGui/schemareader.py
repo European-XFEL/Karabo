@@ -171,17 +171,17 @@ class String(hashtypes.String):
     classAlias = "Text Field"
     icon = icons.string
 
-    @classmethod
-    def populateItem(cls, item, attrs, classtype, treewidget):
-        super(String, cls).populateItem(item, attrs, classtype, treewidget)
+    def item(self, treeWidget, parent, box, isClass):
+        item = super(String, self).item(treeWidget, parent, box, isClass)
 
         try:
             ca = dict(directory='Directory', fileIn='File In',
                       fileOut='File Out')[self.displayType]
             item.classAlias = ca
             item.setIcon(0, icons.path)
-        except AttributeError:
+        except (AttributeError, KeyError):
             pass
+        return item
 
 
 class Integer(hashtypes.Integer):
