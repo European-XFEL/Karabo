@@ -534,9 +534,9 @@ void Schema_Test::testVectorElements() {
     CPPUNIT_ASSERT(sch.isAccessReadOnly("vecDouble") == true);
     CPPUNIT_ASSERT(sch.isAssignmentOptional("vecDouble") == true);
 
-    //readOnly element has default value (even if initialValue not specified) and default value is string "0"
+    //readOnly element has default value (even if initialValue not specified) and default value is vector<double>() -- empty vector
     CPPUNIT_ASSERT(sch.hasDefaultValue("vecDouble") == true);
-    CPPUNIT_ASSERT(sch.getDefaultValue<string>("vecDouble") == "0");
+    CPPUNIT_ASSERT(sch.getDefaultValue<vector<double> >("vecDouble") == vector<double>());
 
     CPPUNIT_ASSERT(sch.hasAlarmLow("vecDouble") == true);
     CPPUNIT_ASSERT(sch.hasAlarmHigh("vecDouble") == true);
