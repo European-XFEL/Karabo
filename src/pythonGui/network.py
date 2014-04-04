@@ -20,7 +20,7 @@ from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
-from karabo import py_authenticator as krb
+from karabo.py_authenticator import PyAuthenticator
 from hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
@@ -163,11 +163,9 @@ class Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.authenticator = krb.PyAuthenticator(
-                    self.username.encode("utf8"), self.password.encode("utf8"),
-                    self.provider.encode("ascii"), ipAddress.encode("ascii"),
-                    self.brokerHost.encode("ascii"), int(self.brokerPort),
-                    self.brokerTopic.encode("utf8"))
+                self.authenticator = PyAuthenticator(
+                            self.username, self.password, self.provider, ipAddress,
+                            self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
