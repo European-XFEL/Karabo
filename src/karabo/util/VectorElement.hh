@@ -37,6 +37,12 @@ namespace karabo {
                 return *this;
             }
 
+            virtual ReadOnlySpecific<VectorElement, CONT<T> >& readOnly() {
+                ReadOnlySpecific<VectorElement, CONT<T> >& _readOnlySpecific = LeafElement<VectorElement, CONT<T> >::readOnly();
+                this->m_node->setAttribute(KARABO_SCHEMA_DEFAULT_VALUE, CONT<T>());
+                return _readOnlySpecific;
+            }
+            
         protected:
 
             void beforeAddition() {
