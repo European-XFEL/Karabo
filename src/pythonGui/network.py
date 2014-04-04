@@ -164,10 +164,8 @@ class Network(QObject):
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
                 self.authenticator = krb.PyAuthenticator(
-                    self.username.encode("utf8"), self.password.encode("utf8"),
-                    self.provider.encode("ascii"), ipAddress.encode("ascii"),
-                    self.brokerHost.encode("ascii"), self.brokerPort,
-                    self.brokerTopic.encode("utf8"))
+                            self.username, self.password, self.provider, ipAddress,
+                            self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
