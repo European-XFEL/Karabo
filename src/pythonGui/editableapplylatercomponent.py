@@ -18,11 +18,12 @@ from messagebox import MessageBox
 from widget import EditableWidget
 
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QSize, QTimer, Qt
-from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QIcon, QLabel, QMenu, \
+from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QLabel, QMenu, \
                         QToolButton, QWidget
 
 import numpy
 import numbers
+import icons
 
 
 class EditableApplyLaterComponent(BaseComponent):
@@ -62,10 +63,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
         self.__tbApply.setIconSize(QSize(24,24))
-        self.__tbApply.setIcon(QIcon(":apply"))
+        self.__tbApply.setIcon(icons.apply)
         self.__tbApply.setEnabled(False)
         # Use action for button to reuse
-        self.__acApply = QAction(QIcon(":apply"), text, self)
+        self.__acApply = QAction(icons.apply, text, self)
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
         self.__acApply.setEnabled(False)
@@ -79,10 +80,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__tbReset.setStatusTip(text)
         self.__tbReset.setToolTip(text)
         self.__tbReset.setIconSize(QSize(24,24))
-        self.__tbReset.setIcon(QIcon(":no"))
+        self.__tbReset.setIcon(icons.no)
         self.__tbReset.setEnabled(False)
         # Use action for button to reuse
-        self.__acReset = QAction(QIcon(":no"), text, self)
+        self.__acReset = QAction(icons.no, text, self)
         self.__acReset.setStatusTip(text)
         self.__acReset.setToolTip(text)
         self.__acReset.setEnabled(False)
@@ -195,12 +196,11 @@ class EditableApplyLaterComponent(BaseComponent):
         if hasConflict is True:
             self.changeColor = QColor(204,240,255,128) # blue
             text = "Resolve conflict"
-            icon = QIcon(":apply-conflict")
-            self.__tbApply.setIcon(icon)
+            self.__tbApply.setIcon(icons.applyConflict)
             self.__tbApply.setPopupMode(QToolButton.InstantPopup)
             self.__tbApply.setMenu(self.__mApply)
             
-            self.__acApply.setIcon(icon)
+            self.__acApply.setIcon(icons.applyConflict)
             self.__acApply.setMenu(self.__mApply)
             
             self.__tbReset.setEnabled(False)
@@ -208,12 +208,11 @@ class EditableApplyLaterComponent(BaseComponent):
         else:
             self.changeColor = QColor(255,255,255,128) # white
             text = "Apply local changes"
-            icon = QIcon(":apply")
-            self.__tbApply.setIcon(icon)
+            self.__tbApply.setIcon(icons.apply)
             self.__tbApply.setPopupMode(QToolButton.DelayedPopup)
             self.__tbApply.setMenu(None)
             
-            self.__acApply.setIcon(icon)
+            self.__acApply.setIcon(icons.apply)
             self.__acApply.setMenu(None)
         self.__tbApply.setStatusTip(text)
         self.__tbApply.setToolTip(text)
