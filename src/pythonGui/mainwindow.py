@@ -17,7 +17,7 @@ import icons
 from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
-from hash import Hash
+from karabo.hash import Hash
 from manager import Manager
 from network import Network
 

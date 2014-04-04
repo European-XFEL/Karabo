@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-import hashtypes
+from karabo import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
 
