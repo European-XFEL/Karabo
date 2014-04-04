@@ -48,7 +48,7 @@ def _gettype(data):
         elif data is None:
             return hashtypes.None_
         else:
-            raise RuntimeError('unknown datatype {}'.format(data.__class__))
+            raise TypeError('unknown datatype {}'.format(data.__class__))
 
 
 class Element(object):
@@ -439,8 +439,6 @@ class BinaryWriter(Writer):
 
     def writeType(self, data):
         type = _gettype(data)
-        if type == hashtypes.VectorChar:
-            print 'writing vc', data
         self.writeFormat('I', type.number)
 
 

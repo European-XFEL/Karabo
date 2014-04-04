@@ -21,7 +21,8 @@ from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 from dialogs.dialogs import PenDialog, TextDialog
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
-from registry import Loadable, Registry, ns_karabo, ns_svg
+from registry import Loadable, Registry
+from const import ns_karabo, ns_svg
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget

@@ -7,7 +7,8 @@
 
 from dialogs.dialogs import TextDialog
 from manager import Manager
-from registry import Loadable, ns_svg, ns_karabo
+from registry import Loadable
+from const import ns_svg, ns_karabo
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
 from PyQt4.QtGui import (QAction, QBoxLayout, QFrame, QGridLayout, QLabel,
