@@ -300,10 +300,10 @@ class EditableApplyLaterComponent(BaseComponent):
         else:
             isEqualEditable = (str(value) == str(self.__editableWidget.value)) # string comparison, problems with float values...
 
-        if isEqualEditable is False:
-            self.changeApplyToBusy(True, False)
-        else:
+        if isEqualEditable:
             self.changeApplyToBusy(False)
+        else:
+            self.changeApplyToBusy(True, False)
 
 
     # Triggered from self.__editableWidget when value was edited
