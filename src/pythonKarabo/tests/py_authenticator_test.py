@@ -3,7 +3,7 @@
 
 import unittest
 from karabo.karathon import * 
-from karabo import py_authenticator as krb
+from karabo.py_authenticator import PyAuthenticator
 
 
 class  PyAuthenticator_TestCase(unittest.TestCase):
@@ -35,7 +35,7 @@ class  PyAuthenticator_TestCase(unittest.TestCase):
         
         # Check properties of empty Authenticator
         try:
-            a = krb.PyAuthenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
+            a = PyAuthenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
             
             # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
@@ -127,7 +127,7 @@ class  PyAuthenticator_TestCase(unittest.TestCase):
         
         # Check properties of empty Authenticator
         try:
-            a = krb.PyAuthenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
+            a = PyAuthenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic)
             
             # Variables that should be correctly assigned
             self.assertEqual(a.getUsername(), username, "getUsername() don't match")
