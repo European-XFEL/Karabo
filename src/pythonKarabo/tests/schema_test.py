@@ -299,7 +299,7 @@ class  Schema_TestCase(unittest.TestCase):
             
             #'readOnly'-element (vector as well) that does not specify 'initialValue' has 'defaultValue' equal to string "0" :
             self.assertEqual(schema.getDefaultValue("testPath2"), "0")
-            self.assertEqual(schema.getDefaultValue("vectInt"), "0")
+            self.assertEqual(schema.getDefaultValue("vectInt"), [])
             
             self.assertEqual(schema.getDefaultValue("exampleIntKey"), 20)
             
