@@ -21,6 +21,8 @@
 
 #include <karabo/util/karaboDll.hh>
 
+#include <boost/assign/std/vector.hpp> // for 'operator+=()'
+
 namespace configurationTest {
 
     using namespace karabo::util;
@@ -348,9 +350,10 @@ namespace configurationTest {
                     .commit();
 
             vector<int> vecIntAlias;
-            vecIntAlias.push_back(10);
-            vecIntAlias.push_back(20);
-            vecIntAlias.push_back(30);
+            {
+                using namespace boost::assign;    // bring 'operator+=()' into scope
+                vecIntAlias += 10, 20, 30;        // use boost::assign to initialize vector
+            }
             INT64_ELEMENT(expected).key("exampleKey5").alias(vecIntAlias)
                     .tags("h/w; d.m.y", ";")
                     .displayedName("Example key 5")
@@ -424,9 +427,10 @@ namespace configurationTest {
                     .commit();
 
             vector<int> vecInit;
-            vecInit.push_back(10);
-            vecInit.push_back(20);
-            vecInit.push_back(30);
+            {
+                using namespace boost::assign;    // bring 'operator+=()' into scope
+                vecInit += 10, 20, 30;
+            }
 
             vector<int> vecWarnL(3, 50);
             vector<int> vecWarnH(3, 100);
