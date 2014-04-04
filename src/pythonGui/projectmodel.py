@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from copy import copy
 from enums import NavigationItemTypes
 import manager
-from hash import Hash, HashMergePolicy, XMLParser, XMLWriter
+from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 

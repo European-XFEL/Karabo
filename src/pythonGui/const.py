@@ -9,8 +9,15 @@
    the application.
 """
 
-
+from xml.etree import ElementTree
 from PyQt4.QtCore import Qt
+
+
+ns_svg = "{http://www.w3.org/2000/svg}"
+ns_karabo = "{http://karabo.eu/scene}"
+ElementTree.register_namespace("svg", ns_svg[1:-1])
+ElementTree.register_namespace("krb", ns_karabo[1:-1])
+
 
 # Parameter item properties
 INTERNAL_KEY           = Qt.UserRole
