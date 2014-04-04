@@ -28,6 +28,21 @@ class  Authenticator_TestCase(unittest.TestCase):
         current_epo = Epochstamp()
         ipAddress = 'PythonUnitTestsIpAddress' + current_epo.toIso8601Ext(TIME_UNITS.ATTOSEC)
         
+        #
+        # Important Historical information...
+        # (When calling this API from the GUI code it was necessary to encode their parameters)
+        #
+        username = username.encode("utf8")
+        password = password.encode("utf8")
+        provider = provider.encode("ascii")
+        brokerHostname = brokerHostname.encode("ascii")
+        brokerPortNumber = int(brokerPortNumber)
+        brokerTopic = brokerTopic.encode("utf8")
+        #
+        # END
+        #
+        
+        
         # Helper variables
         emptyString = ''
         functionName = 'test_authenticator_correct_login'
