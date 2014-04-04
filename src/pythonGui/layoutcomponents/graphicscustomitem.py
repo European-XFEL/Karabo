@@ -11,8 +11,6 @@
 __all__ = ["GraphicsCustomItem", "PrivateSchemaReader"]
 
 
-from karabo.karathon import *
-
 from graphicsinputchannelitem import GraphicsInputChannelItem
 from graphicsoutputchannelitem import GraphicsOutputChannelItem
 
@@ -20,7 +18,8 @@ from layoutcomponents.nodebase import NodeBase
 
 from manager import Manager
 
-from registry import Loadable, ns_karabo, ns_svg
+from registry import Loadable
+from const import ns_karabo, ns_svg
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
