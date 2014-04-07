@@ -12,8 +12,6 @@
 __all__ = ["NavigationPanel"]
 
 
-import const
-
 from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
