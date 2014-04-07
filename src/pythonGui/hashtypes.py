@@ -97,9 +97,11 @@ class NumpyVector(Vector):
 
     def cast(self, other):
         if isinstance(other, numpy.ndarray) and other.dtype == self.numpy:
-            return other
+            ret = other
         else:
-            return numpy.array(other, dtype=self.numpy)
+            ret = numpy.array(other, dtype=self.numpy)
+        assert ret.ndim == 1, "can only treat one-dimensional vectors"
+        return ret
 
 
 class Descriptor(object):
