@@ -850,9 +850,6 @@ class GraphicsView(QSvgWidget):
 
         self.designMode = designMode
 
-        # Describes most recent item to be cut or copied inside the application
-        self.__copiedItem = QByteArray()
-
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
@@ -1102,13 +1099,6 @@ class GraphicsView(QSvgWidget):
                 stream.writeString("\n")
                 stream.writeString("\n")
                 stream.writeString("\n")
-    # Positions a newly added or pasted item in the scene
-    # The sequence number ensures that new items are added in different positions
-    # rather than on top of each other
-    def _setupItem(self, item):
-        item.setPos(QPointF(80 + (100 * (self.__seqNumber % 5)), 80 + (50 * ((self.__seqNumber / 5) % 7))))
-        self.__seqNumber += 1
-        self._addItem(item)
 
 
     # Creates and returns container item
