@@ -19,7 +19,6 @@ from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
-from schemareader import SchemaReader 
 
 from PyQt4.QtCore import pyqtSignal, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
@@ -49,8 +48,6 @@ class ConfigurationPanel(QWidget):
         
         # map = { path, projectPath }
         self.__itemProjectPathMap = dict()
-        
-        self.__schemaReader = SchemaReader()
         
         title = "Configuration Editor"
         self.setWindowTitle(title)
