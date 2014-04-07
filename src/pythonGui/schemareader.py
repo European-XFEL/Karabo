@@ -411,7 +411,7 @@ class ChoiceOfNodes(Schema):
             item.editableComponent.signalApplyChanged.connect(
                 self.treeWidget.onApplyChanged)
 
-        defaultValue = item.defaultValue
+        defaultValue = getattr(item, 'defaultValue', None)
         for k, v in self.dict.iteritems():
             childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
 
@@ -436,7 +436,7 @@ class ChoiceOfNodes(Schema):
     def setDefault(self, box):
         if hasattr(self, 'defaultValue'):
             box.current = self.defaultValue
-            Schema.setDefault(self, box)
+        Schema.setDefault(self, box)
 
 
     def toHash(self, box):

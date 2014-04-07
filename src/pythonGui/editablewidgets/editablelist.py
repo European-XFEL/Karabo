@@ -26,44 +26,46 @@ from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QLabel, QFrame
+from PyQt4.QtGui import QLabel, QFrame, QDialog
 
 import numbers
 import numpy
 
 
 class Label(QLabel):
+    valueChanged = pyqtSignal(list)
+
     def __init__(self, parent):
         super(Label, self).__init__(parent)
         self.setAcceptDrops(True)
+        self.value = [ ]
 
 
-    def setValue(self, box):
-        self.box = box
-
+    def setValue(self, value):
         l = [ ]
-        for v in self.box.value[:10]:
+        for v in value[:10]:
             if (isinstance(v, (numbers.Real, numpy.floating)) and
                     not isinstance(v, numbers.Integral)):
                 l.append("{:.6}".format(v))
             else:
                 l.append("{}".format(v))
-        if len(self.box.value) > 10:
+        if len(value) > 10:
             l.append("...")
 
         with SignalBlocker(self):
             self.setText(", ".join(l))
+        self.value = value
 
 
     def mouseDoubleClickEvent(self, event) :
-
-        listEdit = ListEdit(self.box.descriptor.valueType, True, self.box.value)
+        listEdit = ListEdit(self.valueType, True, self.value)
         listEdit.setTexts("Add", "&Value", "Edit")
 
         if listEdit.exec_() == QDialog.Accepted:
             values = [listEdit.getListElementAt(i)
                       for i in xrange(listEdit.getListCount())]
-            self.box.set(values)
+            self.value = values
+            self.valueChanged.emit(values)
 
 
 class EditableList(EditableWidget):
@@ -77,17 +79,22 @@ class EditableList(EditableWidget):
         self.widget.setMinimumWidth(160)
         self.widget.setMaximumHeight(24)
         self.widget.setFrameStyle(QFrame.Box)
+        self.widget.valueChanged.connect(self.onEditingFinished)
         box.addWidget(self)
-
 
     @property
     def value(self):
-        return self.widget.box.value
+        return self.widget.value
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        self.widget.setValue(box)
+        self.widget.setValue(value)
+
+
+    def typeChanged(self, box):
+        self.widget.valueType = box.descriptor
 
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
+        self.boxes[0].set(value)
+        self.signalEditingFinished.emit(self.boxes[0], value)
