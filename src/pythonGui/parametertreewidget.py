@@ -11,7 +11,7 @@
 
 __all__ = ["ParameterTreeWidget"]
 
-from editableapplylatercomponent import EditableApplyLaterComponent
+from components import EditableApplyLaterComponent
 from enums import NavigationItemTypes
 import globals
 from hash import Hash

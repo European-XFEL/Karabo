@@ -12,7 +12,7 @@ __all__ = ["CommandTreeWidgetItem"]
 
 
 from basetreewidgetitem import BaseTreeWidgetItem
-from displaycomponent import DisplayComponent
+from components import DisplayComponent
 import manager
 
 #from PyQt4.QtCore import *

@@ -13,7 +13,7 @@ __all__ = ["ImageTreeWidgetItem"]
 
 
 from basetreewidgetitem import BaseTreeWidgetItem
-from displaycomponent import DisplayComponent
+from components import DisplayComponent
 
 from PyQt4.QtGui import QIcon
 
