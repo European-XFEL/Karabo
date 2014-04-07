@@ -200,6 +200,11 @@ void exportPyIoFileTools() {
             , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
+    
+    bp::def("loadFromFile"
+            , (void (*) (Schema &, string const &, Hash const &))(&karabo::io::loadFromFile)
+            , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
+            );
 }
 
 template <class T>
