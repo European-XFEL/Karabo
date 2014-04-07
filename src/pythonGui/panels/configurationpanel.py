@@ -111,7 +111,6 @@ class ConfigurationPanel(QWidget):
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
-        Manager().signalDeviceStateChanged.connect(self.onDeviceStateChanged)
         Manager().signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
@@ -562,12 +561,6 @@ class ConfigurationPanel(QWidget):
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
         self.twNavigation.selectItem(parentPath)
-
-
-    def onDeviceStateChanged(self, conf, state):
-        if hasattr(conf, 'index'):
-            twParameterEditor = self.__swParameterEditor.widget(conf.index)
-            twParameterEditor.stateUpdated(state)
 
 
     def onConflictStateChanged(self, deviceId, hasConflict):

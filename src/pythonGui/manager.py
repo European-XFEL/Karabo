@@ -81,7 +81,6 @@ class _Manager(QObject):
     signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
 
     signalReconfigure = pyqtSignal(list)
-    signalDeviceStateChanged = pyqtSignal(object, str) # fullDeviceKey, state
     signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
@@ -192,7 +191,6 @@ class _Manager(QObject):
                 self.signalErrorState.emit(configuration, False)
             
             self.signalChangingState.emit(configuration, False)
-            self.signalDeviceStateChanged.emit(configuration, value)
 
 
 ### Slots ###

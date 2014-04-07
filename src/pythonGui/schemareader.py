@@ -86,6 +86,14 @@ class Box(QObject):
         return not isinstance(self._value, Dummy)
 
 
+    def isAllowed(self):
+        """return whether the value is allowed in the current state """
+
+        return (not hasattr(self.descriptor, 'allowedStates') or
+                self.configuration.configuration.state.value in
+                    self.descriptor.allowedStates)
+
+
     def addWidget(self, widget):
         if widget.typeChanged is not None:
             self.signalNewDescriptor.connect(widget.typeChanged)
