@@ -11,8 +11,6 @@
 
 __all__ = ["PropertyTreeWidgetItem"]
 
-import const
-
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
 from choicecomponent import ChoiceComponent
@@ -68,13 +66,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setText(0, text)
         self.treeWidget().resizeColumnToContents(0)
     displayText = property(fset=_setText)
-
-
-    def _defaultValue(self):
-        return self.data(0, const.DEFAULT_VALUE)
-    def _setDefaultValue(self, default):
-        self.setData(0, const.DEFAULT_VALUE, default)
-    defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
 
 
 ### public functions ###
