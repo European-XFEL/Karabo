@@ -15,10 +15,14 @@ class FileInputOutput_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(FileInputOutput_Test);
     CPPUNIT_TEST(writeTextFile);
     CPPUNIT_TEST(readTextFile);
+    CPPUNIT_TEST(writeTextSchema);
+    CPPUNIT_TEST(readTextSchema);
     CPPUNIT_TEST(writeSequenceToTextFile);
     CPPUNIT_TEST(readSequenceFromTextFile);
     CPPUNIT_TEST(writeBinaryFile);
     CPPUNIT_TEST(readBinaryFile);
+    CPPUNIT_TEST(writeBinarySchema);
+    CPPUNIT_TEST(readBinarySchema);
     CPPUNIT_TEST(writeSequenceToBinaryFile);
     CPPUNIT_TEST(readSequenceFromBinaryFile);
     CPPUNIT_TEST(writeHdf5File);
@@ -36,6 +40,7 @@ public:
 
 private:
 
+    karabo::util::Schema m_schema;
     karabo::util::Hash m_rootedHash;
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
@@ -43,10 +48,14 @@ private:
 
     void writeTextFile();
     void readTextFile();
+    void writeTextSchema();
+    void readTextSchema();
     void writeSequenceToTextFile();
     void readSequenceFromTextFile();
     void writeBinaryFile();
     void readBinaryFile();
+    void writeBinarySchema();
+    void readBinarySchema();
     void writeSequenceToBinaryFile();
     void readSequenceFromBinaryFile();
     void writeHdf5File();
