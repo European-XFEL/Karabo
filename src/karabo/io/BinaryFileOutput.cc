@@ -16,5 +16,7 @@ namespace karabo {
     namespace io {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, BinaryFileOutput<Hash>)
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<Schema>, BinaryFileOutput<Schema>)
+        
     }
 }
