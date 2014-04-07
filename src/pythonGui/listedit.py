@@ -12,10 +12,11 @@
 __all__ = ["ListEdit"]
 
 
-import const
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+import numpy
+from PyQt4.QtCore import QCoreApplication
+from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
+    QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout, QFontMetrics,
+    QLineEdit)
 
 class ListEdit(QDialog):
 
@@ -40,7 +41,8 @@ class ListEdit(QDialog):
 
         hbox = QHBoxLayout(self)
         self.__listWidget = QListWidget(self)
-        self.connect(self.__listWidget, SIGNAL('currentItemChanged(QListWidgetItem*, QListWidgetItem*)'), self.onUpdateButtons)
+        self.__listWidget.currentItemChanged[
+            QListWidgetItem, QListWidgetItem].connect(self.onUpdateButtons)
         hbox.addWidget(self.__listWidget)
 
         vbox = QVBoxLayout()
@@ -66,7 +68,7 @@ class ListEdit(QDialog):
         vbox.addStretch(1)
 
         button = QPushButton("OK", self)
-        button.clicked.connect(self.onOkClicked)
+        button.clicked.connect(self.accept)
         vbox.addWidget(button)
 
         button = QPushButton("Cancel", self)
@@ -89,27 +91,30 @@ class ListEdit(QDialog):
 
     def setList(self, list):
         self.__listWidget.clear()
-        
+
         fm = QFontMetrics(self.__listWidget.font())
         width = 0
         for index in list:
             # insert item
             self._addItem(index)
-            
-            w = fm.width(index)
-            if w > width :
+
+            w = fm.width(unicode(index))
+            if w > width:
                 width = w
 
-        if self.__listWidget.verticalScrollBar() is not None :
+        if self.__listWidget.verticalScrollBar() is not None:
             width += self.__listWidget.verticalScrollBar().width()
-        
-        self.__listWidget.setMinimumWidth(min(width, QCoreApplication.instance().desktop().screenGeometry().width() * 4 / 5)) #?
+
+        self.__listWidget.setMinimumWidth(min(
+            width,
+            QCoreApplication.instance().desktop().screenGeometry().width() *
+            4 / 5)) #?
         self.onUpdateButtons()
 
 
     def _addItem(self, value):
-        item = QListWidgetItem(str(value))
-        item.setData(const.CURRENT_EDITABLE_VALUE, value)
+        item = QListWidgetItem(unicode(value))
+        item.editableValue = value
         self.__listWidget.addItem(item)
 
 
@@ -118,7 +123,7 @@ class ListEdit(QDialog):
 
 
     def getListElementAt(self, index):
-        return self.__listWidget.item(index).data(const.CURRENT_EDITABLE_VALUE)
+        return self.__listWidget.item(index).editableValue
 
 
     def setAllowedChoices(self, allowedChoices, parentItem=None, choiceItemList=[]):
@@ -128,43 +133,35 @@ class ListEdit(QDialog):
 
 
     def retrieveAnyString(self, caption, label):
-
         currentItem = self.__listWidget.currentItem()
         if currentItem is None:
             currentValue = None
         else:
-            currentValue = currentItem.data(const.CURRENT_EDITABLE_VALUE)
+            currentValue = currentItem.editableValue
 
-        if self.__valueType == "float":
-            if currentValue is None:
-                currentValue, ok = QInputDialog.getDouble(self, caption, label)
-            else:
-                currentValue, ok = QInputDialog.getDouble(self, caption, label, currentValue)
-        elif self.__valueType == "int":
-            if currentValue is None:
-                currentValue, ok = QInputDialog.getInt(self, caption, label)
-            else:
-                currentValue, ok = QInputDialog.getInt(self, caption, label, currentValue)
+
+        if issubclass(self.__valueType.numpy, numpy.inexact):
+            dialog = QInputDialog.getDouble
+        elif issubclass(self.__valueType.numpy, numpy.integer):
+            dialog = QInputDialog.getInt
         else:
-            if currentValue is None:
-                currentValue, ok = QInputDialog.getText(self, caption, label, QLineEdit.Normal)
-            else:
-                currentValue, ok = QInputDialog.getText(self, caption, label, QLineEdit.Normal, currentValue)
-            currentValue = str(currentValue)
-        
-        if ok is True :
+            dialog = QInputDialog.getText
+        if currentValue is None:
+            currentValue, ok = dialog(self, caption, label)
+        else:
+            currentValue, ok = dialog(self, caption, label, currentValue)
+
+        if ok:
             return currentValue
         else:
-            return str()
+            return ""
 
 
     def retrieveChoice(self, caption, label):
-        # TODO
-        
         ok = False
-        currentText = str()
-        if self.__listWidget.currentItem() is not None :
-            currentText = str(self.__listWidget.currentItem().text())
+        currentText = ""
+        if self.__listWidget.currentItem() is not None:
+            currentText = unicode(self.__listWidget.currentItem().text())
 
         index = 0
         for i in range(len(self.allowedChoices)) :
@@ -172,57 +169,49 @@ class ListEdit(QDialog):
                 index = i
                 break
 
-        text, ok = QInputDialog.getItem(self, caption, label, self.allowedChoices, index, False)
-        if ok==True :
+        text, ok = QInputDialog.getItem(self, caption, label,
+                                        self.allowedChoices, index, False)
+        if ok:
             return text
-        else :
-            return ""
 
 
-### slots ###
     def onAddClicked(self):
-
-        if len(self.allowedChoices) < 1 :
+        if len(self.allowedChoices) < 1:
             value = self.retrieveAnyString(self.addCaption, self.addLabel);
-        else :
+        else:
             value = self.retrieveChoice(self.addCaption, self.addLabel);
 
-        valueAsString = str(value)
-        if len(valueAsString) < 1:
-            return
-        if self.duplicatesOk==False and self.__listWidget.findItems(valueAsString, Qt.MatchCaseSensitive)!=[] :
+        if (value is None or not self.duplicatesOk and
+            self.__listWidget.findItems(unicode(value), Qt.MatchCaseSensitive)):
             return
 
         self._addItem(value)
-        self.__listWidget.setCurrentRow(self.__listWidget.count()-1)
+        self.__listWidget.setCurrentRow(self.__listWidget.count() - 1)
         self.onUpdateButtons()
 
 
     def onEditClicked(self):
-        
-        if len(self.allowedChoices) < 1 :
+        if len(self.allowedChoices) < 1:
             value = self.retrieveAnyString(self.editCaption, self.editLabel)
         else:
             value = self.retrieveChoice(self.editCaption, self.editLabel)
-        
-        valueAsString = str(value)
-        if len(valueAsString) < 1:
-            return
-        if self.duplicatesOk==False and self.__listWidget.findItems(valueAsString, Qt.MatchCaseSensitive)!=[] :
+
+        if (value is None or not self.duplicatesOk and
+            self.__listWidget.findItems(unicode(value), Qt.MatchCaseSensitive)):
             return
         currentItem = self.__listWidget.currentItem()
-        currentItem.setData(const.CURRENT_EDITABLE_VALUE, value)
-        currentItem.setText(valueAsString)
+        currentItem.editableValue = value
+        currentItem.setText(unicode(value))
         self.onUpdateButtons()
 
 
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
-        if (len(original) < 1) or (self.ask and QMessageBox.question(self, "Remove",
-                                                                    "Remove '{}'?".format(original),
-                                                                    QMessageBox.Yes | QMessageBox.Default,
-                                                                    QMessageBox.No | QMessageBox.Escape) ==
-                                                                    QMessageBox.No):
+        if len(original) < 1 or self.ask and QMessageBox.question(
+                self, "Remove", "Remove '{}'?".format(original),
+                QMessageBox.Yes | QMessageBox.Default,
+                QMessageBox.No | QMessageBox.Escape
+            ) == QMessageBox.No:
             return
         self.__listWidget.takeItem(self.__listWidget.currentRow())
         self.onUpdateButtons()
@@ -230,46 +219,36 @@ class ListEdit(QDialog):
 
     def onMoveUpClicked(self):
         row = self.__listWidget.currentRow()
-        if row > 0 :
-            tmpText = self.__listWidget.item(row-1).text()
-            tmpData = self.__listWidget.item(row-1).data(const.CURRENT_EDITABLE_VALUE)
-            
-            self.__listWidget.item(row-1).setText(self.__listWidget.item(row).text())
-            self.__listWidget.item(row-1).setData(const.CURRENT_EDITABLE_VALUE, self.__listWidget.item(row).data(const.CURRENT_EDITABLE_VALUE))
-            
-            self.__listWidget.item(row).setText(tmpText)
-            self.__listWidget.item(row).setData(const.CURRENT_EDITABLE_VALUE, tmpData)
-            
-            self.__listWidget.setCurrentRow(row-1)
+        l = self.__listWidget
+        if row > 0:
+            tmpText = l.item(row - 1).text()
+            l.item(row - 1).setText(l.item(row).text())
+            l.item(row).setText(tmpText)
+            l.item(row).editableValue, l.item(row - 1).editableValue = \
+                l.item(row - 1).editableValue, l.item(row).editableValue
+            l.setCurrentRow(row - 1)
             self.onUpdateButtons()
 
 
 
     def onMoveDownClicked(self):
         row = self.__listWidget.currentRow()
-        if row < self.__listWidget.count()-1 :
-            tmpText = self.__listWidget.item(row+1).text()
-            tmpData = self.__listWidget.item(row+1).data(const.CURRENT_EDITABLE_VALUE)
-            
-            self.__listWidget.item(row+1).setText(self.__listWidget.item(row).text())
-            self.__listWidget.item(row+1).setData(const.CURRENT_EDITABLE_VALUE, self.__listWidget.item(row).data(const.CURRENT_EDITABLE_VALUE))
-            
-            self.__listWidget.item(row).setText(tmpText)
-            self.__listWidget.item(row).setData(const.CURRENT_EDITABLE_VALUE, tmpData)
-            
-            self.__listWidget.setCurrentRow(row+1)
+        l = self.__listWidget
+        if row < l.count() - 1:
+            tmpText = l.item(row + 1).text()
+            l.item(row + 1).setText(l.item(row).text())
+            l.item(row).setText(tmpText)
+            l.item(row).editableValue, l.item(row + 1).editableValue = \
+                l.item(row + 1).editableValue, l.item(row).editableValue
+            l.setCurrentRow(row + 1)
             self.onUpdateButtons()
 
 
     def onUpdateButtons(self):
-        hasItems = self.__listWidget.count()>0
+        hasItems = self.__listWidget.count() > 0
         self.editButton.setEnabled(hasItems)
         self.removeButton.setEnabled(hasItems)
         i = self.__listWidget.currentRow()
-        self.upButton.setEnabled(hasItems and i>0)
-        self.downButton.setEnabled(hasItems and i<self.__listWidget.count()-1)
-
-
-    def onOkClicked(self):
-        self.accept()
-
+        self.upButton.setEnabled(hasItems and i > 0)
+        self.downButton.setEnabled(hasItems and
+                                   i < self.__listWidget.count() - 1)

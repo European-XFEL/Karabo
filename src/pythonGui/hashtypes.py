@@ -99,7 +99,7 @@ class NumpyVector(Vector):
         if isinstance(other, numpy.ndarray) and other.dtype == self.numpy:
             return other
         else:
-            return array(other, dtype=self.numpy)
+            return numpy.array(other, dtype=self.numpy)
 
 
 class Descriptor(object):
