@@ -66,8 +66,8 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
-        if self.hasValue() and isinstance(d, Schema):
-            self._value = d.getClass()(self)
+        if self.hasValue():
+            self._value = d.cast(self._value)
         self.signalNewDescriptor.emit(self)
 
 
@@ -311,8 +311,7 @@ class Schema(hashtypes.Descriptor):
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
-        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration,
-                   isClass)
+        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration, isClass)
         treeWidget.resizeColumnToContents(0)
 
 
