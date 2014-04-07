@@ -97,10 +97,6 @@ class ParameterTreeWidget(QTreeWidget):
         return self._r_applyButtonsEnabled(self.invisibleRootItem())
 
 
-    def stateUpdated(self, state):
-        self._r_updateParameters(self.invisibleRootItem(), state)
-
-
     def applyItem(self, item):
         """Applies the changed value in an item
 
@@ -191,13 +187,6 @@ class ParameterTreeWidget(QTreeWidget):
 
     def addContextSeparator(self):
         self.mContext.addSeparator()
-
-
-    def _r_updateParameters(self, parentItem, state):
-        for i in range(parentItem.childCount()):
-            childItem = parentItem.child(i)
-            childItem.updateState(state)
-            self._r_updateParameters(childItem, state)
 
 
     def globalAccessLevelChanged(self):

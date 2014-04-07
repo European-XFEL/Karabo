@@ -32,12 +32,6 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.treeWidget().resizeColumnToContents(1)
              
 
-### getter & setter functions ###
-    def _setEnabled(self, enabled):
-        pass
-    enabled = property(fset=_setEnabled)
-
-
     def _setText(self, text):
         self.setText(0, text)
     displayText = property(fset=_setText)

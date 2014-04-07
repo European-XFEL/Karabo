@@ -77,15 +77,10 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
 
 
-    def _setEnabled(self, enable):
-        if self.editableComponent is not None:
-            self.editableComponent.setEnabled(enable)
-    enabled = property(fset=_setEnabled)
-
-
 ### public functions ###
     def setReadOnly(self, readOnly):
-        self._setEnabled(not readOnly)
+        if self.editableComponent is not None:
+            self.editableComponent.setEnabled(not readOnly)
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 

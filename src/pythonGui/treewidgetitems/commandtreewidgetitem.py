@@ -35,21 +35,17 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__command = command
         self.classAlias = "Command"
         
-        self.__isCommandEnabled = False
         self.__pbCommand = QPushButton()
         self.__pbCommand.setMinimumHeight(32)
-        self.__pbCommand.setEnabled(self.__isCommandEnabled)
+        self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
+        self.internalKey.configuration.configuration.state. \
+            signalUpdateComponent.connect(self.onStateChanged)
 
 
-### getter & setter functions ###
-    def _getEnabled(self):
-        return self.__isCommandEnabled
-    def _setEnabled(self, enabled):
-        self.__pbCommand.setEnabled(enabled)
-        self.__isCommandEnabled = enabled
-    enabled = property(fget=_getEnabled, fset=_setEnabled)
+    def onStateChanged(self):
+        self.__pbCommand.setEnabled(self.internalKey.isAllowed())
 
 
     def _getText(self):
@@ -69,7 +65,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         if readOnly is True:
             self.__pbCommand.setEnabled(False)
         else:
-            self.__pbCommand.setEnabled(self.__isCommandEnabled)
+            self.onStateChanged()
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 
