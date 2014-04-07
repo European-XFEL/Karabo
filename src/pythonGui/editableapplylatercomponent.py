@@ -59,10 +59,9 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__hasConflict = False
 
         text = "Apply"
-        self.__acApply = QAction(icons.apply, text, self)
+        self.__acApply = QAction(icons.applyGrey, text, self)
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
-        self.__acApply.setEnabled(False)
         self.__acApply.triggered.connect(self.onApplyClicked)
         tb = QToolButton()
         tb.setDefaultAction(self.__acApply)
@@ -157,12 +156,12 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def _applyEnabled(self):
-        return self.__acApply.isEnabled()
+        return self.__acReset.isEnabled()
     def _setApplyEnabled(self, enable):
-        if self.__acApply.isEnabled() is enable:
+        if self.__acReset.isEnabled() is enable:
             return
 
-        self.__acApply.setEnabled(enable)
+        self.__acApply.setIcon(icons.apply if enable else icons.applyGrey)
         self.__acReset.setEnabled(enable)
 
         if enable is False:
@@ -189,7 +188,8 @@ class EditableApplyLaterComponent(BaseComponent):
         else:
             self.changeColor = QColor(255,255,255,128) # white
             text = "Apply local changes"
-            self.__acApply.setIcon(icons.apply)
+            self.__acApply.setIcon(icons.apply if self.applyEnabled
+                                   else icons.applyGrey)
             self.__acApply.setMenu(None)
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
