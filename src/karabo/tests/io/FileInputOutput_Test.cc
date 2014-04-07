@@ -211,6 +211,7 @@ void FileInputOutput_Test::setUp() {
 
     Schema testSchema("TestSchema", Schema::AssemblyRules(READ | WRITE | INIT));
     MySchema::expectedParameters(testSchema);
+    m_schema = testSchema;
 
     vector<Hash>& vec = m_withSchemaHash.bindReference<vector<Hash> >("a.v");
     vec.resize(4);
@@ -318,6 +319,31 @@ void FileInputOutput_Test::readTextFile() {
     CPPUNIT_ASSERT(karabo::util::similar(h4, m_withSchemaHash));
     CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
 
+}
+
+
+void FileInputOutput_Test::writeTextSchema() {
+    // Using the Factory interface
+    Output<Schema>::Pointer out = Output<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml"), "format.Xml.indentation", 3));
+    out->write(m_schema);
+
+    // Using the FileTools interface
+    saveToFile(m_schema, resourcePath("testschema2.xml"));
+}
+
+
+void FileInputOutput_Test::readTextSchema() {
+
+    // Using the Factory interface
+    Input<Schema>::Pointer in = Input<Schema>::create("TextFile", Hash("filename", resourcePath("testschema.xml")));
+    Schema schema1;
+    in->read(schema1);
+    CPPUNIT_ASSERT(karabo::util::similar(schema1.getParameterHash1(), m_schema.getParameterHash1()));
+
+    // Using the FileTools interface
+    Schema schema2;
+    loadFromFile(schema2, resourcePath("testschema2.xml"));
+    CPPUNIT_ASSERT(karabo::util::similar(schema2.getParameterHash1(), m_schema.getParameterHash1()));
 }
 
 
@@ -437,6 +463,31 @@ void FileInputOutput_Test::readBinaryFile() {
     //    CPPUNIT_ASSERT(karabo::util::similar(h4, h4a));
 
 
+}
+
+
+void FileInputOutput_Test::writeBinarySchema() {
+    // Using the Factory interface
+    Output<Schema>::Pointer out = Output<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
+    out->write(m_schema);
+
+    // Using the FileTools interface
+    saveToFile(m_schema, resourcePath("testschema2.bin"));
+}
+
+
+void FileInputOutput_Test::readBinarySchema() {
+
+    // Using the Factory interface
+    Input<Schema>::Pointer in = Input<Schema>::create("BinaryFile", Hash("filename", resourcePath("testschema.bin")));
+    Schema schema1;
+    in->read(schema1);
+    CPPUNIT_ASSERT(karabo::util::similar(schema1.getParameterHash1(), m_schema.getParameterHash1()));
+
+    // Using the FileTools interface
+    Schema schema2;
+    loadFromFile(schema2, resourcePath("testschema2.bin"));
+    CPPUNIT_ASSERT(karabo::util::similar(schema2.getParameterHash1(), m_schema.getParameterHash1()));
 }
 
 
