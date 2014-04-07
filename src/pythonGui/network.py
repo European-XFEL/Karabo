@@ -8,6 +8,8 @@ from __future__ import unicode_literals
 
 """This module contains a class which establishes the tcp network connection to
    the GuiServerDevice.
+   
+   The network class is a singleton.
 """
 
 __all__ = ["Network"]
@@ -29,13 +31,13 @@ import socket
 from struct import unpack
 
 
-class Network(QObject):
+class _Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
 
     def __init__(self):
-        super(Network, self).__init__()
+        super(_Network, self).__init__()
 
         self.authenticator = None
         self.username = None
@@ -429,3 +431,9 @@ class Network(QObject):
         self.brokerPort = instanceInfo.get("port")
         self.brokerTopic = instanceInfo.get("topic")
         self._login()
+
+
+network = _Network()
+
+def Network():
+    return network

@@ -46,7 +46,9 @@ class MainWindow(QMainWindow):
         self._setupToolBar()
         self._setupStatusBar()
 
-        self._setupNetwork()
+        Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
+        Network().signalUserChanged.connect(self.onUpdateAccessLevel)
+        
         self._setupPanels()
 
         # Setup default project
@@ -179,7 +181,7 @@ class MainWindow(QMainWindow):
         mainSplitter.setContentsMargins(5,5,5,5)
         
         self.navigationPanel = NavigationPanel(Manager().systemTopology)
-        self.network.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
+        Network().signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = DockTabWindow("Navigation", leftArea)
         self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
@@ -187,10 +189,10 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel(Manager().projectTopology)
         self.projectPanel.signalAddScene.connect(self.onAddScene)
-        self.projectPanel.signalConnectToServer.connect(self.network.connectToServer)
+        self.projectPanel.signalConnectToServer.connect(Network().connectToServer)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
-        self.network.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
+        Network().signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
@@ -219,24 +221,18 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _setupNetwork(self):
-        self.network = Network()
-        self.network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
-        self.network.signalUserChanged.connect(self.onUpdateAccessLevel)
-
-
     def _createCustomMiddlePanel(self):
         """
         This function creates a new CustomMiddlePanel, establishes its necessary
         connections and returns it.
         """
         customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
-        self.network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
+        Network().signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
 
     def _quit(self):
-        self.network.endServerConnection()
+        Network().endServerConnection()
         Manager().closeDatabaseConnection()
 
 
@@ -257,9 +253,9 @@ class MainWindow(QMainWindow):
 ### slots ###
     def onConnectToServer(self, checked):
         if checked:
-            self.network.connectToServer()
+            Network().connectToServer()
         else:
-            self.network.disconnectFromServer()
+            Network().disconnectFromServer()
 
 
     def onExit(self):
