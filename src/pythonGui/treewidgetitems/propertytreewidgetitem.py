@@ -13,8 +13,7 @@ __all__ = ["PropertyTreeWidgetItem"]
 
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
-from choicecomponent import ChoiceComponent
-from displaycomponent import DisplayComponent
+from components import ChoiceComponent, DisplayComponent
 from popupwidget import PopupWidget
 
 from PyQt4.QtCore import Qt, QSize

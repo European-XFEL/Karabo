@@ -10,12 +10,11 @@
 __all__ = ["GraphicsView"]
     
 
-from displaycomponent import DisplayComponent
+from components import (DisplayComponent, EditableApplyLaterComponent,
+                        EditableNoApplyComponent)
 
 from enums import ConfigChangeTypes
 
-from editableapplylatercomponent import EditableApplyLaterComponent
-from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 
 from dialogs.dialogs import PenDialog, TextDialog

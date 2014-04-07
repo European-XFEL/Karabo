@@ -6,9 +6,8 @@ import icons
 from timestamp import Timestamp
 from util import Weak
 
-from choicecomponent import ChoiceComponent
-from editableapplylatercomponent import EditableApplyLaterComponent
-from editablenoapplycomponent import EditableNoApplyComponent
+from components import (ChoiceComponent, EditableApplyLaterComponent,
+                        EditableNoApplyComponent)
 
 from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
