@@ -105,6 +105,8 @@ class EditableApplyLaterComponent(BaseComponent):
             manager.Manager().onConflictStateChanged)
 
         box.addComponent(self)
+        box.configuration.configuration.state.signalUpdateComponent.connect(
+            self.onStateChanged)
 
 
     def copy(self):
@@ -304,6 +306,12 @@ class EditableApplyLaterComponent(BaseComponent):
             self.changeApplyToBusy(False)
         else:
             self.changeApplyToBusy(True, False)
+
+
+    def onStateChanged(self):
+        allowed = self.boxes[0].isAllowed()
+        self.__acApply.setEnabled(allowed)
+        self.widget.setEnabled(allowed)
 
 
     # Triggered from self.__editableWidget when value was edited
