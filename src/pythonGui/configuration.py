@@ -74,6 +74,7 @@ class Configuration(object):
         self.parameterEditor = parameterEditor
         self.schema.fillWidget(parameterEditor, self._configuration,
                                self.type == "class")
+        parameterEditor.globalAccessLevelChanged()
 
 
     def addVisible(self):

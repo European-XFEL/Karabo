@@ -201,7 +201,7 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             item.setHidden(False)
 
-        if (item.isChoiceElement == False) and (item.isListElement == False):
+        if not item.isChoiceElement and not item.isListElement:
             for i in range(item.childCount()):
                 self._r_globalAccessLevelChanged(item.child(i))
 

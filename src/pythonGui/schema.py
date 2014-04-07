@@ -162,6 +162,7 @@ class Type(hashtypes.Type):
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)
+        item.requiredAccessLevel = self.requiredAccessLevel
         return item
 
 
@@ -293,6 +294,7 @@ class Schema(hashtypes.Descriptor):
             item = PropertyTreeWidgetItem(configuration, treeWidget, parent)
         item.displayText = self.displayedName
         _copyAttr(self, item, 'allowedStates')
+        item.requiredAccessLevel = self.requiredAccessLevel
         self._item(treeWidget, item, configuration, isClass)
         return item
 
@@ -309,7 +311,8 @@ class Schema(hashtypes.Descriptor):
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
-        self._item(treeWidget, None, configuration, isClass)
+        self._item(treeWidget, treeWidget.invisibleRootItem(), configuration,
+                   isClass)
         treeWidget.resizeColumnToContents(0)
 
 
@@ -388,6 +391,7 @@ class ChoiceOfNodes(Schema):
             f.setBold(True)
             item.setFont(0, f)
         _copyAttr(self, item, 'defaultValue')
+        item.requiredAccessLevel = self.requiredAccessLevel
 
         item.isChoiceElement = True
         item.classAlias = "Choice Element"
@@ -468,3 +472,4 @@ class ListOfNodes(hashtypes.Descriptor):
             item.displayText = self.displayedName
         except AttributeError:
             item.displayText = box.path[-1]
+        item.requiredAccessLevel = 100
