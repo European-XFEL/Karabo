@@ -469,11 +469,3 @@ class ListOfNodes(hashtypes.Descriptor):
             item.displayText = self.displayedName
         except AttributeError:
             item.displayText = box.path[-1]
-
-
-class SchemaReader(object):
-    def readSchema(self, schema):
-        if schema is None:
-            return
-        ret = Schema.parse(schema.name, schema.hash, {})
-        return ret

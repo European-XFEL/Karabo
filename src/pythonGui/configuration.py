@@ -13,7 +13,7 @@ devices.
 __all__ = ["Configuration"]
 
 
-from schemareader import SchemaReader, Box
+from schema import Schema, Box
 import manager
 
 
@@ -32,8 +32,7 @@ class Configuration(object):
 
 
     def setSchema(self, schema):
-        r = SchemaReader()
-        self.schema = r.readSchema(schema)
+        self.schema = Schema.parse(schema.name, schema.hash, {})
         self._configuration.descriptor = self.schema
 
 
