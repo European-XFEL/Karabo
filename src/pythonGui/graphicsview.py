@@ -31,7 +31,7 @@ from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFileDialog, QFont, QFrame, QIcon, QLabel,
+                         QFileDialog, QFont, QFrame, QLabel,
                          QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
                          QPainter, QPen, QStackedLayout,
                          QWidget)
