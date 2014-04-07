@@ -30,38 +30,6 @@ from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject
 from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 
-class DataNotifier(QObject):
-    signalUpdateComponent = pyqtSignal(str, object, object) # internalKey, value, timestamp
-    signalUpdateDisplayValue = pyqtSignal(str, object, object)
-    signalHistoricData = pyqtSignal(str, object)
-
-
-    def __init__(self, key, component):
-        super(DataNotifier, self).__init__()
-
-        self.signalUpdateComponent.connect(self.onValueChanged)
-        self.signalUpdateDisplayValue.connect(self.onValueChanged)
-        self.addComponent(key, component)
-
-
-    def onValueChanged(self, key, value, timestamp=None):
-        self.value = value
-        self.timestamp = timestamp
-
-
-    def addComponent(self, key, component):
-        self.signalUpdateComponent.connect(component.onValueChanged)
-        self.signalUpdateDisplayValue.connect(component.onDisplayValueChanged)
-
-        if hasattr(self, "value"):
-            self.signalUpdateComponent.emit(key, self.value, self.timestamp)
-            self.signalUpdateDisplayValue.emit(key, self.value, self.timestamp)
-
-
-    def updateDisplayValue(self, key, value, timestamp):
-        self.signalUpdateDisplayValue.emit(key, value, timestamp)
-
-
 class _Manager(QObject):
     # signals
     signalGlobalAccessLevelChanged = pyqtSignal()
