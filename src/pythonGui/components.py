@@ -50,45 +50,6 @@ class BaseComponent(Loadable, QObject):
     classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
 
 
-    def _getWidgetCategory(self):
-        raise NotImplementedError, "BaseComponent._getWidgetCategory"
-    widgetCategory = property(fget=_getWidgetCategory)
-
-
-    def _getWidgetFactory(self):
-        raise NotImplementedError, "BaseComponent._getWidgetFactory"
-    widgetFactory = property(fget=_getWidgetFactory)
-
-
-    # Returns the actual widget which is part of the composition
-    def _getWidget(self):
-        raise NotImplementedError, "BaseComponent._getWidget"
-    widget = property(fget=_getWidget)
-
-
-    def _getValue(self):
-        raise NotImplementedError, "BaseComponent._getValue"
-    def _setValue(self, value):
-        raise NotImplementedError, "BaseComponent._setValue"
-    value = property(fget=_getValue, fset=_setValue)
-
-
-    def addKeyValue(self, key, value):
-        raise NotImplementedError, "BaseComponent.addKeyValue"
-
-
-    def removeKey(self, key):
-        raise NotImplementedError, "BaseComponent.removeKey"
-
-
-    def destroy(self):
-        raise NotImplementedError, "BaseComponent.destroy"
-
-
-    def changeWidget(self, classAlias):
-        raise NotImplementedError, "BaseComponent.changeWidget"
-
-
     def attributes(self):
         """ returns a dict of attibutes for saving """
         d = { }
@@ -210,8 +171,6 @@ class DisplayComponent(BaseComponent):
 
 
 class EditableNoApplyComponent(BaseComponent):
-
-
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(EditableNoApplyComponent, self).__init__(classAlias)
 
@@ -609,8 +568,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
 class ChoiceComponent(BaseComponent):
-
-
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(ChoiceComponent, self).__init__(classAlias)
 
