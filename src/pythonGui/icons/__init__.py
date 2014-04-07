@@ -25,6 +25,9 @@ def init():
         if isinstance(v, Icon):
             d[k] = v.__get__(None, None)
 
+    global applyGrey
+    applyGrey = QIcon(apply.pixmap(32, QIcon.Disabled, QIcon.On))
+
 
 entireWindow = Icon("entire.svg")
 selectAll = Icon("select-all.svg")
@@ -53,5 +56,6 @@ float = Icon("type-float.png")
 boolean = Icon("type-boolean.png")
 undefined = Icon("type-undefined.png")
 apply = Icon("apply-32x32.png")
+applyGrey = apply
 applyConflict = Icon("apply-conflict-32x32.png")
 no = Icon("no.png")
