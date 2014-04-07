@@ -18,7 +18,7 @@ import numpy
 
 from mainwindow import MainWindow
 
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QApplication
 
 if __name__ == '__main__':
     numpy.set_printoptions(threshold=10)

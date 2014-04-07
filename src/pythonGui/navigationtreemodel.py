@@ -14,7 +14,8 @@ __all__ = ["NavigationTreeModel"]
 from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
-import manager
+#import manager
+from manager import Manager
 from treenode import TreeNode
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
@@ -304,9 +305,9 @@ class NavigationTreeModel(QAbstractItemModel):
             serverId = parentIndex.data()
             classId = index.data()
 
-            schema = manager.Manager().getClassSchema(serverId, classId)
+            schema = Manager().getClassSchema(serverId, classId)
             path = "{}.{}".format(serverId, classId)
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
+            Manager().onSchemaAvailable(dict(key=path, classId=classId,
                                         type=type, schema=schema))
         elif level == 3:
             type = NavigationItemTypes.DEVICE
@@ -316,9 +317,9 @@ class NavigationTreeModel(QAbstractItemModel):
             #serverIndex = classIndex.parent()
             #serverId = serverIndex.data()
 
-            schema = manager.Manager().getDeviceSchema(deviceId)
+            schema = Manager().getDeviceSchema(deviceId)
             path = deviceId
-            manager.Manager().onSchemaAvailable(dict(key=path, classId=classId,
+            Manager().onSchemaAvailable(dict(key=path, classId=classId,
                                            type=type, schema=schema))
 
         itemInfo = dict(key=path, classId=classId, type=type)
