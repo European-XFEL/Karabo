@@ -16,10 +16,11 @@ import globals
 from hash import Hash
 import manager
 from treenode import TreeNode
+import icons
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
-from PyQt4.QtGui import QItemSelectionModel, QIcon
+from PyQt4.QtGui import QItemSelectionModel
 
 
 class NavigationTreeModel(QAbstractItemModel):
@@ -472,21 +473,17 @@ class NavigationTreeModel(QAbstractItemModel):
             # Find out the hierarchy level of the selected node
             hierarchyLevel = self.getHierarchyLevel(index)
             if hierarchyLevel == 0:
-                return QIcon(":host")
+                return icons.host
             elif hierarchyLevel == 1:
-                #status = self.rawData(level, row, 3)
-                #if status == "offline":
-                #    return QIcon(":no")
-                #elif status == "starting" or status == "online":
-                return QIcon(":yes")
+                return icons.yes
             elif hierarchyLevel == 2:
-                return QIcon(":device-class")
+                return icons.deviceClass
             elif hierarchyLevel == 3:
                 node = index.internalPointer()
                 if node.status == "error":
-                    return QIcon(":device-instance-error")
+                    return icons.deviceInstance
                 else:
-                    return QIcon(":device-instance")
+                    return icons.deviceInstanceError
 
 
     def flags(self, index):
