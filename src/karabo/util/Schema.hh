@@ -782,6 +782,7 @@ namespace karabo {
 
         };
 
+        bool similar(const Schema& left, const Schema& right);
     } // namespace util
 } // namespace karabo
 
