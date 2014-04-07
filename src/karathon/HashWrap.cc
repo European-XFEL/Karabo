@@ -16,6 +16,7 @@
 #include <algorithm>            // std::copy
 
 #include <karabo/util/Hash.hh>
+#include <karabo/util/Schema.hh>
 #include <karabo/util/Types.hh>
 #include <karabo/util/FromLiteral.hh>
 #include <karabo/util/ToLiteral.hh>
@@ -745,6 +746,12 @@ namespace karathon {
             }
         }
 
+        if (bp::extract<karabo::util::Schema>(left).check() && bp::extract<karabo::util::Schema>(right).check()) {
+            const karabo::util::Schema& l = bp::extract<karabo::util::Schema>(left);
+            const karabo::util::Schema& r = bp::extract<karabo::util::Schema>(right);
+            return karabo::util::similar(l, r);
+        }
+        
         return false;
     }
 
