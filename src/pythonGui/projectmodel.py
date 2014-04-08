@@ -31,7 +31,7 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
-    signalItemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
 
     ITEM_PATH = Qt.UserRole
@@ -547,22 +547,10 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether deviceId is already online
         if self.systemTopology.has("device.{}".format(deviceId)):
-            # Get schema
-            schema = manager.Manager().getDeviceSchema(deviceId)
-            itemInfo = dict(key=deviceId, classId=classId, \
-                            type=NavigationItemTypes.DEVICE, schema=schema)
+            conf = manager.Manager().getDevice(deviceId)
         else:
-            # Get schema
-            schema = manager.Manager().getClassSchema(serverId, classId)
-            # Set path which is used to get class schema
-            naviPath = "{}.{}".format(serverId, classId)
-            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
-                            classId=classId, type=NavigationItemTypes.CLASS, \
-                            schema=schema)
-        
-        manager.Manager().onSchemaAvailable(itemInfo)
-        # Notify configurator of changes
-        self.signalItemChanged.emit(itemInfo)
+            conf = manager.Manager().getClass(serverId, classId)
+        self.signalItemChanged.emit(conf)
 
 
     def onServerConnectionChanged(self, isConnected):

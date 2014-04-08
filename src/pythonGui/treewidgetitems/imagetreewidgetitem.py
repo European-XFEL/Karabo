@@ -13,7 +13,7 @@ __all__ = ["ImageTreeWidgetItem"]
 
 
 from basetreewidgetitem import BaseTreeWidgetItem
-from displaycomponent import DisplayComponent
+from components import DisplayComponent
 
 from PyQt4.QtGui import QIcon
 
@@ -24,17 +24,13 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
         
         self.setIcon(0, QIcon(":image"))
+        self.classAlias = "Image View"
         
-        self.displayComponent = DisplayComponent("Image Element", key=path)
+        self.displayComponent = DisplayComponent(
+            "Image Element", path, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
              
-
-### getter & setter functions ###
-    def _setEnabled(self, enabled):
-        pass
-    enabled = property(fset=_setEnabled)
-
 
     def _setText(self, text):
         self.setText(0, text)

@@ -6,6 +6,7 @@
 
 
 import hashtypes
+import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
@@ -29,7 +30,9 @@ def _gettype(data):
         else:
             return hashtypes.Type.strs[data.dtype.str]
     except AttributeError:
-        if isinstance(data, bool):
+        if isinstance(data, hashtypes.Special):
+            return data.hashtype
+        elif isinstance(data, bool):
             return hashtypes.Bool
         elif isinstance(data, numbers.Integral):
             return hashtypes.Int64
@@ -44,7 +47,10 @@ def _gettype(data):
         elif isinstance(data, Hash):
             return hashtypes.Hash
         elif isinstance(data, list):
-            return _gettype(data[0]).vectortype
+            if data:
+                return _gettype(data[0]).vectortype
+            else:
+                return hashtypes.VectorHash
         elif data is None:
             return hashtypes.None_
         else:
@@ -223,8 +229,8 @@ class Hash(OrderedDict):
         return OrderedDict.__getitem__(*self._path(path, auto))
 
 
-    def __str__(self):
-        r = ', '.join('{}{}: {}'.format(k, self[k, ...], self[k])
+    def __repr__(self):
+        r = ', '.join('{}{!r}: {!r}'.format(k, self[k, ...], self[k])
                       for k in self)
         return '<' + r + '>'
 
@@ -245,7 +251,8 @@ class Hash(OrderedDict):
             if isinstance(value, Hash):
                 elem = HashElement(p)
                 elem.children = value
-            elif isinstance(value, list):
+            elif (isinstance(value, list) and
+                  not isinstance(value, hashtypes.Special)):
                 elem = ListElement(p)
                 elem.data = value
             else:
@@ -262,10 +269,7 @@ class Hash(OrderedDict):
             else:
                 return self._get(key).attrs[attr]
         else:
-            try:
-                return self._get(item).data
-            except AttributeError:
-                return None
+            return self._get(item).data
 
     def __delitem__(self, item):
         if isinstance(item, tuple):
@@ -370,8 +374,8 @@ def factory(tag, attrs):
 class XMLParser(object):
     def read(self, data):
         """Parse the XML in the buffer data and return the hash"""
-        target = ElementTree.TreeBuilder(element_factory=factory)
-        parser = ElementTree.XMLParser(target=target)
+        target = xmlparser.TreeBuilder(element_factory=factory)
+        parser = xmlparser.Parser(target=target)
         parser.feed(data)
         root = target.close()
         if hasattr(root, "artificial"):

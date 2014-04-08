@@ -21,10 +21,11 @@
 __all__ = ["DisplayCheckBox"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QCheckBox
 
 
 class DisplayCheckBox(DisplayWidget):
@@ -32,35 +33,20 @@ class DisplayCheckBox(DisplayWidget):
     alias = "Toggle Field"
 
     
-    def __init__(self, **params):
-        super(DisplayCheckBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayCheckBox, self).__init__(box)
         
-        self.__checkBox = QCheckBox()
-        self.__checkBox.setEnabled(False)
+        self.widget = QCheckBox(parent)
+        self.widget.setEnabled(False)
 
-
-    @property
-    def widget(self):
-        return self.__checkBox
+        box.addWidget(self)
 
 
     @property
     def value(self):
-        return self.__checkBox.checkState() == Qt.Checked
+        return self.widget.checkState() == Qt.Checked
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
-        
-        value = bool(value) # could be 0 or 1
-        
-        checkState = Qt.Checked
-        if value is True:
-            checkState = Qt.Checked
-        else :
-            checkState = Qt.Unchecked
-        
-        self.__checkBox.blockSignals(True)
-        self.__checkBox.setCheckState(checkState)
-        self.__checkBox.blockSignals(False)
+    def valueChanged(self, box, value, timestamp=None):
+        with SignalBlocker(self.widget):
+            self.widget.setCheckState(Qt.Checked if value else Qt.Unchecked)
