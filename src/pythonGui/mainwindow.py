@@ -18,8 +18,6 @@ from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
 from karabo.hash import Hash
-from manager import Manager
-from network import Network
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
@@ -29,12 +27,16 @@ from panels.notificationpanel import NotificationPanel
 from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, qApp, QIcon, QKeySequence,
                          QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
 
 
 class MainWindow(QMainWindow):
+    # signals
+    signalServerConnection = pyqtSignal(bool) # connect?
+    signalQuitApplication = pyqtSignal()
+    signalGlobalAccessLevelChanged = pyqtSignal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -45,8 +47,7 @@ class MainWindow(QMainWindow):
         self._setupMenuBar()
         self._setupToolBar()
         self._setupStatusBar()
-
-        self._setupNetwork()
+        
         self._setupPanels()
 
         # Setup default project
@@ -131,7 +132,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self.onConnectToServer)
+        self.acServerConnect.triggered.connect(self.onServerConnection)
 
         text = "Exit application"
         self.acExit = QAction(icons.exit, '&Exit', self)
@@ -178,19 +179,18 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        self.navigationPanel = NavigationPanel(Manager().systemTopology)
-        self.network.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
+        self.navigationPanel = NavigationPanel()
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = DockTabWindow("Navigation", leftArea)
         self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
+        self.signalGlobalAccessLevelChanged.connect(self.navigationPanel.onGlobalAccessLevelChanged)
         leftArea.setStretchFactor(0,2)
 
-        self.projectPanel = ProjectPanel(Manager().projectTopology)
+        self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
-        self.projectPanel.signalConnectToServer.connect(self.network.connectToServer)
+        self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
-        self.network.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
@@ -206,11 +206,11 @@ class MainWindow(QMainWindow):
         self.outputTab.addDockableTab(self.notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.configurationPanel = ConfigurationPanel(Manager().systemTopology, \
-                                                     Manager().projectTopology)
+        self.configurationPanel = ConfigurationPanel()
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.configurationTab = DockTabWindow("Configuration", rightArea)
         self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
+        self.signalGlobalAccessLevelChanged.connect(self.configurationPanel.onGlobalAccessLevelChanged)
         
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,2)
@@ -219,25 +219,17 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _setupNetwork(self):
-        self.network = Network()
-        self.network.signalServerConnectionChanged.connect(self.onServerConnectionChanged)
-        self.network.signalUserChanged.connect(self.onUpdateAccessLevel)
-
-
     def _createCustomMiddlePanel(self):
         """
         This function creates a new CustomMiddlePanel, establishes its necessary
         connections and returns it.
         """
         customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
-        self.network.signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
 
     def _quit(self):
-        self.network.endServerConnection()
-        Manager().closeDatabaseConnection()
+        self.signalQuitApplication.emit()
 
 
 ### virtual functions ###
@@ -255,11 +247,8 @@ class MainWindow(QMainWindow):
 
 
 ### slots ###
-    def onConnectToServer(self, checked):
-        if checked:
-            self.network.connectToServer()
-        else:
-            self.network.disconnectFromServer()
+    def onServerConnection(self, connect):
+        self.signalServerConnection.emit(connect)
 
 
     def onExit(self):
@@ -291,7 +280,7 @@ class MainWindow(QMainWindow):
         elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
-        Manager().signalGlobalAccessLevelChanged.emit()
+        self.signalGlobalAccessLevelChanged.emit()
 
 
     def onServerConnectionChanged(self, isConnected):

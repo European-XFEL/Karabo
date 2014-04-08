@@ -13,7 +13,7 @@ __all__ = ["CustomMiddlePanel"]
 
 
 from graphicsview import GraphicsView
-from manager import Manager
+from network import Network
 from toolbar import ToolBar
 
 from PyQt4.QtCore import Qt
@@ -46,7 +46,8 @@ class CustomMiddlePanel(QWidget):
         mainLayout.setContentsMargins(3,3,3,3)
         mainLayout.addWidget(self.graphicsview)
         
-        Manager().signalReset.connect(self.graphicsview.reset)
+        #Manager().signalReset.connect(self.graphicsview.reset)
+        Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         
         self.setupActions(isConnectedToServer)
 

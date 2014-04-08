@@ -14,6 +14,8 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from enums import NavigationItemTypes
+from manager import Manager
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
@@ -24,19 +26,20 @@ from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QInputDialog, QLineEdit,
 class ProjectTreeView(QTreeView):
 
     # To import a plugin a server connection needs to be established
-    signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
-    signalItemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(object)
+    signalSelectionChanged = pyqtSignal(list)
 
 
-    def __init__(self, model, parent=None):
+    def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__(parent)
 
         # Set same mode for each project view
-        self.setModel(model)
+        self.setModel(Manager().projectTopology)
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
-        self.setSelectionModel(model.selectionModel)
+        self.setSelectionModel(self.model().selectionModel)
+        self.model().selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -169,4 +172,35 @@ class ProjectTreeView(QTreeView):
         if menu is None: return
         
         menu.exec_(QCursor.pos())
+
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        # Send signal to projectPanel to update toolbar actions
+        self.signalSelectionChanged.emit(selectedIndexes)
+        
+        if len(selectedIndexes) < 1:
+            return
+
+        index = selectedIndexes[0]
+
+        path = index.data(ProjectModel.ITEM_PATH)
+        if path is None: return
+        
+        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
+        classId = index.data(ProjectModel.ITEM_CLASS_ID)
+        deviceId = index.data(Qt.DisplayRole)
+
+        if (serverId is None) or (classId is None) or (deviceId is None):
+            return
+
+        if not self.model().checkSystemTopology():
+            return
+
+        # Check whether deviceId is already online
+        if self.model().systemTopology.has("device.{}".format(deviceId)):
+            conf = Manager().getDevice(deviceId)
+        else:
+            conf = Manager().getClass(serverId, classId)
+        self.signalItemChanged.emit(conf)
 
