@@ -56,7 +56,6 @@ class EditableChoiceElement(EditableWidget):
 
 
     def addParameters(self, itemToBeAdded=None):
-        print itemToBeAdded, itemToBeAdded.text(0)
         if itemToBeAdded:
             self.__comboBox.blockSignals(True)
             self.__comboBox.addItem(itemToBeAdded.text(0))
