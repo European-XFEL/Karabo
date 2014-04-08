@@ -161,15 +161,6 @@ class _Manager(QObject):
             self.signalChangingState.emit(configuration, False)
 
 
-### Slots ###
-    def onDeviceClassValueChanged(self, key, value):
-        self._changeClassData(key, value)
-
-        dataNotifier = self._getDataNotifierEditableValue(key)
-        if dataNotifier is not None:
-            dataNotifier.signalUpdateComponent.emit(key, value, None)
-
-
     def onDeviceInstanceValuesChanged(self, boxes):
         self.signalReconfigure.emit(boxes)
 
