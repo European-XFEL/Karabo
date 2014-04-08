@@ -26,7 +26,6 @@ from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QInputDialog, QLineEdit,
 class ProjectTreeView(QTreeView):
 
     # To import a plugin a server connection needs to be established
-    signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
     signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
