@@ -40,7 +40,7 @@ class ConfigurationPanel(QWidget):
     ##########################################
 
 
-    def __init__(self, treeModel, projectModel):
+    def __init__(self):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
@@ -64,14 +64,14 @@ class ConfigurationPanel(QWidget):
         # Layout for navigation and project tree
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
-        self.twNavigation = NavigationTreeView(None, treeModel)
-        treeModel.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation = NavigationTreeView(self)
+        self.twNavigation.signalItemChanged.connect(self.onDeviceItemChanged)
         self.twNavigation.hide()
         navSplitter.addWidget(self.twNavigation)
 
         # Project tree
-        self.twProject = ProjectTreeView(projectModel, self)
-        projectModel.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject = ProjectTreeView(self)
+        self.twProject.signalItemChanged.connect(self.onDeviceItemChanged)
         self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
