@@ -30,7 +30,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
-    signalItemChanged = pyqtSignal(dict)
     signalSelectionChanged = pyqtSignal(list)
 
     ITEM_PATH = Qt.UserRole
@@ -68,7 +67,6 @@ class ProjectModel(QStandardItemModel):
         
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleLeafItems(self, childItem, projectPath, categoryKey, config):
@@ -521,49 +519,6 @@ class ProjectModel(QStandardItemModel):
         
 
 ### slots ###
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        # Send signal to projectPanel to update toolbar actions
-        self.signalSelectionChanged.emit(selectedIndexes)
-        
-        if len(selectedIndexes) < 1:
-            return
-
-        index = selectedIndexes[0]
-
-        path = index.data(ProjectModel.ITEM_PATH)
-        if path is None: return
-        
-        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        deviceId = index.data(Qt.DisplayRole)
-
-        if (serverId is None) or (classId is None) or (deviceId is None):
-            return
-
-        if not self.checkSystemTopology():
-            return
-
-        # Check whether deviceId is already online
-        if self.systemTopology.has("device.{}".format(deviceId)):
-            # Get schema
-            schema = manager.Manager().getDeviceSchema(deviceId)
-            itemInfo = dict(key=deviceId, classId=classId, \
-                            type=NavigationItemTypes.DEVICE, schema=schema)
-        else:
-            # Get schema
-            schema = manager.Manager().getClassSchema(serverId, classId)
-            # Set path which is used to get class schema
-            naviPath = "{}.{}".format(serverId, classId)
-            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
-                            classId=classId, type=NavigationItemTypes.CLASS, \
-                            schema=schema)
-        
-        manager.Manager().onSchemaAvailable(itemInfo)
-        # Notify configurator of changes
-        self.signalItemChanged.emit(itemInfo)
-
-
     def onServerConnectionChanged(self, isConnected):
         """
         If the server connection is changed, the model needs an update.
