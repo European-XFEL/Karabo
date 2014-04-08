@@ -65,7 +65,8 @@ class DisplayHistogram(DisplayWidget):
             
         # Default colors
         self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
-            
+        box.addWidget(self)
+
     @property
     def widget(self):
         return self.__histogramWidget
