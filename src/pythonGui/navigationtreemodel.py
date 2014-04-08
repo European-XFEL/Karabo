@@ -481,9 +481,9 @@ class NavigationTreeModel(QAbstractItemModel):
             elif hierarchyLevel == 3:
                 node = index.internalPointer()
                 if node.status == "error":
-                    return icons.deviceInstance
-                else:
                     return icons.deviceInstanceError
+                else:
+                    return icons.deviceInstance
 
 
     def flags(self, index):
