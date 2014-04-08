@@ -32,8 +32,6 @@ from PyQt4.QtGui import (QFileDialog, QMessageBox)
 
 class _Manager(QObject):
     # signals
-    signalGlobalAccessLevelChanged = pyqtSignal()
-
     signalReset = pyqtSignal()
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)

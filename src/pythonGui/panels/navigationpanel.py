@@ -43,8 +43,6 @@ class NavigationPanel(QWidget):
                 
         self.__twNavigation = NavigationTreeView(self)
         self.__twNavigation.model().signalInstanceNewReset.connect(self.onResetPanel)
-
-        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
         Manager().signalReset.connect(self.onResetPanel)
         
@@ -53,12 +51,6 @@ class NavigationPanel(QWidget):
         mainLayout.addWidget(self.__twNavigation)
 
         self.setupActions()
-
-
-### getter functions ###
-    def _navigationTreeView(self):
-        return self.__twNavigation
-    navigationTreeView = property(fget=_navigationTreeView)
 
 
 ### initializations ###

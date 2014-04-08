@@ -36,7 +36,7 @@ class MainWindow(QMainWindow):
     # signals
     signalServerConnection = pyqtSignal(bool) # connect?
     signalQuitApplication = pyqtSignal()
-    #signalGlobalAccessLevelChanged = pyqtSignal()
+    signalGlobalAccessLevelChanged = pyqtSignal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -183,6 +183,7 @@ class MainWindow(QMainWindow):
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = DockTabWindow("Navigation", leftArea)
         self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
+        self.signalGlobalAccessLevelChanged.connect(self.navigationPanel.onGlobalAccessLevelChanged)
         leftArea.setStretchFactor(0,2)
 
         self.projectPanel = ProjectPanel()
@@ -209,6 +210,7 @@ class MainWindow(QMainWindow):
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.configurationTab = DockTabWindow("Configuration", rightArea)
         self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
+        self.signalGlobalAccessLevelChanged.connect(self.configurationPanel.onGlobalAccessLevelChanged)
         
         mainSplitter.setStretchFactor(0,1)
         mainSplitter.setStretchFactor(1,2)
@@ -247,10 +249,6 @@ class MainWindow(QMainWindow):
 ### slots ###
     def onServerConnection(self, connect):
         self.signalServerConnection.emit(connect)
-        #if checked:
-        #    Network().connectToServer()
-        #else:
-        #    Network().disconnectFromServer()
 
 
     def onExit(self):
@@ -282,7 +280,7 @@ class MainWindow(QMainWindow):
         elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
-        #Manager().signalGlobalAccessLevelChanged.emit()
+        self.signalGlobalAccessLevelChanged.emit()
 
 
     def onServerConnectionChanged(self, isConnected):
