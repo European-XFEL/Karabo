@@ -286,7 +286,6 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        print classAlias
         self.__editableWidget = EditableWidget.get_class(classAlias)(
             box, self.__compositeWidget)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
