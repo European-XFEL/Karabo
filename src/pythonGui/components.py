@@ -138,11 +138,8 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget.setErrorState(isError)
 
 
-    def addKey(self, key):
-        if self.__displayWidget.addKey(key):
-            manager.Manager().registerDisplayComponent(key, self)
-            return True
-        return False
+    def addBox(self, box):
+        return self.__displayWidget.addBox(box)
 
 
     def removeKey(self, key):

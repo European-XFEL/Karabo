@@ -50,13 +50,13 @@ class Curve(QObject):
     ini = 1000
     spare = 100
 
-    def __init__(self, key, curve):
+    def __init__(self, box, curve):
         self.curve = curve
-        self.key = key
+        self.box = box
         self.data = numpy.empty((self.ini, 2), dtype=float)
         self.fill = 0
         self.past = 0
-        Manager().registerHistoricData(self.key, self.onHistoricData)
+        box.signalHistoricData.connect(self.onHistoricData)
 
 
     def addPoint(self, value, timestamp):
@@ -73,10 +73,9 @@ class Curve(QObject):
 
 
     def getFromPast(self, t0, t1):
-        deviceId, property = self.key.split('.')
         t0 = datetime.datetime.utcfromtimestamp(t0)
         t1 = datetime.datetime.utcfromtimestamp(t1)
-        Manager().signalGetFromPast.emit(deviceId, property, t0.isoformat(), t1.isoformat())
+        self.box.getFromPast(t0.isoformat(), t1.isoformat())
 
 
     def changeInterval(self, t0, t1):
@@ -90,7 +89,7 @@ class Curve(QObject):
         self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
 
 
-    def onHistoricData(self, key, data):
+    def onHistoricData(self, box, data):
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
         pos = self.data[:self.fill, 1].searchsorted(l[0][1])
@@ -123,8 +122,8 @@ class DisplayTrendline(DisplayWidget):
     alias = "Trendline"
 
  
-    def __init__(self, key=None, **kwargs):
-        super(DisplayTrendline, self).__init__(**kwargs)
+    def __init__(self, box, parent):
+        super(DisplayTrendline, self).__init__(None)
         
         if not useGuiQwt:
             self.dialog = None
@@ -144,9 +143,7 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
         self.plot.setAxisTitle(QwtPlot.yLeft, 'Value')
         
-        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
-        self.plot.add_item(curve)
-        self.curves = {key: Curve(key, curve)}
+        self.curves = { }
 
         self.manager = PlotManager(self)
         self.manager.add_plot(self.plot)
@@ -166,6 +163,15 @@ class DisplayTrendline(DisplayWidget):
         self.plot.setAxisLabelRotation(QwtPlot.xBottom, -45.0)
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
                                         Qt.AlignLeft | Qt.AlignBottom)
+        self.addBox(box)
+
+
+    def addBox(self, box):
+        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
+        self.curves[box] = Curve(box, curve)
+        self.plot.add_item(curve)
+        box.addWidget(self)
+        return True
 
 
     @property
@@ -176,32 +182,22 @@ class DisplayTrendline(DisplayWidget):
     value = None
 
 
-    def addKey(self, key):
-        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
-        self.plot.add_item(curve)
-        self.curves[key] = Curve(key, curve)
-        return True
-
-
     def removeKey(self, key):
         self.plot.remove_item(self.curves[key])
         del self.curves[key]
 
 
     @property
-    def keys(self):
+    def boxes(self):
         return self.curves.keys()
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        if value is None or not useGuiQwt:
-            return
-        
+    def valueChanged(self, box, value, timestamp=None):
         if timestamp is None:
             timestamp = Timestamp()
 
         t = timestamp.toTimestamp()
-        self.curves[key].addPoint(value, t)
+        self.curves[box].addPoint(value, t)
         t1 = self.plot.axisScaleDiv(QwtPlot.xBottom).upperBound()
         if self.lasttime < t1 < t:
             aw = self.plot.axisWidget(QwtPlot.xBottom)
