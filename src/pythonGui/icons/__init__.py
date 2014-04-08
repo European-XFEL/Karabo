@@ -25,6 +25,9 @@ def init():
         if isinstance(v, Icon):
             d[k] = v.__get__(None, None)
 
+    global applyGrey
+    applyGrey = QIcon(apply.pixmap(32, QIcon.Disabled, QIcon.On))
+
 
 entireWindow = Icon("entire.svg")
 selectAll = Icon("select-all.svg")
@@ -44,4 +47,20 @@ sendToBack = Icon("bring-to-back1-32x32.png")
 lock = Icon("lock-32x32.png")
 remote = Icon("remote.png")
 exit = Icon("exit-32x32.png")
-delete = Icon("edit-remove.svg")
+delete = Icon("edit-remove-32x32.png")
+enum = Icon("type-list.png")
+string = Icon("type-string.png")
+path = Icon("type-string.png")
+int = Icon("type-integer.png")
+float = Icon("type-float.png")
+boolean = Icon("type-boolean.png")
+undefined = Icon("type-undefined.png")
+apply = Icon("apply-32x32.png")
+applyGrey = apply
+applyConflict = Icon("apply-conflict-32x32.png")
+yes = Icon("yes.png")
+no = Icon("no.png")
+host = Icon("computer-32x32.png")
+deviceClass = Icon("device-class.png")
+deviceInstance = Icon("device-instance.png")
+deviceInstanceError = Icon("device-instance-error.png")

@@ -2,7 +2,7 @@
 inherit from a certain parent. """
 
 from PyQt4.QtCore import Qt, QObject
-from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtGui import QAction
 from karabo.registry import Registry
 
 

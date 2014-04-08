@@ -32,28 +32,21 @@ class DisplayCommand(DisplayWidget):
     category = "Slot"
     alias = "Command"
   
-    def __init__(self, command, commandEnabled, commandText, allowedStates, **params):
-        super(DisplayCommand, self).__init__(**params)
-
-        self.command = command
-
-        self.__allowedStates = allowedStates
-        self.__pbCommand = QPushButton(commandText)
-        self.__pbCommand.setEnabled(commandEnabled)
-        self.__pbCommand.clicked.connect(self.onCommandClicked)
-        
-        # TODO: better solution
-        Manager().signalDeviceStateChanged.connect(self.onDeviceStateChanged)
+    def __init__(self, box, parent):
+        super(DisplayCommand, self).__init__(box)
+        box.configuration.configuration.state.signalUpdateComponent.connect(
+            self.onDeviceStateChanged)
+        self.widget = QPushButton(parent)
+        box.addWidget(self)
 
 
-    @property
-    def widget(self):
-        return self.__pbCommand
-    
-    
-    @property
-    def allowedStates(self):
-        return [s for s in self.__allowedStates]
+    def typeChanged(self, box):
+        self.widget.setText(box.descriptor.displayedName)
+        self.allowedStates = box.descriptor.allowedStates
+        self.widget.setEnabled(
+            box.configuration.configuration.state.value in self.allowedStates)
+        self.widget.clicked.connect(self.onCommandClicked)
+
 
     value = None
 
@@ -61,28 +54,11 @@ class DisplayCommand(DisplayWidget):
         pass
 
 
-### slots ###
-    def onDeviceStateChanged(self, deviceId, state):
-        isFound = False
-        for key in self.keys:
-            devId = key.split(".", 1)[0]
-            if devId == deviceId:
-                isFound = True
-        
-        if not isFound:
-            return
-        
-        if len(self.__allowedStates) < 1:
-            return
-        
-        if state in self.__allowedStates:
-            self.__pbCommand.setEnabled(True)
-        else:
-            self.__pbCommand.setEnabled(False)
+    def onDeviceStateChanged(self, box, value, timestamp):
+        self.widget.setEnabled(value in self.allowedStates)
 
 
     def onCommandClicked(self):
-        args = [] # TODO slot arguments
-        for key in self.keys:
-            Manager().executeCommand(dict(path=key, command=self.command,
-                                          args=args))
+        for box in self.boxes:
+            Manager().executeCommand(dict(path=box.configuration.path,
+                                          command=box.path[-1], args=[]))
