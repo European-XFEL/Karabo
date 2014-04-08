@@ -14,8 +14,6 @@ __all__ = ["NavigationTreeModel"]
 from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
-#import manager
-from manager import Manager
 from treenode import TreeNode
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,

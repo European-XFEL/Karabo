@@ -14,6 +14,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from manager import Manager
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
@@ -29,14 +30,14 @@ class ProjectTreeView(QTreeView):
     signalItemChanged = pyqtSignal(dict)
 
 
-    def __init__(self, model, parent=None):
+    def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__(parent)
 
         # Set same mode for each project view
-        self.setModel(model)
+        self.setModel(Manager().projectTopology)
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
-        self.setSelectionModel(model.selectionModel)
+        self.setSelectionModel(self.model().selectionModel)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)

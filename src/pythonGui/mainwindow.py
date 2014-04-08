@@ -18,8 +18,6 @@ from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
 from karabo.hash import Hash
-from manager import Manager
-from network import Network
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
@@ -29,12 +27,15 @@ from panels.notificationpanel import NotificationPanel
 from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QActionGroup, qApp, QIcon, QKeySequence,
                          QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
 
 
 class MainWindow(QMainWindow):
+    # signals
+    #signalQuitApplication = pyqtSignal()
+    #signalGlobalAccessLevelChanged = pyqtSignal()
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -46,8 +47,8 @@ class MainWindow(QMainWindow):
         self._setupToolBar()
         self._setupStatusBar()
 
-        Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
-        Network().signalUserChanged.connect(self.onUpdateAccessLevel)
+        #Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
+        #Network().signalUserChanged.connect(self.onUpdateAccessLevel)
         
         self._setupPanels()
 
@@ -180,19 +181,17 @@ class MainWindow(QMainWindow):
         mainSplitter = QSplitter(Qt.Horizontal)
         mainSplitter.setContentsMargins(5,5,5,5)
         
-        self.navigationPanel = NavigationPanel(Manager().systemTopology)
-        Network().signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
+        self.navigationPanel = NavigationPanel()
         leftArea = QSplitter(Qt.Vertical, mainSplitter)
         self.navigationTab = DockTabWindow("Navigation", leftArea)
         self.navigationTab.addDockableTab(self.navigationPanel, "Navigation")
         leftArea.setStretchFactor(0,2)
 
-        self.projectPanel = ProjectPanel(Manager().projectTopology)
+        self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
-        self.projectPanel.signalConnectToServer.connect(Network().connectToServer)
+        #self.projectPanel.signalConnectToServer.connect(Network().connectToServer)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
-        Network().signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
@@ -208,8 +207,7 @@ class MainWindow(QMainWindow):
         self.outputTab.addDockableTab(self.notificationPanel, "Notifications")
         middleArea.setStretchFactor(1,1)
 
-        self.configurationPanel = ConfigurationPanel(Manager().systemTopology, \
-                                                     Manager().projectTopology)
+        self.configurationPanel = ConfigurationPanel()
         rightArea = QSplitter(Qt.Vertical, mainSplitter)
         self.configurationTab = DockTabWindow("Configuration", rightArea)
         self.configurationTab.addDockableTab(self.configurationPanel, "Configurator")
@@ -227,13 +225,14 @@ class MainWindow(QMainWindow):
         connections and returns it.
         """
         customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
-        Network().signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
+        #Network().signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
 
     def _quit(self):
-        Network().endServerConnection()
-        Manager().closeDatabaseConnection()
+        self.signalQuitApplication.emit()
+        #Network().endServerConnection()
+        #Manager().closeDatabaseConnection()
 
 
 ### virtual functions ###
@@ -287,7 +286,7 @@ class MainWindow(QMainWindow):
         elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
         
-        Manager().signalGlobalAccessLevelChanged.emit()
+        #Manager().signalGlobalAccessLevelChanged.emit()
 
 
     def onServerConnectionChanged(self, isConnected):

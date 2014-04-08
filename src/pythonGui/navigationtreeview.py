@@ -24,12 +24,12 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QIcon, QMenu, QTre
 
 
 class NavigationTreeView(QTreeView):
-    def __init__(self, parent, model):
+    def __init__(self, parent):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.modelReset.connect(self.expandAll)
+        self.setModel(Manager().systemTopology)
+        self.setSelectionModel(self.model().selectionModel)
+        self.model().modelReset.connect(self.expandAll)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
