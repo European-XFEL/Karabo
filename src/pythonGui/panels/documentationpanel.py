@@ -12,8 +12,6 @@
 __all__ = ["DocumentationPanel"]
 
 
-from manager import Manager
-
 from PyQt4.QtCore import QByteArray, QUrl
 from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
 from PyQt4.QtWebKit import QWebPage, QWebView

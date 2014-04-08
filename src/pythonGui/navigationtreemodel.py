@@ -14,7 +14,6 @@ __all__ = ["NavigationTreeModel"]
 from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
-import manager
 from treenode import TreeNode
 import icons
 
@@ -24,7 +23,7 @@ from PyQt4.QtGui import QItemSelectionModel
 
 
 class NavigationTreeModel(QAbstractItemModel):
-    signalItemChanged = pyqtSignal(object)
+    # signal
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
@@ -36,7 +35,6 @@ class NavigationTreeModel(QAbstractItemModel):
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleServerData(self, config):
@@ -276,35 +274,6 @@ class NavigationTreeModel(QAbstractItemModel):
                 
     def globalAccessLevelChanged(self):
         self.modelReset.emit()
-
-
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        if len(selectedIndexes) < 1:
-            return
-        
-        index = selectedIndexes[0]
-
-        if not index.isValid():
-            return
-
-        level = self.getHierarchyLevel(index)
-
-        classId = None
-        path = ""
-
-        if level == 2:
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            conf = manager.Manager().getClass(serverId, classId)
-        elif level == 3:
-            deviceId = index.data()
-            conf = manager.Manager().getDevice(deviceId)
-        else:
-            conf = None
-
-        self.signalItemChanged.emit(conf)
 
 
     def onServerConnectionChanged(self, isConnected):

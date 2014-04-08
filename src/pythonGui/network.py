@@ -8,6 +8,8 @@ from __future__ import unicode_literals
 
 """This module contains a class which establishes the tcp network connection to
    the GuiServerDevice.
+   
+   The network class is a singleton.
 """
 
 __all__ = ["Network"]
@@ -29,13 +31,13 @@ import socket
 from struct import unpack
 
 
-class Network(QObject):
+class _Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
 
     def __init__(self):
-        super(Network, self).__init__()
+        super(_Network, self).__init__()
 
         self.authenticator = None
         self.username = None
@@ -64,6 +66,9 @@ class Network(QObject):
         Manager().signalGetClassSchema.connect(self.onGetClassSchema)
         Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
         Manager().signalGetFromPast.connect(self.onGetFromPast)
+        
+        self.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
+        self.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
 
 
     def connectToServer(self):
@@ -87,7 +92,7 @@ class Network(QObject):
         else:
             isConnected = False
 
-        # Update mainwindow toolbar
+        # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
 
 
@@ -96,7 +101,7 @@ class Network(QObject):
         Disconnect from server.
         """
         self.endServerConnection()
-        # Update mainwindow toolbar
+        # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(False)
 
 
@@ -136,9 +141,9 @@ class Network(QObject):
         self.tcpSocket.disconnectFromHost()
         if (self.tcpSocket.state() == QAbstractSocket.UnconnectedState) or \
             self.tcpSocket.waitForDisconnected(5000):
-            print "Disconnected from server"
-        else:
-            print "Disconnect failed:", self.tcpSocket.errorString()
+            return
+        
+        print "Disconnect failed:", self.tcpSocket.errorString()
 
 
     def _login(self):
@@ -310,6 +315,32 @@ class Network(QObject):
         self.connectToServer()
 
 
+    def onServerConnection(self, connect):
+        """
+        This slot is triggered from the MainWindow.
+        
+        If the user wants the connect the GUI client to the
+        GuiServer \connect is True, else False.
+        """
+        if connect:
+            self.connectToServer()
+        else:
+            self.disconnectFromServer()
+
+
+    def onQuitApplication(self):
+        """
+        This slot is triggered from the MainWindow.
+        
+        The user wants to quit the application.
+        So the network connection needs to be closed
+        and the manager needs to be informed to close
+        the database connection as well.
+        """
+        self.endServerConnection()
+        Manager().closeDatabaseConnection()
+
+
     def onConnected(self):
         pass
 
@@ -426,3 +457,9 @@ class Network(QObject):
         self.brokerPort = instanceInfo.get("port")
         self.brokerTopic = instanceInfo.get("topic")
         self._login()
+
+
+network = _Network()
+
+def Network():
+    return network

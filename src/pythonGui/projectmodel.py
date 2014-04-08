@@ -15,8 +15,6 @@ __all__ = ["ProjectModel"]
 
 
 from copy import copy
-from enums import NavigationItemTypes
-import manager
 from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
@@ -29,10 +27,8 @@ import os.path
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
-    signalConnectToServer = pyqtSignal()
+    signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(str) # scene title
-    signalItemChanged = pyqtSignal(object)
-    signalSelectionChanged = pyqtSignal(list)
 
     ITEM_PATH = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
@@ -69,7 +65,6 @@ class ProjectModel(QStandardItemModel):
         
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleLeafItems(self, childItem, projectPath, categoryKey, config):
@@ -183,7 +178,8 @@ class ProjectModel(QStandardItemModel):
 
         if reply == QMessageBox.No:
             return False
-        self.signalConnectToServer.emit()
+        # Send signal to establish server connection to projectpanel
+        self.signalServerConnection.emit(True)
         return False
 
 
@@ -522,37 +518,6 @@ class ProjectModel(QStandardItemModel):
         
 
 ### slots ###
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        # Send signal to projectPanel to update toolbar actions
-        self.signalSelectionChanged.emit(selectedIndexes)
-        
-        if len(selectedIndexes) < 1:
-            return
-
-        index = selectedIndexes[0]
-
-        path = index.data(ProjectModel.ITEM_PATH)
-        if path is None: return
-        
-        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        deviceId = index.data(Qt.DisplayRole)
-
-        if (serverId is None) or (classId is None) or (deviceId is None):
-            return
-
-        if not self.checkSystemTopology():
-            return
-
-        # Check whether deviceId is already online
-        if self.systemTopology.has("device.{}".format(deviceId)):
-            conf = manager.Manager().getDevice(deviceId)
-        else:
-            conf = manager.Manager().getClass(serverId, classId)
-        self.signalItemChanged.emit(conf)
-
-
     def onServerConnectionChanged(self, isConnected):
         """
         If the server connection is changed, the model needs an update.

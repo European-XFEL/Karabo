@@ -18,17 +18,20 @@ import qrc_icons
 from enums import NavigationItemTypes
 from manager import Manager
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QIcon, QMenu, QTreeView)
 
 
 class NavigationTreeView(QTreeView):
-    def __init__(self, parent, model):
+    signalItemChanged = pyqtSignal(object)
+    
+    
+    def __init__(self, parent):
         super(NavigationTreeView, self).__init__(parent)
         
-        self.setModel(model)
-        self.setSelectionModel(model.selectionModel)
-        model.modelReset.connect(self.expandAll)
+        self.setModel(Manager().systemTopology)
+        self.setSelectionModel(self.model().selectionModel)
+        self.model().modelReset.connect(self.expandAll)
         
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -38,6 +41,8 @@ class NavigationTreeView(QTreeView):
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
+        
+        self.model().selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _setupContextMenu(self):
@@ -168,3 +173,31 @@ class NavigationTreeView(QTreeView):
             self.__acKillDevice.setVisible(True)
             self.__mClassItem.exec_(QCursor.pos())
 
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        if len(selectedIndexes) < 1:
+            return
+        
+        index = selectedIndexes[0]
+
+        if not index.isValid():
+            return
+
+        level = self.model().getHierarchyLevel(index)
+
+        classId = None
+        path = ""
+
+        if level == 2:
+            parentIndex = index.parent()
+            serverId = parentIndex.data()
+            classId = index.data()
+            conf = Manager().getClass(serverId, classId)
+        elif level == 3:
+            deviceId = index.data()
+            conf = Manager().getDevice(deviceId)
+        else:
+            conf = None
+
+        self.signalItemChanged.emit(conf)
