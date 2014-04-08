@@ -40,11 +40,43 @@ class Simple(object):
 
 
 class Integer(Simple):
-    pass
+    def getMinMax(self):
+        info = numpy.iinfo(self.numpy)
+        min = getattr(self, 'minExc', None)
+        if min is None:
+            min = getattr(self, 'minInc', None)
+        else:
+            min += 1
+        if min is None:
+            min = info.min
+
+        max = getattr(self, 'maxExc', None)
+        if max is None:
+            max = getattr(self, 'maxInc', None)
+        else:
+            max -= 1
+        if max is None:
+            max = info.max
+
+        return min, max
 
 
 class Number(Simple):
-    pass
+    def getMinMax(self):
+        info = numpy.finfo(self.numpy)
+        min = getattr(self, 'minInc', None)
+        if min is None:
+            min = getattr(self, 'minExc', None)
+        if min is None:
+            min = info.min
+
+        max = getattr(self, 'maxInc', None)
+        if max is None:
+            max = getattr(self, 'maxExc', None)
+        if max is None:
+            min = info.max
+
+        return min, max
 
 
 class Vector(object):
