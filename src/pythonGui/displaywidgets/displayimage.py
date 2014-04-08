@@ -41,18 +41,19 @@ class DisplayImage(DisplayWidget):
     category = "Image"
     alias = "Image View"
 
-    def __init__(self, **params):
-        super(DisplayImage, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayImage, self).__init__(box)
         
         self.value = None
         
         if useGuiQwt:           
             self.__imageWidget = ImageDialog(edit=False, toolbar=True,
-                wintitle=self.keys[0])
+                wintitle=".".join(box.path))
             self.__image = None
             self.__plot = self.__imageWidget.get_plot()
         else:
-            self.__imageWidget = QLabel()
+            self.__imageWidget = QLabel(parent)
+        box.addWidget(self)
 
     
     @property
@@ -64,22 +65,11 @@ class DisplayImage(DisplayWidget):
         if value is None: return
 
         if self.value is None or value is not self.value:
-            # Store original value with type
-            self.value = copy.copy(value)
+            dimX, dimY = value.dims.value
+            data = value.data.value
             
-            if value.has('dims')==False: return
-            if value.has('data')==False: return
-            
-            # Value as Hash (dimX=<dimX>, dimY=<dimY>, dimZ=<dimZ>, dimC=<dimC>, data=<data>)
-            dims = value.get('dims')
-            if len(dims) < 2: return
-            dimX = dims[0]
-            dimY = dims[1]
-            #dimZ = dims[2]
-            data = value.get('data')
-            
-            if not dimX and not dimY and not data: return
-            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
+            if dimX < 1 or dimY < 1 or len(data) < dimX * dimY:
+                return
 
             image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)
             

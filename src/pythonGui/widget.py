@@ -18,11 +18,8 @@ from registry import Loadable, Registry
 
 
 class Widget(QObject, Registry):
-    def __init__(self, **kwargs):
-        # This method should not be necessary. It is, because we
-        # get kwargs which are not empty.
-        QObject.__init__(self)
-
+    valueChanged = None
+    typeChanged = None
 
     @classmethod
     def register(cls, name, dict):
@@ -64,23 +61,23 @@ class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
 
-    def __init__(self, key=None, **kwargs):
-        Widget.__init__(self, **kwargs)
+    def __init__(self, box):
+        Widget.__init__(self)
         self.valueType = None
-        if key is not None:
-            self.keys = [key]
+        if box is not None:
+            self.boxes = [box]
 
-    def removeKey(self, key):
-        if key in self.keys:
-            self.keys = [ ]
+    def removeBox(self, box):
+        if key in self.boxes:
+            self.boxes = [ ]
 
 
 class VacuumWidget(DisplayWidget):
     menu = "Change vacuum widget"
     category = "State"
 
-    def __init__(self, value=None, **params):
-        super(VacuumWidget, self).__init__(**params)
+    def __init__(self, box=None):
+        DisplayWidget.__init__(box)
 
         self.label = QLabel()
         self.setErrorState(False)
@@ -115,18 +112,18 @@ class VacuumWidget(DisplayWidget):
 class EditableWidget(Widget):
     menu = "Change widget"
     factories = { }
-    signalEditingFinished = pyqtSignal(str, object)
+    signalEditingFinished = pyqtSignal(object, object)
 
     
-    def __init__(self, key=None, **kwargs):
-        Widget.__init__(self, **kwargs)
+    def __init__(self, box):
+        Widget.__init__(self)
         self.valueType = None
-        if key is not None:
-            self.keys = [key]
+        if box is not None:
+            self.boxes = [box]
             
     
     def addParameters(self, **params):
         pass
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
+        self.signalEditingFinished.emit(self.boxes[0], value)

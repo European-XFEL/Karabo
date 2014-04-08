@@ -25,14 +25,14 @@ class Label(QLabel):
     # signals
     signalEditingFinished = pyqtSignal(list)
     
-    def __init__(self, **params):
+    def __init__(self, value, valueType):
         super(Label, self).__init__()
         
-        self.__value = params.get('value')
+        self.__value = value
         if self.__value is None:
             self.__value = []
         
-        self.__valueType = params.get('valueType')
+        self.__valueType = valueType
         
         self.setAcceptDrops(True)
 

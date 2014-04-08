@@ -32,8 +32,8 @@ class EditableChoiceElement(EditableWidget):
     category = "Choice"
     alias = "Choice Element"
 
-    def __init__(self, value=None, **params):
-        super(EditableChoiceElement, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableChoiceElement, self).__init__(box)
         
         self.__comboBox = QComboBox()
         self.__comboBox.setFrame(False)
@@ -43,9 +43,6 @@ class EditableChoiceElement(EditableWidget):
         
         self.childItemList = []
         
-        self.valueChanged(self.keys[0], value)
-
-
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
         if event.type() == QEvent.Wheel and object == self.__comboBox:
@@ -58,19 +55,18 @@ class EditableChoiceElement(EditableWidget):
         return self.__comboBox
 
 
-    def addParameters(self, **params):
-        item = params.get('itemToBeAdded')
-        
-        if item:
+    def addParameters(self, itemToBeAdded=None):
+        print itemToBeAdded, itemToBeAdded.text(0)
+        if itemToBeAdded:
             self.__comboBox.blockSignals(True)
-            self.__comboBox.addItem(item.text(0))
-            self.childItemList.append(item)
+            self.__comboBox.addItem(itemToBeAdded.text(0))
+            self.childItemList.append(itemToBeAdded)
             self.__comboBox.blockSignals(False)
 
 
     @property
     def value(self):
-        return Hash(self.__comboBox.currentText(), Hash())
+        return self.__comboBox.currentText()
 
 
     def _updateChoiceItems(self, index):
@@ -104,7 +100,7 @@ class EditableChoiceElement(EditableWidget):
             self._r_updateChildItems(childItem)
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         
@@ -113,7 +109,7 @@ class EditableChoiceElement(EditableWidget):
             if keys > 0:
                 value = keys[0]
         
-        index = self.__comboBox.findText(value)
+        index = self.__comboBox.findText(type(value).__name__)
         if index < 0:
             return
         
@@ -127,7 +123,7 @@ class EditableChoiceElement(EditableWidget):
     def onEditingFinished(self, index):
         if index > -1 and index < len(self.childItemList):
             self._updateChoiceItems(index)
-        self.signalEditingFinished.emit(self.keys[0], self.value)
+        EditableWidget.onEditingFinished(self, self.value)
 
 
     def copy(self, item):

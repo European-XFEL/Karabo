@@ -32,14 +32,15 @@ class DisplayIconset(DisplayWidget):
     category = "State"
     alias = "Iconset"
 
-    def __init__(self, **kwargs):
-        super(DisplayIconset, self).__init__(**kwargs)
-        self.widget = QSvgWidget()
+    def __init__(self, box, parent):
+        super(DisplayIconset, self).__init__(box)
+        self.widget = QSvgWidget(parent)
         action = QAction("Change Iconset...", self.widget)
         action.triggered.connect(self.onChangeIcons)
         self.widget.addAction(action)
         self.xml = ElementTree.ElementTree(ElementTree.fromstring(
             '<svg xmlns:svg="http://www.w3.org/2000/svg"/>'))
+        box.addWidget(self)
 
 
     @pyqtSlot()
@@ -57,15 +58,11 @@ class DisplayIconset(DisplayWidget):
         self.valueChanged(None, value)
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         self.xml.getroot().filter = value
         buffer = QBuffer()
         buffer.open(QBuffer.WriteOnly)
         self.xml.write(buffer)
         buffer.close()
         self.widget.load(buffer.buffer())
-
-
-
-
 

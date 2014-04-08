@@ -11,12 +11,9 @@
 
 __all__ = ["PropertyTreeWidgetItem"]
 
-import const
-
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
-from choicecomponent import ChoiceComponent
-from displaycomponent import DisplayComponent
+from components import ChoiceComponent, DisplayComponent
 from popupwidget import PopupWidget
 
 from PyQt4.QtCore import Qt, QSize
@@ -25,8 +22,8 @@ from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 
-    def __init__(self, path, parent, parentItem=None):
-        super(PropertyTreeWidgetItem, self).__init__(path, parent, parentItem)
+    def __init__(self, box, parent, parentItem=None):
+        super(PropertyTreeWidgetItem, self).__init__(box, parent, parentItem)
         
         # Popup widget for tooltip info
         self.__popupWidget = None
@@ -35,11 +32,12 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, QIcon(":folder"))
 
-        self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
+        self.displayComponent = DisplayComponent(
+            "Value Field", self.internalKey, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
-        # Connect to DisplayComponent to get current value on device for tooltip update
-        self.displayComponent.signalValueChanged.connect(self.onDisplayValueChanged)
+
+        box.signalUpdateComponent.connect(self.onDisplayValueChanged)
 
 
     def setupContextMenu(self):
@@ -69,22 +67,10 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
     displayText = property(fset=_setText)
 
 
-    def _defaultValue(self):
-        return self.data(0, const.DEFAULT_VALUE)
-    def _setDefaultValue(self, default):
-        self.setData(0, const.DEFAULT_VALUE, default)
-    defaultValue = property(fget=_defaultValue, fset=_setDefaultValue)
-
-
-    def _setEnabled(self, enable):
-        if self.editableComponent is not None:
-            self.editableComponent.setEnabled(enable)
-    enabled = property(fset=_setEnabled)
-
-
 ### public functions ###
     def setReadOnly(self, readOnly):
-        self._setEnabled(not readOnly)
+        if self.editableComponent is not None:
+            self.editableComponent.setEnabled(not readOnly)
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 
@@ -109,13 +95,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             info["Property"] = self.text(0)
             if self.description is not None:
                 info["Description"] = self.description
-            if self.__currentValueOnDevice is not None:
-                # Key consists of deviceId, property key
-                _, property = str(self.internalKey).split(".", 1)
-            else:
-                # Key consists of serverId, classId, property key
-                _, _, property = str(self.internalKey).split(".", 2)
-            info["Key"] = property
+
+            info["Key"] = '.'.join(self.internalKey.path)
             if self.valueType is not None:
                 info["Value Type"] = self.valueType.hashname()
             if self.defaultValue is not None:

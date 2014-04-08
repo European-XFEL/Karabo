@@ -21,69 +21,80 @@
 __all__ = ["EditableList"]
 
 
-from label import Label
+from listedit import ListEdit
+from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import QLabel, QFrame, QDialog
+
+import numbers
+import numpy
+
+
+class Label(QLabel):
+    valueChanged = pyqtSignal(list)
+
+    def __init__(self, parent):
+        super(Label, self).__init__(parent)
+        self.setAcceptDrops(True)
+        self.value = [ ]
+
+
+    def setValue(self, value):
+        l = [ ]
+        for v in value[:10]:
+            if (isinstance(v, (numbers.Real, numpy.floating)) and
+                    not isinstance(v, numbers.Integral)):
+                l.append("{:.6}".format(v))
+            else:
+                l.append("{}".format(v))
+        if len(value) > 10:
+            l.append("...")
+
+        with SignalBlocker(self):
+            self.setText(", ".join(l))
+        self.value = value
+
+
+    def mouseDoubleClickEvent(self, event) :
+        listEdit = ListEdit(self.valueType, True, self.value)
+        listEdit.setTexts("Add", "&Value", "Edit")
+
+        if listEdit.exec_() == QDialog.Accepted:
+            values = [listEdit.getListElementAt(i)
+                      for i in xrange(listEdit.getListCount())]
+            self.value = values
+            self.valueChanged.emit(values)
 
 
 class EditableList(EditableWidget):
     category = "List"
     alias = "Histogram"
 
-    def __init__(self, value=None, **params):
-        super(EditableList, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableList, self).__init__(box)
         
-        self.__label = Label(**params)
-        self.__label.setMinimumWidth(160)
-        self.__label.setMaximumHeight(24)
-        self.__label.setFrameStyle(QFrame.Box)
-        self.__label.signalEditingFinished.connect(self.onEditingFinished)
-        
-        self.valueChanged(self.keys[0], value)
-
-
-    @property
-    def widget(self):
-        return self.__label
-
+        self.widget = Label(parent)
+        self.widget.setMinimumWidth(160)
+        self.widget.setMaximumHeight(24)
+        self.widget.setFrameStyle(QFrame.Box)
+        self.widget.valueChanged.connect(self.onEditingFinished)
+        box.addWidget(self)
 
     @property
     def value(self):
-        return self.__label.value
+        return self.widget.value
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
-        if value is None:
-            return
-        
-        #self.__list = value
-        self.__label.value = value
-        
-        #listLen = len(self.__list)
-        #maxLen = 10
-        #valueAsString = ""
-        #for i in range(listLen):
-        #    if maxLen < 1:
-        #        valueAsString += ".."
-        #        break
-            
-        #    index = self.__list[i]
-        #    valueType = type(index)
-        #    if valueType is float:
-        #        index = str("%.6f" %index)
-        #    valueAsString += str(index)
-            
-        #    if i != (listLen-1):
-        #        valueAsString += ", "
-        #    maxLen -= 1
-        
-        #self.__label.blockSignals(True)
-        #self.__label.blockSignals(False)
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+        self.widget.setValue(value)
 
 
-### slots ###
+    def typeChanged(self, box):
+        self.widget.valueType = box.descriptor
+
+
     def onEditingFinished(self, value):
-        self.__label.value = value
-        self.signalEditingFinished.emit(self.keys[0], value)
+        self.boxes[0].set(value)
+        self.signalEditingFinished.emit(self.boxes[0], value)

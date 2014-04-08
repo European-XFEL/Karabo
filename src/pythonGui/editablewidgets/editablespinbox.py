@@ -22,6 +22,7 @@ __all__ = ["EditableSpinBox"]
 
 import globals
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtCore import QEvent
@@ -34,80 +35,59 @@ class EditableSpinBox(EditableWidget):
     category = "Digit"
     alias = "Integer Field"
 
-    def __init__(self, value=None, valueType=None, **params):
-        super(EditableSpinBox, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableSpinBox, self).__init__(box)
 
-        self.__spinBox = QSpinBox()
-
-        if valueType is not None:
-            info = iinfo(valueType.numpy)
-            self.__spinBox.setRange(max(-0x80000000, info.min),
-                                    min(info.max, 0x7fffffff))
-        self.__spinBox.installEventFilter(self)
-        self.__spinBox.valueChanged.connect(self.onEditingFinished)
-        
-        self.valueChanged(self.keys[0], value)
-
-        #metricPrefixSymbol = params.get('metricPrefixSymbol')
-        #unitSymbol = params.get('unitSymbol')
-        # Append unit label, if available
-        #unitLabel = str()
-        #if metricPrefixSymbol:
-        #    unitLabel += metricPrefixSymbol
-        #if unitSymbol:
-        #    unitLabel += unitSymbol
-        #if len(unitLabel) > 0:
-        #    self.__spinBox.setSuffix(" %s" %unitLabel)
+        self.widget = QSpinBox(parent)
+        self.widget.installEventFilter(self)
+        self.widget.valueChanged.connect(self.onEditingFinished)
+        box.addWidget(self)
 
 
     def eventFilter(self, object, event):
         # Block wheel event on QSpinBox
-        return event.type() == QEvent.Wheel and object == self.__spinBox
-
-
-    @property
-    def widget(self):
-        return self.__spinBox
-
-
-    def addParameters(self, minInc=None, maxInc=None, **params):
-        if minInc is not None:
-            self.__spinBox.blockSignals(True)
-            self.__spinBox.setMinimum(minInc)
-            self.__spinBox.blockSignals(False)
-
-        if maxInc is not None:
-            self.__spinBox.blockSignals(True)
-            self.__spinBox.setMaximum(maxInc)
-            self.__spinBox.blockSignals(False)
+        return event.type() == QEvent.Wheel and object is self.widget
 
 
     @property
     def value(self):
-        return self.__spinBox.value()
+        return self.widget.value()
 
 
-    def _setMinimum(self, min):
-        self.__spinBox.blockSignals(True)
-        self.__spinBox.setMinimum(min)
-        self.__spinBox.blockSignals(False)
-    minimum = property(fset=_setMinimum)
+    def typeChanged(self, box):
+        min = getattr(box.descriptor, "minInc", None)
+        if min is None:
+            min = getattr(box.descriptor, "minExc", None)
+        if min is None:
+            info = iinfo(box.descriptor.numpy)
+            min = info.min
+        else:
+            min += 1
+        if min < -0x80000000:
+            min = -0x80000000
 
 
-    def _setMaximum(self, max):
-        self.__spinBox.blockSignals(True)
-        self.__spinBox.setMaximum(max)
-        self.__spinBox.blockSignals(False)
-    maximum = property(fset=_setMaximum)
+        max = getattr(box.descriptor, "maxInc", None)
+        if max is None:
+            max = getattr(box.descriptor, "maxExc", None)
+        if max is None:
+            info = iinfo(box.descriptor.numpy)
+            max = info.max
+        else:
+            max -= 1
+        if max > 0x7fffffff:
+            max = 0x7fffffff
+
+        self.widget.setRange(min, max)
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0
         
-        self.__spinBox.blockSignals(True)
-        self.__spinBox.setValue(value)
-        self.__spinBox.blockSignals(False)
+        with SignalBlocker(self.widget):
+            self.widget.setValue(value)
         
         if forceRefresh:
             # Needs to be called to update possible apply buttons

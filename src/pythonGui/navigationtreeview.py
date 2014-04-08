@@ -13,7 +13,6 @@
 __all__ = ["NavigationTreeView"]
 
 
-import const
 import qrc_icons
 
 from enums import NavigationItemTypes

@@ -31,18 +31,14 @@ class DisplayChoiceElement(DisplayWidget):
     category = "Choice"
     alias = "Choice Element"
     
-    def __init__(self, **params):
-        super(DisplayChoiceElement, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayChoiceElement, self).__init__(box)
 
-        self.__comboBox = QComboBox()
-        self.__comboBox.setFrame(False)
-        self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
+        self.widget = QComboBox(parent)
+        self.widget.setFrame(False)
+        self.widget.currentIndexChanged.connect(self.onEditingFinished)
         
         self.childItemList = []
-
-    @property
-    def widget(self):
-        return self.__comboBox
 
 
     def addParameters(self, item=None, **params):
@@ -55,7 +51,7 @@ class DisplayChoiceElement(DisplayWidget):
 
     @property
     def value(self):
-        return self.__comboBox.currentText()
+        return self.widget.currentText()
 
 
     def _r_updateChildItems(self, parentItem):

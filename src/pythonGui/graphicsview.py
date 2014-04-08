@@ -10,12 +10,11 @@
 __all__ = ["GraphicsView"]
     
 
-from displaycomponent import DisplayComponent
+from components import (DisplayComponent, EditableApplyLaterComponent,
+                        EditableNoApplyComponent)
 
 from enums import ConfigChangeTypes
 
-from editableapplylatercomponent import EditableApplyLaterComponent
-from editablenoapplycomponent import EditableNoApplyComponent
 from layoutcomponents.graphicscustomitem import GraphicsCustomItem
 
 from dialogs.dialogs import PenDialog, TextDialog
@@ -33,13 +32,14 @@ from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFileDialog, QFont, QFrame, QIcon, QLabel,
+                         QFileDialog, QFont, QFrame, QLabel,
                          QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
                          QPainter, QPen, QStackedLayout,
                          QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
+import xmlparser
 from functools import partial
 import os.path
 from itertools import chain
@@ -387,7 +387,7 @@ class Label(Action, Loadable):
 
 
     def mousePressEvent(self, parent, event):
-        p = ProxyWidget(parent.inner, None)
+        p = ProxyWidget(parent.inner)
         label = QLabel('', p)
         p.setWidget(label)
         dialog = TextDialog(label)
@@ -407,7 +407,7 @@ class Label(Action, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget(), None)
+        proxy = ProxyWidget(layout.parentWidget())
         label = QLabel(elem.get(ns_karabo + "text"), proxy)
         proxy.setWidget(label)
         layout.loadPosition(elem, proxy)
@@ -850,9 +850,6 @@ class GraphicsView(QSvgWidget):
 
         self.designMode = designMode
 
-        # Describes most recent item to be cut or copied inside the application
-        self.__copiedItem = QByteArray()
-
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
@@ -926,8 +923,8 @@ class GraphicsView(QSvgWidget):
         """Remove all child widgets"""
         for c in self.inner.children():
             if isinstance(c, ProxyWidget) and c.component is not None:
-                for k in c.component.keys:
-                    Manager().removeVisibleDevice(k)
+                for b in c.component.boxes:
+                    b.configuration.removeVisible()
             c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
@@ -992,7 +989,7 @@ class GraphicsView(QSvgWidget):
     # Helper function opens *.scene file
     # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
     def openScene(self, filename):
-        self.tree = ElementTree.parse(filename)
+        self.tree = xmlparser.parse(filename)
         root = self.tree.getroot()
         self.clean()
         self.ilayout = FixedLayout.load(root, widget=self.inner)
@@ -1102,13 +1099,6 @@ class GraphicsView(QSvgWidget):
                 stream.writeString("\n")
                 stream.writeString("\n")
                 stream.writeString("\n")
-    # Positions a newly added or pasted item in the scene
-    # The sequence number ensures that new items are added in different positions
-    # rather than on top of each other
-    def _setupItem(self, item):
-        item.setPos(QPointF(80 + (100 * (self.__seqNumber % 5)), 80 + (50 * ((self.__seqNumber / 5) % 7))))
-        self.__seqNumber += 1
-        self._addItem(item)
 
 
     # Creates and returns container item
@@ -1119,7 +1109,9 @@ class GraphicsView(QSvgWidget):
                            QBoxLayout.TopToBottom)
 
         for item, component in items:
-            proxy = ProxyWidget(self.inner, component)
+            proxy = ProxyWidget(self.inner)
+            if component is not None:
+                proxy.setComponent(component)
             proxy.addWidget(item)
             layout.addWidget(proxy)
             proxy.show()
@@ -1209,80 +1201,45 @@ class GraphicsView(QSvgWidget):
             selectedItems = source.selectedItems()
             
             for item in selectedItems:
-                # Get internal key
-                internalKey = item.internalKey
-                # Get display name
+                box = item.internalKey
                 displayName = item.text(0)
-                # Use DeviceClass/DeviceInstance-Key if no displayName is set
                 if len(displayName) == 0:
-                    keys = internalKey.split('.')
-                    displayName = keys[1]
+                    displayName = box.path[-1]
                 
-                # Display component
                 if source.isColumnHidden(1):
                     configDisplayComponent = None
                 else:
                     configDisplayComponent = item.displayComponent
-                # Editable component
                 configEditableComponent = item.editableComponent
 
-                # List stored all items for layout
                 items = []
 
                 displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
                 if displayNameProxyWidget:
-                    # Add item to itemlist
                     items.append((displayNameProxyWidget, None))
                 
-                # Display component
                 if configDisplayComponent:
-                    # Special treatment for command
-                    if item.classAlias == "Command":
-                        allowedStates = item.allowedStates
-                        displayText = item.displayText
-                        commandEnabled = item.enabled
-                        command = item.command
-                        displayComponent = DisplayComponent(item.classAlias, key=internalKey, \
-                                                            allowedStates=allowedStates, \
-                                                            commandText=displayText, \
-                                                            commandEnabled=commandEnabled, \
-                                                            command=command)
-                    else:
-                        displayComponent = DisplayComponent(item.classAlias, key=internalKey,
-                                                            enumeration=item.enumeration,
-                                                            metricPrefixSymbol=item.metricPrefixSymbol,
-                                                            unitSymbol=item.unitSymbol,
-                                                            valueType=item.valueType)
-                    
+                    displayComponent = DisplayComponent(
+                        box.descriptor.classAlias, box, self.inner)
+
                     items.append((displayComponent.widget, displayComponent))
-                    # Create proxy widget
-                    
-                    # Add proxyWidget for unit label, if available
                     unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
                     if unitProxyWidget:
                         items.append((unitProxyWidget, None))
 
-                    # Register as visible device
-                    Manager().newVisibleDevice(internalKey)
+                    box.configuration.addVisible()
 
                 # Editable component
                 if configEditableComponent:
                     if not configDisplayComponent:
-                        editableComponent = EditableNoApplyComponent(item.classAlias, key=internalKey,
-                                                                     enumeration=item.enumeration,
-                                                                     metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                     unitSymbol=item.unitSymbol,
-                                                                     valueType=item.valueType)
+                        editableComponent = EditableNoApplyComponent(
+                            item.classAlias, box, self.inner)
                     else:
-                        editableComponent = EditableApplyLaterComponent(item.classAlias, key=internalKey,
-                                                                        enumeration=item.enumeration,
-                                                                        metricPrefixSymbol=item.metricPrefixSymbol,
-                                                                        unitSymbol=item.unitSymbol,
-                                                                        valueType=item.valueType)
+                        editableComponent = EditableApplyLaterComponent(
+                            item.classAlias, box, self.inner)
                         editableComponent.isEditableValueInit = False
 
-                        # Register as visible device
-                        Manager().newVisibleDevice(internalKey)
+                        box.configuration.addVisible()
                         
                     items.append((editableComponent.widget, editableComponent))
 
