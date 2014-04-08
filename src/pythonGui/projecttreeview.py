@@ -14,6 +14,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from enums import NavigationItemTypes
 from manager import Manager
 from projectmodel import ProjectModel
 
@@ -28,6 +29,7 @@ class ProjectTreeView(QTreeView):
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
     signalItemChanged = pyqtSignal(dict)
+    signalSelectionChanged = pyqtSignal(list)
 
 
     def __init__(self, parent=None):
@@ -193,25 +195,25 @@ class ProjectTreeView(QTreeView):
         if (serverId is None) or (classId is None) or (deviceId is None):
             return
 
-        if not self.checkSystemTopology():
+        if not self.model().checkSystemTopology():
             return
 
         # Check whether deviceId is already online
-        if self.systemTopology.has("device.{}".format(deviceId)):
+        if self.model().systemTopology.has("device.{}".format(deviceId)):
             # Get schema
-            schema = manager.Manager().getDeviceSchema(deviceId)
+            schema = Manager().getDeviceSchema(deviceId)
             itemInfo = dict(key=deviceId, classId=classId, \
                             type=NavigationItemTypes.DEVICE, schema=schema)
         else:
             # Get schema
-            schema = manager.Manager().getClassSchema(serverId, classId)
+            schema = Manager().getClassSchema(serverId, classId)
             # Set path which is used to get class schema
             naviPath = "{}.{}".format(serverId, classId)
             itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
                             classId=classId, type=NavigationItemTypes.CLASS, \
                             schema=schema)
         
-        manager.Manager().onSchemaAvailable(itemInfo)
+        Manager().onSchemaAvailable(itemInfo)
         # Notify configurator of changes
         self.signalItemChanged.emit(itemInfo)
 

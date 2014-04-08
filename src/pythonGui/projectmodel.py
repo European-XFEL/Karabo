@@ -15,7 +15,6 @@ __all__ = ["ProjectModel"]
 
 
 from copy import copy
-from enums import NavigationItemTypes
 from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
@@ -30,7 +29,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalConnectToServer = pyqtSignal()
     signalAddScene = pyqtSignal(str) # scene title
-    signalSelectionChanged = pyqtSignal(list)
 
     ITEM_PATH = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
