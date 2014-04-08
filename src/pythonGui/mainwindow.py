@@ -34,7 +34,8 @@ from PyQt4.QtGui import (QAction, QActionGroup, qApp, QIcon, QKeySequence,
 
 class MainWindow(QMainWindow):
     # signals
-    #signalQuitApplication = pyqtSignal()
+    signalServerConnection = pyqtSignal(bool) # connect?
+    signalQuitApplication = pyqtSignal()
     #signalGlobalAccessLevelChanged = pyqtSignal()
 
     def __init__(self):
@@ -46,9 +47,6 @@ class MainWindow(QMainWindow):
         self._setupMenuBar()
         self._setupToolBar()
         self._setupStatusBar()
-
-        #Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
-        #Network().signalUserChanged.connect(self.onUpdateAccessLevel)
         
         self._setupPanels()
 
@@ -134,7 +132,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self.onConnectToServer)
+        self.acServerConnect.triggered.connect(self.onServerConnection)
 
         text = "Exit application"
         self.acExit = QAction(icons.exit, '&Exit', self)
@@ -225,14 +223,11 @@ class MainWindow(QMainWindow):
         connections and returns it.
         """
         customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
-        #Network().signalServerConnectionChanged.connect(customViewPanel.onServerConnectionChanged)
         return customViewPanel
 
 
     def _quit(self):
         self.signalQuitApplication.emit()
-        #Network().endServerConnection()
-        #Manager().closeDatabaseConnection()
 
 
 ### virtual functions ###
@@ -250,11 +245,12 @@ class MainWindow(QMainWindow):
 
 
 ### slots ###
-    def onConnectToServer(self, checked):
-        if checked:
-            Network().connectToServer()
-        else:
-            Network().disconnectFromServer()
+    def onServerConnection(self, connect):
+        self.signalServerConnection.emit(connect)
+        #if checked:
+        #    Network().connectToServer()
+        #else:
+        #    Network().disconnectFromServer()
 
 
     def onExit(self):

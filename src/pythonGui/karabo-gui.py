@@ -17,6 +17,7 @@ import icons
 import numpy
 
 from mainwindow import MainWindow
+from network import Network
 
 from PyQt4.QtGui import QApplication
 
@@ -43,4 +44,10 @@ if __name__ == '__main__':
     from vacuumwidgets import *
         
     window = MainWindow()
+    # Make connections between Network and MainWindow
+    window.signalServerConnection.connect(Network().onServerConnection)
+    window.signalQuitApplication.connect(Network().onQuitApplication)
+    Network().signalServerConnectionChanged.connect(window.onServerConnectionChanged)
+    Network().signalUserChanged.connect(window.onUpdateAccessLevel)
+    
     sys.exit(app.exec_())

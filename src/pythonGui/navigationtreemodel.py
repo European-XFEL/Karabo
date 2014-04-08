@@ -23,7 +23,6 @@ from PyQt4.QtGui import QItemSelectionModel, QIcon
 
 class NavigationTreeModel(QAbstractItemModel):
     # signal
-    signalItemChanged = pyqtSignal(dict)
     signalInstanceNewReset = pyqtSignal(str) # path
 
 
@@ -35,7 +34,6 @@ class NavigationTreeModel(QAbstractItemModel):
         
         self.setSupportedDragActions(Qt.CopyAction)
         self.selectionModel = QItemSelectionModel(self)
-        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleServerData(self, config):
@@ -275,53 +273,6 @@ class NavigationTreeModel(QAbstractItemModel):
                 
     def globalAccessLevelChanged(self):
         self.modelReset.emit()
-
-
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        if len(selectedIndexes) < 1:
-            return
-        
-        index = selectedIndexes[0]
-
-        if not index.isValid():
-            return
-
-        level = self.getHierarchyLevel(index)
-
-        classId = None
-        path = ""
-
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            path = index.data()
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-
-            schema = Manager().getClassSchema(serverId, classId)
-            path = "{}.{}".format(serverId, classId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                        type=type, schema=schema))
-        elif level == 3:
-            type = NavigationItemTypes.DEVICE
-            deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
-
-            schema = Manager().getDeviceSchema(deviceId)
-            path = deviceId
-            Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                           type=type, schema=schema))
-
-        itemInfo = dict(key=path, classId=classId, type=type)
-        self.signalItemChanged.emit(itemInfo)
 
 
     def onServerConnectionChanged(self, isConnected):

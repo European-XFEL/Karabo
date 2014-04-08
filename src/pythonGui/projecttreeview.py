@@ -38,6 +38,7 @@ class ProjectTreeView(QTreeView):
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
         self.setSelectionModel(self.model().selectionModel)
+        self.model().selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -170,4 +171,47 @@ class ProjectTreeView(QTreeView):
         if menu is None: return
         
         menu.exec_(QCursor.pos())
+
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        # Send signal to projectPanel to update toolbar actions
+        self.signalSelectionChanged.emit(selectedIndexes)
+        
+        if len(selectedIndexes) < 1:
+            return
+
+        index = selectedIndexes[0]
+
+        path = index.data(ProjectModel.ITEM_PATH)
+        if path is None: return
+        
+        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
+        classId = index.data(ProjectModel.ITEM_CLASS_ID)
+        deviceId = index.data(Qt.DisplayRole)
+
+        if (serverId is None) or (classId is None) or (deviceId is None):
+            return
+
+        if not self.checkSystemTopology():
+            return
+
+        # Check whether deviceId is already online
+        if self.systemTopology.has("device.{}".format(deviceId)):
+            # Get schema
+            schema = manager.Manager().getDeviceSchema(deviceId)
+            itemInfo = dict(key=deviceId, classId=classId, \
+                            type=NavigationItemTypes.DEVICE, schema=schema)
+        else:
+            # Get schema
+            schema = manager.Manager().getClassSchema(serverId, classId)
+            # Set path which is used to get class schema
+            naviPath = "{}.{}".format(serverId, classId)
+            itemInfo = dict(key=path, projNaviPathTuple=(naviPath, path),
+                            classId=classId, type=NavigationItemTypes.CLASS, \
+                            schema=schema)
+        
+        manager.Manager().onSchemaAvailable(itemInfo)
+        # Notify configurator of changes
+        self.signalItemChanged.emit(itemInfo)
 

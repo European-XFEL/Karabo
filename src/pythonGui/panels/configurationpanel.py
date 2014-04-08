@@ -72,13 +72,13 @@ class ConfigurationPanel(QWidget):
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.twNavigation = NavigationTreeView(self)
-        self.twNavigation.model().signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation.signalItemChanged.connect(self.onDeviceItemChanged)
         self.twNavigation.hide()
         navSplitter.addWidget(self.twNavigation)
 
         # Project tree
         self.twProject = ProjectTreeView(self)
-        self.twProject.model().signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject.signalItemChanged.connect(self.onDeviceItemChanged)
         self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
