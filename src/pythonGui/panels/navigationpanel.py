@@ -41,14 +41,14 @@ class NavigationPanel(QWidget):
         title = "Navigation"
         self.setWindowTitle(title)
                 
-        self.__twNavigation = NavigationTreeView(self)
-        self.__twNavigation.model().signalInstanceNewReset.connect(self.onResetPanel)
+        self.twNavigation = NavigationTreeView(self)
+        self.twNavigation.model().signalInstanceNewReset.connect(self.onResetPanel)
         
         Manager().signalReset.connect(self.onResetPanel)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__twNavigation)
+        mainLayout.addWidget(self.twNavigation)
 
         self.setupActions()
 
@@ -68,20 +68,20 @@ class NavigationPanel(QWidget):
         This slot is called when the panel needs a reset which means the last
         selection is not needed anymore.
         """
-        self.__twNavigation.clearSelection()
+        self.twNavigation.clearSelection()
 
 
     def onNewNavigationItem(self, itemInfo):
         # itemInfo: id, name, type, (status), (refType), (refId), (schema)
-        self.__twNavigation.createNewItem(itemInfo, True)
+        self.twNavigation.createNewItem(itemInfo, True)
 
 
     def onSelectNewNavigationItem(self, devicePath):
-        self.__twNavigation.selectItem(devicePath)
+        self.twNavigation.selectItem(devicePath)
 
    
     def onGlobalAccessLevelChanged(self):
-        self.__twNavigation.model().globalAccessLevelChanged()
+        self.twNavigation.model().globalAccessLevelChanged()
 
 
     # virtual function
