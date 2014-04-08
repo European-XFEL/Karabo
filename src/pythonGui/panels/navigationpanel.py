@@ -37,14 +37,14 @@ class NavigationPanel(QWidget):
     ##########################################
 
 
-    def __init__(self, treemodel):
+    def __init__(self):
         super(NavigationPanel, self).__init__()
         
         title = "Navigation"
         self.setWindowTitle(title)
                 
-        self.__twNavigation = NavigationTreeView(self, treemodel)
-        treemodel.signalInstanceNewReset.connect(self.onResetPanel)
+        self.__twNavigation = NavigationTreeView(self)
+        self.__twNavigation.model().signalInstanceNewReset.connect(self.onResetPanel)
 
         Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
