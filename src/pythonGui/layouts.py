@@ -477,10 +477,10 @@ class ProxyWidget(QStackedWidget):
 
     def dropEvent(self, event):
         source = event.source()
-        if source is None or not isinstance(source, ParameterTreeWidget):
+        if source is None:
             return
         for item in source.selectedItems():
-            if self.component.addKey(item.internalKey):
-                manager.Manager().newVisibleDevice(item.internalKey)
+            if self.component.addBox(item.internalKey):
+                item.internalKey.configuration.addVisible()
                 event.accept()
 
