@@ -70,6 +70,8 @@ class DisplayLabel(DisplayWidget):
             if isinstance(value[0], Hash):
                 # No visualization of vector of Hash in this widget
                 return
+        if not isinstance(key.descriptor, hashtypes.Type):
+            return # only simple types can be shown here
         
         if value is None:
             return
