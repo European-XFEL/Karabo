@@ -98,8 +98,6 @@ class ConfigurationPanel(QWidget):
         vLayout = QVBoxLayout(topWidget)
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addWidget(splitTopPanes)
-      
-        Manager().signalGlobalAccessLevelChanged.connect(self.onGlobalAccessLevelChanged)
         
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
