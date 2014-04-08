@@ -23,7 +23,7 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QIcon, QMenu, QTre
 
 
 class NavigationTreeView(QTreeView):
-    signalItemChanged = pyqtSignal(dict)
+    signalItemChanged = pyqtSignal(object)
     
     
     def __init__(self, parent):
@@ -189,33 +189,15 @@ class NavigationTreeView(QTreeView):
         classId = None
         path = ""
 
-        if level == 0:
-            type = NavigationItemTypes.HOST
-        elif level == 1:
-            type = NavigationItemTypes.SERVER
-            path = index.data()
-        elif level == 2:
-            type = NavigationItemTypes.CLASS
+        if level == 2:
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-
-            schema = Manager().getClassSchema(serverId, classId)
-            path = "{}.{}".format(serverId, classId)
-            Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                        type=type, schema=schema))
+            conf = Manager().getClass(serverId, classId)
         elif level == 3:
-            type = NavigationItemTypes.DEVICE
             deviceId = index.data()
-            classIndex = index.parent()
-            classId = classIndex.data()
-            #serverIndex = classIndex.parent()
-            #serverId = serverIndex.data()
+            conf = Manager().getDevice(deviceId)
+        else:
+            conf = None
 
-            schema = Manager().getDeviceSchema(deviceId)
-            path = deviceId
-            Manager().onSchemaAvailable(dict(key=path, classId=classId,
-                                           type=type, schema=schema))
-
-        itemInfo = dict(key=path, classId=classId, type=type)
-        self.signalItemChanged.emit(itemInfo)
+        self.signalItemChanged.emit(conf)
