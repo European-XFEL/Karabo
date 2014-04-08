@@ -1,5 +1,5 @@
-from hash import Schema, Hash
-import hashtypes
+from karabo.hash import Schema, Hash
+from karabo import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
 import icons
@@ -336,7 +336,6 @@ class Schema(hashtypes.Descriptor):
                 if v.hasValue():
                     ret[k] = v.toHash()
             except AttributeError as e:
-                print 'tH', k, e
                 pass
         return ret
 
@@ -348,7 +347,6 @@ class Schema(hashtypes.Descriptor):
             try:
                 vv = getattr(box._value, k)
             except AttributeError:
-                print 'schemaset: no {} in {} (to {})'.format(k, box._value, v)
                 continue
             try:
                 ts = Timestamp.fromHashAttributes(a)
@@ -374,7 +372,6 @@ class ChoiceOfNodes(Schema):
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
         self.classAlias = 'Choice Element'
-        print type(self)
         return self
 
 
