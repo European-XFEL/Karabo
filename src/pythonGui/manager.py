@@ -61,7 +61,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
-    signalGetFromPast = pyqtSignal(str, str, str, str) # deviceId, property, t0, t1
+    signalGetFromPast = pyqtSignal(object, str, str) # deviceId, property, t0, t1
 
 
     def __init__(self, *args, **kwargs):
@@ -450,6 +450,12 @@ class _Manager(QObject):
         deviceId = instanceInfo.get("deviceId")
         config = instanceInfo.get("configuration")
         self.deviceData[deviceId].merge(config)
+
+
+    def handleHistoricData(self, hash):
+        box = self.deviceData[hash["deviceId"]].getBox(
+            hash["property"].split("."))
+        box.signalHistoricData.emit(box, hash["data"])
 
 
     def handleNotification(self, instanceInfo):

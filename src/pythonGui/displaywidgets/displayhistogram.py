@@ -25,117 +25,49 @@ import sys
 from widget import DisplayWidget
 from randomcolor import RandomColor
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from guiqwt.plot import CurveDialog
+from guiqwt.builder import make
+from PyQt4.Qwt5 import QwtPlotItem
 
-import numpy as np
-try:
-    from guiqwt.plot import CurveDialog
-    from guiqwt.builder import make
-    from PyQt4.Qwt5 import *
-    useGuiQwt = True
-except:
-    from PyQt4.Qwt5 import *
-    useGuiQwt = False
+from numpy import arange
 
 
 class DisplayHistogram(DisplayWidget):
     category = "List"
     alias = "Histogram"
-    minMaxAssociatedKeys = 1, 10
+    colorList = ["red", "green", "blue", "gray", "violet", "orange",
+                 "lightgreen", "black"]
 
     def __init__(self, box, parent):
-        super(DisplayHistogram, self).__init__(box)
-        
-        if useGuiQwt:
-            self.__histogramWidget = CurveDialog(edit=False, toolbar=True, wintitle="Histogram")
-            self.__plot = self.__histogramWidget.get_plot()
-        else:        
-            self.__histogramWidget = QwtPlot()
-            self.__histogramWidget.setMinimumSize(QSize(200,200))
-            # Attach grid to plot
-            grid = QwtPlotGrid()
-            grid.enableXMin(True)
-            grid.enableYMin(True)
-            grid.setMajPen(QPen(Qt.black, 0, Qt.DotLine))
-            grid.setMinPen(QPen(Qt.gray, 0, Qt.DotLine))
-            grid.attach(self.__histogramWidget)
-            
-        self.__plotCurves = []
-            
-        # Default colors
-        self.__colorList = ["red", "green", "blue", "gray", "violet", "orange", "lightgreen", "black"]
-            
+        super(DisplayHistogram, self).__init__(None)
+
+        self.widget = CurveDialog(edit=False, toolbar=True,
+                                  wintitle="Histogram")
+        self.plot = self.widget.get_plot()
+        self.curves = { }
+        self.addBox(box)
+
+
     @property
-    def widget(self):
-        return self.__histogramWidget
+    def boxes(self):
+        return self.curves.keys()
 
 
     value = None
 
-    def addKeyValue(self, key, value):
-        self.valueChanged(key, value)
 
-
-    def removeKey(self, key):
-        if key in self.__keys:
-            self.__keys.pop(key)
+    def addBox(self, box):
+        curve = make.curve(arange(len(box.value)), box.value, box.path[-1],
+                           self.colorList[len(self.curves)])
+        self.curves[box] = curve
+        self.plot.add_item(curve)
+        box.addWidget(self)
+        return True
 
 
     def valueChanged(self, box, value, timestamp=None):
-        if useGuiQwt:
-            while len(self.__plotCurves) > 0:
-                self.__plot.del_item(self.__plotCurves.pop())
-
-            for index, box in enumerate(self.boxes):
-                value = box.value
-                if value is None:
-                    continue
-                
-                curveItem = make.curve(range(0, len(value), 1), value,
-                                       self.__colorList[index])
-                
-                self.__plot.add_item(curveItem)
-                
-                self.__plotCurves.append(curveItem)
-            
-            self.__plot.replot()
-        else:
-            while len(self.__plotCurves) > 0:
-                self.__plotCurves.pop().detach()
-
-            index = -1
-            for key in self.__keys:
-                value = self.__keys.get(key)
-                if value is None:
-                    continue
-
-                index += 1
-                
-                i = 0
-                width = 1
-                intervals = []
-                values = QwtArrayDouble(len(value))
-                
-                for element in value:
-                    if isinstance(element, str):
-                        return # TODO: what happens if string in list?
-                    xValue = i+width
-                    intervals.append(QwtDoubleInterval(i, xValue))
-                    yValue = float(element)
-                    values[i] = yValue
-                    
-                    i += width
-                
-                # Attach histogram item to plot
-                histogram = HistogramItem()
-                histogram.setColor(QColor(self.__colorList[index]))
-                histogram.setData(QwtIntervalData(intervals, values))
-                histogram.attach(self.__histogramWidget)
-                
-                self.__plotCurves.append(histogram)
-            
-            self.__histogramWidget.replot()
+        self.curves[box].set_data(arange(len(value)), value)
+        self.plot.replot()
 
 
 class HistogramItem(QwtPlotItem):
