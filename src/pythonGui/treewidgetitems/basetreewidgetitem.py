@@ -53,6 +53,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     isListElement = False
     metricPrefixSymbol = None
     unitSymbol = None
+    description = None
 
     # Returns the editable component of the item
     def _editableComponent(self):

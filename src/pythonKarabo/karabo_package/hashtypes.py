@@ -498,7 +498,7 @@ class Hash(Type):
 class VectorHash(Vector, Hash):
     @classmethod
     def read(cls, file):
-        return list(super(VectorString, cls).read(file))
+        return list(super(VectorHash, cls).read(file))
 
 
     def cast(self, other):

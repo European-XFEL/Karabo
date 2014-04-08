@@ -2,6 +2,7 @@ from karabo.hash import Schema, Hash
 from karabo import hashtypes
 from enums import AccessMode, NavigationItemTypes
 from registry import Monkey
+import manager
 import icons
 from timestamp import Timestamp
 from util import Weak
@@ -108,6 +109,10 @@ class Box(QObject):
         self.signalUpdateComponent.connect(component.onDisplayValueChanged)
         if self.hasValue():
             component.onDisplayValueChanged(self, self.value)
+
+
+    def getFromPast(self, t0, t1):
+        manager.Manager().signalGetFromPast.emit(self, t0, t1)
 
 
 def _copyAttr(self, item, out, ain=None):
