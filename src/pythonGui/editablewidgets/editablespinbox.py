@@ -28,8 +28,6 @@ from widget import EditableWidget
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QSpinBox
 
-from numpy import iinfo
-
 
 class EditableSpinBox(EditableWidget):
     category = "Digit"
@@ -55,31 +53,8 @@ class EditableSpinBox(EditableWidget):
 
 
     def typeChanged(self, box):
-        min = getattr(box.descriptor, "minInc", None)
-        if min is None:
-            min = getattr(box.descriptor, "minExc", None)
-        if min is None:
-            info = iinfo(box.descriptor.numpy)
-            min = info.min
-        else:
-            min += 1
-        if min < -0x80000000:
-            min = -0x80000000
-
-
-        max = getattr(box.descriptor, "maxInc", None)
-        if max is None:
-            max = getattr(box.descriptor, "maxExc", None)
-        if max is None:
-            info = iinfo(box.descriptor.numpy)
-            max = info.max
-        else:
-            max -= 1
-        if max > 0x7fffffff:
-            max = 0x7fffffff
-
-        self.widget.setRange(min, max)
-
+        rmin, rmax = box.descriptor.getMinMax()
+        self.widget.setRange(max(-0x80000000, rmin), min(0x7fffffff, rmax))
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
