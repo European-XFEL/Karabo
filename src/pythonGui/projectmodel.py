@@ -27,7 +27,7 @@ import os.path
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
-    signalConnectToServer = pyqtSignal()
+    signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(str) # scene title
 
     ITEM_PATH = Qt.UserRole
@@ -178,7 +178,8 @@ class ProjectModel(QStandardItemModel):
 
         if reply == QMessageBox.No:
             return False
-        self.signalConnectToServer.emit()
+        # Send signal to establish server connection to projectpanel
+        self.signalServerConnection.emit(True)
         return False
 
 
