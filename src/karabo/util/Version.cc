@@ -18,8 +18,9 @@ namespace karabo {
 
     namespace util {
 
+
         Version::Version() : m_major(-1), m_minor(-1), m_patch(-1), m_revision(-1) {
-            
+
             boost::filesystem::path versionFile = getPathToVersionFile();
             if (boost::filesystem::exists(versionFile)) {
                 std::stringstream buffer;
@@ -31,6 +32,7 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Cannot open file: " + versionFile.string());
                 }
                 m_versionString = buffer.str();
+                m_versionString = m_versionString.substr(0, m_versionString.size() - 1); // Cut away newline character
                 if (m_versionString.empty()) {
                     if (m_versionString[0] == 'r') {
                         m_revision = fromString<int>(m_versionString.substr(1));
@@ -41,9 +43,10 @@ namespace karabo {
                         if (v.size() > 2) m_patch = v[2];
                     }
                 }
-            }            
+            }
         }
-        
+
+
         std::string Version::getPathToVersionFile() {
             boost::filesystem::path karaboLocation(std::string(getenv("HOME")) + "/.karabo/karaboFramework");
             if (boost::filesystem::exists(karaboLocation)) {
@@ -57,35 +60,41 @@ namespace karabo {
                 }
                 // Get rid of the newline character
                 std::string path(buffer.str());
-                path = path.substr(0, path.size()-1);
+                path = path.substr(0, path.size() - 1); // Cut away newline character
                 return path + "/VERSION";
             }
         }
-        
+
+
         Version& Version::getInstance() {
             static Version v;
             return v;
         }
-        
+
+
         std::string Version::getVersion() {
             return getInstance().m_versionString;
         }
-        
+
+
         int Version::getMajor() {
             return getInstance().m_major;
         }
-        
+
+
         int Version::getMinor() {
             return getInstance().m_minor;
         }
-        
+
+
         int Version::getPatch() {
             return getInstance().m_patch;
         }
-        
+
+
         int Version::getRevision() {
             return getInstance().m_revision;
         }
-        
+
     }
 }
