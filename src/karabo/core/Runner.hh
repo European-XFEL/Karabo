@@ -43,7 +43,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(Runner, "Runner", "1.0")
+            KARABO_CLASSINFO(Runner, "Runner", karabo::util::Version::getVersion())
 
             KARABO_CONFIGURATION_BASE_CLASS;
 
@@ -425,7 +425,7 @@ namespace karabo {
                 std::cout << "\n ##################################################################\n"
                         << " #             Simple Karabo " << runnableType << " Runner\n"
                         << " #\n"
-                        << " # Runner-Version: " << Runner::classInfo().getVersion() << "\n"
+                        << " # Karabo-Version: " << karabo::util::Version::getVersion() << "\n"
                         << " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.\n"
                         << " ##################################################################\n\n";
             }
