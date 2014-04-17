@@ -45,10 +45,8 @@ namespace karabo {
 
             GuiServerDevice(const karabo::util::Hash& input);
 
-            virtual ~GuiServerDevice() {
-            }
-
-
+            virtual ~GuiServerDevice();
+            
             void okStateOnEntry();
 
 
