@@ -38,6 +38,10 @@ namespace karabo {
                     .assignmentOptional().defaultValue("Jms")
                     .commit();
             
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("Karabo_GuiServer_0")
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
                     .commit();
@@ -57,9 +61,15 @@ namespace karabo {
             m_dataConnection = Connection::create("Tcp", config);
             m_ioService = m_dataConnection->getIOService();
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading      
-            
+
             m_loggerConnection = BrokerConnection::createChoice("loggerConnection", input);
             m_loggerIoService = m_loggerConnection->getIOService();
+        }
+        
+        GuiServerDevice::~GuiServerDevice() {            
+            m_ioService->stop();
+            m_dataConnection->stop();
+            m_loggerIoService->stop();
         }
 
 
@@ -100,7 +110,7 @@ namespace karabo {
                 brokerInfo.set("port", this->getConnection()->getBrokerPort());
                 brokerInfo.set("topic", this->getConnection()->getBrokerTopic());
                 channel->write(brokerInfo);
-                
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onConnect(): " << e.userFriendlyMsg();
             }
@@ -211,7 +221,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = info.get<string > ("deviceId");
                 Hash instanceInfo = createConfigurationChangedHash(deviceId, remote().get(deviceId));
-                
+
                 channel->write(instanceInfo);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
@@ -250,19 +260,19 @@ namespace karabo {
                 if (it != m_channels.end()) {
                     it->second.insert(deviceId);
                 }
-                
+
                 // Increase count of device in visible devices map
                 m_visibleDevices[deviceId]++;
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNewVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
-                 
+
                 if (m_visibleDevices[deviceId] == 1) { // Fresh device on the shelf
                     remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                 }
-                
+
                 // Send back fresh information about device
                 // TODO This could check a dirty-flag whether the device changed since last time seen
                 onRefreshInstance(channel, info);
-                
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onNewVisibleDevice(): " << e.userFriendlyMsg();
             }
@@ -270,22 +280,22 @@ namespace karabo {
 
 
         void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-            try {                
+            try {
                 string deviceId = info.get<string > ("deviceId");
-                
+
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
                 if (it != m_channels.end()) it->second.erase(deviceId);
-                
+
                 m_visibleDevices[deviceId]--;
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRemoveVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
-                
+
                 if (m_visibleDevices[deviceId] == 0) {
                     // Disconnect signal/slot from broker
                     remote().unregisterDeviceMonitor(deviceId);
                 }
-                
-                
+
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRemoveVisibleDevice(): " << e.userFriendlyMsg();
             }
@@ -426,7 +436,7 @@ namespace karabo {
                 KARABO_LOG_ERROR << "Problem in slotChanged(): " << e.userFriendlyMsg();
             }
         }
-        
+
 
         void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             try {
@@ -451,7 +461,7 @@ namespace karabo {
                 Hash notificationInfo("type", "notification", "deviceId", deviceId,
                                       "messageType", type, "shortMsg", shortMessage,
                                       "detailedMsg", detailedMessage);
-                
+
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
@@ -498,7 +508,7 @@ namespace karabo {
                     }
                 }
                 // Remove channel as such
-                m_channels.erase(it);                
+                m_channels.erase(it);
             }
         }
 
@@ -508,7 +518,7 @@ namespace karabo {
             try {
                 for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
                     if (it->hasAttribute("image")) {
-                        
+
                         // Create a RawImageData object which shares the data of the hash
                         karabo::xip::RawImageData img(it->getValue<Hash>(), true); // Must share data
 
@@ -516,7 +526,7 @@ namespace karabo {
 
                         // Support for grayscale images
                         if (img.getEncoding() == Encoding::GRAY) {
-                            KARABO_LOG_DEBUG << "Preprocessing image";
+                            //KARABO_LOG_DEBUG << "Preprocessing image";
                             img.toRGBAPremultiplied();
                         }
                         // TODO: At the moment we don't touch color images!!!
