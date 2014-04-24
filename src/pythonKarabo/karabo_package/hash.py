@@ -289,7 +289,7 @@ class Hash(OrderedDict):
             yield k, self[k], self[k, ...]
 
 
-    def merge(self, other, attribute_policy):
+    def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
 
         If the attribute_policy is 'merge', the attributes from the other
