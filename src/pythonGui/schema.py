@@ -39,6 +39,7 @@ class Box(QObject):
 
     def __init__(self, path, descriptor, configuration):
         QObject.__init__(self)
+        # Path as tuple
         self.path = path
         self._descriptor = descriptor
         self.configuration = configuration
@@ -70,6 +71,15 @@ class Box(QObject):
         if self.hasValue():
             self._value = d.cast(self._value)
         self.signalNewDescriptor.emit(self)
+
+
+    def setSchema(self, schema):
+        self._descriptor = Schema.parse(schema.name, schema.hash, {})
+
+
+    def fillWidget(self, parameterEditor, isClass):
+        if self._descriptor is not None:
+            self._descriptor.fillWidget(parameterEditor, self, isClass)
 
 
     def __getattr__(self, attr):
