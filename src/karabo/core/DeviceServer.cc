@@ -76,27 +76,30 @@ namespace karabo {
                     .description("Decides whether this device-server runs as a master")
                     .assignmentOptional().defaultValue(false)
                     .commit();
-
-            UINT32_ELEMENT(expected)
-                    .key("guiServerPort")
-                    .displayedName("GUI Server Hostport")
-                    .description("Local port for the GUI Server")
-                    .assignmentOptional().defaultValue(44444)
+            
+            LIST_ELEMENT(expected).key("autoStart")
+                    .displayedName("Auto start")
+                    .description("Auto starts selected devices")
+                    .appendNodesOfConfigurationBase<karabo::core::BaseDevice>()
+                    .assignmentOptional().noDefaultValue()
                     .commit();
 
-            UINT32_ELEMENT(expected).key("nameRequestTimeout")
-                    .displayedName("Name Request Timeout")
-                    .description("Time to wait for name resolution (via name-server) until timeout [ms]")
+            BOOL_ELEMENT(expected).key("scanPlugins")
+                    .displayedName("Scan plug-ins?")
+                    .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
                     .expertAccess()
-                    .assignmentOptional().defaultValue(5000)
+                    .assignmentOptional().defaultValue(true)
                     .commit();
-
-            NODE_ELEMENT(expected).key("PluginLoader")
-                    .displayedName("Plugin Loader")
-                    .description("Plugin Loader sub-configuration")
-                    .appendParametersOfConfigurableClass<PluginLoader>("PluginLoader")
+            
+            PATH_ELEMENT(expected)
+                    .key("pluginDirectory")
+                    .displayedName("Plugin Directory")
+                    .description("Directory to search for plugins")
+                    .assignmentOptional().defaultValue("plugins")
+                    .isDirectory()
+                    .expertAccess()
                     .commit();
-
+                       
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -120,9 +123,7 @@ namespace karabo {
 
             OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
                     .setNewDefaultValue("device-server.log")
-                    .commit();
-            
-
+                    .commit();            
             
             NODE_ELEMENT(expected).key("Logger.network")
                     .description("Log Appender settings for Network")
@@ -131,16 +132,12 @@ namespace karabo {
                     .advanced()
                     .commit();
 
-
-
-
             NODE_ELEMENT(expected).key("Logger.ostream")
                     .description("Log Appender settings for terminal")
                     .displayedName("Ostream Appender")
                     .appendParametersOfConfigurableClass<AppenderConfigurator>("Ostream")
                     .advanced()
                     .commit();
-
 
             OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
                     .setNewDefaultValue("Pattern")
@@ -161,7 +158,6 @@ namespace karabo {
                     .setNewAssignmentOptional()
                     .setNewDefaultValue("karabo")
                     .commit();
-
 
             OVERWRITE_ELEMENT(expected).key("Logger.karabo.additivity")
                     .setNewDefaultValue(false)
@@ -187,28 +183,56 @@ namespace karabo {
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {
-
-            input.get("isMaster", m_isMaster);
-
-            // Set device server instance 
-            if (input.has("serverId")) {
-                input.get("serverId", m_serverId);
-                // Automatically load this configuration on next startup
-                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "serverId.xml");
-            } else {
-                m_serverId = generateDefaultServerId();
+        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {            
+            
+            string serverIdFileName("serverId.xml");
+            
+            // Set serverId
+            if (boost::filesystem::exists(serverIdFileName)) { 
+                Hash hash;
+                karabo::io::loadFromFile(hash, serverIdFileName);
+                if (hash.has("serverId")) hash.get("serverId", m_serverId); // If file exists, it has priority
+                else if (input.has("serverId")) input.get("serverId", m_serverId); // Else whatever was configured
+                else m_serverId = generateDefaultServerId(); // If nothing configured -> generate
+            } else { // No file
+                if (input.has("serverId")) {
+                    input.get("serverId", m_serverId);
+                    // Generate file for next startup
+                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "serverId.xml");
+                } else {
+                    m_serverId = generateDefaultServerId(); 
+                }
             }
+            
+            // Device configurations for those to automatically start
+            if (input.has("autoStart")) input.get("autoStart", m_autoStart);
+            
+            // Whether to scan for additional plug-ins at runtime
+            input.get("scanPlugins", m_scanPlugins);
+            
+            // What visibility this server should have
+            input.get("visibility", m_visibility);
 
-            if (m_isMaster) m_visibility = 5;
-            else input.get("visibility", m_visibility);
-            m_guiServerPort = input.get<unsigned int>("guiServerPort");
-
-            m_connectionConfig = input.get<Hash>("connection");
+            // Deprecate the isMaster in future
+            input.get("isMaster", m_isMaster);
+            if (m_isMaster) {
+                
+//                cerr << "\n#### WARNING ####\nThe \"isMaster\" option will be deprecated!\n" 
+//                        << "If you were using the startMasterDeviceServer script,\n"
+//                        << "please delete the whole masterDeviceServer folder and use \"make test\" (in base folder) instead."
+//                        << "\n##################\n\n";
+                
+                m_visibility = 5;
+                m_scanPlugins = false;
+                m_autoStart.resize(2);
+                m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
+                m_autoStart[1] = Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0");
+            }
+            
+            m_connectionConfiguration = input.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", input);
-            loadLogger(input);
-            loadPluginLoader(input);
-            input.get("nameRequestTimeout", m_nameRequestTimeout);
+            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", input.get<string>("pluginDirectory")));
+            loadLogger(input);            
         }
 
 
@@ -253,14 +277,14 @@ namespace karabo {
             
             config.set("appenders[2].Network.layout", Hash());
             config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
-            config.set("appenders[2].Network.connection", m_connectionConfig);
+            config.set("appenders[2].Network.connection", m_connectionConfiguration);
             
             Hash category = config.get<Hash>("karabo");
             category.set("name", "karabo");
             config.set("categories[0].Category", category);
             config.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
             config.erase("karabo");            
-//            cerr << "loadLogger final:" << endl << config << endl;
+            // cerr << "loadLogger final:" << endl << config << endl;
             Logger::configure(config);
         }
 
@@ -291,7 +315,7 @@ namespace karabo {
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, instanceInfo));
             this->startFsm();
             t.join();
-            m_pluginThread.join();
+            
         }
 
 
@@ -326,13 +350,14 @@ namespace karabo {
                 inbuildDevicesAvailable();
             }
 
-            if (m_isMaster) {
-                slotStartDevice(Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0", "FileDataLogger.connection", m_connectionConfig));
-                slotStartDevice(Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0", "GuiServerDevice.connection", m_connectionConfig, "GuiServerDevice.loggerConnection", m_connectionConfig, "GuiServerDevice.port", m_guiServerPort));
-            } else {
+            BOOST_FOREACH(Hash device, m_autoStart) {
+                slotStartDevice(device);                
+            }
+            
+            if (m_scanPlugins) {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
                 m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));
-            }
+            }            
         }
 
 
@@ -373,7 +398,7 @@ namespace karabo {
                         boost::this_thread::sleep(boost::posix_time::milliseconds(10000));
                     }
                 }
-                stopEventLoop();
+                //stopEventLoop();
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Exception raised in scanPlugins: " << e;
@@ -385,6 +410,8 @@ namespace karabo {
 
         void DeviceServer::stopDeviceServer() {
             m_serverIsRunning = false;
+            if (m_pluginThread.joinable()) m_pluginThread.join();
+            stopEventLoop();
         }
 
 
