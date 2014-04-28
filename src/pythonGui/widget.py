@@ -34,20 +34,10 @@ class Widget(Registry, QObject):
         if "menu" in dict:
             cls.factories[name] = cls
             cls.factory = cls
-            cls.categoryToAliases = { } # <category, [alias1,alias2,..]>
-            cls.aliasToCategory = { } # <alias, category>
-            cls.aliasConcreteClass = { } # dict of actual classes
-        elif "alias" in dict:
-            if cls.category in cls.categoryToAliases:
-                cls.categoryToAliases[cls.category].append(cls.alias)
-            else:
-                cls.categoryToAliases[cls.category] = [cls.alias]
-            cls.aliasToCategory[cls.alias] = cls.category
-            cls.aliasConcreteClass[cls.alias] = cls
 
 
     @classmethod
-    def get_class(cls, alias):
+    def getClass(cls, alias):
         # Get module and class name as tuple (moduleName,className)
         return cls.aliasConcreteClass[alias]
 
@@ -67,6 +57,21 @@ class Widget(Registry, QObject):
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
+    categoryToAliases = { }
+    aliasConcreteClass = { }
+
+
+    @classmethod
+    def register(cls, name, dict):
+        super(DisplayWidget, cls).register(name, dict)
+        if "alias" in dict:
+            DisplayWidget.categoryToAliases.setdefault(cls.category,
+                                                       [ ]).append(cls.alias)
+            DisplayWidget.aliasConcreteClass[cls.alias] = cls
+
+
+    def setReadOnly(self, ro):
+        assert ro, "combined Editable and Display widgets: set setReadOnly!"
 
 
 class VacuumWidget(DisplayWidget):
@@ -110,10 +115,25 @@ class EditableWidget(Widget):
     menu = "Change widget"
     factories = { }
     signalEditingFinished = pyqtSignal(object, object)
+    categoryToAliases = { }
+    aliasConcreteClass = { }
+
+
+    @classmethod
+    def register(cls, name, dict):
+        super(EditableWidget, cls).register(name, dict)
+        if "alias" in dict:
+            EditableWidget.categoryToAliases.setdefault(cls.category,
+                                                        [ ]).append(cls.alias)
+            EditableWidget.aliasConcreteClass[cls.alias] = cls
 
 
     def addParameters(self, **params):
         pass
+
+
+    def setReadOnly(self, ro):
+        assert not ro, "combined Editable and Display widgets: set setReadOnly!"
 
 
     def onEditingFinished(self, value):
