@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+            return
         QMainWindow.closeEvent(self, event)
 
 
