@@ -424,12 +424,13 @@ class _Network(QObject):
         self._tcpWriteHash(instanceInfo)
 
 
-    def onGetFromPast(self, box, t0, t1):
+    def onGetFromPast(self, box, t0, t1, maxNumData):
         instanceInfo = Hash("type", "getFromPast")
         instanceInfo.set("deviceId", box.configuration.path)
         instanceInfo.set("property", ".".join(box.path))
         instanceInfo.set("t0", t0)
         instanceInfo.set("t1", t1)
+        instanceInfo.set("maxNumData", maxNumData)
         self._tcpWriteHash(instanceInfo)
 
 
