@@ -89,7 +89,8 @@ class Box(QObject):
     def isAllowed(self):
         """return whether the value is allowed in the current state """
 
-        return (not hasattr(self.descriptor, 'allowedStates') or
+        return (self.descriptor is None or
+                self.descriptor.allowedStates is None or
                 self.configuration.configuration.state.value in
                     self.descriptor.allowedStates)
 
@@ -115,13 +116,6 @@ class Box(QObject):
         manager.Manager().signalGetFromPast.emit(self, t0, t1)
 
 
-def _copyAttr(self, item, out, ain=None):
-    if ain is None:
-        ain = out
-    if hasattr(self, ain):
-        setattr(item, out, getattr(self, ain))
-
-
 class Type(hashtypes.Type):
     __metaclass__ = Monkey
     icon = icons.undefined
@@ -132,7 +126,7 @@ class Type(hashtypes.Type):
 
 
     def setDefault(self, box):
-        if hasattr(self, "defaultValue"):
+        if self.defaultValue is not None:
             self.set(box, self.defaultValue)
 
 
@@ -142,7 +136,7 @@ class Type(hashtypes.Type):
             item.displayText = self.displayedName
         except AttributeError:
             item.displayText = box.path[-1]
-        _copyAttr(self, item, 'allowedStates')
+        item.allowedStates = self.allowedStates
 
         try:
             item.enumeration = self.options
@@ -263,13 +257,10 @@ class Schema(hashtypes.Descriptor):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
         self = cls(key)
-        ral = 0 if parent is None else parent.requiredAccessLevel
-        self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
+        self.displayedName = key
+        self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
             self.dict[k] = nodes[a['nodeType']](k, h, a, self)
-        self.displayedName = key
-        for k, v in attrs.iteritems():
-            setattr(self, k, v)
         self.classAlias = dict(Image="Image View", Slot="Command").get(
             attrs.get('displayType', None), "Value Field")
         self.key = key
@@ -277,11 +268,22 @@ class Schema(hashtypes.Descriptor):
 
 
     @staticmethod
+    def parseAttrs(self, attrs, parent):
+        ral = 0 if parent is None else parent.requiredAccessLevel
+        self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
+        self.description = attrs.get('description')
+        self.displayedName = attrs.get('displayedName', self.displayedName)
+        self.allowedStates = attrs.get('allowedStates')
+        self.accessMode = attrs.get('accessMode', 0)
+        self.displayType = attrs.get('displayType')
+        self.defaultValue = attrs.get('defaultValue')
+
+
+    @staticmethod
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
         ret.displayedName = key
-        for k, v in attrs.iteritems():
-            setattr(ret, k, v)
+        Schema.parseAttrs(ret, attrs, parent)
         return ret
 
 
@@ -298,7 +300,7 @@ class Schema(hashtypes.Descriptor):
         else:
             item = PropertyTreeWidgetItem(configuration, treeWidget, parent)
         item.displayText = self.displayedName
-        _copyAttr(self, item, 'allowedStates')
+        item.allowedStates = self.allowedStates
         item.requiredAccessLevel = self.requiredAccessLevel
         self._item(treeWidget, item, configuration, isClass)
         return item
@@ -376,6 +378,7 @@ class ChoiceOfNodes(Schema):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
+        self.assignment = attrs['assignment']
         self.classAlias = 'Choice Element'
         return self
 
@@ -386,12 +389,12 @@ class ChoiceOfNodes(Schema):
             item.displayText = self.displayedName
         except AttributeError:
             item.displayText = box.path[-1]
-        _copyAttr(self, item, 'allowedStates')
+        item.allowedStates = self.allowedStates
         if self.assignment == 1: # Mandatory
             f = item.font(0)
             f.setBold(True)
             item.setFont(0, f)
-        _copyAttr(self, item, 'defaultValue')
+        item.defaultValue = self.defaultValue
         item.requiredAccessLevel = self.requiredAccessLevel
 
         item.isChoiceElement = True
@@ -415,7 +418,7 @@ class ChoiceOfNodes(Schema):
             item.editableComponent.signalApplyChanged.connect(
                 self.treeWidget.onApplyChanged)
 
-        defaultValue = getattr(item, 'defaultValue', None)
+        defaultValue = item.defaultValue
         for k, v in self.dict.iteritems():
             childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
 
@@ -438,7 +441,7 @@ class ChoiceOfNodes(Schema):
 
 
     def setDefault(self, box):
-        if hasattr(self, 'defaultValue'):
+        if self.defaultValue is not None:
             box.current = self.defaultValue
         Schema.setDefault(self, box)
 
