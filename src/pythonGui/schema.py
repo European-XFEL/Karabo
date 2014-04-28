@@ -277,6 +277,8 @@ class Schema(hashtypes.Descriptor):
         self.accessMode = attrs.get('accessMode', 0)
         self.displayType = attrs.get('displayType')
         self.defaultValue = attrs.get('defaultValue')
+        self.alias = attrs.get('alias')
+        self.tags = attrs.get('tags')
 
 
     @staticmethod
