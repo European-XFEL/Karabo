@@ -86,25 +86,11 @@ int main(int argc, char** argv) {
         }
         #endif
 
-        vector<char*> newArgvVec(argc + 1);
-        char** newArgv = &newArgvVec[0];
-        for (int i = 0; i < argc; ++i) {
-            newArgv[i] = argv[i];
-        }
-
-        string serverIdFileName("serverId.xml");
-        if (boost::filesystem::exists(serverIdFileName)) {
-            newArgv[argc] = (char*) "serverId.xml";
-            argc++;
-        }
-
-        deviceServer = Runner<DeviceServer>::instantiate(argc, newArgv);
+        deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
         if (deviceServer) deviceServer->run();
 
         return EXIT_SUCCESS;
-    } catch (const karabo::util::TimeoutException& e) {
-        std::cout << std::endl << "An error has occurred: Network response timed out." << std::endl;
-        std::cout << "Make sure that a master-device-server is running under the configured broker/topic." << std::endl;
+        
     } catch (const karabo::util::Exception& e) {
         std::cout << e;
     } catch (...) {
