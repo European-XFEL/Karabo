@@ -714,15 +714,28 @@ namespace karabo {
         }
 
 
-        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to) {
+        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
+            return getPropertyHistory(deviceId, key, from, to, maxNumData);
+        }
+        
+        karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
             vector<Hash> result;
             // TODO Make this a global slot later
-            m_signalSlotable->request("Karabo_FileDataLogger_0", "slotGetFromPast", deviceId, key, from, to).timeout(60000).receive(result);
+            Hash args("from", from, "to", to, "maxNumData", maxNumData);
+            m_signalSlotable->request("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, key, args).timeout(60000).receive(result);
             return result;
         }
 
+        
+        std::pair<karabo::util::Hash, karabo::util::Schema> DeviceClient::getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
+            Hash hash;
+            Schema schema;
+            m_signalSlotable->request("Karabo_FileDataLogger_0", "slotGetConfigurationFromPast", deviceId, timepoint).timeout(60000).receive(hash, schema);
+            return make_pair(hash, schema);
+        }
 
+            
         void DeviceClient::registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction) {
             m_instanceNewHandler = callBackFunction;
         }
