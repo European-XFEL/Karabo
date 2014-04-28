@@ -269,11 +269,18 @@ namespace karathon {
             return bp::make_tuple(true, result[0]);
         }
         
-        bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "") {
-            if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
-           return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to));
+        bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0) {
+            return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
         }
-
+        
+        bp::object getPropertyHistoryPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0) {
+            return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
+        }
+        
+        bp::object getConfigurationFromPastPy(const std::string& deviceId, const std::string& timePoint) {
+            return Wrapper::fromStdPairToPyTuple<karabo::util::Hash, karabo::util::Schema>(this->getConfigurationFromPast(deviceId, timePoint));
+        }
+        
     private:
 
         void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
