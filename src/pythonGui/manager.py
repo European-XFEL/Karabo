@@ -268,11 +268,6 @@ class _Manager(QObject):
             self.signalRefreshInstance.emit(deviceId)
 
 
-    def onSchemaAvailable(self, itemInfo):
-        # Notify ConfigurationPanel
-        self.signalSchemaAvailable.emit(itemInfo)
-
-
     def onDeviceInstanceChanged(self, itemInfo, xml):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
@@ -398,8 +393,10 @@ class _Manager(QObject):
         
         conf = self.serverClassData[serverId, classId]
         conf.setSchema(schema)
+        # Set default values for configuration
         conf.setDefault()
-        self.onSchemaAvailable(conf)
+        # Notify ConfigurationPanel
+        self.signalSchemaAvailable.emit(conf)
 
 
     def getClass(self, serverId, classId):
@@ -424,8 +421,7 @@ class _Manager(QObject):
         conf.configuration.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
-        self.onSchemaAvailable(conf)
-        conf.addVisible()
+        self.signalSchemaAvailable.emit(conf)
 
 
     def getDevice(self, deviceId):
