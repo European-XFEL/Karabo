@@ -10,6 +10,8 @@
 #ifndef KARABO_CORE_FILEDATALOGGER_HH
 #define	KARABO_CORE_FILEDATALOGGER_HH
 
+#include <boost/filesystem.hpp>
+
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 
@@ -38,7 +40,7 @@ namespace karabo {
              *          
              */
             karabo::util::Hash m_systemHistory;
-
+            
             mutable boost::mutex m_systemHistoryMutex;
             
             bool m_persistData;
@@ -84,10 +86,21 @@ namespace karabo {
             
             void persistDataThread();
             
-            std::vector<karabo::util::Hash> slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string& to);
+            void copyAndClearSystemConfiguration(karabo::util::Hash& copy);
             
-            std::vector<karabo::util::Hash> getData(const std::string& deviceId, const std::string& key, const int i = -1);
+            void slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string& to);
             
+            void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
+            
+            void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
+            
+            std::vector<karabo::util::Hash> getPropertyData(const std::string& deviceId, const std::string& key, const int i = -1);
+            
+            boost::filesystem::path getArchiveFile(const std::string& deviceId, const int idx);
+            
+            karabo::util::Epochstamp extractRange(const std::vector<karabo::util::Hash>& archive, const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to, std::vector<karabo::util::Hash>& result);
+                        
+            karabo::util::Hash getDeviceData(const std::string& deviceId, const karabo::util::Epochstamp& tp);
         };
     }
 }
