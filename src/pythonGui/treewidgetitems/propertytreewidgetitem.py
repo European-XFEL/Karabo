@@ -97,22 +97,16 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                 info["Description"] = self.description
 
             info["Key"] = '.'.join(self.internalKey.path)
-            if self.valueType is not None:
-                info["Value Type"] = self.valueType.hashname()
-            if self.defaultValue is not None:
-                info["Default Value"] = self.defaultValue
-            if self.alias is not None:
-                info["Alias"] = self.alias
-            if self.tags is not None:
-                tagString = ""
-                nbTags = len(self.tags)
-                for i in xrange(nbTags):
-                    tagString += self.tags[i]
-                    if i < (nbTags-1):
-                        tagString += ", "
-                info["Tags"] = tagString
-            if self.timestamp is not None:
-                info["Timestamp"] = self.timestamp
+            d = self.internalKey.descriptor
+            info["Value Type"] = d.hashname()
+            if d.defaultValue is not None:
+                info["Default Value"] = d.defaultValue
+            if d.alias is not None:
+                info["Alias"] = d.alias
+            if d.tags is not None:
+                info["Tags"] = ", ".join(d.tags)
+            if self.internalKey.timestamp is not None:
+                info["Timestamp"] = self.internalKey.timestamp.toLocal()
             if self.__currentValueOnDevice is not None:
                 info["Value on device"] = self.__currentValueOnDevice
 
