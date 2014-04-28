@@ -41,28 +41,33 @@ namespace karabo {
                 
                 Schema inner;
                 VECTOR_CHAR_ELEMENT(inner).key("data")
-                        .description("Pixel array")
-                        .readOnly()
+                        .description("Pixel array")                        
+                        .readOnly()                        
+                        .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 VECTOR_UINT32_ELEMENT(inner).key("dims")
                         .displayedName("Dimensions")
                         .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
                         .readOnly()
+                        .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 INT32_ELEMENT(inner).key("encoding")
                         .displayedName("Encoding")
                         .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
                         .readOnly()
+                        .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 INT32_ELEMENT(inner).key("channelSpace")
                         .displayedName("Channel space")
                         .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
                         .readOnly()
+                        .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 BOOL_ELEMENT(inner).key("isBigEndian")
                         .displayedName("Is big endian")
                         .description("Flags whether the raw data are in big or little endian")
                         .readOnly()
+                        .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 
                 m_child = inner.getParameterHash1();
