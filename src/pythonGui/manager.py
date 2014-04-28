@@ -61,7 +61,7 @@ class _Manager(QObject):
 
     signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
     signalGetDeviceSchema = pyqtSignal(str) # deviceId
-    signalGetFromPast = pyqtSignal(object, str, str) # deviceId, property, t0, t1
+    signalGetFromPast = pyqtSignal(object, str, str, int) # deviceId, property, t0, t1
 
 
     def __init__(self, *args, **kwargs):

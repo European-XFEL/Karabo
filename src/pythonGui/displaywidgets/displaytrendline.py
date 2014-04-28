@@ -47,24 +47,35 @@ from timestamp import Timestamp
 
 
 class Curve(QObject):
-    ini = 1000
-    spare = 100
+    ini = 1000 # Maximum size of data container
+    spare = 200 # Buffer until historic data is arrived
+    maxHistory = 400 # Limits amount of data from past
 
     def __init__(self, box, curve):
         self.curve = curve
         self.box = box
-        self.data = numpy.empty((self.ini, 2), dtype=float)
-        self.fill = 0
-        self.past = 0
+        self.data = numpy.empty((self.ini, 2), dtype=float) # Data container 
+        self.fill = 0 # Actual fill size (historic + current)
+        self.past = 0 # How much belongs to past
         box.signalHistoricData.connect(self.onHistoricData)
 
 
     def addPoint(self, value, timestamp):
-        if self.fill >= self.data.shape[0]:
+        
+        print "addPoint"
+        print "past", self.past
+        print "data size", self.data.shape[0]
+        print "fill size", self.fill
+        print "spare size", self.spare
+        
+        
+        if self.fill >= self.data.shape[0]: # Have to get rid of data
+            # Emergency case, should only happen if historic data is slow
             self.data[self.past:-self.spare, :] = (
                 self.data[self.past + self.spare:, :])
             self.fill -= self.spare
-        elif self.fill >= self.data.shape[0] - self.spare:
+        # Spare is touched, ask for historic data
+        elif self.fill == self.data.shape[0] - self.spare:
             self.getFromPast(self.data[0, 1],
                 self.data[(self.past + self.data.shape[0]) // 2, 1])
         self.data[self.fill, :] = value, timestamp
@@ -75,30 +86,39 @@ class Curve(QObject):
     def getFromPast(self, t0, t1):
         t0 = datetime.datetime.utcfromtimestamp(t0)
         t1 = datetime.datetime.utcfromtimestamp(t1)
-        self.box.getFromPast(t0.isoformat(), t1.isoformat())
+        print "t0: ", t0.isoformat()
+        print "t1: ", t1.isoformat()
+        self.box.getFromPast(t0.isoformat(), t1.isoformat(), self.maxHistory)
 
 
     def changeInterval(self, t0, t1):
-        if t0 < self.data[0, 1] or (
-                self.past != 0 and t0 < self.data[self.past - 1, 1] and
-                t1 > self.data[self.past, 1]):
-            self.getFromPast(t0, min(t1, self.data[self.past, 1]))
-
+        
+        #print "changeInterval"
+        #print "past", self.past
+        #print "data size", self.data.shape[0]
+        #print "fill size", self.fill
+        #print "spare size", self.spare
+        
+        # t0 represent the oldest value displayed in the widget 
+        if t0 < self.data[0, 1] or t1 < self.data[self.past, 1]:
+            self.getFromPast(t0, min(t1, self.data[self.past, 1]))        
+        
 
     def update(self):
         self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
 
 
-    def onHistoricData(self, box, data):
+    def onHistoricData(self, box, data):        
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
-        pos = self.data[:self.fill, 1].searchsorted(l[0][1])
+        pos = self.data[:self.fill, 1].searchsorted(l[-1][1])
         data = numpy.empty((len(l) + self.fill - pos + self.ini, 2),
                            dtype=float)
-        data[:len(l), :] = l[::-1]
+        data[:len(l), :] = l
         data[len(l):-self.ini, :] = self.data[pos:self.fill, :]
         self.fill = data.shape[0] - self.ini
         self.data = data
+        self.past = len(l)
         self.update()
 
 
@@ -216,4 +236,4 @@ class DisplayTrendline(DisplayWidget):
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
         t0, t1 = asd.lowerBound(), asd.upperBound()
         for v in self.curves.itervalues():
-            v.changeInterval(t0 + 0.001, t1 + 0.001)
+            v.changeInterval(t0, t1)
