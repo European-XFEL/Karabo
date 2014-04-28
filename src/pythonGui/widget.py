@@ -17,9 +17,16 @@ from PyQt4.QtGui import QLabel
 from registry import Loadable, Registry
 
 
-class Widget(QObject, Registry):
+class Widget(Registry, QObject):
     valueChanged = None
     typeChanged = None
+
+    def __init__(self, box):
+        super(Widget, self).__init__()
+        self.valueType = None
+        if box is not None:
+            self.boxes = [box]
+
 
     @classmethod
     def register(cls, name, dict):
@@ -60,16 +67,6 @@ class Widget(QObject, Registry):
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
-
-    def __init__(self, box):
-        Widget.__init__(self)
-        self.valueType = None
-        if box is not None:
-            self.boxes = [box]
-
-    def removeBox(self, box):
-        if key in self.boxes:
-            self.boxes = [ ]
 
 
 class VacuumWidget(DisplayWidget):
@@ -114,16 +111,10 @@ class EditableWidget(Widget):
     factories = { }
     signalEditingFinished = pyqtSignal(object, object)
 
-    
-    def __init__(self, box):
-        Widget.__init__(self)
-        self.valueType = None
-        if box is not None:
-            self.boxes = [box]
-            
-    
+
     def addParameters(self, **params):
         pass
+
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.boxes[0], value)
