@@ -340,7 +340,7 @@ class ConfigurationPanel(QWidget):
         if configuration.type == "class":
             twParameterEditor.hideColumn(1)
 
-        if configuration is not None and configuration.schema is not None:
+        if configuration is not None:
             configuration.fillWidget(twParameterEditor)
         return self.__swParameterEditor.addWidget(twParameterEditor)
 
@@ -461,11 +461,11 @@ class ConfigurationPanel(QWidget):
                     configuration)
             self._setParameterEditorIndex(configuration.index)
 
-        if (configuration is not None and
-                configuration.type == "device" and
-                self.prevConfiguration is not configuration):
+        if configuration not in (None, self.prevConfiguration) and configuration.type == "device":
             configuration.addVisible()
-        self.prevConfiguration = configuration
+            self.prevConfiguration = configuration
+        else:
+            self.prevConfiguration = None
 
 
     def _removeParameterEditorPage(self, twParameterEditor):
@@ -530,8 +530,7 @@ class ConfigurationPanel(QWidget):
             twParameterEditor = self.__swParameterEditor.widget(
                 configuration.index)
             twParameterEditor.clear()
-            if configuration.schema is not None:
-                configuration.fillWidget(twParameterEditor)
+            configuration.fillWidget(twParameterEditor)
         else:
             configuration.index = self._createNewParameterPage(configuration)
         
