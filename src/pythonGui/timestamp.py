@@ -1,5 +1,7 @@
 from __future__ import division
 
+from datetime import datetime
+
 
 class Timestamp(object):
     @staticmethod
@@ -11,3 +13,7 @@ class Timestamp(object):
 
     def toTimestamp(self):
         return self.time / 10 ** 18
+
+
+    def toLocal(self):
+        return datetime.fromtimestamp(self.toTimestamp()).isoformat()
