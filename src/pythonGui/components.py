@@ -92,8 +92,9 @@ class DisplayComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
         super(DisplayComponent, self).__init__(classAlias)
 
-        self.__displayWidget = DisplayWidget.factories[widgetFactory].get_class(
+        self.__displayWidget = DisplayWidget.factories[widgetFactory].getClass(
             classAlias)(box, parent)
+        self.__displayWidget.setReadOnly(True)
 
 
     def _getWidgetCategory(self):
@@ -155,8 +156,9 @@ class DisplayComponent(BaseComponent):
     def changeWidget(self, factory, alias):
         self.classAlias = alias
         oldWidget = self.__displayWidget.widget
-        self.__displayWidget = factory.get_class(alias)(
+        self.__displayWidget = factory.getClass(alias)(
             self.boxes[0], oldWidget.parent())
+        self.__displayWidget.setReadOnly(True)
         for b in self.boxes[1:]:
             self.__displayWidget.addBox(b)
         self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
@@ -176,8 +178,9 @@ class EditableNoApplyComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(
+        self.__editableWidget = EditableWidget.getClass(classAlias)(
             box, self.__compositeWidget)
+        self.__editableWidget.setReadOnly(False)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
 
@@ -251,7 +254,8 @@ class EditableNoApplyComponent(BaseComponent):
 
         oldWidget = self.__editableWidget.widget
         oldWidget.deleteLater()
-        self.__editableWidget = factory.get_class(alias)(**self.__initParams)
+        self.__editableWidget = factory.getClass(alias)(**self.__initParams)
+        self.__editableWidget.setReadOnly(False)
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         proxyWidget.setWidget(self.__editableWidget.widget)
@@ -283,8 +287,9 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.get_class(classAlias)(
+        self.__editableWidget = EditableWidget.getClass(classAlias)(
             box, self.__compositeWidget)
+        self.__editableWidget.setReadOnly(False)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
 
@@ -479,8 +484,9 @@ class EditableApplyLaterComponent(BaseComponent):
         self.classAlias = alias
 
         oldWidget = self.__editableWidget.widget
-        self.__editableWidget = factory.get_class(alias)(
+        self.__editableWidget = factory.getClass(alias)(
             self.box, oldWidget.parent())
+        self.__editableWidget.setReadOnly(False)
         self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
         self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
@@ -568,7 +574,7 @@ class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         super(ChoiceComponent, self).__init__(classAlias)
 
-        self.__choiceWidget = EditableWidget.get_class(classAlias)(box, parent)
+        self.__choiceWidget = EditableWidget.getClass(classAlias)(box, parent)
         self.widget.setEnabled(False)
 
 
