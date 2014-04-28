@@ -21,40 +21,40 @@ class Configuration(object):
 
 
     def __init__(self, path, type):
-        """Create a new Configuration for schema,
-        type should be 'class' or 'device'."""
+        """
+        Create a new Configuration for schema, type should be 'class' or 'device'.
+        """
+        
         super(Configuration, self).__init__()
         self.type = type
         self.path = path
-        self.schema = None
         self.visible = 0
-        self._configuration = Box((), None, self)
+        self._box = Box((), None, self)
 
 
     def setSchema(self, schema):
-        self.schema = Schema.parse(schema.name, schema.hash, {})
-        self._configuration.descriptor = self.schema
+        self._box.setSchema(schema)
 
 
     @property
     def configuration(self):
-        return self._configuration.value
+        return self._box.value
 
 
     def toHash(self):
-        return self._configuration.toHash()
+        return self._box.toHash()
 
 
     def merge(self, config):
-        self._configuration.fromHash(config)
+        self._box.fromHash(config)
 
 
     def set(self, parameterKey, value):
-        self._configuration.set(parameterKey, value)
+        self._box.set(parameterKey, value)
 
 
     def setDefault(self):
-        self._configuration.setDefault()
+        self._box.setDefault()
 
 
     def setAttribute(self, parameterKey, attributeKey, value):
@@ -64,7 +64,7 @@ class Configuration(object):
 
 
     def getBox(self, path):
-        box = self._configuration
+        box = self._box
         for p in path:
             box = getattr(box.value, p)
         return box
@@ -72,8 +72,7 @@ class Configuration(object):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self.schema.fillWidget(parameterEditor, self._configuration,
-                               self.type == "class")
+        self._box.fillWidget(parameterEditor, self.type == "class")
         parameterEditor.globalAccessLevelChanged()
 
 
