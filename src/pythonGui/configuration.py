@@ -29,6 +29,12 @@ class Configuration(object):
         self.schema = None
         self.visible = 0
         self._configuration = Box((), None, self)
+        
+        
+    def copy(self):
+        ret = Configuration()
+        ret.schema = self.schema
+        return ret
 
 
     def setSchema(self, schema):
