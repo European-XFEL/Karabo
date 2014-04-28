@@ -393,6 +393,7 @@ class _Manager(QObject):
         
         conf = self.serverClassData[serverId, classId]
         conf.setSchema(schema)
+        # Set default values for configuration
         conf.setDefault()
         # Notify ConfigurationPanel
         self.signalSchemaAvailable.emit(conf)
@@ -421,7 +422,6 @@ class _Manager(QObject):
             self._triggerStateChange)
         
         self.signalSchemaAvailable.emit(conf)
-        conf.addVisible()
 
 
     def getDevice(self, deviceId):
