@@ -53,6 +53,7 @@ namespace karabo {
 
             GLOBAL_SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
+            //GLOBAL_SLOT2(slotPropertyHistory)        
 
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
@@ -79,8 +80,7 @@ namespace karabo {
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
                 remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
-                //remote().regis
-
+                
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
                 boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
@@ -338,11 +338,13 @@ namespace karabo {
                 string property = info.get<string > ("property");
                 string t0 = info.get<string > ("t0");
                 string t1 = info.get<string > ("t1");
+                int maxNumData = 0;
+                if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 Hash instanceInfo("type", "historicData", "deviceId", deviceId,
                                   "property", property, "t0", t0, "t1", t1,
-                                  "data", remote().getFromPast(deviceId, property, t0, t1));
+                                  "data", remote().getPropertyHistory(deviceId, property, t0, t1, maxNumData));
                 channel->write(instanceInfo);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
