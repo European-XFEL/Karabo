@@ -111,8 +111,8 @@ class Box(QObject):
             component.onDisplayValueChanged(self, self.value)
 
 
-    def getFromPast(self, t0, t1):
-        manager.Manager().signalGetFromPast.emit(self, t0, t1)
+    def getFromPast(self, t0, t1, maxNumData):
+        manager.Manager().signalGetFromPast.emit(self, t0, t1, maxNumData)
 
 
 def _copyAttr(self, item, out, ain=None):

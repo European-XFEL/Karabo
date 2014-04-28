@@ -17,6 +17,8 @@
 #include "core/OkErrorFsm.hh"
 #include "core/StartStopFsm.hh"
 #include "core/CameraFsm.hh"
+#include "core/DeviceServer.hh"
+#include "core/Runner.hh"
 
 #endif
 
