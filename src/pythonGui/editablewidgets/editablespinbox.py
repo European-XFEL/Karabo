@@ -20,16 +20,14 @@
 
 __all__ = ["EditableSpinBox"]
 
-import globals
-
 from util import SignalBlocker
-from widget import EditableWidget
+from widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QSpinBox
 
 
-class EditableSpinBox(EditableWidget):
+class EditableSpinBox(EditableWidget, DisplayWidget):
     category = "Digit"
     alias = "Integer Field"
 
@@ -37,9 +35,14 @@ class EditableSpinBox(EditableWidget):
         super(EditableSpinBox, self).__init__(box)
 
         self.widget = QSpinBox(parent)
-        self.widget.installEventFilter(self)
-        self.widget.valueChanged.connect(self.onEditingFinished)
         box.addWidget(self)
+
+
+    def setReadOnly(self, ro):
+        self.widget.setReadOnly(ro)
+        if not ro:
+            self.widget.installEventFilter(self)
+            self.widget.valueChanged.connect(self.onEditingFinished)
 
 
     def eventFilter(self, object, event):
