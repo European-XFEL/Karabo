@@ -15,17 +15,10 @@
 #include <karabo/util/PluginLoader.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/log/Logger.hh>
+#include <karabo/util/Version.hh>
 #include "coredll.hh"
 
 #include "FsmMacros.hh"
-
-
-// ###################################################
-
- #define KARABO_FRAMEWORK_VERSION "1.1.2"
-
-// ###################################################
-
 
 /**
  * The main European XFEL namespace
@@ -38,7 +31,7 @@ namespace karabo {
     namespace core {
 
         /**
-         * The DeviceServer2 class.
+         * The DeviceServer class.
          */
         class DeviceServer : public karabo::xms::SignalSlotable {
 
@@ -47,7 +40,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DeviceServer, "DeviceServer", KARABO_FRAMEWORK_VERSION)
+            KARABO_CLASSINFO(DeviceServer, "DeviceServer", karabo::util::Version::getVersion())
             KARABO_CONFIGURATION_BASE_CLASS
 
 
@@ -191,10 +184,9 @@ namespace karabo {
             bool m_serverIsRunning;
 
             bool m_isMaster;
-            unsigned int m_nameRequestTimeout;
-            bool m_gotName;
-            unsigned int m_guiServerPort;
-
+            std::vector<karabo::util::Hash> m_autoStart;
+            bool m_scanPlugins;
+                        
             karabo::util::Hash m_availableDevices;
             boost::thread_group m_deviceThreads;
             DeviceInstanceMap m_deviceInstanceMap;
@@ -203,7 +195,7 @@ namespace karabo {
 
             karabo::net::BrokerConnection::Pointer m_connection;
 
-            karabo::util::Hash m_connectionConfig;
+            karabo::util::Hash m_connectionConfiguration;
             std::string m_serverId;
 
 
