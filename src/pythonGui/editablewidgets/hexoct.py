@@ -5,7 +5,7 @@ from PyQt4.QtGui import QLineEdit
 from numpy import log2
 
 
-class Hexadecimal(EditableWidget):
+class Hexadecimal(EditableWidget, DisplayWidget):
     category = "Digit"
     alias = "Hexadecimal"
 
@@ -13,8 +13,13 @@ class Hexadecimal(EditableWidget):
         super(Hexadecimal, self).__init__(box)
 
         self.widget = QLineEdit(parent)
-        self.widget.textChanged.connect(self.onEditingFinished)
         box.addWidget(self)
+
+
+    def setReadOnly(self, ro):
+        self.widget.setReadOnly(ro)
+        if not ro:
+            self.widget.textChanged.connect(self.onEditingFinished)
 
 
     @property
