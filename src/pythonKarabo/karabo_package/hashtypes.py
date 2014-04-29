@@ -189,7 +189,7 @@ class Type(Descriptor, Registry):
 
 
     def fromHash(self, box, data, timestamp=None):
-        box._set(data, timestamp)
+        box.set(data, timestamp)
 
 
 class Bool(Type):
