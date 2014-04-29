@@ -86,7 +86,7 @@ class Box(QObject):
         return partial(getattr(self.descriptor, attr), self)
 
 
-    def _set(self, value, timestamp):
+    def set(self, value, timestamp):
         self._value = self.descriptor.cast(value)
         self.timestamp = timestamp
         self.signalUpdateComponent.emit(self, value, timestamp)
@@ -132,7 +132,7 @@ class Type(hashtypes.Type):
 
 
     def set(self, box, value, timestamp=None):
-        box._set(value, timestamp)
+        box.set(value, timestamp)
 
 
     def setDefault(self, box):
@@ -364,7 +364,7 @@ class Schema(hashtypes.Descriptor):
             box._value = self.getClass()(box)
         for k, v, a in value.iterall():
             try:
-                vv = getattr(box._value, k)
+                entry = getattr(box._value, k)
             except AttributeError:
                 continue
             try:
@@ -372,16 +372,16 @@ class Schema(hashtypes.Descriptor):
             except KeyError:
                 ts = None
             try:
-                s = vv.fromHash
+                s = entry.fromHash
             except AttributeError:
-                print 'bullshit in', k, vv, vv.descriptor
+                print 'bullshit in', k, entry, entry.descriptor
             else:
                 s(v, ts)
-        box._set(box._value, timestamp)
+        box.set(box._value, timestamp)
 
 
     def setDefault(self, box):
-        box._set(self.getClass()(box), None)
+        box.set(self.getClass()(box), None)
         for k, v in self.dict.iteritems():
             getattr(box.value, k).setDefault()
 
@@ -465,7 +465,7 @@ class ChoiceOfNodes(Schema):
 
     def set(self, box, value, timestamp=None):
         box.current = value
-        box._set(box.value, timestamp)
+        box.set(box.value, timestamp)
 
 
 class ListOfNodes(hashtypes.Descriptor):
