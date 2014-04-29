@@ -22,9 +22,7 @@ from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
-from manager import Manager
-from navigationtreeview import NavigationTreeView
-from parametertreewidget import ParameterTreeWidget
+import manager # TODO: avoid ring import
 import pathparser
 import icons
 
@@ -1195,9 +1193,13 @@ class GraphicsView(QSvgWidget):
             if event.isAccepted():
                 return
 
+        mimeData = event.mimeData()
+        # Source type
+        sourceType = mimeData.data("sourceType")
+        
         source = event.source()
         customItem = None
-        if isinstance(source, ParameterTreeWidget):
+        if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
             
             for item in selectedItems:
@@ -1248,7 +1250,7 @@ class GraphicsView(QSvgWidget):
 
             if customItem is None:
                 return
-        elif isinstance(source, NavigationTreeView):
+        elif sourceType == "NavigationTreeView":
             print "NavigationTreeView"
             return
         

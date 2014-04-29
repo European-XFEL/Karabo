@@ -201,3 +201,11 @@ class NavigationTreeView(QTreeView):
             conf = None
 
         self.signalItemChanged.emit(conf)
+
+
+    def mimeData(self, items):
+        mimeData = QMimeData()
+        # Source type
+        mimeData.setData("sourceType", "NavigationTreeView")
+        return mimeData
+

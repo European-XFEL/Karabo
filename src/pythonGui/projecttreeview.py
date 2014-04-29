@@ -56,8 +56,8 @@ class ProjectTreeView(QTreeView):
         directory = "/tmp/"
 
         self.model().createNewProject(projectName, directory)
-        self.model().addScene(projectName, sceneName, sceneName)
-        self.model().saveProject(projectName, directory, True)
+        #self.model().addScene(projectName, sceneName, sceneName)
+        #self.model().saveProject(projectName, directory, True)
 
 
     def newProject(self):

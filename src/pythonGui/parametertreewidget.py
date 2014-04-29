@@ -12,12 +12,10 @@
 __all__ = ["ParameterTreeWidget"]
 
 from components import EditableApplyLaterComponent
-from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
 from manager import Manager
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
-from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 
 from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
@@ -88,7 +86,10 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def mimeData(self, items):
-        return QMimeData()
+        mimeData = QMimeData()
+        # Source type
+        mimeData.setData("sourceType", "ParameterTreeWidget")
+        return mimeData
 
 
 ### public functions ###
