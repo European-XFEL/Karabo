@@ -18,6 +18,7 @@ from copy import copy
 from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
+from project import Project
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
@@ -57,8 +58,8 @@ class ProjectModel(QStandardItemModel):
         
         # Hash stores current system topology
         self.systemTopology = None
-        # Hash stores project tree information
-        self.projectHash = Hash()
+        # List stores projects
+        self.projects = OrderedDict()
         
         # Dialog to add and change a device
         self.pluginDialog = None
@@ -67,92 +68,112 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel = QItemSelectionModel(self)
 
 
-    def _handleLeafItems(self, childItem, projectPath, categoryKey, config):
-        if (config is None) or config.empty():
-            return
-
-        if categoryKey.startswith(ProjectModel.SCENES_KEY):
-            #fileName = config.get("filename")
-            alias = config.get("alias")
-
-            leafItem = QStandardItem(alias)
-            leafItem.setEditable(False)
-            leafPath = projectPath + "." + categoryKey #+ "." + alias
-            leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
-            leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
-            childItem.appendRow(leafItem)
-        else:
-            for leafKey in config.keys():
-                leafItem = QStandardItem(leafKey)
-                leafItem.setEditable(False)
-                leafPath = projectPath + "." + categoryKey + "." + leafKey
-                leafItem.setData(leafPath, ProjectModel.ITEM_PATH)
-                childItem.appendRow(leafItem)
-
-                if categoryKey == ProjectModel.DEVICES_KEY:
-                    leafItem.setData(ProjectModel.DEVICES_KEY, ProjectModel.ITEM_CATEGORY)
-                    
-                    # Update icon on availability of device
-
-                    if (self.systemTopology is not None) and \
-                       (self.systemTopology.has("device.{}".format(leafKey))):
-                        leafItem.setIcon(QIcon(":device-instance"))
-                    else:
-                        leafItem.setIcon(QIcon(":offline"))
-
-                    classConfig = config.get(leafKey)
-                    for classId in classConfig.keys():
-                        serverId = classConfig.get(classId + ".serverId")
-                        # Set server and class ID
-                        leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
-                        leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
-
-
     def updateData(self):
-        #print ""
-        #print self.projectHash
-        #print ""
-
         self.beginResetModel()
         self.clear()
         self.setHorizontalHeaderLabels(["Projects"])
 
         rootItem = self.invisibleRootItem()
-
-        # Add child items
-        for projectKey in self.projectHash.keys():
+        
+        for projectName in self.projects.keys():
             # Project names - toplevel items
-            item = QStandardItem(projectKey)
+            item = QStandardItem(projectName)
             item.setEditable(False)
             font = item.font()
             font.setBold(True)
             item.setFont(font)
             item.setIcon(QIcon(":folder"))
             rootItem.appendRow(item)
+            
+            project = self.projects[projectName]
+            
+            # Devices
+            childItem = QStandardItem(ProjectModel.DEVICES_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for device in project.devices:
+                leafItem = QStandardItem(device.path)
+                leafItem.setEditable(False)
 
-            projectConfig = self.projectHash.get(projectKey)
-            for p in projectConfig.keys():
-                # Project key
+                # Update icon on availability of device
+                if (self.systemTopology is not None) and \
+                   (self.systemTopology.has("device.{}".format(device.path))):
+                    leafItem.setIcon(QIcon(":device-instance"))
+                else:
+                    leafItem.setIcon(QIcon(":offline"))
 
-                # Get children
-                categoryConfig = projectConfig.get(p)
-                for categoryKey in categoryConfig.keys():
-                    # Categories - sub items
-                    childItem = QStandardItem(categoryConfig.getAttribute(categoryKey, "label"))
-                    childItem.setEditable(False)
-                    childItem.setIcon(QIcon(":folder"))
-                    item.appendRow(childItem)
+                #serverId = "Server_002"
+                #classId = "Conveyor"
+                #leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
+                #leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
 
-                    projectPath = projectKey + "." + p
-                    subConfig = categoryConfig.get(categoryKey)
-                    if isinstance(subConfig, list):
-                        # Vector of Hashes
-                        for i, indexConfig in enumerate(subConfig):
-                            self._handleLeafItems(childItem, projectPath, "{}[{}]".format(categoryKey, i), indexConfig)
-                    else:
-                        # Normal Hash
-                        self._handleLeafItems(childItem, projectPath, categoryKey, subConfig)
+                #classConfig = config.get(leafKey)
+                #for classId in classConfig.keys():
+                #    serverId = classConfig.get("{}.serverId".format(classId))
+                #    # Set server and class ID
+                #    leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
+                #    leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
+                #    leafPath = "{}.{}".format(leafPath, classId)
+                
+                #path = "{}.{}.{}".format(projectName, ProjectModel.DEVICES_KEY, device.path)
+                #leafItem.setData(path, ProjectModel.ITEM_PATH)
+                #leafItem.setData(ProjectModel.DEVICES_KEY, ProjectModel.ITEM_CATEGORY)
+                childItem.appendRow(leafItem)
 
+            # Scenes
+            childItem = QStandardItem(ProjectModel.SCENES_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for scene in project.scenes:
+                leafItem = QStandardItem(scene.name)
+                leafItem.setEditable(False)
+                path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY, scene.name)
+                leafItem.setData(path, ProjectModel.ITEM_PATH)
+                leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
+                childItem.appendRow(leafItem)
+
+            # Macros
+            childItem = QStandardItem(ProjectModel.MACROS_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for macro in project.macros:
+                leafItem = QStandardItem(macro)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+
+            # Monitors
+            childItem = QStandardItem(ProjectModel.MONITORS_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for monitor in project.monitors:
+                leafItem = QStandardItem(monitor)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+
+            # Resources
+            childItem = QStandardItem(ProjectModel.RESOURCES_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for resource in project.resources:
+                leafItem = QStandardItem(resource)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+
+            # Configurations
+            childItem = QStandardItem(ProjectModel.CONFIGURATIONS_LABEL)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for config in project.configurations:
+                leafItem = QStandardItem(config)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+        
         self.endResetModel()
 
 
@@ -288,33 +309,10 @@ class ProjectModel(QStandardItemModel):
         """
         # Project name to lower case
         projectName = projectName.lower()
-
-        projectConfig = Hash(ProjectModel.PROJECT_KEY, Hash())
-        projectConfig.setAttribute(ProjectModel.PROJECT_KEY, "name", projectName)
-
-        deviceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.DEVICES_KEY
-        projectConfig.set(deviceKey, None)
-        projectConfig.setAttribute(deviceKey, "label", ProjectModel.DEVICES_LABEL)
-        sceneKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.SCENES_KEY
-        projectConfig.set(sceneKey, None)
-        projectConfig.setAttribute(sceneKey, "label", ProjectModel.SCENES_LABEL)
-        macroKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MACROS_KEY
-        projectConfig.set(macroKey, None)
-        projectConfig.setAttribute(macroKey, "label", ProjectModel.MACROS_LABEL)
-        monitorKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.MONITORS_KEY
-        projectConfig.set(monitorKey, None)
-        projectConfig.setAttribute(monitorKey, "label", ProjectModel.MONITORS_LABEL)
-        resourceKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.RESOURCES_KEY
-        projectConfig.set(resourceKey, None)
-        projectConfig.setAttribute(resourceKey, "label", ProjectModel.RESOURCES_LABEL)
-        configurationKey = ProjectModel.PROJECT_KEY + "." + ProjectModel.CONFIGURATIONS_KEY
-        projectConfig.set(configurationKey, None)
-        projectConfig.setAttribute(configurationKey, "label", ProjectModel.CONFIGURATIONS_LABEL)
-
-        self._addNewProject(projectName, directory, projectConfig)
+        self._addNewProject(projectName, directory)
 
 
-    def _addNewProject(self, projectName, directory, projectConfig):
+    def _addNewProject(self, projectName, directory):
         """
         This function updates the project hash with the given project
         configuration and updates the view with the new changes.
@@ -331,8 +329,7 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        self.projectHash.set(projectName, projectConfig)
-        self.projectHash.setAttribute(projectName, "directory", directory)
+        self.projects[projectName] = Project(projectName, directory)
         self.updateData()
 
 

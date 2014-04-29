@@ -14,7 +14,6 @@ __all__ = ["ConfigurationPanel"]
 
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
-from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
