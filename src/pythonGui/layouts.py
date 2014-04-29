@@ -220,8 +220,9 @@ class FixedLayout(Layout, QLayout):
                         if p.component is not None:
                             for b in p.component.boxes:
                                 b.configuration.removeVisible()
-                        p.setParent(None)
-                del self[i]
+                    # the following line also deletes the item from
+                    # this layout. This is why we don't need to increase i
+                    p.setParent(None)
             else:
                 i += 1
         self.shapes = [s for s in self.shapes if not s.selected]
