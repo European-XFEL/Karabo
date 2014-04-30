@@ -8,6 +8,7 @@
 #include <boost/python.hpp>
 #include <karabo/net/IOService.hh>
 #include <karabo/net/Connection.hh>
+#include <karabo/net/BrokerConnection.hh>
 #include "PythonFactoryMacros.hh"
 #include "IOServiceWrap.hh"
 #include "ConnectionWrap.hh"
@@ -22,6 +23,11 @@ using namespace karathon;
 
 void exportp2p() {
     bp::docstring_options docs(true, true, false);
+    
+    {
+        bp::class_<BrokerConnection, BrokerConnection::Pointer, boost::noncopyable>("BrokerConnection", bp::no_init)
+        KARABO_PYTHON_FACTORY_CONFIGURATOR(BrokerConnection);
+    }
 
     {
         bp::class_<ErrorCode>("ErrorCode", "This class keeps error condition: error code and error message.", bp::init<>())
