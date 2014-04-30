@@ -55,9 +55,25 @@ class ProjectTreeView(QTreeView):
         sceneName = "default_scene"
         directory = QDir.tempPath()
 
-        self.model().createNewProject(projectName, directory)
-        self.model().addScene(projectName, sceneName)
+        project = self.model().createNewProject(projectName, directory)
+        self.model().addScene(project, sceneName)
+        project.save() # TODO
         #self.model().saveProject(projectName, directory, True)
+
+    
+    def getProjectDir(self):
+        fileDialog = QFileDialog(self, "Save project", QDir.rootPath())
+        fileDialog.setFileMode(QFileDialog.Directory)
+        fileDialog.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+
+        if fileDialog.exec_() == QDialog.Rejected:
+            return None
+        
+        directory = fileDialog.selectedFiles()
+        if len(directory) < 0:
+            return None
+        
+        return directory[0]
 
 
     def newProject(self):
@@ -80,18 +96,18 @@ class ProjectTreeView(QTreeView):
 
         projectName = projectName[0]
 
-        directory = QFileDialog.getExistingDirectory(self, "Save project", \
-                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        directory = self.getProjectDir()
         if directory is None:
             return
 
-        self.model().createNewProject(projectName, directory)
-        self.model().saveProject(projectName, directory)
+        project = self.model().createNewProject(projectName, directory)
+        project.save() # TODO
+        #self.model().saveProject(projectName, directory)
 
 
     def openProject(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved project", \
-                                               QDir.tempPath(), "XML (*.xml)")
+                                               QDir.rootPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
         
@@ -99,13 +115,11 @@ class ProjectTreeView(QTreeView):
 
 
     def saveProject(self):
-        directory = QFileDialog.getExistingDirectory(self, "Save project", \
-                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        directory = self.getProjectDir()
         if directory is None:
             return
-        
-        return self.model().saveProject(self.currentIndex().data(Qt.DisplayRole),
-                                        directory)
+
+        return self.model().saveProject(self.model().currentProject(), directory)
 
 
     def mouseDoubleClickEvent(self, event):
@@ -113,10 +127,11 @@ class ProjectTreeView(QTreeView):
         if index is None: return
         if not index.isValid(): return
 
-        if index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY:
-            self.model().editDevice(index.data(ProjectModel.ITEM_PATH))
-        elif index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY:
-            self.model().editScene(index.data(ProjectModel.ITEM_PATH))
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(object, Configuration):
+            self.model().editDevice(object)
+        elif isinstance(object, Scene):
+            self.model().openScene(scene)
 
 
 ### slots ###
@@ -189,11 +204,12 @@ class ProjectTreeView(QTreeView):
         if not isinstance(object, Configuration):
             return
         
-        print "configuration selected..."
-        
+        print "configuration selected...", object
+
         #serverId = index.data(ProjectModel.ITEM_SERVER_ID)
         #classId = index.data(ProjectModel.ITEM_CLASS_ID)
         #deviceId = index.data(Qt.DisplayRole)
+        deviceId = "test" # TODO: remove
 
         #if (serverId is None) or (classId is None) or (deviceId is None):
         #    return
@@ -205,6 +221,7 @@ class ProjectTreeView(QTreeView):
         if self.model().systemTopology.has("device.{}".format(deviceId)):
             conf = Manager().getDevice(deviceId)
         else:
-            conf = Manager().getClass(serverId, classId)
+            conf = object
+        print "ojbect seleceted", conf
         self.signalItemChanged.emit(conf)
 

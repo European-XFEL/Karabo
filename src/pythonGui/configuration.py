@@ -16,11 +16,13 @@ __all__ = ["Configuration"]
 from schema import Schema, Box
 import manager
 
+from PyQt4.QtCore import QObject, pyqtSignal
 
-class Configuration(object):
 
+class Configuration(QObject):
+    signalNewDescriptor = pyqtSignal(object, object)
 
-    def __init__(self, path, type):
+    def __init__(self, path, type, descriptor=None):
         """
         Create a new Configuration for schema, type should be 'class' or 'device'.
         """
@@ -29,11 +31,21 @@ class Configuration(object):
         self.type = type
         self.path = path
         self.visible = 0
-        self._box = Box((), None, self)
+        self._box = Box((), descriptor, self)
+
+
+    def getDescriptor(self):
+        return self._box.descriptor
+
+
+    def setDescriptor(self, descriptor):
+        self._box.descriptor = descriptor
 
 
     def setSchema(self, schema):
-        self._box.setSchema(schema)
+        self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
+        print "Configuration.setSchema"
+        self.signalNewDescriptor.emit(self, self._box.descriptor)
 
 
     @property
