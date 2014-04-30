@@ -22,10 +22,19 @@ class Widget(Registry, QObject):
     typeChanged = None
 
     def __init__(self, box):
+        """ Create a widget with one box.
+
+        For widgets that support more than one box, pass None for the
+        box and do the managment of boxes yourself.
+
+        Note that valueChanged will be called with and initial value for
+        the box, so make sure __init__ is only called after everything is
+        set up so that this poses no problem."""
         super(Widget, self).__init__()
         self.valueType = None
         if box is not None:
             self.boxes = [box]
+            self.connectBox(box)
 
 
     @classmethod
@@ -47,10 +56,23 @@ class Widget(Registry, QObject):
         return cls.categoryToAliases.get(category, [ ])
 
 
-    def addKey(self, key):
-        """adds the *key* to the displayed or edited keys.
+    def connectBox(self, box):
+        """ connects this widget to the signals of the box """
+        if self.typeChanged is not None:
+            box.signalNewDescriptor.connect(self.typeChanged)
+            if box.descriptor is not None:
+                self.typeChanged(box)
+        if self.valueChanged is not None:
+            box.signalUpdateComponent.connect(self.valueChanged)
+            if box.hasValue():
+                self.valueChanged(box, box.value, box.timestamp)
 
-        Return `True` if that is possible, `False` otherwise."""
+
+    def addBox(self, box):
+        """adds the *box* to the displayed or edited box.
+
+        Return whether that is possible. The default implementation returns
+        False, as multi-box support has to be programmed by the user."""
         return False
 
 

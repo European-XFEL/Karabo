@@ -144,7 +144,6 @@ class DisplayTrendline(DisplayWidget):
  
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        
         if not useGuiQwt:
             self.dialog = None
             return
@@ -153,13 +152,6 @@ class DisplayTrendline(DisplayWidget):
                                   wintitle="Trendline")
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
-        self.timer = QTimer(self)
-        self.timer.setInterval(1000)
-        self.timer.setSingleShot(True)
-        self.plot.axisWidget(QwtPlot.xBottom).scaleDivChanged.connect(
-            self.timer.start)
-        self.timer.timeout.connect(self.scaleChanged)
-        
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
         self.plot.setAxisTitle(QwtPlot.yLeft, 'Value')
         
@@ -190,7 +182,7 @@ class DisplayTrendline(DisplayWidget):
         curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
         self.curves[box] = Curve(box, curve)
         self.plot.add_item(curve)
-        box.addWidget(self)
+        self.connectBox(box)
         return True
 
 

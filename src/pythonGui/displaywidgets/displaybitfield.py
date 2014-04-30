@@ -59,10 +59,8 @@ class EditableBitfield(EditableWidget):
     alias = "Bit Field"
 
     def __init__(self, box, parent):
-        super(EditableBitfield, self).__init__(box)
-
         self.widget = Bitfield(parent)
-        box.addWidget(self)
+        super(EditableBitfield, self).__init__(box)
 
 
     def typeChanged(self, box):

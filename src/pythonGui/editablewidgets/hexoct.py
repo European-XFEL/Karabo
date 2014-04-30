@@ -10,10 +10,8 @@ class Hexadecimal(EditableWidget, DisplayWidget):
     alias = "Hexadecimal"
 
     def __init__(self, box, parent):
-        super(Hexadecimal, self).__init__(box)
-
         self.widget = QLineEdit(parent)
-        box.addWidget(self)
+        super(Hexadecimal, self).__init__(box)
 
 
     def setReadOnly(self, ro):
