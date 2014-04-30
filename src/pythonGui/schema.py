@@ -105,12 +105,6 @@ class Box(QObject):
                     self.descriptor.allowedStates)
 
 
-    def addComponent(self, component):
-        self.signalUpdateComponent.connect(component.onDisplayValueChanged)
-        if self.hasValue():
-            component.onDisplayValueChanged(self, self.value)
-
-
     def getFromPast(self, t0, t1, maxNumData):
         manager.Manager().signalGetFromPast.emit(self, t0, t1, maxNumData)
 
