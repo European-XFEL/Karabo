@@ -360,10 +360,10 @@ class PythonDevice(BaseFsm):
         if tags == "":
             return self.parameters
         with self._stateChangeLock:
-            return HashFilter.byTag(self.fullSchema, self.parameters, tags)
+            return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
     
     def filterByTags(self, configuration, tags):
-        return HashFilter.byTag(self.fullSchema, configuration, tags)
+        return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
     
     def getServerId(self):
         return self.serverid
