@@ -198,7 +198,7 @@ namespace karabo {
                 if (input.has("serverId")) {
                     input.get("serverId", m_serverId);
                     // Generate file for next startup
-                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), "serverId.xml");
+                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
                 } else {
                     m_serverId = generateDefaultServerId(); 
                 }
