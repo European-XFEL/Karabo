@@ -348,7 +348,9 @@ class EditableApplyLaterComponent(BaseComponent):
         self.signalConflictStateChanged.connect(
             manager.Manager().onConflictStateChanged)
 
-        box.addComponent(self)
+        box.signalUpdateComponent.connect(self.onDisplayValueChanged)
+        if box.hasValue():
+            self.onDisplayValueChanged(box, box.value)
         box.configuration.configuration.state.signalUpdateComponent.connect(
             self.onStateChanged)
 

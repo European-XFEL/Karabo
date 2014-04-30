@@ -33,14 +33,12 @@ class EditableComboBox(EditableWidget):
     alias = "Selection Field"
 
     def __init__(self, box, parent):
-        super(EditableComboBox, self).__init__(box)
-        
         self.widget = QComboBox(parent)
         self.widget.setFrame(False)
 
         self.widget.installEventFilter(self)
         self.widget.currentIndexChanged[str].connect(self.onEditingFinished)
-        box.addWidget(self)
+        super(EditableComboBox, self).__init__(box)
 
 
     def typeChanged(self, box):

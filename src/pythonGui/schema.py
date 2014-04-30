@@ -105,23 +105,6 @@ class Box(QObject):
                     self.descriptor.allowedStates)
 
 
-    def addWidget(self, widget):
-        if widget.typeChanged is not None:
-            self.signalNewDescriptor.connect(widget.typeChanged)
-            if self.descriptor is not None:
-                widget.typeChanged(self)
-        if widget.valueChanged is not None:
-            self.signalUpdateComponent.connect(widget.valueChanged)
-            if self.hasValue():
-                widget.valueChanged(self, self.value, self.timestamp)
-
-
-    def addComponent(self, component):
-        self.signalUpdateComponent.connect(component.onDisplayValueChanged)
-        if self.hasValue():
-            component.onDisplayValueChanged(self, self.value)
-
-
     def getFromPast(self, t0, t1, maxNumData):
         manager.Manager().signalGetFromPast.emit(self, t0, t1, maxNumData)
 
