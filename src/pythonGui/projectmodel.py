@@ -32,7 +32,8 @@ class ProjectModel(QStandardItemModel):
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
 
-    ITEM_PATH = Qt.UserRole
+    #ITEM_PATH = Qt.UserRole
+    ITEM_OBJECT = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
     ITEM_SERVER_ID = Qt.UserRole + 2
     ITEM_CLASS_ID = Qt.UserRole + 3
@@ -76,17 +77,16 @@ class ProjectModel(QStandardItemModel):
 
         rootItem = self.invisibleRootItem()
         
-        for projectName in self.projects.keys():
+        for project in self.projects.itervalues():
             # Project names - toplevel items
-            item = QStandardItem(projectName)
+            item = QStandardItem(project.name)
+            item.setData(project, ProjectModel.ITEM_OBJECT)
             item.setEditable(False)
             font = item.font()
             font.setBold(True)
             item.setFont(font)
             item.setIcon(QIcon(":folder"))
             rootItem.appendRow(item)
-            
-            project = self.projects[projectName]
             
             # Devices
             childItem = QStandardItem(ProjectModel.DEVICES_LABEL)
@@ -95,6 +95,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for device in project.devices:
                 leafItem = QStandardItem(device.path)
+                leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
                 # Update icon on availability of device
@@ -129,10 +130,11 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for scene in project.scenes:
                 leafItem = QStandardItem(scene.name)
+                leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
-                path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY, scene.name)
-                leafItem.setData(path, ProjectModel.ITEM_PATH)
-                leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
+                #path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY, scene.name)
+                #leafItem.setData(path, ProjectModel.ITEM_PATH)
+                #leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
                 childItem.appendRow(leafItem)
 
             # Macros
@@ -142,6 +144,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for macro in project.macros:
                 leafItem = QStandardItem(macro)
+                leafItem.setData(macro, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
 
@@ -152,6 +155,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for monitor in project.monitors:
                 leafItem = QStandardItem(monitor)
+                leafItem.setData(monitor, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
 
@@ -162,6 +166,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for resource in project.resources:
                 leafItem = QStandardItem(resource)
+                leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
 
@@ -172,6 +177,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for config in project.configurations:
                 leafItem = QStandardItem(config)
+                leafItem.setData(config, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
         
@@ -234,45 +240,54 @@ class ProjectModel(QStandardItemModel):
         self.updateNeeded()
 
 
-    def selectPath(self, path):
-        index = self.findIndex(path)
-        if index is None:
-            return
-
-        self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
-
-
-    def findIndex(self, path):
-        return self._rFindIndex(self.invisibleRootItem(), path)
+    def selectItem(self, object):
+        """
+        This function gets an object which can be of type Configuration or Scene
+        and selects the corresponding item.
+        """
+        index = self.findIndex(object)
+        if index is not None:
+            self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
 
-    def _rFindIndex(self, item, path):
+    #def selectPath(self, path):
+    #    index = self.findIndex(path)
+    #    if index is None:
+    #        return
+
+    #    self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+
+
+    def findIndex(self, object):
+        return self._rFindIndex(self.invisibleRootItem(), object)
+
+
+    def _rFindIndex(self, item, object):
         for i in xrange(item.rowCount()):
             childItem = item.child(i)
-            resultItem = self._rFindIndex(childItem, path)
+            resultItem = self._rFindIndex(childItem, object)
             if resultItem:
                 return resultItem
         
-        indexPath = item.data(ProjectModel.ITEM_PATH)
-        if indexPath == path:
+        indexObject = item.data(ProjectModel.ITEM_OBJECT)
+        if indexObject == object:
             return item.index()
+        
         return None
 
 
-    def _currentProjectName(self):
+    def currentProjectName(self):
         """
-        This function returns the current project name, if a category like
-        Devices, Scenes etc. is selected.
-        
-        It returns None, if no index can be found.
+        This function returns the current project name, if a project is
+        currently selected.
         """
         index = self.selectionModel.currentIndex()
         if not index.isValid():
             return None
-        
+
         while (index.parent().data(Qt.DisplayRole) is not None):
             index = index.parent()
-        
+
         return index.data(Qt.DisplayRole)
 
 
@@ -496,10 +511,12 @@ class ProjectModel(QStandardItemModel):
         self.signalAddScene.emit(scene)
         self.updateData()
         
-        path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY,
-                                 sceneName)
+        self.selectItem(scene)
+        
+        #path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY,
+        #                         sceneName)
         # Select added scene
-        self.selectPath(path)
+        #self.selectPath(path)
         
 
 ### slots ###
