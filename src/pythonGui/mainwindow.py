@@ -219,12 +219,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _createCustomMiddlePanel(self):
+    def _createCustomMiddlePanel(self, graphicsView):
         """
         This function creates a new CustomMiddlePanel, establishes its necessary
         connections and returns it.
         """
-        customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
+        customViewPanel = CustomMiddlePanel(graphicsView, self.acServerConnect.isChecked())
         return customViewPanel
 
 
@@ -262,9 +262,9 @@ class MainWindow(QMainWindow):
         print "onHelpAbout"
 
 
-    def onAddScene(self, sceneName):
-        customViewPanel = self._createCustomMiddlePanel()
-        self.middleTab.addDockableTab(customViewPanel, sceneName)
+    def onAddScene(self, scene):
+        customView = self._createCustomMiddlePanel(scene.view)
+        self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
 

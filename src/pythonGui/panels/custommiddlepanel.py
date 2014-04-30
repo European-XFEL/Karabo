@@ -12,7 +12,6 @@
 __all__ = ["CustomMiddlePanel"]
 
 
-from graphicsview import GraphicsView
 from network import Network
 from toolbar import ToolBar
 
@@ -37,10 +36,12 @@ class CustomMiddlePanel(QWidget):
     ##########################################
 
 
-    def __init__(self, isConnectedToServer):
+    def __init__(self, graphicsView, isConnectedToServer):
         super(CustomMiddlePanel, self).__init__()
 
-        self.graphicsview = GraphicsView(self, isConnectedToServer)
+        self.graphicsview = graphicsView
+        self.graphicsview.setParent(self)
+        self.graphicsview.designMode = isConnectedToServer
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(3,3,3,3)

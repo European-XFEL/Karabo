@@ -22,7 +22,6 @@ from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
-import manager # TODO: avoid ring import
 import pathparser
 import icons
 
@@ -831,7 +830,7 @@ class Lower(SimpleAction):
 
 
 class GraphicsView(QSvgWidget):
-    def __init__(self, parent, designMode=True):
+    def __init__(self, parent=None, designMode=True):
         super(GraphicsView, self).__init__(parent)
         
         self.inner = QWidget(self)
@@ -1013,6 +1012,7 @@ class GraphicsView(QSvgWidget):
         if len(filename) < 1:
             return
         self.saveScene(filename)
+
 
     def saveScene(self, filename):
         fi = QFileInfo(filename)

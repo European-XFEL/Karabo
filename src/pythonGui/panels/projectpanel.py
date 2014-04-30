@@ -34,7 +34,7 @@ class ProjectPanel(QWidget):
 
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool)
-    signalAddScene = pyqtSignal(str) # scene title
+    signalAddScene = pyqtSignal(object) # scene
 
     def __init__(self):
         super(ProjectPanel, self).__init__()

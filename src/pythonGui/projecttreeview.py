@@ -48,15 +48,15 @@ class ProjectTreeView(QTreeView):
     def setupDefaultProject(self):
         """
         This function sets up a default project.
-        So basically a new project is created and saved in the users /tmp/ folder.
+        So basically a new project is created and saved in the users temp folder.
         Previous data is overwritten.
         """
         projectName = "default_project"
         sceneName = "default_scene"
-        directory = "/tmp/"
+        directory = QDir.tempPath()
 
         self.model().createNewProject(projectName, directory)
-        #self.model().addScene(projectName, sceneName, sceneName)
+        self.model().addScene(projectName, sceneName)
         #self.model().saveProject(projectName, directory, True)
 
 

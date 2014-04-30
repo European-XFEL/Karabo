@@ -14,11 +14,12 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 
+from collections import OrderedDict
 from copy import copy
 from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
-from project import Project
+from project import Project, Scene
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
@@ -29,7 +30,7 @@ import os.path
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool) # connect?
-    signalAddScene = pyqtSignal(str) # scene title
+    signalAddScene = pyqtSignal(object) # scene
 
     ITEM_PATH = Qt.UserRole
     ITEM_CATEGORY = Qt.UserRole + 1
@@ -238,7 +239,7 @@ class ProjectModel(QStandardItemModel):
         if index is None:
             return
 
-        self.selectionModel.select(index, QItemSelectionModel.ClearAndSelect)
+        self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
 
     def findIndex(self, path):
@@ -279,7 +280,7 @@ class ProjectModel(QStandardItemModel):
         """
         This functions checks whether a project with the \projectName already exists.
         """
-        return self.projectHash.has(projectName)
+        return projectName in self.projects
 
 
     def _clearProjectDir(self, absolutePath):
@@ -304,19 +305,11 @@ class ProjectModel(QStandardItemModel):
 
     def createNewProject(self, projectName, directory):
         """
-        This function creates a hash for a new project and saves it to the given
-        \directory.
+        This function updates the project list updates the view.
         """
         # Project name to lower case
         projectName = projectName.lower()
-        self._addNewProject(projectName, directory)
-
-
-    def _addNewProject(self, projectName, directory):
-        """
-        This function updates the project hash with the given project
-        configuration and updates the view with the new changes.
-        """
+        
         # Check whether project already exists
         alreadyExists = self._projectExists(projectName)
         if alreadyExists:
@@ -371,7 +364,8 @@ class ProjectModel(QStandardItemModel):
 
                 # Create folder for label
                 label = categoryConfig.getAttribute(cKey, "label")
-                dir.mkpath(absoluteProjectPath + "/" + label)
+                categoryAbsolutePath = os.path.join(absoluteProjectPath, label)
+                dir.mkpath(categoryAbsolutePath)
 
                 subConfig = categoryConfig.get(cKey)
                 if subConfig is None:
@@ -393,10 +387,11 @@ class ProjectModel(QStandardItemModel):
                     # Save scenes
                     for i, sceneConfig in enumerate(subConfig):
                         filename = sceneConfig.get("filename")
-                        alias = sceneConfig.get("alias")
+                        #alias = sceneConfig.get("alias")
                         # Save scene to SVG
-                        #print "path", "{}.{}.{}[{}]".format(projectName, pKey, cKey, i)
-                        #print "save to svg", filename
+                        path = "{}.{}".format(projectName, filename)
+                        filePath = os.path.join(categoryAbsolutePath, filename)
+                        self.signalSaveScene.emit(path, filePath)
 
         # Save project.xml
         with open(os.path.join(directory, projectName, 'project.xml'), 'w'
@@ -477,41 +472,34 @@ class ProjectModel(QStandardItemModel):
         self.selectPath(devicePath)
 
 
-    def editScene(self, path=None):
-        if (path is not None) and self.projectHash.has(path):
-            sceneConfig = self.projectHash.get(path)
-        else:
-            sceneConfig = None
+    def editScene(self):
+        # TODO: edit already existing scene?
+        sceneData = None
         
-        dialog = SceneDialog(sceneConfig)
+        dialog = SceneDialog(sceneData)
         if dialog.exec_() == QDialog.Rejected:
             return
         
         # Get project name
-        projectName = self._currentProjectName()
-        self.addScene(projectName, dialog.sceneName, dialog.sceneName, path is not None)
+        projectName = self.currentProjectName()
+        self.addScene(projectName, dialog.sceneName)
 
 
-    def addScene(self, projectName, fileName, alias, overwrite=False):
-        projScenePath = "{}.{}.{}".format(projectName, ProjectModel.PROJECT_KEY, 
-                                          ProjectModel.SCENES_KEY)
-
-        # Put info in Hash
-        config = Hash("filename", fileName, "alias", alias)
-
-        # Remove old scene
-        if overwrite:
-            self.onRemove()
-            #self.signalRemoveScene(alias) # TODO: remove scene from mainwindow
+    def addScene(self, projectName, sceneName): #, overwrite=False):
+        """
         
-        # Add new scene to project hash
-        self.addSceneToProject(projScenePath, config)
-
+        """
+        scene = Scene(projectName, sceneName)
+        scene.initView()
+        self.projects[projectName].addScene(scene)
+        
+        self.signalAddScene.emit(scene)
+        self.updateData()
+        
+        path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY,
+                                 sceneName)
         # Select added scene
-        self.selectPath(projScenePath)
-        
-        # Send signal to mainWindow to add scene
-        self.signalAddScene.emit(alias)
+        self.selectPath(path)
         
 
 ### slots ###
