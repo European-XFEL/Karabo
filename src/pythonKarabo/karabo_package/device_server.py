@@ -45,23 +45,33 @@ class DeviceServer(object):
     @staticmethod
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("serverId").displayedName("Server ID")
+            STRING_ELEMENT(expected).key("serverId")
+                    .displayedName("Server ID")
                     .description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
                     .assignmentOptional().noDefaultValue().commit()
                     ,
-            INT32_ELEMENT(expected).key("visibility").displayedName("Visibility")
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility")
                     .description("Configures who is allowed to see this server at all")
                     .assignmentOptional().defaultValue(AccessLevel.OBSERVER).options("0 1 2 3 4")
                     .adminAccess().reconfigurable()
                     .commit()
                     ,
-            UINT32_ELEMENT(expected).key("nameRequestTimeout").displayedName("Name Request Timeout")
-                    .description("Time to wait for name resolution (via name-server) until timeout [ms]")
-                    .expertAccess().assignmentOptional().defaultValue(5000).commit()
-                    ,
-            NODE_ELEMENT(expected).key("PluginLoader")
-                    .displayedName("Plugin Loader").description("Plugin Loader sub-configuration")
-                    .appendParametersOfConfigurableClass(PluginLoader, "PythonPluginLoader")
+            CHOICE_ELEMENT(expected).key("connection")
+                    .displayedName("Connection")
+                    .description("The connection to the communication layer of the distributed system")
+                    .appendNodesOfConfigurationBase(BrokerConnection)
+                    .assignmentOptional().defaultValue("Jms")
+                    .expertAccess()
+                    .init()
+                    .commit()
+                    ,                    
+            PATH_ELEMENT(expected).key("pluginDirectory")
+                    .displayedName("Plugin Directory")
+                    .description("Directory to search for plugins")
+                    .assignmentOptional().defaultValue("plugins")
+                    .isDirectory()
+                    .expertAccess()
                     .commit()
                     ,
             NODE_ELEMENT(expected).key("Logger")
@@ -217,15 +227,24 @@ class DeviceServer(object):
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
         self.visibility = input.get("visibility")
         
-        if 'serverId' in input:
-            self.serverid = input['serverId']
-            saveToFile(Hash("DeviceServer.serverId", self.serverid), "autoload.xml")
-        else:
-            self.serverid = self._generateDefaultServerId()
+        # set serverId
+        serverIdFileName = "serverId.xml"
+        if os.path.isfile(serverIdFileName): 
+            hash = loadFromFile(serverIdFileName) 
+            if 'serverId' in hash: self.serverid = hash['serverId'] # If file exists, it has priority
+            elif 'serverId' in input: self.serverid = input['serverId'] # Else whatever was configured 
+            else: self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
+        else: # No file
+            if 'serverId' in input:
+                self.serverid = input['serverId']
+                saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName)
+            else:
+                self.serverid = self._generateDefaultServerId()
         
-        self.loadLogger(input)
-        self.loadPluginLoader(input)
-        self.nameRequestTimeout = input['nameRequestTimeout']
+        self.connectionType = iter(input['connection']).next().getKey()
+        self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
+        self.pluginLoader = PluginLoader.create("PythonPluginLoader", Hash("pluginDirectory", input['pluginDirectory']))
+        self.loadLogger(input)                
     
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -269,14 +288,11 @@ class DeviceServer(object):
         self.loggerConfiguration = Hash()
         self.loggerConfiguration += config
         Logger.configure(config)
-    
-    def loadPluginLoader(self, input):
-        self.pluginLoader = PluginLoader.createNode("PluginLoader", "PythonPluginLoader", input)
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)
         self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
-        self.ss = SignalSlotable.create(self.serverid)
+        self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
         self._registerAndConnectSignalsAndSlots()
         info = Hash("type", "server")
         info["serverId"] = self.serverid
@@ -488,6 +504,7 @@ class Launcher(threading.Thread):
         try:
             self.script = os.path.realpath(pluginDir + "/" + modname + ".py")
             filename = "/tmp/" + modname + "." + classid + ".configuration.xml"
+            # TODO Use higher level API here (i.e. writeToFile)
             cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
             out = OutputHash.create("TextFile", cfg)
             out.write(config)
