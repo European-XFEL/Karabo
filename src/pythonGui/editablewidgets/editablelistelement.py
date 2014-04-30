@@ -36,8 +36,6 @@ class EditableListElement(EditableWidget):
     signalValueChanged = pyqtSignal(str, object) # key, value
     
     def __init__(self, value=None, isDevIns=None, **params):
-        super(EditableListElement, self).__init__(**params)
-        
         self.__pushButton = QPushButton("Edit list")
         self.__pushButton.setStyleSheet("QPushButton { text-align: left; }")
         
@@ -56,6 +54,7 @@ class EditableListElement(EditableWidget):
         self.__pushButton.clicked.connect(self.onClicked)
         
         self.valueChanged(self.keys[0], value)
+        super(EditableListElement, self).__init__(**params)
 
 
     @property

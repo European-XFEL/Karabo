@@ -39,13 +39,11 @@ class DisplayHistogram(DisplayWidget):
                  "lightgreen", "black"]
 
     def __init__(self, box, parent):
-        super(DisplayHistogram, self).__init__(None)
-
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Histogram")
         self.plot = self.widget.get_plot()
         self.curves = { }
-        self.addBox(box)
+        super(DisplayHistogram, self).__init__(None)
 
 
     @property
@@ -61,7 +59,7 @@ class DisplayHistogram(DisplayWidget):
                            self.colorList[len(self.curves)])
         self.curves[box] = curve
         self.plot.add_item(curve)
-        box.addWidget(self)
+        self.connectBox(box)
         return True
 
 

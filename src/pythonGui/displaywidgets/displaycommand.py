@@ -33,11 +33,10 @@ class DisplayCommand(DisplayWidget):
     alias = "Command"
   
     def __init__(self, box, parent):
-        super(DisplayCommand, self).__init__(box)
         box.configuration.configuration.state.signalUpdateComponent.connect(
             self.onDeviceStateChanged)
         self.widget = QPushButton(parent)
-        box.addWidget(self)
+        super(DisplayCommand, self).__init__(box)
 
 
     def typeChanged(self, box):

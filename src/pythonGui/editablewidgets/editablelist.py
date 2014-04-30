@@ -73,14 +73,12 @@ class EditableList(EditableWidget):
     alias = "Histogram"
 
     def __init__(self, box, parent):
-        super(EditableList, self).__init__(box)
-        
         self.widget = Label(parent)
         self.widget.setMinimumWidth(160)
         self.widget.setMaximumHeight(24)
         self.widget.setFrameStyle(QFrame.Box)
         self.widget.valueChanged.connect(self.onEditingFinished)
-        box.addWidget(self)
+        super(EditableList, self).__init__(box)
 
     @property
     def value(self):
