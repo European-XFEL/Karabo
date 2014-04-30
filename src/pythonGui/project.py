@@ -35,12 +35,12 @@ class Project(object):
         self.monitors = []
 
 
-    def addDevice(self, deviceConfig):
-        self.devices.append(deviceConfig)
+    def addDevice(self, configuration):
+        self.devices.append(configuration)
 
 
-    def addScene(self, sceneData):
-        self.scenes.append(sceneData)
+    def addScene(self, scene):
+        self.scenes.append(scene)
 
 
     def fromHash(self, hash):
@@ -50,14 +50,19 @@ class Project(object):
     def toHash(self):
         print "toHash"
 
+    
+    def save(self):
+        print "save project..."
+
+
+    def load(self):
+        print "load project"
+
 
 class Scene(object):
 
-    def __init__(self, projectName, name):
+    def __init__(self, name):
         super(Scene, self).__init__()
-
-        # Project to which this scene belongs
-        self.projectName = projectName
 
         self.name = name
         self.filename = ""
