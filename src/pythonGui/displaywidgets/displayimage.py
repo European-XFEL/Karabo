@@ -42,18 +42,16 @@ class DisplayImage(DisplayWidget):
     alias = "Image View"
 
     def __init__(self, box, parent):
-        super(DisplayImage, self).__init__(box)
-        
         self.value = None
-        
-        if useGuiQwt:           
+
+        if useGuiQwt:
             self.__imageWidget = ImageDialog(edit=False, toolbar=True,
                 wintitle=".".join(box.path))
             self.__image = None
             self.__plot = self.__imageWidget.get_plot()
         else:
             self.__imageWidget = QLabel(parent)
-        box.addWidget(self)
+        super(DisplayImage, self).__init__(box)
 
     
     @property

@@ -33,8 +33,6 @@ class DisplayImageElement(DisplayWidget):
     alias = "Image Element"
 
     def __init__(self, box, parent):
-        super(DisplayImageElement, self).__init__(box)
-        
         self.__image = QLabel(parent)
         self.__image.setAutoFillBackground(True)
         self.__image.setAlignment(Qt.AlignCenter)
@@ -44,8 +42,8 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
-        box.addWidget(self)
-        
+        super(DisplayImageElement, self).__init__(box)
+
 
     @property
     def widget(self):
