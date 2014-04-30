@@ -31,20 +31,19 @@ from PyQt4.QtGui import *
 class EditableDoubleSpinBox(EditableWidget):
     category = "Digit"
     alias = "Float Field"
-    
-    def __init__(self, box, parent):
-        super(EditableDoubleSpinBox, self).__init__(box)
 
+    def __init__(self, box, parent):
         self.__leDblValue = QLineEdit(parent)
         self.__validator = QDoubleValidator(self.__leDblValue)
         self.__leDblValue.setValidator(self.__validator)
         self.__leDblValue.textChanged.connect(self.onEditingFinished)
-        
+
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.__lastCursorPos = 0
 
         if hasattr(box, "value"):
             self.valueChanged(box, box.value)
+        super(EditableDoubleSpinBox, self).__init__(box)
 
 
     @property

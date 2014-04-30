@@ -36,10 +36,8 @@ class DisplayLabel(DisplayWidget):
     alias = "Value Field"
   
     def __init__(self, box, parent):
-        super(DisplayLabel, self).__init__(box)
-        
         self.value = None
-        
+
         self.__label = QLabel(parent)
         self.__label.setAutoFillBackground(True)
         self.__label.setAlignment(Qt.AlignCenter)
@@ -47,8 +45,8 @@ class DisplayLabel(DisplayWidget):
         self.__label.setMinimumHeight(32)
         self.__label.setWordWrap(True)
         self.setErrorState(False)
-        box.addWidget(self)
-        
+        super(DisplayLabel, self).__init__(box)
+
 
     @property
     def widget(self):
