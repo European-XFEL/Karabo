@@ -32,14 +32,12 @@ class EditableLineEdit(EditableWidget):
     alias = "Text Field"
 
     def __init__(self, box, parent):
-        super(EditableLineEdit, self).__init__(box)
-        
         self.__lineEdit = QLineEdit(parent)
         self.__lineEdit.textChanged.connect(self.onEditingFinished)
-        
+
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.__lastCursorPos = 0
-        box.addWidget(self)
+        super(EditableLineEdit, self).__init__(box)
 
 
     @property
