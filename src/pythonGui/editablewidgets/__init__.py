@@ -10,4 +10,4 @@ __all__ = ["editablecheckbox", "editablechoiceelement", "editablecombobox",
            "editabledirectory", "editabledoublespinbox", "editablefilein",
            "editablefileout", "editablelineedit", "editablelistelement",
            "editablelist", "editablespinbox", "editabletauruswheeledit",
-           "hexoct", "qwtwidgets"]
+           "hexoct", "singlebit", "qwtwidgets"]
