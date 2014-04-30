@@ -15,10 +15,12 @@ __all__ = ["ProjectModel"]
 
 
 from collections import OrderedDict
+from configuration import Configuration
 from copy import copy
 from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
+import manager
 from project import Project, Scene
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
@@ -62,6 +64,9 @@ class ProjectModel(QStandardItemModel):
         self.systemTopology = None
         # List stores projects
         self.projects = OrderedDict()
+        
+        # Dict for later descriptor update
+        self.newDescriptorConf = dict()
         
         # Dialog to add and change a device
         self.pluginDialog = None
@@ -276,19 +281,19 @@ class ProjectModel(QStandardItemModel):
         return None
 
 
-    def currentProjectName(self):
+    def currentProject(self):
         """
-        This function returns the current project name, if a project is
-        currently selected.
+        This function returns the current project from which something might
+        be selected.
         """
         index = self.selectionModel.currentIndex()
         if not index.isValid():
             return None
 
-        while (index.parent().data(Qt.DisplayRole) is not None):
+        while (index.parent().data(ProjectModel.ITEM_OBJECT) is not None):
             index = index.parent()
 
-        return index.data(Qt.DisplayRole)
+        return index.data(ProjectModel.ITEM_OBJECT)
 
 
     def _projectExists(self, projectName):
@@ -337,8 +342,11 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        self.projects[projectName] = Project(projectName, directory)
+        project = Project(projectName, directory)
+        self.projects[projectName] = project
         self.updateData()
+        
+        return project
 
 
     def openProject(self, filename):
@@ -455,36 +463,68 @@ class ProjectModel(QStandardItemModel):
             return
 
         # Get project name
-        projectName = self._currentProjectName()
+        project = self.currentProject()
 
         # Remove old device
         if path is not None:
             self.onRemove()
         
         # Add new device
-        self.addDevice(projectName)
+        self.addDevice(project)
         self.pluginDialog = None
 
 
-    def addDevice(self, projectName):
-        if projectName is None: return
+    def addDevice(self, project):
+        """
+        Add a device configuration for the given \project.
+        """
         
         # Path for device in project hash
-        devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
-                     ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
+        #devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
+        #             ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
         # Path for device configuration
-        configPath = devicePath + "." + self.pluginDialog.plugin
+        #configPath = devicePath + "." + self.pluginDialog.plugin
 
         # Put info in Hash
-        config = Hash()
-        config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
-        config.set(configPath + ".serverId", self.pluginDialog.server)
+        #config = Hash()
+        #config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
+        #config.set(configPath + ".serverId", self.pluginDialog.server)
         
         # Add device to project hash
-        self.addProjectConfiguration(config)
+        #self.addProjectConfiguration(config)
+        
+        deviceId = self.pluginDialog.deviceId
+        serverId = self.pluginDialog.serverId
+        classId = self.pluginDialog.classId
+        
+        if deviceId in self.systemTopology:
+            # Get device configuration
+            conf = manager.Manager().getDevice(deviceId)
+        else:
+            # Get class configuration
+            conf = manager.Manager().getClass(serverId, classId)
+        
+        descriptor = conf.getDescriptor()
+        if descriptor is None:
+            conf.signalNewDescriptor.connect(self.onNewDescriptor)
 
-        # Select added device
-        self.selectPath(devicePath)
+        #device = Configuration(deviceId, 'projectClass', conf.getDescriptor())
+        #device.projectPath = "{}.{}.{}".format(projectName,
+        #                                       ProjectModel.DEVICES_KEY,
+        #                                       deviceId)
+        
+        device = Configuration(deviceId, "projectClass", descriptor)
+        # Save configurations for later descriptor update slot
+        if conf in self.newDescriptorConf:
+            self.newDescriptorConf[conf].append(device)
+        else:
+            self.newDescriptorConf[conf] = [device]
+        
+        project.addDevice(device)
+        self.updateData()
+        
+        print "addDevice", device
+        self.selectItem(device)
 
 
     def editScene(self):
@@ -495,28 +535,21 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        # Get project name
-        projectName = self.currentProjectName()
-        self.addScene(projectName, dialog.sceneName)
+        self.addScene(self.currentProject(), dialog.sceneName)
 
 
-    def addScene(self, projectName, sceneName): #, overwrite=False):
+    def addScene(self, project, sceneName): #, overwrite=False):
         """
-        
+        Create new Scene object for given \project.
         """
-        scene = Scene(projectName, sceneName)
+        scene = Scene(sceneName)
         scene.initView()
-        self.projects[projectName].addScene(scene)
+        project.addScene(scene)
         
         self.signalAddScene.emit(scene)
         self.updateData()
         
         self.selectItem(scene)
-        
-        #path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY,
-        #                         sceneName)
-        # Select added scene
-        #self.selectPath(path)
         
 
 ### slots ###
@@ -548,4 +581,18 @@ class ProjectModel(QStandardItemModel):
         self.projectHash.erase(index.data(ProjectModel.ITEM_PATH))
         # Remove data from model
         self.removeRow(index.row(), index.parent())
+
+
+    def onNewDescriptor(self, conf, descriptor):
+        """
+        This slot is called from the Configuration, whenever a new descriptor is
+        available.
+        """
+        print "onNewDescriptor", conf, descriptor
+        # Update all associated project configurations with new descriptor
+        configurations = self.newDescriptorConf[conf]
+        for c in configurations:
+            c.setDescriptor(descriptor)
+            manager.Manager().signalSchemaAvailable.emit(c)
+        
 
