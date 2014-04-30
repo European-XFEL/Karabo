@@ -14,7 +14,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-from enums import NavigationItemTypes
+from configuration import Configuration
 from manager import Manager
 from projectmodel import ProjectModel
 
@@ -184,15 +184,19 @@ class ProjectTreeView(QTreeView):
 
         index = selectedIndexes[0]
 
-        path = index.data(ProjectModel.ITEM_PATH)
-        if path is None: return
-        
-        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        deviceId = index.data(Qt.DisplayRole)
-
-        if (serverId is None) or (classId is None) or (deviceId is None):
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if object is None: return
+        if not isinstance(object, Configuration):
             return
+        
+        print "configuration selected..."
+        
+        #serverId = index.data(ProjectModel.ITEM_SERVER_ID)
+        #classId = index.data(ProjectModel.ITEM_CLASS_ID)
+        #deviceId = index.data(Qt.DisplayRole)
+
+        #if (serverId is None) or (classId is None) or (deviceId is None):
+        #    return
 
         if not self.model().checkSystemTopology():
             return
