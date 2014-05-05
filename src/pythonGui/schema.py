@@ -86,10 +86,10 @@ class Box(QObject):
         return partial(getattr(self.descriptor, attr), self)
 
 
-    def set(self, value, timestamp):
+    def _set(self, value, timestamp):
         self._value = self.descriptor.cast(value)
         self.timestamp = timestamp
-        self.signalUpdateComponent.emit(self, value, timestamp)
+        self.signalUpdateComponent.emit(self, self._value, timestamp)
 
 
     def hasValue(self):
@@ -115,7 +115,7 @@ class Type(hashtypes.Type):
 
 
     def set(self, box, value, timestamp=None):
-        box.set(value, timestamp)
+        box._set(value, timestamp)
 
 
     def setDefault(self, box):
@@ -131,11 +131,11 @@ class Type(hashtypes.Type):
             item.displayText = box.path[-1]
         item.allowedStates = self.allowedStates
 
-        try:
+        if self.options is not None:
             item.enumeration = self.options
             item.classAlias = "Selection Field"
             item.setIcon(0, icons.enum)
-        except AttributeError:
+        else:
             item.enumeration = None
             item.classAlias = self.classAlias
             item.setIcon(0, self.icon)
@@ -262,16 +262,18 @@ class Schema(hashtypes.Descriptor):
 
     @staticmethod
     def parseAttrs(self, attrs, parent):
+        """parse the attributes from attrs. This should correspond to
+        the C++ class util::Schema, where they are defined."""
+        copy = ['description', 'defaultValue', 'displayType', 'alias',
+                'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
+                'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
+                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy']
+        for a in copy:
+            setattr(self, a, attrs.get(a))
+        self.displayedName = attrs.get('displayedName', self.displayedName)
+        self.accessMode = attrs.get('accessMode', 0)
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
-        self.description = attrs.get('description')
-        self.displayedName = attrs.get('displayedName', self.displayedName)
-        self.allowedStates = attrs.get('allowedStates')
-        self.accessMode = attrs.get('accessMode', 0)
-        self.displayType = attrs.get('displayType')
-        self.defaultValue = attrs.get('defaultValue')
-        self.alias = attrs.get('alias')
-        self.tags = attrs.get('tags')
 
 
     @staticmethod
@@ -347,7 +349,7 @@ class Schema(hashtypes.Descriptor):
             box._value = self.getClass()(box)
         for k, v, a in value.iterall():
             try:
-                entry = getattr(box._value, k)
+                vv = getattr(box._value, k)
             except AttributeError:
                 continue
             try:
@@ -355,16 +357,16 @@ class Schema(hashtypes.Descriptor):
             except KeyError:
                 ts = None
             try:
-                s = entry.fromHash
+                s = vv.fromHash
             except AttributeError:
-                print 'bullshit in', k, entry, entry.descriptor
+                print 'bullshit in', k, vv, vv.descriptor
             else:
                 s(v, ts)
-        box.set(box._value, timestamp)
+        box._set(box._value, timestamp)
 
 
     def setDefault(self, box):
-        box.set(self.getClass()(box), None)
+        box._set(self.getClass()(box), None)
         for k, v in self.dict.iteritems():
             getattr(box.value, k).setDefault()
 
@@ -448,7 +450,7 @@ class ChoiceOfNodes(Schema):
 
     def set(self, box, value, timestamp=None):
         box.current = value
-        box.set(box.value, timestamp)
+        box._set(box.value, timestamp)
 
 
 class ListOfNodes(hashtypes.Descriptor):
