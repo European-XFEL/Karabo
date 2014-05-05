@@ -16,11 +16,12 @@ __all__ = ["ProjectTreeView"]
 
 from configuration import Configuration
 from manager import Manager
+from project import Project, Scene, Category
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QInputDialog, QLineEdit,
-                         QMenu, QTreeView)
+from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QInputDialog,
+                         QLineEdit, QMenu, QTreeView)
 
 
 class ProjectTreeView(QTreeView):
@@ -100,8 +101,7 @@ class ProjectTreeView(QTreeView):
             return
 
         project = self.model().createNewProject(projectName, directory)
-        project.save() # TODO
-        #self.model().saveProject(projectName, directory)
+        project.save()
 
 
     def openProject(self):
@@ -113,12 +113,8 @@ class ProjectTreeView(QTreeView):
         self.model().openProject(filename)
 
 
-    def saveProject(self):
-        directory = self.getProjectDir()
-        if directory is None:
-            return
-
-        return self.model().saveProject(self.model().currentProject(), directory)
+    def saveCurrentProject(self):
+        return self.model().currentProject().save()
 
 
     def mouseDoubleClickEvent(self, event):
@@ -140,8 +136,10 @@ class ProjectTreeView(QTreeView):
         if not index.isValid():
             return
 
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        
         menu = None
-        if index.data(Qt.DisplayRole) == Project.DEVICES_LABEL:
+        if isinstance(object, Category) and (object.displayName == Project.DEVICES_LABEL):
             # Devices menu
             text = "Add device"
             acImportPlugin = QAction(text, self)
@@ -151,7 +149,7 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acImportPlugin)
-        elif index.data(Qt.DisplayRole) == Project.SCENES_LABEL:
+        elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
             acAddScene = QAction(text, self)
@@ -161,16 +159,15 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acAddScene)
-        elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY) \
-          or (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+        elif isinstance(object, Configuration) or isinstance(object, Scene):
             text = "Edit"
             acEdit = QAction(text, self)
             acEdit.setStatusTip(text)
             acEdit.setToolTip(text)
             
-            if (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY):
+            if isinstance(object, Configuration):
                 acEdit.triggered.connect(self.model().onEditDevice)
-            elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+            elif isinstance(object, Scene):
                 acEdit.triggered.connect(self.model().onEditScene)
              
             text = "Remove"
