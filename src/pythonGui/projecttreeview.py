@@ -141,7 +141,7 @@ class ProjectTreeView(QTreeView):
             return
 
         menu = None
-        if index.data(Qt.DisplayRole) == ProjectModel.DEVICES_LABEL:
+        if index.data(Qt.DisplayRole) == Project.DEVICES_LABEL:
             # Devices menu
             text = "Add device"
             acImportPlugin = QAction(text, self)
@@ -151,7 +151,7 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acImportPlugin)
-        elif index.data(Qt.DisplayRole) == ProjectModel.SCENES_LABEL:
+        elif index.data(Qt.DisplayRole) == Project.SCENES_LABEL:
             # Scenes menu
             text = "Add scene"
             acAddScene = QAction(text, self)

@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from collections import OrderedDict
 from configuration import Configuration
 from copy import copy
-#from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
+from karabo.hash import Hash
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
