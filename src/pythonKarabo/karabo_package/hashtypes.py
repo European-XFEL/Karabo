@@ -42,17 +42,17 @@ class Simple(object):
 class Integer(Simple):
     def getMinMax(self):
         info = numpy.iinfo(self.numpy)
-        min = getattr(self, 'minExc', None)
+        min = self.minExc
         if min is None:
-            min = getattr(self, 'minInc', None)
+            min = self.minInc
         else:
             min += 1
         if min is None:
             min = info.min
 
-        max = getattr(self, 'maxExc', None)
+        max = self.maxExc
         if max is None:
-            max = getattr(self, 'maxInc', None)
+            max = self.maxInc
         else:
             max -= 1
         if max is None:
@@ -64,15 +64,15 @@ class Integer(Simple):
 class Number(Simple):
     def getMinMax(self):
         info = numpy.finfo(self.numpy)
-        min = getattr(self, 'minInc', None)
+        min = self.minInc
         if min is None:
-            min = getattr(self, 'minExc', None)
+            min = self.minExc
         if min is None:
             min = info.min
 
-        max = getattr(self, 'maxInc', None)
+        max = self.maxInc
         if max is None:
-            max = getattr(self, 'maxExc', None)
+            max = self.maxExc
         if max is None:
             min = info.max
 
@@ -189,7 +189,7 @@ class Type(Descriptor, Registry):
 
 
     def fromHash(self, box, data, timestamp=None):
-        box.set(data, timestamp)
+        box._set(data, timestamp)
 
 
 class Bool(Type):
