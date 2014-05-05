@@ -1015,6 +1015,7 @@ class GraphicsView(QSvgWidget):
 
 
     def saveScene(self, filename):
+        print "graphicsview.savescene", filename
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".svg"
