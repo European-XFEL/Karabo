@@ -21,7 +21,7 @@ from karabo.hash import Hash
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
-from project import Project, Scene
+from project import Project, Scene, Category
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
@@ -37,27 +37,7 @@ class ProjectModel(QStandardItemModel):
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
-    #ITEM_PATH = Qt.UserRole
     ITEM_OBJECT = Qt.UserRole
-    ITEM_CATEGORY = Qt.UserRole + 1
-    ITEM_SERVER_ID = Qt.UserRole + 2
-    ITEM_CLASS_ID = Qt.UserRole + 3
-
-    PROJECT_KEY = "project"
-
-    DEVICES_KEY = "devices"
-    SCENES_KEY = "scenes"
-    MACROS_KEY = "macros"
-    MONITORS_KEY = "monitors"
-    RESOURCES_KEY = "resources"
-    CONFIGURATIONS_KEY = "configurations"
-
-    DEVICES_LABEL = "Devices"
-    SCENES_LABEL = "Scenes"
-    MACROS_LABEL = "Macros"
-    MONITORS_LABEL = "Monitors"
-    RESOURCES_LABEL = "Resources"
-    CONFIGURATIONS_LABEL = "Configurations"
 
 
     def __init__(self, parent=None):
@@ -97,7 +77,8 @@ class ProjectModel(QStandardItemModel):
             rootItem.appendRow(item)
             
             # Devices
-            childItem = QStandardItem(ProjectModel.DEVICES_LABEL)
+            childItem = QStandardItem(Project.DEVICES_LABEL)
+            childItem.setData(Category(Project.DEVICES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -132,7 +113,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Scenes
-            childItem = QStandardItem(ProjectModel.SCENES_LABEL)
+            childItem = QStandardItem(Project.SCENES_LABEL)
+            childItem.setData(Category(Project.SCENES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -146,7 +128,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Macros
-            childItem = QStandardItem(ProjectModel.MACROS_LABEL)
+            childItem = QStandardItem(Project.MACROS_LABEL)
+            childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -157,7 +140,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Monitors
-            childItem = QStandardItem(ProjectModel.MONITORS_LABEL)
+            childItem = QStandardItem(Project.MONITORS_LABEL)
+            childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -168,7 +152,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Resources
-            childItem = QStandardItem(ProjectModel.RESOURCES_LABEL)
+            childItem = QStandardItem(Project.RESOURCES_LABEL)
+            childItem.setData(Category(Project.RESOURCES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -179,7 +164,8 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Configurations
-            childItem = QStandardItem(ProjectModel.CONFIGURATIONS_LABEL)
+            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
+            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
@@ -258,14 +244,6 @@ class ProjectModel(QStandardItemModel):
             self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
 
-    #def selectPath(self, path):
-    #    index = self.findIndex(path)
-    #    if index is None:
-    #        return
-
-    #    self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
-
-
     def findIndex(self, object):
         return self._rFindIndex(self.invisibleRootItem(), object)
 
@@ -341,26 +319,6 @@ class ProjectModel(QStandardItemModel):
         projectConfig = Hash(projectName, projectConfig)
         # Merge loaded hash into the current project hash
         self.addProjectConfiguration(projectConfig)
-
-
-    def addProjectConfiguration(self, config):
-        self.projectHash.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        self.updateData()
-
-
-    def addSceneToProject(self, projScenePath, sceneConfig):
-        # Get old config of scenes
-        vecConfig = self.projectHash.get(projScenePath)
-
-        if vecConfig is None:
-            # Create vector of hashes, if not existent yet
-            vecConfig = [sceneConfig]
-        else:
-            # Append new scene to vector of hashes
-            vecConfig.append(sceneConfig)
-        
-        self.projectHash.set(projScenePath, vecConfig)
-        self.updateData()
 
 
     def editDevice(self, path=None):
@@ -481,8 +439,8 @@ class ProjectModel(QStandardItemModel):
         if not index.isValid():
             return
         
-        # Remove data from project hash
-        self.projectHash.erase(index.data(ProjectModel.ITEM_PATH))
+        # Remove data from project
+        self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
         # Remove data from model
         self.removeRow(index.row(), index.parent())
 
