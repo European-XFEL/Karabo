@@ -200,10 +200,7 @@ class ProjectTreeView(QTreeView):
         if not isinstance(object, Configuration):
             return
 
-        h = object.futureHash
-        for classId in h.keys():
-            serverId = h.get("{}.serverId".format(classId))
-            deviceId = h.get("{}.deviceId".format(classId))
+        deviceId = object.futureHash.get("deviceId")
 
         if not self.model().checkSystemTopology():
             return
