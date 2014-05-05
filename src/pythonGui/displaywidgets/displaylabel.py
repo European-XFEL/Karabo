@@ -80,9 +80,9 @@ class DisplayLabel(DisplayWidget):
 
 
         if isinstance(value, ndarray):
-            ret = str(value)
+            ret = unicode(value)
         elif isinstance(value, list):
-            ret = '[' + ', '.join(format.format(v for v in value[:4]))
+            ret = '[' + ', '.join(format.format(v) for v in value[:4])
             if len(value) > 4:
                 ret += ', ..]'
             else:
