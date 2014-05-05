@@ -23,6 +23,12 @@ from PyQt4.QtCore import pyqtSignal, QDir, QObject
 class Project(QObject):
     signalSaveScene = pyqtSignal(object, str) # scene, filename
 
+    DEVICES_LABEL = "Devices"
+    SCENES_LABEL = "Scenes"
+    MACROS_LABEL = "Macros"
+    MONITORS_LABEL = "Monitors"
+    RESOURCES_LABEL = "Resources"
+    CONFIGURATIONS_LABEL = "Configurations"
 
     def __init__(self, name, directory):
         super(Project, self).__init__()
@@ -75,34 +81,47 @@ class Project(QObject):
                 self._clearProjectDir(absoluteProjectPath)
 
         # Create folder structure and save content
-        projectConfig = Hash()
+        projectConfig = Hash(self.name, Hash())
+        
+        devicePath = "{}.{}".format(self.name, Project.DEVICES_LABEL)
+        projectConfig.set(devicePath, Hash())
         for device in self.devices:
             projectConfig.merge(device.toHash())
         
+        scenePath = "{}.{}".format(self.name, Project.SCENES_LABEL)
+        sceneConfig = []
         for scene in self.scenes:
-            filePath = os.path.join(absoluteProjectPath, "Scenes", scene.filename)
+            filePath = os.path.join(absoluteProjectPath, Project.SCENES_LABEL,
+                                    scene.filename)
             # Save scene to SVG
             self.signalSaveScene.emit(scene, filePath)
-        
+            sceneConfig.append(Hash("filename", scene.filename))
+        projectConfig.set(scenePath, sceneConfig)
+            
+        macroPath = "{}.{}".format(self.name, Project.MACROS_LABEL)
+        projectConfig.set(macroPath, Hash())
         for macro in self.macros:
             # TODO
             pass
         
+        configPath = "{}.{}".format(self.name, Project.CONFIGURATIONS_LABEL)
+        projectConfig.set(configPath, Hash())
         for config in self.configurations:
             # TODO
             pass
         
+        resourcePath = "{}.{}".format(self.name, Project.RESOURCES_LABEL)
+        projectConfig.set(resourcePath, Hash())
         for resource in self.resources:
             # TODO
             pass
         
+        monitorPath = "{}.{}".format(self.name, Project.MONITORS_LABEL)
+        projectConfig.set(monitorPath, Hash())
         for montitor in self.monitors:
             # TODO
             pass
-        
-        print "@@@@@@@@@@@@@@"
-        print projectConfig
-        print "@@@@@@@@@@@@@@"
+
         # Save project.xml
         with open(os.path.join(self.directory, self.name, 'project.xml'), 'w') as file:
             w = XMLWriter()
