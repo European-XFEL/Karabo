@@ -1,9 +1,9 @@
-from widget import DisplayWidget, EditableWidget
+from widget import DisplayWidget
 
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QAction, QCheckBox, QInputDialog
 
-class SingleBit(EditableWidget, DisplayWidget):
+class SingleBit(DisplayWidget):
     category = "Digit"
     alias = "Single Bit"
 
@@ -19,8 +19,6 @@ class SingleBit(EditableWidget, DisplayWidget):
 
     def setReadOnly(self, ro):
         self.widget.setEnabled(ro)
-        if not ro:
-            self.widget.toggled.connect(self.onEditingFinished)
 
 
     @pyqtSlot()
@@ -33,14 +31,4 @@ class SingleBit(EditableWidget, DisplayWidget):
 
 
     def valueChanged(self, box, value, timestamp=None):
-        self.value = value
         self.widget.setChecked((value >> self.bit) & 1 != 0)
-
-
-    def onEditingFinished(self, v):
-        self.value = self.boxes[0].value
-        if v:
-            self.value |= 1 << self.bit
-        else:
-            self.value &= ~(1 << self.bit)
-        super(SingleBit, self).onEditingFinished(self.value)
