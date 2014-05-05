@@ -379,8 +379,11 @@ class ProjectModel(QStandardItemModel):
                 self.classConfigDescriptorMap[conf] = [device]
         
         device.futureHash = Hash(classId, Hash())
-        device.futureHash.set("{}.deviceId".format(classId), deviceId)
-        device.futureHash.set("{}.serverId".format(classId), serverId)
+        device.futureHash.set("deviceId", deviceId)
+        device.futureHash.set("serverId", serverId)
+        
+        if device.getDescriptor() is not None:
+            device.merge(device.futureHash)
         
         project.addDevice(device)
         self.updateData()
@@ -445,7 +448,7 @@ class ProjectModel(QStandardItemModel):
         self.removeRow(index.row(), index.parent())
 
 
-    def onNewDescriptor(self, conf, descriptor):
+    def onNewDescriptor(self, conf):
         """
         This slot is called from the Configuration, whenever a new descriptor is
         available.
@@ -453,11 +456,13 @@ class ProjectModel(QStandardItemModel):
         # Update all associated project configurations with new descriptor
         configurations = self.classConfigDescriptorMap[conf]
         for c in configurations:
-            c.setDescriptor(descriptor)
+            c.setDescriptor(conf.getDescriptor())
             
             # Merge hash configuration into configuration
             if c.futureHash is not None:
                 c.merge(c.futureHash)
             
+            # Set default values for configuration
+            c.setDefault()
             self.signalShowProjectConfiguration.emit(c)
 
