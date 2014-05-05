@@ -36,10 +36,13 @@ class CustomMiddlePanel(QWidget):
     ##########################################
 
 
-    def __init__(self, graphicsView, isConnectedToServer):
+    def __init__(self, scene, isConnectedToServer):
         super(CustomMiddlePanel, self).__init__()
 
-        self.graphicsview = graphicsView
+        # Reference to underlying scene object
+        self.scene = scene
+
+        self.graphicsview = scene.view
         self.graphicsview.setParent(self)
         self.graphicsview.designMode = isConnectedToServer
         
@@ -166,6 +169,14 @@ class CustomMiddlePanel(QWidget):
         widget = QWidget()
         widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.drawingToolBar.addWidget(widget)
+
+
+    def openScene(self, filename):
+        self.graphicsview.openScene(filename)
+
+
+    def saveScene(self, filename):
+        self.graphicsview.saveScene(filename)
 
 
     def onServerConnectionChanged(self, isConnected):

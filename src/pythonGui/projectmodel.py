@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from collections import OrderedDict
 from configuration import Configuration
 from copy import copy
-from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
+#from karabo.hash import Hash, HashMergePolicy, XMLParser, XMLWriter
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
@@ -33,6 +33,8 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
+    signalSaveScene = pyqtSignal(object, str) # scene, filename
+    
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
     #ITEM_PATH = Qt.UserRole
@@ -304,26 +306,6 @@ class ProjectModel(QStandardItemModel):
         return projectName in self.projects
 
 
-    def _clearProjectDir(self, absolutePath):
-        if len(absolutePath) < 1:
-            return
-
-        dirToDelete = QDir(absolutePath)
-        # Remove all files from directory
-        fileEntries = dirToDelete.entryList(QDir.Files | QDir.CaseSensitive)
-        while len(fileEntries) > 0:
-            dirToDelete.remove(fileEntries.pop())
-
-        # Remove all sub directories
-        dirEntries = dirToDelete.entryList(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.CaseSensitive)
-        while len(dirEntries) > 0:
-            subDirPath = absolutePath + "/" + dirEntries.pop()
-            subDirToDelete = QDir(subDirPath)
-            if len(subDirToDelete.entryList()) > 0:
-                self._clearProjectDir(subDirPath)
-            subDirToDelete.rmpath(subDirPath)
-
-
     def createNewProject(self, projectName, directory):
         """
         This function updates the project list updates the view.
@@ -359,69 +341,6 @@ class ProjectModel(QStandardItemModel):
         projectConfig = Hash(projectName, projectConfig)
         # Merge loaded hash into the current project hash
         self.addProjectConfiguration(projectConfig)
-
-
-    def saveProject(self, projectName, directory, overwrite=False):
-        absoluteProjectPath = os.path.join(directory, projectName)
-        dir = QDir()
-        if not QDir(absoluteProjectPath).exists():
-            dir.mkpath(absoluteProjectPath)
-        else:
-            if not overwrite:
-                reply = QMessageBox.question(None, "New project",
-                    "A project folder named \"" + projectName + "\" already exists.<br>"
-                    "Do you want to replace it?",
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-                if reply == QMessageBox.No:
-                    return
-
-                self._clearProjectDir(absoluteProjectPath)
-
-        projectConfig = self.projectHash.get(projectName)
-        # Create folder structure and save content
-        for pKey in projectConfig.keys():
-            categoryConfig = projectConfig.get(pKey)
-            for cKey in categoryConfig.keys():
-                if cKey == ProjectModel.DEVICES_KEY:
-                    continue
-
-                # Create folder for label
-                label = categoryConfig.getAttribute(cKey, "label")
-                categoryAbsolutePath = os.path.join(absoluteProjectPath, label)
-                dir.mkpath(categoryAbsolutePath)
-
-                subConfig = categoryConfig.get(cKey)
-                if subConfig is None:
-                    continue
-
-                if cKey == ProjectModel.CONFIGURATIONS_KEY:
-                    # Save configurations
-                    print "configurations"
-                elif cKey == ProjectModel.MACROS_KEY:
-                    # Save macros
-                    print "macros"
-                elif cKey == ProjectModel.MONITORS_KEY:
-                    # Save monitors
-                    print "monitors"
-                elif cKey == ProjectModel.RESOURCES_KEY:
-                    # Save resources
-                    print "resources"
-                elif cKey == ProjectModel.SCENES_KEY:
-                    # Save scenes
-                    for i, sceneConfig in enumerate(subConfig):
-                        filename = sceneConfig.get("filename")
-                        #alias = sceneConfig.get("alias")
-                        # Save scene to SVG
-                        path = "{}.{}".format(projectName, filename)
-                        filePath = os.path.join(categoryAbsolutePath, filename)
-                        self.signalSaveScene.emit(path, filePath)
-
-        # Save project.xml
-        with open(os.path.join(directory, projectName, 'project.xml'), 'w'
-                  ) as file:
-            w = XMLWriter()
-            w.writeToFile(projectConfig, file)
 
 
     def addProjectConfiguration(self, config):
@@ -528,8 +447,9 @@ class ProjectModel(QStandardItemModel):
         """
         scene = Scene(sceneName)
         scene.initView()
-        project.addScene(scene)
+        project.signalSaveScene.connect(self.signalSaveScene)
         
+        project.addScene(scene)
         self.signalAddScene.emit(scene)
         self.updateData()
         
