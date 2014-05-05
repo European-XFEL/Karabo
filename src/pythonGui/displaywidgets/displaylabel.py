@@ -27,8 +27,10 @@ from karabo import hashtypes
 import decimal
 import re
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QLabel
+
+from numpy import ndarray
 
 
 class DisplayLabel(DisplayWidget):
@@ -38,81 +40,63 @@ class DisplayLabel(DisplayWidget):
     def __init__(self, box, parent):
         self.value = None
 
-        self.__label = QLabel(parent)
-        self.__label.setAutoFillBackground(True)
-        self.__label.setAlignment(Qt.AlignCenter)
-        self.__label.setMinimumWidth(160)
-        self.__label.setMinimumHeight(32)
-        self.__label.setWordWrap(True)
+        self.widget = QLabel(parent)
+        self.widget.setAutoFillBackground(True)
+        self.widget.setAlignment(Qt.AlignCenter)
+        self.widget.setMinimumWidth(160)
+        self.widget.setMinimumHeight(32)
+        self.widget.setWordWrap(True)
         self.setErrorState(False)
         super(DisplayLabel, self).__init__(box)
 
 
-    @property
-    def widget(self):
-        return self.__label
-
-
     def setErrorState(self, isError):
-        if isError is True:
-            self.__label.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
-        else:
-            self.__label.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
+        self.widget.setStyleSheet("QLabel {{ background-color : rgba({}); }}".
+                                  format('255,155,155,128' if isError
+                                         else '225,242,225,128'))
 
 
-    def valueChanged(self, key, value, timestamp=None):
-        if isinstance(value, Hash):# or isinstance(value, Hash[]):
-            # No visualization of Hash objects in this widget
-            return
-        if isinstance(value, list) and len(value) > 0:
-            if isinstance(value[0], Hash):
-                # No visualization of vector of Hash in this widget
-                return
-        if not isinstance(key.descriptor, hashtypes.Type):
+    def valueChanged(self, box, value, timestamp=None):
+        if (not isinstance(box.descriptor, hashtypes.Type)
+            or isinstance(box.descriptor,
+                          (hashtypes.Hash, hashtypes.VectorHash))):
             return # only simple types can be shown here
-        
+
         if value is None:
             return
 
-        # Store original value with type
         self.value = value
-        
-        if isinstance(value, list):    
-            listLen = len(value)
-            maxLen = 4
-            valueAsString = "["
-            
-            for i in range(listLen):
-                if maxLen < 1:
-                    valueAsString += ".."
-                    break
 
-                index = value[i]                
-                if self.valueType is hashtypes.VectorFloat:
-                    index = float(decimal.Decimal(str(index)).quantize(decimal.Decimal('.0000000')))
-                elif self.valueType is hashtypes.VectorDouble:
-                    index = float(decimal.Decimal(str(index)))
-                valueAsString += str(index)
+        try:
+            format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
+                          )[box.descriptor.displayType[:3]]
+        except (TypeError, KeyError):
+            if isinstance(box.descriptor, hashtypes.Float):
+                format = "{:.6g}"
+            elif isinstance(box.descriptor, hashtypes.Double):
+                format = "{:.10g}"
+            else:
+                format = "{}"
 
-                if i != (listLen-1):
-                    valueAsString += ", "
-                maxLen -= 1
-            valueAsString += "]"
-            value = valueAsString
-        elif self.valueType is hashtypes.Float:
-            value = float(decimal.Decimal(str(value)).quantize(decimal.Decimal('.0000000')))
-            value = self.toScientificNotation(value)
-            
-        elif self.valueType is hashtypes.Double:
-            value = float(decimal.Decimal(str(value)))
 
-        self.__label.setText(str(value))
+        if isinstance(value, ndarray):
+            ret = str(value)
+        elif isinstance(value, list):
+            ret = '[' + ', '.join(format.format(v for v in value[:4]))
+            if len(value) > 4:
+                ret += ', ..]'
+            else:
+                ret += ']'
+        else:
+            ret = format.format(value)
+
+        self.widget.setText(ret)
 
 
     def toScientificNotation(self, value):
         strvalue = str(value)
         if re.match('^[^\.]*?\d{6,}\.0+$', strvalue):
-            locale = self.__label.locale()
+            locale = self.widget.locale()
             strvalue = locale.toString(value, 'e', 6)
             if abs(value) >= 1000.0:
                 strvalue.remove(locale.groupSeparator())
