@@ -20,11 +20,12 @@ from PyQt4.QtCore import QObject, pyqtSignal
 
 
 class Configuration(QObject):
-    signalNewDescriptor = pyqtSignal(object, object)
+    signalNewDescriptor = pyqtSignal(object) # configuration
 
     def __init__(self, path, type, descriptor=None):
         """
-        Create a new Configuration for schema, type should be 'class' or 'device'.
+        Create a new Configuration for schema, type should be 'class',
+        'projectClass' or 'device'.
         """
         
         super(Configuration, self).__init__()
@@ -48,7 +49,7 @@ class Configuration(QObject):
 
     def setSchema(self, schema):
         self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
-        self.signalNewDescriptor.emit(self, self._box.descriptor)
+        self.signalNewDescriptor.emit(self)
 
 
     @property
@@ -69,6 +70,10 @@ class Configuration(QObject):
 
 
     def setDefault(self):
+        """
+        This function should be called explicitly whenever a new schema was set
+        and the default values are required to be updated.
+        """
         self._box.setDefault()
 
 
@@ -87,7 +92,8 @@ class Configuration(QObject):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self._box.fillWidget(parameterEditor, self.type == "class")
+        self._box.fillWidget(parameterEditor, (self.type == "class") \
+                                           or (self.type == "projectClass"))
         parameterEditor.globalAccessLevelChanged()
 
 
