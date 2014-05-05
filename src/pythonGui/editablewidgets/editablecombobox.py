@@ -35,10 +35,10 @@ class EditableComboBox(EditableWidget):
     def __init__(self, box, parent):
         self.widget = QComboBox(parent)
         self.widget.setFrame(False)
+        super(EditableComboBox, self).__init__(box)
 
         self.widget.installEventFilter(self)
         self.widget.currentIndexChanged[str].connect(self.onEditingFinished)
-        super(EditableComboBox, self).__init__(box)
 
 
     def typeChanged(self, box):
