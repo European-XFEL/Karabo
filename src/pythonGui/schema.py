@@ -131,11 +131,11 @@ class Type(hashtypes.Type):
             item.displayText = box.path[-1]
         item.allowedStates = self.allowedStates
 
-        try:
+        if self.options is not None:
             item.enumeration = self.options
             item.classAlias = "Selection Field"
             item.setIcon(0, icons.enum)
-        except AttributeError:
+        else:
             item.enumeration = None
             item.classAlias = self.classAlias
             item.setIcon(0, self.icon)
@@ -262,16 +262,18 @@ class Schema(hashtypes.Descriptor):
 
     @staticmethod
     def parseAttrs(self, attrs, parent):
+        """parse the attributes from attrs. This should correspond to
+        the C++ class util::Schema, where they are defined."""
+        copy = ['description', 'defaultValue', 'displayType', 'alias',
+                'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
+                'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
+                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy']
+        for a in copy:
+            setattr(self, a, attrs.get(a))
+        self.displayedName = attrs.get('displayedName', self.displayedName)
+        self.accessMode = attrs.get('accessMode', 0)
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
-        self.description = attrs.get('description')
-        self.displayedName = attrs.get('displayedName', self.displayedName)
-        self.allowedStates = attrs.get('allowedStates')
-        self.accessMode = attrs.get('accessMode', 0)
-        self.displayType = attrs.get('displayType')
-        self.defaultValue = attrs.get('defaultValue')
-        self.alias = attrs.get('alias')
-        self.tags = attrs.get('tags')
 
 
     @staticmethod
