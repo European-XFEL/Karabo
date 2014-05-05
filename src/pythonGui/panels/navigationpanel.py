@@ -12,11 +12,9 @@
 __all__ = ["NavigationPanel"]
 
 
-from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 
-from PyQt4.QtCore import pyqtSignal, SIGNAL
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
 class NavigationPanel(QWidget):

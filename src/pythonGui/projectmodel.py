@@ -33,6 +33,7 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
+    signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
     #ITEM_PATH = Qt.UserRole
     ITEM_OBJECT = Qt.UserRole
@@ -66,7 +67,7 @@ class ProjectModel(QStandardItemModel):
         self.projects = OrderedDict()
         
         # Dict for later descriptor update
-        self.newDescriptorConf = dict()
+        self.classConfigDescriptorMap = dict()
         
         # Dialog to add and change a device
         self.pluginDialog = None
@@ -478,52 +479,35 @@ class ProjectModel(QStandardItemModel):
         """
         Add a device configuration for the given \project.
         """
-        
-        # Path for device in project hash
-        #devicePath = projectName + "." + ProjectModel.PROJECT_KEY + "." + \
-        #             ProjectModel.DEVICES_KEY + "." + self.pluginDialog.deviceId
-        # Path for device configuration
-        #configPath = devicePath + "." + self.pluginDialog.plugin
-
-        # Put info in Hash
-        #config = Hash()
-        #config.set(configPath + ".deviceId", self.pluginDialog.deviceId)
-        #config.set(configPath + ".serverId", self.pluginDialog.server)
-        
-        # Add device to project hash
-        #self.addProjectConfiguration(config)
-        
         deviceId = self.pluginDialog.deviceId
         serverId = self.pluginDialog.serverId
         classId = self.pluginDialog.classId
-        
-        if deviceId in self.systemTopology:
+
+        if self.systemTopology.has("device.{}".format(deviceId)):
             # Get device configuration
-            conf = manager.Manager().getDevice(deviceId)
+            device = manager.Manager().getDevice(deviceId)
         else:
             # Get class configuration
             conf = manager.Manager().getClass(serverId, classId)
         
-        descriptor = conf.getDescriptor()
-        if descriptor is None:
-            conf.signalNewDescriptor.connect(self.onNewDescriptor)
+            descriptor = conf.getDescriptor()
+            if descriptor is None:
+                conf.signalNewDescriptor.connect(self.onNewDescriptor)
 
-        #device = Configuration(deviceId, 'projectClass', conf.getDescriptor())
-        #device.projectPath = "{}.{}.{}".format(projectName,
-        #                                       ProjectModel.DEVICES_KEY,
-        #                                       deviceId)
+            device = Configuration(deviceId, "projectClass", descriptor)
+            # Save configuration for later descriptor update
+            if conf in self.classConfigDescriptorMap:
+                self.classConfigDescriptorMap[conf].append(device)
+            else:
+                self.classConfigDescriptorMap[conf] = [device]
         
-        device = Configuration(deviceId, "projectClass", descriptor)
-        # Save configurations for later descriptor update slot
-        if conf in self.newDescriptorConf:
-            self.newDescriptorConf[conf].append(device)
-        else:
-            self.newDescriptorConf[conf] = [device]
+        device.futureHash = Hash(classId, Hash())
+        device.futureHash.set("{}.deviceId".format(classId), deviceId)
+        device.futureHash.set("{}.serverId".format(classId), serverId)
         
         project.addDevice(device)
         self.updateData()
         
-        print "addDevice", device
         self.selectItem(device)
 
 
@@ -588,11 +572,14 @@ class ProjectModel(QStandardItemModel):
         This slot is called from the Configuration, whenever a new descriptor is
         available.
         """
-        print "onNewDescriptor", conf, descriptor
         # Update all associated project configurations with new descriptor
-        configurations = self.newDescriptorConf[conf]
+        configurations = self.classConfigDescriptorMap[conf]
         for c in configurations:
             c.setDescriptor(descriptor)
-            manager.Manager().signalSchemaAvailable.emit(c)
-        
+            
+            # Merge hash configuration into configuration
+            if c.futureHash is not None:
+                c.merge(c.futureHash)
+            
+            self.signalShowProjectConfiguration.emit(c)
 
