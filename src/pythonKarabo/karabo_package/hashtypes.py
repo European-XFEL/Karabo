@@ -496,7 +496,7 @@ class Hash(Type):
 
 
     def cast(self, other):
-        if isinstance(other, Hash):
+        if isinstance(other, hash.Hash):
             return other
         else:
             raise TypeError(
