@@ -100,7 +100,7 @@ class ProjectPanel(QWidget):
 
 
     def onProjectSave(self):
-        self.twProject.saveProject()
+        self.twProject.saveCurrentProject()
 
 
     def onSelectionChanged(self, selectedIndexes):
