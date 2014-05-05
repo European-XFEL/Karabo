@@ -203,16 +203,11 @@ class ProjectTreeView(QTreeView):
         if object is None: return
         if not isinstance(object, Configuration):
             return
-        
-        print "configuration selected...", object
 
-        #serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        #classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        #deviceId = index.data(Qt.DisplayRole)
-        deviceId = "test" # TODO: remove
-
-        #if (serverId is None) or (classId is None) or (deviceId is None):
-        #    return
+        h = object.futureHash
+        for classId in h.keys():
+            serverId = h.get("{}.serverId".format(classId))
+            deviceId = h.get("{}.deviceId".format(classId))
 
         if not self.model().checkSystemTopology():
             return
@@ -222,6 +217,6 @@ class ProjectTreeView(QTreeView):
             conf = Manager().getDevice(deviceId)
         else:
             conf = object
-        print "ojbect seleceted", conf
+        
         self.signalItemChanged.emit(conf)
 

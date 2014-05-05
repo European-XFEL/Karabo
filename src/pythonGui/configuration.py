@@ -31,6 +31,10 @@ class Configuration(QObject):
         self.type = type
         self.path = path
         self.visible = 0
+        
+        # In case the Schema is not set yet, this variable allows to set the
+        # configuration hash anyway
+        self.futureHash = None
         self._box = Box((), descriptor, self)
 
 
@@ -44,7 +48,6 @@ class Configuration(QObject):
 
     def setSchema(self, schema):
         self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
-        print "Configuration.setSchema"
         self.signalNewDescriptor.emit(self, self._box.descriptor)
 
 
