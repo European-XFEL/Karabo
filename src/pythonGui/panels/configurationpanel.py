@@ -398,6 +398,7 @@ class ConfigurationPanel(QWidget):
 
 
     def _setParameterEditorIndex(self, index):
+        print "_setParameterEditorIndex", index
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
@@ -456,8 +457,7 @@ class ConfigurationPanel(QWidget):
             self._setParameterEditorIndex(0)
         else:
             if not hasattr(configuration, 'index'):
-                configuration.index = self._createNewParameterPage(
-                    configuration)
+                configuration.index = self._createNewParameterPage(configuration)
             self._setParameterEditorIndex(configuration.index)
 
         if configuration not in (None, self.prevConfiguration) and configuration.type == "device":

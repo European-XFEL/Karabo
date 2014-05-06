@@ -20,7 +20,7 @@ from PyQt4.QtCore import QObject, pyqtSignal
 
 
 class Configuration(QObject):
-    signalNewDescriptor = pyqtSignal(object) # configuration
+    signalConfigurationNewDescriptor = pyqtSignal(object) # configuration
 
     def __init__(self, path, type, descriptor=None):
         """
@@ -49,7 +49,7 @@ class Configuration(QObject):
 
     def setSchema(self, schema):
         self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
-        self.signalNewDescriptor.emit(self)
+        self.signalConfigurationNewDescriptor.emit(self)
 
 
     @property

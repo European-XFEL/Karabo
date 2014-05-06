@@ -16,7 +16,7 @@ __all__ = ["Project", "Scene"]
 import os
 from configuration import Configuration
 from graphicsview import GraphicsView
-from karabo.hash import Hash, XMLParser, XMLWriter
+from karabo.hash import Hash, XMLWriter
 
 from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
@@ -32,6 +32,7 @@ class Project(QObject):
     RESOURCES_LABEL = "Resources"
     CONFIGURATIONS_LABEL = "Configurations"
 
+    PROJECT_KEY = "project"
     DEVICES_KEY = "devices"
     SCENES_KEY = "scenes"
     MACROS_KEY = "macros"
@@ -39,7 +40,7 @@ class Project(QObject):
     RESOURCES_KEY = "resources"
     CONFIGURATIONS_KEY = "configurations"
 
-    def __init__(self, name, directory):
+    def __init__(self, name="", directory=""):
         super(Project, self).__init__()
 
         self.name = name
@@ -73,18 +74,9 @@ class Project(QObject):
             self.scenes.remove(object)
         # TODO: for others as well
 
-
-    def fromHash(self, hash):
-        print "fromHash"
-
-
-    def toHash(self):
-        print "toHash"
-
     
     def save(self, overwrite=False):
         absoluteProjectPath = os.path.join(self.directory, self.name)
-        print "save project...", absoluteProjectPath
         dir = QDir()
         if not QDir(absoluteProjectPath).exists():
             dir.mkpath(absoluteProjectPath)
@@ -96,18 +88,19 @@ class Project(QObject):
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
                 if reply == QMessageBox.No:
+                    # TODO: Choose other location
                     return
 
                 self._clearProjectDir(absoluteProjectPath)
 
         # Create folder structure and save content
-        projectConfig = Hash(self.name, Hash())
+        projectConfig = Hash(Project.PROJECT_KEY, Hash())
+        projectConfig.setAttribute(Project.PROJECT_KEY, "name", self.name)
+        projectConfig.setAttribute(Project.PROJECT_KEY, "directory", self.directory)
         
         # Create folder for devices
-        devicePath = "{}.{}".format(self.name, Project.DEVICES_KEY)
+        devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
         projectConfig.set(devicePath, Hash())
-        # Create folder for devices
-        dir.mkpath(devicePath)
         deviceConfig = []
         for device in self.devices:
             deviceConfig.append(device.toHash())
@@ -116,7 +109,7 @@ class Project(QObject):
         # Create folder for scenes
         absoluteLabelPath = os.path.join(absoluteProjectPath, Project.SCENES_LABEL)
         dir.mkpath(absoluteLabelPath)
-        scenePath = "{}.{}".format(self.name, Project.SCENES_KEY)
+        scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
             filePath = os.path.join(absoluteLabelPath, scene.filename)
@@ -128,7 +121,7 @@ class Project(QObject):
         # Create folder for macros
         absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MACROS_LABEL)
         dir.mkpath(absoluteLabelPath)
-        macroPath = "{}.{}".format(self.name, Project.MACROS_KEY)
+        macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
         projectConfig.set(macroPath, Hash())
         for macro in self.macros:
             # TODO
@@ -137,7 +130,7 @@ class Project(QObject):
         # Create folder for configurations
         absoluteLabelPath = os.path.join(absoluteProjectPath, Project.CONFIGURATIONS_LABEL)
         dir.mkpath(absoluteLabelPath)
-        configPath = "{}.{}".format(self.name, Project.CONFIGURATIONS_KEY)
+        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
         projectConfig.set(configPath, Hash())
         for config in self.configurations:
             # TODO
@@ -146,21 +139,17 @@ class Project(QObject):
         # Create folder for resources
         absoluteLabelPath = os.path.join(absoluteProjectPath, Project.RESOURCES_LABEL)
         dir.mkpath(absoluteLabelPath)
-        resourcePath = "{}.{}".format(self.name, Project.RESOURCES_KEY)
+        resourcePath = "{}.{}".format(Project.PROJECT_KEY, Project.RESOURCES_KEY)
         projectConfig.set(resourcePath, Hash())
-        # Create folder for resources
-        dir.mkpath(resourcePath)
         for resource in self.resources:
             # TODO
             pass
 
-        # Create folder for resources
+        # Create folder for monitors
         absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MONITORS_LABEL)
         dir.mkpath(absoluteLabelPath)
-        monitorPath = "{}.{}".format(self.name, Project.MONITORS_KEY)
+        monitorPath = "{}.{}".format(Project.PROJECT_KEY, Project.MONITORS_KEY)
         projectConfig.set(monitorPath, Hash())
-        # Create folder for monitors
-        dir.mkpath(monitorPath)
         for montitor in self.monitors:
             # TODO
             pass
