@@ -483,6 +483,7 @@ class ProjectModel(QStandardItemModel):
                 c.merge(c.futureHash)
             
             # Set default values for configuration
+            print "setDefault"
             c.setDefault()
             self.signalShowProjectConfiguration.emit(c)
 

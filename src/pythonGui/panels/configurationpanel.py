@@ -398,7 +398,6 @@ class ConfigurationPanel(QWidget):
 
 
     def _setParameterEditorIndex(self, index):
-        print "_setParameterEditorIndex", index
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
