@@ -436,6 +436,7 @@ class _Network(QObject):
 
 ### private functions ###
     def _tcpWriteHash(self, instanceInfo):
+        if self.tcpSocket is None: return
         stream = QByteArray()
         writer = BinaryWriter()
         dataBytes = writer.write(instanceInfo)

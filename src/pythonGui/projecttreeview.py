@@ -58,11 +58,11 @@ class ProjectTreeView(QTreeView):
 
         project = self.model().createNewProject(projectName, directory)
         self.model().addScene(project, sceneName)
-        project.save(True)
+        project.save(True) # TODO: if default already exists: open existing
 
     
     def getProjectDir(self):
-        fileDialog = QFileDialog(self, "Save project", QDir.rootPath())
+        fileDialog = QFileDialog(self, "Save project", QDir.tempPath())
         fileDialog.setFileMode(QFileDialog.Directory)
         fileDialog.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
 
@@ -106,7 +106,7 @@ class ProjectTreeView(QTreeView):
 
     def openProject(self):
         filename = QFileDialog.getOpenFileName(None, "Open saved project", \
-                                               QDir.rootPath(), "XML (*.xml)")
+                                               QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
         
@@ -114,7 +114,7 @@ class ProjectTreeView(QTreeView):
 
 
     def saveCurrentProject(self):
-        return self.model().currentProject().save()
+        self.model().currentProject().save()
 
 
     def mouseDoubleClickEvent(self, event):
@@ -211,5 +211,6 @@ class ProjectTreeView(QTreeView):
         else:
             conf = object
         
+        print "signalItemChanged", conf.path, conf.type
         self.signalItemChanged.emit(conf)
 
