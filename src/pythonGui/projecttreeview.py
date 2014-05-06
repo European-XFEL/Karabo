@@ -211,6 +211,5 @@ class ProjectTreeView(QTreeView):
         else:
             conf = object
         
-        print "signalItemChanged", conf.path, conf.type
         self.signalItemChanged.emit(conf)
 
