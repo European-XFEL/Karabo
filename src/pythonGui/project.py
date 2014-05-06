@@ -103,7 +103,10 @@ class Project(QObject):
         projectConfig.set(devicePath, Hash())
         deviceConfig = []
         for device in self.devices:
-            deviceConfig.append(device.toHash())
+            config = device.toHash()
+            # TODO: other way original classId="Device"
+            config.set("classId", device.futureHash.get("classId"))
+            deviceConfig.append(config)
         projectConfig.set(devicePath, deviceConfig)
         
         # Create folder for scenes
