@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from collections import OrderedDict
 from configuration import Configuration
 from copy import copy
-from karabo.hash import Hash
+from karabo.hash import Hash, HashMergePolicy, XMLParser
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
@@ -93,23 +93,6 @@ class ProjectModel(QStandardItemModel):
                     leafItem.setIcon(QIcon(":device-instance"))
                 else:
                     leafItem.setIcon(QIcon(":offline"))
-
-                #serverId = "Server_002"
-                #classId = "Conveyor"
-                #leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
-                #leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
-
-                #classConfig = config.get(leafKey)
-                #for classId in classConfig.keys():
-                #    serverId = classConfig.get("{}.serverId".format(classId))
-                #    # Set server and class ID
-                #    leafItem.setData(serverId, ProjectModel.ITEM_SERVER_ID)
-                #    leafItem.setData(classId, ProjectModel.ITEM_CLASS_ID)
-                #    leafPath = "{}.{}".format(leafPath, classId)
-                
-                #path = "{}.{}.{}".format(projectName, ProjectModel.DEVICES_KEY, device.path)
-                #leafItem.setData(path, ProjectModel.ITEM_PATH)
-                #leafItem.setData(ProjectModel.DEVICES_KEY, ProjectModel.ITEM_CATEGORY)
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -122,9 +105,6 @@ class ProjectModel(QStandardItemModel):
                 leafItem = QStandardItem(scene.name)
                 leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
-                #path = "{}.{}.{}".format(projectName, ProjectModel.SCENES_KEY, scene.name)
-                #leafItem.setData(path, ProjectModel.ITEM_PATH)
-                #leafItem.setData(ProjectModel.SCENES_KEY, ProjectModel.ITEM_CATEGORY)
                 childItem.appendRow(leafItem)
 
             # Macros
@@ -310,15 +290,52 @@ class ProjectModel(QStandardItemModel):
         return project
 
 
+    def createNewProjectFromHash(self, hash):
+        """
+        This function creates a new project via the given \hash and returns it.
+        """
+        project = Project()
+        project.name = hash.getAttribute(Project.PROJECT_KEY, "name")
+        project.directory = hash.getAttribute(Project.PROJECT_KEY, "directory")
+        
+        projConfig = hash.get(Project.PROJECT_KEY)
+        
+        for category in projConfig.keys():
+            if category == Project.DEVICES_KEY:
+                devices = projConfig.get(category)
+                # Vector of hashes
+                for d in devices:
+                    self.addDevice(project, d)
+            elif category == Project.SCENES_KEY:
+                scenes = projConfig.get(category)
+                # Vector of hashes
+                for s in scenes:
+                    self.addScene(project, s.get("filename"))
+            elif category == Project.MACROS_KEY:
+                pass
+            elif category == Project.MONITORS_KEY:
+                pass
+            elif category == Project.RESOURCES_KEY:
+                pass
+            elif category == Project.CONFIGURATIONS_KEY:
+                pass
+        
+        return project
+
+
     def openProject(self, filename):
+        """
+        This function opens a project file, creates a new projects, adds it to
+        the project list and updates the view.
+        """
         p = XMLParser()
         with open(filename, 'r') as file:
             projectConfig = p.read(file.read())
-        # Consider projectName to merge correctly into project hash
-        projectName = projectConfig.getAttribute("project", "name")
-        projectConfig = Hash(projectName, projectConfig)
-        # Merge loaded hash into the current project hash
-        self.addProjectConfiguration(projectConfig)
+        
+        # Create empty project and fill
+        project = self.createNewProjectFromHash(projectConfig)
+        self.projects[project.name] = project
+        self.updateData()
 
 
     def editDevice(self, path=None):
@@ -348,19 +365,24 @@ class ProjectModel(QStandardItemModel):
             self.onRemove()
         
         # Add new device
-        self.addDevice(project)
+        config = Hash("deviceId", self.pluginDialog.deviceId,
+                      "serverId", self.pluginDialog.serverId,
+                      "classId", self.pluginDialog.classId)
+        self.addDevice(project, config)
         self.pluginDialog = None
 
 
-    def addDevice(self, project):
+    def addDevice(self, project, config):
         """
-        Add a device configuration for the given \project.
+        Add a device configuration for the given \project with the given
+        parameters of the \config.
         """
-        deviceId = self.pluginDialog.deviceId
-        serverId = self.pluginDialog.serverId
-        classId = self.pluginDialog.classId
-
-        if self.systemTopology.has("device.{}".format(deviceId)):
+        deviceId = config.get("deviceId")
+        serverId = config.get("serverId")
+        classId = config.get("classId")
+        
+        if (self.systemTopology is not None) and \
+           (self.systemTopology.has("device.{}".format(deviceId))):
             # Get device configuration
             device = manager.Manager().getDevice(deviceId)
         else:
@@ -369,7 +391,7 @@ class ProjectModel(QStandardItemModel):
         
             descriptor = conf.getDescriptor()
             if descriptor is None:
-                conf.signalNewDescriptor.connect(self.onNewDescriptor)
+                conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
             device = Configuration(deviceId, "projectClass", descriptor)
             # Save configuration for later descriptor update
@@ -378,9 +400,7 @@ class ProjectModel(QStandardItemModel):
             else:
                 self.classConfigDescriptorMap[conf] = [device]
         
-        device.futureHash = Hash(classId, Hash())
-        device.futureHash.set("deviceId", deviceId)
-        device.futureHash.set("serverId", serverId)
+        device.futureHash = config
         
         if device.getDescriptor() is not None:
             device.merge(device.futureHash)
@@ -448,10 +468,10 @@ class ProjectModel(QStandardItemModel):
         self.removeRow(index.row(), index.parent())
 
 
-    def onNewDescriptor(self, conf):
+    def onConfigurationNewDescriptor(self, conf):
         """
         This slot is called from the Configuration, whenever a new descriptor is
-        available.
+        available \conf is given.
         """
         # Update all associated project configurations with new descriptor
         configurations = self.classConfigDescriptorMap[conf]
