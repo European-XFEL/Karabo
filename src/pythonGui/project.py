@@ -118,10 +118,10 @@ class Project(QObject):
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
-            filePath = os.path.join(absoluteLabelPath, scene.filename)
+            filename = os.path.join(absoluteLabelPath, scene.filename)
             # Save scene to SVG
-            self.signalSaveScene.emit(scene, filePath)
-            sceneConfig.append(Hash("filename", scene.filename))
+            self.signalSaveScene.emit(scene, filename)
+            sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
         # Create folder for macros
@@ -196,7 +196,7 @@ class Scene(object):
         super(Scene, self).__init__()
 
         self.name = name
-        self.filename = name
+        self.filename = "{}.svg".format(name)
         # GraphicsView
         self.view = None
 

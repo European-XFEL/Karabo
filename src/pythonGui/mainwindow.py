@@ -188,6 +188,7 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
+        self.projectPanel.signalOpenScene.connect(self.onOpenScene)
         self.projectPanel.signalSaveScene.connect(self.onSaveScene)
         self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
@@ -267,6 +268,15 @@ class MainWindow(QMainWindow):
         self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
+
+
+    def onOpenScene(self, scene, filename):
+        print "onOpenScene", filename, scene
+        customView = self._createCustomMiddlePanel(scene)
+        self.middleTab.addDockableTab(customView, scene.name)
+        if self.middleTab.count()-1 > 0:
+            self.middleTab.updateTabsClosable()
+        customView.openScene(filename)
 
 
     def onSaveScene(self, scene, filename):
