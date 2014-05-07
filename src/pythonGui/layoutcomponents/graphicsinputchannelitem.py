@@ -16,7 +16,7 @@ from channelconnection import ChannelConnection
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-from manager import Manager
+#from manager import Manager # TODO: avoid ring import
 
 
 class GraphicsInputChannelItem(QGraphicsObject):

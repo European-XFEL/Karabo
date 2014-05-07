@@ -188,6 +188,8 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
+        self.projectPanel.signalOpenScene.connect(self.onOpenScene)
+        self.projectPanel.signalSaveScene.connect(self.onSaveScene)
         self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
@@ -219,12 +221,11 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _createCustomMiddlePanel(self):
+    def _createCustomMiddlePanel(self, scene):
         """
-        This function creates a new CustomMiddlePanel, establishes its necessary
-        connections and returns it.
+        This function creates a new CustomMiddlePanel and returns it.
         """
-        customViewPanel = CustomMiddlePanel(self.acServerConnect.isChecked())
+        customViewPanel = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         return customViewPanel
 
 
@@ -262,11 +263,26 @@ class MainWindow(QMainWindow):
         print "onHelpAbout"
 
 
-    def onAddScene(self, sceneName):
-        customViewPanel = self._createCustomMiddlePanel()
-        self.middleTab.addDockableTab(customViewPanel, sceneName)
+    def onAddScene(self, scene):
+        customView = self._createCustomMiddlePanel(scene)
+        self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
+
+
+    def onOpenScene(self, scene, filename):
+        customView = self._createCustomMiddlePanel(scene)
+        self.middleTab.addDockableTab(customView, scene.name)
+        if self.middleTab.count()-1 > 0:
+            self.middleTab.updateTabsClosable()
+        customView.openScene(filename)
+
+
+    def onSaveScene(self, scene, filename):
+        for i in xrange(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if divWidget.dockableWidget.scene == scene:
+                divWidget.dockableWidget.saveScene(filename)
 
 
     def onChangeAccessLevel(self, action):

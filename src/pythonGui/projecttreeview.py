@@ -14,19 +14,20 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-from enums import NavigationItemTypes
+import os
+from configuration import Configuration
 from manager import Manager
+from project import Project, Scene, Category
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QInputDialog, QLineEdit,
-                         QMenu, QTreeView)
+from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QInputDialog,
+                         QLineEdit, QMenu, QTreeView)
 
 
 class ProjectTreeView(QTreeView):
 
     # To import a plugin a server connection needs to be established
-    signalAddScene = pyqtSignal(str) # scene title
     signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
 
@@ -47,17 +48,40 @@ class ProjectTreeView(QTreeView):
 
     def setupDefaultProject(self):
         """
-        This function sets up a default project.
-        So basically a new project is created and saved in the users /tmp/ folder.
-        Previous data is overwritten.
+        This function sets up the default project.
+        
+        If the default project already exists in the given directory it is opened,
+        otherwise a new default project is created.
         """
         projectName = "default_project"
-        sceneName = "default_scene"
-        directory = "/tmp/"
+        directory = QDir.tempPath()
+        
+        alreadyExists = self.model().projectExists(directory, projectName)
+        if alreadyExists:
+            # Open existing default project
+            filename = os.path.join(directory, projectName, "project.xml")
+            self.model().openProject(filename)
+            return
 
-        self.model().createNewProject(projectName, directory)
-        self.model().addScene(projectName, sceneName, sceneName)
-        self.model().saveProject(projectName, directory, True)
+        # Create new project or overwrite existing
+        project = self.model().createNewProject(projectName, directory)
+        self.model().addScene(project, "default_scene")
+        project.save(True)
+
+    
+    def getProjectDir(self):
+        fileDialog = QFileDialog(self, "Save project", QDir.tempPath())
+        fileDialog.setFileMode(QFileDialog.Directory)
+        fileDialog.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+
+        if fileDialog.exec_() == QDialog.Rejected:
+            return None
+        
+        directory = fileDialog.selectedFiles()
+        if len(directory) < 0:
+            return None
+        
+        return directory[0]
 
 
     def newProject(self):
@@ -80,13 +104,12 @@ class ProjectTreeView(QTreeView):
 
         projectName = projectName[0]
 
-        directory = QFileDialog.getExistingDirectory(self, "Save project", \
-                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        directory = self.getProjectDir()
         if directory is None:
             return
 
-        self.model().createNewProject(projectName, directory)
-        self.model().saveProject(projectName, directory)
+        project = self.model().createNewProject(projectName, directory)
+        project.save()
 
 
     def openProject(self):
@@ -98,14 +121,8 @@ class ProjectTreeView(QTreeView):
         self.model().openProject(filename)
 
 
-    def saveProject(self):
-        directory = QFileDialog.getExistingDirectory(self, "Save project", \
-                        "/tmp/", QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if directory is None:
-            return
-        
-        return self.model().saveProject(self.currentIndex().data(Qt.DisplayRole),
-                                        directory)
+    def saveCurrentProject(self):
+        self.model().currentProject().save()
 
 
     def mouseDoubleClickEvent(self, event):
@@ -113,10 +130,13 @@ class ProjectTreeView(QTreeView):
         if index is None: return
         if not index.isValid(): return
 
-        if index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY:
-            self.model().editDevice(index.data(ProjectModel.ITEM_PATH))
-        elif index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY:
-            self.model().editScene(index.data(ProjectModel.ITEM_PATH))
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(object, Configuration):
+            self.model().editDevice(object)
+        elif isinstance(object, Scene):
+            # TODO: use project item
+            self.model().openScene(index.parent().data(ProjectModel.ITEM_OBJECT),
+                                   object.name, object.filename)
 
 
 ### slots ###
@@ -126,8 +146,10 @@ class ProjectTreeView(QTreeView):
         if not index.isValid():
             return
 
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        
         menu = None
-        if index.data(Qt.DisplayRole) == ProjectModel.DEVICES_LABEL:
+        if isinstance(object, Category) and (object.displayName == Project.DEVICES_LABEL):
             # Devices menu
             text = "Add device"
             acImportPlugin = QAction(text, self)
@@ -137,7 +159,7 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acImportPlugin)
-        elif index.data(Qt.DisplayRole) == ProjectModel.SCENES_LABEL:
+        elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
             acAddScene = QAction(text, self)
@@ -147,16 +169,15 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acAddScene)
-        elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY) \
-          or (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+        elif isinstance(object, Configuration) or isinstance(object, Scene):
             text = "Edit"
             acEdit = QAction(text, self)
             acEdit.setStatusTip(text)
             acEdit.setToolTip(text)
             
-            if (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.DEVICES_KEY):
+            if isinstance(object, Configuration):
                 acEdit.triggered.connect(self.model().onEditDevice)
-            elif (index.data(ProjectModel.ITEM_CATEGORY) == ProjectModel.SCENES_KEY):
+            elif isinstance(object, Scene):
                 acEdit.triggered.connect(self.model().onEditScene)
              
             text = "Remove"
@@ -184,23 +205,20 @@ class ProjectTreeView(QTreeView):
 
         index = selectedIndexes[0]
 
-        path = index.data(ProjectModel.ITEM_PATH)
-        if path is None: return
-        
-        serverId = index.data(ProjectModel.ITEM_SERVER_ID)
-        classId = index.data(ProjectModel.ITEM_CLASS_ID)
-        deviceId = index.data(Qt.DisplayRole)
-
-        if (serverId is None) or (classId is None) or (deviceId is None):
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if object is None: return
+        if not isinstance(object, Configuration):
             return
 
         if not self.model().checkSystemTopology():
             return
 
+        deviceId = object.futureHash.get("deviceId")
         # Check whether deviceId is already online
-        if self.model().systemTopology.has("device.{}".format(deviceId)):
+        if self.model().isDeviceOnline(deviceId):
             conf = Manager().getDevice(deviceId)
         else:
-            conf = Manager().getClass(serverId, classId)
+            conf = object
+        
         self.signalItemChanged.emit(conf)
 
