@@ -28,7 +28,6 @@ from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QInputDialog,
 class ProjectTreeView(QTreeView):
 
     # To import a plugin a server connection needs to be established
-    signalAddScene = pyqtSignal(str) # scene title
     signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
 
@@ -51,14 +50,14 @@ class ProjectTreeView(QTreeView):
         """
         This function sets up the default project.
         
-        If the default project already exists in the given directory there are
-        two options: open or overwrite existing.
+        If the default project already exists in the given directory it is opened,
+        otherwise a new default project is created.
         """
         projectName = "default_project"
         directory = QDir.tempPath()
         
-        alreadyExists, overwrite = self.model().overwriteExistingProject(projectName, directory)
-        if alreadyExists and not overwrite:
+        alreadyExists = self.model().projectExists(directory, projectName)
+        if alreadyExists:
             # Open existing default project
             filename = os.path.join(directory, projectName, "project.xml")
             self.model().openProject(filename)
@@ -135,8 +134,9 @@ class ProjectTreeView(QTreeView):
         if isinstance(object, Configuration):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
+            # TODO: use project item
             self.model().openScene(index.parent().data(ProjectModel.ITEM_OBJECT),
-                                   scene.name, scene.filename)
+                                   object.name, object.filename)
 
 
 ### slots ###
@@ -210,13 +210,12 @@ class ProjectTreeView(QTreeView):
         if not isinstance(object, Configuration):
             return
 
-        deviceId = object.futureHash.get("deviceId")
-
         if not self.model().checkSystemTopology():
             return
 
+        deviceId = object.futureHash.get("deviceId")
         # Check whether deviceId is already online
-        if self.model().systemTopology.has("device.{}".format(deviceId)):
+        if self.model().isDeviceOnline(deviceId):
             conf = Manager().getDevice(deviceId)
         else:
             conf = object

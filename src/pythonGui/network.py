@@ -20,13 +20,14 @@ from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
-                          QObject)
+                          QObject, QMutex, QMutexLocker)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.py_authenticator import PyAuthenticator
 from karabo.hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
 import globals
+from Queue import Queue
 import socket
 from struct import unpack
 
@@ -52,6 +53,9 @@ class _Network(QObject):
         self.sessionToken = ""
 
         self.tcpSocket = None
+        
+        self.requestQueue = Queue()
+        self.requestMutex = QMutex()
 
         Manager().signalKillDevice.connect(self.onKillDevice)
         Manager().signalKillServer.connect(self.onKillServer)
@@ -94,6 +98,12 @@ class _Network(QObject):
 
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
+        
+        # If some requests got pilled up because of no server connection,
+        # now these get handled
+        with QMutexLocker(self.requestMutex):
+            while not self.requestQueue.empty():
+                self._tcpWriteHash(self.requestQueue.get())
 
 
     def disconnectFromServer(self):
@@ -436,7 +446,11 @@ class _Network(QObject):
 
 ### private functions ###
     def _tcpWriteHash(self, instanceInfo):
-        if self.tcpSocket is None: return
+        if self.tcpSocket is None:
+            # Save request for connection established
+            self.requestQueue.put(instanceInfo)
+            return
+
         stream = QByteArray()
         writer = BinaryWriter()
         dataBytes = writer.write(instanceInfo)

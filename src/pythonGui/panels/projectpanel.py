@@ -86,9 +86,6 @@ class ProjectPanel(QWidget):
 
 
     def setupDefaultProject(self):
-        """
-        
-        """
         self.twProject.setupDefaultProject()
 
 

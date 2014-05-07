@@ -55,6 +55,10 @@ class ProjectModel(QStandardItemModel):
         # Dialog to add and change a device
         self.pluginDialog = None
         
+        # States whether the server connection is already requested to prevent
+        # that selectionChanged signal/slot will ask twice for systemTopology
+        self.serverConnectionRequested = False
+        
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
 
@@ -89,8 +93,7 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setEditable(False)
 
                 # Update icon on availability of device
-                if (self.systemTopology is not None) and \
-                   (self.systemTopology.has("device.{}".format(device.path))):
+                if self.isDeviceOnline(device.path):
                     leafItem.setIcon(QIcon(":device-instance"))
                 else:
                     leafItem.setIcon(QIcon(":offline"))
@@ -166,6 +169,14 @@ class ProjectModel(QStandardItemModel):
             self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
+    def isDeviceOnline(self, deviceId):
+        """
+        Returns, if the \deviceId is online or not.
+        """
+        return self.systemTopology is not None and \
+               self.systemTopology.has("device.{}".format(deviceId))
+
+
     def checkSystemTopology(self):
         """
         This function checks whether the systemTopology is set correctly.
@@ -173,6 +184,9 @@ class ProjectModel(QStandardItemModel):
         """
         if self.systemTopology is not None:
             return True
+        
+        if self.serverConnectionRequested:
+            return False
         
         reply = QMessageBox.question(None, "No server connection",
                                      "There is no connection to the server.<br>"
@@ -183,6 +197,7 @@ class ProjectModel(QStandardItemModel):
             return False
         # Send signal to establish server connection to projectpanel
         self.signalServerConnection.emit(True)
+        self.serverConnectionRequested = True
         return False
 
 
@@ -258,36 +273,12 @@ class ProjectModel(QStandardItemModel):
         return index.data(ProjectModel.ITEM_OBJECT)
 
 
-    def _projectExists(self, directory, projectName):
+    def projectExists(self, directory, projectName):
         """
         This functions checks whether a project with the \projectName already exists.
         """
         absoluteProjectPath = os.path.join(directory, projectName)
         return QDir(absoluteProjectPath).exists()
-
-    
-    def overwriteExistingProject(self, projectName, directory):
-        """
-        This function checks whether the \projectName already exists in the
-        given directory.
-        
-        Returns two parameters.
-        (1) the flag, which tells whether the project already exists
-        (2) the flag, which tells whether the project should be overwritten
-        """
-        # Check whether project already exists
-        alreadyExists = self._projectExists(projectName, directory)
-        if alreadyExists:
-            # Overwrite?
-            reply = QMessageBox.question(None, "Project already exists",
-                "A project with the same name already exists.<br>"
-                "Do you want to overwrite it?",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return alreadyExists, False
-
-        return alreadyExists, True
 
 
     def createNewProject(self, projectName, directory):
@@ -382,7 +373,8 @@ class ProjectModel(QStandardItemModel):
         config = Hash("deviceId", self.pluginDialog.deviceId,
                       "serverId", self.pluginDialog.serverId,
                       "classId", self.pluginDialog.classId)
-        self.addDevice(project, config)
+        device = self.addDevice(project, config)
+        self.selectItem(device)
         self.pluginDialog = None
 
 
@@ -395,8 +387,7 @@ class ProjectModel(QStandardItemModel):
         serverId = config.get("serverId")
         classId = config.get("classId")
         
-        if (self.systemTopology is not None) and \
-           (self.systemTopology.has("device.{}".format(deviceId))):
+        if self.isDeviceOnline(deviceId):
             # Get device configuration
             device = manager.Manager().getDevice(deviceId)
         else:
@@ -418,11 +409,13 @@ class ProjectModel(QStandardItemModel):
         
         if device.getDescriptor() is not None:
             device.merge(device.futureHash)
+            # Set default values for configuration
+            device.setDefault()
         
         project.addDevice(device)
         self.updateData()
         
-        self.selectItem(device)
+        return device
 
 
     def editScene(self):
@@ -451,8 +444,8 @@ class ProjectModel(QStandardItemModel):
         Create new Scene object for given \project.
         """
         scene = self._createScene(project, sceneName)
-        self.signalAddScene.emit(scene)
         self.updateData()
+        self.signalAddScene.emit(scene)
         
         self.selectItem(scene)
         
@@ -473,6 +466,7 @@ class ProjectModel(QStandardItemModel):
         """
         if not isConnected:
             self.systemTopology = None
+            self.serverConnectionRequested = False
 
 
     def onEditDevice(self):
