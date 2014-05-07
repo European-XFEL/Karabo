@@ -342,14 +342,11 @@ class ProjectModel(QStandardItemModel):
         self.updateData()
 
 
-    def editDevice(self, path=None):
+    def editDevice(self, device):
         if not self.checkSystemTopology():
             return
 
-        if (path is not None) and self.projectHash.has(path):
-            deviceConfig = self.projectHash.get(path)
-        else:
-            deviceConfig = None
+        deviceConfig = device.toHash()
 
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
@@ -360,19 +357,14 @@ class ProjectModel(QStandardItemModel):
             return
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
-
-        # Get project name
-        project = self.currentProject()
-
-        # Remove old device
-        if path is not None:
-            self.onRemove()
         
         # Add new device
         config = Hash("deviceId", self.pluginDialog.deviceId,
                       "serverId", self.pluginDialog.serverId,
                       "classId", self.pluginDialog.classId)
-        device = self.addDevice(project, config)
+        device.path = self.pluginDialog.deviceId
+        device.merge(config)
+        self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
@@ -417,15 +409,14 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
-    def editScene(self):
-        # TODO: edit already existing scene?
-        sceneData = None
-        
-        dialog = SceneDialog(sceneData)
+    def editScene(self, scene):
+        dialog = SceneDialog(scene)
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        self.addScene(self.currentProject(), dialog.sceneName)
+        scene.name = dialog.sceneName
+        self.updateData()
+        # TODO: send signal to view to update the name as well
 
 
     def _createScene(self, project, sceneName):
@@ -469,11 +460,13 @@ class ProjectModel(QStandardItemModel):
 
 
     def onEditDevice(self):
-        self.editDevice()
+        index = self.selectionModel.currentIndex()
+        self.editDevice(index.data(ProjectModel.ITEM_OBJECT))
 
 
     def onEditScene(self):
-        self.editScene()
+        index = self.selectionModel.currentIndex()
+        self.editScene(index.data(ProjectModel.ITEM_OBJECT))
 
 
     def onRemove(self):
