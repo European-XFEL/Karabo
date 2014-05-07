@@ -14,6 +14,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+import os
 from configuration import Configuration
 from manager import Manager
 from project import Project, Scene, Category
@@ -57,10 +58,9 @@ class ProjectTreeView(QTreeView):
         directory = QDir.tempPath()
         
         alreadyExists, overwrite = self.model().overwriteExistingProject(projectName, directory)
-        print "overwrite", alreadyExists, overwrite
         if alreadyExists and not overwrite:
             # Open existing default project
-            filename = os.path.join(directory, "project.xml")
+            filename = os.path.join(directory, projectName, "project.xml")
             self.model().openProject(filename)
             return
 
@@ -135,7 +135,8 @@ class ProjectTreeView(QTreeView):
         if isinstance(object, Configuration):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
-            self.model().openScene(scene)
+            self.model().openScene(index.parent().data(ProjectModel.ITEM_OBJECT),
+                                   scene.name, scene.filename)
 
 
 ### slots ###
