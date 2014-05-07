@@ -78,6 +78,7 @@ class BaseComponent(Loadable, QObject):
         parent = ProxyWidget(layout.parentWidget())
         component = cls(d['classAlias'], boxes[0], parent, d['widgetFactory'])
         parent.setComponent(component)
+        parent.addWidget(component.widget)
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
