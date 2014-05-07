@@ -133,15 +133,20 @@ class PluginDialog(QDialog):
         self.cbServer.adjustSize()
 
         if config is not None:
-            print config
-            for classId in config.keys():
-                deviceId = config.get("{}.deviceId".format(classId))
-                serverId = config.get("{}.serverId".format(classId))
-                self.leDeviceId.setText(deviceId)
-                index = self.cbServer.findText(serverId)
-                self.cbServer.setCurrentIndex(index)
-                index = self.cbPlugin.findText(classId)
-                self.cbPlugin.setCurrentIndex(index)
+            #classId = config.get("classId")
+            deviceId = config.get("deviceId")
+            serverId = config.get("serverId")
+
+            # TODO: consider classId, so far it is "Device"
+            #print "classId", classId
+            #print "serverId", serverId
+            #print "deviceId", deviceId
+
+            self.leDeviceId.setText(deviceId)
+            index = self.cbServer.findText(serverId)
+            self.cbServer.setCurrentIndex(index)
+            #index = self.cbPlugin.findText(classId)
+            #self.cbPlugin.setCurrentIndex(index)
         
         return True
 
