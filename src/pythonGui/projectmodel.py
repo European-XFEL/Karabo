@@ -257,22 +257,28 @@ class ProjectModel(QStandardItemModel):
         return index.data(ProjectModel.ITEM_OBJECT)
 
 
-    def _projectExists(self, projectName):
+    def _projectExists(self, projectName, directory):
         """
         This functions checks whether a project with the \projectName already exists.
         """
-        return projectName in self.projects
-
-
-    def createNewProject(self, projectName, directory):
-        """
-        This function updates the project list updates the view.
-        """
-        # Project name to lower case
-        projectName = projectName.lower()
+        if projectName not in self.projects:
+            return False
         
+        project = self.projects[projectName]
+        return project.directory == directory
+    
+    
+    def overwriteExistingProject(self, projectName, directory):
+        """
+        This function checks whether the \projectName already exists in the
+        given directory.
+        
+        Returns two parameters.
+        (1) the flag, which tells whether the project already exists
+        (2) the flag, which tells whether the project should be overwritten
+        """
         # Check whether project already exists
-        alreadyExists = self._projectExists(projectName)
+        alreadyExists = self._projectExists(projectName, directory)
         if alreadyExists:
             # Overwrite?
             reply = QMessageBox.question(None, "Project already exists",
@@ -281,7 +287,17 @@ class ProjectModel(QStandardItemModel):
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
             if reply == QMessageBox.No:
-                return
+                return alreadyExists, False
+
+        return alreadyExists, True
+
+
+    def createNewProject(self, projectName, directory):
+        """
+        This function updates the project list updates the view.
+        """
+        # Project name to lower case
+        projectName = projectName.lower()
         
         project = Project(projectName, directory)
         self.projects[projectName] = project
@@ -483,7 +499,6 @@ class ProjectModel(QStandardItemModel):
                 c.merge(c.futureHash)
             
             # Set default values for configuration
-            print "setDefault"
             c.setDefault()
             self.signalShowProjectConfiguration.emit(c)
 
