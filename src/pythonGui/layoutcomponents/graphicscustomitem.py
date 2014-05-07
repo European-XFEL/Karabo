@@ -16,7 +16,7 @@ from graphicsoutputchannelitem import GraphicsOutputChannelItem
 
 from layoutcomponents.nodebase import NodeBase
 
-from manager import Manager
+#from manager import Manager # TODO: avoid ring import
 
 from registry import Loadable
 from const import ns_karabo, ns_svg
