@@ -103,8 +103,10 @@ namespace karabo {
                 } else {
                     MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
                 }
-                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+                MQStatus tstatus = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
+                if (tstatus.errorCode == MQ_TIMEOUT_EXPIRED)
+                    throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+                else MQ_SAFE_CALL(tstatus)
                 MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
                 if (messageType == MQ_BYTES_MESSAGE) {
                     // Body
@@ -158,8 +160,10 @@ namespace karabo {
                 } else {
                     MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
                 }
-                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+                MQStatus tstatus = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
+                if (tstatus.errorCode == MQ_TIMEOUT_EXPIRED)
+                    throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+                else MQ_SAFE_CALL(tstatus)
                 MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
                 if (messageType == MQ_BYTES_MESSAGE) {
                     int nBytes;
