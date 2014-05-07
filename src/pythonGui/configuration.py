@@ -16,24 +16,40 @@ __all__ = ["Configuration"]
 from schema import Schema, Box
 import manager
 
+from PyQt4.QtCore import QObject, pyqtSignal
 
-class Configuration(object):
 
+class Configuration(QObject):
+    signalConfigurationNewDescriptor = pyqtSignal(object) # configuration
 
-    def __init__(self, path, type):
+    def __init__(self, path, type, descriptor=None):
         """
-        Create a new Configuration for schema, type should be 'class' or 'device'.
+        Create a new Configuration for schema, type should be 'class',
+        'projectClass' or 'device'.
         """
         
         super(Configuration, self).__init__()
         self.type = type
         self.path = path
         self.visible = 0
-        self._box = Box((), None, self)
+        
+        # In case the Schema is not set yet, this variable allows to set the
+        # configuration hash anyway
+        self.futureHash = None
+        self._box = Box((), descriptor, self)
+
+
+    def getDescriptor(self):
+        return self._box.descriptor
+
+
+    def setDescriptor(self, descriptor):
+        self._box.descriptor = descriptor
 
 
     def setSchema(self, schema):
-        self._box.setSchema(schema)
+        self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
+        self.signalConfigurationNewDescriptor.emit(self)
 
 
     @property
@@ -54,6 +70,10 @@ class Configuration(object):
 
 
     def setDefault(self):
+        """
+        This function should be called explicitly whenever a new schema was set
+        and the default values are required to be updated.
+        """
         self._box.setDefault()
 
 
@@ -72,7 +92,8 @@ class Configuration(object):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self._box.fillWidget(parameterEditor, self.type == "class")
+        self._box.fillWidget(parameterEditor, (self.type == "class") \
+                                           or (self.type == "projectClass"))
         parameterEditor.globalAccessLevelChanged()
 
 

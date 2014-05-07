@@ -73,10 +73,6 @@ class Box(QObject):
         self.signalNewDescriptor.emit(self)
 
 
-    def setSchema(self, schema):
-        self._descriptor = Schema.parse(schema.name, schema.hash, {})
-
-
     def fillWidget(self, parameterEditor, isClass):
         if self._descriptor is not None:
             self._descriptor.fillWidget(parameterEditor, self, isClass)

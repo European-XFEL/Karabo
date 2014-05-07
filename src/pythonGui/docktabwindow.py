@@ -24,7 +24,7 @@ class DockTabWindow(QTabWidget):
         
         self.setParent(parent)
         self.setWindowTitle(title)
-        self.__divWidgetList = []
+        self.divWidgetList = []
 
 #        self.setStyleSheet("QTabWidget {border-style: solid;"
 #                                       "border: 1px solid gray;"
@@ -33,6 +33,9 @@ class DockTabWindow(QTabWidget):
 
 
     def addDockableTab(self, dockWidget, label, icon=None):
+        """
+        This function gets a DockTabWindow, a label and optionally an icon.
+        """
         divWidget = DivWidget(dockWidget, label, icon)
 
         divWidget.docked.connect(self.onDock)
@@ -40,10 +43,10 @@ class DockTabWindow(QTabWidget):
 
         index = self.addTab(divWidget, label)
         self.setCurrentIndex(index)
-        divWidget.setIndex(index)
+        divWidget.index = index
 
-        # store divWidget in list to keep it alive for un/dock event!!!
-        self.__divWidgetList.append(divWidget)
+        # Store divWidget in list to keep it alive for un/dock event!!!
+        self.divWidgetList.append(divWidget)
 
 
     def addCornerWidget(self, tbNewTab):
@@ -76,28 +79,27 @@ class DockTabWindow(QTabWidget):
 
     def onUndock(self):
         currentDivWidget = self.currentWidget()
-        if (currentDivWidget is not None) and (currentDivWidget.parent() is not None) :
-            self.removeTab(currentDivWidget.getIndex())
+        if (currentDivWidget is not None) and (currentDivWidget.parent() is not None):
+            self.removeTab(currentDivWidget.index)
             currentDivWidget.setParent(None)
             currentDivWidget.move(QCursor.pos())
             currentDivWidget.show()
 
-            if self.count() == 0 :
+            if self.count() == 0:
                 self.hide()
 
 
     def onDock(self):
         divWidget = self.sender()
         if (divWidget is not None) and (divWidget.parent() is None):
-            index = divWidget.getIndex()
             if divWidget.hasIcon() == True:
-                index = self.insertTab(index, divWidget, divWidget.getIcon(), divWidget.getLabel())
+                index = self.insertTab(divWidget.index, divWidget, divWidget.icon, divWidget.label)
             else:
-                index = self.insertTab(index, divWidget, divWidget.getLabel())
+                index = self.insertTab(divWidget.index, divWidget, divWidget.label)
 
             for i in range(self.count()):
                 if self.widget(i) is not None:
-                    self.widget(i).setIndex(i)
+                    self.widget(i).index = i
 
             self.setCurrentIndex(index)
             self.show()
