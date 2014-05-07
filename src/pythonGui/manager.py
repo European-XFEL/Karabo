@@ -36,7 +36,7 @@ class _Manager(QObject):
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
-    signalSchemaAvailable = pyqtSignal(object) # key, schema
+    signalShowConfiguration = pyqtSignal(object) # configuration
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
@@ -79,6 +79,8 @@ class _Manager(QObject):
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
+        self.projectTopology.signalShowProjectConfiguration. \
+                        connect(self.onShowConfiguration)
         
         # Sets all parameters to start configuration
         self.reset()
@@ -268,6 +270,11 @@ class _Manager(QObject):
             self.signalRefreshInstance.emit(deviceId)
 
 
+    def onShowConfiguration(self, conf):
+        # Notify ConfigurationPanel
+        self.signalShowConfiguration.emit(conf)
+
+
     def onDeviceInstanceChanged(self, itemInfo, xml):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
@@ -396,7 +403,7 @@ class _Manager(QObject):
         # Set default values for configuration
         conf.setDefault()
         # Notify ConfigurationPanel
-        self.signalSchemaAvailable.emit(conf)
+        self.onShowConfiguration(conf)
 
 
     def getClass(self, serverId, classId):
@@ -421,7 +428,7 @@ class _Manager(QObject):
         conf.configuration.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
-        self.signalSchemaAvailable.emit(conf)
+        self.onShowConfiguration(conf)
 
 
     def getDevice(self, deviceId):
