@@ -17,7 +17,7 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
 
 class SceneDialog(QDialog):
 
-    def __init__(self, config):
+    def __init__(self, scene):
         super(SceneDialog, self).__init__()
 
         self.setWindowTitle("Add scene")
@@ -38,9 +38,8 @@ class SceneDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         vLayout.addWidget(self.buttonBox)
 
-        if config is not None:
-            print config
-            self.leSceneName.setText(config.get("name"))
+        if scene is not None:
+            self.leSceneName.setText(scene.name)
 
 
     @property
