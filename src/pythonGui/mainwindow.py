@@ -271,7 +271,6 @@ class MainWindow(QMainWindow):
 
 
     def onOpenScene(self, scene, filename):
-        print "onOpenScene", filename, scene
         customView = self._createCustomMiddlePanel(scene)
         self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:

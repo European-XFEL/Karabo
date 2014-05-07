@@ -460,8 +460,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def openScene(self, project, sceneName, filename):
-        print "openScene", sceneName, filename
-        
         scene = self._createScene(project, sceneName)
         filename = os.path.join(project.directory, project.name, Project.SCENES_LABEL, filename)
         self.updateData()
