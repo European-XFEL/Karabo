@@ -26,12 +26,12 @@ class DivWidget(QFrame):
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
         self.setLineWidth(1)
 
-        self.__index = -1
-        self.__label = label
-        self.__doesDockOnClose = True
-        self.__dockableWidget = dockableWidget
+        self.index = -1
+        self.label = label
+        self.doesDockOnClose = True
+        self.dockableWidget = dockableWidget
 
-        self.__icon = icon
+        self.icon = icon
 
         self.setupActions()
         self.setupToolBar()
@@ -44,13 +44,13 @@ class DivWidget(QFrame):
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(0,0,0,0)
         vLayout.addLayout(self.toolBarLayout)
-        vLayout.addWidget(self.__dockableWidget)
+        vLayout.addWidget(self.dockableWidget)
 
         # Add custom actions to toolbar
-        self.__dockableWidget.setupToolBars(self.toolBar, self)
+        self.dockableWidget.setupToolBars(self.toolBar, self)
 
-        self.docked.connect(self.__dockableWidget.onDock)
-        self.undocked.connect(self.__dockableWidget.onUndock)
+        self.docked.connect(self.dockableWidget.onDock)
+        self.undocked.connect(self.dockableWidget.onUndock)
 
 #        self.setStyleSheet("QWidget {border-style: solid;"
 #                                    "border: 1px solid gray;"
@@ -62,17 +62,17 @@ class DivWidget(QFrame):
         This function sets the member variable to False which decides whether
         this widget should be closed on dockonevent and calls closeEvent.
         """
-        self.__doesDockOnClose = False
+        self.doesDockOnClose = False
         return self.close()
 
 
 ### virtual functions ###
     def closeEvent(self, event):
-        if self.__doesDockOnClose:
+        if self.doesDockOnClose:
             self.onDock()
             event.ignore()
         else:
-            if self.__dockableWidget.close():
+            if self.dockableWidget.close():
                 event.accept()
             else:
                 event.ignore()
@@ -80,23 +80,23 @@ class DivWidget(QFrame):
 
     def setupActions(self):
         text = "Unpin as individual window"
-        self.__acUndock = QAction(QIcon(":undock"), "&Undock", self)
-        self.__acUndock.setToolTip(text)
-        self.__acUndock.setStatusTip(text)
-        self.__acUndock.triggered.connect(self.onUndock)
+        self.acUndock = QAction(QIcon(":undock"), "&Undock", self)
+        self.acUndock.setToolTip(text)
+        self.acUndock.setStatusTip(text)
+        self.acUndock.triggered.connect(self.onUndock)
 
         text = "Pin this window to main program"
-        self.__acDock = QAction(QIcon(":dock"), "&Dock", self)
-        self.__acDock.setToolTip(text)
-        self.__acDock.setStatusTip(text)
-        self.__acDock.triggered.connect(self.onDock)
-        self.__acDock.setVisible(False)
+        self.acDock = QAction(QIcon(":dock"), "&Dock", self)
+        self.acDock.setToolTip(text)
+        self.acDock.setStatusTip(text)
+        self.acDock.triggered.connect(self.onDock)
+        self.acDock.setVisible(False)
 
 
     def setupToolBar(self):
         self.toolBar = ToolBar("Standard")
-        self.toolBar.addAction(self.__acUndock)
-        self.toolBar.addAction(self.__acDock)
+        self.toolBar.addAction(self.acUndock)
+        self.toolBar.addAction(self.acDock)
 
 
     def addToolBar(self, toolBar):
@@ -104,42 +104,29 @@ class DivWidget(QFrame):
 
 
     def onUndock(self):
-        self.__acDock.setVisible(True)
-        self.__acUndock.setVisible(False)
-        if self.__icon is not None:
-            self.setWindowIcon(self.__icon)
-        self.setWindowTitle(self.__label)
+        self.acDock.setVisible(True)
+        self.acUndock.setVisible(False)
+        if self.icon is not None:
+            self.setWindowIcon(self.icon)
+        self.setWindowTitle(self.label)
         self.undocked.emit()
 
 
     def onDock(self):
-        self.__acDock.setVisible(False)
-        self.__acUndock.setVisible(True)
+        self.acDock.setVisible(False)
+        self.acUndock.setVisible(True)
         self.docked.emit()
 
 
     def onIndexChanged(self, index):
-        self.__index = index
-
-
-    def getIndex(self):
-        return self.__index
-
-
-    def setIndex(self, index):
-        self.__index = index
-
-
-    def getLabel(self):
-        return self.__label
-
-
-    def setLabel(self, label):
-        self.__label = label
+        #TODO: change index, if tab is removed
+        print "onIndexChanged", index
+        self.index = index
 
 
     def hasIcon(self):
-        if self.__icon:
-            return True
-        return False
+        if self.icon is None:
+            return False
+
+        return True
 

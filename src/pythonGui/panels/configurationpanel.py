@@ -14,7 +14,6 @@ __all__ = ["ConfigurationPanel"]
 
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
-from enums import NavigationItemTypes
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
@@ -101,7 +100,7 @@ class ConfigurationPanel(QWidget):
         
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
-        Manager().signalSchemaAvailable.connect(self.onSchemaAvailable)
+        Manager().signalShowConfiguration.connect(self.onShowConfiguration)
         Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
@@ -337,7 +336,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.signalItemSelectionChanged.connect(self.onSelectionChanged)
         
-        if configuration.type == "class":
+        if configuration.type == "class" or configuration.type == "projectClass":
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -457,8 +456,7 @@ class ConfigurationPanel(QWidget):
             self._setParameterEditorIndex(0)
         else:
             if not hasattr(configuration, 'index'):
-                configuration.index = self._createNewParameterPage(
-                    configuration)
+                configuration.index = self._createNewParameterPage(configuration)
             self._setParameterEditorIndex(configuration.index)
 
         if configuration not in (None, self.prevConfiguration) and configuration.type == "device":
@@ -525,7 +523,7 @@ class ConfigurationPanel(QWidget):
         self.twNavigation.selectItem(devicePath)
 
 
-    def onSchemaAvailable(self, configuration):
+    def onShowConfiguration(self, configuration):
         if hasattr(configuration, 'index'):
             twParameterEditor = self.__swParameterEditor.widget(
                 configuration.index)
