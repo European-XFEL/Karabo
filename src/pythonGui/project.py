@@ -13,13 +13,14 @@ This module contains a class which represents the project related datastructure.
 __all__ = ["Project", "Scene"]
 
 
-import os
 from configuration import Configuration
 from graphicsview import GraphicsView
 from karabo.hash import Hash, XMLWriter
 
 from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
+
+import os.path
 
 
 class Project(QObject):

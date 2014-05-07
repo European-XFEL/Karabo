@@ -39,7 +39,8 @@ class SceneDialog(QDialog):
         vLayout.addWidget(self.buttonBox)
 
         if config is not None:
-            self.leSceneName.setText(config.get("filename"))
+            print config
+            self.leSceneName.setText(config.get("name"))
 
 
     @property

@@ -11,7 +11,7 @@
 
 __all__ = ["MainWindow"]
 
-import os
+import os.path
 import icons
 
 from docktabwindow import DockTabWindow

@@ -14,7 +14,6 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 
-from collections import OrderedDict
 from configuration import Configuration
 from copy import copy
 from karabo.hash import Hash, HashMergePolicy, XMLParser
@@ -47,7 +46,7 @@ class ProjectModel(QStandardItemModel):
         # Hash stores current system topology
         self.systemTopology = None
         # List stores projects
-        self.projects = OrderedDict()
+        self.projects = []
         
         # Dict for later descriptor update
         self.classConfigDescriptorMap = dict()
@@ -70,7 +69,7 @@ class ProjectModel(QStandardItemModel):
 
         rootItem = self.invisibleRootItem()
         
-        for project in self.projects.itervalues():
+        for project in self.projects:
             # Project names - toplevel items
             item = QStandardItem(project.name)
             item.setData(project, ProjectModel.ITEM_OBJECT)
@@ -289,7 +288,7 @@ class ProjectModel(QStandardItemModel):
         projectName = projectName.lower()
         
         project = Project(projectName, directory)
-        self.projects[projectName] = project
+        self.projects.append(project)
         self.updateData()
         
         return project
@@ -339,7 +338,7 @@ class ProjectModel(QStandardItemModel):
         
         # Create empty project and fill
         project = self.createNewProjectFromHash(projectConfig)
-        self.projects[project.name] = project
+        self.projects.append(project)
         self.updateData()
 
 

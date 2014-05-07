@@ -133,6 +133,7 @@ class PluginDialog(QDialog):
         self.cbServer.adjustSize()
 
         if config is not None:
+            print config
             for classId in config.keys():
                 deviceId = config.get("{}.deviceId".format(classId))
                 serverId = config.get("{}.serverId".format(classId))
