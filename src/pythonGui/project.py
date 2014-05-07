@@ -76,6 +76,9 @@ class Project(QObject):
 
     
     def save(self, overwrite=False):
+        """
+        This function saves this project to its directory.
+        """
         absoluteProjectPath = os.path.join(self.directory, self.name)
         dir = QDir()
         if not QDir(absoluteProjectPath).exists():
