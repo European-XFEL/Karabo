@@ -14,7 +14,6 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-import os
 from configuration import Configuration
 from manager import Manager
 from project import Project, Scene, Category
@@ -23,6 +22,7 @@ from projectmodel import ProjectModel
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
 from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QInputDialog,
                          QLineEdit, QMenu, QTreeView)
+import os.path
 
 
 class ProjectTreeView(QTreeView):

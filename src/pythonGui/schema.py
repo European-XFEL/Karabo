@@ -1,6 +1,6 @@
 from karabo.hash import Schema, Hash
 from karabo import hashtypes
-from enums import AccessMode, NavigationItemTypes
+from enums import AccessMode
 from registry import Monkey
 import manager
 import icons
