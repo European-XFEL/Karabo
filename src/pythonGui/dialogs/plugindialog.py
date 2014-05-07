@@ -151,12 +151,12 @@ class PluginDialog(QDialog):
 
 
     @property
-    def plugin(self):
+    def classId(self):
         return self.cbPlugin.currentText()
 
 
     @property
-    def server(self):
+    def serverId(self):
         return self.cbServer.currentText()
 
 
