@@ -33,6 +33,7 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
+    signalOpenScene = pyqtSignal(object, str) # scene, filename
     signalSaveScene = pyqtSignal(object, str) # scene, filename
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
@@ -257,16 +258,13 @@ class ProjectModel(QStandardItemModel):
         return index.data(ProjectModel.ITEM_OBJECT)
 
 
-    def _projectExists(self, projectName, directory):
+    def _projectExists(self, directory, projectName):
         """
         This functions checks whether a project with the \projectName already exists.
         """
-        if projectName not in self.projects:
-            return False
-        
-        project = self.projects[projectName]
-        return project.directory == directory
-    
+        absoluteProjectPath = os.path.join(directory, projectName)
+        return QDir(absoluteProjectPath).exists()
+
     
     def overwriteExistingProject(self, projectName, directory):
         """
@@ -326,7 +324,7 @@ class ProjectModel(QStandardItemModel):
                 scenes = projConfig.get(category)
                 # Vector of hashes
                 for s in scenes:
-                    self.addScene(project, s.get("filename"))
+                    self.openScene(project, s.get("name"), s.get("filename"))
             elif category == Project.MACROS_KEY:
                 pass
             elif category == Project.MONITORS_KEY:
@@ -438,20 +436,37 @@ class ProjectModel(QStandardItemModel):
         self.addScene(self.currentProject(), dialog.sceneName)
 
 
-    def addScene(self, project, sceneName): #, overwrite=False):
-        """
-        Create new Scene object for given \project.
-        """
+    def _createScene(self, project, sceneName):
         scene = Scene(sceneName)
         scene.initView()
         project.signalSaveScene.connect(self.signalSaveScene)
         
         project.addScene(scene)
+        
+        return scene
+
+
+    def addScene(self, project, sceneName): #, overwrite=False):
+        """
+        Create new Scene object for given \project.
+        """
+        scene = self._createScene(project, sceneName)
         self.signalAddScene.emit(scene)
         self.updateData()
         
         self.selectItem(scene)
         
+        return scene
+
+
+    def openScene(self, project, sceneName, filename):
+        print "openScene", sceneName, filename
+        
+        scene = self._createScene(project, sceneName)
+        filename = os.path.join(project.directory, project.name, Project.SCENES_LABEL, filename)
+        self.updateData()
+        self.signalOpenScene.emit(scene, filename)
+
 
 ### slots ###
     def onServerConnectionChanged(self, isConnected):
