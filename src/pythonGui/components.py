@@ -18,6 +18,7 @@ import icons
 from layouts import ProxyWidget
 from registry import Loadable
 from const import ns_karabo
+from messagebox import MessageBox
 from widget import EditableWidget, DisplayWidget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer, Qt
@@ -268,7 +269,6 @@ class EditableNoApplyComponent(BaseComponent):
 
     def onEditingFinished(self, box, value):
         box.set(value, None)
-        manager.Manager().onDeviceInstanceValuesChanged([box])
 
 
 class EditableApplyLaterComponent(BaseComponent):
@@ -506,8 +506,7 @@ class EditableApplyLaterComponent(BaseComponent):
         # TODO: KeWe function with key/value pair needed
         for box in self.__editableWidget.boxes:
             box.set(self.__editableWidget.value, None)
-        manager.Manager().onDeviceInstanceValuesChanged(
-            self.__editableWidget.boxes)
+        manager.Manager().onDeviceInstanceValuesChanged(self.__editableWidget.boxes)
         self.applyEnabled = False
 
 
