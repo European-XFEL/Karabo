@@ -107,7 +107,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                 info["Tags"] = ", ".join(d.tags)
             if self.internalKey.timestamp is not None:
                 info["Timestamp"] = self.internalKey.timestamp.toLocal()
-            if d.displayType.startswith('bin|'):
+            if d.displayType and d.displayType.startswith('bin|'):
                 info["Bits"] = d.displayType[4:]
             if self.__currentValueOnDevice is not None:
                 info["Value on device"] = self.__currentValueOnDevice
