@@ -850,6 +850,8 @@ class GraphicsView(QSvgWidget):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
+        self.setBackgroundRole(QPalette.Window)
+        self.resize(1024, 768)
 
 
     def add_actions(self, source):
@@ -990,6 +992,7 @@ class GraphicsView(QSvgWidget):
         root = self.tree.getroot()
         self.clean()
         self.ilayout = FixedLayout.load(root, widget=self.inner)
+        self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
         self.designMode = True
 
         ar = QByteArray()
@@ -1023,6 +1026,8 @@ class GraphicsView(QSvgWidget):
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)
+        root.set('width', unicode(self.width()))
+        root.set('height', unicode(self.height()))
         tree.write(filename)
 
 
@@ -1099,27 +1104,6 @@ class GraphicsView(QSvgWidget):
                 stream.writeString("\n")
 
 
-    # Creates and returns container item
-    def createGraphicsItemContainer(self, orientation, items, pos):
-        # Initialize layout
-        layout = BoxLayout(QBoxLayout.LeftToRight if
-                           orientation == Qt.Horizontal else
-                           QBoxLayout.TopToBottom)
-
-        for item, component in items:
-            proxy = ProxyWidget(self.inner)
-            if component is not None:
-                proxy.setComponent(component)
-            proxy.addWidget(item)
-            layout.addWidget(proxy)
-            proxy.show()
-
-        layout.fixed_geometry = QRect(pos, layout.sizeHint())
-        self.ilayout.add_item(layout)
-        layout.selected = True
-        return layout
-
-
     def clear_selection(self):
         for s in self.ilayout.shapes:
             s.selected = False
@@ -1194,68 +1178,75 @@ class GraphicsView(QSvgWidget):
                 return
 
         mimeData = event.mimeData()
-        # Source type
         sourceType = mimeData.data("sourceType")
-        
+
         source = event.source()
         customItem = None
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
-            
+
             for item in selectedItems:
                 box = item.internalKey
                 displayName = item.text(0)
-                if len(displayName) == 0:
+                if not displayName:
                     displayName = box.path[-1]
-                
+
                 if source.isColumnHidden(1):
                     configDisplayComponent = None
                 else:
                     configDisplayComponent = item.displayComponent
                 configEditableComponent = item.editableComponent
 
-                items = []
+                layout = BoxLayout(QBoxLayout.LeftToRight)
 
-                displayNameProxyWidget = self._createDisplayNameProxyWidget(displayName)
-                if displayNameProxyWidget:
-                    items.append((displayNameProxyWidget, None))
-                
+                if displayName:
+                    proxy = ProxyWidget(self.inner)
+                    proxy.addWidget(QLabel(displayName, proxy))
+                    layout.addWidget(proxy)
+                    proxy.show()
+
                 if configDisplayComponent:
+                    proxy = ProxyWidget(self.inner)
                     displayComponent = DisplayComponent(
-                        box.descriptor.classAlias, box, self.inner)
-
-                    items.append((displayComponent.widget, displayComponent))
-                    unitProxyWidget = self._createUnitProxyWidget(item.metricPrefixSymbol, item.unitSymbol)
-                    if unitProxyWidget:
-                        items.append((unitProxyWidget, None))
-
+                        box.descriptor.classAlias, box, proxy)
+                    proxy.setComponent(displayComponent)
+                    proxy.addWidget(displayComponent.widget)
+                    layout.addWidget(proxy)
+                    proxy.show()
                     box.configuration.addVisible()
 
-                # Editable component
+                unit = (box.descriptor.metricPrefixSymbol +
+                        box.descriptor.unitSymbol)
+                if unit:
+                    proxy = ProxyWidget(self.inner)
+                    proxy.addWidget(QLabel(unit, proxy))
+                    layout.addWidget(proxy)
+                    proxy.show()
+
                 if configEditableComponent:
+                    proxy = ProxyWidget(self.inner)
                     if not configDisplayComponent:
                         editableComponent = EditableNoApplyComponent(
-                            item.classAlias, box, self.inner)
+                            item.classAlias, box, proxy)
                     else:
                         editableComponent = EditableApplyLaterComponent(
-                            item.classAlias, box, self.inner)
+                            item.classAlias, box, proxy)
                         editableComponent.isEditableValueInit = False
 
                         box.configuration.addVisible()
-                        
-                    items.append((editableComponent.widget, editableComponent))
+                    proxy.setComponent(editableComponent)
+                    proxy.addWidget(editableComponent.widget)
+                    layout.addWidget(proxy)
+                    proxy.show()
 
-                customItem = self.createGraphicsItemContainer(
-                    Qt.Horizontal, items, event.pos())
-
-            if customItem is None:
-                return
+                layout.fixed_geometry = QRect(event.pos(), layout.sizeHint())
+                self.ilayout.add_item(layout)
+                layout.selected = True
         elif sourceType == "NavigationTreeView":
             print "NavigationTreeView"
             return
-        
-        event.accept()
 
+        event.accept()
         QWidget.dropEvent(self, event)
 
 
@@ -1269,31 +1260,6 @@ class GraphicsView(QSvgWidget):
                 item.event(event)
                 return True
         return ret
-
-
-    def _createDisplayNameProxyWidget(self, displayName):
-        if len(displayName) < 1:
-            return None
-
-        # Label only, if there is something to show
-        return QLabel(displayName)
-
-
-    def _createUnitProxyWidget(self, metricPrefixSymbol, unitSymbol):
-        # If metricPrefix &| unitSymbol are set a QLabel is returned,
-        # otherwise None
-        unitLabel = str()
-        
-        if metricPrefixSymbol and len(metricPrefixSymbol) > 0:
-            unitLabel += metricPrefixSymbol
-        if unitSymbol and len(unitSymbol) > 0:
-            unitLabel += unitSymbol
-        
-        if len(unitLabel) > 0:
-            laUnit = QLabel(unitLabel)
-            return laUnit
-        
-        return None
 
 
     def paintEvent(self, event):

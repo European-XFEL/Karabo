@@ -16,11 +16,12 @@ from network import Network
 from toolbar import ToolBar
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QIcon, QKeySequence, QMenu, QSizePolicy,
-                         QToolButton, QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QAction, QIcon, QKeySequence, QMenu, QPalette,
+                         QSizePolicy, QScrollArea, QToolButton, QVBoxLayout,
+                         QWidget)
 
 
-class CustomMiddlePanel(QWidget):
+class CustomMiddlePanel(QScrollArea):
     ##########################################
     # Dockable widget class used in DivWidget
     # Requires following interface:
@@ -45,15 +46,13 @@ class CustomMiddlePanel(QWidget):
         self.graphicsview = scene.view
         self.graphicsview.setParent(self)
         self.graphicsview.designMode = isConnectedToServer
-        
-        mainLayout = QVBoxLayout(self)
-        mainLayout.setContentsMargins(3,3,3,3)
-        mainLayout.addWidget(self.graphicsview)
-        
+        self.setWidget(self.graphicsview)
+
         #Manager().signalReset.connect(self.graphicsview.reset)
         Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         
         self.setupActions(isConnectedToServer)
+        self.setBackgroundRole(QPalette.Dark)
 
 
 ### virtual functions ###
@@ -200,8 +199,15 @@ class CustomMiddlePanel(QWidget):
 
 
     def onUndock(self):
-        pass
+        osize = self.graphicsview.size()
+        self.setWidgetResizable(True)
+        self.parent().resize(osize - self.graphicsview.size() +
+                             self.parent().size())
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 
     def onDock(self):
-        pass
+        self.setWidgetResizable(False)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)

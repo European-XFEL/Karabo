@@ -79,6 +79,7 @@ class BaseComponent(Loadable, QObject):
         parent = ProxyWidget(layout.parentWidget())
         component = cls(d['classAlias'], boxes[0], parent, d['widgetFactory'])
         parent.setComponent(component)
+        parent.addWidget(component.widget)
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
@@ -185,8 +186,8 @@ class EditableNoApplyComponent(BaseComponent):
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
 
-        unitLabel = (getattr(box.descriptor, "metricPrefixSymbol", "") +
-                     getattr(box.descriptor, "unitSymbol", ""))
+        unitLabel = (box.descriptor.metricPrefixSymbol +
+                     box.descriptor.unitSymbol)
 
         if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
@@ -295,10 +296,10 @@ class EditableApplyLaterComponent(BaseComponent):
 
         self.box = box
         d = box.descriptor
-        unitLabel = (getattr(d, "metricPrefixSymbol", "") +
-                     getattr(d, "unitSymbol", ""))
-        if unitLabel:
-            hLayout.addWidget(QLabel(unitLabel))
+        if d is not None:
+            unitLabel = d.metricPrefixSymbol + d.unitSymbol
+            if unitLabel:
+                hLayout.addWidget(QLabel(unitLabel))
 
         self.__hasConflict = False
 
