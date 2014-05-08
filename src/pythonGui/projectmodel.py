@@ -15,6 +15,7 @@ __all__ = ["ProjectModel"]
 
 
 from copy import copy
+import icons
 from karabo.hash import Hash, HashMergePolicy, XMLParser
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
@@ -92,9 +93,13 @@ class ProjectModel(QStandardItemModel):
 
                 # Update icon on availability of device
                 if self.isDeviceOnline(device.path):
-                    leafItem.setIcon(QIcon(":device-instance"))
+                    status = self.systemTopology.getAttribute("device.{}".format(device.path), "status")
+                    if status == "error":
+                        leafItem.setIcon(icons.deviceInstanceError)
+                    else:
+                        leafItem.setIcon(icons.deviceInstance)
                 else:
-                    leafItem.setIcon(QIcon(":offline"))
+                    leafItem.setIcon(icons.deviceOffline)
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -389,25 +394,21 @@ class ProjectModel(QStandardItemModel):
         """
         deviceId = config.get("deviceId")
         serverId = config.get("serverId")
-        
-        if self.isDeviceOnline(deviceId):
-            # Get device configuration
-            device = manager.Manager().getDevice(deviceId)
-        else:
-            # Get class configuration
-            conf = manager.Manager().getClass(serverId, classId)
-        
-            descriptor = conf.getDescriptor()
-            if descriptor is None:
-                conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
-            device = Device(deviceId, "projectClass", descriptor)
-            # Save configuration for later descriptor update
-            if conf in self.classConfigProjDeviceMap:
-                self.classConfigProjDeviceMap[conf].append(device)
-            else:
-                self.classConfigProjDeviceMap[conf] = [device]
-        
+        # Get class configuration
+        conf = manager.Manager().getClass(serverId, classId)
+
+        descriptor = conf.getDescriptor()
+        if descriptor is None:
+            conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
+
+        device = Device(deviceId, "projectClass", descriptor)
+        # Save configuration for later descriptor update
+        if conf in self.classConfigProjDeviceMap:
+            self.classConfigProjDeviceMap[conf].append(device)
+        else:
+            self.classConfigProjDeviceMap[conf] = [device]
+
         # Set classId
         device.classId = classId
         # Set deviceId and serverId in case descriptor is not set yet
