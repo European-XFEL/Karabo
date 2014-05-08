@@ -316,12 +316,12 @@ class BoxLayout(Layout, QBoxLayout):
 
 
     def save(self):
-        return {ns_karabo + "Direction": self.direction()}
+        return {ns_karabo + "direction": self.direction()}
 
 
     @staticmethod
     def load(elem, layout):
-        ret = BoxLayout(int(elem.get(ns_karabo + "Direction")))
+        ret = BoxLayout(int(elem.get(ns_karabo + "direction")))
         layout.loadPosition(elem, ret)
         ret.load_element(elem)
         return ret
