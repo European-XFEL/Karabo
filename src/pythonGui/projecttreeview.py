@@ -46,6 +46,21 @@ class ProjectTreeView(QTreeView):
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
+    def currentIndex(self):
+        return self.selectionModel().currentIndex()
+
+
+    def indexInfo(self, index=None):
+        """
+        This function return the info about the given \index.
+
+        Defaults to the current index, if index is None.
+        """
+        if index is None:
+            index = self.currentIndex()
+        return self.model().indexInfo(index)
+
+
     def setupDefaultProject(self):
         """
         This function sets up the default project.
@@ -126,8 +141,7 @@ class ProjectTreeView(QTreeView):
 
 
     def mouseDoubleClickEvent(self, event):
-        index = self.selectionModel().currentIndex()
-        if index is None: return
+        index = self.currentIndex()
         if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
@@ -139,10 +153,8 @@ class ProjectTreeView(QTreeView):
 
 ### slots ###
     def onCustomContextMenuRequested(self, pos):
-        index = self.selectionModel().currentIndex()
-
-        if not index.isValid():
-            return
+        index = self.currentIndex()
+        if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
         
