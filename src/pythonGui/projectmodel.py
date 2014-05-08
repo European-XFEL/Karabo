@@ -31,8 +31,8 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
-    signalOpenScene = pyqtSignal(object, str) # scene, filename
-    signalSaveScene = pyqtSignal(object, str) # scene, filename
+    signalOpenScene = pyqtSignal(object) # scene
+    signalSaveScene = pyqtSignal(object) # scene
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
@@ -314,7 +314,7 @@ class ProjectModel(QStandardItemModel):
                 scenes = projConfig.get(category)
                 # Vector of hashes
                 for s in scenes:
-                    self.openScene(project, s.get("name"), s.get("filename"))
+                    self.openScene(project, s.get("name"))
             elif category == Project.MACROS_KEY:
                 pass
             elif category == Project.MONITORS_KEY:
@@ -421,27 +421,29 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
-    def editScene(self, scene):
+    def editScene(self, scene=None):
         dialog = SceneDialog(scene)
         if dialog.exec_() == QDialog.Rejected:
             return
         
-        scene.name = dialog.sceneName
-        self.updateData()
+        if scene is None:
+            self.addScene(self.currentProject(), dialog.sceneName)
+        else:
+            scene.name = dialog.sceneName
+            self.updateData()
         # TODO: send signal to view to update the name as well
 
 
     def _createScene(self, project, sceneName):
-        scene = Scene(sceneName)
+        scene = Scene(project, sceneName)
         scene.initView()
         project.signalSaveScene.connect(self.signalSaveScene)
-        
         project.addScene(scene)
         
         return scene
 
 
-    def addScene(self, project, sceneName): #, overwrite=False):
+    def addScene(self, project, sceneName):
         """
         Create new Scene object for given \project.
         """
@@ -454,12 +456,15 @@ class ProjectModel(QStandardItemModel):
         return scene
 
 
-    def openScene(self, project, sceneName, filename):
+    def openScene(self, project, sceneName):
         scene = self._createScene(project, sceneName)
-        filename = os.path.join(project.directory, project.name, Project.SCENES_LABEL, filename)
         self.updateData()
-        self.signalOpenScene.emit(scene, filename)
+        self.showScene(scene)
 
+
+    def showScene(self, scene):
+        self.signalOpenScene.emit(scene)
+        
 
 ### slots ###
     def onServerConnectionChanged(self, isConnected):
