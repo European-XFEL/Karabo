@@ -38,8 +38,10 @@ class DockTabWindow(QTabWidget):
         """
         divWidget = DivWidget(dockWidget, label, icon)
 
+        divWidget.docked.connect(dockWidget.onDock)
         divWidget.docked.connect(self.onDock)
         divWidget.undocked.connect(self.onUndock)
+        divWidget.undocked.connect(dockWidget.onUndock)
 
         index = self.addTab(divWidget, label)
         self.setCurrentIndex(index)
@@ -137,13 +139,6 @@ class DivWidget(QFrame):
 
         # Add custom actions to toolbar
         self.dockableWidget.setupToolBars(self.toolBar, self)
-
-        self.docked.connect(self.dockableWidget.onDock)
-        self.undocked.connect(self.dockableWidget.onUndock)
-
-#        self.setStyleSheet("QWidget {border-style: solid;"
-#                                    "border: 1px solid gray;"
-#                                    "}")
 
 
     def forceClose(self):
