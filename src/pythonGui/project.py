@@ -10,10 +10,9 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["Project", "Scene"]
+__all__ = ["Project", "Scene", "Category"]
 
 
-import os
 from configuration import Configuration
 from graphicsview import GraphicsView
 from karabo.hash import Hash, XMLWriter
@@ -21,9 +20,11 @@ from karabo.hash import Hash, XMLWriter
 from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
 
+import os.path
+
 
 class Project(QObject):
-    signalSaveScene = pyqtSignal(object, str) # scene, filename
+    signalSaveScene = pyqtSignal(object) # scene
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
@@ -56,8 +57,8 @@ class Project(QObject):
         self.monitors = []
 
 
-    def addDevice(self, configuration):
-        self.devices.append(configuration)
+    def addDevice(self, device):
+        self.devices.append(device)
 
 
     def addScene(self, scene):
@@ -107,9 +108,7 @@ class Project(QObject):
         deviceConfig = []
         for device in self.devices:
             config = device.toHash()
-            # TODO: other way original classId="Device"
-            config.set("classId", device.futureHash.get("classId"))
-            deviceConfig.append(config)
+            deviceConfig.append(Hash(device.classId, config))
         projectConfig.set(devicePath, deviceConfig)
         
         # Create folder for scenes
@@ -118,9 +117,8 @@ class Project(QObject):
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
-            filename = os.path.join(absoluteLabelPath, scene.filename)
             # Save scene to SVG
-            self.signalSaveScene.emit(scene, filename)
+            self.signalSaveScene.emit(scene)
             sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
@@ -190,13 +188,42 @@ class Project(QObject):
             subDirToDelete.rmpath(subDirPath)
 
 
+class Device(Configuration):
+
+    def __init__(self, path, type, descriptor=None):
+        super(Device, self).__init__(path, type, descriptor)
+        
+        self.classId = None
+        # Needed in case the descriptor is not set yet
+        self.futureConfig = None
+
+
+    def mergeFutureConfig(self):
+        """
+        This function merges the \self.futureConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.getDescriptor() is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        self.merge(self.futureConfig)
+
+
 class Scene(object):
 
-    def __init__(self, name):
+    def __init__(self, project, name):
         super(Scene, self).__init__()
+
+        # Reference to the project this scene belongs to
+        self.project = project
 
         self.name = name
         self.filename = "{}.svg".format(name)
+        
+        self.absoluteFilePath = os.path.join(project.directory, project.name,
+                                             Project.SCENES_LABEL, self.filename)
+        
         # GraphicsView
         self.view = None
 

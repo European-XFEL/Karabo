@@ -113,7 +113,8 @@ class ParameterTreeWidget(QTreeWidget):
         
         if editableComponent.applyEnabled:
             editableComponent.changeApplyToBusy(True)
-            item.internalKey.value = editableComponent.value
+            for box in editableComponent.boxes:
+                box.set(editableComponent.value, None)
             return True
         return False
 

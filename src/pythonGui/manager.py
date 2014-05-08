@@ -17,7 +17,6 @@ from __future__ import unicode_literals
 __all__ = ["Manager"]
 
 
-from enums import NavigationItemTypes, ConfigChangeTypes
 from configuration import Configuration
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
@@ -163,7 +162,6 @@ class _Manager(QObject):
 
     def onDeviceInstanceValuesChanged(self, boxes):
         self.signalReconfigure.emit(boxes)
-
 
 
     def onConflictStateChanged(self, key, hasConflict):
