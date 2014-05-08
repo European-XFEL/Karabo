@@ -164,7 +164,6 @@ class _Manager(QObject):
         self.signalReconfigure.emit(boxes)
 
 
-
     def onConflictStateChanged(self, key, hasConflict):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
