@@ -62,6 +62,21 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel = QItemSelectionModel(self)
 
 
+    def indexInfo(self, index):
+        if not index.isValid():
+            return { }
+
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        
+        if isinstance(object, Device):
+            return dict(serverId=object.futureConfig.get("serverId"),
+                        classId=object.classId,
+                        deviceId=object.futureConfig.get("deviceId"),
+                        config=object.toHash())
+        
+        return { }
+
+
     def updateData(self):
         self.beginResetModel()
         self.clear()

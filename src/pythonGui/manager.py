@@ -176,7 +176,7 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.projectTopology.selectionModel.clearSelection()
+        self.projectTopology.selectionModel.clear()
 
 
     def onProjectModelSelectionChanged(self, selected, deselected):
@@ -187,17 +187,15 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.systemTopology.selectionModel.clearSelection()
+        self.systemTopology.selectionModel.clear()
 
-
-
-    def initDevice(self, serverId, classId):
-        # Put configuration hash together
-        config = Hash(classId,
-            self.serverClassData[serverId, classId].toHash())
+    def initDevice(self, serverId, classId, config=None):
+        if config is None:
+            # Use standard configuration for server/classId
+            config = self.serverClassData[serverId, classId].toHash()
        
         # Send signal to network
-        self.signalInitDevice.emit(serverId, config)
+        self.signalInitDevice.emit(serverId, Hash(classId, config))
         self.__isInitDeviceCurrentlyProcessed = True
 
 

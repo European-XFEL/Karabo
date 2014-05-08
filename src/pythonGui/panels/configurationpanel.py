@@ -649,14 +649,22 @@ class ConfigurationPanel(QWidget):
 
 
     def onInitDevice(self):
-        itemInfo = self.twNavigation.indexInfo()
-        if len(itemInfo) == 0:
+        # Check whether an index of the Navigation or ProjectPanel is selected
+        if self.twNavigation.currentIndex().isValid():
+            indexInfo = self.twNavigation.indexInfo()
+        elif self.twProject.currentIndex().isValid():
+            indexInfo = self.twProject.indexInfo()
+        else:
+            print "No device for initiation selected."
+
+        if len(indexInfo) == 0:
             return
         
-        serverId = itemInfo.get('serverId')
-        classId = itemInfo.get('classId')
+        serverId = indexInfo.get('serverId')
+        classId = indexInfo.get('classId')
+        config = indexInfo.get('config')
 
-        Manager().initDevice(serverId, classId)
+        Manager().initDevice(serverId, classId, config)
 
 
     def onDeviceSchemaUpdated(self, key):
