@@ -24,7 +24,7 @@ import os.path
 
 
 class Project(QObject):
-    signalSaveScene = pyqtSignal(object, str) # scene, filename
+    signalSaveScene = pyqtSignal(object) # scene
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
@@ -117,9 +117,8 @@ class Project(QObject):
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
-            filename = os.path.join(absoluteLabelPath, scene.filename)
             # Save scene to SVG
-            self.signalSaveScene.emit(scene, filename)
+            self.signalSaveScene.emit(scene)
             sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
@@ -213,11 +212,18 @@ class Device(Configuration):
 
 class Scene(object):
 
-    def __init__(self, name):
+    def __init__(self, project, name):
         super(Scene, self).__init__()
+
+        # Reference to the project this scene belongs to
+        self.project = project
 
         self.name = name
         self.filename = "{}.svg".format(name)
+        
+        self.absoluteFilePath = os.path.join(project.directory, project.name,
+                                             Project.SCENES_LABEL, self.filename)
+        
         # GraphicsView
         self.view = None
 
