@@ -992,6 +992,7 @@ class GraphicsView(QSvgWidget):
         root = self.tree.getroot()
         self.clean()
         self.ilayout = FixedLayout.load(root, widget=self.inner)
+        self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
         self.designMode = True
 
         ar = QByteArray()
@@ -1025,6 +1026,8 @@ class GraphicsView(QSvgWidget):
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)
+        root.set('width', unicode(self.width()))
+        root.set('height', unicode(self.height()))
         tree.write(filename)
 
 
