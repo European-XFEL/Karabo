@@ -51,8 +51,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     displayComponent = property(fget=_displayComponent, fset=_setDisplayComponent)
     isChoiceElement = False
     isListElement = False
-    metricPrefixSymbol = None
-    unitSymbol = None
     description = None
 
     # Returns the editable component of the item
