@@ -10,7 +10,6 @@ from util import Weak
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
 
-from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
