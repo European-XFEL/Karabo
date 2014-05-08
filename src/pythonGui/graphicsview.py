@@ -850,6 +850,8 @@ class GraphicsView(QSvgWidget):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
         self.setAttribute(Qt.WA_MouseTracking)
+        self.setBackgroundRole(QPalette.Window)
+        self.resize(1024, 768)
 
 
     def add_actions(self, source):
