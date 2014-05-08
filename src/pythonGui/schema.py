@@ -1,6 +1,6 @@
 from karabo.hash import Schema, Hash
 from karabo import hashtypes
-from enums import AccessMode, NavigationItemTypes
+from enums import AccessMode
 from registry import Monkey
 import manager
 import icons
@@ -10,7 +10,6 @@ from util import Weak
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
 
-from treewidgetitems.attributetreewidgetitem import AttributeTreeWidgetItem
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem

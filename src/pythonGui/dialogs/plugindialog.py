@@ -71,7 +71,7 @@ class PluginDialog(QDialog):
         vLayout.addWidget(self.buttonBox)
 
 
-    def updateServerTopology(self, systemTopology, config=None):
+    def updateServerTopology(self, systemTopology, device=None):
         """
         This function updates the comboboxes for the servers and the plugins on
         the servers which are given by the \systemTopology.
@@ -132,15 +132,18 @@ class PluginDialog(QDialog):
         self.cbPlugin.adjustSize()
         self.cbServer.adjustSize()
 
-        if config is not None:
-            for classId in config.keys():
-                deviceId = config.get("{}.deviceId".format(classId))
-                serverId = config.get("{}.serverId".format(classId))
-                self.leDeviceId.setText(deviceId)
-                index = self.cbServer.findText(serverId)
-                self.cbServer.setCurrentIndex(index)
-                index = self.cbPlugin.findText(classId)
-                self.cbPlugin.setCurrentIndex(index)
+        if device is not None:
+            classId = device.classId
+            
+            config = device.futureConfig
+            deviceId = config.get("deviceId")
+            serverId = config.get("serverId")
+
+            self.leDeviceId.setText(deviceId)
+            index = self.cbServer.findText(serverId)
+            self.cbServer.setCurrentIndex(index)
+            index = self.cbPlugin.findText(classId)
+            self.cbPlugin.setCurrentIndex(index)
         
         return True
 
