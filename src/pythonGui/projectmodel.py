@@ -14,13 +14,12 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 
-from configuration import Configuration
 from copy import copy
 from karabo.hash import Hash, HashMergePolicy, XMLParser
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
-from project import Project, Scene, Category
+from project import Category, Device, Project, Scene
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
@@ -49,7 +48,7 @@ class ProjectModel(QStandardItemModel):
         self.projects = []
         
         # Dict for later descriptor update
-        self.classConfigDescriptorMap = dict()
+        self.classConfigProjDeviceMap = dict() # {Configuration, [Device]}
         
         # Dialog to add and change a device
         self.pluginDialog = None
@@ -309,7 +308,8 @@ class ProjectModel(QStandardItemModel):
                 devices = projConfig.get(category)
                 # Vector of hashes
                 for d in devices:
-                    self.addDevice(project, d)
+                    classId = d.keys()[0]
+                    self.addDevice(project, classId, d.get(classId))
             elif category == Project.SCENES_KEY:
                 scenes = projConfig.get(category)
                 # Vector of hashes
@@ -342,41 +342,53 @@ class ProjectModel(QStandardItemModel):
         self.updateData()
 
 
-    def editDevice(self, device):
+    def editDevice(self, device=None):
+        """
+        Within a dialog the properties of a device can be modified.
+        
+        Depending on the given parameter \device (either None or set) it is
+        either created or edited via the dialog.
+        """
         if not self.checkSystemTopology():
             return
-
-        deviceConfig = device.toHash()
-
+        
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(self.systemTopology, deviceConfig):
+        if not self.pluginDialog.updateServerTopology(self.systemTopology, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
             return
+        
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
         
-        # Add new device
         config = Hash("deviceId", self.pluginDialog.deviceId,
-                      "serverId", self.pluginDialog.serverId,
-                      "classId", self.pluginDialog.classId)
-        device.path = self.pluginDialog.deviceId
-        device.merge(config)
+                      "serverId", self.pluginDialog.serverId)
+        
+        if device is None:
+            # Get project name
+            project = self.currentProject()
+            # Add new device
+            device = self.addDevice(project, self.pluginDialog.classId, config)
+        else:
+            # Overwrite existing device
+            device.classId = self.pluginDialog.classId
+            device.path = self.pluginDialog.deviceId
+            device.merge(config)
+        
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, config):
+    def addDevice(self, project, classId, config):
         """
-        Add a device configuration for the given \project with the given
-        parameters of the \config.
+        Add a device configuration for the given \project with the given \classId
+        and the \config.
         """
         deviceId = config.get("deviceId")
         serverId = config.get("serverId")
-        classId = config.get("classId")
         
         if self.isDeviceOnline(deviceId):
             # Get device configuration
@@ -389,19 +401,19 @@ class ProjectModel(QStandardItemModel):
             if descriptor is None:
                 conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
-            device = Configuration(deviceId, "projectClass", descriptor)
+            device = Device(deviceId, "projectClass", descriptor)
             # Save configuration for later descriptor update
-            if conf in self.classConfigDescriptorMap:
-                self.classConfigDescriptorMap[conf].append(device)
+            if conf in self.classConfigProjDeviceMap:
+                self.classConfigProjDeviceMap[conf].append(device)
             else:
-                self.classConfigDescriptorMap[conf] = [device]
+                self.classConfigProjDeviceMap[conf] = [device]
         
-        device.futureHash = config
-        
-        if device.getDescriptor() is not None:
-            device.merge(device.futureHash)
-            # Set default values for configuration
-            device.setDefault()
+        # Set classId
+        device.classId = classId
+        # Set deviceId and serverId in case descriptor is not set yet
+        device.futureConfig = config
+        # Merge futureConfig, if descriptor is not None
+        device.mergeFutureConfig()
         
         project.addDevice(device)
         self.updateData()
@@ -461,12 +473,18 @@ class ProjectModel(QStandardItemModel):
 
     def onEditDevice(self):
         index = self.selectionModel.currentIndex()
-        self.editDevice(index.data(ProjectModel.ITEM_OBJECT))
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(object, Category):
+            object = None
+        self.editDevice(object)
 
 
     def onEditScene(self):
         index = self.selectionModel.currentIndex()
-        self.editScene(index.data(ProjectModel.ITEM_OBJECT))
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(object, Category):
+            object = None
+        self.editScene(object)
 
 
     def onRemove(self):
@@ -488,16 +506,12 @@ class ProjectModel(QStandardItemModel):
         This slot is called from the Configuration, whenever a new descriptor is
         available \conf is given.
         """
-        # Update all associated project configurations with new descriptor
-        configurations = self.classConfigDescriptorMap[conf]
-        for c in configurations:
-            c.setDescriptor(conf.getDescriptor())
+        # Update all associated project devices with new descriptor
+        devices = self.classConfigProjDeviceMap[conf]
+        for device in devices:
+            device.setDescriptor(conf.getDescriptor())
             
             # Merge hash configuration into configuration
-            if c.futureHash is not None:
-                c.merge(c.futureHash)
-            
-            # Set default values for configuration
-            c.setDefault()
-            self.signalShowProjectConfiguration.emit(c)
+            device.mergeFutureConfig()
+            self.signalShowProjectConfiguration.emit(device)
 

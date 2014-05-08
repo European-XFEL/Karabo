@@ -14,9 +14,8 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-from configuration import Configuration
 from manager import Manager
-from project import Project, Scene, Category
+from project import Category, Device, Project, Scene
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
@@ -131,7 +130,7 @@ class ProjectTreeView(QTreeView):
         if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Configuration):
+        if isinstance(object, Device):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
             # TODO: use project item
@@ -169,13 +168,13 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acAddScene)
-        elif isinstance(object, Configuration) or isinstance(object, Scene):
+        elif isinstance(object, Device) or isinstance(object, Scene):
             text = "Edit"
             acEdit = QAction(text, self)
             acEdit.setStatusTip(text)
             acEdit.setToolTip(text)
             
-            if isinstance(object, Configuration):
+            if isinstance(object, Device):
                 acEdit.triggered.connect(self.model().onEditDevice)
             elif isinstance(object, Scene):
                 acEdit.triggered.connect(self.model().onEditScene)
@@ -205,20 +204,20 @@ class ProjectTreeView(QTreeView):
 
         index = selectedIndexes[0]
 
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if object is None: return
-        if not isinstance(object, Configuration):
+        device = index.data(ProjectModel.ITEM_OBJECT)
+        if device is None: return
+        if not isinstance(device, Device):
             return
 
         if not self.model().checkSystemTopology():
             return
 
-        deviceId = object.futureHash.get("deviceId")
+        deviceId = device.path
         # Check whether deviceId is already online
         if self.model().isDeviceOnline(deviceId):
             conf = Manager().getDevice(deviceId)
         else:
-            conf = object
+            conf = device
         
         self.signalItemChanged.emit(conf)
 
