@@ -14,6 +14,7 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from configuration import Configuration
 from manager import Manager
 from project import Category, Device, Project, Scene
 from projectmodel import ProjectModel
@@ -204,7 +205,7 @@ class ProjectTreeView(QTreeView):
 
         device = index.data(ProjectModel.ITEM_OBJECT)
         if device is None: return
-        if not isinstance(device, Device):
+        if not isinstance(device, Configuration):
             return
 
         if not self.model().checkSystemTopology():
@@ -216,6 +217,6 @@ class ProjectTreeView(QTreeView):
             conf = Manager().getDevice(deviceId)
         else:
             conf = device
-        
+
         self.signalItemChanged.emit(conf)
 
