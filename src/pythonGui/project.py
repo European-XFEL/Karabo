@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["Project", "Scene"]
+__all__ = ["Project", "Scene", "Category"]
 
 
 from configuration import Configuration
@@ -57,8 +57,8 @@ class Project(QObject):
         self.monitors = []
 
 
-    def addDevice(self, configuration):
-        self.devices.append(configuration)
+    def addDevice(self, device):
+        self.devices.append(device)
 
 
     def addScene(self, scene):
@@ -108,9 +108,7 @@ class Project(QObject):
         deviceConfig = []
         for device in self.devices:
             config = device.toHash()
-            # TODO: other way original classId="Device"
-            config.set("classId", device.futureHash.get("classId"))
-            deviceConfig.append(config)
+            deviceConfig.append(Hash(device.classId, config))
         projectConfig.set(devicePath, deviceConfig)
         
         # Create folder for scenes
@@ -189,6 +187,28 @@ class Project(QObject):
             if len(subDirToDelete.entryList()) > 0:
                 self._clearProjectDir(subDirPath)
             subDirToDelete.rmpath(subDirPath)
+
+
+class Device(Configuration):
+
+    def __init__(self, path, type, descriptor=None):
+        super(Device, self).__init__(path, type, descriptor)
+        
+        self.classId = None
+        # Needed in case the descriptor is not set yet
+        self.futureConfig = None
+
+
+    def mergeFutureConfig(self):
+        """
+        This function merges the \self.futureConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.getDescriptor() is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        self.merge(self.futureConfig)
 
 
 class Scene(object):
