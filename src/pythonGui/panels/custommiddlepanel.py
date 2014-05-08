@@ -199,8 +199,10 @@ class CustomMiddlePanel(QScrollArea):
 
 
     def onUndock(self):
-        self.parent().resize(self.graphicsview.size())
+        osize = self.graphicsview.size()
         self.setWidgetResizable(True)
+        self.parent().resize(osize - self.graphicsview.size() +
+                             self.parent().size())
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
