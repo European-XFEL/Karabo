@@ -534,7 +534,9 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, configuration):
-        self.updateButtonsVisibility = configuration is not None and configuration.type == 'class'
+        self.updateButtonsVisibility = configuration is not None and \
+                                       (configuration.type == 'class' or \
+                                        configuration.type == 'projectClass')
 
         if self.prevConfiguration not in (None, configuration):
             self.prevConfiguration.removeVisible()
