@@ -11,7 +11,7 @@
 
 __all__ = ["MainWindow"]
 
-import os
+import os.path
 import icons
 
 from docktabwindow import DockTabWindow
@@ -270,19 +270,19 @@ class MainWindow(QMainWindow):
             self.middleTab.updateTabsClosable()
 
 
-    def onOpenScene(self, scene, filename):
+    def onOpenScene(self, scene):
         customView = self._createCustomMiddlePanel(scene)
         self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
-        customView.openScene(filename)
+        customView.openScene(scene.absoluteFilePath)
 
 
-    def onSaveScene(self, scene, filename):
+    def onSaveScene(self, scene):
         for i in xrange(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if divWidget.dockableWidget.scene == scene:
-                divWidget.dockableWidget.saveScene(filename)
+                divWidget.dockableWidget.saveScene(scene.absoluteFilePath)
 
 
     def onChangeAccessLevel(self, action):

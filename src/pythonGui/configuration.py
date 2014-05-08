@@ -33,9 +33,6 @@ class Configuration(QObject):
         self.path = path
         self.visible = 0
         
-        # In case the Schema is not set yet, this variable allows to set the
-        # configuration hash anyway
-        self.futureHash = None
         self._box = Box((), descriptor, self)
 
 
