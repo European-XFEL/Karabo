@@ -7,12 +7,11 @@ class QwtWidget(EditableWidget):
     category = "Digit"
 
     def __init__(self, box, parent):
+        self.widget = self.Cls(parent)
         super(QwtWidget, self).__init__(box)
 
-        self.widget = self.Cls(parent)
         self.valueChanged(self.boxes[0], self.boxes[0].value)
         self.widget.valueChanged.connect(self.onEditingFinished)
-        box.addWidget(self)
 
 
     def typeChanged(self, box):
