@@ -500,6 +500,17 @@ class ProjectModel(QStandardItemModel):
         self.editDevice(object)
 
 
+    def onInitDevices(self):
+        if not self.checkSystemTopology():
+            return
+        
+        project = self.currentProject()
+        for device in project.devices:
+            # TODO: check for startup behavior
+            serverId = device.futureConfig.get("serverId")
+            manager.Manager().initDevice(serverId, device.classId, device.toHash())
+
+
     def onEditScene(self):
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
