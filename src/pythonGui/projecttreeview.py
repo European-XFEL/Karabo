@@ -46,6 +46,21 @@ class ProjectTreeView(QTreeView):
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
 
 
+    def currentIndex(self):
+        return self.selectionModel().currentIndex()
+
+
+    def indexInfo(self, index=None):
+        """
+        This function return the info about the given \index.
+
+        Defaults to the current index, if index is None.
+        """
+        if index is None:
+            index = self.currentIndex()
+        return self.model().indexInfo(index)
+
+
     def setupDefaultProject(self):
         """
         This function sets up the default project.
@@ -126,8 +141,7 @@ class ProjectTreeView(QTreeView):
 
 
     def mouseDoubleClickEvent(self, event):
-        index = self.selectionModel().currentIndex()
-        if index is None: return
+        index = self.currentIndex()
         if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
@@ -139,10 +153,8 @@ class ProjectTreeView(QTreeView):
 
 ### slots ###
     def onCustomContextMenuRequested(self, pos):
-        index = self.selectionModel().currentIndex()
-
-        if not index.isValid():
-            return
+        index = self.currentIndex()
+        if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
         
@@ -155,8 +167,23 @@ class ProjectTreeView(QTreeView):
             acImportPlugin.setToolTip(text)
             acImportPlugin.triggered.connect(self.model().onEditDevice)
 
+            text = "Initiate all"
+            acInitDevices = QAction(text, self)
+            acInitDevices.setStatusTip(text)
+            acInitDevices.setToolTip(text)
+            acInitDevices.triggered.connect(self.model().onInitDevices)
+
+            text = "Kill all"
+            acKillDevices = QAction(text, self)
+            acKillDevices.setStatusTip(text)
+            acKillDevices.setToolTip(text)
+            acKillDevices.triggered.connect(self.model().onKillDevices)
+
             menu = QMenu()
             menu.addAction(acImportPlugin)
+            menu.addSeparator()
+            menu.addAction(acInitDevices)
+            menu.addAction(acKillDevices)
         elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
@@ -184,9 +211,24 @@ class ProjectTreeView(QTreeView):
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
             
+            text = "Instantiate"
+            acInitDevice = QAction(text, self)
+            acInitDevice.setStatusTip(text)
+            acInitDevice.setToolTip(text)
+            acInitDevice.triggered.connect(self.onInitDevice)
+            
+            text = "Kill"
+            acKillDevice = QAction(text, self)
+            acKillDevice.setStatusTip(text)
+            acKillDevice.setToolTip(text)
+            acKillDevice.triggered.connect(self.onKillDevice)
+            
             menu = QMenu()
             menu.addAction(acEdit)
             menu.addAction(acRemove)
+            menu.addSeparator()
+            menu.addAction(acInitDevice)
+            menu.addAction(acKillDevice)
         
         if menu is None: return
         
@@ -219,4 +261,22 @@ class ProjectTreeView(QTreeView):
             conf = device
 
         self.signalItemChanged.emit(conf)
+
+
+    def onInitDevice(self):
+        index = self.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(object, Device): return
+        
+        config = object.toHash()
+        serverId = config.get("serverId")
+        Manager().initDevice(serverId, object.classId, config)
+
+
+    def onKillDevice(self):
+        index = self.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(object, Device): return
+        
+        Manager().killDevice(object.path)
 
