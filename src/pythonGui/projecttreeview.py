@@ -173,10 +173,17 @@ class ProjectTreeView(QTreeView):
             acInitDevices.setToolTip(text)
             acInitDevices.triggered.connect(self.model().onInitDevices)
 
+            text = "Kill all"
+            acKillDevices = QAction(text, self)
+            acKillDevices.setStatusTip(text)
+            acKillDevices.setToolTip(text)
+            acKillDevices.triggered.connect(self.model().onKillDevices)
+
             menu = QMenu()
             menu.addAction(acImportPlugin)
             menu.addSeparator()
             menu.addAction(acInitDevices)
+            menu.addAction(acKillDevices)
         elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
