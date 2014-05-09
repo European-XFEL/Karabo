@@ -176,7 +176,7 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.projectTopology.selectionModel.clearSelection()
+        self.projectTopology.selectionModel.clear()
 
 
     def onProjectModelSelectionChanged(self, selected, deselected):
@@ -187,37 +187,38 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.systemTopology.selectionModel.clearSelection()
+        self.systemTopology.selectionModel.clear()
 
 
-
-    def initDevice(self, serverId, classId):
-        # Put configuration hash together
-        config = Hash(classId,
-            self.serverClassData[serverId, classId].toHash())
+    def initDevice(self, serverId, classId, config=None):
+        if config is None:
+            # Use standard configuration for server/classId
+            config = self.serverClassData[serverId, classId].toHash()
        
         # Send signal to network
-        self.signalInitDevice.emit(serverId, config)
+        self.signalInitDevice.emit(serverId, Hash(classId, config))
         self.__isInitDeviceCurrentlyProcessed = True
 
 
     def killDevice(self, deviceId):
         reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill this instance?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
             return
 
-        # Remove deviceId data
-        del self.deviceData[deviceId]
+        if deviceId in self.deviceData:
+            # Remove deviceId data
+            del self.deviceData[deviceId]
+        
         self.signalKillDevice.emit(deviceId)
 
 
     def killServer(self, serverId):
         reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill this instance?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
             return

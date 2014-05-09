@@ -62,6 +62,21 @@ class ProjectModel(QStandardItemModel):
         self.selectionModel = QItemSelectionModel(self)
 
 
+    def indexInfo(self, index):
+        if not index.isValid():
+            return { }
+
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        
+        if isinstance(object, Device):
+            return dict(serverId=object.futureConfig.get("serverId"),
+                        classId=object.classId,
+                        deviceId=object.futureConfig.get("deviceId"),
+                        config=object.toHash())
+        
+        return { }
+
+
     def updateData(self):
         self.beginResetModel()
         self.clear()
@@ -483,6 +498,28 @@ class ProjectModel(QStandardItemModel):
         if isinstance(object, Category):
             object = None
         self.editDevice(object)
+
+
+    def onInitDevices(self):
+        if not self.checkSystemTopology():
+            return
+        
+        project = self.currentProject()
+        for device in project.devices:
+            # TODO: check for startup behavior
+            serverId = device.futureConfig.get("serverId")
+            manager.Manager().initDevice(serverId, device.classId, device.toHash())
+
+
+    def onKillDevices(self):
+        if not self.checkSystemTopology():
+            return
+        
+        project = self.currentProject()
+        for device in project.devices:
+            deviceId = device.path
+            if self.isDeviceOnline(deviceId):
+                manager.Manager().killDevice(deviceId)
 
 
     def onEditScene(self):
