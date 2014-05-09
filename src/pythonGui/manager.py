@@ -201,21 +201,23 @@ class _Manager(QObject):
 
     def killDevice(self, deviceId):
         reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill this instance?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
             return
 
-        # Remove deviceId data
-        del self.deviceData[deviceId]
+        if deviceId in self.deviceData:
+            # Remove deviceId data
+            del self.deviceData[deviceId]
+        
         self.signalKillDevice.emit(deviceId)
 
 
     def killServer(self, serverId):
         reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill this instance?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
             return
