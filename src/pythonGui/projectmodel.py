@@ -517,7 +517,7 @@ class ProjectModel(QStandardItemModel):
         
         project = self.currentProject()
         for device in project.devices:
-            deviceId = device.toHash().get("deviceId")
+            deviceId = device.path
             if self.isDeviceOnline(deviceId):
                 manager.Manager().killDevice(deviceId)
 
