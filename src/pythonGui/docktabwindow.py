@@ -14,8 +14,9 @@ __all__ = ["DockTabWindow"]
 
 from toolbar import ToolBar
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import (QAction, QFrame, QHBoxLayout, QIcon, QTabWidget,
+                         QVBoxLayout)
 
 class DockTabWindow(QTabWidget):
 
