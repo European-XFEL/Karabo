@@ -167,8 +167,16 @@ class ProjectTreeView(QTreeView):
             acImportPlugin.setToolTip(text)
             acImportPlugin.triggered.connect(self.model().onEditDevice)
 
+            text = "Initiate all"
+            acInitDevices = QAction(text, self)
+            acInitDevices.setStatusTip(text)
+            acInitDevices.setToolTip(text)
+            acInitDevices.triggered.connect(self.model().onInitDevices)
+
             menu = QMenu()
             menu.addAction(acImportPlugin)
+            menu.addSeparator()
+            menu.addAction(acInitDevices)
         elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
