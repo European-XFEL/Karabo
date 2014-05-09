@@ -211,9 +211,24 @@ class ProjectTreeView(QTreeView):
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
             
+            text = "Instantiate"
+            acInitDevice = QAction(text, self)
+            acInitDevice.setStatusTip(text)
+            acInitDevice.setToolTip(text)
+            acInitDevice.triggered.connect(self.onInitDevice)
+            
+            text = "Kill"
+            acKillDevice = QAction(text, self)
+            acKillDevice.setStatusTip(text)
+            acKillDevice.setToolTip(text)
+            acKillDevice.triggered.connect(self.onKillDevice)
+            
             menu = QMenu()
             menu.addAction(acEdit)
             menu.addAction(acRemove)
+            menu.addSeparator()
+            menu.addAction(acInitDevice)
+            menu.addAction(acKillDevice)
         
         if menu is None: return
         
@@ -246,4 +261,22 @@ class ProjectTreeView(QTreeView):
             conf = device
 
         self.signalItemChanged.emit(conf)
+
+
+    def onInitDevice(self):
+        index = self.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(object, Device): return
+        
+        config = object.toHash()
+        serverId = config.get("serverId")
+        Manager().initDevice(serverId, object.classId, config)
+
+
+    def onKillDevice(self):
+        index = self.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(object, Device): return
+        
+        Manager().killDevice(object.path)
 
