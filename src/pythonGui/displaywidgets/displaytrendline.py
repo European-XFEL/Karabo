@@ -61,14 +61,6 @@ class Curve(QObject):
 
 
     def addPoint(self, value, timestamp):
-        
-        print "addPoint"
-        print "past", self.past
-        print "data size", self.data.shape[0]
-        print "fill size", self.fill
-        print "spare size", self.spare
-        
-        
         if self.fill >= self.data.shape[0]: # Have to get rid of data
             # Emergency case, should only happen if historic data is slow
             self.data[self.past:-self.spare, :] = (
@@ -86,19 +78,10 @@ class Curve(QObject):
     def getFromPast(self, t0, t1):
         t0 = datetime.datetime.utcfromtimestamp(t0)
         t1 = datetime.datetime.utcfromtimestamp(t1)
-        print "t0: ", t0.isoformat()
-        print "t1: ", t1.isoformat()
         self.box.getFromPast(t0.isoformat(), t1.isoformat(), self.maxHistory)
 
 
     def changeInterval(self, t0, t1):
-        
-        #print "changeInterval"
-        #print "past", self.past
-        #print "data size", self.data.shape[0]
-        #print "fill size", self.fill
-        #print "spare size", self.spare
-        
         # t0 represent the oldest value displayed in the widget 
         if t0 < self.data[0, 1] or t1 < self.data[self.past, 1]:
             self.getFromPast(t0, min(t1, self.data[self.past, 1]))        
