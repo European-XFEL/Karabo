@@ -511,6 +511,17 @@ class ProjectModel(QStandardItemModel):
             manager.Manager().initDevice(serverId, device.classId, device.toHash())
 
 
+    def onKillDevices(self):
+        if not self.checkSystemTopology():
+            return
+        
+        project = self.currentProject()
+        for device in project.devices:
+            deviceId = device.toHash().get("deviceId")
+            if self.isDeviceOnline(deviceId):
+                manager.Manager().killDevice(deviceId)
+
+
     def onEditScene(self):
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
