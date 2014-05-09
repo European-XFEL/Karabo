@@ -402,10 +402,11 @@ class ProxyWidget(QStackedWidget):
         self.selected = False
         self.component = None
 
-        #self.setToolTip(component.boxes[0])
 
     def setComponent(self, component):
         self.component = component
+
+        self.setToolTip(self.component.boxes[0].key())
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
