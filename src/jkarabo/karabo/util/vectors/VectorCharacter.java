@@ -29,6 +29,10 @@ public class VectorCharacter extends ArrayList<Character> {
         super(c);
     }
 
+    public VectorCharacter(String vecchar) {
+        throw new RuntimeException("VectorCharacter(String vecchar) not implemented yet");
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

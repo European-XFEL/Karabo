@@ -27,6 +27,10 @@ public class VectorBoolean extends ArrayList<Boolean> {
         super(c);
     }
     
+    public VectorBoolean(String vecbool) {
+        throw new RuntimeException("VectorBoolean(String vecbool) not implemented yet");
+    }
+    
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

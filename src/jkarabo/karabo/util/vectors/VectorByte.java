@@ -29,6 +29,13 @@ public class VectorByte extends ArrayList<Byte> {
         super(c);
     }
 
+    public VectorByte(String c) {
+        super(c.length());
+        for (Byte b : c.getBytes()) {
+            this.add(b);
+        }
+    }
+    
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
