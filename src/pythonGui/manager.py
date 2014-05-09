@@ -189,6 +189,7 @@ class _Manager(QObject):
 
         self.systemTopology.selectionModel.clear()
 
+
     def initDevice(self, serverId, classId, config=None):
         if config is None:
             # Use standard configuration for server/classId
