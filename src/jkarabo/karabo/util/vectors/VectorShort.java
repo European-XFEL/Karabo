@@ -40,4 +40,13 @@ public class VectorShort extends ArrayList<Short> {
             this.add(null);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Short i : this) {
+            result += i.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }

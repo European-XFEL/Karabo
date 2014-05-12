@@ -43,4 +43,13 @@ public class VectorByte extends ArrayList<Byte> {
             this.add(null);
         }
     }
+    
+    @Override
+    public String toString() {
+        byte[] bytes = new byte[this.size()];
+        for (int i = 0; i < this.size(); i++) {
+            bytes[i] = this.get(i);
+        }
+        return new String(bytes);
+    }
 }

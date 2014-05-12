@@ -43,4 +43,13 @@ public class VectorComplexDouble extends ArrayList<ComplexDouble> {
             s = s.substring(e + 1);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (ComplexDouble c : this) {
+            result += "(" + ((Double) c.re()).toString() + "," + ((Double) c.im()).toString() + "),";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }

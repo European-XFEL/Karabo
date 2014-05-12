@@ -29,8 +29,12 @@ public class VectorCharacter extends ArrayList<Character> {
         super(c);
     }
 
-    public VectorCharacter(String vecchar) {
-        throw new RuntimeException("VectorCharacter(String vecchar) not implemented yet");
+    public VectorCharacter(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(s.charAt(0));
+        }
     }
 
     @Override
@@ -39,5 +43,14 @@ public class VectorCharacter extends ArrayList<Character> {
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Character ch : this) {
+            result += ch.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

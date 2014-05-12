@@ -40,4 +40,13 @@ public class VectorLong extends ArrayList<Long> {
             this.add(null);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Long l : this) {
+            result += l.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }

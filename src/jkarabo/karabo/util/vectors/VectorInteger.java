@@ -44,4 +44,13 @@ public class VectorInteger extends ArrayList<Integer> {
             this.add(null);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Integer i : this) {
+            result += i.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }
