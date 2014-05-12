@@ -39,7 +39,6 @@ class _Manager(QObject):
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
-    signalDeviceSchemaUpdated = pyqtSignal(str) # deviceId
 
     signalRefreshInstance = pyqtSignal(object) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
@@ -395,6 +394,10 @@ class _Manager(QObject):
     def handleClassSchema(self, classInfo):
         serverId = classInfo.get('serverId')
         classId = classInfo.get('classId')
+        if (serverId, classId) not in self.serverClassData:
+            print 'not requested schema for classId {} arrived'.format(classId)
+            return
+        
         schema = classInfo.get('schema')
         
         conf = self.serverClassData[serverId, classId]
@@ -442,7 +445,6 @@ class _Manager(QObject):
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
         
-        self.signalDeviceSchemaUpdated.emit(deviceId)
         self.handleDeviceSchema(instanceInfo)
         self.onRefreshInstance(deviceId)
 
