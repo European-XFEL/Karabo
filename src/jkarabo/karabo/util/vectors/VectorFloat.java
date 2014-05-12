@@ -44,4 +44,13 @@ public class VectorFloat extends ArrayList<Float> {
             this.add(null);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Float f : this) {
+            result += f.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }

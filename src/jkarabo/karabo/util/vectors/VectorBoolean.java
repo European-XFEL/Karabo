@@ -41,4 +41,14 @@ public class VectorBoolean extends ArrayList<Boolean> {
         super.ensureCapacity(capacity);
         while(this.size() < capacity) this.add(null);
     }
+    
+    @Override
+    public String toString() {
+        String result = new String();
+        for (boolean b : this) {
+            result += b? "1" : "0";
+            result += ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }

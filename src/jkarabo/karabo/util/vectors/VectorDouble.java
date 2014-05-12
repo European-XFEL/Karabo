@@ -40,4 +40,13 @@ public class VectorDouble extends ArrayList<Double> {
             this.add(null);
         }
     }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Double d : this) {
+            result += d.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
+    }
 }
