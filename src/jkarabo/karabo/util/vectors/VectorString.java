@@ -29,6 +29,14 @@ public class VectorString extends ArrayList<String> {
         super(c);
     }
 
+    public VectorString(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(s);
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

@@ -29,6 +29,14 @@ public class VectorInteger extends ArrayList<Integer> {
         super(c);
     }
 
+    public VectorInteger(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Integer.parseInt(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
