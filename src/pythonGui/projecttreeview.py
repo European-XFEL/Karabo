@@ -14,7 +14,6 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
-from configuration import Configuration
 from manager import Manager
 from project import Category, Device, Project, Scene
 from projectmodel import ProjectModel
@@ -27,10 +26,6 @@ import os.path
 
 class ProjectTreeView(QTreeView):
 
-    # To import a plugin a server connection needs to be established
-    signalItemChanged = pyqtSignal(object)
-    signalSelectionChanged = pyqtSignal(list)
-
 
     def __init__(self, parent=None):
         super(ProjectTreeView, self).__init__(parent)
@@ -40,7 +35,6 @@ class ProjectTreeView(QTreeView):
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
         self.setSelectionModel(self.model().selectionModel)
-        self.model().selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -233,34 +227,6 @@ class ProjectTreeView(QTreeView):
         if menu is None: return
         
         menu.exec_(QCursor.pos())
-
-
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        # Send signal to projectPanel to update toolbar actions
-        self.signalSelectionChanged.emit(selectedIndexes)
-        
-        if len(selectedIndexes) < 1:
-            return
-
-        index = selectedIndexes[0]
-
-        device = index.data(ProjectModel.ITEM_OBJECT)
-        if device is None: return
-        if not isinstance(device, Configuration):
-            return
-
-        if not self.model().checkSystemTopology():
-            return
-
-        deviceId = device.path
-        # Check whether deviceId is already online
-        if self.model().isDeviceOnline(deviceId):
-            conf = Manager().getDevice(deviceId)
-        else:
-            conf = device
-
-        self.signalItemChanged.emit(conf)
 
 
     def onInitDevice(self):
