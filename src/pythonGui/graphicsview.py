@@ -924,7 +924,7 @@ class GraphicsView(QSvgWidget):
             if isinstance(c, ProxyWidget) and c.component is not None:
                 for b in c.component.boxes:
                     b.configuration.removeVisible()
-            c.setParent(None)
+            #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
         self.ilayout = None
@@ -994,7 +994,7 @@ class GraphicsView(QSvgWidget):
         self.ilayout = FixedLayout.load(root, widget=self.inner)
         self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
         self.designMode = True
-
+        
         ar = QByteArray()
         buf = QBuffer(ar)
         buf.open(QIODevice.WriteOnly)
