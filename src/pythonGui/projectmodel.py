@@ -383,16 +383,15 @@ class ProjectModel(QStandardItemModel):
         config = Hash("deviceId", self.pluginDialog.deviceId,
                       "serverId", self.pluginDialog.serverId)
         
-        if device is None:
-            # Get project name
-            project = self.currentProject()
-            # Add new device
-            device = self.addDevice(project, self.pluginDialog.classId, config)
-        else:
-            # Overwrite existing device
-            device.classId = self.pluginDialog.classId
-            device.path = self.pluginDialog.deviceId
-            device.merge(config)
+        # Get project name
+        project = self.currentProject()
+        
+        if device is not None:
+            # Remove old device configuration
+            project.remove(device)
+        
+        # Add new device
+        device = self.addDevice(project, self.pluginDialog.classId, config)
         
         self.updateData()
         self.selectItem(device)
@@ -566,8 +565,7 @@ class ProjectModel(QStandardItemModel):
         
         # Remove data from project
         self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
-        # Remove data from model
-        self.removeRow(index.row(), index.parent())
+        self.updateData()
 
 
     def onConfigurationNewDescriptor(self, conf):
