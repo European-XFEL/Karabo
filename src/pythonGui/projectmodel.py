@@ -14,6 +14,7 @@ a treeview.
 __all__ = ["ProjectModel"]
 
 
+from configuration import Configuration
 from copy import copy
 import icons
 from karabo.hash import Hash, HashMergePolicy, XMLParser
@@ -30,6 +31,8 @@ import os.path
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
+    signalItemChanged = pyqtSignal(object)
+    signalSelectionChanged = pyqtSignal(list)
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
     signalOpenScene = pyqtSignal(object) # scene
@@ -54,12 +57,9 @@ class ProjectModel(QStandardItemModel):
         # Dialog to add and change a device
         self.pluginDialog = None
         
-        # States whether the server connection is already requested to prevent
-        # that selectionChanged signal/slot will ask twice for systemTopology
-        self.serverConnectionRequested = False
-        
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def indexInfo(self, index):
@@ -203,9 +203,6 @@ class ProjectModel(QStandardItemModel):
         if self.systemTopology is not None:
             return True
         
-        if self.serverConnectionRequested:
-            return False
-        
         reply = QMessageBox.question(None, "No server connection",
                                      "There is no connection to the server.<br>"
                                      "Do you want to establish a server connection?",
@@ -213,9 +210,9 @@ class ProjectModel(QStandardItemModel):
 
         if reply == QMessageBox.No:
             return False
+        
         # Send signal to establish server connection to projectpanel
         self.signalServerConnection.emit(True)
-        self.serverConnectionRequested = True
         return False
 
 
@@ -483,13 +480,42 @@ class ProjectModel(QStandardItemModel):
         
 
 ### slots ###
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        # Send signal to projectPanel to update toolbar actions
+        self.signalSelectionChanged.emit(selectedIndexes)
+        
+        if len(selectedIndexes) < 1:
+            return
+
+        index = selectedIndexes[0]
+
+        device = index.data(ProjectModel.ITEM_OBJECT)
+        if device is None: return
+        if not isinstance(device, Configuration):
+            return
+
+        if not self.checkSystemTopology():
+            return
+
+        deviceId = device.path
+        # Check whether deviceId is already online
+        if self.isDeviceOnline(deviceId):
+            conf = manager.Manager().getDevice(deviceId)
+        else:
+            conf = device
+
+        self.signalItemChanged.emit(conf)
+
+
     def onServerConnectionChanged(self, isConnected):
         """
         If the server connection is changed, the model needs an update.
         """
-        if not isConnected:
-            self.systemTopology = None
-            self.serverConnectionRequested = False
+        if isConnected: return
+        
+        self.systemTopology = None
 
 
     def onEditDevice(self):

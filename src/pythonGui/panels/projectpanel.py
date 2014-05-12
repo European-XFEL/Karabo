@@ -49,7 +49,7 @@ class ProjectPanel(QWidget):
         self.twProject.model().signalOpenScene.connect(self.signalOpenScene)
         self.twProject.model().signalSaveScene.connect(self.signalSaveScene)
         self.twProject.model().signalServerConnection.connect(self.signalServerConnection)
-        self.twProject.signalSelectionChanged.connect(self.onSelectionChanged)
+        self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
