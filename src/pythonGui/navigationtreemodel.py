@@ -280,11 +280,12 @@ class NavigationTreeModel(QAbstractItemModel):
         """
         If the server connection is changed, the model needs a reset.
         """
-        if not isConnected:
-            self.beginResetModel()
-            self.rootNode.parentNode = None
-            self.rootNode.childNodes = []
-            self.endResetModel()
+        if isConnected: return
+        
+        self.beginResetModel()
+        self.rootNode.parentNode = None
+        self.rootNode.childNodes = []
+        self.endResetModel()
 
 
     def getAsHash(self):
