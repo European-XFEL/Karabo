@@ -70,7 +70,7 @@ class ConfigurationPanel(QWidget):
 
         # Project tree
         self.twProject = ProjectTreeView(self)
-        self.twProject.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twProject.model().signalItemChanged.connect(self.onDeviceItemChanged)
         self.twProject.hide()
         navSplitter.addWidget(self.twProject)
 
@@ -534,6 +534,7 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, configuration):
+        print "onDeviceItemChanged", configuration.type, configuration.path
         self.updateButtonsVisibility = configuration is not None and \
                                        (configuration.type == 'class' or \
                                         configuration.type == 'projectClass')
