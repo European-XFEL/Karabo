@@ -4,10 +4,6 @@
  */
 package karabo.util;
 
-import karabo.util.types.ToLiteral;
-import karabo.util.types.Types;
-import karabo.util.vectors.VectorHash;
-import karabo.util.vectors.VectorString;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -16,6 +12,19 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import karabo.util.types.ComplexDouble;
+import karabo.util.types.ToLiteral;
+import karabo.util.types.Types;
+import karabo.util.vectors.VectorBoolean;
+import karabo.util.vectors.VectorByte;
+import karabo.util.vectors.VectorCharacter;
+import karabo.util.vectors.VectorDouble;
+import karabo.util.vectors.VectorFloat;
+import karabo.util.vectors.VectorHash;
+import karabo.util.vectors.VectorInteger;
+import karabo.util.vectors.VectorLong;
+import karabo.util.vectors.VectorShort;
+import karabo.util.vectors.VectorString;
 
 /**
  * Hash is the basic container widely used in Karabo Framework.<br>
@@ -32,7 +41,7 @@ import java.util.StringTokenizer;
  * are strings and values can be of any Java type.</li>
  * </ul>
  * <br>
- * Concept:<br> 
+ * Concept:<br>
  * <ul>
  * <li>Provide recursive key-value associative container (keys are strings and unique, values can be of any type)</li>
  * <li>Preserve insertion order, while optimized for random key-based lookup. Different iterators are available for each
@@ -47,11 +56,11 @@ import java.util.StringTokenizer;
  * <li>Exposed iterators will a sequential iterator (insertion order) and a alpha-numeric order iterator.</li>
  * <li>Each iterator provides access to its key, value, and attributes in form of a Hash::Node and can thus be used for
  * recursive traversal.</li>
- * <li>Insertion of a non-existing key leads to new entry whilst insertion of an existing key will only update (merge) the
- * corresponding value/attributes.</li>
- * <li>Additional functionality include: list of paths, clear/erase, find, merge, comparison, etc.</li> 
+ * <li>Insertion of a non-existing key leads to new entry whilst insertion of an existing key will only update (merge)
+ * the corresponding value/attributes.</li>
+ * <li>Additional functionality include: list of paths, clear/erase, find, merge, comparison, etc.</li>
  * </ul>
- * 
+ *
  * @author Sergey Esenov serguei.essenov at xfel.eu
  */
 public class Hash extends Object implements Iterable {
@@ -555,6 +564,71 @@ public class Hash extends Object implements Iterable {
      */
     public Node set(String key, Object value) {
         return this.set(key, value, ".");
+    }
+
+    public Node set(String key, Types.ReferenceType type, Object value) {
+        switch (type) {
+            case BOOL:
+                return this.set(key, Boolean.parseBoolean((String)value));
+            case VECTOR_BOOL:
+                return this.set(key, new VectorBoolean((String)value));
+            case CHAR:
+                return this.set(key, ((String)value).charAt(0));
+            case VECTOR_CHAR:
+                return this.set(key, new VectorCharacter((String)value));
+            case INT8:
+            case UINT8:
+                return this.set(key, ((String)value).getBytes()[0]);
+            case VECTOR_INT8:
+            case VECTOR_UINT8:
+                return this.set(key, new VectorByte((String)value));
+            case INT16:
+            case UINT16:
+                return this.set(key, Short.parseShort((String)value));
+            case VECTOR_INT16:
+            case VECTOR_UINT16:
+                return this.set(key, new VectorShort((String)value));
+            case INT32:
+            case UINT32:
+                return this.set(key, Integer.parseInt((String)value));
+            case VECTOR_INT32:
+            case VECTOR_UINT32:
+                return this.set(key, new VectorInteger((String)value));
+            case INT64:
+            case UINT64:
+                return this.set(key, Long.parseLong((String)value));
+            case VECTOR_INT64:
+            case VECTOR_UINT64:
+                return this.set(key, new VectorLong((String)value));
+            case FLOAT:
+                return this.set(key, Float.parseFloat((String)value));
+            case VECTOR_FLOAT:
+                return this.set(key, new VectorFloat((String)value));
+            case DOUBLE:
+                return this.set(key, Double.parseDouble((String)value));
+            case VECTOR_DOUBLE:
+                return this.set(key, new VectorDouble((String)value));
+            case STRING:
+                return this.set(key, value);
+            case VECTOR_STRING:
+                return this.set(key, new VectorString((String)value));
+            case HASH:
+                return this.set(key, (Hash)value);
+            case VECTOR_HASH:
+                return this.set(key, (VectorHash)value);
+            case SCHEMA:
+                return this.set(key, (Schema)value);
+            //case COMPLEX_FLOAT:
+            //case VECTOR_COMPLEX_FLOAT:
+            case COMPLEX_DOUBLE:
+                return this.set(key, new ComplexDouble((String)value));
+            case VECTOR_COMPLEX_DOUBLE:
+            case NONE:
+            case VECTOR_NONE:
+            default:
+                break;
+        }
+        throw new RuntimeException("Unsupported type " + type);
     }
 
     /**

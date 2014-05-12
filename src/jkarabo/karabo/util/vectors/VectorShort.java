@@ -25,6 +25,14 @@ public class VectorShort extends ArrayList<Short> {
         super(c);
     }
 
+    public VectorShort(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Short.parseShort(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

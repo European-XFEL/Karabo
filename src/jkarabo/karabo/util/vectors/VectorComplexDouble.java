@@ -23,6 +23,12 @@ public class VectorComplexDouble extends ArrayList<ComplexDouble> {
     }
     
     public VectorComplexDouble(Collection<ComplexDouble> c) {
-        super(c);
+        super(c); 
+    }
+    
+    public VectorComplexDouble(String c) {
+        super();
+        String s = c.substring(2, c.length() - 2);
+        System.out.println("*** VectorComplexDouble: " + s);
     }
 }
