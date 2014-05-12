@@ -25,6 +25,14 @@ public class VectorLong extends ArrayList<Long> {
         super(c);
     }
 
+    public VectorLong(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Long.parseLong(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

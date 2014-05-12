@@ -25,6 +25,14 @@ public class VectorDouble extends ArrayList<Double> {
         super(c);
     }
 
+    public VectorDouble(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Double.parseDouble(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);

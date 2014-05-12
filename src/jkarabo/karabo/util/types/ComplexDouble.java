@@ -10,6 +10,17 @@ public class ComplexDouble {
         im = imag;
     }
 
+    public ComplexDouble(String c) {
+        String s = c.substring(2, c.length() - 1);
+        String[] sa = s.split("[,]");
+        if (sa.length == 2) {
+            re = Double.parseDouble(sa[0]);
+            im = Double.parseDouble(sa[1]);
+        } else {
+            re = Double.parseDouble(sa[0]);
+            im = 0.0;
+        }
+    }
     // return a string representation of the invoking ComplexDouble object
     public String toString() {
         if (im == 0) return re + "";
