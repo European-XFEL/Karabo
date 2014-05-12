@@ -395,6 +395,10 @@ class _Manager(QObject):
     def handleClassSchema(self, classInfo):
         serverId = classInfo.get('serverId')
         classId = classInfo.get('classId')
+        if (serverId, classId) not in self.serverClassData:
+            print 'not requested schema for classId {} arrived'.format(classId)
+            return
+        
         schema = classInfo.get('schema')
         
         conf = self.serverClassData[serverId, classId]

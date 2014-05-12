@@ -92,18 +92,19 @@ class _Network(QObject):
                                        dialog.provider,
                                        dialog.hostname,
                                        dialog.port)
+
+            # If some requests got pilled up, because of no server connection,
+            # now these get handled
+            with QMutexLocker(self.requestMutex):
+                while not self.requestQueue.empty():
+                    self._tcpWriteHash(self.requestQueue.get())
+            
             isConnected = True
         else:
             isConnected = False
 
         # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(isConnected)
-        
-        # If some requests got pilled up because of no server connection,
-        # now these get handled
-        with QMutexLocker(self.requestMutex):
-            while not self.requestQueue.empty():
-                self._tcpWriteHash(self.requestQueue.get())
 
 
     def disconnectFromServer(self):
