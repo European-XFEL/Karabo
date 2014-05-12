@@ -107,7 +107,7 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setEditable(False)
 
                 # Update icon on availability of device
-                if self.isDeviceOnline(device.path):
+                if self.isDeviceOnline(device):
                     status = self.systemTopology.getAttribute("device.{}".format(device.path), "status")
                     if status == "error":
                         leafItem.setIcon(icons.deviceInstanceError)
@@ -187,12 +187,14 @@ class ProjectModel(QStandardItemModel):
             self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
-    def isDeviceOnline(self, deviceId):
+    def isDeviceOnline(self, device):
         """
-        Returns, if the \deviceId is online or not.
+        Returns, if the \device is online or not, classId is considered as well.
         """
-        return self.systemTopology is not None and \
-               self.systemTopology.has("device.{}".format(deviceId))
+        path = "device.{}".format(device.path)
+        return (self.systemTopology is not None and 
+                self.systemTopology.has(path) and 
+                self.systemTopology.getAttribute(path, "classId") == device.classId)
 
 
     def checkSystemTopology(self):
@@ -496,10 +498,9 @@ class ProjectModel(QStandardItemModel):
         if not self.checkSystemTopology():
             return
 
-        deviceId = device.path
-        # Check whether deviceId is already online
-        if self.isDeviceOnline(deviceId):
-            conf = manager.Manager().getDevice(deviceId)
+        # Check whether device is already online
+        if self.isDeviceOnline(device):
+            conf = manager.Manager().getDevice(device.path)
         else:
             conf = device
 
@@ -540,9 +541,8 @@ class ProjectModel(QStandardItemModel):
         
         project = self.currentProject()
         for device in project.devices:
-            deviceId = device.path
-            if self.isDeviceOnline(deviceId):
-                manager.Manager().killDevice(deviceId)
+            if self.isDeviceOnline(device):
+                manager.Manager().killDevice(device.path)
 
 
     def onEditScene(self):
