@@ -534,7 +534,6 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, configuration):
-        print "onDeviceItemChanged", configuration.type, configuration.path
         self.updateButtonsVisibility = configuration is not None and \
                                        (configuration.type == 'class' or \
                                         configuration.type == 'projectClass')
