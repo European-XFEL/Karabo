@@ -39,7 +39,6 @@ class _Manager(QObject):
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
     signalKillDevice = pyqtSignal(str) # deviceId
     signalKillServer = pyqtSignal(str) # serverId
-    signalDeviceSchemaUpdated = pyqtSignal(str) # deviceId
 
     signalRefreshInstance = pyqtSignal(object) # deviceId
     signalInitDevice = pyqtSignal(str, object) # deviceId, hash
@@ -446,7 +445,6 @@ class _Manager(QObject):
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
         
-        self.signalDeviceSchemaUpdated.emit(deviceId)
         self.handleDeviceSchema(instanceInfo)
         self.onRefreshInstance(deviceId)
 

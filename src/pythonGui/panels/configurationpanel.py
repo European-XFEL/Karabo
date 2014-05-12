@@ -43,18 +43,12 @@ class ConfigurationPanel(QWidget):
         super(ConfigurationPanel, self).__init__()
         
         self.__toolBar = None
-        self.__pathSchemaLoadedMap = dict()
-        
-        # map = { path, projectPath }
-        self.__itemProjectPathMap = dict()
         
         title = "Configuration Editor"
         self.setWindowTitle(title)
         
         # map = { deviceId, timer }
         self.__changingTimerDeviceIdMap = dict()
-
-        self.__prevPath = "" # previous selected DEVICE_INSTANCE internalKey
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -101,7 +95,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalShowConfiguration.connect(self.onShowConfiguration)
-        Manager().signalDeviceSchemaUpdated.connect(self.onDeviceSchemaUpdated)
 
         Manager().signalInstanceGone.connect(self.onInstanceGone)
         
@@ -309,19 +302,6 @@ class ConfigurationPanel(QWidget):
         self.acResetAll.setToolTip(text)
 
 
-    def _parseSchema(self, itemInfo, twParameterEditor):
-        path = itemInfo.get('key')
-        conf = itemInfo["configuration"]
-        
-        # Distinguish between DEVICE_CLASS and DEVICE_INSTANCE
-        deviceType = itemInfo.get('type')
-        if conf is None:
-            return False
-        else:
-            conf.fillWidget(twParameterEditor)
-        return True
-
-
     def _createNewParameterPage(self, configuration):
         twParameterEditor = ParameterTreeWidget(configuration)
         twParameterEditor.setHeaderLabels([
@@ -488,30 +468,8 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        # Reset previous path
-        self.__prevPath = ""
-
-        # Reset maps
-        self.__itemPathIndexMap = dict()
-        self.__pathSchemaLoadedMap = dict()
-        self.__itemProjectPathMap = dict()
-
         while self.__swParameterEditor.count() > 1:
             self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
-
-
-    def onInstanceNewReset(self, path):
-        """
-        This slot is called when a new instance is available which means, if there
-        was already a parameter editor for the given path created it needs to
-        be cleaned and removed.
-        """
-        # Remove \path from map
-        if path in self.__itemPathIndexMap:
-            del self.__itemPathIndexMap[path]
-        if path in self.__itemProjectPathMap:
-            del self.__itemProjectPathMap[path]
-        self._removeParameterEditorPage(self._getParameterEditorByPath(path))
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -546,12 +504,6 @@ class ConfigurationPanel(QWidget):
 
 
     def onInstanceGone(self, instanceId, parentPath):
-        # New schema can be in plugins of instance
-        keys = self.__pathSchemaLoadedMap.keys()
-        for key in keys:
-            if instanceId in key:
-                self.__pathSchemaLoadedMap[key] = False
-
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
         self.twNavigation.selectItem(parentPath)
@@ -669,10 +621,6 @@ class ConfigurationPanel(QWidget):
         config = indexInfo.get('config')
 
         Manager().initDevice(serverId, classId, config)
-
-
-    def onDeviceSchemaUpdated(self, key):
-        self.__pathSchemaLoadedMap[key] = False
 
 
     def onGlobalAccessLevelChanged(self):
