@@ -30,99 +30,139 @@ namespace karathon {
 
     struct AbstractInputWrap {
 
+
         static void reconfigure(AbstractInput::Pointer self, const karabo::util::Hash& configuration) {
             self->reconfigure(configuration);
         }
+
 
         static bp::object getInstanceId(AbstractInput::Pointer self) {
             return bp::object(self->getInstanceId());
         }
 
+
         static void setInstanceId(AbstractInput::Pointer self, const std::string& instanceId) {
             self->setInstanceId(instanceId);
         }
 
-        static void setInputHandlerType(AbstractInput::Pointer self, const std::string& type) {
-            self->setInputHandlerType(type);
+
+        static void setInputHandlerType(AbstractInput::Pointer self, const std::string& language, const std::string& inputType) {
+            self->setInputHandlerType(language, inputType);
         }
+
 
         static bool needsDeviceConnection(AbstractInput::Pointer self) {
             return self->needsDeviceConnection();
         }
 
+
         static bp::object getConnectedOutputChannels(AbstractInput::Pointer self) {
             return Wrapper::fromStdVectorToPyHashList(self->getConnectedOutputChannels());
         }
+
 
         static void connectNow(AbstractInput::Pointer self, const karabo::util::Hash& config) {
             ScopedGILRelease nogil;
             self->connectNow(config);
         }
 
+
         static bool canCompute(AbstractInput::Pointer self) {
             return self->canCompute();
         }
+
 
         static void update(AbstractInput::Pointer self) {
             ScopedGILRelease nogil;
             self->update();
         }
 
+
         static void setEndOfStream(AbstractInput::Pointer self) {
             ScopedGILRelease nogil;
             self->setEndOfStream();
         }
 
+
         static void registerIOEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
         }
 
-        void registerEndOfStreamEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
+
+        static void registerEndOfStreamEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             self->registerEndOfStreamEventHandler(handler);
         }
     };
 
-
-
     struct AbstractOutputWrap {
+
 
         static bp::object getInstanceId(AbstractOutput::Pointer self) {
             return bp::object(self->getInstanceId());
         }
 
+
         static void setInstanceId(AbstractOutput::Pointer self, const std::string& instanceId) {
             self->setInstanceId(instanceId);
         }
+
 
         static void setOutputHandlerType(AbstractOutput::Pointer self, const std::string& type) {
             self->setOutputHandlerType(type);
         }
 
+
         static bp::object getInformation(AbstractOutput::Pointer self) {
             return bp::object(self->getInformation());
         }
+
 
         static bool canCompute(AbstractOutput::Pointer self) {
             return self->canCompute();
         }
 
+
         static void update(AbstractOutput::Pointer self) {
+            ScopedGILRelease nogil;       
             self->update();
         }
+
 
         static void signalEndOfStream(AbstractOutput::Pointer self) {
             ScopedGILRelease nogil;
             self->signalEndOfStream();
         }
 
+
         static void registerIOEventHandler(AbstractOutput::Pointer self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
         }
     };
 
+    template <class T>
+    struct OutputWrap {
 
-    struct loadFromFileWrap{
-        static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& hashObj){
+        static void update(const boost::shared_ptr<karabo::io::Output<T> >& self) {
+            ScopedGILRelease nogil;
+            self->update();
+        }
+    };
+
+    template <class T>
+    struct InputWrap {
+
+        static T read(const boost::shared_ptr<karabo::io::Input<T> >& self, size_t idx = 0) {
+            T t;
+            self->read(t, idx);
+            return t;
+        }
+
+    };
+
+    struct loadFromFileWrap {
+
+
+        static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& hashObj) {
             if (PyString_Check(fileNameObj.ptr())) {
                 string fileName = bp::extract<string>(fileNameObj);
                 Hash hash = bp::extract<Hash>(hashObj);
@@ -138,6 +178,7 @@ namespace karathon {
         }
     };
 }
+
 
 void exportPyIo() {
     {
@@ -156,27 +197,6 @@ void exportPyIo() {
                 .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler, (bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
                 ;
-    }
-    {
-        bp::class_<std::map<std::string, boost::shared_ptr<AbstractInput> > >("InputChannels")
-                .def(bp::map_indexing_suite<std::map<std::string, boost::shared_ptr<AbstractInput> > >());
-    }
-    {
-        bp::class_<AbstractOutput, boost::shared_ptr<AbstractOutput>, boost::noncopyable>("AbstractOutput", bp::no_init)
-                .def("setInstanceId", &karathon::AbstractOutputWrap::setInstanceId, (bp::arg("instanceId")))
-                .def("getInstanceId", &karathon::AbstractOutputWrap::getInstanceId)
-                .def("setOutputHandlerType", &karathon::AbstractOutputWrap::setOutputHandlerType, (bp::arg("type")))
-                .def("getInformation", &karathon::AbstractOutputWrap::getInformation)
-                .def("canCompute", &karathon::AbstractOutputWrap::canCompute)
-                .def("update", &karathon::AbstractOutputWrap::update)
-                .def("signalEndOfStream", &karathon::AbstractOutputWrap::signalEndOfStream)
-                .def("registerIOEventHandler", &karathon::AbstractOutputWrap::registerIOEventHandler, (bp::arg("handler")))
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractOutput)
-                ;
-    }
-    {
-        bp::class_<std::map<std::string, AbstractOutput::Pointer> >("OutputChannels")
-                .def(bp::map_indexing_suite<std::map<std::string, AbstractOutput::Pointer> >());
     }
 }
 
@@ -200,12 +220,13 @@ void exportPyIoFileTools() {
             , (void (*) (Hash &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
-    
+
     bp::def("loadFromFile"
             , (void (*) (Schema &, string const &, Hash const &))(&karabo::io::loadFromFile)
             , (bp::arg("object"), bp::arg("filename"), bp::arg("config") = karabo::util::Hash())
             );
 }
+
 
 template <class T>
 void exportPyIoOutput() {
@@ -216,8 +237,7 @@ void exportPyIoOutput() {
                 .def("write"
                      , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
-                .def("update"
-                     , (void (SpecificOutput::*)()) (&SpecificOutput::update))
+                .def("update", &karathon::OutputWrap<T>::update)
                 .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
@@ -227,19 +247,16 @@ void exportPyIoOutput() {
 template void exportPyIoOutput<karabo::util::Hash>();
 template void exportPyIoOutput<karabo::util::Schema>();
 
+
 template <class T>
 void exportPyIoInput() {
 
     {//exposing karabo::io::Input<karabo::util::Hash>
         typedef karabo::io::Input<T> SpecificInput;
         bp::class_<SpecificInput, boost::shared_ptr<SpecificInput>, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
-                .def("read"
-                     , (void (SpecificInput::*)(T &, size_t))(&SpecificInput::read)
-                     , (bp::arg("data"), bp::arg("idx") = 0))
-                .def("size"
-                     , (size_t(SpecificInput::*)() const) (&SpecificInput::size))
-                .def("update"
-                     , (void (SpecificInput::*)()) (&SpecificInput::update))
+                .def("read", &karathon::InputWrap<T>::read, (bp::arg("idx") = 0))
+                .def("size", (size_t(SpecificInput::*)() const) (&SpecificInput::size))
+                .def("update", (void (SpecificInput::*)()) (&SpecificInput::update))
                 .def("use_count", &boost::shared_ptr<SpecificInput>::use_count)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificInput)
@@ -249,17 +266,18 @@ void exportPyIoInput() {
 template void exportPyIoInput<karabo::util::Hash>();
 template void exportPyIoInput<karabo::util::Schema>();
 
-
 template <class T>
 class TextSerializerWrap {
 
 public:
+
 
     static bp::object save(karabo::io::TextSerializer<T>& s, const T& object) {
         std::string archive;
         s.save(object, archive);
         return bp::object(archive);
     }
+
 
     static bp::object load(karabo::io::TextSerializer<T>& s, const bp::object& obj) {
         if (PyByteArray_Check(obj.ptr())) {
@@ -277,6 +295,7 @@ public:
         throw KARABO_PYTHON_EXCEPTION("Python object must be either of type bytearray or string");
     }
 };
+
 
 template <class T>
 void exportPyIoTextSerializer() {
@@ -303,11 +322,11 @@ void exportPyIoTextSerializer() {
 template void exportPyIoTextSerializer<karabo::util::Hash>();
 template void exportPyIoTextSerializer<karabo::util::Schema>();
 
-
 template <class T>
 class BinarySerializerWrap {
 
 public:
+
 
     static bp::object save(karabo::io::BinarySerializer<T>& s, const T& object) {
         std::vector<char> v;
@@ -315,13 +334,14 @@ public:
         return bp::object(bp::handle<>(PyByteArray_FromStringAndSize(&v[0], v.size())));
     }
 
+
     static bp::object load(karabo::io::BinarySerializer<T>& s, const bp::object& obj) {
         if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
             T object;
-            s.load(object, data, size);            
+            s.load(object, data, size);
             return bp::object(object);
             // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
         } else if (bp::extract<std::string>(obj).check()) {
@@ -333,6 +353,7 @@ public:
         throw KARABO_PYTHON_EXCEPTION("Python object type is not a bytearray!");
     }
 };
+
 
 template <class T>
 void exportPyIoBinarySerializer() {

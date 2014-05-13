@@ -190,7 +190,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("createInputChannelHash"
                  , (boost::shared_ptr<InputHashType> (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const bp::object&, const boost::shared_ptr<InputHashType>&)) (&SignalSlotableWrap::createInputChannel<InputHashType>)
-                 , (bp::arg("inputType"), bp::arg("name"), bp::arg("configuration")
+                 , (bp::arg("name"), bp::arg("configuration")
                  , bp::arg("onInputAvailableHandler") = bp::object()
                  , bp::arg("onEndOfStreamEventHandler") = bp::object()
                  , bp::arg("never_use") = boost::shared_ptr<InputHashType>()))
