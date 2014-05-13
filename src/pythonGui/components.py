@@ -76,7 +76,6 @@ class BaseComponent(Loadable, QObject):
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
-        component.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         return component
 
 
@@ -156,8 +155,6 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget.setReadOnly(True)
         for b in self.boxes[1:]:
             self.__displayWidget.addBox(b)
-        self.__displayWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
-        self.__displayWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         oldWidget.parent().addWidget(self.__displayWidget.widget)
         oldWidget.parent().removeWidget(oldWidget)
         oldWidget.parent().setCurrentWidget(self.__displayWidget.widget)
@@ -251,8 +248,6 @@ class EditableNoApplyComponent(BaseComponent):
         oldWidget.deleteLater()
         self.__editableWidget = factory.getClass(alias)(**self.__initParams)
         self.__editableWidget.setReadOnly(False)
-        self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
-        self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         proxyWidget.setWidget(self.__editableWidget.widget)
         self.__editableWidget.widget.show()
 
@@ -483,8 +478,6 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__editableWidget = factory.getClass(alias)(
             self.box, oldWidget.parent())
         self.__editableWidget.setReadOnly(False)
-        self.__editableWidget.widget.setWindowFlags(Qt.BypassGraphicsProxyWidget)
-        self.__editableWidget.widget.setAttribute(Qt.WA_NoSystemBackground, True)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         oldWidget.parent().layout().insertWidget(0, self.__editableWidget.widget)
         oldWidget.setParent(None)
