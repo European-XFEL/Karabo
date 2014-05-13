@@ -37,19 +37,12 @@ class BaseComponent(Loadable, QObject):
     def __init__(self, classAlias):
         super(BaseComponent, self).__init__()
 
-        self.__classAlias = classAlias
+        self.classAlias = classAlias
 
         # States, if the widget is associated with an online device from the distributed system
         self.__isOnline = False
         # Gives the position of the widget in the global coordinate system
         self.__windowPosition = None
-
-
-    def _getClassAlias(self):
-        return self.__classAlias
-    def _setClassAlias(self, classAlias):
-        self.__classAlias = classAlias
-    classAlias = property(fget=_getClassAlias, fset=_setClassAlias)
 
 
     def attributes(self):
@@ -566,10 +559,7 @@ class EditableApplyLaterComponent(BaseComponent):
             return
 
         # Update apply and reset buttons...
-        if value == self.__currentDisplayValue:
-            self.applyEnabled = False
-        else:
-            self.applyEnabled = True
+        self.applyEnabled = value != self.__currentDisplayValue
 
 
 class ChoiceComponent(BaseComponent):
@@ -581,8 +571,7 @@ class ChoiceComponent(BaseComponent):
 
 
     def copy(self):
-        copyComponent = ChoiceComponent(self.__classAlias, **self.__initParams)
-        return copyComponent
+        return ChoiceComponent(self.classAlias, **self.__initParams)
 
 
     def _getWidgetCategory(self):
