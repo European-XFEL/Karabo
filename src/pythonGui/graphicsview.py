@@ -808,6 +808,8 @@ class Raise(SimpleAction):
                             shapes[i].geometry()):
                         break
                 shapes[j], shapes[i:j] = shapes[i], shapes[i + 1:j + 1]
+        for w in self.parent.ilayout.iterWidgets(selected=True):
+            w.raise_()
         self.parent.update()
 
 
@@ -826,6 +828,8 @@ class Lower(SimpleAction):
                             shapes[i].geometry()):
                         break
                 shapes[j], shapes[j + 1:i + 1] = shapes[i], shapes[j:i]
+        for w in self.parent.ilayout.iterWidgets(selected=True):
+            w.lower()
         self.parent.update()
 
 
