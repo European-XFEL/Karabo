@@ -14,16 +14,16 @@ __all__ = ["ImageTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
+import icons
 
-from PyQt4.QtGui import QIcon
 
 class ImageTreeWidgetItem(BaseTreeWidgetItem):
     
     def __init__(self, path, parent, parentItem=None):
         
         super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
-        
-        self.setIcon(0, QIcon(":image"))
+
+        self.setIcon(0, icons.image)
         self.classAlias = "Image View"
         
         self.displayComponent = DisplayComponent(
