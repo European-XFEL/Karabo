@@ -27,13 +27,28 @@ public class VectorBoolean extends ArrayList<Boolean> {
         super(c);
     }
     
-    public VectorBoolean(String vecbool) {
-        throw new RuntimeException("VectorBoolean(String vecbool) not implemented yet");
+    public VectorBoolean(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            int i = Integer.parseInt(s);
+            this.add(i != 0 ? true : false);
+        }
     }
     
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while(this.size() < capacity) this.add(null);
+    }
+    
+    @Override
+    public String toString() {
+        String result = new String();
+        for (boolean b : this) {
+            result += b? "1" : "0";
+            result += ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

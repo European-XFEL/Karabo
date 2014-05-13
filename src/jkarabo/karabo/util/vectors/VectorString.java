@@ -29,11 +29,28 @@ public class VectorString extends ArrayList<String> {
         super(c);
     }
 
+    public VectorString(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(s);
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (String s : this) {
+            result += s + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }
