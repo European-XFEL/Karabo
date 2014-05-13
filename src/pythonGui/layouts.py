@@ -482,7 +482,8 @@ class ProxyWidget(QStackedWidget):
         if source is None:
             return
         for item in source.selectedItems():
-            if self.component.addBox(item.internalKey):
+            if (self.component is not None and
+                    self.component.addBox(item.internalKey)):
                 item.internalKey.configuration.addVisible()
                 event.accept()
 
