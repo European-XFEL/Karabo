@@ -834,8 +834,7 @@ class GraphicsView(QSvgWidget):
         super(GraphicsView, self).__init__(parent)
         
         self.inner = QWidget(self)
-        self.ilayout = FixedLayout()
-        self.inner.setLayout(self.ilayout)
+        self.inner.setLayout(FixedLayout())
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
@@ -900,6 +899,11 @@ class GraphicsView(QSvgWidget):
         self.inner.setAttribute(Qt.WA_TransparentForMouseEvents, value)
 
 
+    @property
+    def ilayout(self):
+        return self.inner.layout()
+
+
     def reset(self):
         if len(self.ilayout) == 0 and len(self.ilayout.shapes) == 0:
             return
@@ -913,8 +917,7 @@ class GraphicsView(QSvgWidget):
             self.saveSceneLayoutToFile()
 
         self.clean()
-        self.ilayout = FixedLayout()
-        self.inner.setLayout(self.ilayout)
+        self.inner.setLayout(FixedLayout())
         self.layout().addWidget(self.inner)
 
 
@@ -927,7 +930,6 @@ class GraphicsView(QSvgWidget):
             #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
-        self.ilayout = None
         self.layout().addWidget(self.inner)
 
 
@@ -991,7 +993,7 @@ class GraphicsView(QSvgWidget):
         self.tree = xmlparser.parse(filename)
         root = self.tree.getroot()
         self.clean()
-        self.ilayout = FixedLayout.load(root, widget=self.inner)
+        FixedLayout.load(root, widget=self.inner)
         self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
         self.designMode = True
         
