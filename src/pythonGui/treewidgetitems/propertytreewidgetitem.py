@@ -115,13 +115,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.__popupWidget.setInfo(info)
 
 
-### slots ###
     def onSetToDefault(self):
-        if self.editableComponent:
-            #self.editableComponent.value = self.defaultValue
-            self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
-            if not isinstance(self.editableComponent, ChoiceComponent):
-                self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
+        self.internalKey.descriptor.setDefault(self.internalKey)
 
 
     def onDisplayValueChanged(self, key, value):
