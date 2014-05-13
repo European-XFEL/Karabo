@@ -44,6 +44,7 @@ class DisplayHistogram(DisplayWidget):
         self.plot = self.widget.get_plot()
         self.curves = { }
         super(DisplayHistogram, self).__init__(None)
+        self.addBox(box)
 
 
     @property
