@@ -33,7 +33,11 @@ public abstract class TextSerializer<T extends Object> extends ClassInfo {
         return result;
     }
 
-    public abstract T load(String archive) throws IOException;
+    public abstract T load(byte[] archive) throws IOException;
+    
+    public T load(String archive) throws IOException {
+        return load(archive.getBytes());
+    }
     
     public T load(StringBuffer archive) throws IOException {
         return load(archive.toString());
@@ -41,10 +45,6 @@ public abstract class TextSerializer<T extends Object> extends ClassInfo {
 
     public T load(InputStream archive) throws IOException {
         return load(archive.toString()); // Creates a copy, but may be overridden for more performance
-    }
-
-    public T load(byte[] archive) throws IOException {
-        return load(new String(archive));
     }
 
     public T load(byte[] archive, int nBytes) throws IOException {
