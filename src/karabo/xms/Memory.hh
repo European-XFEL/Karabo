@@ -15,17 +15,10 @@
 #include <karabo/util/Factory.hh>
 #include <karabo/io/BinarySerializer.hh>
 
+#include <karabo/log/Logger.hh>
+
 namespace karabo {
     namespace xms {
-
-        enum MemoryStatus {
-
-            EMPTY = 0,
-            UNREAD,
-            READ,
-            CACHED,
-            CAN_DELETE
-        };
 
         template <class T>
         class Memory {
@@ -43,11 +36,11 @@ namespace karabo {
 
             typedef std::vector<std::vector<int> > ChunkStatus;
             typedef std::vector<int> ChannelStatus;
-            
-            
+
+
             typedef std::vector<size_t> ChunkUsers;
             typedef std::vector<ChunkUsers> ChannelUsers;
-            
+
             static ChannelUsers m_cacheUsers;
 
 
@@ -60,8 +53,8 @@ namespace karabo {
             static SerializedChannels m_serializedCache;
 
             static boost::mutex m_accessMutex;
-            
-          
+
+
             static boost::shared_ptr<karabo::io::BinarySerializer<DataType> > m_serializer;
 
             static const int MAX_N_CHANNELS = 64;
@@ -92,36 +85,66 @@ namespace karabo {
 
             static size_t registerChannel(const std::string& name = "") {
                 boost::mutex::scoped_lock lock(m_accessMutex);
-                for (size_t i = 0; i < m_cache.size(); ++i) { // Find free slot
-                    if (m_channelStatus[i] == EMPTY) { // Found a free channel
+                for (size_t i = 0; i < m_cache.size(); ++i) { // Find free channel
+                    if (m_channelStatus[i] == 0) { // Found a free channel
                         if (!name.empty()) m_name2Idx[name] = i;
-                        m_channelStatus[i] = UNREAD;
+                        m_channelStatus[i] = 1;
                         return i;
                     }
                 }
                 throw KARABO_MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
             }
 
+            static void unregisterChannel(const size_t channelIdx) {
+                decrementChannelUsage(channelIdx);
+            }
+
+            static void incrementChannelUsage(const size_t& channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                m_channelStatus[channelIdx]++;
+            }
+
+            static void decrementChannelUsage(const size_t& channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                if (--m_channelStatus[channelIdx] == 0) {
+                    for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
+                        m_chunkStatus[channelIdx][i] = 0;
+                        m_cache[channelIdx][i].clear();
+                    }
+                }
+            }
+
             static size_t registerChunk(const size_t channelIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 for (size_t i = 0; i < m_cache[channelIdx].size(); ++i) { // Find free chunk
-                    if (m_chunkStatus[channelIdx][i] == EMPTY) { // Found a free channel
+                    if (m_chunkStatus[channelIdx][i] == 0) { // Found a free chunk
                         m_cache[channelIdx][i] = Data();
-                        m_chunkStatus[channelIdx][i] = UNREAD;
+                        m_chunkStatus[channelIdx][i] = 1;
                         return i;
                     }
                 }
                 throw KARABO_MEMORY_INIT_EXCEPTION("Total number chunks is exhausted");
             }
-            
-            static void subscribeChunk(const size_t & channelIdx, const size_t & chunkIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cacheUsers[channelIdx][chunkIdx]++;
+
+            static void unregisterChunk(const size_t channelIdx, const size_t chunkIdx) {
+                decrementChunkUsage(channelIdx, chunkIdx);
             }
-            
-            static void unsubscribeChunk(const size_t & channelIdx, const size_t & chunkIdx) {
+
+            static void incrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cacheUsers[channelIdx][chunkIdx]--;
+                m_chunkStatus[channelIdx][chunkIdx]++;
+            }
+
+            static void decrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                if (--m_chunkStatus[channelIdx][chunkIdx] == 0) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Freeing memory for [" << channelIdx << "][" << chunkIdx << "]";
+                    m_cache[channelIdx][chunkIdx].clear();
+                }
+            }
+
+            static void clearChunkData(const size_t & channelIdx, const size_t & chunkIdx) {
+                m_cache[channelIdx][chunkIdx].clear();
             }
 
             static int getChannelStatus(const size_t channelIdx) {
@@ -193,13 +216,13 @@ namespace karabo {
             }
 
             static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
-            
+
                 return *(m_serializedCache[channelIdx][chunkIdx]);
             }
 
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
-                
-                
+
+
                 unsigned int nData = header.get<unsigned int>("nData");
                 //std::cout<<header<<std::endl;
                 if (!m_serializer) m_serializer = karabo::io::BinarySerializer<DataType>::create("Bin");
@@ -222,31 +245,14 @@ namespace karabo {
             static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
                 m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
             }
-            
-            
-            static void clearChannel(const size_t channelIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cache[channelIdx].clear();
-                m_channelStatus[channelIdx] = EMPTY;
-                for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {     
-                    m_chunkStatus[channelIdx][i] = EMPTY;
-                }
-            }
-
-            static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-            
-                if(m_cacheUsers[channelIdx][chunkIdx] == 0){
-                    m_cache[channelIdx][chunkIdx].clear();
-                    m_chunkStatus[channelIdx][chunkIdx] = EMPTY;
-                }
-            }
 
             static size_t size(const size_t channelIdx, const size_t chunkIdx) {
                 return m_cache[channelIdx][chunkIdx].size();
             }
 
         };
+
+        /********************* TEMPLATE SPECIALIZATION FOR VECTOR<CHAR> ******************/
 
         template <>
         class Memory<std::vector<char> > {
@@ -261,15 +267,15 @@ namespace karabo {
             typedef boost::shared_ptr<SerializedChunk> SerializedChunkPointer;
             typedef std::vector< SerializedChunkPointer > SerializedChunks;
             typedef std::vector< SerializedChunks > SerializedChannels;
-            
-            
+
+
             typedef std::vector<size_t> ChunkUsers;
             typedef std::vector<ChunkUsers> ChannelUsers;
-            
+
             static ChannelUsers m_cacheUsers;
 
             static std::map<std::string, size_t> m_name2Idx;
-            
+
             typedef std::vector<std::vector<int> > ChunkStatus;
             typedef std::vector<int> ChannelStatus;
 
@@ -279,15 +285,15 @@ namespace karabo {
             static Channels m_cache;
             static boost::mutex m_accessMutex;
             static SerializedChannels m_serializedCache;
-            
-        
+
+
 
 
             static const int MAX_N_CHANNELS = 64;
             static const int MAX_N_CHUNKS = 512;
 
             Memory() {
-                
+
             }
 
         public:
@@ -312,36 +318,63 @@ namespace karabo {
 
             static size_t registerChannel(const std::string& name = "") {
                 boost::mutex::scoped_lock lock(m_accessMutex);
-                for (size_t i = 0; i < m_cache.size(); ++i) { // Find free slot
-                    if (m_channelStatus[i] == EMPTY) { // Found a free channel
+                for (size_t i = 0; i < m_cache.size(); ++i) { // Find free channel
+                    if (m_channelStatus[i] == 0) { // Found a free channel
                         if (!name.empty()) m_name2Idx[name] = i;
-                        m_channelStatus[i] = UNREAD;
+                        m_channelStatus[i] = 1;
                         return i;
                     }
                 }
-                throw KARABO_MEMORY_INIT_EXCEPTION("Total number of channels is exhausted");
+                throw KARABO_MEMORY_INIT_EXCEPTION("Total number channels is exhausted");
+            }
+
+            static void unregisterChannel(const size_t channelIdx) {
+                decrementChannelUsage(channelIdx);
+            }
+
+            static void incrementChannelUsage(const size_t& channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                m_channelStatus[channelIdx]++;
+            }
+
+            static void decrementChannelUsage(const size_t& channelIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                if (--m_channelStatus[channelIdx] == 0) {
+                    for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
+                        m_chunkStatus[channelIdx][i] = 0;
+                        m_cache[channelIdx][i].clear();
+                    }
+                }
             }
 
             static size_t registerChunk(const size_t channelIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 for (size_t i = 0; i < m_cache[channelIdx].size(); ++i) { // Find free chunk
-                    if (m_chunkStatus[channelIdx][i] == EMPTY) { // Found a free channel
+                    if (m_chunkStatus[channelIdx][i] == 0) { // Found a free chunk
                         m_cache[channelIdx][i] = Data();
-                        m_chunkStatus[channelIdx][i] = UNREAD;
+                        m_chunkStatus[channelIdx][i] = 1;
                         return i;
                     }
                 }
                 throw KARABO_MEMORY_INIT_EXCEPTION("Total number of chunks is exhausted");
             }
-            
-            static void subscribeChunk(const size_t & channelIdx, const size_t & chunkIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cacheUsers[channelIdx][chunkIdx]++;
+
+            static void unregisterChunk(const size_t channelIdx, const size_t chunkIdx) {
+                decrementChunkUsage(channelIdx, chunkIdx);
             }
-            
-            static void unsubscribeChunk(const size_t & channelIdx, const size_t & chunkIdx) {
+
+            static void incrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cacheUsers[channelIdx][chunkIdx]--;
+                m_chunkStatus[channelIdx][chunkIdx]++;
+            }
+
+            static void decrementChunkUsage(const size_t& channelIdx, const size_t& chunkIdx) {
+                boost::mutex::scoped_lock lock(m_accessMutex);
+                if (--m_chunkStatus[channelIdx][chunkIdx] == 0) m_cache[channelIdx][chunkIdx].clear();
+            }
+
+            static void clearChunkData(const size_t & channelIdx, const size_t & chunkIdx) {
+                m_cache[channelIdx][chunkIdx].clear();
             }
 
             static int getChannelStatus(const size_t channelIdx) {
@@ -404,21 +437,19 @@ namespace karabo {
             static void cacheAsContiguousBlock(const size_t channelIdx, const size_t chunkIdx) {
                 SerializedChunkPointer scp = SerializedChunkPointer(new SerializedChunk);
                 Memory<std::vector<char> >::readAsContiguosBlock(scp->first, scp->second, channelIdx, chunkIdx);
-        
+
                 m_serializedCache[channelIdx][chunkIdx] = scp;
             }
 
             static const std::pair<std::vector<char>, karabo::util::Hash>& readContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
-        
+
                 return *(m_serializedCache[channelIdx][chunkIdx]);
             }
 
             static void clearContiguousBlockCache(const size_t channelIdx, const size_t chunkIdx) {
-        
+
                 m_serializedCache[channelIdx][chunkIdx] = SerializedChunkPointer();
             }
-            
-           
 
             static void writeAsContiguosBlock(const std::vector<char>& buffer, const karabo::util::Hash& header, const size_t channelIdx, const size_t chunkIdx) {
                 unsigned int nData = header.get<unsigned int>("nData");
@@ -432,24 +463,6 @@ namespace karabo {
                     *it = DataPointer(new DataType(byteSize));
                     std::memcpy(&(**it)[0], &buffer[offset], byteSize);
                     offset += byteSize;
-                }
-            }
-
-            static void clearChannel(const size_t channelIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_cache[channelIdx].clear();
-                m_channelStatus[channelIdx] = EMPTY;
-                for (size_t i = 0; i < m_chunkStatus[channelIdx].size(); ++i) {
-                    m_chunkStatus[channelIdx][i] = EMPTY;
-                }
-            }
-
-            static void clearChunk(const size_t channelIdx, const size_t chunkIdx) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                //m_cacheUsers[channelIdx][chunkIdx]--;
-                if(m_cacheUsers[channelIdx][chunkIdx] == 0){
-                        m_cache[channelIdx][chunkIdx].clear();
-                        m_chunkStatus[channelIdx][chunkIdx] = EMPTY;
                 }
             }
 
@@ -475,13 +488,13 @@ namespace karabo {
         template <class T>
         typename Memory<T>::SerializedChannels Memory<T>::m_serializedCache = typename Memory<T>::SerializedChannels(MAX_N_CHANNELS, typename Memory<T>::SerializedChunks(MAX_N_CHUNKS));
 
-        
+
         template <class T>
         typename Memory<T>::ChannelUsers Memory<T>::m_cacheUsers = typename Memory<T>::ChannelUsers(MAX_N_CHANNELS, typename Memory<T>::ChunkUsers(MAX_N_CHUNKS, 0));
 
-        
-        
-        
+
+
+
         template <class T>
         std::map<std::string, size_t> Memory<T>::m_name2Idx;
 
