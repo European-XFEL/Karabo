@@ -7,7 +7,7 @@
 
 """This module contains classes which define different enumerators."""
 
-__all__ = ["NavigationItemTypes", "AccessMode", "ConfigChangeTypes"]
+__all__ = ["NavigationItemTypes", "AccessMode"]
 
 class AccessLevel(object):
     OBSERVER = 0
@@ -31,12 +31,6 @@ class AccessMode(object): # TODO use INTs?
     INITONLY = 1
     READONLY = 2
     RECONFIGURABLE = 4
-
-
-class ConfigChangeTypes(object):
-    DEVICE_CLASS_CONFIG_CHANGED = 0 # new configuration for DEVICE_CLASS
-    DEVICE_INSTANCE_CONFIG_CHANGED = 1 # new configuration for DEVICE_INSTANCE
-    DEVICE_INSTANCE_CURRENT_VALUES_CHANGED = 2 # current values for DEVICE_INSTANCE changed
 
 
 class CompositionMode(object):
