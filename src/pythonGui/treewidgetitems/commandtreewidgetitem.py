@@ -13,18 +13,17 @@ __all__ = ["CommandTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
+import icons
 import manager
 
-#from PyQt4.QtCore import *
-from PyQt4.QtGui import QIcon, QPushButton
+from PyQt4.QtGui import QPushButton
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
     
     def __init__(self, command, path, parent, parentItem=None):
         super(CommandTreeWidgetItem, self).__init__(path, parent, parentItem)
-        
-        self.setIcon(0, QIcon(":slot"))
-        
+        self.setIcon(0, icons.slot)
+
         # Create empty label for 2nd column (current value on device)
         self.displayComponent = DisplayComponent(
             "Value Field", self.internalKey, self.treeWidget())

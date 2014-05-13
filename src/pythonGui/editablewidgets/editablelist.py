@@ -70,7 +70,7 @@ class Label(QLabel):
 
 class EditableList(EditableWidget):
     category = "List"
-    alias = "Histogram"
+    alias = "Plot"
 
     def __init__(self, box, parent):
         self.widget = Label(parent)
