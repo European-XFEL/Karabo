@@ -254,7 +254,7 @@ namespace karathon {
             karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
 
             channel->setInstanceId(m_instanceId);
-            channel->setInputHandlerType("python");
+            channel->setInputHandlerType("python", std::string(typeid (InputType).name()));
             if (onInputAvailableHandler != bp::object()) {
                 channel->registerIOEventHandler(onInputAvailableHandler);
             }
