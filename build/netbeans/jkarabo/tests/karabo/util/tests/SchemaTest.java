@@ -260,7 +260,7 @@ public class SchemaTest {
         assertTrue("exampleAlias4".equals(m_schema.getAliasAsString("exampleKey4")));
 
         String aliasStr = m_schema.getAliasAsString("exampleKey5");
-        assertTrue("[10, 20, 30]".equals(aliasStr));
+        assertTrue("10,20,30".equals(aliasStr));
     }
 
     @Test

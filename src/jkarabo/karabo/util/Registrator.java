@@ -26,7 +26,6 @@ public class Registrator {
             Class.forName("karabo.util.BinarySerializerHash");
             Class.forName("karabo.util.BinarySerializerSchema");
             Class.forName("karabo.util.HashBinarySerializer");
-            Class.forName("karabo.util.HashXmlSerializer");
             Class.forName("karabo.util.SchemaBinarySerializer");
             
             Class.forName("karabo.io.AbstractInput");
@@ -45,6 +44,7 @@ public class Registrator {
             
             
             Class.forName("karabo.util.TextSerializer");
+            Class.forName("karabo.util.TextSerializerHash");
             Class.forName("karabo.util.HashXmlSerializer");
             Class.forName("karabo.util.SchemaXmlSerializer");
             
