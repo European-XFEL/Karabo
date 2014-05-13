@@ -336,7 +336,7 @@ class _Manager(QObject):
 
 
     def handleSystemTopology(self, config):
-        # Update navigation treemodel
+        # Update navigation and project treemodel
         self.systemTopology.updateData(config)
         # Update project model
         self.projectTopology.systemTopologyChanged(config)
