@@ -680,12 +680,12 @@ namespace karabo {
 
             template <class InputType>
             boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, 
-            const boost::function<void (const karabo::io::AbstractInput::Pointer&) >& onInputAvailableHandler = boost::function<void (const karabo::io::AbstractInput::Pointer&) >(), 
+            const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
             const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
                 using namespace karabo::util;
                 karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
                 channel->setInstanceId(m_instanceId);
-                channel->setInputHandlerType("c++");
+                channel->setInputHandlerType("c++", std::string(typeid (InputType).name()));
                 if (!onInputAvailableHandler.empty()) {
                     channel->registerIOEventHandler(onInputAvailableHandler);
                 }
