@@ -263,13 +263,10 @@ class ProjectModel(QStandardItemModel):
         This function updates the status (on/offline) of the project devices and
         the server/classes which are available over the network.
         """
-        print "changed"
-        print config
         if self.systemTopology is None:
             self.systemTopology = config
         else:
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-        print self.systemTopology
 
         # Update relevant
         self.updateNeeded()

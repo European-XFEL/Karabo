@@ -73,75 +73,6 @@ class CustomMiddlePanel(QScrollArea):
         self.__acDesignMode.setEnabled(isConnectedToServer)
         self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
        
-        text = "Open"
-        self.__tbOpen = QToolButton(self)
-        self.__tbOpen.setIcon(QIcon(":open"))
-        self.__tbOpen.setToolTip(text)
-        self.__tbOpen.setStatusTip(text)
-        self.__tbOpen.setPopupMode(QToolButton.InstantPopup)
-        
-        text = "Open layout"
-        self.__acOpenLayout = QAction(QIcon(":open"), text, self)
-        self.__acOpenLayout.setStatusTip(text)
-        self.__acOpenLayout.setToolTip(text)
-        self.__acOpenLayout.triggered.connect(
-            self.graphicsview.openSceneLayoutFromFile)
-        
-        text = "Open configurations"
-        self.__acOpenConfigurations = QAction(QIcon(":open"), text, self)
-        self.__acOpenConfigurations.setStatusTip(text)
-        self.__acOpenConfigurations.setToolTip(text)
-        self.__acOpenConfigurations.setEnabled(False)
-        self.__acOpenConfigurations.triggered.connect(
-            self.graphicsview.openSceneConfigurationsFromFile)
-        
-        text = "Open layout and configurations"
-        self.__acOpenLayoutConfigurations = QAction(QIcon(":open"), text, self)
-        self.__acOpenLayoutConfigurations.setStatusTip(text)
-        self.__acOpenLayoutConfigurations.setToolTip(text)
-        self.__acOpenLayoutConfigurations.triggered.connect(
-            self.graphicsview.openSceneLayoutConfigurationsFromFile)
-        
-        self.__mOpen = QMenu()
-        self.__mOpen.addAction(self.__acOpenLayout)
-        self.__mOpen.addAction(self.__acOpenConfigurations)
-        self.__mOpen.addAction(self.__acOpenLayoutConfigurations)
-        self.__tbOpen.setMenu(self.__mOpen)
-
-        text = "Save as"
-        self.__tbSaveAs = QToolButton(self)
-        self.__tbSaveAs.setIcon(QIcon(":save-as"))
-        self.__tbSaveAs.setToolTip(text)
-        self.__tbSaveAs.setStatusTip(text)
-        self.__tbSaveAs.setPopupMode(QToolButton.InstantPopup)
-        
-        text = "Save layout as"
-        self.__acLayoutSaveAs = QAction(QIcon(":save-as"), text, self)
-        self.__acLayoutSaveAs.setStatusTip(text)
-        self.__acLayoutSaveAs.setToolTip(text)
-        self.__acLayoutSaveAs.triggered.connect(
-            self.graphicsview.saveSceneLayoutToFile)
-        
-        text = "Save configurations as"
-        self.__acConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
-        self.__acConfigurationsSaveAs.setStatusTip(text)
-        self.__acConfigurationsSaveAs.setToolTip(text)
-        self.__acConfigurationsSaveAs.triggered.connect(
-            self.graphicsview.saveSceneConfigurationsToFile)
-        
-        text = "Save layout and configurations as"
-        self.__acLayoutConfigurationsSaveAs = QAction(QIcon(":save-as"), text, self)
-        self.__acLayoutConfigurationsSaveAs.setStatusTip(text)
-        self.__acLayoutConfigurationsSaveAs.setToolTip(text)
-        self.__acLayoutConfigurationsSaveAs.triggered.connect(
-            self.graphicsview.saveSceneLayoutConfigurationsToFile)
-        
-        self.__mSaveAs = QMenu()
-        self.__mSaveAs.addAction(self.__acLayoutSaveAs)
-        self.__mSaveAs.addAction(self.__acConfigurationsSaveAs)
-        self.__mSaveAs.addAction(self.__acLayoutConfigurationsSaveAs)
-        self.__tbSaveAs.setMenu(self.__mSaveAs)
-
         self.graphicsactions = list(self.graphicsview.add_actions(self))
         
 
@@ -153,10 +84,6 @@ class CustomMiddlePanel(QScrollArea):
         parent.addToolBar(toolBar)
         self.graphicsview.setFocusProxy(toolBar)
         toolBar.setFocusPolicy(Qt.StrongFocus)
-        
-        toolBar.addSeparator()
-        toolBar.addWidget(self.__tbOpen)
-        toolBar.addWidget(self.__tbSaveAs)
         
         toolBar.addSeparator()
         #toolBar.addWidget(self.__tbAddShape)
