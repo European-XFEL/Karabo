@@ -14,9 +14,8 @@ __all__ = ["AttributeTreeWidgetItem"]
 
 from basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
+import icons
 
-#from PyQt4.QtCore import *
-from PyQt4.QtGui import QIcon
 
 class AttributeTreeWidgetItem(BaseTreeWidgetItem):
 
@@ -24,9 +23,7 @@ class AttributeTreeWidgetItem(BaseTreeWidgetItem):
     def __init__(self, path, parent, parentItem=None):
         
         super(AttributeTreeWidgetItem, self).__init__(path, parent, parentItem)
-        
-        self.setIcon(0, QIcon(":signal"))
-        
+        self.setIcon(0, icons.signal)
         self.displayComponent = DisplayComponent("Value Field", key=self.internalKey)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
