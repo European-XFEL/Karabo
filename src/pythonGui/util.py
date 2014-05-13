@@ -1,6 +1,18 @@
 import weakref
 
 class Weak(object):
+    """ this declares a member variable of a class to be weak
+
+    use as follows:
+
+        class Spam(object):
+            ham = Weak()
+
+            def __init__(self, ham):
+                self.ham = ham # use like a normal variable
+
+    to define a weak variable ham.  """
+
     def __get__(self, instance, owner):
         return instance.__dict__[self]()
 
@@ -14,6 +26,7 @@ class Weak(object):
 
 
 class SignalBlocker(object):
+    """ Block signals from a QWidget in a with statement """
     def __init__(self, object):
         self.object = object
 
