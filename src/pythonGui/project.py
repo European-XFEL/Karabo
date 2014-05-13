@@ -74,6 +74,8 @@ class Project(QObject):
         elif isinstance(object, Scene):
             self.scenes.remove(object)
         # TODO: for others as well
+        
+        del object
 
     
     def save(self, overwrite=False):

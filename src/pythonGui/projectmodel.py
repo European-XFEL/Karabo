@@ -107,14 +107,31 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setEditable(False)
 
                 # Update icon on availability of device
-                if self.isDeviceOnline(device.path):
+                if self.isDeviceOnline(device):
                     status = self.systemTopology.getAttribute("device.{}".format(device.path), "status")
                     if status == "error":
                         leafItem.setIcon(icons.deviceInstanceError)
                     else:
                         leafItem.setIcon(icons.deviceInstance)
                 else:
-                    leafItem.setIcon(icons.deviceOffline)
+                    # There are three flavours of 'offline'
+                    # (1) connected to server, but a) server of project device
+                    # is not available or b) class plugin is not available on
+                    # server
+                    # (2) not connected to server so really offline
+                    iconSet = False
+                    if self.systemTopology is not None:
+                        if not self.isDeviceServerAvailable(device):
+                            leafItem.setIcon(icons.deviceOfflineNoServer)
+                            iconSet = True
+                        else:
+                            if not self.isDevicePluginAvailable(device):
+                                leafItem.setIcon(icons.deviceOfflineNoPlugin)
+                                iconSet = True
+                    
+                    # Set icon, if not done yet
+                    if not iconSet:
+                        leafItem.setIcon(icons.deviceOffline)
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -187,12 +204,37 @@ class ProjectModel(QStandardItemModel):
             self.pluginDialog.updateServerTopology(self.systemTopology)
 
 
-    def isDeviceOnline(self, deviceId):
+    def isDeviceOnline(self, device):
         """
-        Returns, if the \deviceId is online or not.
+        Returns, if the \device is online or not, classId is considered as well.
         """
-        return self.systemTopology is not None and \
-               self.systemTopology.has("device.{}".format(deviceId))
+        path = "device.{}".format(device.path)
+        return (self.systemTopology is not None and 
+                self.systemTopology.has(path) and 
+                self.systemTopology.getAttribute(path, "serverId") == device.futureConfig.get("serverId") and
+                self.systemTopology.getAttribute(path, "classId") == device.classId)
+
+
+    def isDeviceServerAvailable(self, device):
+        """
+        Returns, if the server on which the \device should live,
+        is available or not.
+        """
+        path = "server.{}".format(device.futureConfig.get("serverId"))
+        return (self.systemTopology is not None and
+                self.systemTopology.has(path))
+
+
+    def isDevicePluginAvailable(self, device):
+        """
+        Returns, if the server and plugin combination on which the \device is
+        based, is available or not.
+        """
+        path = "server.{}".format(device.futureConfig.get("serverId"))
+        return (self.systemTopology is not None and
+                self.systemTopology.has(path) and
+                self.systemTopology.hasAttribute(path, "deviceClasses") and
+                device.classId in self.systemTopology.getAttribute(path, "deviceClasses"))
 
 
     def checkSystemTopology(self):
@@ -221,12 +263,13 @@ class ProjectModel(QStandardItemModel):
         This function updates the status (on/offline) of the project devices and
         the server/classes which are available over the network.
         """
-        # TODO: remove copying hash
-        config = copy(config)
+        print "changed"
+        print config
         if self.systemTopology is None:
             self.systemTopology = config
         else:
             self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
+        print self.systemTopology
 
         # Update relevant
         self.updateNeeded()
@@ -383,16 +426,15 @@ class ProjectModel(QStandardItemModel):
         config = Hash("deviceId", self.pluginDialog.deviceId,
                       "serverId", self.pluginDialog.serverId)
         
-        if device is None:
-            # Get project name
-            project = self.currentProject()
-            # Add new device
-            device = self.addDevice(project, self.pluginDialog.classId, config)
-        else:
-            # Overwrite existing device
-            device.classId = self.pluginDialog.classId
-            device.path = self.pluginDialog.deviceId
-            device.merge(config)
+        # Get project name
+        project = self.currentProject()
+        
+        if device is not None:
+            # Remove old device configuration
+            project.remove(device)
+        
+        # Add new device
+        device = self.addDevice(project, self.pluginDialog.classId, config)
         
         self.updateData()
         self.selectItem(device)
@@ -499,10 +541,9 @@ class ProjectModel(QStandardItemModel):
         if not self.checkSystemTopology():
             return
 
-        deviceId = device.path
-        # Check whether deviceId is already online
-        if self.isDeviceOnline(deviceId):
-            conf = manager.Manager().getDevice(deviceId)
+        # Check whether device is already online
+        if self.isDeviceOnline(device):
+            conf = manager.Manager().getDevice(device.path)
         else:
             conf = device
 
@@ -543,9 +584,8 @@ class ProjectModel(QStandardItemModel):
         
         project = self.currentProject()
         for device in project.devices:
-            deviceId = device.path
-            if self.isDeviceOnline(deviceId):
-                manager.Manager().killDevice(deviceId)
+            if self.isDeviceOnline(device):
+                manager.Manager().killDevice(device.path)
 
 
     def onEditScene(self):
@@ -566,8 +606,7 @@ class ProjectModel(QStandardItemModel):
         
         # Remove data from project
         self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
-        # Remove data from model
-        self.removeRow(index.row(), index.parent())
+        self.updateData()
 
 
     def onConfigurationNewDescriptor(self, conf):
