@@ -25,11 +25,28 @@ public class VectorShort extends ArrayList<Short> {
         super(c);
     }
 
+    public VectorShort(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Short.parseShort(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Short i : this) {
+            result += i.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

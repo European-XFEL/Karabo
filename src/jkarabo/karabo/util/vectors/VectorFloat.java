@@ -29,11 +29,28 @@ public class VectorFloat extends ArrayList<Float> {
         super(c);
     }
 
+    public VectorFloat(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Float.parseFloat(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Float f : this) {
+            result += f.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

@@ -25,11 +25,28 @@ public class VectorLong extends ArrayList<Long> {
         super(c);
     }
 
+    public VectorLong(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Long.parseLong(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Long l : this) {
+            result += l.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

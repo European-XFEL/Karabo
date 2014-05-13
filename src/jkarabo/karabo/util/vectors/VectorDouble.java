@@ -25,11 +25,28 @@ public class VectorDouble extends ArrayList<Double> {
         super(c);
     }
 
+    public VectorDouble(String v) {
+        super();
+        String[] sa = v.split("[,]");
+        for (String s : sa) {
+            this.add(Double.parseDouble(s));
+        }
+    }
+
     @Override
     public void ensureCapacity(int capacity) {
         super.ensureCapacity(capacity);
         while (this.size() < capacity) {
             this.add(null);
         }
+    }
+
+    @Override
+    public String toString() {
+        String result = new String();
+        for (Double d : this) {
+            result += d.toString() + ",";
+        }
+        return result.substring(0, result.length() - 1);
     }
 }

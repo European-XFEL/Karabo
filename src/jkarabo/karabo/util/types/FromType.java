@@ -179,4 +179,59 @@ public class FromType<ValueType> {
         }
     }
 
+    public static String toString(Object object) {
+        if (object instanceof Boolean) {
+            return ((Boolean) object).toString();
+        } else if (object instanceof VectorBoolean) {
+            return ((VectorBoolean) object).toString();
+        } else if (object instanceof Character) {
+            return ((Character) object).toString();
+        } else if (object instanceof VectorCharacter) {
+            return ((VectorCharacter) object).toString();
+        } else if (object instanceof Byte) {
+            return ((Byte) object).toString();
+        } else if (object instanceof VectorByte) {
+            return ((VectorByte) object).toString();
+        } else if (object instanceof Short) {
+            return ((Short) object).toString();
+        } else if (object instanceof VectorShort) {
+            return ((VectorShort) object).toString();
+        } else if (object instanceof Integer) {
+            return ((Integer) object).toString();
+        } else if (object instanceof VectorInteger) {
+            return ((VectorInteger) object).toString();
+        } else if (object instanceof Long) {
+            return ((Long) object).toString();
+        } else if (object instanceof VectorLong) {
+            return ((VectorLong) object).toString();
+        } else if (object instanceof Float) {
+            return ((Float) object).toString();
+        } else if (object instanceof VectorFloat) {
+            return ((VectorFloat) object).toString();
+        } else if (object instanceof Double) {
+            return ((Double) object).toString();
+        } else if (object instanceof VectorDouble) {
+            return ((VectorDouble) object).toString();
+        } else if (object instanceof ComplexDouble) {
+            return ((ComplexDouble)object).toString();
+        } else if (object instanceof VectorComplexDouble) {
+            return ((VectorComplexDouble)object).toString();
+        } else if (object instanceof String) {
+            return (String)object;
+        } else if (object instanceof VectorString) {
+            return ((VectorString)object).toString();
+        } else if (object instanceof Hash) {
+            return ((Hash)object).toString();
+        } else if (object instanceof VectorHash) {
+            return ((VectorHash)object).toString();
+        } else if (object instanceof Schema) {
+            return ((Schema)object).toString();
+        } else if (object instanceof CppNone) {
+            return ((CppNone)object).toString();
+        } else if (object instanceof VectorNone) {
+            return ((VectorNone)object).toString();
+        }
+        throw new RuntimeException("Cannot convert to string the object with UNKNOWN reference type");
+    }
+
 }
