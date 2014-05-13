@@ -199,7 +199,7 @@ class Bool(hashtypes.Bool):
 
 class Vector(hashtypes.Vector):
     __metaclass__ = Monkey
-    classAlias = 'Histogram'
+    classAlias = 'Plot'
 
 
 class Object(object):
