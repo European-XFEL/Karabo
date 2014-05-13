@@ -9,11 +9,11 @@ import java.util.Map;
 import karabo.util.CppNone;
 import karabo.util.Hash;
 import karabo.util.Schema;
-import karabo.util.types.Types;
 import karabo.util.vectors.VectorBoolean;
 import karabo.util.vectors.VectorByte;
 import karabo.util.vectors.VectorCharacter;
 import karabo.util.vectors.VectorComplexDouble;
+import karabo.util.vectors.VectorComplexFloat;
 import karabo.util.vectors.VectorDouble;
 import karabo.util.vectors.VectorFloat;
 import karabo.util.vectors.VectorHash;
@@ -56,6 +56,8 @@ public class FromType<ValueType> {
         m_typeinfo.put(double.class, Types.ReferenceType.DOUBLE);
         m_typeinfo.put(Double.class, Types.ReferenceType.DOUBLE);
         m_typeinfo.put(VectorDouble.class, Types.ReferenceType.VECTOR_DOUBLE);
+        m_typeinfo.put(ComplexFloat.class, Types.ReferenceType.COMPLEX_FLOAT);
+        m_typeinfo.put(VectorComplexFloat.class, Types.ReferenceType.VECTOR_COMPLEX_FLOAT);
         m_typeinfo.put(ComplexDouble.class, Types.ReferenceType.COMPLEX_DOUBLE);
         m_typeinfo.put(VectorComplexDouble.class, Types.ReferenceType.VECTOR_COMPLEX_DOUBLE);
         m_typeinfo.put(String.class, Types.ReferenceType.STRING);
@@ -91,6 +93,7 @@ public class FromType<ValueType> {
                 || clazz == Long.class
                 || clazz == Float.class
                 || clazz == Double.class
+                || clazz == ComplexFloat.class
                 || clazz == ComplexDouble.class
                 || clazz == String.class
                 || clazz == Void.class
@@ -105,6 +108,7 @@ public class FromType<ValueType> {
                 || clazz == VectorLong.class
                 || clazz == VectorFloat.class
                 || clazz == VectorDouble.class
+                || clazz == VectorComplexFloat.class
                 || clazz == VectorComplexDouble.class
                 || clazz == VectorString.class
                 || clazz == VectorHash.class
@@ -156,6 +160,10 @@ public class FromType<ValueType> {
             return Types.ReferenceType.DOUBLE;
         } else if (object instanceof VectorDouble) {
             return Types.ReferenceType.VECTOR_DOUBLE;
+        } else if (object instanceof ComplexFloat) {
+            return Types.ReferenceType.COMPLEX_FLOAT;
+        } else if (object instanceof VectorComplexFloat) {
+            return Types.ReferenceType.VECTOR_COMPLEX_FLOAT;
         } else if (object instanceof ComplexDouble) {
             return Types.ReferenceType.COMPLEX_DOUBLE;
         } else if (object instanceof VectorComplexDouble) {
@@ -212,24 +220,28 @@ public class FromType<ValueType> {
             return ((Double) object).toString();
         } else if (object instanceof VectorDouble) {
             return ((VectorDouble) object).toString();
+        } else if (object instanceof ComplexFloat) {
+            return ((ComplexFloat) object).toString();
+        } else if (object instanceof VectorComplexFloat) {
+            return ((VectorComplexFloat) object).toString();
         } else if (object instanceof ComplexDouble) {
-            return ((ComplexDouble)object).toString();
+            return ((ComplexDouble) object).toString();
         } else if (object instanceof VectorComplexDouble) {
-            return ((VectorComplexDouble)object).toString();
+            return ((VectorComplexDouble) object).toString();
         } else if (object instanceof String) {
-            return (String)object;
+            return (String) object;
         } else if (object instanceof VectorString) {
-            return ((VectorString)object).toString();
+            return ((VectorString) object).toString();
         } else if (object instanceof Hash) {
-            return ((Hash)object).toString();
+            return ((Hash) object).toString();
         } else if (object instanceof VectorHash) {
-            return ((VectorHash)object).toString();
+            return ((VectorHash) object).toString();
         } else if (object instanceof Schema) {
-            return ((Schema)object).toString();
+            return ((Schema) object).toString();
         } else if (object instanceof CppNone) {
-            return ((CppNone)object).toString();
+            return ((CppNone) object).toString();
         } else if (object instanceof VectorNone) {
-            return ((VectorNone)object).toString();
+            return ((VectorNone) object).toString();
         }
         throw new RuntimeException("Cannot convert to string the object with UNKNOWN reference type");
     }
