@@ -247,6 +247,8 @@ namespace karabo {
             if (m_connectionType == "server")
                 m_acceptor->close();
 
+            this->closeAllChannels();
+
             // Think about stopping service
             //m_boost_io_service->stop();
         }
