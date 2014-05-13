@@ -13,10 +13,6 @@ __all__ = ["GraphicsView"]
 from components import (DisplayComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
 
-from enums import ConfigChangeTypes
-
-from layoutcomponents.graphicscustomitem import GraphicsCustomItem
-
 from dialogs.dialogs import PenDialog, TextDialog
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
@@ -350,23 +346,6 @@ class Select(Action):
         if self.selection_start is not None:
             painter.setPen(Qt.black)
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
-
-
-class SelectAll(SimpleAction):
-    text = 'Select All'
-    icon = icons.selectAll
-    shortcut = QKeySequence.Paste
-
-
-    def run(self):
-        for c in self.parent.ilayout:
-            c.selected = True
-        for s in self.parent.ilayout.shapes:
-            s.selected = True
-        self.parent.update()
-
-
-Separator()
 
 
 class Label(Action, Loadable):
@@ -734,6 +713,23 @@ class EntireWindow(GroupActions, SimpleAction):
 Separator()
 
 
+class SelectAll(SimpleAction):
+    text = 'Select All'
+    icon = icons.selectAll
+    shortcut = QKeySequence.Paste
+
+
+    def run(self):
+        for c in self.parent.ilayout:
+            c.selected = True
+        for s in self.parent.ilayout.shapes:
+            s.selected = True
+        self.parent.update()
+
+
+Separator()
+
+
 class Cut(SimpleAction):
     text = "Cut"
     icon = icons.editCut
@@ -931,60 +927,6 @@ class GraphicsView(QSvgWidget):
         self.layout().addWidget(self.inner)
 
 
-    # Open saved view from file
-    def openSceneLayoutFromFile(self):
-        filename = QFileDialog.getOpenFileName(None, "Open saved view",
-                                               QDir.tempPath(), "SVG (*.svg)")
-        if len(filename) < 1:
-            return
-
-        self.openScene(filename)
-
-
-    def openSceneConfigurationsFromFile(self):
-        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
-                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-
-        if len(dirPath) < 1:
-            return
-
-        dir = QDir(dirPath)
-        fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
-        for fileInfo in fileInfos:
-            print fileInfo
-
-
-    def openSceneLayoutConfigurationsFromFile(self):
-        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to open configuration files", QDir.tempPath(),
-                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-
-        if len(dirPath) < 1:
-            return
-
-        dir = QDir(dirPath)
-        fileInfos = dir.entryInfoList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
-
-        internalKeyTextTuples = []
-        for fileInfo in fileInfos:
-            if fileInfo.suffix() == "scene":
-                # Layout file
-                internalKeyTextTuples = self.openScene(str(fileInfo.absoluteFilePath()))
-            #elif fileInfo.suffix() == "xml":
-                # Configuration file
-                #print "XML file:", fileInfo.absoluteFilePath()
-
-        for internalKeyText in internalKeyTextTuples:
-            internalKey = str(internalKeyText[0])
-            text = str(internalKeyText[1])
-            filename = str(dirPath + "/" + text + ".xml")
-            # openAsXml(self, filename, internalKey, configChange=ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, classId=str())
-
-            # TODO: Remove dirty hack for scientific computing again!!!
-            croppedClassId = text.split("-")
-            classId = croppedClassId[0]
-            Manager().openAsXml(filename, internalKey, ConfigChangeTypes.DEVICE_CLASS_CONFIG_CHANGED, classId)
-
-
     # Helper function opens *.scene file
     # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
     def openScene(self, filename):
@@ -1001,20 +943,6 @@ class GraphicsView(QSvgWidget):
         self.tree.write(buf)
         buf.close()
         self.load(ar)
-
-
-    # Helper function opens *.xml configuration file
-    def openConfiguration(self, filename):
-        print "openConfiguration", filename
-
-
-    def saveSceneLayoutToFile(self):
-        """ Save active view to file """
-        filename = QFileDialog.getSaveFileName(None, "Save file as",
-                                               QDir.tempPath(), "SVG (*.svg)")
-        if len(filename) < 1:
-            return
-        self.saveScene(filename)
 
 
     def saveScene(self, filename):
@@ -1045,32 +973,6 @@ class GraphicsView(QSvgWidget):
         return mime
 
 
-    def saveSceneConfigurationsToFile(self):
-        dirPath = QFileDialog.getExistingDirectory(self, "Select directory to save configuration files", QDir.tempPath(),
-                                                   QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-
-        if len(dirPath) < 1:
-            return
-
-        # Check, if directory is empty
-        self.checkDirectoryBeforeSave(dirPath)
-
-        # Save configurations of navigation related items
-        self.saveSceneConfigurations(dirPath)
-
-
-    def saveSceneLayoutConfigurationsToFile(self):
-        """ Save active view and configurations to folder/files """
-        dir = QFileDialog.getExistingDirectory(
-            self, "Select directory to save layout and configuration files",
-            options=QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
-        if not dir:
-            return
-        self.checkDirectoryBeforeSave(dir)
-        self.saveScene(os.path.join(dir, os.path.basename(dir) + ".svg"))
-        self.saveSceneConfigurations(dir)
-
-
     # Helper function checks whether the directory to save to is empty
     # If the directory is not empty the user has to select what happens with the existing files
     def checkDirectoryBeforeSave(self, dirPath):
@@ -1087,21 +989,6 @@ class GraphicsView(QSvgWidget):
 
         for file in files:
             dir.remove(file)
-
-
-    # Helper function to save all configurations for scene items
-    def saveSceneConfigurations(self, dirPath):
-        for item in self.ilayout.shapes:
-            if isinstance(item, GraphicsCustomItem):
-                # TODO: Remove dirty hack for scientific computing again!!!
-                croppedClassId = item.text().split("-")
-                classId = croppedClassId[0]
-                Manager().saveAsXml(str(dirPath + "/" + item.text() + ".xml"), str(classId), str(item.internalKey()))
-
-
-                stream.writeString("\n")
-                stream.writeString("\n")
-                stream.writeString("\n")
 
 
     def clear_selection(self):
@@ -1181,7 +1068,6 @@ class GraphicsView(QSvgWidget):
         sourceType = mimeData.data("sourceType")
 
         source = event.source()
-        customItem = None
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
 
