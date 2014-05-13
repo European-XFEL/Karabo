@@ -18,7 +18,7 @@
             return Attribute*(**params)
 """
 
-__all__ = ["DisplayHistogram", "HistogramItem"]
+__all__ = ["DisplayPlot", "PlotItem"]
 
 
 import sys
@@ -32,18 +32,18 @@ from PyQt4.Qwt5 import QwtPlotItem
 from numpy import arange
 
 
-class DisplayHistogram(DisplayWidget):
+class DisplayPlot(DisplayWidget):
     category = "List"
-    alias = "Histogram"
+    alias = "Plot"
     colorList = ["red", "green", "blue", "gray", "violet", "orange",
                  "lightgreen", "black"]
 
     def __init__(self, box, parent):
         self.widget = CurveDialog(edit=False, toolbar=True,
-                                  wintitle="Histogram")
+                                  wintitle="Plot")
         self.plot = self.widget.get_plot()
         self.curves = { }
-        super(DisplayHistogram, self).__init__(None)
+        super(DisplayPlot, self).__init__(None)
         self.addBox(box)
 
 
@@ -69,7 +69,7 @@ class DisplayHistogram(DisplayWidget):
         self.plot.replot()
 
 
-class HistogramItem(QwtPlotItem):
+class PlotItem(QwtPlotItem):
 
     Auto = 0
     Xfy = 1
@@ -77,7 +77,7 @@ class HistogramItem(QwtPlotItem):
     def __init__(self, *args):
         QwtPlotItem.__init__(self, *args)
         
-        self.__attributes = HistogramItem.Auto
+        self.__attributes = PlotItem.Auto
         self.__data = QwtIntervalData()
         self.__color = QColor()
         self.__reference = 0.0
@@ -109,7 +109,7 @@ class HistogramItem(QwtPlotItem):
         result = self.__data.boundingRect()
         if not result.isValid():
             return result
-        if self.testHistogramAttribute(HistogramItem.Xfy):
+        if self.testPlotAttribute(PlotItem.Xfy):
             result = QwtDoubleRect(result.y(), result.x(),
                                        result.height(), result.width())
             if result.left() > self.baseline():
@@ -130,7 +130,7 @@ class HistogramItem(QwtPlotItem):
         x0 = xMap.transform(self.baseline())
         y0 = yMap.transform(self.baseline())
         for i in range(iData.size()):
-            if self.testHistogramAttribute(HistogramItem.Xfy):
+            if self.testPlotAttribute(PlotItem.Xfy):
                 x2 = xMap.transform(iData.value(i))
                 if x2 == x0:
                     continue
@@ -188,8 +188,8 @@ class HistogramItem(QwtPlotItem):
     def baseline(self,):
         return self.__reference
 
-    def setHistogramAttribute(self, attribute, on = True):
-        if self.testHistogramAttribute(attribute):
+    def setPlotAttribute(self, attribute, on=True):
+        if self.testPlotAttribute(attribute):
             return
 
         if on:
@@ -200,8 +200,8 @@ class HistogramItem(QwtPlotItem):
         self.itemChanged()
 
 
-    def testHistogramAttribute(self, attribute):
-        return bool(self.__attributes & attribute) 
+    def testPlotAttribute(self, attribute):
+        return self.__attributes & attribute != 0
 
 
     def drawBar(self, painter, orientation, rect):
