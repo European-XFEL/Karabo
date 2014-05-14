@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package karabo.io.tests;
 
 import java.util.Arrays;
@@ -14,6 +13,7 @@ import karabo.io.OutputHash;
 import karabo.util.Hash;
 import karabo.util.Registrator;
 import karabo.util.vectors.VectorDouble;
+import karabo.util.vectors.VectorInteger;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.*;
@@ -26,23 +26,23 @@ import org.junit.Test;
  * @author Sergey Esenov <serguei.essenov@xfel.eu>
  */
 public class HashXmlFileTest {
-    
+
     public HashXmlFileTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
         Registrator.registerAll();
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -63,7 +63,6 @@ public class HashXmlFileTest {
 //        for (String name : vBinarySerializer) {
 //            System.out.println("\tClass " + name);
 //        }
-        
         Output<Hash> out = OutputHash.create(OutputHash.class, "TextFile", new Hash("filename", "tests/resources/file1.xml"));
         //TextFileOutputHash out = new TextFileOutputHash(new Hash("filename", "file1.xml"));
         out.write(hash);
@@ -71,10 +70,21 @@ public class HashXmlFileTest {
         Hash hash2 = inp.read();   // inp.<Hash>read();
         assertTrue(hash.get("abc").equals(hash2.get("abc")));
         assertTrue(hash.get("aFloat").equals(hash2.get("aFloat")));
-       
+
 //        System.out.println("hash2 is ...\n" + hash2);
         Input<Hash> inp2a = InputHash.create(InputHash.class, "TextFile", new Hash("filename", "tests/resources/file2a.xml"));
         Hash hash2a = inp2a.read();   // inp2a.<Hash>read();
         //System.out.println("hash2a...\n" + hash2a);
+
+        Hash unrooted = new Hash("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", new VectorInteger("5,5,5,5,5"), "F.f.f.f.f", new Hash("x.y.z", 99));
+        unrooted.setAttribute("F.f.f", "attr1", true);
+        
+        out = OutputHash.create(OutputHash.class, "TextFile", new Hash("filename", "tests/resources/file3.xml", "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
+        out.write(unrooted);
+        
+        inp = InputHash.create(InputHash.class, "TextFile", new Hash("filename", "tests/resources/file3.xml"));
+        hash2 = inp.read();
+        
+        System.out.println("xmlFileInputOutput: hash is ...\n" + hash2);
     }
 }
