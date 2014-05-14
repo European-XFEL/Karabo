@@ -439,7 +439,7 @@ class ConfigurationPanel(QWidget):
                 configuration.index = self._createNewParameterPage(configuration)
             self._setParameterEditorIndex(configuration.index)
 
-        if configuration not in (None, self.prevConfiguration) and configuration.type == "device":
+        if configuration not in (None, self.prevConfiguration):
             configuration.addVisible()
             self.prevConfiguration = configuration
         else:
@@ -510,6 +510,9 @@ class ConfigurationPanel(QWidget):
 
 
     def onConflictStateChanged(self, deviceId, hasConflict):
+        if Manager().deviceData.get(deviceId) is None:
+            return
+        
         parameterEditor = Manager().deviceData[deviceId].parameterEditor
 
         result = parameterEditor.checkApplyButtonsEnabled()

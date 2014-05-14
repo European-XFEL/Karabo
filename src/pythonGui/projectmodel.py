@@ -78,6 +78,13 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateData(self):
+        # Get last selected object
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        if selectedIndexes:
+            lastSelectionObj = selectedIndexes[0].data(ProjectModel.ITEM_OBJECT)
+        else:
+            lastSelectionObj = None
+        
         self.beginResetModel()
         self.clear()
         self.setHorizontalHeaderLabels(["Projects"])
@@ -195,6 +202,10 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
         
         self.endResetModel()
+        
+        # Set last selected object
+        if lastSelectionObj is not None:
+            self.selectItem(lastSelectionObj)
 
 
     def updateNeeded(self):
@@ -409,6 +420,9 @@ class ProjectModel(QStandardItemModel):
         if not self.checkSystemTopology():
             return
         
+        # Get project name
+        project = self.currentProject()
+        
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
         if not self.pluginDialog.updateServerTopology(self.systemTopology, device):
@@ -422,9 +436,6 @@ class ProjectModel(QStandardItemModel):
         
         config = Hash("deviceId", self.pluginDialog.deviceId,
                       "serverId", self.pluginDialog.serverId)
-        
-        # Get project name
-        project = self.currentProject()
         
         if device is not None:
             # Remove old device configuration
