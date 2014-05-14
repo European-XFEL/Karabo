@@ -394,13 +394,13 @@ public final class Validator {
                 VectorString options = masterNode.getAttribute(Schema.KARABO_SCHEMA_OPTIONS);
                 boolean found = false;
                 for (String option : options) {
-                    if (option == null ? (String) workNode.getValue() == null : option.equals((String) workNode.getValue())) {
+                    if (option == null ? workNode.getValueAsAny() == null : option.equals(workNode.getValueAsString())) {
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    report += "Value " + workNode.getValue() + " for parameter \"" + scope + "\" is not one of the valid options: " + options + "\n";
+                    report += "Value " + workNode.getValueAsString() + " for parameter \"" + scope + "\" is not one of the valid options: " + options + "\n";
                 }
             }
 

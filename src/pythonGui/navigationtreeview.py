@@ -13,13 +13,13 @@
 __all__ = ["NavigationTreeView"]
 
 
-import qrc_icons
 
 from enums import NavigationItemTypes
+import icons
 from manager import Manager
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QIcon, QMenu, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 
 class NavigationTreeView(QTreeView):
@@ -51,7 +51,7 @@ class NavigationTreeView(QTreeView):
         self.__mServerItem = QMenu(self)
         
         text = "Kill instance"
-        self.__acKillServer = QAction(QIcon(":delete"), text, self)
+        self.__acKillServer = QAction(icons.delete, text, self)
         self.__acKillServer.setStatusTip(text)
         self.__acKillServer.setToolTip(text)
         self.__acKillServer.triggered.connect(self.onKillInstance)
@@ -61,21 +61,22 @@ class NavigationTreeView(QTreeView):
         self.__mClassItem = QMenu(self)
         
         text = "Open configuration (*.xml)"
-        self.__acFileOpen = QAction(QIcon(":open"), "Open configuration", self)
+        self.__acFileOpen = QAction(icons.open, "Open configuration", self)
         self.__acFileOpen.setStatusTip(text)
         self.__acFileOpen.setToolTip(text)
         self.__acFileOpen.triggered.connect(self.onFileOpen)
         self.__mClassItem.addAction(self.__acFileOpen)
         
         text = "Save configuration as (*.xml)"
-        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save configuration as", self)
+        self.__acFileSaveAs = QAction(icons.saveAs, "Save configuration as",
+                                      self)
         self.__acFileSaveAs.setStatusTip(text)
         self.__acFileSaveAs.setToolTip(text)
         self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
         self.__mClassItem.addAction(self.__acFileSaveAs)
 
         text = "Kill instance"
-        self.__acKillDevice = QAction(QIcon(":delete"), text, self)
+        self.__acKillDevice = QAction(icons.delete, text, self)
         self.__acKillDevice.setStatusTip(text)
         self.__acKillDevice.setToolTip(text)
         self.__acKillDevice.triggered.connect(self.onKillInstance)

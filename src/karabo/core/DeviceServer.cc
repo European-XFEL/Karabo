@@ -191,17 +191,24 @@ namespace karabo {
             if (boost::filesystem::exists(serverIdFileName)) { 
                 Hash hash;
                 karabo::io::loadFromFile(hash, serverIdFileName);
-                if (hash.has("serverId")) hash.get("serverId", m_serverId); // If file exists, it has priority
-                else if (input.has("serverId")) input.get("serverId", m_serverId); // Else whatever was configured
-                else m_serverId = generateDefaultServerId(); // If nothing configured -> generate
+                if (input.has("serverId")) { 
+                    input.get("serverId", m_serverId);
+                    // Update file for next startup
+                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
+                } else if (hash.has("DeviceServer.serverId")) hash.get("DeviceServer.serverId", m_serverId);
+                else {
+                    KARABO_LOG_FRAMEWORK_WARN << "Found serverId.xml without serverId contained";
+                    m_serverId = generateDefaultServerId();
+                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
+                }
             } else { // No file
                 if (input.has("serverId")) {
-                    input.get("serverId", m_serverId);
-                    // Generate file for next startup
-                    karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
+                    input.get("serverId", m_serverId);                   
                 } else {
-                    m_serverId = generateDefaultServerId(); 
+                    m_serverId = generateDefaultServerId();
                 }
+                // Generate file for next startup
+                karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
             }
             
             // Device configurations for those to automatically start

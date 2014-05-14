@@ -20,16 +20,17 @@ namespace bp = boost::python;
 
 namespace karathon {
 
+    template <class InputType>
     class PythonInputHandler : public karabo::io::InputHandler {
 
     public:
 
-        KARABO_CLASSINFO(PythonInputHandler, "PythonInputHandler", "1.0")
+        KARABO_CLASSINFO(PythonInputHandler, "PythonInputHandler" + std::string(typeid (InputType).name()), "1.0")
 
         PythonInputHandler() {
         }
 
-        PythonInputHandler(const karabo::io::AbstractInput::Pointer& input) : m_input(input) {
+        PythonInputHandler(const karabo::io::AbstractInput::Pointer& input) : m_input(boost::static_pointer_cast<InputType>(input)) {
         }
 
         virtual ~PythonInputHandler() {
@@ -63,7 +64,7 @@ namespace karathon {
         void triggerIOEvent() {
             ScopedGILAcquire gil;
             if (m_ioEventHandler != bp::object()) {
-                if (karabo::io::AbstractInput::Pointer in = m_input.lock()) m_ioEventHandler(bp::object(in));
+                if (typename InputType::Pointer in = m_input.lock()) m_ioEventHandler(bp::object(in));
             }
         }
 
@@ -74,7 +75,7 @@ namespace karathon {
         }
 
     private:
-        boost::weak_ptr<karabo::io::AbstractInput> m_input;
+        boost::weak_ptr<InputType> m_input;
         bp::object m_ioEventHandler;
         bp::object m_endOfStreamEventHandler;
     };

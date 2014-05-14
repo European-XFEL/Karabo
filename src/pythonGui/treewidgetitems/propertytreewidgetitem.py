@@ -14,10 +14,11 @@ __all__ = ["PropertyTreeWidgetItem"]
 from collections import OrderedDict
 from basetreewidgetitem import BaseTreeWidgetItem
 from components import ChoiceComponent, DisplayComponent
+import icons
 from popupwidget import PopupWidget
 
 from PyQt4.QtCore import Qt, QSize
-from PyQt4.QtGui import QAction, QCursor, QIcon, QMenu
+from PyQt4.QtGui import QAction, QCursor, QMenu
 
 class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
@@ -30,7 +31,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.__currentValueOnDevice = None
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
-        self.setIcon(0, QIcon(":folder"))
+        self.setIcon(0, icons.folder)
 
         self.displayComponent = DisplayComponent(
             "Value Field", self.internalKey, self.treeWidget())
@@ -48,7 +49,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         
         self.mItem = QMenu()
         text = "Reset to default"
-        self.__acResetToDefault = QAction(QIcon(":revert"), text, None)
+        self.__acResetToDefault = QAction(icons.revert, text, None)
         self.__acResetToDefault.setStatusTip(text)
         self.__acResetToDefault.setToolTip(text)
         self.__acResetToDefault.setIconVisibleInMenu(True)
@@ -115,13 +116,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             self.__popupWidget.setInfo(info)
 
 
-### slots ###
     def onSetToDefault(self):
-        if self.editableComponent:
-            #self.editableComponent.value = self.defaultValue
-            self.editableComponent.onValueChanged(self.internalKey, self.defaultValue)
-            if not isinstance(self.editableComponent, ChoiceComponent):
-                self.editableComponent.onEditingFinished(self.internalKey, self.defaultValue)
+        self.internalKey.descriptor.setDefault(self.internalKey)
 
 
     def onDisplayValueChanged(self, key, value):

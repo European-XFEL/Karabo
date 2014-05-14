@@ -53,6 +53,18 @@ class Layout(Loadable):
         return r.widget() if r.widget() is not None else r
 
 
+    def iterWidgets(self, selected=False):
+        """iterates over all widgets contained in this layout,
+        or only selected ones if selected is True."""
+        for wl in self:
+            if not selected or wl.selected:
+                if isinstance(wl, Layout):
+                    for r in wl.iterWidgets():
+                        yield r
+                else:
+                    yield wl
+
+
     def __delitem__(self, i):
         if isinstance(i, slice):
             for j in range(i.start, i.stop, i.step):
@@ -482,7 +494,8 @@ class ProxyWidget(QStackedWidget):
         if source is None:
             return
         for item in source.selectedItems():
-            if self.component.addBox(item.internalKey):
+            if (self.component is not None and
+                    self.component.addBox(item.internalKey)):
                 item.internalKey.configuration.addVisible()
                 event.accept()
 

@@ -14,23 +14,24 @@
 namespace karabo {
     namespace io {
 
+        template <class InputType>
         class CppInputHandler : public InputHandler {
 
         public:
 
-            KARABO_CLASSINFO(CppInputHandler, "CppInputHandler", "1.0")
+            KARABO_CLASSINFO(CppInputHandler, "CppInputHandler" + std::string(typeid (InputType).name()), "1.0")
 
             CppInputHandler() {
             }
 
-            CppInputHandler(const AbstractInput::Pointer& input) :  m_input(input) {
+            CppInputHandler(const AbstractInput::Pointer& input) :  m_input(boost::static_pointer_cast<InputType>(input)) {
             }
 
             virtual ~CppInputHandler() {
             }
 
             void registerIOEventHandler(const boost::any& ioEventHandler) {
-                m_ioEventHandler = boost::any_cast < boost::function<void (const AbstractInput::Pointer&) > >(ioEventHandler);
+                m_ioEventHandler = boost::any_cast < boost::function<void (const typename InputType::Pointer&) > >(ioEventHandler);
             }
 
             void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
@@ -39,7 +40,7 @@ namespace karabo {
 
             void triggerIOEvent() {
                 if (!m_ioEventHandler.empty()) {
-                    if (AbstractInput::Pointer in = m_input.lock()) m_ioEventHandler(in);
+                    if (typename InputType::Pointer in = m_input.lock()) m_ioEventHandler(in);
                 }
             }
 
@@ -48,8 +49,8 @@ namespace karabo {
             }
 
         private:
-            boost::weak_ptr<AbstractInput> m_input;
-            boost::function<void (const AbstractInput::Pointer&) > m_ioEventHandler;
+            boost::weak_ptr<InputType> m_input;
+            boost::function<void (const typename InputType::Pointer&) > m_ioEventHandler;
             boost::function<void() > m_endOfStreamEventHandler;
         };
 
