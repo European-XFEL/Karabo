@@ -28,17 +28,18 @@ public abstract class TextSerializer<T extends Object> extends ClassInfo {
 
     public String save(ArrayList<T> objects) throws IOException {
         String result = "";
-        for (T element : objects)
+        for (T element : objects) {
             result += save(element);
+        }
         return result;
     }
 
     public abstract T load(byte[] archive) throws IOException;
-    
+
     public T load(String archive) throws IOException {
         return load(archive.getBytes());
     }
-    
+
     public T load(StringBuffer archive) throws IOException {
         return load(archive.toString());
     }
@@ -59,15 +60,20 @@ public abstract class TextSerializer<T extends Object> extends ClassInfo {
         return load(new String(archive, 0, count));
     }
 
-    public void load(ArrayList<T> objects, String archive) throws IOException {
-        if (objects == null)
+    public void load(ArrayList<T> objects, byte[] archive) throws IOException {
+        if (objects == null) {
             throw new RuntimeException("First argument cannot be null.");
+        }
         T object = load(archive);
         if (objects.isEmpty()) {
             objects.add(object);
         } else {
             objects.set(0, object);
         }
+    }
+
+    public void load(ArrayList<T> objects, String archive) throws IOException {
+        load(objects, archive.getBytes());
     }
 
     public void load(ArrayList<T> objects, InputStream archive) throws IOException {

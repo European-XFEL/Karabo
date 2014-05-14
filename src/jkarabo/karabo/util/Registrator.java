@@ -49,7 +49,9 @@ public class Registrator {
             Class.forName("karabo.util.SchemaXmlSerializer");
             
             Class.forName("karabo.io.TextFileInput");
+            Class.forName("karabo.io.TextFileInputHash");
             Class.forName("karabo.io.TextFileOutput");
+            Class.forName("karabo.io.TextFileOutputHash");
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(Registrator.class.getName()).log(Level.SEVERE, null, ex);
         }

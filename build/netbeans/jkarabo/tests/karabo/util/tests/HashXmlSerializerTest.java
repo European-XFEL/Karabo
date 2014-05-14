@@ -6,15 +6,21 @@
 package karabo.util.tests;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import karabo.util.Hash;
 import karabo.util.Registrator;
 import karabo.util.TextSerializer;
 import karabo.util.TextSerializerHash;
+import karabo.util.vectors.VectorByte;
+import karabo.util.vectors.VectorDouble;
+import karabo.util.vectors.VectorFloat;
+import karabo.util.vectors.VectorInteger;
+import karabo.util.vectors.VectorShort;
+import karabo.util.vectors.VectorString;
 import org.junit.After;
 import org.junit.AfterClass;
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,5 +76,32 @@ public class HashXmlSerializerTest {
         } catch (IOException ex) {
             Logger.getLogger(HashBinarySerializerTest.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Test
+    public void testHashVector() {
+        Hash hash = new Hash();
+        hash.set("vByte", new VectorByte(Arrays.asList((byte) 0x41, (byte) 0x61, (byte) 0x77)));
+        hash.set("vInt",  new VectorInteger(Arrays.asList(0x41, 0x61, 0x77)));
+        hash.set("vShort", new VectorShort(Arrays.asList((short) 0x41, (short) 0x61, (short) 0x77)));
+        hash.set("vFloat",  new VectorFloat(Arrays.asList(4.1F, 61.44F, 77.777F)));
+        hash.set("vDouble",  new VectorDouble(Arrays.asList(0.412345, 61.44, 77.777)));
+        hash.set("vString",  new VectorString(Arrays.asList("a.412345", "b61.44", "c77.777")));
+//        System.out.println("Saved hash is ...\n" + hash);
+        TextSerializerHash serializer = TextSerializerHash.create(TextSerializerHash.class, "Xml", new Hash());
+        try {
+            String archive = serializer.save(hash);
+            Hash hash2 = serializer.load(archive);
+//            System.out.println("Loaded hash is ...\n" + hash2);
+            assert hash2.get("vByte").equals(hash.get("vByte"));
+            assert hash2.get("vInt").equals(hash.get("vInt"));
+            assert hash2.get("vShort").equals(hash.get("vShort"));
+            assert hash2.get("vFloat").equals(hash.get("vFloat"));
+            assert hash2.get("vDouble").equals(hash.get("vDouble"));
+            assert hash2.get("vString").equals(hash.get("vString"));
+        } catch (IOException ex) {
+            Logger.getLogger(HashBinarySerializerTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }
