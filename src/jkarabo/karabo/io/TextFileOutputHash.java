@@ -35,7 +35,7 @@ public class TextFileOutputHash extends OutputHash {
 
     static {
         KARABO_REGISTER_FOR_CONFIGURATION(OutputHash.class, TextFileOutputHash.class);
-        //System.out.println("BinaryFileOutputHash class static registration");
+        //System.out.println("TextFileOutputHash class static registration");
     }
 
     public static void expectedParameters(Schema expected) {
