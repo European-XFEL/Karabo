@@ -21,7 +21,7 @@ from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
 
 import os.path
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class Project(QObject):
@@ -147,11 +147,12 @@ class Project(QObject):
         projectData = XMLWriter().write(projectConfig)
         
         absoluteProjectPath = os.path.join(self.directory, self.name)
-        zf = ZipFile(absoluteProjectPath, mode="w")#, 
-                     #compression=ZIP_DEFLATED)
+        zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
         try:
             print "adding project.xml"
             zf.writestr("project.xml", projectData)
+            zf.write(absoluteProjectPath, os.path.join(Project.SCENES_LABEL, "testScene.svg"))
+            zf.write(absoluteProjectPath, os.path.join(Project.CONFIGURATIONS_LABEL, "config.xml"))
         finally:
             print "closing"
             zf.close()
