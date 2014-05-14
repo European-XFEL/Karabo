@@ -175,7 +175,7 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.projectTopology.selectionModel.clear()
+        self.projectTopology.selectionModel.clearSelection()
 
 
     def onProjectModelSelectionChanged(self, selected, deselected):
@@ -186,7 +186,7 @@ class _Manager(QObject):
         if len(selected.indexes()) < 1:
             return
 
-        self.systemTopology.selectionModel.clear()
+        self.systemTopology.selectionModel.clearSelection()
 
 
     def initDevice(self, serverId, classId, config=None):

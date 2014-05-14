@@ -1074,54 +1074,46 @@ class GraphicsView(QSvgWidget):
             selectedItems = source.selectedItems()
 
             for item in selectedItems:
-                box = item.internalKey
-                displayName = item.text(0)
-                if not displayName:
-                    displayName = box.path[-1]
-
-                if source.isColumnHidden(1):
-                    configDisplayComponent = None
-                else:
-                    configDisplayComponent = item.displayComponent
-                configEditableComponent = item.editableComponent
-
+                # Create layout for coming context
                 layout = BoxLayout(QBoxLayout.LeftToRight)
 
-                if displayName:
-                    proxy = ProxyWidget(self.inner)
-                    proxy.addWidget(QLabel(displayName, proxy))
-                    layout.addWidget(proxy)
-                    proxy.show()
+                # Create label
+                displayName = item.text(0)
+                proxy = ProxyWidget(self.inner)
+                proxy.addWidget(QLabel(displayName, proxy))
+                layout.addWidget(proxy)
+                proxy.show()
 
-                if configDisplayComponent:
+                # Get Box
+                box = item.internalKey
+
+                # Create display component, if available
+                configDisplayComponent = item.displayComponent
+                if configDisplayComponent is not None:
                     proxy = ProxyWidget(self.inner)
-                    displayComponent = DisplayComponent(
-                        box.descriptor.classAlias, box, proxy)
+                    displayComponent = DisplayComponent(box.descriptor.classAlias, box, proxy)
                     proxy.setComponent(displayComponent)
                     proxy.addWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
                     box.configuration.addVisible()
 
-                unit = (box.descriptor.metricPrefixSymbol +
-                        box.descriptor.unitSymbol)
-                if unit:
-                    proxy = ProxyWidget(self.inner)
-                    proxy.addWidget(QLabel(unit, proxy))
-                    layout.addWidget(proxy)
-                    proxy.show()
+                    unit = (box.descriptor.metricPrefixSymbol + box.descriptor.unitSymbol)
+                    if len(unit) > 0:
+                        proxy = ProxyWidget(self.inner)
+                        proxy.addWidget(QLabel(unit, proxy))
+                        layout.addWidget(proxy)
+                        proxy.show()
 
-                if configEditableComponent:
+                # Create editable component, if available
+                configEditableComponent = item.editableComponent
+                if configEditableComponent is not None:
                     proxy = ProxyWidget(self.inner)
-                    if not configDisplayComponent:
-                        editableComponent = EditableNoApplyComponent(
-                            item.classAlias, box, proxy)
-                    else:
-                        editableComponent = EditableApplyLaterComponent(
-                            item.classAlias, box, proxy)
-                        editableComponent.isEditableValueInit = False
 
-                        box.configuration.addVisible()
+                    editableComponent = EditableApplyLaterComponent(item.classAlias, box, proxy)
+                    editableComponent.isEditableValueInit = False
+
+                    box.configuration.addVisible()
                     proxy.setComponent(editableComponent)
                     proxy.addWidget(editableComponent.widget)
                     layout.addWidget(proxy)
