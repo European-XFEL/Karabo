@@ -118,7 +118,8 @@ class ProjectTreeView(QTreeView):
             return
 
         project = self.model().createNewProject(projectName, directory)
-        project.save()
+        #project.save()
+        project.zip()
 
 
     def openProject(self):
