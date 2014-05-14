@@ -88,6 +88,14 @@ public class Node extends Object {
     }
 
     /**
+     * Get value associated with current node as Object
+     * @return value
+     */
+    public String getValueAsString() {
+        return FromType.toString(m_value);
+    }
+
+    /**
      * Set current node value
      * @param value set as value associated with current node
      */

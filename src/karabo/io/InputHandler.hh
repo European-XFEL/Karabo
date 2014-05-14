@@ -13,7 +13,7 @@
 
 namespace karabo {
     namespace io {
-        
+
         class InputHandler {
         public:
             
