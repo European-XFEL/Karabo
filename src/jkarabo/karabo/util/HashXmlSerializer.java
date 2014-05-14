@@ -34,6 +34,7 @@ import karabo.util.vectors.VectorFloat;
 import karabo.util.vectors.VectorHash;
 import karabo.util.vectors.VectorInteger;
 import karabo.util.vectors.VectorLong;
+import karabo.util.vectors.VectorNone;
 import karabo.util.vectors.VectorShort;
 import karabo.util.vectors.VectorString;
 
@@ -611,7 +612,18 @@ public class HashXmlSerializer extends TextSerializerHash {
                 attributes.set(attribute, new VectorComplexDouble(value));
                 break;
             case NONE:
-            case VECTOR_NONE:
+                assert "None".equals(value);
+                attributes.set(attribute, CppNone.getInstance());
+                break;
+            case VECTOR_NONE: {
+                int count = new VectorString(value).size();
+                VectorNone vn = new VectorNone();
+                while (count-- > 0) {
+                    vn.add(CppNone.getInstance());
+                }
+                attributes.set(attribute, vn);
+                break;
+            }
             case HASH:
             case VECTOR_HASH:
             case SCHEMA:
