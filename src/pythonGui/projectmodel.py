@@ -284,6 +284,8 @@ class ProjectModel(QStandardItemModel):
 
 
     def handleInstanceGone(self, instanceId):
+        if self.systemTopology is None: return
+        
         path = None
         if self.systemTopology.has("server." + instanceId):
             path = "server." + instanceId
@@ -536,7 +538,7 @@ class ProjectModel(QStandardItemModel):
         # Send signal to projectPanel to update toolbar actions
         self.signalSelectionChanged.emit(selectedIndexes)
         
-        if len(selectedIndexes) < 1:
+        if not selectedIndexes:
             return
 
         index = selectedIndexes[0]
