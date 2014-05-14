@@ -193,11 +193,13 @@ public class HashXmlSerializer extends TextSerializerHash {
             if (step >= 0) {
                 writer.writeCharacters("\n");
             }
-            writer.writeStartElement("root");
-            writer.writeAttribute(prefix + "Artificial", "");
-            writer.writeAttribute(prefix + "Type", ToLiteral.to(ReferenceType.HASH));
-            if (step >= 0) {
-                writer.writeCharacters("\n");
+            if (object.size() != 1 || object.iterator().next().getValue().getType() != ReferenceType.HASH) {
+                writer.writeStartElement("root");
+                writer.writeAttribute(prefix + "Artificial", "");
+                writer.writeAttribute(prefix + "Type", ToLiteral.to(ReferenceType.HASH));
+                if (step >= 0) {
+                    writer.writeCharacters("\n");
+                }
             }
             recordElement(object);
             writer.writeEndElement();
@@ -265,8 +267,9 @@ public class HashXmlSerializer extends TextSerializerHash {
             }
         }
         Node firstNode = hash.iterator().next().getValue();
-        if (firstNode.hasAttribute(artificialRootFlag))
+        if (firstNode.hasAttribute(artificialRootFlag)) {
             return hash.<Hash>get("root");
+        }
         return hash;
     }
 
