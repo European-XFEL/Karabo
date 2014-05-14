@@ -20,7 +20,6 @@ __all__ = ["Manager"]
 from configuration import Configuration
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
-from timestamp import Timestamp
 from navigationtreemodel import NavigationTreeModel
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -172,7 +171,7 @@ class _Manager(QObject):
         This slot is called whenever something of the navigation panel is selected.
         If an item was selected, the selection of the project panel is cleared.
         """
-        if len(selected.indexes()) < 1:
+        if not selected.indexes():
             return
 
         self.projectTopology.selectionModel.clearSelection()
@@ -183,7 +182,7 @@ class _Manager(QObject):
         This slot is called whenever something of the project panel is selected.
         If an item was selected, the selection of the navigation panel is cleared.
         """
-        if len(selected.indexes()) < 1:
+        if not selected.indexes():
             return
 
         self.systemTopology.selectionModel.clearSelection()
