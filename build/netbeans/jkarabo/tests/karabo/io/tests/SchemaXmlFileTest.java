@@ -3,6 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package karabo.io.tests;
 
 import java.util.Arrays;
@@ -12,15 +13,6 @@ import karabo.io.Output;
 import karabo.io.OutputSchema;
 import karabo.util.AccessType;
 import karabo.util.ClassInfo;
-import static karabo.util.ClassInfo.CHOICE_ELEMENT;
-import static karabo.util.ClassInfo.DOUBLE_ELEMENT;
-import static karabo.util.ClassInfo.INT32_ELEMENT;
-import static karabo.util.ClassInfo.INT64_ELEMENT;
-import static karabo.util.ClassInfo.LIST_ELEMENT;
-import static karabo.util.ClassInfo.NODE_ELEMENT;
-import static karabo.util.ClassInfo.STRING_ELEMENT;
-import static karabo.util.ClassInfo.VECTOR_INT32_ELEMENT;
-import static karabo.util.ClassInfo.VECTOR_STRING_ELEMENT;
 import karabo.util.Configurator;
 import karabo.util.Hash;
 import karabo.util.KARABO_CLASSINFO;
@@ -36,8 +28,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-@KARABO_CLASSINFO(classId = "TestSchemaSerializer1", version = "1.0")
-class TestSchemaSerializer1 extends ClassInfo {
+@KARABO_CLASSINFO(classId = "TestSchemaSerializer2", version = "1.0")
+class TestSchemaSerializer2 extends ClassInfo {
 
     public static void expectedParameters(Schema expected) {
 
@@ -181,26 +173,26 @@ class TestSchemaSerializer1 extends ClassInfo {
 
 /**
  *
- * @author Sergey Esenov <serguei.essenov@xfel.eu>
+ * @author Sergey Esenov serguei.essenov@xfel.eu
  */
-public class SchemaBinaryFileTest {
-
-    public SchemaBinaryFileTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() {
+public class SchemaXmlFileTest {
+    
+    public SchemaXmlFileTest() {
         Registrator.registerAll();
     }
-
+    
+    @BeforeClass
+    public static void setUpClass() {
+    }
+    
     @AfterClass
     public static void tearDownClass() {
     }
-
+    
     @Before
     public void setUp() {
     }
-
+    
     @After
     public void tearDown() {
     }
@@ -211,20 +203,20 @@ public class SchemaBinaryFileTest {
     // @Test
     // public void hello() {}
     @Test
-    public void binaryFileInputOutput() {
+    public void textFileInputOutput() {
         Schema testSchema = new Schema("TestSchema", new Schema.AssemblyRules(AccessType.INIT_READ_WRITE));
-        TestSchemaSerializer1.expectedParameters(testSchema);
+        TestSchemaSerializer2.expectedParameters(testSchema);
 
         VectorString vBinarySerializer = Configurator.getRegisteredClasses(InputSchema.class);
         //System.out.println("Registry of base class InputSchema");
         for (String name : vBinarySerializer) {
             //System.out.println("\tClass " + name);
         }
-        Output<Schema> out = OutputSchema.create(OutputSchema.class, "BinaryFile", new Hash("filename", "tests/resources/file2.bin"));
+        Output<Schema> out = OutputSchema.create(OutputSchema.class, "TextFile", new Hash("filename", "tests/resources/file2.xml"));
         out.write(testSchema);
         //System.out.println("Java TestSchema is saved.");
 
-        Input<Schema> inp = InputSchema.create(InputSchema.class, "BinaryFile", new Hash("filename", "tests/resources/file2.bin"));
+        Input<Schema> inp = InputSchema.create(InputSchema.class, "TextFile", new Hash("filename", "tests/resources/file2.xml"));
         Schema schema2 = inp.read();   // inp.<Schema>read();
         
         assertTrue(testSchema.getDisplayedName("intVector").equals(schema2.getDisplayedName("intVector")));
@@ -232,7 +224,7 @@ public class SchemaBinaryFileTest {
         //System.out.println("schema2 is ...\n" + schema2);
         //System.out.println("Java TestSchema is loaded.");
         
-        Input<Schema> inp2 = InputSchema.create(InputSchema.class, "BinaryFile", new Hash("filename", "tests/resources/testschema.bin"));
+        Input<Schema> inp2 = InputSchema.create(InputSchema.class, "TextFile", new Hash("filename", "tests/resources/testschema.xml"));
         Schema cppSchema = inp2.read();   // inp.<Schema>read();
         //System.out.println("C++ TestSchema is loaded.");
     }
