@@ -21,6 +21,7 @@ from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
 
 import os.path
+from zipfile import ZipFile
 
 
 class Project(QObject):
@@ -76,6 +77,84 @@ class Project(QObject):
         # TODO: for others as well
         
         del object
+
+
+    def zip(self):
+        """
+        This function save this project to its zip file.
+        """
+        # Create folder structure and save content
+        projectConfig = Hash(Project.PROJECT_KEY, Hash())
+        projectConfig.setAttribute(Project.PROJECT_KEY, "name", self.name)
+        projectConfig.setAttribute(Project.PROJECT_KEY, "directory", self.directory)
+        
+        # Create folder for devices
+        devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
+        projectConfig.set(devicePath, Hash())
+        deviceConfig = []
+        for device in self.devices:
+            config = device.toHash()
+            deviceConfig.append(Hash(device.classId, config))
+        projectConfig.set(devicePath, deviceConfig)
+        
+        # Create folder for scenes
+        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.SCENES_LABEL)
+        #dir.mkpath(absoluteLabelPath)
+        scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
+        sceneConfig = []
+        for scene in self.scenes:
+            # Save scene to SVG
+            self.signalSaveScene.emit(scene)
+            sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
+        projectConfig.set(scenePath, sceneConfig)
+
+        # Create folder for macros
+        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MACROS_LABEL)
+        #dir.mkpath(absoluteLabelPath)
+        macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
+        projectConfig.set(macroPath, Hash())
+        for macro in self.macros:
+            # TODO
+            pass
+        
+        # Create folder for configurations
+        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.CONFIGURATIONS_LABEL)
+        #dir.mkpath(absoluteLabelPath)
+        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
+        projectConfig.set(configPath, Hash())
+        for config in self.configurations:
+            # TODO
+            pass
+        
+        # Create folder for resources
+        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.RESOURCES_LABEL)
+        #dir.mkpath(absoluteLabelPath)
+        resourcePath = "{}.{}".format(Project.PROJECT_KEY, Project.RESOURCES_KEY)
+        projectConfig.set(resourcePath, Hash())
+        for resource in self.resources:
+            # TODO
+            pass
+
+        # Create folder for monitors
+        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MONITORS_LABEL)
+        #dir.mkpath(absoluteLabelPath)
+        monitorPath = "{}.{}".format(Project.PROJECT_KEY, Project.MONITORS_KEY)
+        projectConfig.set(monitorPath, Hash())
+        for montitor in self.monitors:
+            # TODO
+            pass
+        
+        projectData = XMLWriter().write(projectConfig)
+        
+        absoluteProjectPath = os.path.join(self.directory, self.name)
+        zf = ZipFile(absoluteProjectPath, mode="w")#, 
+                     #compression=ZIP_DEFLATED)
+        try:
+            print "adding project.xml"
+            zf.writestr("project.xml", projectData)
+        finally:
+            print "closing"
+            zf.close()
 
     
     def save(self, overwrite=False):
