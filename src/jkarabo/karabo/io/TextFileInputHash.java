@@ -12,8 +12,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import karabo.util.BinarySerializerHash;
-import static karabo.util.ClassInfo.KARABO_REGISTER_FOR_CONFIGURATION;
 import static karabo.util.ClassInfo.KARABO_REGISTER_FOR_CONFIGURATION;
 import karabo.util.Configurator;
 import karabo.util.Hash;
@@ -28,6 +26,10 @@ import karabo.util.vectors.VectorHash;
  */
 @KARABO_CLASSINFO(classId = "TextFile", version = "1.0")
 public class TextFileInputHash extends InputHash {
+
+    private final Path m_filename;
+    private TextSerializerHash m_serializer;
+    private VectorHash m_sequenceBuffer;
 
     static {
         KARABO_REGISTER_FOR_CONFIGURATION(InputHash.class, TextFileInputHash.class);
@@ -45,15 +47,11 @@ public class TextFileInputHash extends InputHash {
         CHOICE_ELEMENT(expected).key("format")
                 .displayedName("Format")
                 .description("Select the format which should be used to interprete the data")
-                .appendNodesOfConfigurationBase(BinarySerializerHash.class)
+                .appendNodesOfConfigurationBase(TextSerializerHash.class)
                 .assignmentOptional().noDefaultValue()
                 .commit();
     }
     
-    private final Path m_filename;
-    private TextSerializerHash m_serializer;
-    private VectorHash m_sequenceBuffer;
-
     public TextFileInputHash(Hash config) {
         super(config);
         m_filename = FileSystems.getDefault().getPath(".", (String) config.get("filename"));

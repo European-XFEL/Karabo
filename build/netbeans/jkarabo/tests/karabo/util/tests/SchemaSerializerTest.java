@@ -18,6 +18,8 @@ import karabo.util.Hash;
 import karabo.util.KARABO_CLASSINFO;
 import karabo.util.Registrator;
 import karabo.util.Schema;
+import karabo.util.TextSerializer;
+import karabo.util.TextSerializerSchema;
 import karabo.util.Units;
 import karabo.util.vectors.VectorInteger;
 import karabo.util.vectors.VectorString;
@@ -175,9 +177,9 @@ class TestSchemaSerializer extends ClassInfo {
  *
  * @author Sergey Esenov <serguei.essenov@xfel.eu>
  */
-public class SchemaBinarySerializerTest {
+public class SchemaSerializerTest {
 
-    public SchemaBinarySerializerTest() {
+    public SchemaSerializerTest() {
     }
 
     @BeforeClass
@@ -203,28 +205,16 @@ public class SchemaBinarySerializerTest {
     // @Test
     // public void hello() {}
     @Test
-    public void testSchema() {
+    public void testSchemaBinarySerializer() {
         Schema testSchema = new Schema("TestSchema", new Schema.AssemblyRules(AccessType.INIT_READ_WRITE));
         TestSchemaSerializer.expectedParameters(testSchema);
-//        System.out.println("*** testSchema ***\n" + testSchema);
-//        VectorString vBaseClasses = Configurator.getRegisteredBaseClasses();
-//        VectorString vBinarySerializer = Configurator.getRegisteredClasses(BinarySerializerSchema.class);
-//        
-//        System.out.println("Base classes registry is ...");
-//        for (String name : vBaseClasses) {
-//            System.out.println("\tClass " + name);
-//        }
-//        System.out.println("Registry of base class BinarySerializerSchema");
-//        for (String name : vBinarySerializer) {
-//            System.out.println("\tClass " + name);
-//        }
 
         BinarySerializer<Schema> serializer = BinarySerializerSchema.create(BinarySerializerSchema.class, "Bin", new Hash());
 
         try {
-            ByteBuffer archive1 = serializer.save(testSchema);
+            ByteBuffer archive = serializer.save(testSchema);
             //System.out.println("*** archive1.size=" + archive1.capacity());
-            Schema inputSchema = serializer.load(archive1.array(), 0, archive1.capacity());
+            Schema inputSchema = serializer.load(archive.array(), 0, archive.capacity());
             //System.out.println("*** input schema ***\n" + inputSchema);
             // Check whether alias maps got re-established
             assertTrue(inputSchema.keyHasAlias("exampleKey5") == true);
@@ -233,33 +223,28 @@ public class SchemaBinarySerializerTest {
             assertTrue("exampleAlias5".equals(inputSchema.<String>getAliasFromKey("exampleKey5")));
 
         } catch (IOException ex) {
-            Logger.getLogger(SchemaBinarySerializerTest.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SchemaSerializerTest.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    @Test
+    public void testSchemaXmlSerializer() {
+        Schema testSchema = new Schema("TestSchema", new Schema.AssemblyRules(AccessType.INIT_READ_WRITE));
+        TestSchemaSerializer.expectedParameters(testSchema);
+        
+        TextSerializer<Schema> textSerializer = TextSerializerSchema.create(TextSerializerSchema.class, "Xml", new Hash());
 
-//    std::vector<char> archive2;
-//
-//    p->save(inputSchema, archive2);
-//
-//    //std::clog << "\nOriginal:\n" << testSchema << std::endl;
-//    //std::clog << "\nSerialized:\n" << inputSchema << std::endl;
-//
-//    CPPUNIT_ASSERT(archive2.size() == archive1.size());
-//
-//    CPPUNIT_ASSERT(memcmp(&archive1[0], &archive2[0], archive1.size()) == 0);
-//
-//    TextSerializer<Schema>::Pointer p2 = TextSerializer<Schema>::create("Xsd");
-//
-//    std::string archive3;
-//    p2->save(testSchema, archive3);
-//
-//    p2 = TextSerializer<Schema>::create("Xml");
-//
-//    std::string archive4;
-//    p2->save(testSchema, archive4);
-//    
-        //std::clog << "Xml:\n" << archive4 << std::endl;
-//    std::clog << "Binary: " << archive2.size()   << " bytes" << std::endl;
-//    std::clog << "Xml   : " << archive4.length() << " bytes" << std::endl;
-//    std::clog << "Xsd   : " << archive3.length() << " bytes" << std::endl;
+        try {
+            String archive = textSerializer.save(testSchema);
+            //System.out.println("*** archived Schema ...\n" + archive);
+            Schema inputSchema = textSerializer.load(archive);
+            //System.out.println("*** input schema ***\n" + inputSchema);
+            assertTrue(inputSchema.keyHasAlias("exampleKey5") == true);
+            assertTrue(inputSchema.aliasHasKey("exampleAlias5") == true);
+            assertTrue("exampleKey5".equals(inputSchema.getKeyFromAlias("exampleAlias5")));
+            assertTrue("exampleAlias5".equals(inputSchema.<String>getAliasFromKey("exampleKey5")));
+        } catch (IOException ex) {
+            Logger.getLogger(SchemaSerializerTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
