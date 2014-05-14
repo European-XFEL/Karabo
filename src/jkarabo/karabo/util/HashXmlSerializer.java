@@ -9,9 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLInputFactory;
@@ -59,6 +57,7 @@ public class HashXmlSerializer extends TextSerializerHash {
     private String prefix = null;
     private final boolean debug = false;
     private String artificialRootFlag;
+    private boolean writeDataTypesFlag = false;
 
     private class ParsedTuple {
 
@@ -178,6 +177,9 @@ public class HashXmlSerializer extends TextSerializerHash {
             prefix = input.<String>get("prefix");
         }
         artificialRootFlag = prefix + "Artificial";
+        if (input.has("writeDataTypes")) {
+            writeDataTypesFlag = input.<Boolean>get("writeDataTypes");
+        }
     }
 
     @Override
@@ -196,7 +198,9 @@ public class HashXmlSerializer extends TextSerializerHash {
             if (object.size() != 1 || object.iterator().next().getValue().getType() != ReferenceType.HASH) {
                 writer.writeStartElement("root");
                 writer.writeAttribute(prefix + "Artificial", "");
-                writer.writeAttribute(prefix + "Type", ToLiteral.to(ReferenceType.HASH));
+                if (writeDataTypesFlag) {
+                    writer.writeAttribute(prefix + "Type", ToLiteral.to(ReferenceType.HASH));
+                }
                 if (step >= 0) {
                     writer.writeCharacters("\n");
                 }
@@ -727,8 +731,14 @@ public class HashXmlSerializer extends TextSerializerHash {
                 throw new RuntimeException("Hash or VectorHash object as attribute value are not allowed.");
             }
             String attributeStringValue = FromType.toString(attribute);
-            writer.writeAttribute(key, attributeStringType + ":" + attributeStringValue);
+            if (writeDataTypesFlag) {
+                writer.writeAttribute(key, attributeStringType + ":" + attributeStringValue);
+            } else {
+                writer.writeAttribute(key, attributeStringValue);
+            }
         }
-        writer.writeAttribute(prefix + "Type", ToLiteral.to(type));
+        if (writeDataTypesFlag) {
+            writer.writeAttribute(prefix + "Type", ToLiteral.to(type));
+        }
     }
 }
