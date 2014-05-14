@@ -9,7 +9,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLInputFactory;
@@ -55,7 +57,8 @@ public class HashXmlSerializer extends TextSerializerHash {
     private int processCount = 0;
     private int step = 2;
     private String prefix = null;
-    private boolean debug = false;
+    private final boolean debug = false;
+    private String artificialRootFlag;
 
     private class ParsedTuple {
 
@@ -174,6 +177,7 @@ public class HashXmlSerializer extends TextSerializerHash {
         if (input.has("prefix")) {
             prefix = input.<String>get("prefix");
         }
+        artificialRootFlag = prefix + "Artificial";
     }
 
     @Override
@@ -260,8 +264,10 @@ public class HashXmlSerializer extends TextSerializerHash {
                 Logger.getLogger(HashXmlSerializer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
-        return hash.<Hash>get("root");
+        Node firstNode = hash.iterator().next().getValue();
+        if (firstNode.hasAttribute(artificialRootFlag))
+            return hash.<Hash>get("root");
+        return hash;
     }
 
     private String getEventTypeString(int eventType) {
