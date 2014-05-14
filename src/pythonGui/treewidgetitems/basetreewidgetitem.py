@@ -57,7 +57,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
     def _editableComponent(self):
         return self.__editableComponent
     def _setEditableComponent(self, component):
-        if not component:
+        if component is None:
             return
         
         self.__editableComponent = component
