@@ -8,6 +8,10 @@ from const import ns_karabo
 
 
 class Monkey(object):
+    """ This is a Monkey-patcher class
+
+    A class with this metaclass does not actually define a new class, but
+    updates an already preexisting class. """
     def __new__(cls, name, bases, dict):
         for k, v in dict.iteritems():
             setattr(bases[0], k, v)
@@ -15,10 +19,11 @@ class Monkey(object):
 
 
 class Registry(Registry):
+    """ This is a special case of a registry which inherits QObject """
     class __metaclass__(type(Registry), type(QObject)):
         pass
 
-        
+
 class Loadable(Registry):
     """The registry for all loadable objects.
 

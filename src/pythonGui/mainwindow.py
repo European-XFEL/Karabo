@@ -12,6 +12,7 @@
 __all__ = ["MainWindow"]
 
 import os.path
+import qrc_icons # hopefully this goes one day
 import icons
 
 from docktabwindow import DockTabWindow
@@ -28,7 +29,7 @@ from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, qApp, QIcon, QKeySequence,
+from PyQt4.QtGui import (QAction, QActionGroup, qApp, QKeySequence,
                          QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
 
 

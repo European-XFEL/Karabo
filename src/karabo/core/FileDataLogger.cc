@@ -261,7 +261,7 @@ namespace karabo {
 
                         if (boost::filesystem::file_size(filePath) > (get<int>("maximumFileSize") * 1E6)) { // File is too large
 
-                            KARABO_LOG_INFO << "File size for " << deviceId << " to too large, log-rotating...";
+                            KARABO_LOG_INFO << "File size for " << deviceId << " is too large, log-rotating...";
 
                             // Find the latest used file index
                             int i = 0;

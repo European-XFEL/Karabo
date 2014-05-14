@@ -51,30 +51,30 @@ namespace karabo {
                 return m_instanceId;
             }
 
-            void setInputHandlerType(const std::string& handlerType) {
-                std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
+            void setInputHandlerType(const std::string& language, const std::string& inputType) {
+                std::string capitalType = boost::algorithm::to_upper_copy(language);
                 if (capitalType == "C++")
-                    m_handlers = karabo::util::Factory<InputHandler>::create("CppInputHandler", shared_from_this());
+                    m_handler = karabo::util::Factory<InputHandler>::create("CppInputHandler" + inputType, shared_from_this());
                 else if (capitalType == "PYTHON")
-                    m_handlers = karabo::util::Factory<InputHandler>::create("PythonInputHandler", shared_from_this());
+                    m_handler = karabo::util::Factory<InputHandler>::create("PythonInputHandler" + inputType, shared_from_this());
                 else
-                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + handlerType + " is not supported.  Supported types (case-insensitive) are C++, Python");
+                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + language + " is not supported.  Supported types (case-insensitive) are C++, Python");
             }
 
             InputHandler::Pointer getInputHandler() {
-                return m_handlers;
+                return m_handler;
             }
 
             void registerIOEventHandler(const boost::any& ioEventHandler) {
-                if (!m_handlers)
+                if (!m_handler)
                     throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
-                m_handlers->registerIOEventHandler(ioEventHandler);
+                m_handler->registerIOEventHandler(ioEventHandler);
             }
 
             void registerEndOfStreamEventHandler(const boost::any& endOfStreamEventHandler) {
-                if (!m_handlers)
+                if (!m_handler)
                     throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setInputHandlerType' first.");
-                m_handlers->registerEndOfStreamEventHandler(endOfStreamEventHandler);
+                m_handler->registerEndOfStreamEventHandler(endOfStreamEventHandler);
             }
 
             virtual bool needsDeviceConnection() const { // TODO Check if we can get rid of this
@@ -106,19 +106,19 @@ namespace karabo {
         protected:
 
             void triggerIOEvent() {
-                if (m_handlers) {
-                    m_handlers->triggerIOEvent();
+                if (m_handler) {
+                    m_handler->triggerIOEvent();
                 }
             }
 
             void triggerEndOfStreamEvent() {
-                if (m_handlers) {
-                    m_handlers->triggerEndOfStreamEvent();
+                if (m_handler) {
+                    m_handler->triggerEndOfStreamEvent();
                 }
             }
 
         private:
-            boost::shared_ptr<InputHandler> m_handlers;
+            boost::shared_ptr<InputHandler> m_handler;
             std::string m_instanceId;
         };
     }

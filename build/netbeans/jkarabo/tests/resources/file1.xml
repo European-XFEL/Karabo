@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<root KRB_Artificial="" KRB_Type="HASH">
+  <abc KRB_Type="INT32">12345</abc>
+  <aFloat KRB_Type="FLOAT">3.1415</aFloat>
+  <aString aNumber="KRB_DOUBLE:2.783467333" aVector="KRB_VECTOR_DOUBLE:3.1415,2.87,4.12,3.62,8.12,2.78" KRB_Type="STRING">Some vector as attribute</aString>
+</root>

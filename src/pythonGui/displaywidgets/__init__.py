@@ -9,7 +9,7 @@
 __all__ = ["displaybitfield",
     "displaycheckbox", "displaychoiceelement", "displaycombobox",
     "displaycommand", "displaydirectory", "displaydoublespinbox",
-    "displayfilein", "displayfileout", "displayhistogram", "displayiconset",
+    "displayfilein", "displayfileout", "displayplot", "displayiconset",
     "displayimageelement", "displayimage", "displaylabel",
     "displaylineedit", "displaypycodeHist", "displaypycode",
     "displaytrendline", "tauruslabel", "taurusplot"]

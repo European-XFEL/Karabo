@@ -26,7 +26,7 @@ public class SchemaXmlSerializer extends TextSerializer<Schema> {
     }
 
     @Override
-    public Schema load(String archive) throws IOException {
+    public Schema load(byte[] archive) throws IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

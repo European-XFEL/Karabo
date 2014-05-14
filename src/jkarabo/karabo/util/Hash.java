@@ -578,7 +578,7 @@ public class Hash extends Object implements Iterable {
                 return this.set(key, new VectorCharacter((String)value));
             case INT8:
             case UINT8:
-                return this.set(key, ((String)value).getBytes()[0]);
+                return this.set(key, (byte)Integer.parseInt((String)value));
             case VECTOR_INT8:
             case VECTOR_UINT8:
                 return this.set(key, new VectorByte((String)value));
