@@ -12,4 +12,4 @@ __all__ = ["displaybitfield",
     "displayfilein", "displayfileout", "displayplot", "displayiconset",
     "displayimageelement", "displayimage", "displaylabel",
     "displaylineedit", "displaypycodeHist", "displaypycode",
-    "displaytrendline", "tauruslabel", "taurusplot"]
+    "displaytrendline", "icons", "tauruslabel", "taurusplot"]

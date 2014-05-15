@@ -76,6 +76,16 @@ class Widget(Registry, QObject):
         return False
 
 
+    def save(self, element):
+        """Saves the widget into the ElementTree element"""
+        return
+
+
+    def load(self, element):
+        """Loads the widgets from the ElementTree element"""
+        return
+
+
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
