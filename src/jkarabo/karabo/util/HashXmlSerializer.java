@@ -58,6 +58,7 @@ public class HashXmlSerializer extends TextSerializerHash {
     private final boolean debug = false;
     private String artificialRootFlag;
     private boolean writeDataTypesFlag = false;
+    private boolean readDataTypesFlag = true;
 
     private class ParsedTuple {
 
@@ -179,6 +180,9 @@ public class HashXmlSerializer extends TextSerializerHash {
         artificialRootFlag = prefix + "Artificial";
         if (input.has("writeDataTypes")) {
             writeDataTypesFlag = input.<Boolean>get("writeDataTypes");
+        }
+        if (input.has("readDataTypes")) {
+            readDataTypesFlag = input.<Boolean>get("readDataTypes");
         }
     }
 
@@ -402,12 +406,23 @@ public class HashXmlSerializer extends TextSerializerHash {
             processAttributes(tuple);
 
             //System.out.println("*** processElement Hash ENTER : " + processCount++ + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType());
-            boolean endFlag = false;
+            boolean isParentStart = xmlr.isStartElement();
             while (xmlr.hasNext()) {
-                int eventType = xmlr.next();
+                xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     printStartElement();
+                    if (tuple.getType() == null || !readDataTypesFlag) {
+                        if (isParentStart) {
+                            if (xmlr.getName().toString().equals(prefix + "Item")) {
+                                tuple.setType(ReferenceType.VECTOR_HASH);
+                            } else {
+                                tuple.setType(ReferenceType.HASH);
+                            }
+                        } else {
+                            tuple.setType(ReferenceType.STRING);
+                        }
+                    }
                     if (tuple.getType() == ReferenceType.VECTOR_HASH) {
                         if (tuple.getValue() == null) {
                             tuple.setValue(new VectorHash());
@@ -421,17 +436,21 @@ public class HashXmlSerializer extends TextSerializerHash {
                         processElement((Hash) tuple.getValue());
                         //System.out.println("---------- Hash is \n" + hash);
                     } else {
-                        throw new RuntimeException("Wrong reference type " + tuple.getType());
+                        throw new RuntimeException("Wrong reference type " + tuple.getType()
+                                + " : xml tag = " + xmlr.getName().toString() + " , xml event = " + getEventTypeString(xmlr.getEventType()));
                     }
                     continue;  // read next event, because last event was END_ELEMENT
                 }
                 if (xmlr.hasText()) {
-                    printText();
-                    String text = xmlr.getText();
-                    text = text.trim();     // trim space characters
-                    if (!text.isEmpty()) {
-                        //System.out.println("\n\t==> XML text: " + text);
-                        tuple.setValue(text);
+                    if (xmlr.isCharacters()) {
+                        if (xmlr.isWhiteSpace()) {
+                            continue;
+                        }
+                        printText();
+                        if (tuple.getType() == null || !readDataTypesFlag) {
+                            tuple.setType(ReferenceType.STRING);
+                        }
+                        tuple.setValue(xmlr.getText());
                     }
                 }
                 if (xmlr.isEndElement()) {
@@ -441,6 +460,9 @@ public class HashXmlSerializer extends TextSerializerHash {
                         continue;
                     }
                     if (tuple.getValue() != null) {
+                        if (tuple.getType() == null) {
+                            tuple.setType(ReferenceType.STRING);
+                        }
                         input.set(tuple.getKey(), tuple.getType(), tuple.getValue());
                         if (tuple.getAttributes() != null) {
                             input.setAttributes(tuple.getKey(), tuple.getAttributes());
@@ -472,9 +494,8 @@ public class HashXmlSerializer extends TextSerializerHash {
             processAttributes(tuple);
 
             //System.out.println("*** processElement VectoHash ENTER : " + processCount++ + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType());
-            boolean endFlag = false;
             while (xmlr.hasNext()) {
-                int eventType = xmlr.next();
+                xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     printStartElement();
@@ -487,9 +508,11 @@ public class HashXmlSerializer extends TextSerializerHash {
                     continue;
                 }
                 if (xmlr.hasText()) {
-                    printText();
-                    String text = xmlr.getText().trim();
-                    if (!text.isEmpty()) {
+                    if (xmlr.isCharacters()) {
+                        if (xmlr.isWhiteSpace()) {
+                            continue;
+                        }
+                        printText();
                         throw new RuntimeException("Text area for VECTOR_HASH contains non-Space characters");
                     }
                 }
@@ -512,7 +535,7 @@ public class HashXmlSerializer extends TextSerializerHash {
             Logger.getLogger(HashXmlSerializer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        //System.out.println("*** processElement VectorHash EXIT : " + --processCount + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType() + "\n*** input is ...\n" + input);
+        //System.out.println("*** processElement VectorHash EXIT : " + --processCount + " ===> \"" + stack.peek().getKey() + "\"\ttype = " + stack.peek().getType() + "\n*** input is ...\n" + input);
     }
 
     private void processAttributes(ParsedTuple tuple) throws IOException {
@@ -535,7 +558,11 @@ public class HashXmlSerializer extends TextSerializerHash {
                 } else {
                     // split using ':' separator
                     String[] sa = stringVal.split("[:]");
-                    putAttribute(attributes, attribute, sa[0], sa[1]);
+                    if (sa.length == 1) {
+                        putAttribute(attributes, attribute, prefix + "STRING", sa[0]);
+                    } else {
+                        putAttribute(attributes, attribute, sa[0], sa[1]);
+                    }
                 }
             }
             if (attributes != null) {
