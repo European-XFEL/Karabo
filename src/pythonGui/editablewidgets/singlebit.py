@@ -20,7 +20,7 @@ class SingleBit(DisplayWidget):
 
 
     def setReadOnly(self, ro):
-        self.widget.setEnabled(ro)
+        self.widget.setEnabled(not ro)
 
 
     @pyqtSlot()
@@ -34,8 +34,8 @@ class SingleBit(DisplayWidget):
         else:
             min, max = self.boxes[0].descriptor.getMinMax()
             bit, ok = QInputDialog.getInt(self.widget, "Bit Number",
-                                          "Enter number of bit:", min=0,
-                                          max=log2(max) + 1)
+                                          "Enter number of bit:", self.bit, 0,
+                                          log2(max) + 1)
         if ok:
             self.bit = bit
             self.valueChanged(self.boxes[0], self.boxes[0].value)
