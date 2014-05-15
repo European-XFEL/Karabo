@@ -1121,7 +1121,7 @@ class GraphicsView(QSvgWidget):
                 # Create label
                 displayName = item.text(0)
                 proxy = ProxyWidget(self.inner)
-                proxy.addWidget(QLabel(displayName, proxy))
+                proxy.setWidget(QLabel(displayName, proxy))
                 layout.addWidget(proxy)
                 proxy.show()
 
@@ -1134,7 +1134,7 @@ class GraphicsView(QSvgWidget):
                     proxy = ProxyWidget(self.inner)
                     displayComponent = DisplayComponent(box.descriptor.classAlias, box, proxy)
                     proxy.setComponent(displayComponent)
-                    proxy.addWidget(displayComponent.widget)
+                    proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
                     box.configuration.addVisible()
