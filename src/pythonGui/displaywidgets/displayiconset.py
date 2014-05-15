@@ -1,3 +1,4 @@
+from const import ns_karabo
 from widget import DisplayWidget
 
 from PyQt4.QtCore import pyqtSlot, QBuffer
@@ -39,7 +40,22 @@ class DisplayIconset(DisplayWidget):
         self.widget.addAction(action)
         self.xml = ElementTree.ElementTree(ElementTree.fromstring(
             '<svg xmlns:svg="http://www.w3.org/2000/svg"/>'))
+        self.filename = None
         super(DisplayIconset, self).__init__(box)
+
+
+    def save(self, e):
+        if self.filename is not None:
+            e.set(ns_karabo + "filename", self.filename)
+
+
+    def load(self, e):
+        name = e.get(ns_karabo + "filename")
+        self.valueChanged(None, "")
+        if name is None:
+            self.filename = None
+        else:
+            self.setFilename(e.get(ns_karabo + "filename"))
 
 
     @pyqtSlot()
@@ -48,7 +64,11 @@ class DisplayIconset(DisplayWidget):
                                          filter="*.svg")
         if not fn:
             return
+        self.setFilename(fn)
 
+
+    def setFilename(self, fn):
+        self.filename = fn
         parser = ElementTree.XMLParser(target=ElementTree.TreeBuilder(
             element_factory=Element))
         value = self.xml.getroot().filter
