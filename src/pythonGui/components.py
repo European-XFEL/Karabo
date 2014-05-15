@@ -45,15 +45,15 @@ class BaseComponent(Loadable, QObject):
         self.__windowPosition = None
 
 
-    def attributes(self):
-        """ returns a dict of attibutes for saving """
+    def save(self, e):
+        """saves this component into the ElementTree.Element e"""
         d = { }
-        d[ns_karabo + "class"] = self.__class__.__name__
-        d[ns_karabo + "widgetFactory"] = self.widgetFactory.factory.__name__
-        d[ns_karabo + "classAlias"] = self.classAlias
-        d[ns_karabo + "keys"] = ",".join(b.key()
-                                         for b in self.widgetFactory.boxes)
-        return d
+        e.set(ns_karabo + "class", self.__class__.__name__)
+        e.set(ns_karabo + "widgetFactory", self.widgetFactory.factory.__name__)
+        e.set(ns_karabo + "classAlias", self.classAlias)
+        e.set(ns_karabo + "keys", ",".join(b.key()
+                                           for b in self.widgetFactory.boxes))
+        self.widgetFactory.save(e)
 
 
     @classmethod
@@ -76,6 +76,8 @@ class BaseComponent(Loadable, QObject):
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
+        component.widgetFactory.load(elem)
+        elem.clear()
         return component
 
 
