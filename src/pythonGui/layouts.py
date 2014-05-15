@@ -12,7 +12,7 @@ from const import ns_svg, ns_karabo
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
 from PyQt4.QtGui import (QAction, QBoxLayout, QFrame, QGridLayout, QLabel,
-                         QLayout, QPalette, QMenu, QStackedWidget)
+                         QLayout, QPalette, QMenu, QStackedLayout, QWidget)
 
 from bisect import bisect
 from functools import partial
@@ -408,17 +408,22 @@ class GridLayout(Layout, QGridLayout):
         return ret
 
 
-class ProxyWidget(QStackedWidget):
+class ProxyWidget(QWidget):
     def __init__(self, parent):
-        QStackedWidget.__init__(self, parent)
+        QWidget.__init__(self, parent)
+        QStackedLayout(self).setStackingMode(QStackedLayout.StackAll)
         self.selected = False
         self.component = None
+        self.marker = QLabel("X", self)
+        self.layout().addWidget(self.marker)
+        self.widget = None
 
 
     def setComponent(self, component):
         self.component = component
 
-        self.setToolTip(self.component.boxes[0].key())
+        box = self.component.boxes[0]
+        self.setToolTip(box.key())
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
@@ -436,9 +441,10 @@ class ProxyWidget(QStackedWidget):
 
 
     def setWidget(self, widget):
-        if self.count() > 0:
-            self.removeWidget(self.widget(0))
-        self.addWidget(widget)
+        if self.layout().count() > 1:
+            self.layout().takeAt(0)
+        self.layout().insertWidget(0, widget)
+        self.widget = widget
 
 
     @pyqtSlot()
@@ -450,14 +456,14 @@ class ProxyWidget(QStackedWidget):
     def contextMenuEvent(self, event):
         if not self.parent().parent().designMode:
             return
-        QMenu.exec_(self.currentWidget().actions() + self.actions(),
+        QMenu.exec_(self.widget.actions() + self.actions(),
                     event.globalPos(), None, self)
 
     def element(self):
         g = self.geometry()
         d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height() }
         if self.component is None:
-            w = self.currentWidget()
+            w = self.widget
             d[ns_karabo + "class"] = "Label"
             d[ns_karabo + "text"] = w.text()
             d[ns_karabo + "font"] = w.font().toString()
@@ -485,8 +491,8 @@ class ProxyWidget(QStackedWidget):
 
 
     def edit(self):
-        if isinstance(self.currentWidget(), QLabel):
-            dialog = TextDialog(self.currentWidget())
+        if isinstance(self.widget, QLabel):
+            dialog = TextDialog(self.widget)
             dialog.exec_()
 
 

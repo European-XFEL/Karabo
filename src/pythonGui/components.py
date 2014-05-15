@@ -72,7 +72,7 @@ class BaseComponent(Loadable, QObject):
         parent = ProxyWidget(layout.parentWidget())
         component = cls(d['classAlias'], boxes[0], parent, d['widgetFactory'])
         parent.setComponent(component)
-        parent.addWidget(component.widget)
+        parent.setWidget(component.widget)
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
@@ -157,9 +157,7 @@ class DisplayComponent(BaseComponent):
         self.__displayWidget.setReadOnly(True)
         for b in self.boxes[1:]:
             self.__displayWidget.addBox(b)
-        oldWidget.parent().addWidget(self.__displayWidget.widget)
-        oldWidget.parent().removeWidget(oldWidget)
-        oldWidget.parent().setCurrentWidget(self.__displayWidget.widget)
+        oldWidget.parent().setWidget(self.__displayWidget.widget)
         oldWidget.setParent(None)
         self.__displayWidget.widget.show()
 
