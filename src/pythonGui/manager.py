@@ -451,6 +451,8 @@ class _Manager(QObject):
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
+        if self.deviceData.get(deviceId) is None: return
+        
         config = instanceInfo.get("configuration")
         self.deviceData[deviceId].merge(config)
 
