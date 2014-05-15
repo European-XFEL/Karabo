@@ -11,6 +11,7 @@ __author__="kerstin weger"
 import sip
 sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
+sip.setapi("QUrl", 2)
 
 import sys
 import icons
