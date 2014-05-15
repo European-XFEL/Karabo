@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from const import ns_karabo
 import icons
 from widget import DisplayWidget
 
@@ -11,6 +12,7 @@ from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
 
 from os import path
 import re
+from xml.etree.ElementTree import Element
 
 
 class Label(QLabel):
@@ -104,13 +106,21 @@ class Icons(DisplayWidget):
             self.widget.setPixmap(p)
 
 
+    def loadImage(self, e):
+        name = e.get("image")
+        if name is None:
+            return None, None
+        else:
+            return name, QPixmap(name)
+
+
 class TextIcons(Icons):
     category = "State"
     alias = "Text Icons"
 
 
     def typeChanged(self, box):
-        self.list = [(None, None, None)]
+        self.list = [(None, None, None, None)]
         self.dialog.stack.setCurrentWidget(self.dialog.textPage)
         self.dialog.up.clicked.connect(self.on_up_clicked)
         self.dialog.down.clicked.connect(self.on_down_clicked)
@@ -136,15 +146,35 @@ class TextIcons(Icons):
 
     def on_addValue_clicked(self):
         self.list.insert(0, (re.compile(self.dialog.textValue.text()),
+                             self.dialog.textValue.text(),
                              None, None))
         self.dialog.list.insertItem(0, self.dialog.textValue.text())
 
 
     def valueChanged(self, box, value, timestamp=None):
-        for r, i, p in self.list:
+        for r, _, _, p in self.list:
             if r is None or r.match(value):
                 self.setPixmap(p)
                 return
+
+
+    def save(self, e):
+        for _, t, i, _ in self.list:
+            ee = Element(ns_karabo + "re")
+            if t is not None:
+                ee.text = t
+            if i is not None:
+                ee.set('image', i)
+            e.append(ee)
+
+
+    def load(self, e):
+        self.list = [((re.compile(ee.text), ee.text)
+                       if ee.text else (None, None)) +
+                     self.loadImage(ee) for ee in e]
+        self.dialog.list.clear()
+        self.dialog.list.addItems(["default" if t is None else t
+                                   for _, t, _, _ in self.list])
 
 
 class DigitIcons(Icons):
@@ -181,3 +211,27 @@ class DigitIcons(Icons):
             if value < v or value == v and f or v is None:
                 self.setPixmap(p)
                 break
+
+
+    def save(self, e):
+        for v, f, i, _ in self.list:
+            ee = Element(ns_karabo + "value")
+            if v is not None:
+                ee.text = repr(v)
+            if f is not None:
+                ee.set('equal', unicode(f).lower())
+            if i is not None:
+                ee.set('image', i)
+            e.append(ee)
+
+
+    def load(self, e):
+        parse = int if isinstance(self.boxes[0].descriptor,
+                                  hashtypes.Integer) else float
+        self.list = [((parse(ee.text), ee.get('equal') == 'true')
+                       if ee.get('equal') else (None, None)) +
+                     self.loadImage(ee) for ee in e]
+        self.dialog.list.clear()
+        self.dialog.list.addItems(["default" if v is None
+                                   else "{} {}".format("<=" if f else "<", v)
+                                   for v, f, _, _ in self.list])
