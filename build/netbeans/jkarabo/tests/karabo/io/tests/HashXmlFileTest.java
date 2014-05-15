@@ -82,9 +82,9 @@ public class HashXmlFileTest {
         out = OutputHash.create(OutputHash.class, "TextFile", new Hash("filename", "tests/resources/file3.xml", "format.Xml.indentation", 0, "format.Xml.writeDataTypes", false));
         out.write(unrooted);
         
-        inp = InputHash.create(InputHash.class, "TextFile", new Hash("filename", "tests/resources/file3.xml"));
-        hash2 = inp.read();
-        
-        System.out.println("xmlFileInputOutput: hash is ...\n" + hash2);
+//        inp = InputHash.create(InputHash.class, "TextFile", new Hash("filename", "tests/resources/file3.xml"));
+//        hash2 = inp.read();
+//        
+//        System.out.println("xmlFileInputOutput: hash is ...\n" + hash2);
     }
 }
