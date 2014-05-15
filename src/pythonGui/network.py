@@ -374,14 +374,14 @@ class _Network(QObject):
 
     def onRefreshInstance(self, configuration):
         instanceInfo = Hash("type", "refreshInstance")
-        instanceInfo.set("deviceId", configuration.path)
+        instanceInfo.set("deviceId", configuration.key)
         self._tcpWriteHash(instanceInfo)
 
 
     def onReconfigure(self, boxes):
         instanceInfo = Hash()
         instanceInfo["type"] = "reconfigure"
-        instanceInfo["deviceId"] = boxes[0].configuration.path
+        instanceInfo["deviceId"] = boxes[0].configuration.key
         for b in boxes:
             instanceInfo["configuration." + ".".join(b.path)] = b.toHash()
         self._tcpWriteHash(instanceInfo)
@@ -437,7 +437,7 @@ class _Network(QObject):
 
     def onGetFromPast(self, box, t0, t1, maxNumData):
         instanceInfo = Hash("type", "getFromPast")
-        instanceInfo.set("deviceId", box.configuration.path)
+        instanceInfo.set("deviceId", box.configuration.key)
         instanceInfo.set("property", ".".join(box.path))
         instanceInfo.set("t0", t0)
         instanceInfo.set("t1", t1)

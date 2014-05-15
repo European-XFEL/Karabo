@@ -464,7 +464,7 @@ class ProjectModel(QStandardItemModel):
 
         descriptor = conf.getDescriptor()
         if descriptor is None:
-            conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
+            conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
         device = Device(deviceId, "projectClass", descriptor)
         # Save configuration for later descriptor update
