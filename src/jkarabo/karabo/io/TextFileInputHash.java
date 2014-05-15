@@ -22,7 +22,7 @@ import karabo.util.vectors.VectorHash;
 
 /**
  *
- * @author Sergey Esenov <serguei.essenov@xfel.eu>
+ * @author Sergey Esenov serguei.essenov@xfel.eu
  */
 @KARABO_CLASSINFO(classId = "TextFile", version = "1.0")
 public class TextFileInputHash extends InputHash {
