@@ -784,7 +784,7 @@ namespace karabo {
 
         void DeviceClient::unregisterDeviceMonitor(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            m_deviceChangedHandlers.erase(instanceId);
+            if (m_deviceChangedHandlers.has(instanceId)) m_deviceChangedHandlers.erase(instanceId);
             mortalize(instanceId);
         }
 
