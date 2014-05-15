@@ -78,11 +78,19 @@ class ProjectPanel(QWidget):
         self.acProjectSave.setEnabled(False)
         self.acProjectSave.triggered.connect(self.onProjectSave)
 
+        text = "Save project as"
+        self.acProjectSaveAs = QAction(QIcon(":save-as"), "&Save project as", self)
+        self.acProjectSaveAs.setStatusTip(text)
+        self.acProjectSaveAs.setToolTip(text)
+        self.acProjectSaveAs.setEnabled(False)
+        self.acProjectSaveAs.triggered.connect(self.onProjectSaveAs)
+
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.acProjectNew)
         standardToolBar.addAction(self.acProjectOpen)
         standardToolBar.addAction(self.acProjectSave)
+        standardToolBar.addAction(self.acProjectSaveAs)
 
 
     def setupDefaultProject(self):
@@ -91,19 +99,24 @@ class ProjectPanel(QWidget):
 
 ### slots ###
     def onProjectNew(self):
-        self.twProject.newProject()
+        self.twProject.projectNew()
 
 
     def onProjectOpen(self):
-        self.twProject.openProject()
+        self.twProject.projectOpen()
 
 
     def onProjectSave(self):
-        self.twProject.saveCurrentProject()
+        self.twProject.projectSave()
+
+
+    def onProjectSaveAs(self):
+        self.twProject.projectSaveAs()
 
 
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
+        self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
 
 
     # virtual function
