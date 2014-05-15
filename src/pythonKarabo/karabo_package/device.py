@@ -541,8 +541,7 @@ class PythonDevice(BaseFsm):
     @staticmethod
     def loadConfiguration(xmlfile):
         input = InputHash.create("TextFile", Hash("filename", xmlfile))
-        hash = Hash()
-        input.read(hash)
+        hash = input.read()
         return hash
  
 def launchPythonDevice():
