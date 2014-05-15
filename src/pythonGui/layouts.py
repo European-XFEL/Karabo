@@ -468,10 +468,11 @@ class ProxyWidget(QStackedWidget):
                     w.palette().color(QPalette.Background).rgb() & 0xffffff)
             if w.frameShape() == QFrame.Box:
                 d[ns_karabo + 'frameWidth'] = unicode(w.lineWidth())
-        else:
-            d.update(self.component.attributes())
-        return ElementTree.Element(ns_svg + "rect",
-                                   {k: unicode(v) for k, v in d.iteritems()})
+        ret = ElementTree.Element(ns_svg + "rect",
+                                  {k: unicode(v) for k, v in d.iteritems()})
+        if self.component is not None:
+            self.component.save(ret)
+        return ret
 
 
     def translate(self, pos):
