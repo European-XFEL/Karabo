@@ -33,7 +33,7 @@ class DisplayCommand(DisplayWidget):
     alias = "Command"
   
     def __init__(self, box, parent):
-        box.configuration.configuration.state.signalUpdateComponent.connect(
+        box.configuration.value.state.signalUpdateComponent.connect(
             self.onDeviceStateChanged)
         self.widget = QPushButton(parent)
         super(DisplayCommand, self).__init__(box)
@@ -43,7 +43,7 @@ class DisplayCommand(DisplayWidget):
         self.widget.setText(box.descriptor.displayedName)
         self.allowedStates = box.descriptor.allowedStates
         self.widget.setEnabled(
-            box.configuration.configuration.state.value in self.allowedStates)
+            box.configuration.value.state.value in self.allowedStates)
         self.widget.clicked.connect(self.onCommandClicked)
 
 
@@ -59,5 +59,5 @@ class DisplayCommand(DisplayWidget):
 
     def onCommandClicked(self):
         for box in self.boxes:
-            Manager().executeCommand(dict(path=box.configuration.path,
+            Manager().executeCommand(dict(path=box.configuration.key,
                                           command=box.path[-1], args=[]))
