@@ -154,40 +154,40 @@ class ProjectModel(QStandardItemModel):
                 childItem.appendRow(leafItem)
 
             # Macros
-            childItem = QStandardItem(Project.MACROS_LABEL)
-            childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
-            item.appendRow(childItem)
-            for macro in project.macros:
-                leafItem = QStandardItem(macro)
-                leafItem.setData(macro, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
+            #childItem = QStandardItem(Project.MACROS_LABEL)
+            #childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
+            #childItem.setEditable(False)
+            #childItem.setIcon(QIcon(":folder"))
+            #item.appendRow(childItem)
+            #for macro in project.macros:
+            #    leafItem = QStandardItem(macro)
+            #    leafItem.setData(macro, ProjectModel.ITEM_OBJECT)
+            #    leafItem.setEditable(False)
+            #    childItem.appendRow(leafItem)
 
             # Monitors
-            childItem = QStandardItem(Project.MONITORS_LABEL)
-            childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
-            item.appendRow(childItem)
-            for monitor in project.monitors:
-                leafItem = QStandardItem(monitor)
-                leafItem.setData(monitor, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
+            #childItem = QStandardItem(Project.MONITORS_LABEL)
+            #childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
+            #childItem.setEditable(False)
+            #childItem.setIcon(QIcon(":folder"))
+            #item.appendRow(childItem)
+            #for monitor in project.monitors:
+            #    leafItem = QStandardItem(monitor)
+            #    leafItem.setData(monitor, ProjectModel.ITEM_OBJECT)
+            #    leafItem.setEditable(False)
+            #    childItem.appendRow(leafItem)
 
             # Resources
-            childItem = QStandardItem(Project.RESOURCES_LABEL)
-            childItem.setData(Category(Project.RESOURCES_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
-            item.appendRow(childItem)
-            for resource in project.resources:
-                leafItem = QStandardItem(resource)
-                leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
+            #childItem = QStandardItem(Project.RESOURCES_LABEL)
+            #childItem.setData(Category(Project.RESOURCES_LABEL), ProjectModel.ITEM_OBJECT)
+            #childItem.setEditable(False)
+            #childItem.setIcon(QIcon(":folder"))
+            #item.appendRow(childItem)
+            #for resource in project.resources:
+            #    leafItem = QStandardItem(resource)
+            #    leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
+            #    leafItem.setEditable(False)
+            #    childItem.appendRow(leafItem)
 
             # Configurations
             childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
