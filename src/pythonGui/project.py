@@ -15,7 +15,7 @@ __all__ = ["Project", "Scene", "Category"]
 
 from configuration import Configuration
 from graphicsview import GraphicsView
-from karabo.hash import Hash, XMLWriter
+from karabo.hash import Hash, XMLParser, XMLWriter
 
 from PyQt4.QtCore import pyqtSignal, QDir, QObject
 from PyQt4.QtGui import QMessageBox
@@ -79,9 +79,43 @@ class Project(QObject):
         del object
 
 
+    def load(self, filename):
+        p = XMLParser()
+        with open(filename, 'r') as file:
+            projectConfig = p.read(file.read())
+        
+        self.name = projectConfig.getAttribute(Project.PROJECT_KEY, "name")
+        self.directory = projectConfig.getAttribute(Project.PROJECT_KEY, "directory")
+        
+        projConfig = projectConfig.get(Project.PROJECT_KEY)
+        
+        for category in projConfig.keys():
+            if category == Project.DEVICES_KEY:
+                devices = projConfig.get(category)
+                # Vector of hashes
+                for d in devices:
+                    classId = d.keys()[0]
+                    print "addDevice", classId
+                    #self.addDevice(project, classId, d.get(classId))
+            elif category == Project.SCENES_KEY:
+                scenes = projConfig.get(category)
+                # Vector of hashes
+                for s in scenes:
+                    print "openScene"
+                    #self.openScene(project, s.get("name"))
+            elif category == Project.MACROS_KEY:
+                pass
+            elif category == Project.MONITORS_KEY:
+                pass
+            elif category == Project.RESOURCES_KEY:
+                pass
+            elif category == Project.CONFIGURATIONS_KEY:
+                pass
+
+
     def zip(self):
         """
-        This function save this project to its zip file.
+        This function save this project as a zip file.
         """
         # Create folder structure and save content
         projectConfig = Hash(Project.PROJECT_KEY, Hash())
@@ -147,6 +181,8 @@ class Project(QObject):
         projectData = XMLWriter().write(projectConfig)
         
         absoluteProjectPath = os.path.join(self.directory, self.name)
+        # TODO: Check, if project already exists
+        
         zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
         try:
             print "adding project.xml"
@@ -244,10 +280,6 @@ class Project(QObject):
         with open(os.path.join(self.directory, self.name, 'project.xml'), 'w') as file:
             w = XMLWriter()
             w.writeToFile(projectConfig, file)
-
-
-    def load(self):
-        print "load project"
 
 
     def _clearProjectDir(self, absolutePath):

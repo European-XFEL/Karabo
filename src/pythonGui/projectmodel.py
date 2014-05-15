@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from configuration import Configuration
 from copy import copy
 import icons
-from karabo.hash import Hash, HashMergePolicy, XMLParser
+from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
@@ -363,53 +363,46 @@ class ProjectModel(QStandardItemModel):
         return project
 
 
-    def createNewProjectFromHash(self, hash):
-        """
-        This function creates a new project via the given \hash and returns it.
-        """
-        project = Project()
-        project.name = hash.getAttribute(Project.PROJECT_KEY, "name")
-        project.directory = hash.getAttribute(Project.PROJECT_KEY, "directory")
-        
-        projConfig = hash.get(Project.PROJECT_KEY)
-        
-        for category in projConfig.keys():
-            if category == Project.DEVICES_KEY:
-                devices = projConfig.get(category)
-                # Vector of hashes
-                for d in devices:
-                    classId = d.keys()[0]
-                    self.addDevice(project, classId, d.get(classId))
-            elif category == Project.SCENES_KEY:
-                scenes = projConfig.get(category)
-                # Vector of hashes
-                for s in scenes:
-                    self.openScene(project, s.get("name"))
-            elif category == Project.MACROS_KEY:
-                pass
-            elif category == Project.MONITORS_KEY:
-                pass
-            elif category == Project.RESOURCES_KEY:
-                pass
-            elif category == Project.CONFIGURATIONS_KEY:
-                pass
-        
-        return project
-
-
-    def openProject(self, filename):
+    def projectOpen(self, filename):
         """
         This function opens a project file, creates a new projects, adds it to
         the project list and updates the view.
         """
-        p = XMLParser()
-        with open(filename, 'r') as file:
-            projectConfig = p.read(file.read())
+        project = Project()
+        try:
+            project.load(filename)
+        except Exception, e:
+            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+            QMessageBox.critical(None, "Error", message + str(e))
+            return
         
-        # Create empty project and fill
-        project = self.createNewProjectFromHash(projectConfig)
         self.projects.append(project)
         self.updateData()
+
+
+    def projectSave(self, project=None):
+        """
+        This function saves the \project.
+        
+        If the \project is None, the current project is taken.
+        """
+        if project is None:
+            project = self.currentProject()
+        
+        project.save()
+
+
+    def projectSaveAs(self, directory, project=None):
+        """
+        This function saves the \project into the \directory.
+        
+        If the \project is None, the current project is taken.
+        """
+        if project is None:
+            project = self.currentProject()
+        
+        project.directory = directory
+        project.save()
 
 
     def editDevice(self, device=None):
