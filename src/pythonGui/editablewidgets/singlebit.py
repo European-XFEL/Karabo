@@ -1,3 +1,4 @@
+from const import ns_karabo
 from widget import DisplayWidget
 
 from PyQt4.QtCore import pyqtSlot
@@ -39,6 +40,14 @@ class SingleBit(DisplayWidget):
         if ok:
             self.bit = bit
             self.valueChanged(self.boxes[0], self.boxes[0].value)
+
+
+    def save(self, element):
+        element.set(ns_karabo + "bit", repr(self.bit))
+
+
+    def load(self, element):
+        self.bit = int(element.get(ns_karabo + "bit"))
 
 
     def valueChanged(self, box, value, timestamp=None):
