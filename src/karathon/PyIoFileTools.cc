@@ -148,17 +148,6 @@ namespace karathon {
         }
     };
 
-    template <class T>
-    struct InputWrap {
-
-        static T read(const boost::shared_ptr<karabo::io::Input<T> >& self, size_t idx = 0) {
-            T t;
-            self->read(t, idx);
-            return t;
-        }
-
-    };
-
     struct loadFromFileWrap {
 
 
@@ -254,7 +243,9 @@ void exportPyIoInput() {
     {//exposing karabo::io::Input<karabo::util::Hash>
         typedef karabo::io::Input<T> SpecificInput;
         bp::class_<SpecificInput, boost::shared_ptr<SpecificInput>, boost::noncopyable >(string("Input" + T::classInfo().getClassName()).c_str(), bp::no_init)
-                .def("read", &karathon::InputWrap<T>().read, (bp::arg("idx") = 0))
+                .def("read"
+                     , (void (SpecificInput::*)(T &, size_t))(&SpecificInput::read)
+                     , (bp::arg("data"), bp::arg("idx") = 0))
                 .def("size", (size_t(SpecificInput::*)() const) (&SpecificInput::size))
                 .def("update", (void (SpecificInput::*)()) (&SpecificInput::update))
                 .def("use_count", &boost::shared_ptr<SpecificInput>::use_count)
