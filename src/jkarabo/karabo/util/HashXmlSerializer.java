@@ -201,23 +201,35 @@ public class HashXmlSerializer extends TextSerializerHash {
             fis = new ByteArrayInputStream(archive);
             xmlr = factory.createXMLStreamReader(fis);
             //processEventType(xmlr.getEventType());
-            printStartDocument();
+            if (debug) {
+                printStartDocument();
+            }
             while (xmlr.hasNext()) {
                 xmlr.next();
                 //processEventType(xmlr.getEventType());
                 if (xmlr.isStartElement()) {
-                    printStartElement();
+                    if (debug) {
+                        printStartElement();
+                    }
                     processElement(hash);
                 } else if (xmlr.hasText()) {
-                    printText();
+                    if (debug) {
+                        printText();
+                    }
                 } else if (xmlr.isEndElement()) {
-                    printEndElement();
+                    if (debug) {
+                        printEndElement();
+                    }
                 } else if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
-                    printPI();
+                    if (debug) {
+                        printPI();
+                    }
                 } else if (xmlr.getEventType() == xmlr.COMMENT) {
-                    printComment();
+                    if (debug) {
+                        printComment();
+                    }
                 } else if (xmlr.END_DOCUMENT == xmlr.getEventType()) {
-                    //System.out.println("End of Document");
+                    // if (debug) System.out.println("End of Document");
                 } else {
                     throw new RuntimeException("TOP Wrong eventType=" + getEventTypeString(xmlr.getEventType()));
                 }
@@ -285,7 +297,7 @@ public class HashXmlSerializer extends TextSerializerHash {
     }
 
     private void printStartDocument() {
-        if (debug && xmlr.START_DOCUMENT == xmlr.getEventType()) {
+        if (xmlr.START_DOCUMENT == xmlr.getEventType()) {
             System.out.print("<?xml version=\"" + xmlr.getVersion() + "\"");
             if (xmlr.getCharacterEncodingScheme() != null) {
                 System.out.print(" encoding=\"" + xmlr.getCharacterEncodingScheme() + "\"");
@@ -295,64 +307,52 @@ public class HashXmlSerializer extends TextSerializerHash {
     }
 
     private void printStartElement() {
-        if (debug) {
-            System.out.print("<" + xmlr.getName().toString());
-            printAttributes();
-            System.out.print(">");
-        }
+        System.out.print("<" + xmlr.getName().toString());
+        printAttributes();
+        System.out.print(">");
     }
 
     private void printEndElement() {
-        if (debug) {
-            System.out.print("</" + xmlr.getName().toString() + ">");
-        }
+        System.out.print("</" + xmlr.getName().toString() + ">");
     }
 
     private void printText() {
-        if (debug) {
-            System.out.print(xmlr.getText());
-        }
+        System.out.print(xmlr.getText());
     }
 
     private void printPI() {
-        if (debug) {
-            System.out.print("<?" + xmlr.getPITarget() + " " + xmlr.getPIData() + "?>");
-        }
+        System.out.print("<?" + xmlr.getPITarget() + " " + xmlr.getPIData() + "?>");
     }
 
     private void printComment() {
-        if (debug) {
-            System.out.print("<!--" + xmlr.getText() + "-->");
-        }
+        System.out.print("<!--" + xmlr.getText() + "-->");
     }
 
     private void printAttributes() {
-        if (debug) {
-            int count = xmlr.getAttributeCount();
-            if (count > 0) {
-                for (int i = 0; i < count; i++) {
-                    System.out.print(" ");
-                    System.out.print(xmlr.getAttributeName(i).toString());
-                    System.out.print("=");
-                    System.out.print("\"");
-                    System.out.print(xmlr.getAttributeValue(i));
-                    System.out.print("\"");
-                }
+        int count = xmlr.getAttributeCount();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                System.out.print(" ");
+                System.out.print(xmlr.getAttributeName(i).toString());
+                System.out.print("=");
+                System.out.print("\"");
+                System.out.print(xmlr.getAttributeValue(i));
+                System.out.print("\"");
             }
+        }
 
-            count = xmlr.getNamespaceCount();
-            if (count > 0) {
-                for (int i = 0; i < count; i++) {
-                    System.out.print(" ");
-                    System.out.print("xmlns");
-                    if (xmlr.getNamespacePrefix(i) != null) {
-                        System.out.print(":" + xmlr.getNamespacePrefix(i));
-                    }
-                    System.out.print("=");
-                    System.out.print("\"");
-                    System.out.print(xmlr.getNamespaceURI(i));
-                    System.out.print("\"");
+        count = xmlr.getNamespaceCount();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                System.out.print(" ");
+                System.out.print("xmlns");
+                if (xmlr.getNamespacePrefix(i) != null) {
+                    System.out.print(":" + xmlr.getNamespacePrefix(i));
                 }
+                System.out.print("=");
+                System.out.print("\"");
+                System.out.print(xmlr.getNamespaceURI(i));
+                System.out.print("\"");
             }
         }
     }
@@ -364,11 +364,14 @@ public class HashXmlSerializer extends TextSerializerHash {
             processAttributes(tuple);
 
             boolean isParentStart = xmlr.isStartElement();
+            loop:
             while (xmlr.hasNext()) {
                 xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
-                    printStartElement();
+                    if (debug) {
+                        printStartElement();
+                    }
                     if (tuple.type == null || !readDataTypesFlag) {
                         if (isParentStart) {
                             if (xmlr.getName().toString().equals(prefix + "Item")) {
@@ -396,22 +399,23 @@ public class HashXmlSerializer extends TextSerializerHash {
                         throw new RuntimeException("Wrong reference type " + tuple.type
                                 + " : xml tag = " + xmlr.getName().toString() + " , xml event = " + getEventTypeString(xmlr.getEventType()));
                     }
-                    continue;  // read next event, because last event was END_ELEMENT
-                }
-                if (xmlr.hasText()) {
+                } else if (xmlr.hasText()) {
                     if (xmlr.isCharacters()) {
                         if (xmlr.isWhiteSpace()) {
                             continue;
                         }
-                        printText();
+                        if (debug) {
+                            printText();
+                        }
                         if (tuple.type == null || !readDataTypesFlag) {
                             tuple.type = ReferenceType.STRING;
                         }
                         tuple.value = xmlr.getText();
                     }
-                }
-                if (xmlr.isEndElement()) {
-                    printEndElement();
+                } else if (xmlr.isEndElement()) {
+                    if (debug) {
+                        printEndElement();
+                    }
                     //System.out.println("\t** H END ELEMENT for " + xmlr.getName().toString() + " Tuple: \"" + tuple.key + "\", " + tuple.type);
                     if (tuple.key.equals(prefix + "Item")) {
                         continue;
@@ -425,15 +429,15 @@ public class HashXmlSerializer extends TextSerializerHash {
                             input.setAttributes(tuple.key, tuple.attributes);
                         }
                     }
-                    break;
-                }
-                if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
-                    printPI();
-                    //System.out.println("\tXML processing instruction");
-                }
-                if (xmlr.getEventType() == XMLEvent.COMMENT) {
-                    printComment();
-                    //System.out.println("\tXML Comment");
+                    break loop;
+                } else if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
+                    if (debug) {
+                        printPI();
+                    }
+                } else if (xmlr.getEventType() == XMLEvent.COMMENT) {
+                    if (debug) {
+                        printComment();
+                    }
                 }
             }
         } catch (XMLStreamException ex) {
@@ -447,40 +451,45 @@ public class HashXmlSerializer extends TextSerializerHash {
         try {
             tuple.key = xmlr.getName().toString();
             processAttributes(tuple);
-
+            loop:
             while (xmlr.hasNext()) {
                 xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
-                    printStartElement();
+                    if (debug) {
+                        printStartElement();
+                    }
                     assert (prefix + "Item").equals(tuple.key);
                     if (tuple.value == null) {
                         tuple.value = new Hash();
                     }
                     processElement((Hash) tuple.value);
                     //System.out.println("------ VectorHash is \n" + input);
-                    continue;
-                }
-                if (xmlr.hasText()) {
+                } else if (xmlr.hasText()) {
                     if (xmlr.isCharacters()) {
                         if (xmlr.isWhiteSpace()) {
                             continue;
                         }
-                        printText();
+                        if (debug) {
+                            printText();
+                        }
                         throw new RuntimeException("Text area for VECTOR_HASH contains non-Space characters");
                     }
-                }
-                if (xmlr.isEndElement()) {
-                    printEndElement();
+                } else if (xmlr.isEndElement()) {
+                    if (debug) {
+                        printEndElement();
+                    }
                     assert (prefix + "Item").equals(tuple.key);
                     input.add((Hash) tuple.value);
-                    break;
-                }
-                if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
-                    printPI();
-                }
-                if (xmlr.getEventType() == XMLEvent.COMMENT) {
-                    printComment();
+                    break loop;
+                } else if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
+                    if (debug) {
+                        printPI();
+                    }
+                } else if (xmlr.getEventType() == XMLEvent.COMMENT) {
+                    if (debug) {
+                        printComment();
+                    }
                 }
             }
         } catch (XMLStreamException ex) {
