@@ -367,7 +367,6 @@ public class HashXmlSerializer extends TextSerializerHash {
             loop:
             while (xmlr.hasNext()) {
                 xmlr.next();
-                //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     if (debug) {
                         printStartElement();
@@ -388,13 +387,11 @@ public class HashXmlSerializer extends TextSerializerHash {
                             tuple.value = new VectorHash();
                         }
                         processElement((VectorHash) tuple.value);
-                        //System.out.println("---------- VectorHash is \n" + vectorHash);
                     } else if (tuple.type == ReferenceType.HASH) {
                         if (tuple.value == null) {
                             tuple.value = new Hash();
                         }
                         processElement((Hash) tuple.value);
-                        //System.out.println("---------- Hash is \n" + hash);
                     } else {
                         throw new RuntimeException("Wrong reference type " + tuple.type
                                 + " : xml tag = " + xmlr.getName().toString() + " , xml event = " + getEventTypeString(xmlr.getEventType()));
@@ -416,7 +413,6 @@ public class HashXmlSerializer extends TextSerializerHash {
                     if (debug) {
                         printEndElement();
                     }
-                    //System.out.println("\t** H END ELEMENT for " + xmlr.getName().toString() + " Tuple: \"" + tuple.key + "\", " + tuple.type);
                     if (tuple.key.equals(prefix + "Item")) {
                         continue;
                     }
@@ -454,7 +450,6 @@ public class HashXmlSerializer extends TextSerializerHash {
             loop:
             while (xmlr.hasNext()) {
                 xmlr.next();
-                //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     if (debug) {
                         printStartElement();
@@ -464,7 +459,6 @@ public class HashXmlSerializer extends TextSerializerHash {
                         tuple.value = new Hash();
                     }
                     processElement((Hash) tuple.value);
-                    //System.out.println("------ VectorHash is \n" + input);
                 } else if (xmlr.hasText()) {
                     if (xmlr.isCharacters()) {
                         if (xmlr.isWhiteSpace()) {
