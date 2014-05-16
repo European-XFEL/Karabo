@@ -82,7 +82,8 @@
         }
         ]]>
         </script>
-        <!-- echo message="My KARABO is ${KARABO}/lib, dist.jar=${dist.jar}" -->
-        <copy file="${dist.jar}" todir="${KARABO}/lib"/>
+	<copy todir="${KARABO}/jars">
+            <fileset dir="${dist.jar.dir}" excludes="README.*" />
+        </copy>
     </target>    
 </project>
