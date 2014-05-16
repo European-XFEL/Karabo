@@ -62,58 +62,16 @@ public class HashXmlSerializer extends TextSerializerHash {
 
     private class ParsedTuple {
 
-        private String key = null;
-        private Attributes attributes = null;
-        private ReferenceType type = null;
-        private Object value = null;
+        public String key;
+        public Attributes attributes;
+        public ReferenceType type;
+        public Object value;
 
         public ParsedTuple() {
-        }
-
-        public void setAttributes(Attributes attributes) {
-            this.attributes = attributes;
-        }
-
-        public void setKey(String key) {
-            this.key = key;
-        }
-
-        public void setType(ReferenceType type) {
-            this.type = type;
-        }
-
-        public void setValue(Object value) {
-            this.value = value;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public Attributes getAttributes() {
-            return attributes;
-        }
-
-        public ReferenceType getType() {
-            return type;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        public void clear() {
             key = null;
             attributes = null;
             type = null;
             value = null;
-        }
-
-        public boolean isEmpty() {
-            if (key == null && attributes == null && type == null && value == null) {
-                return true;
-            }
-            return false;
         }
     }
 
@@ -402,41 +360,40 @@ public class HashXmlSerializer extends TextSerializerHash {
     private void processElement(Hash input) throws IOException {
         ParsedTuple tuple = new ParsedTuple();
         try {
-            tuple.setKey(xmlr.getName().toString());
+            tuple.key = xmlr.getName().toString();
             processAttributes(tuple);
 
-            //System.out.println("*** processElement Hash ENTER : " + processCount++ + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType());
             boolean isParentStart = xmlr.isStartElement();
             while (xmlr.hasNext()) {
                 xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     printStartElement();
-                    if (tuple.getType() == null || !readDataTypesFlag) {
+                    if (tuple.type == null || !readDataTypesFlag) {
                         if (isParentStart) {
                             if (xmlr.getName().toString().equals(prefix + "Item")) {
-                                tuple.setType(ReferenceType.VECTOR_HASH);
+                                tuple.type = ReferenceType.VECTOR_HASH;
                             } else {
-                                tuple.setType(ReferenceType.HASH);
+                                tuple.type = ReferenceType.HASH;
                             }
                         } else {
-                            tuple.setType(ReferenceType.STRING);
+                            tuple.type = ReferenceType.STRING;
                         }
                     }
-                    if (tuple.getType() == ReferenceType.VECTOR_HASH) {
-                        if (tuple.getValue() == null) {
-                            tuple.setValue(new VectorHash());
+                    if (tuple.type == ReferenceType.VECTOR_HASH) {
+                        if (tuple.value == null) {
+                            tuple.value = new VectorHash();
                         }
-                        processElement((VectorHash) tuple.getValue());
+                        processElement((VectorHash) tuple.value);
                         //System.out.println("---------- VectorHash is \n" + vectorHash);
-                    } else if (tuple.getType() == ReferenceType.HASH) {
-                        if (tuple.getValue() == null) {
-                            tuple.setValue(new Hash());
+                    } else if (tuple.type == ReferenceType.HASH) {
+                        if (tuple.value == null) {
+                            tuple.value = new Hash();
                         }
-                        processElement((Hash) tuple.getValue());
+                        processElement((Hash) tuple.value);
                         //System.out.println("---------- Hash is \n" + hash);
                     } else {
-                        throw new RuntimeException("Wrong reference type " + tuple.getType()
+                        throw new RuntimeException("Wrong reference type " + tuple.type
                                 + " : xml tag = " + xmlr.getName().toString() + " , xml event = " + getEventTypeString(xmlr.getEventType()));
                     }
                     continue;  // read next event, because last event was END_ELEMENT
@@ -447,25 +404,25 @@ public class HashXmlSerializer extends TextSerializerHash {
                             continue;
                         }
                         printText();
-                        if (tuple.getType() == null || !readDataTypesFlag) {
-                            tuple.setType(ReferenceType.STRING);
+                        if (tuple.type == null || !readDataTypesFlag) {
+                            tuple.type = ReferenceType.STRING;
                         }
-                        tuple.setValue(xmlr.getText());
+                        tuple.value = xmlr.getText();
                     }
                 }
                 if (xmlr.isEndElement()) {
                     printEndElement();
-                    //System.out.println("\t** H END ELEMENT for " + xmlr.getName().toString() + " Tuple: \"" + tuple.getKey() + "\", " + tuple.getType());
-                    if (tuple.getKey().equals(prefix + "Item")) {
+                    //System.out.println("\t** H END ELEMENT for " + xmlr.getName().toString() + " Tuple: \"" + tuple.key + "\", " + tuple.type);
+                    if (tuple.key.equals(prefix + "Item")) {
                         continue;
                     }
-                    if (tuple.getValue() != null) {
-                        if (tuple.getType() == null) {
-                            tuple.setType(ReferenceType.STRING);
+                    if (tuple.value != null) {
+                        if (tuple.type == null) {
+                            tuple.type = ReferenceType.STRING;
                         }
-                        input.set(tuple.getKey(), tuple.getType(), tuple.getValue());
-                        if (tuple.getAttributes() != null) {
-                            input.setAttributes(tuple.getKey(), tuple.getAttributes());
+                        input.set(tuple.key, tuple.type, tuple.value);
+                        if (tuple.attributes != null) {
+                            input.setAttributes(tuple.key, tuple.attributes);
                         }
                     }
                     break;
@@ -482,28 +439,25 @@ public class HashXmlSerializer extends TextSerializerHash {
         } catch (XMLStreamException ex) {
             Logger.getLogger(HashXmlSerializer.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        //System.out.println("*** processElement Hash EXIT : " + --processCount + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType() + "\n\t*** input is ...\n" + input);
     }
 
     private void processElement(VectorHash input) throws IOException {
         Hash hash = null;
         ParsedTuple tuple = new ParsedTuple();
         try {
-            tuple.setKey(xmlr.getName().toString());
+            tuple.key = xmlr.getName().toString();
             processAttributes(tuple);
 
-            //System.out.println("*** processElement VectoHash ENTER : " + processCount++ + " ===> \"" + tuple.getKey() + "\"\ttype = " + tuple.getType());
             while (xmlr.hasNext()) {
                 xmlr.next();
                 //processEventType(eventType);
                 if (xmlr.isStartElement()) {
                     printStartElement();
-                    assert (prefix + "Item").equals(tuple.getKey());
-                    if (tuple.getValue() == null) {
-                        tuple.setValue(new Hash());
+                    assert (prefix + "Item").equals(tuple.key);
+                    if (tuple.value == null) {
+                        tuple.value = new Hash();
                     }
-                    processElement((Hash) tuple.getValue());
+                    processElement((Hash) tuple.value);
                     //System.out.println("------ VectorHash is \n" + input);
                     continue;
                 }
@@ -518,24 +472,20 @@ public class HashXmlSerializer extends TextSerializerHash {
                 }
                 if (xmlr.isEndElement()) {
                     printEndElement();
-                    assert (prefix + "Item").equals(tuple.getKey());
-                    input.add((Hash) tuple.getValue());
+                    assert (prefix + "Item").equals(tuple.key);
+                    input.add((Hash) tuple.value);
                     break;
                 }
                 if (xmlr.getEventType() == XMLEvent.PROCESSING_INSTRUCTION) {
                     printPI();
-                    //System.out.print("<?" + xmlr.getPITarget() + " " + xmlr.getPIData() + "?>");
                 }
                 if (xmlr.getEventType() == XMLEvent.COMMENT) {
                     printComment();
-                    //System.out.print("<!--" + xmlr.getText() + "-->");
                 }
             }
         } catch (XMLStreamException ex) {
             Logger.getLogger(HashXmlSerializer.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        //System.out.println("*** processElement VectorHash EXIT : " + --processCount + " ===> \"" + stack.peek().getKey() + "\"\ttype = " + stack.peek().getType() + "\n*** input is ...\n" + input);
     }
 
     private void processAttributes(ParsedTuple tuple) throws IOException {
@@ -546,7 +496,7 @@ public class HashXmlSerializer extends TextSerializerHash {
             for (int i = 0; i < count; i++) {
                 String attribute = xmlr.getAttributeName(i).toString();
                 if (attribute.equals(prefix + "Type")) {
-                    tuple.setType(FromLiteral.from(xmlr.getAttributeValue(i)));
+                    tuple.type = FromLiteral.from(xmlr.getAttributeValue(i));
                     continue;
                 }
                 if (attributes == null) {
@@ -566,7 +516,7 @@ public class HashXmlSerializer extends TextSerializerHash {
                 }
             }
             if (attributes != null) {
-                tuple.setAttributes(attributes);
+                tuple.attributes = attributes;
             }
         }
     }
