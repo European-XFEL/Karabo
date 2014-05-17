@@ -76,6 +76,9 @@ Other distributions like Fedora or Suse may still work.
 
             Native python code for some core elements of Karabo which deserve a native python re-write instead of a C++ binding.
 
+	serverControl/
+
+	    Tool to configure and manage karabo (install, upgrade, ...) installation
 
     build/
     

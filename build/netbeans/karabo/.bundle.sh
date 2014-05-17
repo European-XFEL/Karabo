@@ -172,6 +172,12 @@ safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib/pythonCli/. $PYKARABO/
 
+# pythonCli
+cd ../serverControl
+safeRunCommand "./build.sh"
+cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
+
 # pythonTools
 cd ../pythonTools
 safeRunCommand "./build.sh"

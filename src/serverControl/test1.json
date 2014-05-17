@@ -1,0 +1,42 @@
+{
+  "installation_name": "test1", 
+  "karabo_packages_repositories": [
+    "file:///home/repository/karaboPackages"
+  ], 
+  "broker":{
+    "hostname": "broker1", 
+    "port": 2799
+  }, 
+  "schema_version": 1,
+  "hosts": [
+    {
+      "device_servers": [
+        {
+          "server_id": "ds01", 
+          "autostart": false, 
+          "plugins": [
+            {
+              "version": "1.0.0", 
+              "name": "conveyor"
+            }
+          ]
+        }
+      ], 
+      "hostname": "exflst101"
+    }
+  ], 
+  "karabo_repositories": [
+    "https://home.xfel.eu/repository/karabo", 
+    "ftp://home.desy.de/repository/karabo", 
+    "file:///opt/karabo_repository"
+  ], 
+  "generation_date": "2014-05-10T12:00:02.023+02:00", 
+  "defaults": {
+    "karabo_version": "21.21.3ab-a", 
+    "login_user": "root-q3w", 
+    "karabo_user": "test1", 
+    "run_prefix": "/home/test1", 
+    "install_prefix": "/opt", 
+    "autostart": true
+  }
+}
