@@ -8,6 +8,7 @@ import pprint
 from jsonschema import Draft4Validator
 from jsonschema import FormatChecker
 import os
+import socket
 
 __author__="wrona"
 __date__ ="$May 11, 2014 5:32:08 PM$"
@@ -21,8 +22,9 @@ def main():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--verbose','-v',action='count', help='set verbosity level (-v, -vv)')
     group.add_argument('--quiet','-q',action='store_true', help='do not display anything')
+    group.add_argument('--just-print','-n',action='store_true', help='simulate what the script would do on hosts')
     parser.add_argument('--host', '-H',action='store', help='run the tool as only this host would be defined in configuration file')
-    parser.add_argument('--just-print','-n',action='store_true', help='simulate what the script would do on hosts')
+
     
     subparsers = parser.add_subparsers()
 
@@ -71,6 +73,9 @@ def main():
     if args.quiet:
         log_level=logging.CRITICAL
     
+    if args.just_print:
+        log_level=logging.INFO
+        
     #logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=log_level)
     logging.basicConfig(format='%(message)s', level=log_level)
                           
@@ -88,14 +93,19 @@ def validate(args):
     '''
     
     logging.debug('sub-command: validate ' +  args.file)
-    config = validate_configuration(args.file)
+    config = validate_configuration_file_against_schema(args.file)
     if config:
-        logging.info("Configuration is valid")
-        return 0
+        logging.info("Configuration complies to the schema")
     else:        
-        logging.info("Configuration is not valid")
+        logging.warn("Configuration does not comply to the schema")
+        return 1
+
+    if not validate_configuration(config):
+        logging.warn("Configuration is not valid")
         return 1
     
+    logging.info("Configuration is valid")
+    return 0
     
 def install(args):    
     """
@@ -103,9 +113,23 @@ def install(args):
     """    
     logging.debug('sub-command: install ' + args.file )
     
-    config_new = validate_configuration(args.file)
+    config = validate_configuration_file_against_schema(args.file)
+    if config:
+        logging.info("Configuration complies to the schema")
+    else:        
+        logging.warn("Configuration does not comply to the schema")
+        return 1
     
-                
+    if not validate_configuration(config):
+        logging.warn("Configuration is not valid")        
+        return 1
+    
+    
+
+    
+    
+    
+            
 def update(args):
     """
     Update configuration. The function requires two configurations: latest already applied to hosts
@@ -115,8 +139,8 @@ def update(args):
     
     logging.debug('sub-command: update ' + args.file_new + ' ' + args.file_latest)
         
-    config_latest = validate_configuration(args.file_latest)
-    config_new = validate_configuration(args.file_new)
+    config_latest = validate_configuration_file_against_schema(args.file_latest)
+    config_new = validate_configuration_file_against_schema(args.file_new)
     return 0
 
     
@@ -152,15 +176,15 @@ def stop(args):
 
 
 
-def validate_configuration(file):
+def validate_configuration_file_against_schema(file):
     
     data = {}
     
     try: 
         data = load_json(file)    
     except ValueError, e:
-        logging.warning("Syntax error in JSON file: " + file)
-        logging.debug(str(e))
+        logging.warn("Syntax error in JSON file: " + file)
+        logging.info(str(e))
         return {}
         
     
@@ -171,23 +195,23 @@ def validate_configuration(file):
     if u'schema_version' in data.keys():
         schema_version = data['schema_version']
         if type(schema_version) != type(1) :
-            logging.info("Schema version must be an integer value")
+            logging.warn("Schema version must be an integer value")
             return {}
         if not schema_version in __SUPPORTED_SCHEMA_VERSIONS__:
-            logging.info("schema version: " + str(schema_version) +  " not supported by this tool")
+            logging.warn("schema version: " + str(schema_version) +  " not supported by this tool")
             return {}
     else:
-        logging.info("schema version not defined in the JSON file. Check the configuration file.")
+        logging.warn("schema version not defined in the JSON file. Check the configuration file.")
         return {}
         
-    logging.info("retrieving schema, version " + str(schema_version) )
+    logging.debug("retrieving schema, version " + str(schema_version) )
         
     schema = {}
     try:
         schema = get_schema(schema_version)
     except ValueError, e:
-        logging.info("Syntax error in schema definition. Contact the author of the tool")
-        logging.info(str(e))
+        logging.warn("Syntax error in schema definition. Contact the author of the tool")
+        logging.warn(str(e))
         return {}
             
     logging.debug("checking JSON schema...")
@@ -204,13 +228,93 @@ def validate_configuration(file):
     else:
         errors = v.iter_errors(data)
         for error in  sorted(errors, key=str):                
-            logging.info(pprint.pformat(error.message))
+            logging.warn(pprint.pformat(error.message))
     
     return {}
 
 
+def validate_configuration(config):
+
+    logging.debug('checking if broker hostname can be resolved...')    
+    if not hostname_resolves(config['broker']['hostname']):
+        logging.info("broker hostname could not be resolved")
+        return False
+    else:
+        logging.info("broker hostname could be resolved")
+        
+    logging.debug('checking if hostnames are unique...')    
+    
+    if not are_hostnames_unique(config):
+        logging.warn("multiple definition for hosts")
+        return False
+    
+    logging.debug('checking if all hostnames can be resolved...')    
+    hosts = get_hostnames(config)
+    if not hostnames_resolve(hosts):
+        logging.warn("hostnames could not be resolved")
+        return False
+    else:
+        logging.info("hostnames could be resolved")
+
+    if not are_device_servers_unique(config):
+        logging.warn('multiple definition of device_server')
+        return False
+    
+    return True
+    
 
 
+def are_device_servers_unique(config):
+    device_servers_ids = []
+    for host in config['hosts']:
+        for device_server in host['device_servers']:
+            device_server_id = device_server['server_id']
+            if device_server_id in device_servers_ids:
+                logging.warn('device_server.server_id ' + device_server_id + ' defined multiple times')
+                return False
+            device_servers_ids.append(device_server_id)
+    return True
+
+def are_hostnames_unique(config):
+    hostnames = []
+    for host in config['hosts']:
+        hostname = host['hostname']
+        trace('are_hostnames_unique: host  ' + hostname)
+        trace('are_hostnames_unique: hosts ' + pprint.pformat(hostnames))
+        if hostname in hostnames:
+            logging.warn('hostname ' + hostname + ' defined multiple times')
+            return False
+        hostnames.append(hostname)    
+    return True
+    
+
+def get_hostnames(config):
+    hosts = []
+    for host in config['hosts']:
+        hosts.append(host['hostname'])
+    logging.debug("hostnames: " + str(hosts))
+    return hosts
+
+    
+def hostname_resolves(hostname):
+    logging.debug('checking if host ' + hostname + ' can be resolved')
+    try:
+        socket.gethostbyname(hostname)
+        return True
+    except socket.error:
+        return False
+    
+def hostnames_resolve(hostnames):
+    for hostname in hostnames:
+        if not hostname_resolves(hostname):
+            logging.warn('hostname ' + hostname + ' cannot be resolved')
+            return False    
+    return True
+        
+    
+    
+    
+    
 def load_json( filename ):
     json_file = open(filename)
     data = json.load(json_file)
@@ -259,9 +363,7 @@ __SUPPORTED_SCHEMA_VERSIONS__ = [1]
 #
 #            "schema_version": {
 #                "description": "Indicates version of the schema",
-#                "type": "integer",
-#                "minimum" : N,
-#                "maximum": N
+#                "enum": [N]
 #            }
 
 __SCHEMA__ = { 1 : '''\
@@ -300,9 +402,7 @@ __SCHEMA__ = { 1 : '''\
 	"properties":{
             "schema_version": {
                 "description": "Indicates version of the schema",
-                "type": "integer",
-                "minimum" : 1,
-                "maximum": 1
+                "enum": [1]
             },
             "installation_name": {
                 "description": "Must be unique name identifying karabo installation within the whole site (e.g. XFEL.EU). It is used as a broker topic name",
