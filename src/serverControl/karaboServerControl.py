@@ -49,6 +49,11 @@ def main():
     check_parser.add_argument('file', help='JSON file with configuration')
     check_parser.set_defaults(func=check)
 
+    start_parser = subparsers.add_parser('start')
+    start_parser.set_defaults(func=start)
+
+    stop_parser = subparsers.add_parser('stop')
+    stop_parser.set_defaults(func=stop)    
     
     args = parser.parse_args()
     
@@ -99,8 +104,8 @@ def install(args):
     logging.debug('sub-command: install ' + args.file )
     
     config_new = validate_configuration(args.file)
-        
     
+                
 def update(args):
     """
     Update configuration. The function requires two configurations: latest already applied to hosts
@@ -127,12 +132,23 @@ def uninstall(args):
 def check(args):
     """
     Check if the configuration defined in the file is applied to the hosts
-    """
-    
+    """    
     logging.debug('sub-command: check ' + args.file)
     return 0
     
+def start(args):
+    """
+    Start device server
+    """
+    logging.debug('sub-command: start ')
+    return 0
 
+def stop(args):
+    """
+    Stop device servers
+    """    
+    logging.debug('sub-command: stop ')
+    return 0
 
 
 
