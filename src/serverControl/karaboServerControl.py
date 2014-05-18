@@ -17,7 +17,7 @@ __TRACE__ = False
 def main():
     
 
-    parser = argparse.ArgumentParser(description='Karabo server control. Tool to manage Karabo installation')
+    parser = argparse.ArgumentParser(prog='karabo-server-control', description='Karabo server control. Tool to manage Karabo installation')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--verbose','-v',action='count', help='set verbosity level (-v, -vv)')
     group.add_argument('--quiet','-q',action='store_true', help='do not display anything')
