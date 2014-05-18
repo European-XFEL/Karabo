@@ -24,7 +24,7 @@ else
     PYKARABO=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 fi
 
-python \$PYKARABO/karabo/karabo-server-control "\$@"
+python \$PYKARABO/karabo/karaboServerControl.py "\$@"
 End-of-file
 chmod u+x karabo-server-control
 cd ../lib
