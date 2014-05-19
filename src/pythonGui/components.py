@@ -342,7 +342,7 @@ class EditableApplyLaterComponent(BaseComponent):
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
         if box.hasValue():
             self.onDisplayValueChanged(box, box.value)
-        box.configuration.configuration.state.signalUpdateComponent.connect(
+        box.configuration.value.state.signalUpdateComponent.connect(
             self.onStateChanged)
 
 
@@ -433,7 +433,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
 
-        self.signalConflictStateChanged.emit(self.boxes[0].configuration.path,
+        self.signalConflictStateChanged.emit(self.boxes[0].configuration.key,
                                              hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 
