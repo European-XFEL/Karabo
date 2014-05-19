@@ -46,7 +46,6 @@ class Configuration(QObject):
 
     def setSchema(self, schema):
         self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
-        print "emit.setSchema", self.path
         self.signalConfigurationNewDescriptor.emit(self)
 
 
