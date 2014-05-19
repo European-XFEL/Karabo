@@ -27,6 +27,7 @@ from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
+from zipfile import is_zipfile
 
 
 class ProjectModel(QStandardItemModel):
@@ -35,8 +36,6 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
-    signalOpenScene = pyqtSignal(object) # scene
-    signalSaveScene = pyqtSignal(object) # scene
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
@@ -346,7 +345,7 @@ class ProjectModel(QStandardItemModel):
         This functions checks whether a project with the \projectName already exists.
         """
         absoluteProjectPath = os.path.join(directory, projectName)
-        return QDir(absoluteProjectPath).exists()
+        return is_zipfile(absoluteProjectPath)
 
 
     def createNewProject(self, projectName, directory):
@@ -389,7 +388,7 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
         
-        project.save()
+        project.zip()
 
 
     def projectSaveAs(self, directory, project=None):
@@ -402,7 +401,7 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
         
         project.directory = directory
-        project.save()
+        project.zip()
 
 
     def editDevice(self, device=None):
@@ -494,8 +493,6 @@ class ProjectModel(QStandardItemModel):
 
     def _createScene(self, project, sceneName):
         scene = Scene(project, sceneName)
-        scene.initView()
-        project.signalSaveScene.connect(self.signalSaveScene)
         project.addScene(scene)
         
         return scene
@@ -521,7 +518,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def showScene(self, scene):
-        self.signalOpenScene.emit(scene)
+        scene.load()
         
 
 ### slots ###

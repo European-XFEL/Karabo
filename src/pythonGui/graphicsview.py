@@ -951,6 +951,19 @@ class GraphicsView(QSvgWidget):
         self.load(ar)
 
 
+    def sceneAsXml(self):
+        """
+        Returns the scene as XML string.
+        """
+        root = self.tree.getroot().copy()
+        tree = ElementTree.ElementTree(root)
+        e = self.ilayout.element()
+        root.extend(ee for ee in e)
+        root.set('width', unicode(self.width()))
+        root.set('height', unicode(self.height()))
+        return ElementTree.tostring(root)
+
+
     def saveScene(self, filename):
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
