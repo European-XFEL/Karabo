@@ -472,12 +472,10 @@ class ProjectModel(QStandardItemModel):
         
         # Get descriptor and connect, if None
         descriptor = conf.getDescriptor()
-        print "checkDescriptor", device.path, serverId, classId
-        print descriptor
-        print ""
         if descriptor is None:
             conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
         else:
+            device.setDescriptor(descriptor)
             device.mergeFutureConfig()
 
         # Save configuration for later descriptor update
@@ -556,7 +554,6 @@ class ProjectModel(QStandardItemModel):
         else:
             conf = device
 
-        print "onSelectionChanged", conf.path, conf.getDescriptor()
         self.signalItemChanged.emit(conf)
 
 
@@ -626,7 +623,6 @@ class ProjectModel(QStandardItemModel):
         """
         # Update all associated project devices with new descriptor
         devices = self.classConfigProjDeviceMap[conf]
-        print "onConfigurationNewDescriptor", conf.path
         for device in devices:
             device.setDescriptor(conf.getDescriptor())
             
