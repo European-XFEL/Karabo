@@ -115,7 +115,7 @@ class ProjectModel(QStandardItemModel):
 
                 # Update icon on availability of device
                 if self.isDeviceOnline(device):
-                    status = self.systemTopology.getAttribute("device.{}".format(device.path), "status")
+                    status = self.systemTopology.getAttribute("device.{}".format(device.key), "status")
                     if status == "error":
                         leafItem.setIcon(icons.deviceInstanceError)
                     else:
@@ -219,7 +219,7 @@ class ProjectModel(QStandardItemModel):
         """
         Returns, if the \device is online or not, classId is considered as well.
         """
-        path = "device.{}".format(device.path)
+        path = "device.{}".format(device.key)
         return (self.systemTopology is not None and 
                 self.systemTopology.has(path) and 
                 self.systemTopology.getAttribute(path, "serverId") == device.futureConfig.get("serverId") and
@@ -552,7 +552,7 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether device is already online
         if self.isDeviceOnline(device):
-            conf = manager.Manager().getDevice(device.path)
+            conf = manager.Manager().getDevice(device.key)
         else:
             conf = device
 
@@ -594,7 +594,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         for device in project.devices:
             if self.isDeviceOnline(device):
-                manager.Manager().killDevice(device.path)
+                manager.Manager().killDevice(device.key)
 
 
     def onEditScene(self):
