@@ -97,14 +97,6 @@ class CustomMiddlePanel(QScrollArea):
         self.drawingToolBar.addWidget(widget)
 
 
-    def openScene(self, filename):
-        self.graphicsview.openScene(filename)
-
-
-    def saveScene(self, filename):
-        self.graphicsview.saveScene(filename)
-
-
     def onServerConnectionChanged(self, isConnected):
         """
         This slot is called when the server connection has changed (connect/disconnect).
