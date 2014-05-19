@@ -109,7 +109,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
             for device in project.devices:
-                leafItem = QStandardItem(device.path)
+                leafItem = QStandardItem(device.key)
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
@@ -462,11 +462,10 @@ class ProjectModel(QStandardItemModel):
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
 
-        descriptor = conf.getDescriptor()
-        if descriptor is None:
+        if conf.descriptor is None:
             conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
-        device = Device(deviceId, "projectClass", descriptor)
+        device = Device(deviceId, "projectClass", conf.descriptor)
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
             self.classConfigProjDeviceMap[conf].append(device)
@@ -627,7 +626,7 @@ class ProjectModel(QStandardItemModel):
         # Update all associated project devices with new descriptor
         devices = self.classConfigProjDeviceMap[conf]
         for device in devices:
-            device.setDescriptor(conf.getDescriptor())
+            device.descriptor = conf.descriptor
             
             # Merge hash configuration into configuration
             device.mergeFutureConfig()

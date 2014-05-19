@@ -205,11 +205,11 @@ class Device(Configuration):
         This function merges the \self.futureConfig into the Configuration.
         This is only possible, if the descriptor has been set before.
         """
-        if self.getDescriptor() is None: return
+        if self.descriptor is None: return
 
         # Set default values for configuration
         self.setDefault()
-        self.merge(self.futureConfig)
+        self.fromHash(self.futureConfig)
 
 
 class Scene(object):
