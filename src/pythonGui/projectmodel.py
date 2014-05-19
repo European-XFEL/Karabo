@@ -368,15 +368,22 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        try:
-            project.load(filename)
-        except Exception, e:
-            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-            QMessageBox.critical(None, "Error", message + str(e))
-            return
+        #try:
+        project.unzip(filename)
+        #except Exception, e:
+        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+        #    QMessageBox.critical(None, "Error", message + str(e))
+        #    return
         
         self.projects.append(project)
         self.updateData()
+        
+        for device in project.devices:
+            self.checkDescriptor(device)
+        
+        # Open new loaded project scenes
+        for scene in project.scenes:
+            self.signalAddScene.emit(scene)
 
 
     def projectSave(self, project=None):
@@ -436,46 +443,43 @@ class ProjectModel(QStandardItemModel):
             project.remove(device)
         
         # Add new device
-        device = self.addDevice(project, self.pluginDialog.classId, config)
+        device = self.addDevice(project, self.pluginDialog.deviceId, self.pluginDialog.classId, config)
         
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, classId, config):
+    def addDevice(self, project, deviceId, classId, config):
         """
         Add a device configuration for the given \project with the given \classId
         and the \config.
         """
-        deviceId = config.get("deviceId")
-        serverId = config.get("serverId")
+        device = Device(deviceId, classId, config)
+        self.checkDescriptor(device)
+        project.addDevice(device)
+        self.updateData()
+        
+        return device
 
+
+    def checkDescriptor(self, device):
+        serverId = device.futureConfig.get("serverId")
+        classId = device.classId
+        
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
-
+        
+        # Get descriptor and connect, if None
         descriptor = conf.getDescriptor()
         if descriptor is None:
             conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
 
-        device = Device(deviceId, "projectClass", descriptor)
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
             self.classConfigProjDeviceMap[conf].append(device)
         else:
             self.classConfigProjDeviceMap[conf] = [device]
-
-        # Set classId
-        device.classId = classId
-        # Set deviceId and serverId in case descriptor is not set yet
-        device.futureConfig = config
-        # Merge futureConfig, if descriptor is not None
-        device.mergeFutureConfig()
-        
-        project.addDevice(device)
-        self.updateData()
-        
-        return device
 
 
     def editScene(self, scene=None):
