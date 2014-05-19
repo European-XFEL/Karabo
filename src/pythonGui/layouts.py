@@ -414,7 +414,7 @@ class ProxyWidget(QWidget):
         QStackedLayout(self).setStackingMode(QStackedLayout.StackAll)
         self.selected = False
         self.component = None
-        self.marker = QLabel("X", self)
+        self.marker = QLabel("", self)
         self.layout().addWidget(self.marker)
         self.widget = None
 
@@ -424,6 +424,8 @@ class ProxyWidget(QWidget):
 
         box = self.component.boxes[0]
         self.setToolTip(box.key())
+        box.configuration.statusChanged.connect(self.showStatus)
+        self.showStatus(None, box.configuration.status)
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
@@ -438,6 +440,14 @@ class ProxyWidget(QWidget):
                         partial(self.on_changeWidget, factory, a))
                 aa.setMenu(menu)
                 self.addAction(aa)
+
+
+    def showStatus(self, configuration, status):
+        if status == "alive":
+            self.marker.hide()
+        else:
+            self.marker.setText(status)
+            self.marker.show()
 
 
     def setWidget(self, widget):
