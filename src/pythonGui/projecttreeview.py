@@ -123,7 +123,7 @@ class ProjectTreeView(QTreeView):
 
     def projectOpen(self):
         filename = QFileDialog.getOpenFileName(None, "Open project", \
-                                               QDir.tempPath(), "XML (*.xml)")
+                                               QDir.tempPath())
         if len(filename) < 1:
             return
         
