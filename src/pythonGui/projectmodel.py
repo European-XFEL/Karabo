@@ -17,7 +17,7 @@ __all__ = ["ProjectModel"]
 from configuration import Configuration
 from copy import copy
 import icons
-from karabo.hash import Hash, HashMergePolicy, XMLParser
+from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
@@ -27,6 +27,7 @@ from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
+from zipfile import is_zipfile
 
 
 class ProjectModel(QStandardItemModel):
@@ -35,8 +36,6 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
-    signalOpenScene = pyqtSignal(object) # scene
-    signalSaveScene = pyqtSignal(object) # scene
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
@@ -341,12 +340,12 @@ class ProjectModel(QStandardItemModel):
         return index.data(ProjectModel.ITEM_OBJECT)
 
 
-    def projectExists(self, directory, projectName):
+    def projectExists(self, directory, projectFile):
         """
-        This functions checks whether a project with the \projectName already exists.
+        This functions checks whether a project with the \projectFile already exists.
         """
-        absoluteProjectPath = os.path.join(directory, projectName)
-        return QDir(absoluteProjectPath).exists()
+        absoluteProjectPath = os.path.join(directory, projectFile)
+        return is_zipfile(absoluteProjectPath)
 
 
     def createNewProject(self, projectName, directory):
@@ -363,53 +362,53 @@ class ProjectModel(QStandardItemModel):
         return project
 
 
-    def createNewProjectFromHash(self, hash):
-        """
-        This function creates a new project via the given \hash and returns it.
-        """
-        project = Project()
-        project.name = hash.getAttribute(Project.PROJECT_KEY, "name")
-        project.directory = hash.getAttribute(Project.PROJECT_KEY, "directory")
-        
-        projConfig = hash.get(Project.PROJECT_KEY)
-        
-        for category in projConfig.keys():
-            if category == Project.DEVICES_KEY:
-                devices = projConfig.get(category)
-                # Vector of hashes
-                for d in devices:
-                    classId = d.keys()[0]
-                    self.addDevice(project, classId, d.get(classId))
-            elif category == Project.SCENES_KEY:
-                scenes = projConfig.get(category)
-                # Vector of hashes
-                for s in scenes:
-                    self.openScene(project, s.get("name"))
-            elif category == Project.MACROS_KEY:
-                pass
-            elif category == Project.MONITORS_KEY:
-                pass
-            elif category == Project.RESOURCES_KEY:
-                pass
-            elif category == Project.CONFIGURATIONS_KEY:
-                pass
-        
-        return project
-
-
-    def openProject(self, filename):
+    def projectOpen(self, filename):
         """
         This function opens a project file, creates a new projects, adds it to
         the project list and updates the view.
         """
-        p = XMLParser()
-        with open(filename, 'r') as file:
-            projectConfig = p.read(file.read())
+        project = Project()
+        try:
+            project.unzip(filename)
+        except Exception, e:
+            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+            QMessageBox.critical(None, "Error", message + str(e))
+            return
         
-        # Create empty project and fill
-        project = self.createNewProjectFromHash(projectConfig)
         self.projects.append(project)
         self.updateData()
+        
+        for device in project.devices:
+            self.checkDescriptor(device)
+        
+        # Open new loaded project scenes
+        for scene in project.scenes:
+            self.signalAddScene.emit(scene)
+
+
+    def projectSave(self, project=None):
+        """
+        This function saves the \project.
+        
+        If the \project is None, the current project is taken.
+        """
+        if project is None:
+            project = self.currentProject()
+        
+        project.zip()
+
+
+    def projectSaveAs(self, directory, project=None):
+        """
+        This function saves the \project into the \directory.
+        
+        If the \project is None, the current project is taken.
+        """
+        if project is None:
+            project = self.currentProject()
+        
+        project.directory = directory
+        project.zip()
 
 
     def editDevice(self, device=None):
@@ -444,45 +443,45 @@ class ProjectModel(QStandardItemModel):
             project.remove(device)
         
         # Add new device
-        device = self.addDevice(project, self.pluginDialog.classId, config)
+        device = self.addDevice(project, self.pluginDialog.deviceId, self.pluginDialog.classId, config)
         
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, classId, config):
+    def addDevice(self, project, deviceId, classId, config):
         """
         Add a device configuration for the given \project with the given \classId
         and the \config.
         """
-        deviceId = config.get("deviceId")
-        serverId = config.get("serverId")
+        device = Device(deviceId, classId, config)
+        self.checkDescriptor(device)
+        project.addDevice(device)
+        self.updateData()
+        
+        return device
 
+
+    def checkDescriptor(self, device):
+        serverId = device.futureConfig.get("serverId")
+        classId = device.classId
+        
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
-
+        
+        # Get descriptor and connect, if None
         if conf.descriptor is None:
             conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
+        else:
+            device.descriptor = conf.descriptor
+            device.mergeFutureConfig()
 
-        device = Device(deviceId, "projectClass", conf.descriptor)
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
             self.classConfigProjDeviceMap[conf].append(device)
         else:
             self.classConfigProjDeviceMap[conf] = [device]
-
-        # Set classId
-        device.classId = classId
-        # Set deviceId and serverId in case descriptor is not set yet
-        device.futureConfig = config
-        # Merge futureConfig, if descriptor is not None
-        device.mergeFutureConfig()
-        
-        project.addDevice(device)
-        self.updateData()
-        
-        return device
 
 
     def editScene(self, scene=None):
@@ -500,8 +499,6 @@ class ProjectModel(QStandardItemModel):
 
     def _createScene(self, project, sceneName):
         scene = Scene(project, sceneName)
-        scene.initView()
-        project.signalSaveScene.connect(self.signalSaveScene)
         project.addScene(scene)
         
         return scene
@@ -527,7 +524,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def showScene(self, scene):
-        self.signalOpenScene.emit(scene)
+        scene.load()
         
 
 ### slots ###
