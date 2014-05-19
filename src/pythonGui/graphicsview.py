@@ -36,6 +36,7 @@ import xmlparser
 from functools import partial
 import os.path
 from itertools import chain
+from cStringIO import StringIO
 
 
 class Action(Registry):
@@ -951,7 +952,26 @@ class GraphicsView(QSvgWidget):
         self.load(ar)
 
 
-    def sceneAsXml(self):
+    def sceneFromXml(self, xmlString):
+        """
+        Parses the given xmlString which represents the SVG.
+        """
+        self.tree = ElementTree.parse(StringIO(xmlString))#ElementTree.tostring(xmlString)
+        root = self.tree.getroot()
+        self.clean()
+        FixedLayout.load(root, widget=self.inner)
+        self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
+        self.designMode = True
+        
+        ar = QByteArray()
+        buf = QBuffer(ar)
+        buf.open(QIODevice.WriteOnly)
+        self.tree.write(buf)
+        buf.close()
+        self.load(ar)
+
+
+    def sceneToXml(self):
         """
         Returns the scene as XML string.
         """

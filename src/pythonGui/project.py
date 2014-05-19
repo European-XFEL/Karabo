@@ -79,14 +79,12 @@ class Project(QObject):
         del object
 
 
-    def load(self, filename):
-        print "+++ load", filename
+    def unzip(self, filename):
         zf = ZipFile(filename)
-        projXml = "project.xml"
         try:
-            data = zf.read("project.xml")
+            data = zf.read("{}.xml".format(Project.PROJECT_KEY))
         except KeyError:
-            print "ERROR: Did not find %s in zip file" % projXml
+            print "ERROR: Did not find %s in zip file" % "{}.xml".format(Project.PROJECT_KEY)
         
         projectConfig = XMLParser().read(data)
         
@@ -102,16 +100,17 @@ class Project(QObject):
                 # Vector of hashes
                 for d in devices:
                     classId = d.keys()[0]
-                    print "addDevice", classId
-                    # TODO: add device
-                    #self.addDevice(project, classId, d.get(classId))
+                    config = d.get(classId)
+                    device = Device(config.get("deviceId"), classId, config)
+                    self.addDevice(device)
             elif category == Project.SCENES_KEY:
                 scenes = projConfig.get(category)
                 # Vector of hashes
                 for s in scenes:
-                    print "openScene"
-                    # TODO: add scene
-                    #self.openScene(project, s.get("name"))
+                    scene = Scene(self, s.get("name"))
+                    data = zf.read(os.path.join(Project.SCENES_LABEL, s.get("filename")))
+                    scene.sceneFromXml(data)
+                    self.addScene(scene)
             elif category == Project.MACROS_KEY:
                 pass
             elif category == Project.MONITORS_KEY:
@@ -148,7 +147,7 @@ class Project(QObject):
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
-            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.sceneAsXml())
+            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.sceneToXml())
             sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
@@ -182,97 +181,9 @@ class Project(QObject):
         
         projectData = XMLWriter().write(projectConfig)
         try:
-            zf.writestr("project.xml", projectData)
+            zf.writestr("{}.xml".format(Project.PROJECT_KEY), projectData)
         finally:
             zf.close()
-
-    
-    def save(self, overwrite=False):
-        """
-        This function saves this project to its directory.
-        """
-        absoluteProjectPath = os.path.join(self.directory, self.name)
-        dir = QDir()
-        if not QDir(absoluteProjectPath).exists():
-            dir.mkpath(absoluteProjectPath)
-        else:
-            if not overwrite:
-                reply = QMessageBox.question(None, "New project",
-                    "A project folder named \"" + self.name + "\" already exists.<br>"
-                    "Do you want to replace it?",
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-                if reply == QMessageBox.No:
-                    # TODO: Choose other location
-                    return
-
-                self._clearProjectDir(absoluteProjectPath)
-
-        # Create folder structure and save content
-        projectConfig = Hash(Project.PROJECT_KEY, Hash())
-        projectConfig.setAttribute(Project.PROJECT_KEY, "name", self.name)
-        projectConfig.setAttribute(Project.PROJECT_KEY, "directory", self.directory)
-        
-        # Create folder for devices
-        devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
-        projectConfig.set(devicePath, Hash())
-        deviceConfig = []
-        for device in self.devices:
-            config = device.toHash()
-            deviceConfig.append(Hash(device.classId, config))
-        projectConfig.set(devicePath, deviceConfig)
-        
-        # Create folder for scenes
-        absoluteLabelPath = os.path.join(absoluteProjectPath, Project.SCENES_LABEL)
-        dir.mkpath(absoluteLabelPath)
-        scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
-        sceneConfig = []
-        for scene in self.scenes:
-            # Save scene to SVG
-            scene.save()
-            sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
-        projectConfig.set(scenePath, sceneConfig)
-
-        # Create folder for macros
-        absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MACROS_LABEL)
-        dir.mkpath(absoluteLabelPath)
-        macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
-        projectConfig.set(macroPath, Hash())
-        for macro in self.macros:
-            # TODO
-            pass
-        
-        # Create folder for configurations
-        absoluteLabelPath = os.path.join(absoluteProjectPath, Project.CONFIGURATIONS_LABEL)
-        dir.mkpath(absoluteLabelPath)
-        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
-        projectConfig.set(configPath, Hash())
-        for config in self.configurations:
-            # TODO
-            pass
-        
-        # Create folder for resources
-        absoluteLabelPath = os.path.join(absoluteProjectPath, Project.RESOURCES_LABEL)
-        dir.mkpath(absoluteLabelPath)
-        resourcePath = "{}.{}".format(Project.PROJECT_KEY, Project.RESOURCES_KEY)
-        projectConfig.set(resourcePath, Hash())
-        for resource in self.resources:
-            # TODO
-            pass
-
-        # Create folder for monitors
-        absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MONITORS_LABEL)
-        dir.mkpath(absoluteLabelPath)
-        monitorPath = "{}.{}".format(Project.PROJECT_KEY, Project.MONITORS_KEY)
-        projectConfig.set(monitorPath, Hash())
-        for montitor in self.monitors:
-            # TODO
-            pass
-
-        # Save project.xml
-        with open(os.path.join(self.directory, self.name, 'project.xml'), 'w') as file:
-            w = XMLWriter()
-            w.writeToFile(projectConfig, file)
 
 
     def _clearProjectDir(self, absolutePath):
@@ -297,12 +208,14 @@ class Project(QObject):
 
 class Device(Configuration):
 
-    def __init__(self, path, type, descriptor=None):
-        super(Device, self).__init__(path, type, descriptor)
+    def __init__(self, path, classId, config, descriptor=None):
+        super(Device, self).__init__(path, "projectClass", descriptor)
         
-        self.classId = None
+        self.classId = classId
         # Needed in case the descriptor is not set yet
-        self.futureConfig = None
+        self.futureConfig = config
+        # Merge futureConfig, if descriptor is not None
+        self.mergeFutureConfig()
 
 
     def mergeFutureConfig(self):
@@ -335,19 +248,23 @@ class Scene(object):
         self.view = GraphicsView()
 
 
-    def load(self):
+    def open(self):
+        self.view.load()
+
+
+    def sceneFromXml(self, xmlString):
         """
         This function loads the corresponding SVG file of this scene into the
         view.
         """
-        self.view.openScene(self.absoluteFilePath)
+        self.view.sceneFromXml(xmlString)
 
 
-    def sceneAsXml(self):
+    def sceneToXml(self):
         """
         This function returns the scenes' SVG file as a string.
         """
-        return self.view.sceneAsXml()
+        return self.view.sceneToXml()
 
 
 class Category(object):
