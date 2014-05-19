@@ -125,7 +125,7 @@ class Project(QObject):
         """
         This function save this project as a zip file.
         """
-        absoluteProjectPath = os.path.join(self.directory, self.name)
+        absoluteProjectPath = os.path.join(self.directory, "{}.KRB".format(self.name))
         zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
         
         # Create folder structure and save content
@@ -178,7 +178,7 @@ class Project(QObject):
         for montitor in self.monitors:
             # TODO
             pass
-        
+
         projectData = XMLWriter().write(projectConfig)
         try:
             zf.writestr("{}.xml".format(Project.PROJECT_KEY), projectData)
