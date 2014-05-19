@@ -68,14 +68,14 @@ class ProjectTreeView(QTreeView):
         alreadyExists = self.model().projectExists(directory, projectName)
         if alreadyExists:
             # Open existing default project
-            filename = os.path.join(directory, projectName, "project.xml")
+            filename = os.path.join(directory, projectName)
             self.model().projectOpen(filename)
             return
 
         # Create new project or overwrite existing
         project = self.model().createNewProject(projectName, directory)
         self.model().addScene(project, "default_scene")
-        project.save(True)
+        project.zip()
 
     
     def getProjectDir(self):
