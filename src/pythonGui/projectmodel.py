@@ -340,11 +340,11 @@ class ProjectModel(QStandardItemModel):
         return index.data(ProjectModel.ITEM_OBJECT)
 
 
-    def projectExists(self, directory, projectName):
+    def projectExists(self, directory, projectFile):
         """
-        This functions checks whether a project with the \projectName already exists.
+        This functions checks whether a project with the \projectFile already exists.
         """
-        absoluteProjectPath = os.path.join(directory, projectName)
+        absoluteProjectPath = os.path.join(directory, projectFile)
         return is_zipfile(absoluteProjectPath)
 
 
@@ -368,12 +368,12 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        #try:
-        project.unzip(filename)
-        #except Exception, e:
-        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-        #    QMessageBox.critical(None, "Error", message + str(e))
-        #    return
+        try:
+            project.unzip(filename)
+        except Exception, e:
+            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+            QMessageBox.critical(None, "Error", message + str(e))
+            return
         
         self.projects.append(project)
         self.updateData()
@@ -556,7 +556,7 @@ class ProjectModel(QStandardItemModel):
         else:
             conf = device
 
-        print "onSelectionChanged", conf.path
+        print "onSelectionChanged", conf.path, conf.getDescriptor()
         self.signalItemChanged.emit(conf)
 
 

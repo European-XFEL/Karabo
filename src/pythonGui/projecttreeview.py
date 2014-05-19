@@ -65,10 +65,11 @@ class ProjectTreeView(QTreeView):
         projectName = "default_project"
         directory = QDir.tempPath()
         
-        alreadyExists = self.model().projectExists(directory, projectName)
+        projectFile = "{}.KRB".format(projectName)
+        alreadyExists = self.model().projectExists(directory, projectFile)
         if alreadyExists:
             # Open existing default project
-            filename = os.path.join(directory, projectName)
+            filename = os.path.join(directory, projectFile)
             self.model().projectOpen(filename)
             return
 
@@ -123,7 +124,7 @@ class ProjectTreeView(QTreeView):
 
     def projectOpen(self):
         filename = QFileDialog.getOpenFileName(None, "Open project", \
-                                               QDir.tempPath())
+                                               QDir.tempPath(), "KRB (*.KRB)")
         if len(filename) < 1:
             return
         
