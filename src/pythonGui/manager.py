@@ -282,9 +282,9 @@ class _Manager(QObject):
             config = r.read(file.read())[classId]
 
         if deviceId is not None:
-            self.deviceData[deviceId].merge(config)
+            self.deviceData[deviceId].fromHash(config)
         elif serverId is not None:
-            self.serverClassData[serverId, classId].merge(config)
+            self.serverClassData[serverId, classId].fromHash(config)
 
 
     def onFileOpen(self, deviceId, classId, serverId):
@@ -426,7 +426,7 @@ class _Manager(QObject):
         schema = instanceInfo['schema']
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
-        conf.configuration.state.signalUpdateComponent.connect(
+        conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
         self.onShowConfiguration(conf)
@@ -454,7 +454,7 @@ class _Manager(QObject):
         if self.deviceData.get(deviceId) is None: return
         
         config = instanceInfo.get("configuration")
-        self.deviceData[deviceId].merge(config)
+        self.deviceData[deviceId].fromHash(config)
 
 
     def handleHistoricData(self, hash):
