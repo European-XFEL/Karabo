@@ -65,17 +65,18 @@ class ProjectTreeView(QTreeView):
         projectName = "default_project"
         directory = QDir.tempPath()
         
-        alreadyExists = self.model().projectExists(directory, projectName)
+        projectFile = "{}.KRB".format(projectName)
+        alreadyExists = self.model().projectExists(directory, projectFile)
         if alreadyExists:
             # Open existing default project
-            filename = os.path.join(directory, projectName, "project.xml")
-            self.model().openProject(filename)
+            filename = os.path.join(directory, projectFile)
+            self.model().projectOpen(filename)
             return
 
         # Create new project or overwrite existing
         project = self.model().createNewProject(projectName, directory)
         self.model().addScene(project, "default_scene")
-        project.save(True)
+        project.zip()
 
     
     def getProjectDir(self):
@@ -93,7 +94,7 @@ class ProjectTreeView(QTreeView):
         return directory[0]
 
 
-    def newProject(self):
+    def projectNew(self):
         projectName = QInputDialog.getText(self, "New project", \
                                            "Enter project name:", QLineEdit.Normal, "")
 
@@ -108,7 +109,7 @@ class ProjectTreeView(QTreeView):
                 return
 
             # Call function again
-            self.newProject()
+            self.projectNew()
             return
 
         projectName = projectName[0]
@@ -118,20 +119,25 @@ class ProjectTreeView(QTreeView):
             return
 
         project = self.model().createNewProject(projectName, directory)
-        project.save()
+        project.zip()
 
 
-    def openProject(self):
-        filename = QFileDialog.getOpenFileName(None, "Open saved project", \
-                                               QDir.tempPath(), "XML (*.xml)")
+    def projectOpen(self):
+        filename = QFileDialog.getOpenFileName(None, "Open project", \
+                                               QDir.tempPath(), "KRB (*.KRB)")
         if len(filename) < 1:
             return
         
-        self.model().openProject(filename)
+        self.model().projectOpen(filename)
 
 
-    def saveCurrentProject(self):
-        self.model().currentProject().save()
+    def projectSave(self):
+        self.model().projectSave()
+
+
+    def projectSaveAs(self):
+        directory = self.getProjectDir()
+        self.model().projectSaveAs(directory)
 
 
     def mouseDoubleClickEvent(self, event):
