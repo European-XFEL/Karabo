@@ -18,14 +18,13 @@ from graphicsview import GraphicsView
 from karabo.hash import Hash, XMLParser, XMLWriter
 
 from PyQt4.QtCore import pyqtSignal, QDir, QObject
-from PyQt4.QtGui import QMessageBox
+#from PyQt4.QtGui import QMessageBox
 
 import os.path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
 
 class Project(QObject):
-    signalSaveScene = pyqtSignal(object) # scene
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
@@ -45,6 +44,7 @@ class Project(QObject):
     def __init__(self, name="", directory=""):
         super(Project, self).__init__()
 
+        self.version = 1
         self.name = name
         self.directory = directory
         
@@ -80,10 +80,17 @@ class Project(QObject):
 
 
     def load(self, filename):
-        p = XMLParser()
-        with open(filename, 'r') as file:
-            projectConfig = p.read(file.read())
+        print "+++ load", filename
+        zf = ZipFile(filename)
+        projXml = "project.xml"
+        try:
+            data = zf.read("project.xml")
+        except KeyError:
+            print "ERROR: Did not find %s in zip file" % projXml
         
+        projectConfig = XMLParser().read(data)
+        
+        self.version = projectConfig.getAttribute(Project.PROJECT_KEY, "version")
         self.name = projectConfig.getAttribute(Project.PROJECT_KEY, "name")
         self.directory = projectConfig.getAttribute(Project.PROJECT_KEY, "directory")
         
@@ -96,12 +103,14 @@ class Project(QObject):
                 for d in devices:
                     classId = d.keys()[0]
                     print "addDevice", classId
+                    # TODO: add device
                     #self.addDevice(project, classId, d.get(classId))
             elif category == Project.SCENES_KEY:
                 scenes = projConfig.get(category)
                 # Vector of hashes
                 for s in scenes:
                     print "openScene"
+                    # TODO: add scene
                     #self.openScene(project, s.get("name"))
             elif category == Project.MACROS_KEY:
                 pass
@@ -117,12 +126,16 @@ class Project(QObject):
         """
         This function save this project as a zip file.
         """
+        absoluteProjectPath = os.path.join(self.directory, self.name)
+        zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
+        
         # Create folder structure and save content
         projectConfig = Hash(Project.PROJECT_KEY, Hash())
+        projectConfig.setAttribute(Project.PROJECT_KEY, "version", self.version)
         projectConfig.setAttribute(Project.PROJECT_KEY, "name", self.name)
         projectConfig.setAttribute(Project.PROJECT_KEY, "directory", self.directory)
         
-        # Create folder for devices
+        # Handle devices
         devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
         projectConfig.set(devicePath, Hash())
         deviceConfig = []
@@ -131,47 +144,36 @@ class Project(QObject):
             deviceConfig.append(Hash(device.classId, config))
         projectConfig.set(devicePath, deviceConfig)
         
-        # Create folder for scenes
-        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.SCENES_LABEL)
-        #dir.mkpath(absoluteLabelPath)
+        # Handle scenes
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneConfig = []
         for scene in self.scenes:
-            # Save scene to SVG
-            self.signalSaveScene.emit(scene)
+            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.sceneAsXml())
             sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
-        # Create folder for macros
-        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MACROS_LABEL)
-        #dir.mkpath(absoluteLabelPath)
+        # Handle macros
         macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
         projectConfig.set(macroPath, Hash())
         for macro in self.macros:
             # TODO
             pass
         
-        # Create folder for configurations
-        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.CONFIGURATIONS_LABEL)
-        #dir.mkpath(absoluteLabelPath)
+        # Handle configurations
         configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
         projectConfig.set(configPath, Hash())
         for config in self.configurations:
             # TODO
             pass
         
-        # Create folder for resources
-        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.RESOURCES_LABEL)
-        #dir.mkpath(absoluteLabelPath)
+        # Handle resources
         resourcePath = "{}.{}".format(Project.PROJECT_KEY, Project.RESOURCES_KEY)
         projectConfig.set(resourcePath, Hash())
         for resource in self.resources:
             # TODO
             pass
 
-        # Create folder for monitors
-        #absoluteLabelPath = os.path.join(absoluteProjectPath, Project.MONITORS_LABEL)
-        #dir.mkpath(absoluteLabelPath)
+        # Handle monitors
         monitorPath = "{}.{}".format(Project.PROJECT_KEY, Project.MONITORS_KEY)
         projectConfig.set(monitorPath, Hash())
         for montitor in self.monitors:
@@ -179,18 +181,9 @@ class Project(QObject):
             pass
         
         projectData = XMLWriter().write(projectConfig)
-        
-        absoluteProjectPath = os.path.join(self.directory, self.name)
-        # TODO: Check, if project already exists
-        
-        zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
         try:
-            print "adding project.xml"
             zf.writestr("project.xml", projectData)
-            zf.write(absoluteProjectPath, os.path.join(Project.SCENES_LABEL, "testScene.svg"))
-            zf.write(absoluteProjectPath, os.path.join(Project.CONFIGURATIONS_LABEL, "config.xml"))
         finally:
-            print "closing"
             zf.close()
 
     
@@ -236,7 +229,7 @@ class Project(QObject):
         sceneConfig = []
         for scene in self.scenes:
             # Save scene to SVG
-            self.signalSaveScene.emit(scene)
+            scene.save()
             sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneConfig)
 
@@ -339,14 +332,22 @@ class Scene(object):
                                              Project.SCENES_LABEL, self.filename)
         
         # GraphicsView
-        self.view = None
-
-
-    def initView(self):
-        """
-        The graphical representation of this scene is created.
-        """
         self.view = GraphicsView()
+
+
+    def load(self):
+        """
+        This function loads the corresponding SVG file of this scene into the
+        view.
+        """
+        self.view.openScene(self.absoluteFilePath)
+
+
+    def sceneAsXml(self):
+        """
+        This function returns the scenes' SVG file as a string.
+        """
+        return self.view.sceneAsXml()
 
 
 class Category(object):
