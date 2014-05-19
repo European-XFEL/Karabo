@@ -6,6 +6,7 @@
 
 
 from dialogs.dialogs import TextDialog
+import icons
 import manager
 from registry import Loadable
 from const import ns_svg, ns_karabo
@@ -446,7 +447,14 @@ class ProxyWidget(QWidget):
         if status == "alive":
             self.marker.hide()
         else:
-            self.marker.setText(status)
+            icon = dict(requested=icons.device_requested,
+                        schema=icons.device_schema,
+                        dead=icons.device_dead).get(status)
+            if icon is not None:
+                self.marker.setPixmap(icon.pixmap(16))
+                self.marker.setText("")
+            else:
+                self.marker.setText(status)
             self.marker.show()
 
 
