@@ -321,8 +321,8 @@ namespace karabo {
                 }
                 raw.setChannelSpace(channelSpace);
 
-                // Set header
-                raw.setHeader(this->getHeader());
+                // Set header 
+                //raw.setHeader(this->getHeader());
 	    }
 
             /***************************************
