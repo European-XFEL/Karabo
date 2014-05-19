@@ -189,8 +189,6 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
-        self.projectPanel.signalOpenScene.connect(self.onOpenScene)
-        self.projectPanel.signalSaveScene.connect(self.onSaveScene)
         self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
@@ -269,21 +267,6 @@ class MainWindow(QMainWindow):
         self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
-
-
-    def onOpenScene(self, scene):
-        customView = self._createCustomMiddlePanel(scene)
-        self.middleTab.addDockableTab(customView, scene.name)
-        if self.middleTab.count()-1 > 0:
-            self.middleTab.updateTabsClosable()
-        customView.openScene(scene.absoluteFilePath)
-
-
-    def onSaveScene(self, scene):
-        for i in xrange(self.middleTab.count()):
-            divWidget = self.middleTab.widget(i)
-            if divWidget.dockableWidget.scene == scene:
-                divWidget.dockableWidget.saveScene(scene.absoluteFilePath)
 
 
     def onChangeAccessLevel(self, action):

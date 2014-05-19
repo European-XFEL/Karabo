@@ -35,8 +35,6 @@ class ProjectPanel(QWidget):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool)
     signalAddScene = pyqtSignal(object) # scene
-    signalOpenScene = pyqtSignal(object) # scene
-    signalSaveScene = pyqtSignal(object) # scene
 
     def __init__(self):
         super(ProjectPanel, self).__init__()
@@ -46,8 +44,6 @@ class ProjectPanel(QWidget):
 
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalAddScene.connect(self.signalAddScene)
-        self.twProject.model().signalOpenScene.connect(self.signalOpenScene)
-        self.twProject.model().signalSaveScene.connect(self.signalSaveScene)
         self.twProject.model().signalServerConnection.connect(self.signalServerConnection)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
@@ -78,11 +74,19 @@ class ProjectPanel(QWidget):
         self.acProjectSave.setEnabled(False)
         self.acProjectSave.triggered.connect(self.onProjectSave)
 
+        text = "Save project as"
+        self.acProjectSaveAs = QAction(QIcon(":save-as"), "&Save project as", self)
+        self.acProjectSaveAs.setStatusTip(text)
+        self.acProjectSaveAs.setToolTip(text)
+        self.acProjectSaveAs.setEnabled(False)
+        self.acProjectSaveAs.triggered.connect(self.onProjectSaveAs)
+
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.acProjectNew)
         standardToolBar.addAction(self.acProjectOpen)
         standardToolBar.addAction(self.acProjectSave)
+        standardToolBar.addAction(self.acProjectSaveAs)
 
 
     def setupDefaultProject(self):
@@ -91,19 +95,24 @@ class ProjectPanel(QWidget):
 
 ### slots ###
     def onProjectNew(self):
-        self.twProject.newProject()
+        self.twProject.projectNew()
 
 
     def onProjectOpen(self):
-        self.twProject.openProject()
+        self.twProject.projectOpen()
 
 
     def onProjectSave(self):
-        self.twProject.saveCurrentProject()
+        self.twProject.projectSave()
+
+
+    def onProjectSaveAs(self):
+        self.twProject.projectSaveAs()
 
 
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
+        self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
 
 
     # virtual function
