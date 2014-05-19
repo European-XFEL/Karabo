@@ -469,14 +469,23 @@ class ProjectModel(QStandardItemModel):
         
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
-        
-        # Get descriptor and connect, if None
+<<<<<<< HEAD
+
         if conf.descriptor is None:
             conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
+
+        device = Device(deviceId, "projectClass", conf.descriptor)
+=======
+        
+        # Get descriptor and connect, if None
+        descriptor = conf.getDescriptor()
+        if descriptor is None:
+            conf.signalConfigurationNewDescriptor.connect(self.onConfigurationNewDescriptor)
         else:
-            device.descriptor = conf.descriptor
+            device.setDescriptor(descriptor)
             device.mergeFutureConfig()
 
+>>>>>>> zipProject
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
             self.classConfigProjDeviceMap[conf].append(device)
