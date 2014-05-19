@@ -66,7 +66,6 @@ class ProjectTreeView(QTreeView):
         directory = QDir.tempPath()
         
         alreadyExists = self.model().projectExists(directory, projectName)
-        print "exists", alreadyExists
         if alreadyExists:
             # Open existing default project
             filename = os.path.join(directory, projectName)
