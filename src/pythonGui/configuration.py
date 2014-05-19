@@ -20,6 +20,9 @@ from PyQt4.QtCore import QObject, pyqtSignal
 
 
 class Configuration(Box):
+    statusChanged = pyqtSignal(object, str)
+
+
     def __init__(self, key, type, descriptor=None):
         """
         Create a new Configuration for schema, type should be 'class',
@@ -30,10 +33,36 @@ class Configuration(Box):
         self.type = type
         self.key = key
         self.visible = 0
+        self._status = "dead"
 
 
     def setSchema(self, schema):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
+        if self.status != "alive":
+            self.status = "schema"
+
+
+    @property
+    def status(self):
+        """Each device can be in one of three states:
+
+        "dead": nothing is known about the device
+        "requested": a schema is requested, but didnt arrive yet
+        "schema": the device has a schema, but no value yet
+        "alive": everything is up-and-running """
+        return self._status
+
+
+    @status.setter
+    def status(self, value):
+        if value != self._status:
+            self._status = value
+            self.statusChanged.emit(self, value)
+
+
+    def _set(self, value, timestamp):
+        Box._set(self, value, timestamp)
+        self.status = "alive"
 
 
     def getBox(self, path):
