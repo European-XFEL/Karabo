@@ -453,6 +453,8 @@ class _Manager(QObject):
         """
         Remove instanceId from central hash and update
         """
+        if instanceId in self.deviceData:
+            self.deviceData[instanceId].status = "dead"
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
         if parentPath is not None:
@@ -505,11 +507,14 @@ class _Manager(QObject):
 
 
     def getDevice(self, deviceId):
-        if deviceId not in self.deviceData:
-            self.deviceData[deviceId] = Configuration(deviceId, 'device')
+        c = self.deviceData.get(deviceId)
+        if c is None:
+            c = self.deviceData[deviceId] = Configuration(deviceId, 'device')
+        if c.descriptor is None and c.status != "requested":
             self.signalGetDeviceSchema.emit(deviceId)
-        return self.deviceData[deviceId]
-        
+            c.status = "requested"
+        return c
+
 
     def handleDeviceSchemaUpdated(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
