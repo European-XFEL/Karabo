@@ -39,7 +39,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.internalKey.configuration.configuration.state. \
+        self.internalKey.configuration.value.state. \
             signalUpdateComponent.connect(self.onStateChanged)
 
 
@@ -76,5 +76,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         manager.Manager().executeCommand(
-            dict(path=self.internalKey.configuration.path,
+            dict(path=self.internalKey.configuration.key,
             command=self.__command, args=args))

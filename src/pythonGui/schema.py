@@ -48,7 +48,7 @@ class Box(QObject):
 
 
     def key(self):
-        return self.configuration.path + '.' + '.'.join(self.path)
+        return self.configuration.key + '.' + '.'.join(self.path)
 
 
     configuration = Weak()
@@ -96,7 +96,7 @@ class Box(QObject):
 
         return (self.descriptor is None or
                 self.descriptor.allowedStates is None or
-                self.configuration.configuration.state.value in
+                self.configuration.value.state.value in
                     self.descriptor.allowedStates)
 
 

@@ -19,69 +19,25 @@ import manager
 from PyQt4.QtCore import QObject, pyqtSignal
 
 
-class Configuration(QObject):
-    signalConfigurationNewDescriptor = pyqtSignal(object) # configuration
-
-    def __init__(self, path, type, descriptor=None):
+class Configuration(Box):
+    def __init__(self, key, type, descriptor=None):
         """
         Create a new Configuration for schema, type should be 'class',
         'projectClass' or 'device'.
         """
-        
-        super(Configuration, self).__init__()
+
+        super(Configuration, self).__init__((), descriptor, self)
         self.type = type
-        self.path = path
+        self.key = key
         self.visible = 0
-        
-        self._box = Box((), descriptor, self)
-
-
-    def getDescriptor(self):
-        return self._box.descriptor
-
-
-    def setDescriptor(self, descriptor):
-        self._box.descriptor = descriptor
 
 
     def setSchema(self, schema):
-        self._box.descriptor = Schema.parse(schema.name, schema.hash, {})
-        self.signalConfigurationNewDescriptor.emit(self)
-
-
-    @property
-    def configuration(self):
-        return self._box.value
-
-
-    def toHash(self):
-        return self._box.toHash()
-
-
-    def merge(self, config):
-        self._box.fromHash(config)
-
-
-    def set(self, parameterKey, value):
-        self._box.set(parameterKey, value)
-
-
-    def setDefault(self):
-        """
-        This function should be called explicitly whenever a new schema was set
-        and the default values are required to be updated.
-        """
-        self._box.setDefault()
-
-
-    def setAttribute(self, parameterKey, attributeKey, value):
-        if not self.configuration.has(parameterKey):
-            self.configuration.set(parameterKey, None)
-        self.configuration.setAttribute(parameterKey, attributeKey, value)
+        self.descriptor = Schema.parse(schema.name, schema.hash, {})
 
 
     def getBox(self, path):
-        box = self._box
+        box = self
         for p in path:
             box = getattr(box.value, p)
         return box
@@ -89,21 +45,21 @@ class Configuration(QObject):
 
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
-        self._box.fillWidget(parameterEditor, (self.type == "class") \
-                                           or (self.type == "projectClass"))
+        Box.fillWidget(self, parameterEditor,
+                       self.type in ("class", "projectClass"))
         parameterEditor.globalAccessLevelChanged()
 
 
     def addVisible(self):
         self.visible += 1
         if self.visible == 1:
-            manager.Manager().signalNewVisibleDevice.emit(self.path)
+            manager.Manager().signalNewVisibleDevice.emit(self.key)
 
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0:
-            manager.Manager().signalRemoveVisibleDevice.emit(self.path)
+            manager.Manager().signalRemoveVisibleDevice.emit(self.key)
 
 
     def refresh(self):
