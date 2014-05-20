@@ -93,6 +93,10 @@ class ProjectPanel(QWidget):
         self.twProject.setupDefaultProject()
 
 
+    def closeAllProjects(self):
+        print "closeAllProjects"
+
+
 ### slots ###
     def onProjectNew(self):
         self.twProject.projectNew()
