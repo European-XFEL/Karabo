@@ -71,6 +71,7 @@ namespace karabo {
 
             // Initialize the memory data structure (currently only devices are supported)
             m_systemHistory.set("device", Hash());
+            SIGNAL3("signalPropertyHistory", string /*deviceId*/, string /*property*/, vector<Hash>);
         }
 
 
@@ -416,7 +417,7 @@ namespace karabo {
         
         void FileDataLogger::slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const Hash& params) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyFromPast()";
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory()";
 
                 vector<Hash> result;
 
@@ -427,7 +428,7 @@ namespace karabo {
                 if (params.has("to")) to = Epochstamp(params.get<string>("to"));
 
                 unsigned int maxNumData = 0;
-                if (params.has("maxNumData")) maxNumData = params.get<unsigned int>("maxNumData");
+                if (params.has("maxNumData")) maxNumData = params.get<int>("maxNumData");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.getSeconds();
                 KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.getSeconds();
@@ -481,7 +482,7 @@ namespace karabo {
                 }
 
                 reply(result);
-                //return result;
+                emit("signalPropertyHistory", deviceId, property, result);
 
             } catch (...) {
 
