@@ -186,6 +186,7 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
+        self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
@@ -279,6 +280,13 @@ class MainWindow(QMainWindow):
         self.middleTab.addDockableTab(customView, scene.name)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
+
+
+    def onRemoveScene(self, scene):
+        for i in xrange(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if divWidget.dockableWidget.scene == scene:
+                self.middleTab.removeDockableTab(divWidget.dockableWidget)
 
 
     def onChangeAccessLevel(self, action):
