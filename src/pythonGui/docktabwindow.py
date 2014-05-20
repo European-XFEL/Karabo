@@ -52,6 +52,13 @@ class DockTabWindow(QTabWidget):
         self.divWidgetList.append(divWidget)
 
 
+    def removeDockableTab(self, widget):
+        divWidget = widget.parent()
+        print "removeDockableTab", divWidget
+        self.removeTab(self.indexOf(divWidget))
+        self.updateTabsClosable()
+
+
     def addCornerWidget(self, tbNewTab):
         self.setCornerWidget(tbNewTab)
 
