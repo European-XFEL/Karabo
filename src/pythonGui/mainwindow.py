@@ -18,13 +18,13 @@ import icons
 from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
-from karabo.hash import Hash
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
+from panels.placeholderpanel import PlaceholderPanel
 from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
@@ -50,9 +50,6 @@ class MainWindow(QMainWindow):
         self._setupStatusBar()
         
         self._setupPanels()
-
-        # Setup default project
-        self.projectPanel.setupDefaultProject()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
         self.resize(1200,800)
@@ -189,6 +186,7 @@ class MainWindow(QMainWindow):
 
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
+        self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
@@ -196,7 +194,8 @@ class MainWindow(QMainWindow):
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         self.middleTab = DockTabWindow("Custom view", middleArea)
-        middleArea.setStretchFactor(0, 10)
+        self._showStartPage(True)
+        middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
@@ -230,6 +229,20 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         self.signalQuitApplication.emit()
+
+
+    def _showStartPage(self, show):
+        if show:
+            # Close all projects
+            self.projectPanel.closeAllProjects()
+            # Add startup page
+            self.placeholderPanel = PlaceholderPanel()
+            self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        else:
+            # Remove startup page
+            self.middleTab.removeDockableTab(self.placeholderPanel)
+            # Setup default project
+            self.projectPanel.setupDefaultProject()
 
 
 ### virtual functions ###
@@ -269,6 +282,13 @@ class MainWindow(QMainWindow):
             self.middleTab.updateTabsClosable()
 
 
+    def onRemoveScene(self, scene):
+        for i in xrange(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if divWidget.dockableWidget.scene == scene:
+                self.middleTab.removeDockableTab(divWidget.dockableWidget)
+
+
     def onChangeAccessLevel(self, action):
         if action is self.acObserver:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
@@ -298,6 +318,9 @@ class MainWindow(QMainWindow):
         self.acServerConnect.blockSignals(False)
         
         self.tbAccessLevel.setEnabled(isConnected)
+
+        # Adapt middle panel
+        self._showStartPage(not isConnected)
 
 
     def onUpdateAccessLevel(self):
