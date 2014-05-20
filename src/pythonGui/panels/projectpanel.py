@@ -35,6 +35,8 @@ class ProjectPanel(QWidget):
     # To import a plugin a server connection needs to be established
     signalServerConnection = pyqtSignal(bool)
     signalAddScene = pyqtSignal(object) # scene
+    signalRemoveScene = pyqtSignal(object) # scene
+    
 
     def __init__(self):
         super(ProjectPanel, self).__init__()
@@ -44,6 +46,7 @@ class ProjectPanel(QWidget):
 
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalAddScene.connect(self.signalAddScene)
+        self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
         self.twProject.model().signalServerConnection.connect(self.signalServerConnection)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
@@ -94,7 +97,7 @@ class ProjectPanel(QWidget):
 
 
     def closeAllProjects(self):
-        print "closeAllProjects"
+        self.twProject.closeAllProjects()
 
 
 ### slots ###
