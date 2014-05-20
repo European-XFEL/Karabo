@@ -53,8 +53,8 @@ namespace karabo {
 
             GLOBAL_SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            //GLOBAL_SLOT2(slotPropertyHistory)        
-
+            SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
+            
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
             config.set("type", "server");
@@ -80,7 +80,10 @@ namespace karabo {
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
                 remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
-                
+
+                // Connect the history slot
+                connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
+
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
                 boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
@@ -341,15 +344,36 @@ namespace karabo {
                 int maxNumData = 0;
                 if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
 
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash instanceInfo("type", "historicData", "deviceId", deviceId,
-                                  "property", property, "t0", t0, "t1", t1,
-                                  "data", remote().getPropertyHistory(deviceId, property, t0, t1, maxNumData));
-                channel->write(instanceInfo);
+                Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
+                call("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, property, args);               
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
             }
         }
+        
+        
+        void GuiServerDevice::slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+            try {
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting property history";
+                
+                Hash h("type", "propertyHistory", "deviceId", deviceId,
+                       "property", property, "data", data);
+                
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {                    
+                    if (it->second.find(deviceId) != it->second.end()) {
+                        it->first->write(h);
+                    }
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotPropertyHistory " << e.userFriendlyMsg();
+            }
+        }
+
 
 
         void GuiServerDevice::sendSystemTopology(karabo::net::Channel::Pointer channel) {
@@ -423,6 +447,7 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
+                // TODO Change this!! This is a performance hell!!!
                 Hash instanceInfo = createConfigurationChangedHash(deviceId, what);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);

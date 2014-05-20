@@ -82,7 +82,8 @@ namespace karabo {
 
             void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            
+            void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
+
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
             void sendSystemTopology(karabo::net::Channel::Pointer channel);
