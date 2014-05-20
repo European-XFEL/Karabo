@@ -48,10 +48,7 @@ class ProjectModel(QStandardItemModel):
         
         # List stores projects
         self.projects = []
-        
-        # Dict for later descriptor update
-        self.classConfigProjDeviceMap = dict() # {Configuration, [Device]}
-        
+
         # Dialog to add and change a device
         self.pluginDialog = None
         
@@ -410,10 +407,7 @@ class ProjectModel(QStandardItemModel):
             device.onNewDescriptor(conf)
 
         # Save configuration for later descriptor update
-        if conf in self.classConfigProjDeviceMap:
-            self.classConfigProjDeviceMap[conf].append(device)
-        else:
-            self.classConfigProjDeviceMap[conf] = [device]
+        conf.projectDevices.append(device)
 
 
     def editScene(self, scene=None):
@@ -547,8 +541,7 @@ class ProjectModel(QStandardItemModel):
         available \conf is given.
         """
         # Update all associated project devices with new descriptor
-        devices = self.classConfigProjDeviceMap[conf]
-        for device in devices:
+        for device in conf.projectDevices:
             device.descriptor = conf.descriptor
             
             # Merge hash configuration into configuration
