@@ -97,7 +97,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.description is not None:
                 info["Description"] = self.description
 
-            info["Key"] = '.'.join(self.internalKey.key)
+            info["Key"] = self.internalKey.key()
             d = self.internalKey.descriptor
             info["Value Type"] = d.hashname()
             if d.defaultValue is not None:
