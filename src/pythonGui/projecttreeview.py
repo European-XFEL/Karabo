@@ -78,6 +78,10 @@ class ProjectTreeView(QTreeView):
         self.model().addScene(project, "default_scene")
         project.zip()
 
+
+    def closeAllProjects(self):
+        self.model().closeAllProjects()
+
     
     def getProjectDir(self):
         fileDialog = QFileDialog(self, "Save project", QDir.tempPath())

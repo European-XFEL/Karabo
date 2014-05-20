@@ -36,6 +36,7 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
+    signalRemoveScene = pyqtSignal(object) # scene
     
     signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
@@ -338,6 +339,17 @@ class ProjectModel(QStandardItemModel):
             index = index.parent()
 
         return index.data(ProjectModel.ITEM_OBJECT)
+
+
+    def closeAllProjects(self):
+        """
+        This function removes all projects and closes its open scenes.
+        """
+        for project in self.projects:
+            for scene in project.scenes:
+                self.signalRemoveScene.emit(scene)
+        self.projects = []
+        self.updateData()
 
 
     def projectExists(self, directory, projectFile):
