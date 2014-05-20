@@ -35,6 +35,7 @@ class Configuration(Box):
         self.key = key
         self.visible = 0
         self._status = "offline"
+        self.projectDevices = [ ]
         self.error = False
 
         if type == "device":
