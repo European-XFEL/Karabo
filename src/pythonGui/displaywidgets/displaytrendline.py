@@ -48,7 +48,7 @@ from timestamp import Timestamp
 
 class Curve(QObject):
     ini = 1000 # Maximum size of data container
-    spare = 200 # Buffer until historic data is arrived
+    spare = 200 # Buffer until historic data is requested
     maxHistory = 400 # Limits amount of data from past
 
     def __init__(self, box, curve):
@@ -84,22 +84,22 @@ class Curve(QObject):
     def changeInterval(self, t0, t1):
         # t0 represent the oldest value displayed in the widget 
         if t0 < self.data[0, 1] or t1 < self.data[self.past, 1]:
-            self.getFromPast(t0, min(t1, self.data[self.past, 1]))        
-        
+            self.getFromPast(t0, min(t1, self.data[self.past, 1]))
+
 
     def update(self):
         self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
 
 
-    def onHistoricData(self, box, data):        
+    def onHistoricData(self, box, data):
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
         pos = self.data[:self.fill, 1].searchsorted(l[-1][1])
-        data = numpy.empty((len(l) + self.fill - pos + self.ini, 2),
-                           dtype=float)
+        newsize = max(self.ini, self.fill - pos + self.spare)
+        data = numpy.empty((len(l) + newsize, 2), dtype=float)
         data[:len(l), :] = l
-        data[len(l):-self.ini, :] = self.data[pos:self.fill, :]
-        self.fill = data.shape[0] - self.ini
+        data[len(l):len(l) + self.fill - pos, :] = self.data[pos:self.fill, :]
+        self.fill = len(l) + self.fill - pos
         self.data = data
         self.past = len(l)
         self.update()
@@ -137,7 +137,16 @@ class DisplayTrendline(DisplayWidget):
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
         self.plot.setAxisTitle(QwtPlot.yLeft, 'Value')
-        
+
+        # have a 1 s timeout to request data, thus avoid
+        # frequent re-loading while scaling
+        self.timer = QTimer(self)
+        self.timer.setInterval(1000)
+        self.timer.setSingleShot(True)
+        self.plot.axisWidget(QwtPlot.xBottom).scaleDivChanged.connect(
+            self.timer.start)
+        self.timer.timeout.connect(self.scaleChanged)
+
         self.curves = { }
 
         self.manager = PlotManager(self)
