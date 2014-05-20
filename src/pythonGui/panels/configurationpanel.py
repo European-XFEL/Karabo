@@ -439,11 +439,10 @@ class ConfigurationPanel(QWidget):
                 configuration.index = self._createNewParameterPage(configuration)
             self._setParameterEditorIndex(configuration.index)
 
-        if configuration not in (None, self.prevConfiguration):
+        if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
-            self.prevConfiguration = configuration
-        else:
-            self.prevConfiguration = None
+        
+        self.prevConfiguration = configuration
 
 
     def _removeParameterEditorPage(self, twParameterEditor):
@@ -496,9 +495,8 @@ class ConfigurationPanel(QWidget):
                                        (configuration.type == 'class' or \
                                         configuration.type == 'projectClass')
 
-        if self.prevConfiguration not in (None, configuration):
+        if self.prevConfiguration not in (None, configuration) and (self.prevConfiguration.type == "device"):
             self.prevConfiguration.removeVisible()
-            self.prevConfiguration = None
         
         self.showParameterPage(configuration)
 
