@@ -51,9 +51,6 @@ class MainWindow(QMainWindow):
         
         self._setupPanels()
 
-        # Setup default project
-        #self.projectPanel.setupDefaultProject()
-
         self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
         self.resize(1200,800)
         self.show()
@@ -195,9 +192,8 @@ class MainWindow(QMainWindow):
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
-        self.placeholderPanel = PlaceholderPanel()
         self.middleTab = DockTabWindow("Custom view", middleArea)
-        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        self._showStartPage(True)
         middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
@@ -232,6 +228,20 @@ class MainWindow(QMainWindow):
 
     def _quit(self):
         self.signalQuitApplication.emit()
+
+
+    def _showStartPage(self, show):
+        if show:
+            # Close all projects
+            self.projectPanel.closeAllProjects()
+            # Add startup page
+            self.placeholderPanel = PlaceholderPanel()
+            self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        else:
+            # Remove startup page
+            self.middleTab.removeDockableTab(self.placeholderPanel)
+            # Setup default project
+            self.projectPanel.setupDefaultProject()
 
 
 ### virtual functions ###
@@ -300,6 +310,9 @@ class MainWindow(QMainWindow):
         self.acServerConnect.blockSignals(False)
         
         self.tbAccessLevel.setEnabled(isConnected)
+
+        # Adapt middle panel
+        self._showStartPage(not isConnected)
 
 
     def onUpdateAccessLevel(self):
