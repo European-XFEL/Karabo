@@ -18,13 +18,13 @@ import icons
 from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
-from karabo.hash import Hash
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
+from panels.placeholderpanel import PlaceholderPanel
 from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
         self._setupPanels()
 
         # Setup default project
-        self.projectPanel.setupDefaultProject()
+        #self.projectPanel.setupDefaultProject()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
         self.resize(1200,800)
@@ -195,8 +195,10 @@ class MainWindow(QMainWindow):
         leftArea.setStretchFactor(1,1)
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
+        self.placeholderPanel = PlaceholderPanel()
         self.middleTab = DockTabWindow("Custom view", middleArea)
-        middleArea.setStretchFactor(0, 10)
+        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
         self.scriptingPanel = ScriptingPanel()
