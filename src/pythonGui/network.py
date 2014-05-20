@@ -279,7 +279,7 @@ class _Network(QObject):
             Manager().handleDeviceSchemaUpdated(instanceInfo)
         elif type == "notification":
             Manager().handleNotification(instanceInfo)
-        elif type == "historicData":
+        elif type == "propertyHistory":
             Manager().handleHistoricData(instanceInfo)
         elif type == "invalidateCache":
             print "invalidateCache"
