@@ -37,8 +37,6 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
-    
-    signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
     ITEM_OBJECT = Qt.UserRole
 
@@ -406,9 +404,6 @@ class ProjectModel(QStandardItemModel):
         if conf.descriptor is not None:
             device.onNewDescriptor(conf)
 
-        # Save configuration for later descriptor update
-        conf.projectDevices.append(device)
-
 
     def editScene(self, scene=None):
         dialog = SceneDialog(scene)
@@ -533,18 +528,3 @@ class ProjectModel(QStandardItemModel):
         # Remove data from project
         self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
         self.updateData()
-
-
-    def onConfigurationNewDescriptor(self, conf):
-        """
-        This slot is called from the Configuration, whenever a new descriptor is
-        available \conf is given.
-        """
-        # Update all associated project devices with new descriptor
-        for device in conf.projectDevices:
-            device.descriptor = conf.descriptor
-            
-            # Merge hash configuration into configuration
-            device.mergeFutureConfig()
-            self.signalShowProjectConfiguration.emit(device)
-

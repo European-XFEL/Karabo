@@ -228,6 +228,12 @@ class Device(Configuration):
         self.fromHash(self.futureConfig)
 
 
+    def onNewDescriptor(self, conf):
+        self.descriptor = conf.descriptor
+        self.mergeFutureConfig()
+        manager.Manager().onShowConfiguration(self)
+
+
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
