@@ -16,6 +16,7 @@ __all__ = ["Project", "ProjectConfiguration", "Category"]
 from configuration import Configuration
 from graphicsview import GraphicsView
 from karabo.hash import Hash, XMLParser, XMLWriter
+import manager
 
 from PyQt4.QtCore import pyqtSignal, QDir, QFileInfo, QObject
 #from PyQt4.QtGui import QMessageBox
@@ -82,139 +83,95 @@ class Project(QObject):
             self.devices.remove(object)
         elif isinstance(object, GraphicsView):
             self.scenes.remove(object)
-        # TODO: for others as well
-        
-        del object
 
 
     def unzip(self, filename):
-        zf = ZipFile(filename)
-        try:
-            data = zf.read("{}.xml".format(Project.PROJECT_KEY))
-        except KeyError:
-            print "ERROR: Did not find %s in zip file" % "{}.xml".format(Project.PROJECT_KEY)
-        
-        projectConfig = XMLParser().read(data)
-        
-        self.version = projectConfig.getAttribute(Project.PROJECT_KEY, "version")
-        self.name = projectConfig.getAttribute(Project.PROJECT_KEY, "name")
-        self.directory = projectConfig.getAttribute(Project.PROJECT_KEY, "directory")
-        
-        projConfig = projectConfig.get(Project.PROJECT_KEY)
-        
-        for category in projConfig.keys():
-            if category == Project.DEVICES_KEY:
-                devices = projConfig.get(category)
-                # Vector of hashes
-                for d in devices:
-                    filename = d.get("filename")
-                    data = zf.read(os.path.join(Project.DEVICES_KEY, filename))
-                    fi = QFileInfo(filename)
-                    if len(fi.suffix()) > 1:
-                        filename = fi.baseName()
+        with ZipFile(filename) as zf:
+            try:
+                data = zf.read("{}.xml".format(Project.PROJECT_KEY))
+            except KeyError:
+                print "ERROR: Did not find %s in zip file" % "{}.xml".format(
+                    Project.PROJECT_KEY)
+
+            projectConfig = XMLParser().read(data)
+
+            self.version = projectConfig[Project.PROJECT_KEY, "version"]
+            self.name = projectConfig[Project.PROJECT_KEY, "name"]
+            self.directory = projectConfig[Project.PROJECT_KEY, "directory"]
+
+            projConfig = projectConfig[Project.PROJECT_KEY]
+
+            for d in projConfig[Project.DEVICES_KEY]:
+                filename = d.get("filename")
+                data = zf.read(os.path.join(Project.DEVICES_KEY, filename))
+                fi = QFileInfo(filename)
+                if len(fi.suffix()) > 1:
+                    filename = fi.baseName()
                     
-                    config = XMLParser().read(data)
-                    # classId comes from configuration hash
-                    classId = config.keys()[0]
-                    device = Device(filename, classId, config.get(classId))
-                    device.ifexists = d.get("ifexists")
-                    self.addDevice(device)
-            elif category == Project.SCENES_KEY:
-                scenes = projConfig.get(category)
+                config = XMLParser().read(data)
+                # classId comes from configuration hash
+                classId = config.keys()[0]
+                device = Device(filename, classId, config.get(classId))
+                device.ifexists = d.get("ifexists")
+                self.addDevice(device)
+            for s in projConfig[Project.SCENES_KEY]:
+                scene = GraphicsView(self, s["filename"])
+                data = zf.read("{}/{}".format(Project.SCENES_LABEL,
+                                              s["filename"]))
+                scene.fromXml(data)
+                self.addScene(scene)
+            for deviceId, configList in projConfig[
+                                Project.CONFIGURATIONS_KEY].iteritems():
                 # Vector of hashes
-                for s in scenes:
-                    filename = s.get("filename")
-                    scene = GraphicsView(self, filename)
-                    data = zf.read(os.path.join(Project.SCENES_KEY, filename))
-                    scene.fromXml(data)
-                    self.addScene(scene)
-            elif category == Project.CONFIGURATIONS_KEY:
-                configurations = projConfig.get(category)
-                for deviceId in configurations.keys():
-                    configList = configurations[deviceId]
-                    # Vector of hashes
-                    for c in configList:
-                        filename = c.get("filename")
-                        configuration = ProjectConfiguration(self, c.get("filename"))
-                        data = zf.read(os.path.join(Project.CONFIGURATIONS_KEY, filename))
-                        configuration.fromXml(data)
-                        self.addConfiguration(deviceId, configuration)
-            elif category == Project.MACROS_KEY:
-                pass
-            elif category == Project.MONITORS_KEY:
-                pass
-            elif category == Project.RESOURCES_KEY:
-                pass
+                for c in configList:
+                    filename = c.get("filename")
+                    configuration = ProjectConfiguration(self, c.get("filename"))
+                    data = zf.read(os.path.join(Project.CONFIGURATIONS_KEY, filename))
+                    configuration.fromXml(data)
+                    self.addConfiguration(deviceId, configuration)
 
 
     def zip(self):
         """
-        This function save this project as a zip file.
+        This method saves this project as a zip file.
         """
-        absoluteProjectPath = os.path.join(self.directory, "{}.krb".format(self.name))
-        zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
-        
-        # Create folder structure and save content
-        projectConfig = Hash(Project.PROJECT_KEY, Hash())
-        projectConfig.setAttribute(Project.PROJECT_KEY, "version", self.version)
-        projectConfig.setAttribute(Project.PROJECT_KEY, "name", self.name)
-        projectConfig.setAttribute(Project.PROJECT_KEY, "directory", self.directory)
-        
-        # Handle devices
-        devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
-        deviceVec = []
-        for device in self.devices:
-            zf.writestr(os.path.join(Project.DEVICES_KEY, device.filename), device.toXml())
-            h = Hash("filename", device.filename, "ifexists", device.ifexists)
-            deviceVec.append(h)
-        projectConfig.set(devicePath, deviceVec)
-        
-        # Handle scenes
-        scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
-        sceneVec = []
-        for scene in self.scenes:
-            zf.writestr(os.path.join(Project.SCENES_KEY, scene.filename), scene.toXml())
-            sceneVec.append(Hash("filename", scene.filename))
-        projectConfig.set(scenePath, sceneVec)
-        
-        # Handle configurations
-        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
-        configHash = Hash()
-        for deviceId, configList in self.configurations.iteritems():
-            configVec = []
-            for c in configList:
-                zf.writestr(os.path.join(Project.CONFIGURATIONS_KEY, c.filename),
-                            c.toXml())
-                configVec.append(Hash("filename", c.filename))
-            configHash.set(deviceId, configVec)
-        projectConfig.set(configPath, configHash)
-        
-        # Handle macros
-        macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
-        projectConfig.set(macroPath, Hash())
-        for macro in self.macros:
-            # TODO
-            pass
-        
-        # Handle resources
-        resourcePath = "{}.{}".format(Project.PROJECT_KEY, Project.RESOURCES_KEY)
-        projectConfig.set(resourcePath, Hash())
-        for resource in self.resources:
-            # TODO
-            pass
+        absoluteProjectPath = os.path.join(self.directory,
+                                           "{}.krb".format(self.name))
 
-        # Handle monitors
-        monitorPath = "{}.{}".format(Project.PROJECT_KEY, Project.MONITORS_KEY)
-        projectConfig.set(monitorPath, Hash())
-        for montitor in self.monitors:
-            # TODO
-            pass
+        with ZipFile(absoluteProjectPath, mode="w",
+                     compression=ZIP_DEFLATED) as zf:
+            # Create folder structure and save content
+            projectConfig = Hash(Project.PROJECT_KEY, Hash())
+            projectConfig[Project.PROJECT_KEY, "version"] = self.version
+            projectConfig[Project.PROJECT_KEY, "name"] = self.name
+            projectConfig[Project.PROJECT_KEY, "directory"] = self.directory
 
-        projectData = XMLWriter().write(projectConfig)
-        try:
+            # Handle devices
+            for device in self.devices:
+                zf.writestr(os.path.join(Project.DEVICES_KEY, device.filename),
+                            device.toXml())
+            projectConfig[Project.PROJECT_KEY][Project.DEVICES_KEY] = [
+                Hash("classId", device.classId, "filename", device.filename,
+                     "ifexists", device.ifexists) for device in self.devices]
+
+            for scene in self.scenes:
+                zf.writestr("{}/{}".format(Project.SCENES_LABEL,
+                                           scene.filename), scene.toXml())
+            projectConfig[Project.PROJECT_KEY][Project.SCENES_KEY] = [
+                Hash("filename", scene.filename) for scene in self.scenes]
+
+            configs = Hash()
+            for deviceId, configList in self.configurations.iteritems():
+                configs[deviceId] = [Hash("filename", c.filename)
+                                     for c in configList]
+                for c in configList:
+                    zf.writestr(os.path.join(Project.CONFIGURATIONS_KEY, c.filename),
+                                c.toXml())
+            projectConfig[Project.PROJECT_KEY][Project.CONFIGURATIONS_KEY] = \
+                configs
+
+            projectData = XMLWriter().write(projectConfig)
             zf.writestr("{}.xml".format(Project.PROJECT_KEY), projectData)
-        finally:
-            zf.close()
 
 
     def _clearProjectDir(self, absolutePath):
