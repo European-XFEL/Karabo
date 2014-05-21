@@ -77,6 +77,29 @@ class Configuration(Box):
             self.statusChanged.emit(self, value)
 
 
+    def updateStatus(self):
+        """ determine the status from the system topology """
+        if manager.Manager().systemHash is None:
+            self.status = "offline"
+            return
+
+        try:
+            attrs = manager.Manager().systemHash[
+                "device.{}".format(self.key), ...]
+        except KeyError as e:
+            self.status = "offline"
+        else:
+            self.classId = attrs.get("classId")
+            self.serverId = attrs.get("serverId")
+            if attrs.get("status") == "error":
+                self.status = "error"
+            else:
+                if self.status == "error":
+                    self.status = "alive"
+                elif self.status not in ("requested", "schema", "alive"):
+                    self.status = "online"
+
+
     def _set(self, value, timestamp):
         Box._set(self, value, timestamp)
         self.status = "alive"

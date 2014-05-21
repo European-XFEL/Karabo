@@ -244,10 +244,6 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return
 
-        if deviceId in self.deviceData:
-            # Remove deviceId data
-            del self.deviceData[deviceId]
-        
         self.signalKillDevice.emit(deviceId)
 
 
@@ -449,18 +445,7 @@ class _Manager(QObject):
         # Update navigation and project treemodel
         self.systemTopology.updateData(config)
         for v in self.deviceData.itervalues():
-            try:
-                attrs = config["device.{}".format(v.key), ...]
-                if attrs.get("status") == "error":
-                    v.status = "error"
-                else:
-                    if v.status not in ("requested", "schema",
-                                        "error", "alive"):
-                        v.status = "online"
-                v.classId = attrs.get("classId")
-                v.serverId = attrs.get("serverId")
-            except KeyError:
-                v.status = "offline"
+            v.updateStatus()
         self.projectTopology.updateNeeded()
 
 
@@ -504,8 +489,10 @@ class _Manager(QObject):
         """
         Remove instanceId from central hash and update
         """
-        if instanceId in self.deviceData:
-            self.deviceData[instanceId].status = "offline"
+        device = self.deviceData.get(instanceId)
+        if device is not None:
+            device.status = "offline"
+            device.descriptor = None
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
         if parentPath is not None:
@@ -518,10 +505,6 @@ class _Manager(QObject):
         self.systemTopology.erase(path)
 
         self.projectTopology.updateNeeded()
-
-
-
-
 
 
     def handleClassSchema(self, classInfo):
@@ -570,6 +553,7 @@ class _Manager(QObject):
         c = self.deviceData.get(deviceId)
         if c is None:
             c = self.deviceData[deviceId] = Configuration(deviceId, 'device')
+            c.updateStatus()
         if c.descriptor is None and c.status != "requested":
             self.signalGetDeviceSchema.emit(deviceId)
             c.status = "requested"

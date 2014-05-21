@@ -289,6 +289,10 @@ class Device(Configuration):
         """ this method gets the status of the corresponding real device,
         and finds out the gory details for this project device """
 
+        if manager.Manager().systemHash is None:
+            self.status = "offline"
+            return
+
         if status == "offline":
             try:
                 attrs = manager.Manager().systemHash[

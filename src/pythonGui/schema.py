@@ -67,7 +67,7 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
-        if self.hasValue():
+        if self.hasValue() and d is not None:
             self._value = d.cast(self._value)
         self.signalNewDescriptor.emit(self)
 
