@@ -30,10 +30,15 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
+        assert type in ('class', 'projectClass', 'device')
         self.type = type
         self.key = key
         self.visible = 0
-        self._status = "dead"
+        self._status = "offline"
+
+        if type == "device":
+            self.serverId = None
+            self.classId = None
 
 
     def setSchema(self, schema):
@@ -44,17 +49,29 @@ class Configuration(Box):
 
     @property
     def status(self):
-        """Each device can be in one of three states:
+        """Each device can be in one of the following states:
 
-        "dead": nothing is known about the device
+        "noserver": device server not available
+        "noplugin": class plugin not available
+        "incompatible": device running, but of different type
+        "offline": device could, but is not started
+        "online": the device is online but doesn't have a schema yet
         "requested": a schema is requested, but didnt arrive yet
         "schema": the device has a schema, but no value yet
-        "alive": everything is up-and-running """
+        "error": device running but in error state
+        "alive": everything is up-and-running
+
+        "noserver", "noplugin", and "incompatible" only make sense
+        if we actually know the (future) server, so only for a device
+        in a project. Actual devices are just "offline". """
         return self._status
 
 
     @status.setter
     def status(self, value):
+        assert value in ('offline', 'noserver', 'noplugin', 'online',
+                         'incompatible', 'requested', 'schema', 'error',
+                         'alive')
         if value != self._status:
             self._status = value
             self.statusChanged.emit(self, value)
