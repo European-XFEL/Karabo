@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
 
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         self.middleTab = DockTabWindow("Custom view", middleArea)
+        self.placeholderPanel = None
         self._showStartPage(True)
         middleArea.setStretchFactor(0, 6)
 
@@ -233,6 +234,9 @@ class MainWindow(QMainWindow):
 
     def _showStartPage(self, show):
         if show:
+            if self.placeholderPanel is not None:
+                return
+            
             # Close all projects
             self.projectPanel.closeAllProjects()
             # Add startup page
@@ -241,6 +245,7 @@ class MainWindow(QMainWindow):
         else:
             # Remove startup page
             self.middleTab.removeDockableTab(self.placeholderPanel)
+            self.placeholderPanel = None
             # Setup default project
             self.projectPanel.setupDefaultProject()
 
