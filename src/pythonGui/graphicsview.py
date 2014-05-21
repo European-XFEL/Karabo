@@ -1088,9 +1088,13 @@ class GraphicsView(QSvgWidget):
 
 
     def dragEnterEvent(self, event):
-        source = event.source()
-        if source is not None and source is not self and self.designMode:
-            event.accept()
+        sourceType = event.mimeData().data("sourceType")
+        
+        if sourceType == "ParameterTreeWidget":
+            source = event.source()
+            if (source is not None) and (source is not self) and self.designMode \
+               and not (source.path.type == "class"):
+                event.accept()
         QWidget.dragEnterEvent(self, event)
 
 
