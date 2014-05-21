@@ -16,8 +16,7 @@ from network import Network
 from toolbar import ToolBar
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QIcon, QKeySequence, QMenu, QPalette,
-                         QSizePolicy, QScrollArea, QToolButton, QVBoxLayout,
+from PyQt4.QtGui import (QAction, QIcon, QPalette, QSizePolicy, QScrollArea,
                          QWidget)
 
 
