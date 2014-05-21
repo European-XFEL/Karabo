@@ -64,14 +64,14 @@ class NavigationTreeView(QTreeView):
         self.acOpenFromFile = QAction(icons.open, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
         self.mDeviceItem.addAction(self.acOpenFromFile)
         
         text = "Open configuration from project"
         self.acOpenFromProject = QAction(icons.open, text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(self.onOpenFromProject)
+        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
         self.mDeviceItem.addAction(self.acOpenFromProject)
         
         self.mDeviceItem.addSeparator()
@@ -80,14 +80,14 @@ class NavigationTreeView(QTreeView):
         self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(self.onSaveToFile)
+        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
         self.mDeviceItem.addAction(self.acSaveToFile)
         
         text = "Save configuration to project"
         self.acSaveToProject = QAction(icons.saveAs, text, self)
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(self.onSaveToProject)
+        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
         self.mDeviceItem.addAction(self.acSaveToProject)
 
         text = "Kill instance"
@@ -101,7 +101,7 @@ class NavigationTreeView(QTreeView):
 
 
     def currentIndex(self):
-        return self.selectionModel().currentIndex()
+        return self.model().currentIndex()
 
 
     def currentIndexType(self):
@@ -155,34 +155,6 @@ class NavigationTreeView(QTreeView):
         elif type is NavigationItemTypes.SERVER:
             serverId = itemInfo.get('serverId')
             Manager().killServer(serverId)
-
-
-    def onSaveToFile(self):
-        itemInfo = self.indexInfo()
-        
-        deviceId = itemInfo.get('deviceId')
-        classId = itemInfo.get('classId')
-        serverId = itemInfo.get('serverId')
-        
-        Manager().onSaveAsXml(deviceId, classId, serverId)
-
-
-    def onSaveToProject(self):
-        print "onSaveToProject"
-
-
-    def onOpenFromFile(self): # TODO
-        itemInfo = self.indexInfo()
-        
-        deviceId = itemInfo.get('deviceId')
-        classId = itemInfo.get('classId')
-        serverId = itemInfo.get('serverId')
-        
-        Manager().onFileOpen(deviceId, classId, serverId)
-
-
-    def onOpenFromProject(self):
-        print "onOpenFromProject"
 
 
     def onCustomContextMenuRequested(self, pos):
