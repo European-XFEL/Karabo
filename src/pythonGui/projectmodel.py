@@ -110,32 +110,12 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
-                # Update icon on availability of device
-                if self.isDeviceOnline(device):
-                    status = self.systemTopology.getAttribute("device.{}".format(device.key), "status")
-                    if status == "error":
-                        leafItem.setIcon(icons.deviceInstanceError)
-                    else:
-                        leafItem.setIcon(icons.deviceInstance)
-                else:
-                    # There are three flavours of 'offline'
-                    # (1) connected to server, but a) server of project device
-                    # is not available or b) class plugin is not available on
-                    # server
-                    # (2) not connected to server so really offline
-                    iconSet = False
-                    if self.systemTopology is not None:
-                        if not self.isDeviceServerAvailable(device):
-                            leafItem.setIcon(icons.deviceOfflineNoServer)
-                            iconSet = True
-                        else:
-                            if not self.isDevicePluginAvailable(device):
-                                leafItem.setIcon(icons.deviceOfflineNoPlugin)
-                                iconSet = True
-                    
-                    # Set icon, if not done yet
-                    if not iconSet:
-                        leafItem.setIcon(icons.deviceOffline)
+                leafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                      noserver=icons.deviceOfflineNoServer,
+                                      noplugin=icons.deviceOfflineNoPlugin,
+                                      offline=icons.deviceOffline,
+                                      incompatible=icons.deviceOffline).get(
+                    device.status, icons.deviceInstance))
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -420,12 +400,9 @@ class ProjectModel(QStandardItemModel):
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
         
-        # Get descriptor and connect, if None
-        if conf.descriptor is None:
-            conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
-        else:
-            device.descriptor = conf.descriptor
-            device.mergeFutureConfig()
+        conf.signalNewDescriptor.connect(device.onNewDescriptor)
+        if conf.descriptor is not None:
+            device.onNewDescriptor(conf)
 
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
@@ -501,7 +478,7 @@ class ProjectModel(QStandardItemModel):
             return
 
         # Check whether device is already online
-        if self.isDeviceOnline(device):
+        if device.isOnline():
             conf = manager.Manager().getDevice(device.key)
         else:
             conf = device
@@ -534,7 +511,7 @@ class ProjectModel(QStandardItemModel):
         
         project = self.currentProject()
         for device in project.devices:
-            if self.isDeviceOnline(device):
+            if device.isOnline():
                 manager.Manager().killDevice(device.key)
 
 

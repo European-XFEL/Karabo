@@ -285,6 +285,34 @@ class Device(Configuration):
         return XMLWriter().write(Hash(self.classId, self.toHash()))
 
 
+    def onStatusChanged(self, conf, status):
+        """ this method gets the status of the corresponding real device,
+        and finds out the gory details for this project device """
+
+        if status == "offline":
+            try:
+                attrs = manager.Manager().systemHash[
+                    "server.{}".format(self.futureConfig["serverId"]), ...]
+            except KeyError:
+                self.status = "noserver"
+            else:
+                if self.classId not in attrs.get("deviceClasses", []):
+                    self.status = "noplugin"
+                else:
+                    self.status = "offline"
+        else:
+            if (conf.classId == self.classId and
+                    conf.serverId == self.futureConfig.get("serverId")):
+                self.status = status
+            else:
+                self.status = "incompatible"
+
+
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
+
+
 class Scene(object):
 
     def __init__(self, project, name):
