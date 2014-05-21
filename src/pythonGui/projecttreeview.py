@@ -41,7 +41,7 @@ class ProjectTreeView(QTreeView):
 
 
     def currentIndex(self):
-        return self.selectionModel().currentIndex()
+        return self.model().currentIndex()
 
 
     def indexInfo(self, index=None):

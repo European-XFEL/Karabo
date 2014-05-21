@@ -298,6 +298,10 @@ class ProjectModel(QStandardItemModel):
         self.updateNeeded()
 
 
+    def currentIndex(self):
+        return self.selectionModel.currentIndex()
+
+
     def selectItem(self, object):
         """
         This function gets an object which can be of type Configuration or Scene

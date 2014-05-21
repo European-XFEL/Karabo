@@ -326,6 +326,10 @@ class NavigationTreeModel(QAbstractItemModel):
         return hierarchyLevel
 
 
+    def currentIndex(self):
+        return self.selectionModel.currentIndex()
+
+
     def selectIndex(self, index):
         if not index:
             return

@@ -276,6 +276,20 @@ class _Manager(QObject):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
 
+    def getIndexInfo(self):
+        """
+        
+        """
+        if self.systemTopology.currentIndex().isValid():
+            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+        elif self.projectTopology.currentIndex().isValid():
+            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+        else:
+            indexInfo = { }
+        
+        return indexInfo.get("deviceId"), indexInfo.get("classId"), indexInfo.get("serverId")
+
+
     def openAsXml(self, filename, deviceId, classId, serverId):
         r = XMLParser()
         with open(filename, 'r') as file:
@@ -285,19 +299,6 @@ class _Manager(QObject):
             self.deviceData[deviceId].fromHash(config)
         elif serverId is not None:
             self.serverClassData[serverId, classId].fromHash(config)
-
-
-    def onFileOpen(self, deviceId, classId, serverId):
-        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", \
-                                               QDir.tempPath(), "XML (*.xml)")
-        if len(filename) < 1:
-            return
-        
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
-            
-        self.openAsXml(filename, deviceId, classId, serverId)
 
 
     def saveAsXml(self, filename, deviceId, classId, serverId=None):
@@ -313,17 +314,42 @@ class _Manager(QObject):
         with open(filename, 'w') as file:
             w.writeToFile(config, file)
 
-    
-    def onSaveAsXml(self, deviceId, classId, serverId):
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
+
+    def onOpenFromFile(self):
+        filename = QFileDialog.getOpenFileName(None, "Open configuration", \
+                                               QDir.tempPath(), "XML (*.xml)")
+        if len(filename) < 1:
+            return
+        
+        file = QFile(filename)
+        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
+            return
+        
+        deviceId, classId, serverId = self.getIndexInfo()
+        self.openAsXml(filename, deviceId, classId, serverId)
+
+
+    def onOpenFromProject(self):
+        print "onOpenFromProject"
+        # TODO: Open dialog to select project and configuration
+
+
+    def onSaveToFile(self):
+        filename = QFileDialog.getSaveFileName(None, "Save configuration as", QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
         
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".xml"
-
+        
+        deviceId, classId, serverId = self.getIndexInfo()
         self.saveAsXml(filename, deviceId, classId, serverId)
+ 
+
+    def onSaveToProject(self):
+        print "onSaveToProject"
+        # TODO: Open dialog to select project to which configuration should be saved
 
 
     # TODO: needs to be implemented

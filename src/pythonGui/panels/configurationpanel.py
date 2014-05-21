@@ -220,13 +220,13 @@ class ConfigurationPanel(QWidget):
         self.acOpenFromFile = QAction(QIcon(":open"), text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
-        self.acOpenFromFile.triggered.connect(self.onOpenFromFile)
+        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
 
         text = "Open configuration from project"
         self.acOpenFromProject = QAction(QIcon(":open"), text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
-        self.acOpenFromProject.triggered.connect(self.onOpenFromProject)
+        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
         
         self.openMenu = QMenu()
         self.openMenu.addAction(self.acOpenFromFile)
@@ -244,13 +244,13 @@ class ConfigurationPanel(QWidget):
         self.acSaveToFile = QAction(QIcon(":save-as"), text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
-        self.acSaveToFile.triggered.connect(self.onSaveToFile)
+        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
 
         text = "Save configuration to project"
         self.acSaveToProject = QAction(QIcon(":save-as"), text, self)
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
-        self.acSaveToProject.triggered.connect(self.onSaveToProject)
+        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
         
         self.saveMenu = QMenu()
         self.saveMenu.addAction(self.acSaveToFile)
