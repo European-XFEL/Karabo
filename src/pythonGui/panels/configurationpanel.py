@@ -266,13 +266,13 @@ class ConfigurationPanel(QWidget):
 
 
     def setupToolBars(self, toolBar, parent):
+        # Save action to member variables to make setVisible work later
         self.acOpenConfig = toolBar.addWidget(self.tbOpenConfig)
         self.acSaveConfig = toolBar.addWidget(self.tbSaveConfig)
 
 
     def updateApplyAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(
-            configuration.index)
+        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbApplyAll.isEnabled() is True) and (nbSelected > 0):
@@ -664,21 +664,19 @@ class ConfigurationPanel(QWidget):
 
 
     def onSaveToFile(self):
-        self.twNavigation.onFileSaveAs()
+        self.twNavigation.onSaveToFile()
 
 
     def onSaveToProject(self):
-        print "onSaveToProject"
-        #self.twNavigation.onSaveToProject()
+        self.twNavigation.onSaveToProject()
 
 
     def onOpenFromFile(self):
-        self.twNavigation.onFileOpen()
+        self.twNavigation.onOpenFromFile()
 
 
     def onOpenFromProject(self):
-        print "onOpenFromProject"
-        #self.twNavigation.onOpenFromProject()
+        self.twNavigation.onOpenFromProject()
 
 
     # virtual function
