@@ -34,7 +34,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
-    signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     
@@ -46,8 +45,6 @@ class ProjectModel(QStandardItemModel):
     def __init__(self, parent=None):
         super(ProjectModel, self).__init__(parent)
         
-        # Hash stores current system topology
-        self.systemTopology = None
         # List stores projects
         self.projects = []
         
@@ -222,90 +219,8 @@ class ProjectModel(QStandardItemModel):
         # Update project view and pluginDialog data
         self.updateData()
         if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(self.systemTopology)
-
-
-    def isDeviceOnline(self, device):
-        """
-        Returns, if the \device is online or not, classId is considered as well.
-        """
-        path = "device.{}".format(device.key)
-        return (self.systemTopology is not None and 
-                self.systemTopology.has(path) and 
-                self.systemTopology.getAttribute(path, "serverId") == device.futureConfig.get("serverId") and
-                self.systemTopology.getAttribute(path, "classId") == device.classId)
-
-
-    def isDeviceServerAvailable(self, device):
-        """
-        Returns, if the server on which the \device should live,
-        is available or not.
-        """
-        path = "server.{}".format(device.futureConfig.get("serverId"))
-        return (self.systemTopology is not None and
-                self.systemTopology.has(path))
-
-
-    def isDevicePluginAvailable(self, device):
-        """
-        Returns, if the server and plugin combination on which the \device is
-        based, is available or not.
-        """
-        path = "server.{}".format(device.futureConfig.get("serverId"))
-        return (self.systemTopology is not None and
-                self.systemTopology.has(path) and
-                self.systemTopology.hasAttribute(path, "deviceClasses") and
-                device.classId in self.systemTopology.getAttribute(path, "deviceClasses"))
-
-
-    def checkSystemTopology(self):
-        """
-        This function checks whether the systemTopology is set correctly.
-        If not, a signal to connect to the server is emitted.
-        """
-        if self.systemTopology is not None:
-            return True
-        
-        reply = QMessageBox.question(None, "No server connection",
-                                     "There is no connection to the server.<br>"
-                                     "Do you want to establish a server connection?",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-        if reply == QMessageBox.No:
-            return False
-        
-        # Send signal to establish server connection to projectpanel
-        self.signalServerConnection.emit(True)
-        return False
-
-
-    def systemTopologyChanged(self, config):
-        """
-        This function updates the status (on/offline) of the project devices and
-        the server/classes which are available over the network.
-        """
-        if self.systemTopology is None:
-            self.systemTopology = config
-        else:
-            self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-
-        # Update relevant
-        self.updateNeeded()
-
-
-    def handleInstanceGone(self, instanceId):
-        if self.systemTopology is None: return
-        
-        path = None
-        if self.systemTopology.has("server." + instanceId):
-            path = "server." + instanceId
-        elif self.systemTopology.has("device." + instanceId):
-            path = "device." + instanceId
-
-        self.systemTopology.erase(path)
-        
-        # Update relevant
-        self.updateNeeded()
+            self.pluginDialog.updateServerTopology(
+                manager.Manager().systemHash())
 
 
     def currentDevice(self):
@@ -452,7 +367,7 @@ class ProjectModel(QStandardItemModel):
         Depending on the given parameter \device (either None or set) it is
         either created or edited via the dialog.
         """
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         # Get project name
@@ -460,7 +375,8 @@ class ProjectModel(QStandardItemModel):
         
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(self.systemTopology, device):
+        if not self.pluginDialog.updateServerTopology(
+                manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
@@ -581,7 +497,7 @@ class ProjectModel(QStandardItemModel):
         if not isinstance(device, Configuration):
             return
 
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
 
         # Check whether device is already online
@@ -593,15 +509,6 @@ class ProjectModel(QStandardItemModel):
         self.signalItemChanged.emit(conf)
 
 
-    def onServerConnectionChanged(self, isConnected):
-        """
-        If the server connection is changed, the model needs an update.
-        """
-        if isConnected: return
-        
-        self.systemTopology = None
-
-
     def onEditDevice(self):
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
@@ -611,7 +518,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onInitDevices(self):
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         project = self.currentProject()
@@ -622,7 +529,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         project = self.currentProject()

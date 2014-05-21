@@ -69,7 +69,7 @@ class _Network(QObject):
         Manager().signalGetFromPast.connect(self.onGetFromPast)
         
         self.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
-        self.signalServerConnectionChanged.connect(Manager().projectTopology.onServerConnectionChanged)
+        self.signalServerConnectionChanged.connect(Manager().onServerConnectionChanged)
 
 
     def connectToServer(self):

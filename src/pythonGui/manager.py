@@ -34,6 +34,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
+    signalServerConnection = pyqtSignal(bool) # connect?
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -82,6 +83,8 @@ class _Manager(QObject):
         self.projectTopology.signalShowProjectConfiguration. \
                         connect(self.onShowConfiguration)
         
+        self.systemHash = None
+
         # Sets all parameters to start configuration
         self.reset()
 
@@ -122,8 +125,40 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].setAttribute(propertyKey, attributeKey, value)
         else:
             self.serverClassData[serverId, classId].set(property, value)
-    
-    
+
+
+    def checkSystemHash(self):
+        """
+        This function checks whether the systemHash is set correctly.
+        If not, a signal to connect to the server is emitted.
+        """
+        if self.systemHash is not None:
+            return True
+
+        reply = QMessageBox.question(
+            None, "No server connection",
+            "There is no connection to the server.<br>"
+            "Do you want to establish a server connection?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+        if reply == QMessageBox.No:
+            return False
+
+        # Send signal to establish server connection to projectpanel
+        self.signalServerConnection.emit(True)
+        return False
+
+
+    def onServerConnectionChanged(self, isConnected):
+        """
+        If the server connection is changed, the model needs an update.
+        """
+        if isConnected:
+            return
+
+        self.systemHash = None
+
+
     def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
@@ -407,10 +442,26 @@ class _Manager(QObject):
 
 
     def handleSystemTopology(self, config):
+        if self.systemHash is None:
+            self.systemHash = config
+        else:
+            self.systemHash.merge(config, "merge")
         # Update navigation and project treemodel
         self.systemTopology.updateData(config)
-        # Update project model
-        self.projectTopology.systemTopologyChanged(config)
+        for v in self.deviceData.itervalues():
+            try:
+                attrs = config["device.{}".format(v.key), ...]
+                if attrs.get("status") == "error":
+                    v.status = "error"
+                else:
+                    if v.status not in ("requested", "schema",
+                                        "error", "alive"):
+                        v.status = "online"
+                v.classId = attrs.get("classId")
+                v.serverId = attrs.get("serverId")
+            except KeyError:
+                v.status = "offline"
+        self.projectTopology.updateNeeded()
 
 
     def handleInstanceNew(self, config):
@@ -454,14 +505,23 @@ class _Manager(QObject):
         Remove instanceId from central hash and update
         """
         if instanceId in self.deviceData:
-            self.deviceData[instanceId].status = "dead"
+            self.deviceData[instanceId].status = "offline"
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
         if parentPath is not None:
             self.signalInstanceGone.emit(instanceId, parentPath)
-        
-        # Update on/offline status of project
-        self.projectTopology.handleInstanceGone(instanceId)
+        path = None
+        if self.systemHash.has("server." + instanceId):
+            path = "server." + instanceId
+        elif self.systemHash.has("device." + instanceId):
+            path = "device." + instanceId
+        self.systemTopology.erase(path)
+
+        self.projectTopology.updateNeeded()
+
+
+
+
 
 
     def handleClassSchema(self, classInfo):

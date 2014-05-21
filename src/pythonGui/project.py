@@ -254,6 +254,10 @@ class Device(Configuration):
         # Merge futureConfig, if descriptor is not None
         self.mergeFutureConfig()
 
+        actual = manager.Manager().getDevice(config["deviceId"])
+        actual.statusChanged.connect(self.onStatusChanged)
+        self.onStatusChanged(actual, actual.status)
+
 
     def mergeFutureConfig(self):
         """
