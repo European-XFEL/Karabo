@@ -22,7 +22,7 @@ from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
 from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
                           QObject, QMutex, QMutexLocker)
 from PyQt4.QtGui import QDialog, QMessageBox
-from karabo.py_authenticator import PyAuthenticator
+from karabo.authenticator import Authenticator
 from karabo.hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
@@ -178,9 +178,9 @@ class _Network(QObject):
             try:
                 # TODO: adapt Authenticator constructor for unicode parameters
                 # instead of string
-                self.authenticator = PyAuthenticator(
-                            self.username, self.password, self.provider, ipAddress,
-                            self.brokerHost, self.brokerPort, self.brokerTopic)
+                self.authenticator = Authenticator(
+                    self.username, self.password, self.provider, ipAddress,
+                    self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception, e:
                 raise RuntimeError("Authentication exception " + str(e))
 
@@ -200,7 +200,8 @@ class _Network(QObject):
                 return
 
             if ok:
-                globals.GLOBAL_ACCESS_LEVEL = self.authenticator.getDefaultAccessLevelId()
+                globals.GLOBAL_ACCESS_LEVEL = \
+                    self.authenticator.defaultAccessLevelId
             else:
                 print "Login failed"
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)
