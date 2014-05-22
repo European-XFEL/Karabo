@@ -20,6 +20,7 @@ from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
+from messagebox import MessageBox
 from project import Category, Device, Project, Scene
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
@@ -399,12 +400,12 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        #try:
-        project.unzip(filename)
-        #except Exception, e:
-        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-        #    QMessageBox.critical(None, "Error", message + str(e))
-        #    return
+        try:
+            project.unzip(filename)
+        except Exception, e:
+            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+            MessageBox.showError(message + str(e))
+            return
         
         self.projects.append(project)
         self.updateData()
