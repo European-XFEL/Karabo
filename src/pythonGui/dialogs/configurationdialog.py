@@ -8,25 +8,29 @@
 """This module contains dialog classes which allow the loading and saving of
 configurations."""
 
-__all__ = ["SelectProjectDialog"]
+__all__ = ["SelectProjectDialog", "SelectProjectConfigurationDialog"]
 
+
+from project import ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
-                         QListWidget, QListWidgetItem, QVBoxLayout)
+                         QListWidget, QListWidgetItem, QTreeWidget,
+                         QTreeWidgetItem, QVBoxLayout)
 
 
 class SelectProjectDialog(QDialog):
-
+    """
+    Select a name for the configuration and a project.
+    """
     def __init__(self, name, projects):
         """
-        The constructor expects a list of projects.
+        The constructor expects a default name for the configuration and a list
+        of projects.
         """
         super(SelectProjectDialog, self).__init__()
 
         self.setWindowTitle("Select name and project")
-        
-        vLayout = QVBoxLayout(self)
         
         formLayout = QFormLayout()
         self.leName = QLineEdit()
@@ -36,6 +40,8 @@ class SelectProjectDialog(QDialog):
         self.leName.textChanged.connect(self.onNameChanged)
         
         formLayout.addRow("Configurationname: ", self.leName)
+        
+        vLayout = QVBoxLayout(self)
         vLayout.addLayout(formLayout)
         
         self.projectWidget = QListWidget(self)
@@ -80,4 +86,59 @@ class SelectProjectDialog(QDialog):
 
     def onProjectSelectionChanged(self, item):
         self.enableOkButton()
+
+
+
+class SelectProjectConfigurationDialog(QDialog):
+    """
+    Select a project configuration.
+    """
+    def __init__(self, projects):
+        """
+        The constructor expects a list of projects.
+        """
+        super(SelectProjectConfigurationDialog, self).__init__()
+
+        self.setWindowTitle("Select project configuration")
+        
+        self.projConfWidget = QTreeWidget(self)
+        self.projConfWidget.headerItem().setHidden(True)
+        self._populate(projects)
+        self.projConfWidget.itemClicked.connect(self.onProjConfSelectionChanged)
+        
+        vLayout = QVBoxLayout(self)
+        vLayout.addWidget(self.projConfWidget)
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+
+    def _populate(self, projects):
+        for p in projects:
+            item = QTreeWidgetItem([p.name])
+            item.setData(0, Qt.UserRole, p)
+            self.projConfWidget.addTopLevelItem(item)
+            item.setExpanded(True)
+            
+            for c in p.configurations:
+                deviceItem = QTreeWidgetItem([c.deviceId])
+                item.addChild(deviceItem)
+                deviceItem.setExpanded(True)
+                
+                confItem = QTreeWidgetItem([c.filename])
+                confItem.setData(0, Qt.UserRole, c)
+                deviceItem.addChild(confItem)
+                confItem.setExpanded(True)
+
+
+    def projectConfiguration(self):
+        return self.projConfWidget.currentItem().data(0, Qt.UserRole)
+
+
+    def onProjConfSelectionChanged(self, item):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled((item is not None) \
+                and isinstance(item.data(0, Qt.UserRole), ProjectConfiguration))
 
