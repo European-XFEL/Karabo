@@ -12,19 +12,31 @@ __all__ = ["SelectProjectDialog"]
 
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QListWidget, QListWidgetItem,
-                         QVBoxLayout)
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
+                         QListWidget, QListWidgetItem, QVBoxLayout)
 
 
 class SelectProjectDialog(QDialog):
 
-    def __init__(self, projects):
+    def __init__(self, name, projects):
         """
         The constructor expects a list of projects.
         """
         super(SelectProjectDialog, self).__init__()
 
-        self.setWindowTitle("Select project")
+        self.setWindowTitle("Select name and project")
+        
+        vLayout = QVBoxLayout(self)
+        
+        formLayout = QFormLayout()
+        self.leName = QLineEdit()
+        self.leName.setToolTip("Enter configuration name")
+        if name is not None:
+            self.leName.setText(name)
+        self.leName.textChanged.connect(self.onNameChanged)
+        
+        formLayout.addRow("Configurationname: ", self.leName)
+        vLayout.addLayout(formLayout)
         
         self.projectWidget = QListWidget(self)
         for p in projects:
@@ -32,8 +44,7 @@ class SelectProjectDialog(QDialog):
             item.setData(Qt.UserRole, p)
             self.projectWidget.addItem(item)
         self.projectWidget.itemClicked.connect(self.onProjectSelectionChanged)
-            
-        vLayout = QVBoxLayout(self)
+        
         vLayout.addWidget(self.projectWidget)
         
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -57,6 +68,16 @@ class SelectProjectDialog(QDialog):
         return self.leName.text()
 
 
+    def enableOkButton(self):
+        self.buttonBox.button(QDialogButtonBox.Ok) \
+                      .setEnabled(len(self.leName.text()) > 0 and \
+                                  len(self.projectWidget.selectedItems()) > 0)
+
+
+    def onNameChanged(self, name):
+        self.enableOkButton()
+
+
     def onProjectSelectionChanged(self, item):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(item is not None)
+        self.enableOkButton()
 

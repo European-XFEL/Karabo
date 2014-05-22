@@ -196,7 +196,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
             for config in project.configurations:
-                leafItem = QStandardItem(config)
+                leafItem = QStandardItem(config.filename)
                 leafItem.setData(config, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
