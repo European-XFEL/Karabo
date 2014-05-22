@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["Project", "Scene", "Category"]
+__all__ = ["Project", "Scene", "ProjectConfiguration", "Category"]
 
 
 from configuration import Configuration
@@ -67,7 +67,7 @@ class Project(QObject):
 
 
     def addConfiguration(self, configuration):
-        print "Project.addConfiguration"
+        self.configurations.append(configuration)
 
 
     def remove(self, object):
@@ -248,7 +248,6 @@ class ProjectListItem(object):
         self.project = project
 
         self.name = name
-        self.filename = "{}.svg".format(name)
 
 
 class Scene(ProjectListItem):
@@ -256,6 +255,7 @@ class Scene(ProjectListItem):
     def __init__(self, project, name):
         super(Scene, self).__init__(project, name)
         
+        self.filename = "{}.svg".format(name)
         self.absoluteFilePath = os.path.join(project.directory, project.name,
                                              Project.SCENES_LABEL, self.filename)
         
@@ -282,11 +282,12 @@ class Scene(ProjectListItem):
         return self.view.sceneToXml()
 
 
-class Configuration(ProjectListItem):
+class ProjectConfiguration(ProjectListItem):
 
     def __init__(self, project, name, config):
-        super(Configuration, self).__init__(project, name)
+        super(ProjectConfiguration, self).__init__(project, name)
         
+        self.filename = "{}.xml".format(name)
         self.absoluteFilePath = os.path.join(project.directory, project.name,
                                              Project.CONFIGURATIONS_LABEL,
                                              self.filename)
