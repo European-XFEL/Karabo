@@ -53,6 +53,10 @@ class SelectProjectDialog(QDialog):
         return item.data(Qt.UserRole)
 
 
+    def configurationName(self):
+        return self.leName.text()
+
+
     def onProjectSelectionChanged(self, item):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(item is not None)
 
