@@ -66,6 +66,10 @@ class Project(QObject):
         self.scenes.append(scene)
 
 
+    def addConfiguration(self, configuration):
+        print "Project.addConfiguration"
+
+
     def remove(self, object):
         """
         The \object should be removed from this project.

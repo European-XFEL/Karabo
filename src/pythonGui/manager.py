@@ -18,6 +18,7 @@ __all__ = ["Manager"]
 
 
 from configuration import Configuration
+from dialogs.configurationdialog import SelectProjectDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
 from navigationtreemodel import NavigationTreeModel
@@ -25,7 +26,7 @@ from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
-from PyQt4.QtGui import (QFileDialog, QMessageBox)
+from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 
 class _Manager(QObject):
@@ -326,12 +327,16 @@ class _Manager(QObject):
             return
         
         deviceId, classId, serverId = self.getIndexInfo()
+        # Distinguish between navigation/project selection
         self.openAsXml(filename, deviceId, classId, serverId)
 
 
     def onOpenFromProject(self):
         print "onOpenFromProject"
         # TODO: Open dialog to select project and configuration
+        dialog = OpenConfigurationDialog()
+        if dialog.exec_() == QDialog.Rejected:
+            return
 
 
     def onSaveToFile(self):
@@ -344,12 +349,19 @@ class _Manager(QObject):
             filename += ".xml"
         
         deviceId, classId, serverId = self.getIndexInfo()
+        # Distinguish between navigation/project selection
         self.saveAsXml(filename, deviceId, classId, serverId)
  
 
     def onSaveToProject(self):
         print "onSaveToProject"
         # TODO: Open dialog to select project to which configuration should be saved
+        dialog = SelectProjectDialog(self.projectTopology.projects)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        project = dialog.selectedProject()
+        print project.name
+        #project.addConfiguration(config)
 
 
     # TODO: needs to be implemented
