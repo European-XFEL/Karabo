@@ -293,7 +293,7 @@ class ProjectConfiguration(object):
         self.filename = "{}.xml".format(name)
         self.deviceId = deviceId
         self.classId = classId
-        self.hash = hash
+        self.hash = Hash(self.classId, hash)
 
 
     def fromXml(self, xmlString):
@@ -307,7 +307,7 @@ class ProjectConfiguration(object):
         """
         This function returns the configurations' XML file as a string.
         """
-        return XMLWriter().write(Hash(self.classId, self.hash))
+        return XMLWriter().write(self.hash)
 
 
 class Category(object):
