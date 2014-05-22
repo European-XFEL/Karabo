@@ -276,44 +276,44 @@ class _Manager(QObject):
     def onDeviceInstanceChanged(self, itemInfo, xml):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
-
-    def getIndexInfo(self):
+    
+    def currentConfigurationAndClassId(self):
         """
+        This function returns the configuration of the currently selected device
+        which can be part of the systemTopology or the projectTopology.
         
+        If no device is selected None is returned.
         """
         if self.systemTopology.currentIndex().isValid():
             indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            deviceId = indexInfo.get("deviceId")
+            classId = indexInfo.get("classId")
+            serverId = indexInfo.get("serverId")
+
+            if deviceId is not None:
+                return self.deviceData[deviceId], classId
+            elif serverId is not None:
+                return self.serverClassData[serverId, classId], classId
+            else:
+                return None
         elif self.projectTopology.currentIndex().isValid():
             indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            return self.projectTopology.currentDevice(), indexInfo.get("classId")
         else:
-            indexInfo = { }
+            return None
+
+
+    def currentConfigurationAsHash(self):
+        """
+        This function returns the configuration hash of the currently selected
+        device which can be part of the systemTopology or the projectTopology.
         
-        return indexInfo.get("deviceId"), indexInfo.get("classId"), indexInfo.get("serverId")
-
-
-    def openAsXml(self, filename, deviceId, classId, serverId):
-        r = XMLParser()
-        with open(filename, 'r') as file:
-            config = r.read(file.read())[classId]
-
-        if deviceId is not None:
-            self.deviceData[deviceId].fromHash(config)
-        elif serverId is not None:
-            self.serverClassData[serverId, classId].fromHash(config)
-
-
-    def saveAsXml(self, filename, deviceId, classId, serverId=None):
-        if deviceId is not None:
-            config = Hash(classId, self.deviceData[deviceId].toHash())
-        elif serverId is not None:
-            config = Hash(classId,
-                          self.serverClassData[serverId, classId].toHash())
-        else:
-            config = Hash()
-
-        w = XMLWriter()
-        with open(filename, 'w') as file:
-            w.writeToFile(config, file)
+        If no device is selected None is returned.
+        """
+        conf, classId = self.currentConfigurationAndClassId()
+        if conf is None: return None
+        
+        return Hash(classId, conf.toHash())
 
 
     def onOpenFromFile(self):
@@ -326,9 +326,13 @@ class _Manager(QObject):
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
         
-        deviceId, classId, serverId = self.getIndexInfo()
-        # Distinguish between navigation/project selection
-        self.openAsXml(filename, deviceId, classId, serverId)
+        conf, classId = self.currentConfigurationAndClassId()
+        
+        r = XMLParser()
+        with open(filename, 'r') as file:
+            config = r.read(file.read())[classId]
+        
+        conf.fromHash(config)
 
 
     def onOpenFromProject(self):
@@ -348,20 +352,28 @@ class _Manager(QObject):
         if len(fi.suffix()) < 1:
             filename += ".xml"
         
-        deviceId, classId, serverId = self.getIndexInfo()
-        # Distinguish between navigation/project selection
-        self.saveAsXml(filename, deviceId, classId, serverId)
+        config = self.currentConfigurationAsHash()
+        if config is None:
+            QMessageBox.critical(None, "Saving failed",
+                                     "Saving of the configuratino failed!")
+            return
+        
+        # Save configuration to file
+        w = XMLWriter()
+        with open(filename, 'w') as file:
+            w.writeToFile(config, file)
  
 
     def onSaveToProject(self):
-        print "onSaveToProject"
-        # TODO: Open dialog to select project to which configuration should be saved
+        # Open dialog to select project to which configuration should be saved
         dialog = SelectProjectDialog(self.projectTopology.projects)
         if dialog.exec_() == QDialog.Rejected:
             return
-        project = dialog.selectedProject()
-        print project.name
-        #project.addConfiguration(config)
+
+        # Add configuration to project
+        project.addConfiguration(Configuration(dialog.selectedProject(),
+                                               dialog.configurationName(),
+                                               self.currentConfigurationAsHash()))
 
 
     # TODO: needs to be implemented

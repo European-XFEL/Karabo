@@ -298,6 +298,14 @@ class ProjectModel(QStandardItemModel):
         self.updateNeeded()
 
 
+    def currentDevice(self):
+        device = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(device, Device):
+            return None
+        
+        return device
+
+
     def currentIndex(self):
         return self.selectionModel.currentIndex()
 
