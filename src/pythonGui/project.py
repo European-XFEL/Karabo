@@ -112,7 +112,7 @@ class Project(QObject):
                 # Vector of hashes
                 for s in scenes:
                     scene = Scene(self, s.get("name"))
-                    data = zf.read(os.path.join(Project.SCENES_LABEL, s.get("filename")))
+                    data = zf.read(os.path.join(Project.SCENES_KEY, s.get("filename")))
                     scene.fromXml(data)
                     self.addScene(scene)
             elif category == Project.CONFIGURATIONS_KEY:
@@ -121,7 +121,7 @@ class Project(QObject):
                 for c in configurations:
                     configuration = ProjectConfiguration(self, c.get("name"), \
                                             c.get("deviceId"), c.get("classId"))
-                    data = zf.read(os.path.join(Project.CONFIGURATIONS_LABEL, c.get("filename")))
+                    data = zf.read(os.path.join(Project.CONFIGURATIONS_KEY, c.get("filename")))
                     configuration.fromXml(data)
                     self.addConfiguration(configuration)
             elif category == Project.MACROS_KEY:
@@ -136,7 +136,7 @@ class Project(QObject):
         """
         This function save this project as a zip file.
         """
-        absoluteProjectPath = os.path.join(self.directory, "{}.KRB".format(self.name))
+        absoluteProjectPath = os.path.join(self.directory, "{}.krb".format(self.name))
         zf = ZipFile(absoluteProjectPath, mode="w", compression=ZIP_DEFLATED)
         
         # Create folder structure and save content
@@ -158,7 +158,7 @@ class Project(QObject):
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneVec = []
         for scene in self.scenes:
-            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.toXml())
+            zf.writestr(os.path.join(Project.SCENES_KEY, scene.filename), scene.toXml())
             sceneVec.append(Hash("name", scene.name, "filename", scene.filename))
         projectConfig.set(scenePath, sceneVec)
         
@@ -166,7 +166,7 @@ class Project(QObject):
         configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
         configVec = []
         for config in self.configurations:
-            zf.writestr(os.path.join(Project.CONFIGURATIONS_LABEL, config.filename),
+            zf.writestr(os.path.join(Project.CONFIGURATIONS_KEY, config.filename),
                         config.toXml())
             c = Hash()
             c.set("name", config.name)
