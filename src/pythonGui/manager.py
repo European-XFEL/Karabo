@@ -18,9 +18,10 @@ __all__ = ["Manager"]
 
 
 from configuration import Configuration
-from dialogs.configurationdialog import SelectProjectDialog
+from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
+from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from project import ProjectConfiguration
 from projectmodel import ProjectModel
@@ -347,16 +348,27 @@ class _Manager(QObject):
         
         r = XMLParser()
         with open(filename, 'r') as file:
-            config = r.read(file.read())[classId]
+            config = r.read(file.read())
         
-        conf.fromHash(config)
+        if not config.has(classId):
+            MessageBox.showError("Configuration open failed")
+            return
+        
+        conf.fromHash(config[classId])
 
 
     def onOpenFromProject(self):
-        # TODO: Open dialog to select project and configuration
-        dialog = OpenConfigurationDialog()
+        # Open dialog to select project and configuration
+        dialog = SelectProjectConfigurationDialog(self.projectTopology.projects)
         if dialog.exec_() == QDialog.Rejected:
             return
+        
+        conf, classId = self.currentConfigurationAndClassId()
+        if not dialog.projectConfiguration().hash.has(classId):
+            MessageBox.showError("Configuration open failed")
+            return
+        
+        conf.fromHash(dialog.projectConfiguration().hash[classId])
 
 
     def onSaveToFile(self):
@@ -370,8 +382,7 @@ class _Manager(QObject):
         
         config = self.currentConfigurationAsHash()
         if config is None:
-            QMessageBox.critical(None, "Saving failed",
-                                     "Saving of the configuratino failed!")
+            MessageBox.showError("Configuration save failed")
             return
         
         # Save configuration to file
