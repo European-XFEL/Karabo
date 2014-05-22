@@ -113,15 +113,22 @@ class Project(QObject):
                 for s in scenes:
                     scene = Scene(self, s.get("name"))
                     data = zf.read(os.path.join(Project.SCENES_LABEL, s.get("filename")))
-                    scene.sceneFromXml(data)
+                    scene.fromXml(data)
                     self.addScene(scene)
+            elif category == Project.CONFIGURATIONS_KEY:
+                configurations = projConfig.get(category)
+                # Vector of hashes
+                for c in configurations:
+                    configuration = ProjectConfiguration(self, c.get("name"), \
+                                    c.get("deviceId"), c.get("classId"))
+                    data = zf.read(os.path.join(Project.CONFIGURATIONS_LABEL, c.get("filename")))
+                    configuration.fromXml(data)
+                    self.addConfiguration(configuration)
             elif category == Project.MACROS_KEY:
                 pass
             elif category == Project.MONITORS_KEY:
                 pass
             elif category == Project.RESOURCES_KEY:
-                pass
-            elif category == Project.CONFIGURATIONS_KEY:
                 pass
 
 
@@ -149,23 +156,30 @@ class Project(QObject):
         
         # Handle scenes
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
-        sceneConfig = []
+        sceneVec = []
         for scene in self.scenes:
-            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.sceneToXml())
-            sceneConfig.append(Hash("name", scene.name, "filename", scene.filename))
-        projectConfig.set(scenePath, sceneConfig)
-
+            zf.writestr(os.path.join(Project.SCENES_LABEL, scene.filename), scene.toXml())
+            sceneVec.append(Hash("name", scene.name, "filename", scene.filename))
+        projectConfig.set(scenePath, sceneVec)
+        
+        # Handle configurations
+        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
+        configVec = []
+        for config in self.configurations:
+            zf.writestr(os.path.join(Project.CONFIGURATIONS_LABEL, config.filename),
+                        config.toXml())
+            c = Hash()
+            c.set("name", config.name)
+            c.set("filename", config.filename)
+            c.set("deviceId", config.deviceId)
+            c.set("classId", config.classId)
+            configVec.append(c)
+        projectConfig.set(configPath, configVec)
+        
         # Handle macros
         macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
         projectConfig.set(macroPath, Hash())
         for macro in self.macros:
-            # TODO
-            pass
-        
-        # Handle configurations
-        configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
-        projectConfig.set(configPath, Hash())
-        for config in self.configurations:
             # TODO
             pass
         
@@ -244,9 +258,6 @@ class Scene(object):
 
         self.name = name
         self.filename = "{}.svg".format(name)
-        self.absoluteFilePath = os.path.join(project.directory, project.name,
-                                             Project.SCENES_LABEL, self.filename)
-        
         # GraphicsView
         self.view = GraphicsView()
 
@@ -255,7 +266,7 @@ class Scene(object):
         self.view.load()
 
 
-    def sceneFromXml(self, xmlString):
+    def fromXml(self, xmlString):
         """
         This function loads the corresponding SVG file of this scene into the
         view.
@@ -263,7 +274,7 @@ class Scene(object):
         self.view.sceneFromXml(xmlString)
 
 
-    def sceneToXml(self):
+    def toXml(self):
         """
         This function returns the scenes' SVG file as a string.
         """
@@ -272,7 +283,7 @@ class Scene(object):
 
 class ProjectConfiguration(object):
 
-    def __init__(self, project, name, deviceConf):
+    def __init__(self, project, name, deviceId, classId, hash=None):
         super(ProjectConfiguration, self).__init__()
         
         # Reference to the project this scene belongs to
@@ -280,13 +291,23 @@ class ProjectConfiguration(object):
 
         self.name = name
         self.filename = "{}.xml".format(name)
-        self.absoluteFilePath = os.path.join(project.directory, project.name,
-                                             Project.CONFIGURATIONS_LABEL,
-                                             self.filename)
-        
-        # Of type Configuration/Device
-        self.deviceConf = deviceConf
+        self.deviceId = deviceId
+        self.classId = classId
+        self.hash = hash
 
+
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.hash = XMLParser().read(xmlString)
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        return XMLWriter().write(Hash(self.classId, self.hash))
 
 
 class Category(object):

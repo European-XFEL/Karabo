@@ -15,7 +15,6 @@ __all__ = ["ProjectModel"]
 
 
 from configuration import Configuration
-from copy import copy
 import icons
 from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
@@ -162,8 +161,7 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for config in project.configurations:
                 # Add item for device it belongs to
-                leafItem = QStandardItem(config.deviceConf.key)
-                leafItem.setData(config.deviceConf, ProjectModel.ITEM_OBJECT)
+                leafItem = QStandardItem(config.deviceId)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
                 
@@ -401,12 +399,12 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        try:
-            project.unzip(filename)
-        except Exception, e:
-            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-            QMessageBox.critical(None, "Error", message + str(e))
-            return
+        #try:
+        project.unzip(filename)
+        #except Exception, e:
+        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+        #    QMessageBox.critical(None, "Error", message + str(e))
+        #    return
         
         self.projects.append(project)
         self.updateData()

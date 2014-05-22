@@ -388,12 +388,13 @@ class _Manager(QObject):
             return
 
         project = dialog.selectedProject()
-        conf, _ = self.currentConfigurationAndClassId()
-        print "conf", conf
+        conf, classId = self.currentConfigurationAndClassId()
         # Add configuration to project
         project.addConfiguration(ProjectConfiguration(project,
                                                       dialog.configurationName(),
-                                                      conf))
+                                                      conf.key,
+                                                      classId,
+                                                      conf.toHash()))
         self.projectTopology.updateData()
 
 
