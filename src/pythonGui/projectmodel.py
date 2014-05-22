@@ -149,9 +149,30 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
             for scene in project.scenes:
                 leafItem = QStandardItem(scene.name)
+                leafItem.setIcon(icons.image)
                 leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
+
+            # Configurations
+            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
+            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            for config in project.configurations:
+                # Add item for device it belongs to
+                leafItem = QStandardItem(config.deviceConf.key)
+                leafItem.setData(config.deviceConf, ProjectModel.ITEM_OBJECT)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+                
+                # Add item with configuration file
+                subLeafItem = QStandardItem(config.filename)
+                subLeafItem.setIcon(icons.file)
+                subLeafItem.setData(config, ProjectModel.ITEM_OBJECT)
+                subLeafItem.setEditable(False)
+                leafItem.appendRow(subLeafItem)
 
             # Macros
             #childItem = QStandardItem(Project.MACROS_LABEL)
@@ -188,18 +209,6 @@ class ProjectModel(QStandardItemModel):
             #    leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
             #    leafItem.setEditable(False)
             #    childItem.appendRow(leafItem)
-
-            # Configurations
-            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
-            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
-            item.appendRow(childItem)
-            for config in project.configurations:
-                leafItem = QStandardItem(config.filename)
-                leafItem.setData(config, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
         
         self.endResetModel()
         
