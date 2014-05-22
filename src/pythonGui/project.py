@@ -234,27 +234,15 @@ class Device(Configuration):
         self.fromHash(self.futureConfig)
 
 
-class ProjectListItem(object):
-    """
-    This class is a base class for items which are part of one of the Projects
-    list and are referenced to a file.
-    
-    Inherited by: Scene, Configuration
-    """
-    def __init__(self, project, name):
-        super(ProjectListItem, self).__init__()
+class Scene(object):
 
+    def __init__(self, project, name):
+        super(Scene, self).__init__()
+        
         # Reference to the project this scene belongs to
         self.project = project
 
         self.name = name
-
-
-class Scene(ProjectListItem):
-
-    def __init__(self, project, name):
-        super(Scene, self).__init__(project, name)
-        
         self.filename = "{}.svg".format(name)
         self.absoluteFilePath = os.path.join(project.directory, project.name,
                                              Project.SCENES_LABEL, self.filename)
@@ -282,17 +270,22 @@ class Scene(ProjectListItem):
         return self.view.sceneToXml()
 
 
-class ProjectConfiguration(ProjectListItem):
+class ProjectConfiguration(object):
 
-    def __init__(self, project, name, config):
-        super(ProjectConfiguration, self).__init__(project, name)
+    def __init__(self, project, name, deviceConf):
+        super(ProjectConfiguration, self).__init__()
         
+        # Reference to the project this scene belongs to
+        self.project = project
+
+        self.name = name
         self.filename = "{}.xml".format(name)
         self.absoluteFilePath = os.path.join(project.directory, project.name,
                                              Project.CONFIGURATIONS_LABEL,
                                              self.filename)
         
-        self.configHash = config
+        # Of type Configuration/Device
+        self.deviceConf = deviceConf
 
 
 
