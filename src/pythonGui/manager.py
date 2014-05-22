@@ -353,7 +353,7 @@ class _Manager(QObject):
         if not config.has(classId):
             MessageBox.showError("Configuration open failed")
             return
-        
+
         conf.fromHash(config[classId])
 
 
