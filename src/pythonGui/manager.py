@@ -22,6 +22,7 @@ from dialogs.configurationdialog import SelectProjectDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
 from navigationtreemodel import NavigationTreeModel
+from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
@@ -276,13 +277,29 @@ class _Manager(QObject):
     def onDeviceInstanceChanged(self, itemInfo, xml):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
-    
+
+    def currentDeviceId(self):
+        """
+        This function returns the deviceId of the currently selected device.
+        
+        Returns None, if deviceId not available.
+        """
+        if self.systemTopology.currentIndex().isValid():
+            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            return indexInfo.get("deviceId")
+        elif self.projectTopology.currentIndex().isValid():
+            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            return indexInfo.get("deviceId")
+        else:
+            return None
+
+
     def currentConfigurationAndClassId(self):
         """
         This function returns the configuration of the currently selected device
         which can be part of the systemTopology or the projectTopology.
         
-        If no device is selected None is returned.
+        Returns None, If no device is selected.
         """
         if self.systemTopology.currentIndex().isValid():
             indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
@@ -308,7 +325,7 @@ class _Manager(QObject):
         This function returns the configuration hash of the currently selected
         device which can be part of the systemTopology or the projectTopology.
         
-        If no device is selected None is returned.
+        Returns None, if no device is selected None.
         """
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None: return None
@@ -366,22 +383,15 @@ class _Manager(QObject):
 
     def onSaveToProject(self):
         # Open dialog to select project to which configuration should be saved
-        dialog = SelectProjectDialog(self.projectTopology.projects)
+        dialog = SelectProjectDialog(self.currentDeviceId(), self.projectTopology.projects)
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        project = dialog.selectedProject()
         # Add configuration to project
-        project.addConfiguration(Configuration(dialog.selectedProject(),
-                                               dialog.configurationName(),
-                                               self.currentConfigurationAsHash()))
-
-
-    # TODO: needs to be implemented
-    def onReloadXsd(self, deviceServer, deviceId):
-        print "Manager, onReloadXsd", deviceServer, deviceId
-        #mainWindow signalReloadXsd
-        # onXsdAvailable.emit()
-        pass
+        project.addConfiguration(ProjectConfiguration(project, dialog.configurationName(),
+                                                      self.currentConfigurationAsHash()))
+        self.projectTopology.updateData()
 
 
     def handleSystemTopology(self, config):
