@@ -353,7 +353,6 @@ class _Manager(QObject):
 
 
     def onOpenFromProject(self):
-        print "onOpenFromProject"
         # TODO: Open dialog to select project and configuration
         dialog = OpenConfigurationDialog()
         if dialog.exec_() == QDialog.Rejected:

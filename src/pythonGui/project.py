@@ -120,7 +120,7 @@ class Project(QObject):
                 # Vector of hashes
                 for c in configurations:
                     configuration = ProjectConfiguration(self, c.get("name"), \
-                                    c.get("deviceId"), c.get("classId"))
+                                            c.get("deviceId"), c.get("classId"))
                     data = zf.read(os.path.join(Project.CONFIGURATIONS_LABEL, c.get("filename")))
                     configuration.fromXml(data)
                     self.addConfiguration(configuration)
