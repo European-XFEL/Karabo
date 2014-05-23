@@ -17,7 +17,7 @@ from configuration import Configuration
 from graphicsview import GraphicsView
 from karabo.hash import Hash, XMLParser, XMLWriter
 
-from PyQt4.QtCore import pyqtSignal, QDir, QObject
+from PyQt4.QtCore import pyqtSignal, QDir, QFileInfo, QObject
 #from PyQt4.QtGui import QMessageBox
 
 import os.path
@@ -52,8 +52,9 @@ class Project(QObject):
         self.devices = []
         # List of Scene
         self.scenes = []
+        # Map for {deviceId, [ProjectConfiguration]}
+        self.configurations = dict()
         self.macros = []
-        self.configurations = []
         self.resources = []
         self.monitors = []
 
@@ -66,8 +67,11 @@ class Project(QObject):
         self.scenes.append(scene)
 
 
-    def addConfiguration(self, configuration):
-        self.configurations.append(configuration)
+    def addConfiguration(self, deviceId, configuration):
+        if deviceId in self.configurations:
+            self.configurations[deviceId].append(configuration)
+        else:
+            self.configurations[deviceId] = [configuration]
 
 
     def remove(self, object):
@@ -103,27 +107,35 @@ class Project(QObject):
                 devices = projConfig.get(category)
                 # Vector of hashes
                 for d in devices:
-                    classId = d.keys()[0]
-                    config = d.get(classId)
-                    device = Device(config.get("deviceId"), classId, config)
+                    filename = d.get("filename")
+                    data = zf.read(os.path.join(Project.DEVICES_KEY, filename))
+                    fi = QFileInfo(filename)
+                    if len(fi.suffix()) > 1:
+                        filename = fi.baseName()
+                    classId = d.get("classId")
+                    device = Device(filename, classId, XMLParser().read(data).get(classId))
+                    device.ifexists = d.get("ifexists")
                     self.addDevice(device)
             elif category == Project.SCENES_KEY:
                 scenes = projConfig.get(category)
                 # Vector of hashes
                 for s in scenes:
-                    scene = Scene(self, s.get("name"))
-                    data = zf.read(os.path.join(Project.SCENES_KEY, s.get("filename")))
+                    filename = s.get("filename")
+                    scene = Scene(self, filename)
+                    data = zf.read(os.path.join(Project.SCENES_KEY, filename))
                     scene.fromXml(data)
                     self.addScene(scene)
             elif category == Project.CONFIGURATIONS_KEY:
                 configurations = projConfig.get(category)
-                # Vector of hashes
-                for c in configurations:
-                    configuration = ProjectConfiguration(self, c.get("name"), \
-                                            c.get("deviceId"), c.get("classId"))
-                    data = zf.read(os.path.join(Project.CONFIGURATIONS_KEY, c.get("filename")))
-                    configuration.fromXml(data)
-                    self.addConfiguration(configuration)
+                for deviceId in configurations.keys():
+                    configList = configurations[deviceId]
+                    # Vector of hashes
+                    for c in configList:
+                        filename = c.get("filename")
+                        configuration = ProjectConfiguration(self, c.get("filename"))
+                        data = zf.read(os.path.join(Project.CONFIGURATIONS_KEY, filename))
+                        configuration.fromXml(data)
+                        self.addConfiguration(deviceId, configuration)
             elif category == Project.MACROS_KEY:
                 pass
             elif category == Project.MONITORS_KEY:
@@ -147,34 +159,33 @@ class Project(QObject):
         
         # Handle devices
         devicePath = "{}.{}".format(Project.PROJECT_KEY, Project.DEVICES_KEY)
-        projectConfig.set(devicePath, Hash())
-        deviceConfig = []
+        deviceVec = []
         for device in self.devices:
-            config = device.toHash()
-            deviceConfig.append(Hash(device.classId, config))
-        projectConfig.set(devicePath, deviceConfig)
+            zf.writestr(os.path.join(Project.DEVICES_KEY, device.filename), device.toXml())
+            h = Hash("classId", device.classId, "filename", device.filename,
+                     "ifexists", device.ifexists)
+            deviceVec.append(h)
+        projectConfig.set(devicePath, deviceVec)
         
         # Handle scenes
         scenePath = "{}.{}".format(Project.PROJECT_KEY, Project.SCENES_KEY)
         sceneVec = []
         for scene in self.scenes:
             zf.writestr(os.path.join(Project.SCENES_KEY, scene.filename), scene.toXml())
-            sceneVec.append(Hash("name", scene.name, "filename", scene.filename))
+            sceneVec.append(Hash("filename", scene.filename))
         projectConfig.set(scenePath, sceneVec)
         
         # Handle configurations
         configPath = "{}.{}".format(Project.PROJECT_KEY, Project.CONFIGURATIONS_KEY)
-        configVec = []
-        for config in self.configurations:
-            zf.writestr(os.path.join(Project.CONFIGURATIONS_KEY, config.filename),
-                        config.toXml())
-            c = Hash()
-            c.set("name", config.name)
-            c.set("filename", config.filename)
-            c.set("deviceId", config.deviceId)
-            c.set("classId", config.classId)
-            configVec.append(c)
-        projectConfig.set(configPath, configVec)
+        configHash = Hash()
+        for deviceId, configList in self.configurations.iteritems():
+            configVec = []
+            for c in configList:
+                zf.writestr(os.path.join(Project.CONFIGURATIONS_KEY, c.filename),
+                            c.toXml())
+                configVec.append(Hash("filename", c.filename))
+            configHash.set(deviceId, configVec)
+        projectConfig.set(configPath, configHash)
         
         # Handle macros
         macroPath = "{}.{}".format(Project.PROJECT_KEY, Project.MACROS_KEY)
@@ -229,7 +240,13 @@ class Device(Configuration):
     def __init__(self, path, classId, config, descriptor=None):
         super(Device, self).__init__(path, "projectClass", descriptor)
         
+        self.filename = path
+        fi = QFileInfo(self.filename)
+        if len(fi.suffix()) < 1:
+            self.filename = "{}.xml".format(self.filename)
+        
         self.classId = classId
+        self.ifexists = "ignore" # restart, ignore, keep
         # Needed in case the descriptor is not set yet
         self.futureConfig = config
         # Merge futureConfig, if descriptor is not None
@@ -248,6 +265,20 @@ class Device(Configuration):
         self.fromHash(self.futureConfig)
 
 
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.fromHash(XMLParser().read(xmlString))
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        return XMLWriter().write(Hash(self.classId, self.toHash()))
+
+
 class Scene(object):
 
     def __init__(self, project, name):
@@ -256,8 +287,11 @@ class Scene(object):
         # Reference to the project this scene belongs to
         self.project = project
 
-        self.name = name
-        self.filename = "{}.svg".format(name)
+        self.filename = name
+        fi = QFileInfo(self.filename)
+        if len(fi.suffix()) < 1:
+            self.filename = "{}.svg".format(self.filename)
+        
         # GraphicsView
         self.view = GraphicsView()
 
@@ -283,17 +317,20 @@ class Scene(object):
 
 class ProjectConfiguration(object):
 
-    def __init__(self, project, name, deviceId, classId, hash=None):
+    def __init__(self, project, name, hash=None):
         super(ProjectConfiguration, self).__init__()
         
         # Reference to the project this scene belongs to
         self.project = project
 
-        self.name = name
-        self.filename = "{}.xml".format(name)
-        self.deviceId = deviceId
-        self.classId = classId
-        self.hash = Hash(self.classId, hash)
+        self.filename = name
+        fi = QFileInfo(self.filename)
+        if len(fi.suffix()) < 1:
+            self.filename = "{}.xml".format(self.filename)
+        
+        #self.deviceId = deviceId
+        #self.classId = classId
+        self.hash = hash
 
 
     def fromXml(self, xmlString):

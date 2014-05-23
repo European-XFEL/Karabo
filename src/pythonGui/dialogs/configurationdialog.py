@@ -123,15 +123,16 @@ class SelectProjectConfigurationDialog(QDialog):
             self.projConfWidget.addTopLevelItem(item)
             item.setExpanded(True)
             
-            for c in p.configurations:
-                deviceItem = QTreeWidgetItem([c.deviceId])
+            for deviceId, configList in p.configurations.iteritems():
+                deviceItem = QTreeWidgetItem([deviceId])
                 item.addChild(deviceItem)
                 deviceItem.setExpanded(True)
                 
-                confItem = QTreeWidgetItem([c.filename])
-                confItem.setData(0, Qt.UserRole, c)
-                deviceItem.addChild(confItem)
-                confItem.setExpanded(True)
+                for c in configList:
+                    confItem = QTreeWidgetItem([c.filename])
+                    confItem.setData(0, Qt.UserRole, c)
+                    deviceItem.addChild(confItem)
+                    confItem.setExpanded(True)
 
 
     def projectConfiguration(self):
