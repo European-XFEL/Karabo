@@ -43,7 +43,9 @@ class Configuration(Box):
 
     def setSchema(self, schema):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
-        if self.status != "alive":
+        if self.status == "requested":
+            if self.visible > 0:
+                manager.Manager().signalNewVisibleDevice.emit(self.key)
             self.status = "schema"
 
 
@@ -89,6 +91,9 @@ class Configuration(Box):
         except KeyError as e:
             self.status = "offline"
         else:
+            if self.status == "offline" and self.visible > 0:
+                manager.Manager().signalGetDeviceSchema.emit(self.key)
+                self.status = "requested"
             self.classId = attrs.get("classId")
             self.serverId = attrs.get("serverId")
             if attrs.get("status") == "error":
@@ -98,11 +103,6 @@ class Configuration(Box):
                     self.status = "alive"
                 elif self.status not in ("requested", "schema", "alive"):
                     self.status = "online"
-
-
-    def _set(self, value, timestamp):
-        Box._set(self, value, timestamp)
-        self.status = "alive"
 
 
     def getBox(self, path):
@@ -121,13 +121,13 @@ class Configuration(Box):
 
     def addVisible(self):
         self.visible += 1
-        if self.visible == 1:
+        if self.visible == 1 and self.status not in ("offline", "requested"):
             manager.Manager().signalNewVisibleDevice.emit(self.key)
 
 
     def removeVisible(self):
         self.visible -= 1
-        if self.visible == 0:
+        if self.visible == 0 and self.status != "offline":
             manager.Manager().signalRemoveVisibleDevice.emit(self.key)
 
 
