@@ -48,45 +48,60 @@ class NavigationTreeView(QTreeView):
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         # Device server instance menu
-        self.__mServerItem = QMenu(self)
+        self.mServerItem = QMenu(self)
         
         text = "Kill instance"
-        self.__acKillServer = QAction(icons.delete, text, self)
-        self.__acKillServer.setStatusTip(text)
-        self.__acKillServer.setToolTip(text)
-        self.__acKillServer.triggered.connect(self.onKillInstance)
-        self.__mServerItem.addAction(self.__acKillServer)
+        self.acKillServer = QAction(icons.delete, text, self)
+        self.acKillServer.setStatusTip(text)
+        self.acKillServer.setToolTip(text)
+        self.acKillServer.triggered.connect(self.onKillInstance)
+        self.mServerItem.addAction(self.acKillServer)
         
         # Device class/instance menu
-        self.__mClassItem = QMenu(self)
+        self.mDeviceItem = QMenu(self)
         
         text = "Open configuration (*.xml)"
-        self.__acFileOpen = QAction(icons.open, "Open configuration", self)
-        self.__acFileOpen.setStatusTip(text)
-        self.__acFileOpen.setToolTip(text)
-        self.__acFileOpen.triggered.connect(self.onFileOpen)
-        self.__mClassItem.addAction(self.__acFileOpen)
+        self.acOpenFromFile = QAction(icons.open, text, self)
+        self.acOpenFromFile.setStatusTip(text)
+        self.acOpenFromFile.setToolTip(text)
+        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
+        self.mDeviceItem.addAction(self.acOpenFromFile)
+        
+        text = "Open configuration from project"
+        self.acOpenFromProject = QAction(icons.open, text, self)
+        self.acOpenFromProject.setStatusTip(text)
+        self.acOpenFromProject.setToolTip(text)
+        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
+        self.mDeviceItem.addAction(self.acOpenFromProject)
+        
+        self.mDeviceItem.addSeparator()
         
         text = "Save configuration as (*.xml)"
-        self.__acFileSaveAs = QAction(icons.saveAs, "Save configuration as",
-                                      self)
-        self.__acFileSaveAs.setStatusTip(text)
-        self.__acFileSaveAs.setToolTip(text)
-        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
-        self.__mClassItem.addAction(self.__acFileSaveAs)
+        self.acSaveToFile = QAction(icons.saveAs, text, self)
+        self.acSaveToFile.setStatusTip(text)
+        self.acSaveToFile.setToolTip(text)
+        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
+        self.mDeviceItem.addAction(self.acSaveToFile)
+        
+        text = "Save configuration to project"
+        self.acSaveToProject = QAction(icons.saveAs, text, self)
+        self.acSaveToProject.setStatusTip(text)
+        self.acSaveToProject.setToolTip(text)
+        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
+        self.mDeviceItem.addAction(self.acSaveToProject)
 
         text = "Kill instance"
-        self.__acKillDevice = QAction(icons.delete, text, self)
-        self.__acKillDevice.setStatusTip(text)
-        self.__acKillDevice.setToolTip(text)
-        self.__acKillDevice.triggered.connect(self.onKillInstance)
-        self.__mClassItem.addAction(self.__acKillDevice)
+        self.acKillDevice = QAction(icons.delete, text, self)
+        self.acKillDevice.setStatusTip(text)
+        self.acKillDevice.setToolTip(text)
+        self.acKillDevice.triggered.connect(self.onKillInstance)
+        self.mDeviceItem.addAction(self.acKillDevice)
 
-        self.__mClassItem.addSeparator()
+        self.mDeviceItem.addSeparator()
 
 
     def currentIndex(self):
-        return self.selectionModel().currentIndex()
+        return self.model().currentIndex()
 
 
     def currentIndexType(self):
@@ -142,37 +157,17 @@ class NavigationTreeView(QTreeView):
             Manager().killServer(serverId)
 
 
-    def onFileSaveAs(self):
-        itemInfo = self.indexInfo()
-        
-        deviceId = itemInfo.get('deviceId')
-        classId = itemInfo.get('classId')
-        serverId = itemInfo.get('serverId')
-        
-        Manager().onSaveAsXml(deviceId, classId, serverId)
-
-
-    def onFileOpen(self): # TODO
-        itemInfo = self.indexInfo()
-        
-        deviceId = itemInfo.get('deviceId')
-        classId = itemInfo.get('classId')
-        serverId = itemInfo.get('serverId')
-        
-        Manager().onFileOpen(deviceId, classId, serverId)
-
-
     def onCustomContextMenuRequested(self, pos):
         type = self.currentIndexType()
         # Show context menu for DEVICE_CLASS and DEVICE_INSTANCE
         if type is NavigationItemTypes.SERVER:
-            self.__mServerItem.exec_(QCursor.pos())
+            self.mServerItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.CLASS:
-            self.__acKillDevice.setVisible(False)
-            self.__mClassItem.exec_(QCursor.pos())
+            self.acKillDevice.setVisible(False)
+            self.mDeviceItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.DEVICE:
-            self.__acKillDevice.setVisible(True)
-            self.__mClassItem.exec_(QCursor.pos())
+            self.acKillDevice.setVisible(True)
+            self.mDeviceItem.exec_(QCursor.pos())
 
 
     def onSelectionChanged(self, selected, deselected):

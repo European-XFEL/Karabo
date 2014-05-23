@@ -282,7 +282,7 @@ class MainWindow(QMainWindow):
 
     def onAddScene(self, scene):
         customView = self._createCustomMiddlePanel(scene)
-        self.middleTab.addDockableTab(customView, scene.name)
+        self.middleTab.addDockableTab(customView, scene.filename)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
 
