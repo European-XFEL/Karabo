@@ -15,12 +15,12 @@ __all__ = ["ProjectModel"]
 
 
 from configuration import Configuration
-from copy import copy
 import icons
 from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 import manager
+from messagebox import MessageBox
 from project import Category, Device, Project, Scene
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
@@ -148,10 +148,32 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
             for scene in project.scenes:
-                leafItem = QStandardItem(scene.name)
+                leafItem = QStandardItem(scene.filename)
+                leafItem.setIcon(icons.image)
                 leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
                 childItem.appendRow(leafItem)
+
+            # Configurations
+            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
+            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
+            childItem.setEditable(False)
+            childItem.setIcon(QIcon(":folder"))
+            item.appendRow(childItem)
+            
+            for deviceId, configList in project.configurations.iteritems():
+                # Add item for device it belongs to
+                leafItem = QStandardItem(deviceId)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+
+                for config in configList:
+                    # Add item with configuration file
+                    subLeafItem = QStandardItem(config.filename)
+                    subLeafItem.setIcon(icons.file)
+                    subLeafItem.setData(config, ProjectModel.ITEM_OBJECT)
+                    subLeafItem.setEditable(False)
+                    leafItem.appendRow(subLeafItem)
 
             # Macros
             #childItem = QStandardItem(Project.MACROS_LABEL)
@@ -188,18 +210,6 @@ class ProjectModel(QStandardItemModel):
             #    leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
             #    leafItem.setEditable(False)
             #    childItem.appendRow(leafItem)
-
-            # Configurations
-            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
-            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
-            item.appendRow(childItem)
-            for config in project.configurations:
-                leafItem = QStandardItem(config)
-                leafItem.setData(config, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
         
         self.endResetModel()
         
@@ -298,6 +308,18 @@ class ProjectModel(QStandardItemModel):
         self.updateNeeded()
 
 
+    def currentDevice(self):
+        device = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(device, Device):
+            return None
+        
+        return device
+
+
+    def currentIndex(self):
+        return self.selectionModel.currentIndex()
+
+
     def selectItem(self, object):
         """
         This function gets an object which can be of type Configuration or Scene
@@ -380,12 +402,12 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        try:
-            project.unzip(filename)
-        except Exception, e:
-            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-            QMessageBox.critical(None, "Error", message + str(e))
-            return
+        #try:
+        project.unzip(filename)
+        #except Exception, e:
+        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+        #    MessageBox.showError(message + str(e))
+        #    return
         
         self.projects.append(project)
         self.updateData()
@@ -504,7 +526,10 @@ class ProjectModel(QStandardItemModel):
         if scene is None:
             self.addScene(self.currentProject(), dialog.sceneName)
         else:
-            scene.name = dialog.sceneName
+            scene.filename = dialog.sceneName
+            fi = QFileInfo(scene.filename)
+            if len(fi.suffix()) < 1:
+                scene.filename = "{}.svg".format(scene.filename)
             self.updateData()
         # TODO: send signal to view to update the name as well
 

@@ -21,7 +21,8 @@ from projecttreeview import ProjectTreeView
 
 from PyQt4.QtCore import pyqtSignal, Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
-                         QSplitter, QStackedWidget, QVBoxLayout, QWidget)
+                         QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
+                         QWidget)
 
 class ConfigurationPanel(QWidget):
     ##########################################
@@ -215,31 +216,63 @@ class ConfigurationPanel(QWidget):
 
 
     def setupActions(self):
-        text = "Open configuration (*.xml)"
-        self.__acFileOpen = QAction(QIcon(":open"), "&Open configuration", self)
-        #self.__acFileOpen = QAction(QIcon(":filein"), "&Open configuration", self)
-        self.__acFileOpen.setStatusTip(text)
-        self.__acFileOpen.setToolTip(text)
-        self.__acFileOpen.setVisible(False)
-        self.__acFileOpen.triggered.connect(self.onFileOpen)
+        text = "Open configuration from file (*.xml)"
+        self.acOpenFromFile = QAction(QIcon(":open"), text, self)
+        self.acOpenFromFile.setStatusTip(text)
+        self.acOpenFromFile.setToolTip(text)
+        self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
 
-        text = "Save configuration as (*.xml)"
-        self.__acFileSaveAs = QAction(QIcon(":save-as"), "Save &As...", self)
-        #self.__acFileSaveAs = QAction(QIcon(":fileout"), "Save &As...", self)
-        self.__acFileSaveAs.setStatusTip(text)
-        self.__acFileSaveAs.setToolTip(text)
-        self.__acFileSaveAs.setVisible(False)
-        self.__acFileSaveAs.triggered.connect(self.onFileSaveAs)
+        text = "Open configuration from project"
+        self.acOpenFromProject = QAction(QIcon(":open"), text, self)
+        self.acOpenFromProject.setStatusTip(text)
+        self.acOpenFromProject.setToolTip(text)
+        self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
+        
+        self.openMenu = QMenu()
+        self.openMenu.addAction(self.acOpenFromFile)
+        self.openMenu.addAction(self.acOpenFromProject)
+        text = "Open configuration"
+        self.tbOpenConfig = QToolButton()
+        self.tbOpenConfig.setIcon(QIcon(":open"))
+        self.tbOpenConfig.setStatusTip(text)
+        self.tbOpenConfig.setToolTip(text)
+        self.tbOpenConfig.setVisible(False)
+        self.tbOpenConfig.setPopupMode(QToolButton.InstantPopup)
+        self.tbOpenConfig.setMenu(self.openMenu)
+
+        text = "Save configuration to file (*.xml)"
+        self.acSaveToFile = QAction(QIcon(":save-as"), text, self)
+        self.acSaveToFile.setStatusTip(text)
+        self.acSaveToFile.setToolTip(text)
+        self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
+
+        text = "Save configuration to project"
+        self.acSaveToProject = QAction(QIcon(":save-as"), text, self)
+        self.acSaveToProject.setStatusTip(text)
+        self.acSaveToProject.setToolTip(text)
+        self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
+        
+        self.saveMenu = QMenu()
+        self.saveMenu.addAction(self.acSaveToFile)
+        self.saveMenu.addAction(self.acSaveToProject)
+        text = "Save configuration"
+        self.tbSaveConfig = QToolButton()
+        self.tbSaveConfig.setIcon(QIcon(":save-as"))
+        self.tbSaveConfig.setStatusTip(text)
+        self.tbSaveConfig.setToolTip(text)
+        self.tbSaveConfig.setVisible(False)
+        self.tbSaveConfig.setPopupMode(QToolButton.InstantPopup)
+        self.tbSaveConfig.setMenu(self.saveMenu)
 
 
     def setupToolBars(self, toolBar, parent):
-        toolBar.addAction(self.__acFileOpen)
-        toolBar.addAction(self.__acFileSaveAs)
+        # Save action to member variables to make setVisible work later
+        self.acOpenConfig = toolBar.addWidget(self.tbOpenConfig)
+        self.acSaveConfig = toolBar.addWidget(self.tbSaveConfig)
 
 
     def updateApplyAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(
-            configuration.index)
+        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbApplyAll.isEnabled() is True) and (nbSelected > 0):
@@ -307,8 +340,8 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.setHeaderLabels([
             "Parameter", "Current value on device", "Value"])
         
-        twParameterEditor.addContextAction(self.__acFileOpen)
-        twParameterEditor.addContextAction(self.__acFileSaveAs)
+        twParameterEditor.addContextMenu(self.openMenu)
+        twParameterEditor.addContextMenu(self.saveMenu)
         twParameterEditor.addContextSeparator()
         twParameterEditor.addContextAction(self.acKillInstance)
         twParameterEditor.addContextAction(self.acApplyAll)
@@ -383,8 +416,8 @@ class ConfigurationPanel(QWidget):
         self.__swParameterEditor.blockSignals(False)
 
         show = index != 0
-        self.__acFileOpen.setVisible(show)
-        self.__acFileSaveAs.setVisible(show)
+        self.acOpenConfig.setVisible(show)
+        self.acSaveConfig.setVisible(show)
 
 
     def _hideAllButtons(self):
@@ -630,12 +663,20 @@ class ConfigurationPanel(QWidget):
             twParameterEditor.globalAccessLevelChanged()
 
 
-    def onFileSaveAs(self):
-        self.twNavigation.onFileSaveAs()
+    def onSaveToFile(self):
+        self.twNavigation.onSaveToFile()
 
 
-    def onFileOpen(self):
-        self.twNavigation.onFileOpen()
+    def onSaveToProject(self):
+        self.twNavigation.onSaveToProject()
+
+
+    def onOpenFromFile(self):
+        self.twNavigation.onOpenFromFile()
+
+
+    def onOpenFromProject(self):
+        self.twNavigation.onOpenFromProject()
 
 
     # virtual function
