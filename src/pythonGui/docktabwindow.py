@@ -45,7 +45,6 @@ class DockTabWindow(QTabWidget):
         divWidget.undocked.connect(dockWidget.onUndock)
 
         index = self.addTab(divWidget, label)
-        self.setCurrentIndex(index)
         divWidget.index = index
 
         # Store divWidget in list to keep it alive for un/dock event!!!
