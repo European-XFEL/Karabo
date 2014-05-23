@@ -10,10 +10,8 @@
 __all__ = ["LoginDialog"]
 
 
-import sys
-
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import (QComboBox, QDialog, QFormLayout, QFrame, QHBoxLayout,
+                         QIntValidator, QLabel, QLineEdit, QPushButton, QVBoxLayout)
 
 
 class LoginDialog(QDialog):

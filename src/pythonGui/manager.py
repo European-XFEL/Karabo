@@ -18,14 +18,17 @@ __all__ = ["Manager"]
 
 
 from configuration import Configuration
+from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
+from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
+from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
-from PyQt4.QtGui import (QFileDialog, QMessageBox)
+from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 
 class _Manager(QObject):
@@ -276,19 +279,63 @@ class _Manager(QObject):
         self.signalDeviceInstanceChanged.emit(itemInfo, xml)
 
 
-    def openAsXml(self, filename, deviceId, classId, serverId):
-        r = XMLParser()
-        with open(filename, 'r') as file:
-            config = r.read(file.read())[classId]
+    def currentDeviceId(self):
+        """
+        This function returns the deviceId of the currently selected device.
+        
+        Returns None, if deviceId not available.
+        """
+        if self.systemTopology.currentIndex().isValid():
+            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            return indexInfo.get("deviceId")
+        elif self.projectTopology.currentIndex().isValid():
+            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            return indexInfo.get("deviceId")
+        else:
+            return None
 
-        if deviceId is not None:
-            self.deviceData[deviceId].fromHash(config)
-        elif serverId is not None:
-            self.serverClassData[serverId, classId].fromHash(config)
+
+    def currentConfigurationAndClassId(self):
+        """
+        This function returns the configuration of the currently selected device
+        which can be part of the systemTopology or the projectTopology.
+        
+        Returns None, If no device is selected.
+        """
+        if self.systemTopology.currentIndex().isValid():
+            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
+            deviceId = indexInfo.get("deviceId")
+            classId = indexInfo.get("classId")
+            serverId = indexInfo.get("serverId")
+
+            if deviceId is not None:
+                return self.deviceData[deviceId], classId
+            elif serverId is not None:
+                return self.serverClassData[serverId, classId], classId
+            else:
+                return None
+        elif self.projectTopology.currentIndex().isValid():
+            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
+            return self.projectTopology.currentDevice(), indexInfo.get("classId")
+        else:
+            return None
 
 
-    def onFileOpen(self, deviceId, classId, serverId):
-        filename = QFileDialog.getOpenFileName(None, "Open saved configuration", \
+    def currentConfigurationAsHash(self):
+        """
+        This function returns the configuration hash of the currently selected
+        device which can be part of the systemTopology or the projectTopology.
+        
+        Returns None, if no device is selected None.
+        """
+        conf, classId = self.currentConfigurationAndClassId()
+        if conf is None: return None
+        
+        return Hash(classId, conf.toHash())
+
+
+    def onOpenFromFile(self):
+        filename = QFileDialog.getOpenFileName(None, "Open configuration", \
                                                QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
@@ -296,42 +343,67 @@ class _Manager(QObject):
         file = QFile(filename)
         if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
             return
-            
-        self.openAsXml(filename, deviceId, classId, serverId)
+        
+        conf, classId = self.currentConfigurationAndClassId()
+        
+        r = XMLParser()
+        with open(filename, 'r') as file:
+            config = r.read(file.read())
+        
+        if not config.has(classId):
+            MessageBox.showError("Configuration open failed")
+            return
+
+        conf.fromHash(config[classId])
 
 
-    def saveAsXml(self, filename, deviceId, classId, serverId=None):
-        if deviceId is not None:
-            config = Hash(classId, self.deviceData[deviceId].toHash())
-        elif serverId is not None:
-            config = Hash(classId,
-                          self.serverClassData[serverId, classId].toHash())
-        else:
-            config = Hash()
+    def onOpenFromProject(self):
+        # Open dialog to select project and configuration
+        dialog = SelectProjectConfigurationDialog(self.projectTopology.projects)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        conf, classId = self.currentConfigurationAndClassId()
+        if not dialog.projectConfiguration().hash.has(classId):
+            MessageBox.showError("Configuration open failed")
+            return
+        
+        conf.fromHash(dialog.projectConfiguration().hash[classId])
 
-        w = XMLWriter()
-        with open(filename, 'w') as file:
-            w.writeToFile(config, file)
 
-    
-    def onSaveAsXml(self, deviceId, classId, serverId):
-        filename = QFileDialog.getSaveFileName(None, "Save file as", QDir.tempPath(), "XML (*.xml)")
+    def onSaveToFile(self):
+        filename = QFileDialog.getSaveFileName(None, "Save configuration as", QDir.tempPath(), "XML (*.xml)")
         if len(filename) < 1:
             return
         
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".xml"
+        
+        config = self.currentConfigurationAsHash()
+        if config is None:
+            MessageBox.showError("Configuration save failed")
+            return
+        
+        # Save configuration to file
+        w = XMLWriter()
+        with open(filename, 'w') as file:
+            w.writeToFile(config, file)
+ 
 
-        self.saveAsXml(filename, deviceId, classId, serverId)
+    def onSaveToProject(self):
+        # Open dialog to select project to which configuration should be saved
+        dialog = SelectProjectDialog(self.currentDeviceId(), self.projectTopology.projects)
+        if dialog.exec_() == QDialog.Rejected:
+            return
 
-
-    # TODO: needs to be implemented
-    def onReloadXsd(self, deviceServer, deviceId):
-        print "Manager, onReloadXsd", deviceServer, deviceId
-        #mainWindow signalReloadXsd
-        # onXsdAvailable.emit()
-        pass
+        project = dialog.selectedProject()
+        conf, classId = self.currentConfigurationAndClassId()
+        # Add configuration to project
+        project.addConfiguration(conf.key, ProjectConfiguration(project,
+                                                      dialog.configurationName(),
+                                                      Hash(classId, conf.toHash())))
+        self.projectTopology.updateData()
 
 
     def handleSystemTopology(self, config):
