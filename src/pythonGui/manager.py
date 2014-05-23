@@ -554,7 +554,7 @@ class _Manager(QObject):
         if c is None:
             c = self.deviceData[deviceId] = Configuration(deviceId, 'device')
             c.updateStatus()
-        if c.descriptor is None and c.status != "requested":
+        if c.descriptor is None and c.status not in ("offline", "requested"):
             self.signalGetDeviceSchema.emit(deviceId)
             c.status = "requested"
         return c
@@ -572,10 +572,14 @@ class _Manager(QObject):
     # TODO: This function must be thread-safe!!
     def handleConfigurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
-        if self.deviceData.get(deviceId) is None: return
-        
+        device = self.deviceData.get(deviceId)
+        if device is None:
+            return
+
         config = instanceInfo.get("configuration")
-        self.deviceData[deviceId].fromHash(config)
+        device.fromHash(config)
+        if device.status == "schema":
+            device.status = "alive"
 
 
     def handleHistoricData(self, hash):
