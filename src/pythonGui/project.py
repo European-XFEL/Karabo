@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["Project", "Scene", "ProjectConfiguration", "Category"]
+__all__ = ["Project", "ProjectConfiguration", "Category"]
 
 
 from configuration import Configuration
@@ -80,7 +80,7 @@ class Project(QObject):
         """
         if isinstance(object, Configuration):
             self.devices.remove(object)
-        elif isinstance(object, Scene):
+        elif isinstance(object, GraphicsView):
             self.scenes.remove(object)
         # TODO: for others as well
         
@@ -124,7 +124,7 @@ class Project(QObject):
                 # Vector of hashes
                 for s in scenes:
                     filename = s.get("filename")
-                    scene = Scene(self, filename)
+                    scene = GraphicsView(self, filename)
                     data = zf.read(os.path.join(Project.SCENES_KEY, filename))
                     scene.fromXml(data)
                     self.addScene(scene)
@@ -316,38 +316,6 @@ class Device(Configuration):
     def isOnline(self):
         return self.status not in (
             "offline", "noplugin", "noserver", "incompatible")
-
-
-class Scene(object):
-
-    def __init__(self, project, name):
-        super(Scene, self).__init__()
-        
-        # Reference to the project this scene belongs to
-        self.project = project
-
-        self.filename = name
-        fi = QFileInfo(self.filename)
-        if len(fi.suffix()) < 1:
-            self.filename = "{}.svg".format(self.filename)
-        
-        # GraphicsView
-        self.view = GraphicsView()
-
-
-    def fromXml(self, xmlString):
-        """
-        This function loads the corresponding SVG file of this scene into the
-        view.
-        """
-        self.view.sceneFromXml(xmlString)
-
-
-    def toXml(self):
-        """
-        This function returns the scenes' SVG file as a string.
-        """
-        return self.view.sceneToXml()
 
 
 class ProjectConfiguration(object):

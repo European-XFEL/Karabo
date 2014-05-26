@@ -14,8 +14,9 @@ configuration panel containing the parameters of a device.
 __all__ = ["ProjectTreeView"]
 
 
+from graphicsview import GraphicsView
 from manager import Manager
-from project import Category, Device, Project, Scene
+from project import Category, Device, Project
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
@@ -151,7 +152,7 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if isinstance(object, Device):
             self.model().editDevice(object)
-        elif isinstance(object, Scene):
+        elif isinstance(object, GraphicsView):
             self.model().showScene(object)
 
 
@@ -198,7 +199,7 @@ class ProjectTreeView(QTreeView):
 
             menu = QMenu()
             menu.addAction(acAddScene)
-        elif isinstance(object, Device) or isinstance(object, Scene):
+        elif isinstance(object, (Device, GraphicsView)):
             text = "Edit"
             acEdit = QAction(text, self)
             acEdit.setStatusTip(text)
@@ -206,7 +207,7 @@ class ProjectTreeView(QTreeView):
             
             if isinstance(object, Device):
                 acEdit.triggered.connect(self.model().onEditDevice)
-            elif isinstance(object, Scene):
+            elif isinstance(object, GraphicsView):
                 acEdit.triggered.connect(self.model().onEditScene)
              
             text = "Remove"
