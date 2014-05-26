@@ -288,6 +288,7 @@ class Device(Configuration):
     def onStatusChanged(self, conf, status):
         """ this method gets the status of the corresponding real device,
         and finds out the gory details for this project device """
+        self.error = conf.error
 
         if manager.Manager().systemHash is None:
             self.status = "offline"
