@@ -956,7 +956,7 @@ class GraphicsView(QSvgWidget):
         """
         Parses the given xmlString which represents the SVG.
         """
-        self.tree = ElementTree.parse(StringIO(xmlString))#ElementTree.tostring(xmlString)
+        self.tree = xmlparser.parse(StringIO(xmlString))
         root = self.tree.getroot()
         self.clean()
         FixedLayout.load(root, widget=self.inner)
