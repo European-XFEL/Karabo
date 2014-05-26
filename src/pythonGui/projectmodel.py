@@ -110,12 +110,16 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
-                leafItem.setIcon(dict(error=icons.deviceInstanceError,
-                                      noserver=icons.deviceOfflineNoServer,
-                                      noplugin=icons.deviceOfflineNoPlugin,
-                                      offline=icons.deviceOffline,
-                                      incompatible=icons.deviceOffline).get(
-                    device.status, icons.deviceInstance))
+                if device.error:
+                    leafItem.setIcon(icons.deviceInstanceError)
+                else:
+                    leafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                          noserver=icons.deviceOfflineNoServer,
+                                          noplugin=icons.deviceOfflineNoPlugin,
+                                          offline=icons.deviceOffline,
+                                          incompatible=icons.deviceOffline
+                                         ).get(
+                                device.status, icons.deviceInstance))
                 childItem.appendRow(leafItem)
 
             # Scenes
