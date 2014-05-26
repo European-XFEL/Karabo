@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>499</width>
-    <height>397</height>
+    <width>354</width>
+    <height>289</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,22 +15,68 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_6">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QListWidget" name="list">
-         <item>
-          <property name="text">
-           <string>default</string>
-          </property>
-         </item>
+        <widget class="QPushButton" name="open">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>../icons/document-open.svg</normaloff>../icons/document-open.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="deleteValue">
+        <widget class="QPushButton" name="paste">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="text">
-          <string>Delete</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>../icons/edit-paste.svg</normaloff>../icons/edit-paste.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Label" name="image">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
@@ -42,6 +88,12 @@
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
          </property>
@@ -49,7 +101,7 @@
           <number>0</number>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="floatPage">
           <layout class="QVBoxLayout" name="verticalLayout">
@@ -101,30 +153,52 @@
            </property>
            <item>
             <widget class="QPushButton" name="up">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
-              <string>Up</string>
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/up.svg</normaloff>../icons/up.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="down">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
-              <string>Down</string>
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset>
+               <normaloff>../icons/down.svg</normaloff>../icons/down.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QLineEdit" name="textValue"/>
-           </item>
           </layout>
          </widget>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="addValue">
-         <property name="text">
-          <string>Add</string>
-         </property>
         </widget>
        </item>
       </layout>
@@ -132,30 +206,65 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
-        <widget class="Label" name="image">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLineEdit" name="textValue"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="addValue">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>../icons/add.svg</normaloff>../icons/add.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deleteValue">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>../icons/remove.svg</normaloff>../icons/remove.svg</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
-        <widget class="QPushButton" name="open">
-         <property name="text">
-          <string>Open</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="paste">
-         <property name="text">
-          <string>Paste</string>
-         </property>
+        <widget class="QListWidget" name="list">
+         <item>
+          <property name="text">
+           <string>default</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
@@ -164,11 +273,8 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
@@ -190,12 +296,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>291</x>
+     <y>299</y>
     </hint>
     <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
+     <x>291</x>
+     <y>160</y>
     </hint>
    </hints>
   </connection>
@@ -206,12 +312,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>291</x>
+     <y>299</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>291</x>
+     <y>160</y>
     </hint>
    </hints>
   </connection>

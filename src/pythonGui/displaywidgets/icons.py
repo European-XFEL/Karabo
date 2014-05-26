@@ -83,12 +83,15 @@ class Icons(DisplayWidget):
             self.dialog.image.setFilename(name)
 
 
-    def on_dialog_finished(self):
-        self.valueChanged(self.boxes[0], self.boxes[0].value)
+    def on_dialog_finished(self, result):
+        if result == QDialog.Accepted:
+            self.valueChanged(self.boxes[0], self.boxes[0].value)
 
 
     def on_paste_clicked(self):
         mime = QApplication.clipboard().mimeData()
+        if not mime.urls():
+            return
         name = mime.urls()[0].toLocalFile()
         self.dialog.image.setFilename(name)
 
@@ -98,6 +101,7 @@ class Icons(DisplayWidget):
         if self.list[cr][0] is not None:
             del self.list[cr]
             self.dialog.list.takeItem(cr)
+
 
     def setPixmap(self, p):
         if p is None:
@@ -127,7 +131,9 @@ class TextIcons(Icons):
 
 
     def on_up_clicked(self):
+        print "onupclicked"
         l = self.dialog.list
+        print l
         cr = l.currentRow()
         if not 0 < cr < len(self.list) - 1:
             return
@@ -136,8 +142,10 @@ class TextIcons(Icons):
 
 
     def on_down_clicked(self):
+        print "ondownclicked"
         l = self.dialog.list
         cr = l.currentRow()
+        print cr
         if cr >= len(self.list) - 2:
             return
         l.insertItem(cr + 1, l.takeItem(cr))
