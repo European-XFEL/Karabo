@@ -35,6 +35,7 @@ class Configuration(Box):
         self.key = key
         self.visible = 0
         self._status = "offline"
+        self.error = False
 
         if type == "device":
             self.serverId = None
@@ -60,7 +61,6 @@ class Configuration(Box):
         "online": the device is online but doesn't have a schema yet
         "requested": a schema is requested, but didnt arrive yet
         "schema": the device has a schema, but no value yet
-        "error": device running but in error state
         "alive": everything is up-and-running
 
         "noserver", "noplugin", and "incompatible" only make sense
@@ -72,8 +72,7 @@ class Configuration(Box):
     @status.setter
     def status(self, value):
         assert value in ('offline', 'noserver', 'noplugin', 'online',
-                         'incompatible', 'requested', 'schema', 'error',
-                         'alive')
+                         'incompatible', 'requested', 'schema', 'alive')
         if value != self._status:
             self._status = value
         self.statusChanged.emit(self, value)
@@ -96,13 +95,13 @@ class Configuration(Box):
                 self.status = "requested"
             self.classId = attrs.get("classId")
             self.serverId = attrs.get("serverId")
-            if attrs.get("status") == "error":
-                self.status = "error"
-            else:
-                if self.status == "error":
-                    self.status = "alive"
-                elif self.status not in ("requested", "schema", "alive"):
-                    self.status = "online"
+            error = attrs.get("status") == "error"
+            error_changed = error != self.error
+            self.error = error
+            if self.status not in ("requested", "schema", "alive"):
+                self.status = "online"
+            elif error_changed:
+                self.statusChanged.emit(self, self.status)
 
 
     def getBox(self, path):
