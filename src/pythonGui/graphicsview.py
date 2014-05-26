@@ -934,24 +934,6 @@ class GraphicsView(QSvgWidget):
         self.layout().addWidget(self.inner)
 
 
-    # Helper function opens *.scene file
-    # Returns list of tuples containing (internalKey, text) of GraphicsItem of scene
-    def openScene(self, filename):
-        self.tree = xmlparser.parse(filename)
-        root = self.tree.getroot()
-        self.clean()
-        FixedLayout.load(root, widget=self.inner)
-        self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
-        self.designMode = True
-        
-        ar = QByteArray()
-        buf = QBuffer(ar)
-        buf.open(QIODevice.WriteOnly)
-        self.tree.write(buf)
-        buf.close()
-        self.load(ar)
-
-
     def sceneFromXml(self, xmlString):
         """
         Parses the given xmlString which represents the SVG.
@@ -984,20 +966,6 @@ class GraphicsView(QSvgWidget):
         return ElementTree.tostring(root)
 
 
-    def saveScene(self, filename):
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".svg"
-
-        root = self.tree.getroot().copy()
-        tree = ElementTree.ElementTree(root)
-        e = self.ilayout.element()
-        root.extend(ee for ee in e)
-        root.set('width', unicode(self.width()))
-        root.set('height', unicode(self.height()))
-        tree.write(filename)
-
-
     def mimeData(self):
         e = self.ilayout.element(selected=True)
         e.tag = ns_svg + "svg"
@@ -1010,24 +978,6 @@ class GraphicsView(QSvgWidget):
         mime = QMimeData()
         mime.setData("image/svg+xml", ar)
         return mime
-
-
-    # Helper function checks whether the directory to save to is empty
-    # If the directory is not empty the user has to select what happens with the existing files
-    def checkDirectoryBeforeSave(self, dirPath):
-        dir = QDir(dirPath)
-        files = dir.entryList(QDir.NoDotAndDotDot | QDir.Files | QDir.Hidden | QDir.System)
-        if len(files) > 0:
-            reply = QMessageBox.question(self, 'Selected directory is not empty',
-                "The selected directory already contains files.<br>These files will be overwritten or removed.<br><br>" \
-                + "Do you want to continue?", QMessageBox.Yes |
-                QMessageBox.No, QMessageBox.No)
-
-            if reply == QMessageBox.No:
-                return
-
-        for file in files:
-            dir.remove(file)
 
 
     def clear_selection(self):
