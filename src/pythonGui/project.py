@@ -335,10 +335,6 @@ class Scene(object):
         self.view = GraphicsView()
 
 
-    def open(self):
-        self.view.load()
-
-
     def fromXml(self, xmlString):
         """
         This function loads the corresponding SVG file of this scene into the
