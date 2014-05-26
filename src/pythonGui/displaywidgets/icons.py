@@ -131,9 +131,7 @@ class TextIcons(Icons):
 
 
     def on_up_clicked(self):
-        print "onupclicked"
         l = self.dialog.list
-        print l
         cr = l.currentRow()
         if not 0 < cr < len(self.list) - 1:
             return
@@ -142,7 +140,6 @@ class TextIcons(Icons):
 
 
     def on_down_clicked(self):
-        print "ondownclicked"
         l = self.dialog.list
         cr = l.currentRow()
         print cr
