@@ -831,9 +831,15 @@ class Lower(SimpleAction):
 
 
 class GraphicsView(QSvgWidget):
-    def __init__(self, parent=None, designMode=True):
+    def __init__(self, project, name, parent=None, designMode=True):
         super(GraphicsView, self).__init__(parent)
-        
+
+        self.project = project
+        self.filename = name
+        fi = QFileInfo(self.filename)
+        if len(fi.suffix()) < 1:
+            self.filename = "{}.svg".format(self.filename)
+
         self.inner = QWidget(self)
         self.inner.setLayout(FixedLayout())
         layout = QStackedLayout(self)
@@ -934,7 +940,7 @@ class GraphicsView(QSvgWidget):
         self.layout().addWidget(self.inner)
 
 
-    def sceneFromXml(self, xmlString):
+    def fromXml(self, xmlString):
         """
         Parses the given xmlString which represents the SVG.
         """
@@ -953,7 +959,7 @@ class GraphicsView(QSvgWidget):
         self.load(ar)
 
 
-    def sceneToXml(self):
+    def toXml(self):
         """
         Returns the scene as XML string.
         """
