@@ -23,7 +23,7 @@ class SelectProjectDialog(QDialog):
     """
     Select a name for the configuration and a project.
     """
-    def __init__(self, name, projects):
+    def __init__(self, projects):
         """
         The constructor expects a default name for the configuration and a list
         of projects.
@@ -35,11 +35,9 @@ class SelectProjectDialog(QDialog):
         formLayout = QFormLayout()
         self.leName = QLineEdit()
         self.leName.setToolTip("Enter configuration name")
-        if name is not None:
-            self.leName.setText(name)
         self.leName.textChanged.connect(self.onNameChanged)
         
-        formLayout.addRow("Configurationname: ", self.leName)
+        formLayout.addRow("Configuration name: ", self.leName)
         
         vLayout = QVBoxLayout(self)
         vLayout.addLayout(formLayout)

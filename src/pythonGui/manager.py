@@ -393,7 +393,7 @@ class _Manager(QObject):
 
     def onSaveToProject(self):
         # Open dialog to select project to which configuration should be saved
-        dialog = SelectProjectDialog(self.currentDeviceId(), self.projectTopology.projects)
+        dialog = SelectProjectDialog(self.projectTopology.projects)
         if dialog.exec_() == QDialog.Rejected:
             return
 

@@ -112,8 +112,11 @@ class Project(QObject):
                     fi = QFileInfo(filename)
                     if len(fi.suffix()) > 1:
                         filename = fi.baseName()
-                    classId = d.get("classId")
-                    device = Device(filename, classId, XMLParser().read(data).get(classId))
+                    
+                    config = XMLParser().read(data)
+                    # classId comes from configuration hash
+                    classId = config.keys()[0]
+                    device = Device(filename, classId, config.get(classId))
                     device.ifexists = d.get("ifexists")
                     self.addDevice(device)
             elif category == Project.SCENES_KEY:
@@ -162,8 +165,7 @@ class Project(QObject):
         deviceVec = []
         for device in self.devices:
             zf.writestr(os.path.join(Project.DEVICES_KEY, device.filename), device.toXml())
-            h = Hash("classId", device.classId, "filename", device.filename,
-                     "ifexists", device.ifexists)
+            h = Hash("filename", device.filename, "ifexists", device.ifexists)
             deviceVec.append(h)
         projectConfig.set(devicePath, deviceVec)
         
