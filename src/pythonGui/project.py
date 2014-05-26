@@ -254,6 +254,10 @@ class Device(Configuration):
         # Merge futureConfig, if descriptor is not None
         self.mergeFutureConfig()
 
+        actual = manager.Manager().getDevice(config["deviceId"])
+        actual.statusChanged.connect(self.onStatusChanged)
+        self.onStatusChanged(actual, actual.status)
+
 
     def mergeFutureConfig(self):
         """
@@ -279,6 +283,39 @@ class Device(Configuration):
         This function returns the configurations' XML file as a string.
         """
         return XMLWriter().write(Hash(self.classId, self.toHash()))
+
+
+    def onStatusChanged(self, conf, status):
+        """ this method gets the status of the corresponding real device,
+        and finds out the gory details for this project device """
+        self.error = conf.error
+
+        if manager.Manager().systemHash is None:
+            self.status = "offline"
+            return
+
+        if status == "offline":
+            try:
+                attrs = manager.Manager().systemHash[
+                    "server.{}".format(self.futureConfig["serverId"]), ...]
+            except KeyError:
+                self.status = "noserver"
+            else:
+                if self.classId not in attrs.get("deviceClasses", []):
+                    self.status = "noplugin"
+                else:
+                    self.status = "offline"
+        else:
+            if (conf.classId == self.classId and
+                    conf.serverId == self.futureConfig.get("serverId")):
+                self.status = status
+            else:
+                self.status = "incompatible"
+
+
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
 
 
 class Scene(object):

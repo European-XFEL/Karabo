@@ -12,6 +12,7 @@
 __all__ = ["ProjectPanel"]
 
 from projecttreeview import ProjectTreeView
+import manager
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QIcon, QVBoxLayout, QWidget)
@@ -47,7 +48,7 @@ class ProjectPanel(QWidget):
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalAddScene.connect(self.signalAddScene)
         self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
-        self.twProject.model().signalServerConnection.connect(self.signalServerConnection)
+        manager.Manager().signalServerConnection.connect(self.signalServerConnection)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)

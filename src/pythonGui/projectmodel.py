@@ -34,7 +34,6 @@ class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
     signalItemChanged = pyqtSignal(object)
     signalSelectionChanged = pyqtSignal(list)
-    signalServerConnection = pyqtSignal(bool) # connect?
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     
@@ -46,8 +45,6 @@ class ProjectModel(QStandardItemModel):
     def __init__(self, parent=None):
         super(ProjectModel, self).__init__(parent)
         
-        # Hash stores current system topology
-        self.systemTopology = None
         # List stores projects
         self.projects = []
         
@@ -113,32 +110,16 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
-                # Update icon on availability of device
-                if self.isDeviceOnline(device):
-                    status = self.systemTopology.getAttribute("device.{}".format(device.key), "status")
-                    if status == "error":
-                        leafItem.setIcon(icons.deviceInstanceError)
-                    else:
-                        leafItem.setIcon(icons.deviceInstance)
+                if device.error:
+                    leafItem.setIcon(icons.deviceInstanceError)
                 else:
-                    # There are three flavours of 'offline'
-                    # (1) connected to server, but a) server of project device
-                    # is not available or b) class plugin is not available on
-                    # server
-                    # (2) not connected to server so really offline
-                    iconSet = False
-                    if self.systemTopology is not None:
-                        if not self.isDeviceServerAvailable(device):
-                            leafItem.setIcon(icons.deviceOfflineNoServer)
-                            iconSet = True
-                        else:
-                            if not self.isDevicePluginAvailable(device):
-                                leafItem.setIcon(icons.deviceOfflineNoPlugin)
-                                iconSet = True
-                    
-                    # Set icon, if not done yet
-                    if not iconSet:
-                        leafItem.setIcon(icons.deviceOffline)
+                    leafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                          noserver=icons.deviceOfflineNoServer,
+                                          noplugin=icons.deviceOfflineNoPlugin,
+                                          offline=icons.deviceOffline,
+                                          incompatible=icons.deviceOffline
+                                         ).get(
+                                device.status, icons.deviceInstance))
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -222,90 +203,8 @@ class ProjectModel(QStandardItemModel):
         # Update project view and pluginDialog data
         self.updateData()
         if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(self.systemTopology)
-
-
-    def isDeviceOnline(self, device):
-        """
-        Returns, if the \device is online or not, classId is considered as well.
-        """
-        path = "device.{}".format(device.key)
-        return (self.systemTopology is not None and 
-                self.systemTopology.has(path) and 
-                self.systemTopology.getAttribute(path, "serverId") == device.futureConfig.get("serverId") and
-                self.systemTopology.getAttribute(path, "classId") == device.classId)
-
-
-    def isDeviceServerAvailable(self, device):
-        """
-        Returns, if the server on which the \device should live,
-        is available or not.
-        """
-        path = "server.{}".format(device.futureConfig.get("serverId"))
-        return (self.systemTopology is not None and
-                self.systemTopology.has(path))
-
-
-    def isDevicePluginAvailable(self, device):
-        """
-        Returns, if the server and plugin combination on which the \device is
-        based, is available or not.
-        """
-        path = "server.{}".format(device.futureConfig.get("serverId"))
-        return (self.systemTopology is not None and
-                self.systemTopology.has(path) and
-                self.systemTopology.hasAttribute(path, "deviceClasses") and
-                device.classId in self.systemTopology.getAttribute(path, "deviceClasses"))
-
-
-    def checkSystemTopology(self):
-        """
-        This function checks whether the systemTopology is set correctly.
-        If not, a signal to connect to the server is emitted.
-        """
-        if self.systemTopology is not None:
-            return True
-        
-        reply = QMessageBox.question(None, "No server connection",
-                                     "There is no connection to the server.<br>"
-                                     "Do you want to establish a server connection?",
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-        if reply == QMessageBox.No:
-            return False
-        
-        # Send signal to establish server connection to projectpanel
-        self.signalServerConnection.emit(True)
-        return False
-
-
-    def systemTopologyChanged(self, config):
-        """
-        This function updates the status (on/offline) of the project devices and
-        the server/classes which are available over the network.
-        """
-        if self.systemTopology is None:
-            self.systemTopology = config
-        else:
-            self.systemTopology.merge(config, HashMergePolicy.MERGE_ATTRIBUTES)
-
-        # Update relevant
-        self.updateNeeded()
-
-
-    def handleInstanceGone(self, instanceId):
-        if self.systemTopology is None: return
-        
-        path = None
-        if self.systemTopology.has("server." + instanceId):
-            path = "server." + instanceId
-        elif self.systemTopology.has("device." + instanceId):
-            path = "device." + instanceId
-
-        self.systemTopology.erase(path)
-        
-        # Update relevant
-        self.updateNeeded()
+            self.pluginDialog.updateServerTopology(
+                manager.Manager().systemHash())
 
 
     def currentDevice(self):
@@ -452,7 +351,7 @@ class ProjectModel(QStandardItemModel):
         Depending on the given parameter \device (either None or set) it is
         either created or edited via the dialog.
         """
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         # Get project name
@@ -460,7 +359,8 @@ class ProjectModel(QStandardItemModel):
         
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(self.systemTopology, device):
+        if not self.pluginDialog.updateServerTopology(
+                manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
@@ -504,12 +404,9 @@ class ProjectModel(QStandardItemModel):
         # Get class configuration
         conf = manager.Manager().getClass(serverId, classId)
         
-        # Get descriptor and connect, if None
-        if conf.descriptor is None:
-            conf.signalNewDescriptor.connect(self.onConfigurationNewDescriptor)
-        else:
-            device.descriptor = conf.descriptor
-            device.mergeFutureConfig()
+        conf.signalNewDescriptor.connect(device.onNewDescriptor)
+        if conf.descriptor is not None:
+            device.onNewDescriptor(conf)
 
         # Save configuration for later descriptor update
         if conf in self.classConfigProjDeviceMap:
@@ -581,25 +478,16 @@ class ProjectModel(QStandardItemModel):
         if not isinstance(device, Configuration):
             return
 
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
 
         # Check whether device is already online
-        if self.isDeviceOnline(device):
+        if device.isOnline():
             conf = manager.Manager().getDevice(device.key)
         else:
             conf = device
 
         self.signalItemChanged.emit(conf)
-
-
-    def onServerConnectionChanged(self, isConnected):
-        """
-        If the server connection is changed, the model needs an update.
-        """
-        if isConnected: return
-        
-        self.systemTopology = None
 
 
     def onEditDevice(self):
@@ -611,7 +499,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onInitDevices(self):
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         project = self.currentProject()
@@ -622,12 +510,12 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
-        if not self.checkSystemTopology():
+        if not manager.Manager().checkSystemHash():
             return
         
         project = self.currentProject()
         for device in project.devices:
-            if self.isDeviceOnline(device):
+            if device.isOnline():
                 manager.Manager().killDevice(device.key)
 
 

@@ -20,6 +20,9 @@ from PyQt4.QtCore import QObject, pyqtSignal
 
 
 class Configuration(Box):
+    statusChanged = pyqtSignal(object, str)
+
+
     def __init__(self, key, type, descriptor=None):
         """
         Create a new Configuration for schema, type should be 'class',
@@ -27,13 +30,78 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
+        assert type in ('class', 'projectClass', 'device')
         self.type = type
         self.key = key
         self.visible = 0
+        self._status = "offline"
+        self.error = False
+
+        if type == "device":
+            self.serverId = None
+            self.classId = None
 
 
     def setSchema(self, schema):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
+        if self.status == "requested":
+            if self.visible > 0:
+                manager.Manager().signalNewVisibleDevice.emit(self.key)
+            self.status = "schema"
+
+
+    @property
+    def status(self):
+        """Each device can be in one of the following states:
+
+        "noserver": device server not available
+        "noplugin": class plugin not available
+        "incompatible": device running, but of different type
+        "offline": device could, but is not started
+        "online": the device is online but doesn't have a schema yet
+        "requested": a schema is requested, but didnt arrive yet
+        "schema": the device has a schema, but no value yet
+        "alive": everything is up-and-running
+
+        "noserver", "noplugin", and "incompatible" only make sense
+        if we actually know the (future) server, so only for a device
+        in a project. Actual devices are just "offline". """
+        return self._status
+
+
+    @status.setter
+    def status(self, value):
+        assert value in ('offline', 'noserver', 'noplugin', 'online',
+                         'incompatible', 'requested', 'schema', 'alive')
+        if value != self._status:
+            self._status = value
+        self.statusChanged.emit(self, value)
+
+
+    def updateStatus(self):
+        """ determine the status from the system topology """
+        if manager.Manager().systemHash is None:
+            self.status = "offline"
+            return
+
+        try:
+            attrs = manager.Manager().systemHash[
+                "device.{}".format(self.key), ...]
+        except KeyError as e:
+            self.status = "offline"
+        else:
+            if self.status == "offline" and self.visible > 0:
+                manager.Manager().signalGetDeviceSchema.emit(self.key)
+                self.status = "requested"
+            self.classId = attrs.get("classId")
+            self.serverId = attrs.get("serverId")
+            error = attrs.get("status") == "error"
+            error_changed = error != self.error
+            self.error = error
+            if self.status not in ("requested", "schema", "alive"):
+                self.status = "online"
+            elif error_changed:
+                self.statusChanged.emit(self, self.status)
 
 
     def getBox(self, path):
@@ -52,13 +120,13 @@ class Configuration(Box):
 
     def addVisible(self):
         self.visible += 1
-        if self.visible == 1:
+        if self.visible == 1 and self.status not in ("offline", "requested"):
             manager.Manager().signalNewVisibleDevice.emit(self.key)
 
 
     def removeVisible(self):
         self.visible -= 1
-        if self.visible == 0:
+        if self.visible == 0 and self.status != "offline":
             manager.Manager().signalRemoveVisibleDevice.emit(self.key)
 
 
