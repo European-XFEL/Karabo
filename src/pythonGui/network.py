@@ -19,15 +19,13 @@ from manager import Manager
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import (pyqtSignal, QByteArray, QCryptographicHash,
-                          QObject, QMutex, QMutexLocker)
+from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.hash import Hash, BinaryParser, BinaryWriter
 from enums import AccessLevel
 
 import globals
-from Queue import Queue
 import socket
 from struct import unpack
 
@@ -54,8 +52,7 @@ class _Network(QObject):
 
         self.tcpSocket = None
         
-        self.requestQueue = Queue()
-        self.requestMutex = QMutex()
+        self.requestQueue = [ ]
 
         Manager().signalKillDevice.connect(self.onKillDevice)
         Manager().signalKillServer.connect(self.onKillServer)
@@ -93,12 +90,12 @@ class _Network(QObject):
                                        dialog.hostname,
                                        dialog.port)
 
-            # If some requests got pilled up, because of no server connection,
+            # If some requests got piled up, because of no server connection,
             # now these get handled
-            with QMutexLocker(self.requestMutex):
-                while not self.requestQueue.empty():
-                    self._tcpWriteHash(self.requestQueue.get())
-            
+            for r in self.requestQueue:
+                print 'queued', r['type']
+                self._tcpWriteHash(r)
+
             isConnected = True
         else:
             isConnected = False
@@ -450,7 +447,7 @@ class _Network(QObject):
     def _tcpWriteHash(self, instanceInfo):
         if self.tcpSocket is None:
             # Save request for connection established
-            self.requestQueue.put(instanceInfo)
+            self.requestQueue.append(instanceInfo)
             return
 
         stream = QByteArray()
