@@ -76,7 +76,7 @@ class Configuration(Box):
                          'alive')
         if value != self._status:
             self._status = value
-            self.statusChanged.emit(self, value)
+        self.statusChanged.emit(self, value)
 
 
     def updateStatus(self):
