@@ -88,7 +88,6 @@ class Project(QObject):
     def unzip(self, filename):
         with ZipFile(filename) as zf:
             data = zf.read("{}.xml".format(self.PROJECT_KEY))
-
             projectConfig = XMLParser().read(data)
 
             self.version = projectConfig[self.PROJECT_KEY, "version"]
@@ -103,11 +102,10 @@ class Project(QObject):
                 assert filename.endswith(".xml")
                 filename = filename[:-4]
 
-                config = XMLParser().read(data)
-                # classId comes from configuration hash
-                classId = config.keys()[0]
-                device = Device(filename, classId, config.get(classId))
-                device.ifexists = d.get("ifexists")
+                for classId, conf in XMLParser().read(data).iteritems():
+                    device = Device(filename, classId, conf)
+                    device.ifexists = d.get("ifexists")
+                    break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
                 scene = GraphicsView(self, s["filename"])
