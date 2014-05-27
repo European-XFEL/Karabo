@@ -19,9 +19,10 @@ import icons
 from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
+from graphicsview import GraphicsView
 import manager
 from messagebox import MessageBox
-from project import Category, Device, Project, Scene
+from project import Category, Device, Project
 
 from PyQt4.QtCore import pyqtSignal, QDir, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
@@ -36,8 +37,6 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
-    
-    signalShowProjectConfiguration = pyqtSignal(object) # configuration
 
     ITEM_OBJECT = Qt.UserRole
 
@@ -47,10 +46,7 @@ class ProjectModel(QStandardItemModel):
         
         # List stores projects
         self.projects = []
-        
-        # Dict for later descriptor update
-        self.classConfigProjDeviceMap = dict() # {Configuration, [Device]}
-        
+
         # Dialog to add and change a device
         self.pluginDialog = None
         
@@ -408,12 +404,6 @@ class ProjectModel(QStandardItemModel):
         if conf.descriptor is not None:
             device.onNewDescriptor(conf)
 
-        # Save configuration for later descriptor update
-        if conf in self.classConfigProjDeviceMap:
-            self.classConfigProjDeviceMap[conf].append(device)
-        else:
-            self.classConfigProjDeviceMap[conf] = [device]
-
 
     def editScene(self, scene=None):
         dialog = SceneDialog(scene)
@@ -432,7 +422,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def _createScene(self, project, sceneName):
-        scene = Scene(project, sceneName)
+        scene = GraphicsView(project, sceneName)
         project.addScene(scene)
         
         return scene
@@ -538,19 +528,3 @@ class ProjectModel(QStandardItemModel):
         # Remove data from project
         self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
         self.updateData()
-
-
-    def onConfigurationNewDescriptor(self, conf):
-        """
-        This slot is called from the Configuration, whenever a new descriptor is
-        available \conf is given.
-        """
-        # Update all associated project devices with new descriptor
-        devices = self.classConfigProjDeviceMap[conf]
-        for device in devices:
-            device.descriptor = conf.descriptor
-            
-            # Merge hash configuration into configuration
-            device.mergeFutureConfig()
-            self.signalShowProjectConfiguration.emit(device)
-

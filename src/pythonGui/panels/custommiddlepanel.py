@@ -40,9 +40,7 @@ class CustomMiddlePanel(QScrollArea):
         super(CustomMiddlePanel, self).__init__()
 
         # Reference to underlying scene object
-        self.scene = scene
-
-        self.graphicsview = scene.view
+        self.graphicsview = scene
         self.graphicsview.setParent(self)
         self.graphicsview.designMode = isConnectedToServer
         self.setWidget(self.graphicsview)
