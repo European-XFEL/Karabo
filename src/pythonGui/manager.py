@@ -80,9 +80,7 @@ class _Manager(QObject):
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
-        self.projectTopology.signalShowProjectConfiguration. \
-                        connect(self.onShowConfiguration)
-        
+
         self.systemHash = None
 
         # Sets all parameters to start configuration

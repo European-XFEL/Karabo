@@ -14,6 +14,7 @@ __all__ = ["NavigationTreeModel"]
 from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
+from enums import AccessLevel
 from treenode import TreeNode
 import icons
 
@@ -38,37 +39,16 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def _handleServerData(self, config):
-        """
-        This private function checks whether the incoming configuration has server
-        data. If this is the case, this data is put into the tree structure.
-        """
-        # Define some often used keys
-        hostAttrKey = "host"
-        versionAttrKey = "version"
-        visibilityAttrKey = "visibility"
-        
-        # Get server data
-        serverKey = "server"
-        if not config.has(serverKey):
+        """ Put the configuration hash config into the internal
+        tree structure  """
+
+        if "server" not in config:
             return
-        
-        serverConfig = config.get(serverKey)
-        for serverId in serverConfig.getKeys():
-            # Get attributes
-            if serverConfig.hasAttribute(serverId, hostAttrKey):
-                host = serverConfig.getAttribute(serverId, hostAttrKey)
-            else:
-                host = "UNKNOWN"
 
-            if serverConfig.hasAttribute(serverId, versionAttrKey):
-                version = serverConfig.getAttribute(serverId, versionAttrKey)
-            else:
-                version = None
-
-            if serverConfig.hasAttribute(serverId, visibilityAttrKey):
-                visibility = serverConfig.getAttribute(serverId, visibilityAttrKey)
-            else:
-                visibility = AccessLevel.OBSERVER
+        for serverId, _, attrs in config["server"].iterall():
+            host = attrs.get("host", "UNKNOWN")
+            version = attrs.get("version")
+            visibility = attrs.get("visibility", AccessLevel.OBSERVER)
 
             # Create node for host
             hostNode = self.rootNode.getNode(host)
@@ -83,76 +63,31 @@ class NavigationTreeModel(QAbstractItemModel):
                 hostNode.appendChildNode(serverNode)
             serverNode.visibility = visibility
 
-            # Create nodes for classes
-            devClaAttrKey = "deviceClasses"
-            if serverConfig.hasAttribute(serverId, devClaAttrKey):
-                classes = serverConfig.getAttribute(serverId, devClaAttrKey)
 
-                visibilitiesAttrKey = "visibilities"
-                if serverConfig.hasAttribute(serverId, visibilitiesAttrKey):
-                    visibilities = serverConfig.getAttribute(serverId, visibilitiesAttrKey)
-                else:
-                    visibilities = []
-
-                for visibility, classId in zip(visibilities, classes):
-                    path = "{}.{}".format(serverId, classId)
-                    classNode = serverNode.getNode(classId)
-                    if classNode is None:
-                        classNode = TreeNode(classId, path, serverNode)
-                        serverNode.appendChildNode(classNode)
-                    classNode.visibility = visibility
+            for classId, visibility in zip(attrs.get("deviceClasses", []),
+                                           attrs.get("visibilities", [])):
+                path = "{}.{}".format(serverId, classId)
+                classNode = serverNode.getNode(classId)
+                if classNode is None:
+                    classNode = TreeNode(classId, path, serverNode)
+                    serverNode.appendChildNode(classNode)
+                classNode.visibility = visibility
 
 
     def _handleDeviceData(self, config):
-        """
-        This private function checks whether the incoming configuration has device
-        data. If this is the case, this data is put into the tree structure.
-        """
-        hostAttrKey = "host"
-        versionAttrKey = "version"
-        visibilityAttrKey = "visibility"
-        
-        # Get device data
-        deviceKey = "device"
-        if not config.has(deviceKey):
+        """ This method puts the device data of the configuration hash into
+        the internal tree structure. """
+
+        if "device" not in config:
             return
-        
-        deviceConfig = config.get(deviceKey)
-        deviceIds = deviceConfig.getKeys()
-        for deviceId in deviceIds:
-            # Get attributes
-            if deviceConfig.hasAttribute(deviceId, visibilityAttrKey):
-                visibility = deviceConfig.getAttribute(deviceId, visibilityAttrKey)
-            else:
-                visibility = AccessLevel.OBSERVER
 
-            if deviceConfig.hasAttribute(deviceId, hostAttrKey):
-                host = deviceConfig.getAttribute(deviceId, hostAttrKey)
-            else:
-                host = "UNKNOWN"
-
-            serverIdAttrKey = "serverId"
-            if deviceConfig.hasAttribute(deviceId, serverIdAttrKey):
-                serverId = deviceConfig.getAttribute(deviceId, serverIdAttrKey)
-            else:
-                serverId = "unknown-server"
-
-            classIdAttrKey = "classId"
-            if deviceConfig.hasAttribute(deviceId, classIdAttrKey):
-                classId = deviceConfig.getAttribute(deviceId, classIdAttrKey)
-            else:
-                classId = "unknown-class"
-
-            if deviceConfig.hasAttribute(deviceId, versionAttrKey):
-                version = deviceConfig.getAttribute(deviceId, versionAttrKey)
-            else:
-                version = None
-
-            statusAttrKey = "status"
-            if deviceConfig.hasAttribute(deviceId, statusAttrKey):
-                status = deviceConfig.getAttribute(deviceId, statusAttrKey)
-            else:
-                status = "ok"
+        for deviceId, _, attrs in config["device"].iterall():
+            visibility = attrs.get("visibility", AccessLevel.OBSERVER)
+            host = attrs.get("host", "UNKNOWN")
+            serverId = attrs.get("serverId", "unknown-server")
+            classId = attrs.get("classId", "unknown-class")
+            version = attrs.get("version")
+            status = attrs.get("status", "ok")
 
             # Host node
             hostNode = self.rootNode.getNode(host)
@@ -201,21 +136,21 @@ class NavigationTreeModel(QAbstractItemModel):
             lastSelectionPath = selectedIndexes[0].internalPointer().path
         else:
             lastSelectionPath = None
-        
+
         self.beginResetModel()
-        self._handleServerData(config)
-        self._handleDeviceData(config)
-        self.endResetModel()
-        
+        try:
+            self._handleServerData(config)
+            self._handleDeviceData(config)
+        finally:
+            self.endResetModel()
+
         # Set last selection path
         if lastSelectionPath is not None:
             self.selectPath(lastSelectionPath)
 
 
     def has(self, path):
-        if self.findIndex(path) is None:
-            return False
-        return True
+        return self.findIndex(path) is not None
 
 
     def erase(self, instanceId):
