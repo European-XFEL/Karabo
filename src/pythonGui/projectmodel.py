@@ -102,7 +102,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
             for device in project.devices:
-                leafItem = QStandardItem(device.key)
+                leafItem = QStandardItem(device.id)
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
@@ -277,18 +277,43 @@ class ProjectModel(QStandardItemModel):
         return is_zipfile(absoluteProjectPath)
 
 
-    def createNewProject(self, projectName, directory):
+    def replaceExistingProject(self, directory, projectName):
+        """
+        This function checks whether the project with the \projectName already
+        exists in the \directory.
+        
+        Returns True, if it should be replaced or it does not yet exist,
+        else False.
+        """
+        projectFile = "{}.{}".format(projectName, Project.PROJECT_SUFFIX)
+        alreadyExists = self.projectExists(directory, projectFile)
+        if alreadyExists:
+            reply = QMessageBox.question(None, "Replace project",
+                "A project named \"<b>{}</b>\" already exists.<br>"
+                "Do you want to replace it?".format(projectFile),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+            if reply == QMessageBox.No:
+                return False
+        
+        return True
+
+
+    def projectNew(self, directory, projectName):
         """
         This function updates the project list updates the view.
         """
         # Project name to lower case
         projectName = projectName.lower()
         
+        if not self.replaceExistingProject(directory, projectName):
+            return False, None
+        
         project = Project(projectName, directory)
         self.projects.append(project)
         self.updateData()
-        
-        return project
+
+        return True, project
 
 
     def projectOpen(self, filename):
@@ -297,12 +322,12 @@ class ProjectModel(QStandardItemModel):
         the project list and updates the view.
         """
         project = Project()
-        #try:
-        project.unzip(filename)
-        #except Exception, e:
-        #    message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-        #    MessageBox.showError(message + str(e))
-        #    return
+        try:
+            project.unzip(filename)
+        except Exception, e:
+            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
+            MessageBox.showError(message + str(e))
+            return
         
         self.projects.append(project)
         self.updateData()
@@ -336,8 +361,12 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
         
+        if not self.replaceExistingProject(directory, project.name):
+            return False
+        
         project.directory = directory
         project.zip()
+        return True
 
 
     def editDevice(self, device=None):
@@ -473,7 +502,7 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether device is already online
         if device.isOnline():
-            conf = manager.Manager().getDevice(device.key)
+            conf = manager.Manager().getDevice(device.id)
         else:
             conf = device
 
@@ -506,7 +535,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         for device in project.devices:
             if device.isOnline():
-                manager.Manager().killDevice(device.key)
+                manager.Manager().killDevice(device.id)
 
 
     def onEditScene(self):
