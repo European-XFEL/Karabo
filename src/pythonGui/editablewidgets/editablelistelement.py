@@ -91,7 +91,7 @@ class EditableListElement(EditableWidget):
             parentItem = choiceItem.parent()
 
             # Change full key name...
-            newInternalKeyName = parentItem.internalKey
+            newInternalKeyName = parentItem.box
             newInternalKeyName.append("[{}]".format(arrayIndex)) #[next]
 
             copyItem = choiceItem.copy(parentItem, newInternalKeyName)
@@ -99,7 +99,7 @@ class EditableListElement(EditableWidget):
             self.__selectedItemList.append(copyItem)
 
             # Notify Manager about changes
-            self.signalValueChanged.emit(copyItem.internalKey, Hash())
+            self.signalValueChanged.emit(copyItem.box, Hash())
 
 
     def valueChanged(self, key, value, timestamp=None, forceRefresh=False):

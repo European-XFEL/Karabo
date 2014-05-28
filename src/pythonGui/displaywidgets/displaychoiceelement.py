@@ -94,7 +94,7 @@ class DisplayChoiceElement(DisplayWidget):
         #    self.applyEnabled = True
         #else:
             # device class
-        #    self.signalDeviceClassValueChanged.emit(self.item.internalKey, self.value)
+        #    self.signalDeviceClassValueChanged.emit(self.item.box, self.value)
         
         if index > -1 and index < len(self.childItemList) :
             for i in range(len(self.childItemList)) :

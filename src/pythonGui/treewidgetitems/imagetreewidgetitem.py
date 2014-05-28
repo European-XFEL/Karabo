@@ -19,15 +19,14 @@ import icons
 
 class ImageTreeWidgetItem(BaseTreeWidgetItem):
     
-    def __init__(self, path, parent, parentItem=None):
+    def __init__(self, box, parent, parentItem=None):
         
-        super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
+        super(ImageTreeWidgetItem, self).__init__(box, parent, parentItem)
 
         self.setIcon(0, icons.image)
         self.classAlias = "Image View"
         
-        self.displayComponent = DisplayComponent(
-            "Image Element", path, self.treeWidget())
+        self.displayComponent = DisplayComponent("Image Element", box, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
              

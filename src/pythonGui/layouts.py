@@ -521,7 +521,7 @@ class ProxyWidget(QWidget):
             return
         for item in source.selectedItems():
             if (self.component is not None and
-                    self.component.addBox(item.internalKey)):
-                item.internalKey.configuration.addVisible()
+                    self.component.addBox(item.box)):
+                item.box.configuration.addVisible()
                 event.accept()
 

@@ -140,7 +140,6 @@ class DisplayComponent(BaseComponent):
 
 
     def removeKey(self, key):
-        manager.Manager().unregisterDisplayComponent(key, self)
         self.__displayWidget.removeKey(key)
 
 

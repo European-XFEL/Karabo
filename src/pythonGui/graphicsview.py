@@ -1083,7 +1083,7 @@ class GraphicsView(QSvgWidget):
                 proxy.show()
 
                 # Get Box
-                box = item.internalKey
+                box = item.box
 
                 # Create display component, if available
                 configDisplayComponent = item.displayComponent
