@@ -102,7 +102,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(QIcon(":folder"))
             item.appendRow(childItem)
             for device in project.devices:
-                leafItem = QStandardItem(device.key)
+                leafItem = QStandardItem(device.id)
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
@@ -502,7 +502,7 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether device is already online
         if device.isOnline():
-            conf = manager.Manager().getDevice(device.key)
+            conf = manager.Manager().getDevice(device.id)
         else:
             conf = device
 
@@ -535,7 +535,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         for device in project.devices:
             if device.isOnline():
-                manager.Manager().killDevice(device.key)
+                manager.Manager().killDevice(device.id)
 
 
     def onEditScene(self):
