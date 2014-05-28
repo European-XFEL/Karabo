@@ -16,7 +16,7 @@ __all__ = ["Configuration"]
 from schema import Schema, Box
 import manager
 
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import pyqtSignal
 
 
 class Configuration(Box):
@@ -36,6 +36,7 @@ class Configuration(Box):
         self.visible = 0
         self._status = "offline"
         self.error = False
+        self.parameterEditor = None
 
         if type == "device":
             self.serverId = None
@@ -90,14 +91,14 @@ class Configuration(Box):
         except KeyError as e:
             self.status = "offline"
         else:
-            if self.status == "offline" and self.visible > 0:
-                manager.Manager().signalGetDeviceSchema.emit(self.key)
-                self.status = "requested"
             self.classId = attrs.get("classId")
             self.serverId = attrs.get("serverId")
             error = attrs.get("status") == "error"
             error_changed = error != self.error
             self.error = error
+            if self.status == "offline" and self.visible > 0:
+                manager.Manager().signalGetDeviceSchema.emit(self.key)
+                self.status = "requested"
             if self.status not in ("requested", "schema", "alive"):
                 self.status = "online"
             elif error_changed:
