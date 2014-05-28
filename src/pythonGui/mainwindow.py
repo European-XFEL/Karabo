@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
     def onRemoveScene(self, scene):
         for i in xrange(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
-            if divWidget.dockableWidget.scene == scene:
+            if divWidget.dockableWidget.graphicsview == scene:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
 
 
