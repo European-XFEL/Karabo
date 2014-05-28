@@ -21,7 +21,7 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
     
     def __init__(self, box, parent, parentItem=None):
         
-        super(ImageTreeWidgetItem, self).__init__(path, parent, parentItem)
+        super(ImageTreeWidgetItem, self).__init__(box, parent, parentItem)
 
         self.setIcon(0, icons.image)
         self.classAlias = "Image View"

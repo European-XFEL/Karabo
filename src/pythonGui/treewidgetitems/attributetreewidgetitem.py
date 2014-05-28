@@ -20,9 +20,9 @@ import icons
 class AttributeTreeWidgetItem(BaseTreeWidgetItem):
 
 
-    def __init__(self, path, parent, parentItem=None):
+    def __init__(self, box, parent, parentItem=None):
         
-        super(AttributeTreeWidgetItem, self).__init__(path, parent, parentItem)
+        super(AttributeTreeWidgetItem, self).__init__(box, parent, parentItem)
         self.setIcon(0, icons.signal)
         self.displayComponent = DisplayComponent("Value Field", self.box)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
