@@ -495,11 +495,17 @@ class _Manager(QObject):
         parentPath = self.systemTopology.erase(instanceId)
         if parentPath is not None:
             self.signalInstanceGone.emit(instanceId, parentPath)
-        path = None
-        if self.systemHash.has("server." + instanceId):
-            path = "server." + instanceId
-        elif self.systemHash.has("device." + instanceId):
+        path = "server." + instanceId
+        if path in self.systemHash:
+            del self.systemHash[path]
+            for v in self.deviceData.itervalues():
+                v.updateStatus()
+        else:
             path = "device." + instanceId
+            if path in self.systemHash:
+                del self.systemHash[path]
+            else:
+                path = None
         self.systemTopology.erase(path)
 
         self.projectTopology.updateNeeded()
