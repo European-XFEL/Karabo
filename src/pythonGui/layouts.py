@@ -449,7 +449,8 @@ class ProxyWidget(QWidget):
         else:
             icon = dict(requested=icons.device_requested,
                         schema=icons.device_schema,
-                        dead=icons.device_dead).get(status)
+                        dead=icons.device_dead,
+                        offline=icons.deviceOffline).get(status)
             if icon is not None:
                 self.marker.setPixmap(icon.pixmap(16))
                 self.marker.setText("")
