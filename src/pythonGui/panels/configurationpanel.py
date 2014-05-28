@@ -541,12 +541,14 @@ class ConfigurationPanel(QWidget):
 
 
     def onConflictStateChanged(self, deviceId, hasConflict):
-        if Manager().deviceData.get(deviceId) is None:
+        conf = Manager().deviceData.get(deviceId)
+        if conf is None:
             return
-        
-        parameterEditor = Manager().deviceData[deviceId].parameterEditor
 
-        result = parameterEditor.checkApplyButtonsEnabled()
+        if conf.parameterEditor is None:
+            return
+
+        result = conf.parameterEditor.checkApplyButtonsEnabled()
         self.pbApplyAll.setEnabled(result[0])
         self.pbResetAll.setEnabled(result[0])
         if result[1] == hasConflict:
