@@ -23,7 +23,7 @@ class Configuration(Box):
     statusChanged = pyqtSignal(object, str)
 
 
-    def __init__(self, key, type, descriptor=None):
+    def __init__(self, id, type, descriptor=None):
         """
         Create a new Configuration for schema, type should be 'class',
         'projectClass' or 'device'.
@@ -32,7 +32,7 @@ class Configuration(Box):
         super(Configuration, self).__init__((), descriptor, self)
         assert type in ('class', 'projectClass', 'device')
         self.type = type
-        self.key = key
+        self.id = id
         self.visible = 0
         self._status = "offline"
         self.error = False
@@ -47,7 +47,7 @@ class Configuration(Box):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
-                manager.Manager().signalNewVisibleDevice.emit(self.key)
+                manager.Manager().signalNewVisibleDevice.emit(self.id)
             self.status = "schema"
 
 
@@ -87,7 +87,7 @@ class Configuration(Box):
 
         try:
             attrs = manager.Manager().systemHash[
-                "device.{}".format(self.key), ...]
+                "device.{}".format(self.id), ...]
         except KeyError as e:
             self.status = "offline"
         else:
@@ -97,7 +97,7 @@ class Configuration(Box):
             error_changed = error != self.error
             self.error = error
             if self.status == "offline" and self.visible > 0:
-                manager.Manager().signalGetDeviceSchema.emit(self.key)
+                manager.Manager().signalGetDeviceSchema.emit(self.id)
                 self.status = "requested"
             if self.status not in ("requested", "schema", "alive"):
                 self.status = "online"
@@ -122,13 +122,13 @@ class Configuration(Box):
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
-            manager.Manager().signalNewVisibleDevice.emit(self.key)
+            manager.Manager().signalNewVisibleDevice.emit(self.id)
 
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status != "offline":
-            manager.Manager().signalRemoveVisibleDevice.emit(self.key)
+            manager.Manager().signalRemoveVisibleDevice.emit(self.id)
 
 
     def refresh(self):

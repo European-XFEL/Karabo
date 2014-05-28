@@ -431,7 +431,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__acApply.setStatusTip(text)
         self.__acApply.setToolTip(text)
 
-        self.signalConflictStateChanged.emit(self.boxes[0].configuration.key,
+        self.signalConflictStateChanged.emit(self.boxes[0].configuration.id,
                                              hasConflict)
     hasConflict = property(fget=_hasConflict, fset=_setHasConflict)
 

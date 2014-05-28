@@ -41,6 +41,9 @@ class Project(QObject):
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
     CONFIGURATIONS_KEY = "configurations"
+    
+    PROJECT_SUFFIX = "krb"
+
 
     def __init__(self, name="", directory=""):
         super(Project, self).__init__()
@@ -129,7 +132,7 @@ class Project(QObject):
         This method saves this project as a zip file.
         """
         absoluteProjectPath = os.path.join(self.directory,
-                                           "{}.krb".format(self.name))
+                              "{}.{}".format(self.name, Project.PROJECT_SUFFIX))
         projectConfig = Hash()
 
         with ZipFile(absoluteProjectPath, mode="w",
@@ -162,26 +165,6 @@ class Project(QObject):
                 version=self.version, name=self.name, directory=self.directory)
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
-        
-
-    def _clearProjectDir(self, absolutePath):
-        if len(absolutePath) < 1:
-            return
-
-        dirToDelete = QDir(absolutePath)
-        # Remove all files from directory
-        fileEntries = dirToDelete.entryList(QDir.Files | QDir.CaseSensitive)
-        while len(fileEntries) > 0:
-            dirToDelete.remove(fileEntries.pop())
-
-        # Remove all sub directories
-        dirEntries = dirToDelete.entryList(QDir.AllDirs | QDir.NoDotAndDotDot | QDir.CaseSensitive)
-        while len(dirEntries) > 0:
-            subDirPath = absolutePath + "/" + dirEntries.pop()
-            subDirToDelete = QDir(subDirPath)
-            if len(subDirToDelete.entryList()) > 0:
-                self._clearProjectDir(subDirPath)
-            subDirToDelete.rmpath(subDirPath)
 
 
 class Device(Configuration):

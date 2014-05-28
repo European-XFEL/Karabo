@@ -66,7 +66,7 @@ class ProjectTreeView(QTreeView):
         projectName = "default_project"
         directory = QDir.tempPath()
         
-        projectFile = "{}.krb".format(projectName)
+        projectFile = "{}.{}".format(projectName, Project.PROJECT_SUFFIX)
         alreadyExists = self.model().projectExists(directory, projectFile)
         if alreadyExists:
             # Open existing default project
@@ -75,7 +75,7 @@ class ProjectTreeView(QTreeView):
             return
 
         # Create new project or overwrite existing
-        project = self.model().createNewProject(projectName, directory)
+        _, project = self.model().projectNew(directory, projectName)
         self.model().addScene(project, "default_scene")
         project.zip()
 
@@ -119,17 +119,19 @@ class ProjectTreeView(QTreeView):
 
         projectName = projectName[0]
 
-        directory = self.getProjectDir()
-        if directory is None:
-            return
-
-        project = self.model().createNewProject(projectName, directory)
+        result = False
+        while not result:
+            directory = self.getProjectDir()
+            if directory is None:
+                return
+            result, project = self.model().projectNew(directory, projectName)
         project.zip()
 
 
     def projectOpen(self):
         filename = QFileDialog.getOpenFileName(None, "Open project", \
-                                               QDir.tempPath(), "krb (*.krb)")
+             QDir.tempPath(),
+             "{} (*.{})".format(Project.PROJECT_SUFFIX, Project.PROJECT_SUFFIX))
         if len(filename) < 1:
             return
         
@@ -141,8 +143,12 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSaveAs(self):
-        directory = self.getProjectDir()
-        self.model().projectSaveAs(directory)
+        result = False
+        while not result:
+            directory = self.getProjectDir()
+            if directory is None:
+                return
+            result = self.model().projectSaveAs(directory)
 
 
     def mouseDoubleClickEvent(self, event):
@@ -255,5 +261,5 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if not isinstance(object, Device): return
         
-        Manager().killDevice(object.key)
+        Manager().killDevice(object.id)
 

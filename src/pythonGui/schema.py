@@ -48,7 +48,7 @@ class Box(QObject):
 
 
     def key(self):
-        return self.configuration.key + '.' + '.'.join(self.path)
+        return self.configuration.id + '.' + '.'.join(self.path)
 
 
     configuration = Weak()
