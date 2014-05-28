@@ -20,8 +20,8 @@ from PyQt4.QtGui import QPushButton
 
 class CommandTreeWidgetItem(BaseTreeWidgetItem):
     
-    def __init__(self, command, path, parent, parentItem=None):
-        super(CommandTreeWidgetItem, self).__init__(path, parent, parentItem)
+    def __init__(self, command, box, parent, parentItem=None):
+        super(CommandTreeWidgetItem, self).__init__(box, parent, parentItem)
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
