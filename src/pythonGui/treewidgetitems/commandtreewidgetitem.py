@@ -76,5 +76,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         manager.Manager().executeCommand(
-            dict(path=self.internalKey.configuration.key,
+            dict(path=self.internalKey.configuration.id,
             command=self.__command, args=args))
