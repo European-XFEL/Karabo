@@ -157,13 +157,15 @@ class NavigationTreeModel(QAbstractItemModel):
         index = self.findIndex(instanceId)
         if (index is None) or (not index.isValid()):
             return None
-        
+
         self.beginResetModel()
-        childNode = index.internalPointer()
-        parentNode = childNode.parentNode
-        parentNode.removeChildNode(childNode)
-        self.endResetModel()
-        
+        try:
+            childNode = index.internalPointer()
+            parentNode = childNode.parentNode
+            parentNode.removeChildNode(childNode)
+        finally:
+            self.endResetModel()
+
         return parentNode.path
 
 
