@@ -59,5 +59,5 @@ class DisplayCommand(DisplayWidget):
 
     def onCommandClicked(self):
         for box in self.boxes:
-            Manager().executeCommand(dict(path=box.configuration.key,
+            Manager().executeCommand(dict(path=box.configuration.id,
                                           command=box.path[-1], args=[]))
