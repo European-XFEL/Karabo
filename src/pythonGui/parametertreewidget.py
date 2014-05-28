@@ -22,7 +22,7 @@ from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
 class ParameterTreeWidget(QTreeWidget):
-    signalApplyChanged = pyqtSignal(object, bool, bool) # internalKey, enable, hasConflicts
+    signalApplyChanged = pyqtSignal(object, bool, bool) # box, enable, hasConflicts
     signalItemSelectionChanged = pyqtSignal(object)
 
 
@@ -128,7 +128,7 @@ class ParameterTreeWidget(QTreeWidget):
             return
         
         if editableComponent.applyEnabled:
-            editableComponent.onApplyRemoteChanges(item.internalKey)
+            editableComponent.onApplyRemoteChanges(item.box)
 
 
     def resetAll(self):
@@ -266,10 +266,10 @@ class ParameterTreeWidget(QTreeWidget):
         if nbSelectedItems > 0:
             config = Hash()
             selectedItems = self.selectedItems()
-            boxes = [item.internalKey for item in selectedItems
+            boxes = [item.box for item in selectedItems
                      if self.applyItem(item)]
         else:
-            boxes = [item.internalKey for item in self.allItems()
+            boxes = [item.box for item in self.allItems()
                      if self.applyItem(item)]
 
         Manager().onDeviceInstanceValuesChanged(boxes)

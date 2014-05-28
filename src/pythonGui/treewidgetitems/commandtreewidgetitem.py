@@ -25,8 +25,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent(
-            "Value Field", self.internalKey, self.treeWidget())
+        self.displayComponent = DisplayComponent("Value Field", self.box, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
@@ -39,12 +38,12 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.internalKey.configuration.value.state. \
+        self.box.configuration.value.state. \
             signalUpdateComponent.connect(self.onStateChanged)
 
 
     def onStateChanged(self):
-        self.__pbCommand.setEnabled(self.internalKey.isAllowed())
+        self.__pbCommand.setEnabled(self.box.isAllowed())
 
 
     def _getText(self):
@@ -76,5 +75,4 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
     def onCommandClicked(self):
         args = [] # TODO slot arguments
         manager.Manager().executeCommand(
-            dict(path=self.internalKey.configuration.id,
-            command=self.__command, args=args))
+         dict(path=self.box.configuration.id, command=self.__command, args=args))

@@ -33,7 +33,7 @@ class Box(QObject):
     network is returned to it. """
 
     signalNewDescriptor = pyqtSignal(object)
-    signalUpdateComponent = pyqtSignal(object, object, object) # internalKey, value, timestamp
+    signalUpdateComponent = pyqtSignal(object, object, object) # box, value, timestamp
     signalHistoricData = pyqtSignal(object, object)
 
     def __init__(self, path, descriptor, configuration):
