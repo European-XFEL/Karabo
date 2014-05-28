@@ -261,5 +261,5 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if not isinstance(object, Device): return
         
-        Manager().killDevice(object.key)
+        Manager().killDevice(object.id)
 
