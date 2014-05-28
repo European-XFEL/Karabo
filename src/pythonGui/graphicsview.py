@@ -1098,7 +1098,7 @@ class GraphicsView(QSvgWidget):
                     unit = (box.descriptor.metricPrefixSymbol + box.descriptor.unitSymbol)
                     if len(unit) > 0:
                         proxy = ProxyWidget(self.inner)
-                        proxy.addWidget(QLabel(unit, proxy))
+                        proxy.setWidget(QLabel(unit, proxy))
                         layout.addWidget(proxy)
                         proxy.show()
 
@@ -1112,7 +1112,7 @@ class GraphicsView(QSvgWidget):
 
                     box.configuration.addVisible()
                     proxy.setComponent(editableComponent)
-                    proxy.addWidget(editableComponent.widget)
+                    proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
 

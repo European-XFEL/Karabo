@@ -16,7 +16,7 @@ __all__ = ["Configuration"]
 from schema import Schema, Box
 import manager
 
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import pyqtSignal
 
 
 class Configuration(Box):
@@ -36,6 +36,7 @@ class Configuration(Box):
         self.visible = 0
         self._status = "offline"
         self.error = False
+        self.parameterEditor = None
 
         if type == "device":
             self.serverId = None
