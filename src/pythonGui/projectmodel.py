@@ -334,7 +334,7 @@ class ProjectModel(QStandardItemModel):
         
         for device in project.devices:
             self.checkDescriptor(device)
-        
+
         # Open new loaded project scenes
         for scene in project.scenes:
             self.signalAddScene.emit(scene)

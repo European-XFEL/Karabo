@@ -89,13 +89,6 @@ class _Network(QObject):
                                        dialog.provider,
                                        dialog.hostname,
                                        dialog.port)
-
-            # If some requests got piled up, because of no server connection,
-            # now these get handled
-            for r in self.requestQueue:
-                print 'queued', r['type']
-                self._tcpWriteHash(r)
-
             isConnected = True
         else:
             isConnected = False
@@ -142,6 +135,7 @@ class _Network(QObject):
         """
         self._logout()
         Manager().disconnectedFromServer()
+        self.requestQueue = []
 
         if self.tcpSocket is None:
             return
@@ -351,7 +345,11 @@ class _Network(QObject):
 
 
     def onConnected(self):
-        pass
+        # If some requests got piled up, because of no server connection,
+        # now these get handled
+        for r in self.requestQueue:
+            self._tcpWriteHash(r)
+        self.requestQueue = []
 
 
     def onDisconnected(self):
@@ -445,7 +443,10 @@ class _Network(QObject):
 
 ### private functions ###
     def _tcpWriteHash(self, instanceInfo):
-        if self.tcpSocket is None:
+        # There might be a connect to server in progress, but without success
+        if self.tcpSocket is None or \
+           self.tcpSocket.state() == QAbstractSocket.HostLookupState or \
+           self.tcpSocket.state() == QAbstractSocket.ConnectingState:
             # Save request for connection established
             self.requestQueue.append(instanceInfo)
             return
