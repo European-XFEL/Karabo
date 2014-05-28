@@ -111,7 +111,7 @@ class Project(QObject):
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
                 scene = GraphicsView(self, s["filename"])
-                data = zf.read("{}/{}".format(self.SCENES_LABEL, s["filename"]))
+                data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
                 scene.fromXml(data)
                 self.addScene(scene)
             for deviceId, configList in projectConfig[
@@ -144,7 +144,7 @@ class Project(QObject):
                      "ifexists", device.ifexists) for device in self.devices]
 
             for scene in self.scenes:
-                zf.writestr("{}/{}".format(self.SCENES_LABEL, scene.filename),
+                zf.writestr("{}/{}".format(self.SCENES_KEY, scene.filename),
                             scene.toXml())
             projectConfig[self.SCENES_KEY] = [Hash("filename", scene.filename)
                                               for scene in self.scenes]
@@ -164,7 +164,7 @@ class Project(QObject):
                 version=self.version, name=self.name, directory=self.directory)
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
-
+        
 
     def _clearProjectDir(self, absolutePath):
         if len(absolutePath) < 1:
@@ -282,8 +282,6 @@ class ProjectConfiguration(object):
         if len(fi.suffix()) < 1:
             self.filename = "{}.xml".format(self.filename)
         
-        #self.deviceId = deviceId
-        #self.classId = classId
         self.hash = hash
 
 
