@@ -4,11 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
 """This module contains a class which represents a QSvgWidget."""
 
-__all__ = ["GraphicsView"]
-    
+from __future__ import unicode_literals
 
 from components import (DisplayComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
@@ -37,6 +35,9 @@ from functools import partial
 import os.path
 from itertools import chain
 from cStringIO import StringIO
+
+
+__all__ = ["GraphicsView"]
 
 
 class Action(Registry):
