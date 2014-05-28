@@ -33,8 +33,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
-        self.displayComponent = DisplayComponent(
-            "Value Field", self.internalKey, self.treeWidget())
+        self.displayComponent = DisplayComponent("Value Field", self.box, self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
@@ -97,8 +96,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
             if self.description is not None:
                 info["Description"] = self.description
 
-            info["Key"] = self.internalKey.key()
-            d = self.internalKey.descriptor
+            info["Key"] = self.box.key()
+            d = self.box.descriptor
             info["Value Type"] = d.hashname()
             if d.defaultValue is not None:
                 info["Default Value"] = d.defaultValue
@@ -106,8 +105,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
                 info["Alias"] = d.alias
             if d.tags is not None:
                 info["Tags"] = ", ".join(d.tags)
-            if self.internalKey.timestamp is not None:
-                info["Timestamp"] = self.internalKey.timestamp.toLocal()
+            if self.box.timestamp is not None:
+                info["Timestamp"] = self.box.timestamp.toLocal()
             if d.displayType and d.displayType.startswith('bin|'):
                 info["Bits"] = d.displayType[4:]
             if self.__currentValueOnDevice is not None:
@@ -117,7 +116,7 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
 
     def onSetToDefault(self):
-        self.internalKey.descriptor.setDefault(self.internalKey)
+        self.box.descriptor.setDefault(self.box)
 
 
     def onDisplayValueChanged(self, key, value):

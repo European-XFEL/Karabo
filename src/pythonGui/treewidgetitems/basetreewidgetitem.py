@@ -23,14 +23,14 @@ from PyQt4.QtGui import QCursor, QTreeWidgetItem
 
 class BaseTreeWidgetItem(QTreeWidgetItem):
     
-    def __init__(self, path, parent, parentItem=None):
+    def __init__(self, box, parent, parentItem=None):
         
         if parentItem:
             super(BaseTreeWidgetItem, self).__init__(parentItem)
         else:
             super(BaseTreeWidgetItem, self).__init__(parent)
         
-        self.internalKey = path
+        self.box = box
         
         # The components can be defined in Subclasses
         self.__displayComponent = None
