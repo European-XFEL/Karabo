@@ -1,7 +1,7 @@
-import hash
-from registry import Registry
+from __future__ import unicode_literals, absolute_import
+import karabo.hash
+from karabo.registry import Registry
 
-from struct import unpack, calcsize
 import base64
 import numpy
 
@@ -455,7 +455,7 @@ class Hash(Type):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        ret = hash.Hash()
+        ret = karabo.hash.Hash()
         for i in xrange(size):
             key = file.readKey()
             type, = file.readFormat('I')

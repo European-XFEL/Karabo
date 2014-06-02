@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals
-import hashtypes
-import xmlparser
+from __future__ import unicode_literals, absolute_import
+from karabo import hashtypes
+from karabo import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
@@ -406,6 +406,7 @@ class XMLWriter(Writer):
 
 class BinaryParser(object):
     def readFormat(self, fmt):
+        fmt = fmt.encode("ascii")
         size = calcsize(fmt)
         self.pos += size
         return unpack(fmt, self.data[self.pos - size:self.pos])
@@ -425,7 +426,7 @@ class BinaryParser(object):
 
 class BinaryWriter(Writer):
     def writeFormat(self, fmt, data):
-        s = pack(fmt, data)
+        s = pack(fmt.encode("ascii"), data)
         self.file.write(s)
 
 
