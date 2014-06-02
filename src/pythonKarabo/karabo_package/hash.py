@@ -16,12 +16,6 @@ import numpy
 
 from struct import pack, unpack, calcsize
 
-def schemaloader(s):
-    name, xml = s.split(":", 1)
-    ret = Schema()
-    ret.hash = parseXML(xml)
-    ret.name = name
-    return ret
 
 def _gettype(data):
     try:
@@ -361,9 +355,6 @@ class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
 
-class Schema(object):
-    def getKeys(self):
-        return self.hash.keys()
 
 def factory(tag, attrs):
     if attrs["KRB_Type"] == "HASH":
@@ -457,9 +448,3 @@ class BinaryWriter(Writer):
     def writeToFile(self, data, file):
         self.file = file
         hashtypes.Hash.write(self, data)
-
-
-class Schema(object):
-    def __init__(self, name, hash):
-        self.name = name
-        self.hash = hash

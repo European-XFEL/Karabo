@@ -572,7 +572,16 @@ class Schema(Hash):
         name = unicode(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)
-        return hash.Schema(name, ret)
+        return Schema_(name, ret)
+
+
+class Schema_(Special):
+    hashtype = Schema
+
+
+    def __init__(self, name, hash):
+        self.name = name
+        self.hash = hash
 
 
 class VectorSchema(Type):
