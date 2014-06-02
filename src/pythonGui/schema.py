@@ -1,4 +1,4 @@
-from karabo.hash import Schema, Hash
+from karabo.hash import Hash
 from karabo import hashtypes
 from enums import AccessMode
 from registry import Monkey
