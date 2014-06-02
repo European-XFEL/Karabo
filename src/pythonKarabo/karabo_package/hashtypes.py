@@ -1,4 +1,3 @@
-from enums import AccessMode
 import hash
 from registry import Registry
 
@@ -480,7 +479,7 @@ class Hash(Type):
             file.writeKey(k)
             file.writeType(v)
             file.writeFormat('I', len(data[k, ...]))
-            for ak, av in data[k, ...]:
+            for ak, av in data[k, ...].iteritems():
                 file.writeKey(ak)
                 file.writeType(av)
                 file.writeData(av)
