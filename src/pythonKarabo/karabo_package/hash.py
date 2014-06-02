@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-
+from __future__ import unicode_literals
 import hashtypes
 import xmlparser
 
@@ -77,7 +77,7 @@ class Element(object):
         yield "KRB_Type", self.hashname()
         for k, v in self.attrs.iteritems():
             t = _gettype(v)
-            yield k, u'KRB_{}:{}'.format(t.hashname(), v)
+            yield k, u'KRB_{}:{}'.format(t.hashname(), t.toString(v))
 
 
 class SimpleElement(Element):
@@ -223,8 +223,11 @@ class Hash(OrderedDict):
             if auto and p not in s:
                 OrderedDict.__setitem__(s, p, HashElement(p))
             s = s[p]
+        if not isinstance(s, Hash):
+            raise KeyError(path)
         return s, path[-1]
-    
+
+
     def _get(self, path, auto=False):
         return OrderedDict.__getitem__(*self._path(path, auto))
 
@@ -404,7 +407,7 @@ class XMLWriter(Writer):
             e = OrderedDict.__getitem__(hash, hash.keys()[0])
         else:
             e = HashElement("root")
-            e.attrs = dict(KRB_Artificial="", KRB_Type="HASH")
+            e.attrs = dict(KRB_Artificial="")
             e.children = hash
         et = ElementTree.ElementTree(e)
         et.write(file)
