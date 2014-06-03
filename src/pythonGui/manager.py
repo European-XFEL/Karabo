@@ -23,6 +23,7 @@ from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
 from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
+from network import Network
 from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
@@ -40,30 +41,15 @@ class _Manager(QObject):
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalShowConfiguration = pyqtSignal(object) # configuration
     signalDeviceInstanceChanged = pyqtSignal(dict, str)
-    signalKillDevice = pyqtSignal(str) # deviceId
-    signalKillServer = pyqtSignal(str) # serverId
 
-    signalRefreshInstance = pyqtSignal(object) # deviceId
-    signalInitDevice = pyqtSignal(str, object) # deviceId, hash
-    signalExecute = pyqtSignal(str, dict) # deviceId, slotName/arguments
-
-    signalReconfigure = pyqtSignal(list)
     signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
     signalInstanceGone = pyqtSignal(str, str) # path, parentPath
 
-    signalNewVisibleDevice = pyqtSignal(object) # device
-    signalRemoveVisibleDevice = pyqtSignal(str) # deviceId
-
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
-
-    signalGetClassSchema = pyqtSignal(str, str) # serverId, classId
-    signalGetDeviceSchema = pyqtSignal(str) # deviceId
-    signalGetFromPast = pyqtSignal(object, str, str, int) # deviceId, property, t0, t1
-
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
@@ -82,6 +68,12 @@ class _Manager(QObject):
                         connect(self.onProjectModelSelectionChanged)
 
         self.systemHash = None
+
+        Network().signalServerConnectionChanged.connect(
+            self.onServerConnectionChanged)
+        Network().signalServerConnectionChanged.connect(
+            self.systemTopology.onServerConnectionChanged)
+        Network().receivedData.connect(self.onReceivedData)
 
         # Sets all parameters to start configuration
         self.reset()
@@ -103,7 +95,7 @@ class _Manager(QObject):
         if hasattr(self, "visibleDeviceIdCount"):
             for deviceId in self.visibleDeviceIdCount.keys():
                 if self.visibleDeviceIdCount[deviceId] > 0:
-                    self.signalRemoveVisibleDevice.emit(deviceId)
+                    Network().onRemoveVisibleDevice(deviceId)
         self.visibleDeviceIdCount = dict()
         
         # State, if initiate device is currently processed
@@ -123,6 +115,40 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].setAttribute(propertyKey, attributeKey, value)
         else:
             self.serverClassData[serverId, classId].set(property, value)
+
+
+    def onReceivedData(self, instanceInfo):
+        type = instanceInfo.get("type")
+
+        if type == "brokerInformation":
+            Network()._handleBrokerInformation(instanceInfo)
+        elif type == "systemTopology":
+            self.handleSystemTopology(instanceInfo.get("systemTopology"))
+        elif type == "instanceNew":
+            self.handleInstanceNew(instanceInfo.get("topologyEntry"))
+        elif type == "instanceUpdated":
+            self.handleSystemTopology(instanceInfo.get("topologyEntry"))
+        elif type == "instanceGone":
+            self.handleInstanceGone(instanceInfo.get("instanceId"))
+        elif type == "classSchema":
+            self.handleClassSchema(instanceInfo)
+        elif type == "deviceSchema":
+            self.handleDeviceSchema(instanceInfo)
+        elif type == "configurationChanged":
+            self.handleConfigurationChanged(instanceInfo)
+        elif type == "log":
+            self.onLogDataAvailable(instanceInfo.get("message"))
+        elif type == "schemaUpdated":
+            self.handleDeviceSchemaUpdated(instanceInfo)
+        elif type == "notification":
+            self.handleNotification(instanceInfo)
+        elif type == "propertyHistory":
+            self.handleHistoricData(instanceInfo)
+        elif type == "invalidateCache":
+            print "invalidateCache"
+        else:
+            raise RuntimeError('Got unknown communication token "{}" '\
+                               'from server'.format(type))
 
 
     def checkSystemHash(self):
@@ -156,8 +182,6 @@ class _Manager(QObject):
 
         self.systemHash = None
 
-
-    def disconnectedFromServer(self):
         # Reset manager settings
         self.reset()
         # Send reset signal to configurator to clear stacked widget
@@ -194,10 +218,6 @@ class _Manager(QObject):
             self.signalChangingState.emit(configuration, False)
 
 
-    def onDeviceInstanceValuesChanged(self, boxes):
-        self.signalReconfigure.emit(boxes)
-
-
     def onConflictStateChanged(self, key, hasConflict):
         self.signalConflictStateChanged.emit(key, hasConflict)
 
@@ -230,7 +250,7 @@ class _Manager(QObject):
             config = self.serverClassData[serverId, classId].toHash()
        
         # Send signal to network
-        self.signalInitDevice.emit(serverId, Hash(classId, config))
+        Network().onInitDevice(serverId, Hash(classId, config))
         self.__isInitDeviceCurrentlyProcessed = True
 
 
@@ -242,7 +262,7 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return
 
-        self.signalKillDevice.emit(deviceId)
+        Network().onKillDevice(deviceId)
 
 
     def killServer(self, serverId):
@@ -252,24 +272,12 @@ class _Manager(QObject):
 
         if reply == QMessageBox.No:
             return
-        
-        self.signalKillServer.emit(serverId)
+
+        Network().onKillServer(serverId)
 
 
     def selectNavigationItemByKey(self, path):
         self.signalNavigationItemSelectionChanged.emit(path)
-
-
-    def executeCommand(self, itemInfo):
-        # instanceId, name, arguments
-        path = itemInfo.get('path')
-        keys = path.split('.')
-        deviceId = keys[0]
-        
-        command = itemInfo.get('command')
-        args = itemInfo.get('args')
-        
-        self.signalExecute.emit(deviceId, dict(command=command, args=args))
 
 
     def onLogDataAvailable(self, logData):
@@ -277,10 +285,6 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logData)
 
 
-    def onRefreshInstance(self, configuration):
-        self.signalRefreshInstance.emit(configuration)
-
-   
     def onNewNavigationItem(self, itemInfo):
         self.signalNewNavigationItem.emit(itemInfo)
 
@@ -296,7 +300,7 @@ class _Manager(QObject):
         if (deviceId in self.visibleDeviceIdCount) and \
            (self.visibleDeviceIdCount[deviceId] > 0):
             self.signalSelectNewNavigationItem.emit(deviceId)
-            self.signalRefreshInstance.emit(deviceId)
+            Network().onRefreshInstance(deviceId)
 
 
     def onShowConfiguration(self, conf):
@@ -533,7 +537,7 @@ class _Manager(QObject):
             path = "{}.{}".format(serverId, classId)
             self.serverClassData[serverId, classId] = Configuration(path,
                                                                     'class')
-            self.signalGetClassSchema.emit(serverId, classId)
+            Network().onGetClassSchema(serverId, classId)
         return self.serverClassData[serverId, classId]
     
     
@@ -559,7 +563,7 @@ class _Manager(QObject):
             c = self.deviceData[deviceId] = Configuration(deviceId, 'device')
             c.updateStatus()
         if c.descriptor is None and c.status not in ("offline", "requested"):
-            self.signalGetDeviceSchema.emit(deviceId)
+            Network().onGetDeviceSchema(deviceId)
             c.status = "requested"
         return c
 
@@ -568,9 +572,9 @@ class _Manager(QObject):
         deviceId = instanceInfo.get("deviceId")
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
-        
+
         self.handleDeviceSchema(instanceInfo)
-        self.onRefreshInstance(deviceId)
+        Network().onRefreshInstance(deviceId)
 
 
     # TODO: This function must be thread-safe!!
