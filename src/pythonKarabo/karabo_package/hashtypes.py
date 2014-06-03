@@ -1,7 +1,7 @@
-import hash
-from registry import Registry
+from __future__ import unicode_literals, absolute_import
+import karabo.hash
+from karabo.registry import Registry
 
-from struct import unpack, calcsize
 import base64
 import numpy
 
@@ -455,7 +455,7 @@ class Hash(Type):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        ret = hash.Hash()
+        ret = karabo.hash.Hash()
         for i in xrange(size):
             key = file.readKey()
             type, = file.readFormat('I')
@@ -572,7 +572,16 @@ class Schema(Hash):
         name = unicode(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)
-        return hash.Schema(name, ret)
+        return Schema_(name, ret)
+
+
+class Schema_(Special):
+    hashtype = Schema
+
+
+    def __init__(self, name, hash):
+        self.name = name
+        self.hash = hash
 
 
 class VectorSchema(Type):

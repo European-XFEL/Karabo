@@ -324,11 +324,11 @@ class ProjectModel(QStandardItemModel):
         project = Project()
         try:
             project.unzip(filename)
-        except Exception, e:
-            message = "While reading the project a <b>critical error</b> occurred:<br><br>"
-            MessageBox.showError(message + str(e))
-            return
-        
+        except Exception as e:
+            e.message = "While reading the project a <b>critical error</b> " \
+                        "occurred."
+            raise
+
         self.projects.append(project)
         self.updateData()
         

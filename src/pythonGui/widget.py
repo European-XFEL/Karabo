@@ -20,6 +20,7 @@ from registry import Loadable, Registry
 class Widget(Registry, QObject):
     valueChanged = None
     typeChanged = None
+    widgets = { }
 
     def __init__(self, box):
         """ Create a widget with one box.
@@ -40,6 +41,8 @@ class Widget(Registry, QObject):
     @classmethod
     def register(cls, name, dict):
         super(Widget, cls).register(name, dict)
+        if "alias" in dict:
+            Widget.widgets[name] = cls
         if "menu" in dict:
             cls.factories[name] = cls
             cls.factory = cls
