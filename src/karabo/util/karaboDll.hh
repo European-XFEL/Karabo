@@ -58,5 +58,15 @@ typedef __unit64 uint64
 typedef unsigned long long uint64;
 #endif
 
+#ifdef __GNUC__
+#define KARABO_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define KARABO_DEPRECATED __declspec(deprecated)
+#else
+#pragma message("WARNING: You need to implement KARABO_DEPRECATED for this compiler")
+#define KARABO_DEPRECATED
+#endif
+
+
 #endif
 
