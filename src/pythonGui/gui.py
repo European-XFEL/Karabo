@@ -8,11 +8,7 @@ __author__="kerstin weger"
 
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
-import sip
-sip.setapi("QString", 2)
-sip.setapi("QVariant", 2)
-sip.setapi("QUrl", 2)
-
+import util # assure sip api is set first
 import sys
 
 from mainwindow import MainWindow
@@ -46,9 +42,8 @@ def init(argv):
 #        "margin-bottom: 0px;"
 #        "}")
 
-
+    global window
     window = MainWindow()
-    # Make connections between Network and MainWindow
     window.signalServerConnection.connect(Network().onServerConnection)
     window.signalQuitApplication.connect(Network().onQuitApplication)
     Network().signalServerConnectionChanged.connect(
