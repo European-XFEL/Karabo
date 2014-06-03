@@ -97,6 +97,7 @@ namespace karabo {
                 case Types::SIMPLE: return writeSingleValue(os, value, type);
                 case Types::VECTOR_HASH:
                 case Types::SEQUENCE: return writeSequence(os, value, type);
+                case Types::RAW_ARRAY: return writeRawArray(os, value, type);
                 default:
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value type \"" + Types::to<ToLiteral>(type) + "\" for writing to archive");
             }
@@ -108,6 +109,7 @@ namespace karabo {
                 case Types::SCHEMA:
                 case Types::SIMPLE: value = readSingleValue(is, type);
                     return;
+                case Types::RAW_ARRAY:
                 case Types::SEQUENCE: readSequence(is, value, type);
                     return;
                 case Types::HASH:
@@ -127,7 +129,6 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value \"" + Types::to<ToLiteral>(type) + "\" for reading from archive");
             }
         }
-
 
         template<>
         std::string HashBinarySerializer::readSingleValue(std::istream& is) {
@@ -208,19 +209,32 @@ namespace karabo {
         void HashBinarySerializer::readSequence(std::istream& is, boost::any& result, const Types::ReferenceType type) {
             unsigned size = readSize(is);
             switch (type) {
+
+                case Types::ARRAY_BOOL:
                 case Types::VECTOR_BOOL: return readSequence<bool > (is, result, size);
                 case Types::VECTOR_STRING: return readSequence<std::string > (is, result, size);
-                case Types::VECTOR_CHAR: return readSequence<char>(is, result, size);
-                case Types::VECTOR_INT8: return readSequence<signed char>(is, result, size);
-                case Types::VECTOR_INT16: return readSequence<short>(is, result, size);
-                case Types::VECTOR_INT32: return readSequence<int>(is, result, size);
-                case Types::VECTOR_INT64: return readSequence<long long>(is, result, size);
-                case Types::VECTOR_UINT8: return readSequence<unsigned char>(is, result, size);
-                case Types::VECTOR_UINT16: return readSequence<unsigned short>(is, result, size);
-                case Types::VECTOR_UINT32: return readSequence<unsigned int>(is, result, size);
-                case Types::VECTOR_UINT64: return readSequence<unsigned long long>(is, result, size);
-                case Types::VECTOR_FLOAT: return readSequence<float>(is, result, size);
-                case Types::VECTOR_DOUBLE: return readSequence<double>(is, result, size);
+                case Types::ARRAY_CHAR:
+                case Types::VECTOR_CHAR: return readSequenceBulk<char>(is, result, size);
+                case Types::ARRAY_INT8:
+                case Types::VECTOR_INT8: return readSequenceBulk<signed char>(is, result, size);
+                case Types::ARRAY_INT16:
+                case Types::VECTOR_INT16: return readSequenceBulk<short>(is, result, size);
+                case Types::ARRAY_INT32:
+                case Types::VECTOR_INT32: return readSequenceBulk<int>(is, result, size);
+                case Types::ARRAY_INT64:
+                case Types::VECTOR_INT64: return readSequenceBulk<long long>(is, result, size);
+                case Types::ARRAY_UINT8:
+                case Types::VECTOR_UINT8: return readSequenceBulk<unsigned char>(is, result, size);
+                case Types::ARRAY_UINT16:
+                case Types::VECTOR_UINT16: return readSequenceBulk<unsigned short>(is, result, size);
+                case Types::ARRAY_UINT32:
+                case Types::VECTOR_UINT32: return readSequenceBulk<unsigned int>(is, result, size);
+                case Types::ARRAY_UINT64:
+                case Types::VECTOR_UINT64: return readSequenceBulk<unsigned long long>(is, result, size);
+                case Types::ARRAY_FLOAT:
+                case Types::VECTOR_FLOAT: return readSequenceBulk<float>(is, result, size);
+                case Types::ARRAY_DOUBLE:
+                case Types::VECTOR_DOUBLE: return readSequenceBulk<double>(is, result, size);
                 case Types::VECTOR_COMPLEX_FLOAT: return readSequence<std::complex<float> >(is, result, size);
                 case Types::VECTOR_COMPLEX_DOUBLE: return readSequence<std::complex<double> >(is, result, size);
                 case Types::VECTOR_HASH: return readSequence<Hash > (is, result, size);
@@ -322,6 +336,30 @@ namespace karabo {
                     throw KARABO_IO_EXCEPTION("Encountered unknown array data type whilst writing to binary archive");
             }
         }
+
+        void HashBinarySerializer::writeRawArray(std::ostream& os, const boost::any& value, const karabo::util::Types::ReferenceType type) {
+            switch (type) {
+                #define _KARABO_HELPER_MACRO(RefType, CppType) case Types::RefType: return writeRawArray(os, boost::any_cast<std::pair<const CppType*, size_t> >(value));
+
+                _KARABO_HELPER_MACRO(ARRAY_BOOL, bool)
+                _KARABO_HELPER_MACRO(ARRAY_CHAR, char)
+                _KARABO_HELPER_MACRO(ARRAY_INT8, signed char)
+                _KARABO_HELPER_MACRO(ARRAY_UINT8, unsigned char)
+                _KARABO_HELPER_MACRO(ARRAY_INT16, short)
+                _KARABO_HELPER_MACRO(ARRAY_UINT16, unsigned short)
+                _KARABO_HELPER_MACRO(ARRAY_INT32, int)
+                _KARABO_HELPER_MACRO(ARRAY_UINT32, unsigned int)
+                _KARABO_HELPER_MACRO(ARRAY_INT64, long long)
+                _KARABO_HELPER_MACRO(ARRAY_UINT64, unsigned long long)
+                _KARABO_HELPER_MACRO(ARRAY_FLOAT, float)
+                _KARABO_HELPER_MACRO(ARRAY_DOUBLE, double)
+
+                #undef _KARABO_HELPER_MACRO
+                default:
+                    throw KARABO_IO_EXCEPTION("Encountered unknown array data type whilst writing to binary archive");
+            }
+        }
+
 
 
         void HashBinarySerializer::writeSize(std::ostream& os, unsigned size) {

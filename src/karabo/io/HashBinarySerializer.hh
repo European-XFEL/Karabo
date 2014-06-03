@@ -98,6 +98,13 @@ namespace karabo {
             }
 
             template<typename T>
+            inline void readSequenceBulk(std::istream& is, boost::any& value, unsigned size) {
+                value = std::vector<T > (size);
+                std::vector<T>& result = boost::any_cast<std::vector<T>& >(value);
+                is.read(reinterpret_cast<char*>(&result[0]), size * sizeof(T));
+            }
+
+            template<typename T>
             inline void readSequence(std::istream& is, boost::any& value, unsigned size) {
                 value = std::vector<T > (size);
                 std::vector<T>& result = boost::any_cast<std::vector<T>& >(value);
@@ -135,9 +142,17 @@ namespace karabo {
                 }
             }
 
+            template<typename T>
+            inline void writeRawArray(std::ostream& os, const std::pair<const T*, size_t>& raw) {
+                writeSize(os, raw.second);
+                os.write((char*) raw.first, raw.second * sizeof (T));
+            }
+
             inline void writeSingleValue(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
 
             inline void writeSequence(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
+
+            inline void writeRawArray(std::ostream& os, const boost::any&, const karabo::util::Types::ReferenceType type);
 
             static inline void writeSize(std::ostream& os, const unsigned size);
 

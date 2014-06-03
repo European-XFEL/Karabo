@@ -30,6 +30,8 @@ private:
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
     std::vector<karabo::util::Hash> m_vectorOfHashes;
+
+    std::vector<double> m_data;
 };
 
 #endif	/* HASHXMLSERIALIZER_TEST_HH */
