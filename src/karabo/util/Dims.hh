@@ -92,6 +92,21 @@ namespace karabo {
                 calculate();
             }
 
+            ull64 x() const {
+                if (m_rank >= 1) return m_vec[0];
+                return 0;
+            }
+
+            ull64 y() const {
+                if (m_rank >= 2) return m_vec[1];
+                return 1;
+            }
+
+            ull64 z() const {
+                if (m_rank >= 3) return m_vec[2];
+                return 1;
+            }
+
 
 
         private:
