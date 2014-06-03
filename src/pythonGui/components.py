@@ -19,7 +19,7 @@ from layouts import ProxyWidget
 from registry import Loadable
 from const import ns_karabo
 from messagebox import MessageBox
-from widget import EditableWidget, DisplayWidget
+from widget import EditableWidget, DisplayWidget, Widget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer, Qt
 from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QLabel, QMenu, \
@@ -49,8 +49,7 @@ class BaseComponent(Loadable, QObject):
         """saves this component into the ElementTree.Element e"""
         d = { }
         e.set(ns_karabo + "class", self.__class__.__name__)
-        e.set(ns_karabo + "widgetFactory", self.widgetFactory.factory.__name__)
-        e.set(ns_karabo + "classAlias", self.classAlias)
+        e.set(ns_karabo + "widget", type(self.widgetFactory).__name__)
         e.set(ns_karabo + "keys", ",".join(b.key()
                                            for b in self.widgetFactory.boxes))
         self.widgetFactory.save(e)
@@ -58,19 +57,15 @@ class BaseComponent(Loadable, QObject):
 
     @classmethod
     def load(cls, elem, layout):
-        ks = "classAlias", "keys", "widgetFactory"
-        if elem.get(ns_karabo + "classAlias") == "Command":
-            ks += "command", "allowedStates", "commandText"
-        d = {k: elem.get(ns_karabo + k) for k in ks}
         boxes = []
-        for k in d['keys'].split(","):
+        for k in elem.get(ns_karabo + 'keys').split(","):
             deviceId, path = k.split('.', 1)
             conf = manager.Manager().getDevice(deviceId)
             conf.addVisible()
             boxes.append(conf.getBox(path.split(".")))
         #commandEnabled=elem.get(ns_karabo + "commandEnabled") == "True"
         parent = ProxyWidget(layout.parentWidget())
-        component = cls(d['classAlias'], boxes[0], parent, d['widgetFactory'])
+        component = cls(elem.get(ns_karabo + "widget"), boxes[0], parent)
         parent.setComponent(component)
         parent.setWidget(component.widget)
         layout.loadPosition(elem, parent)
@@ -86,10 +81,15 @@ class DisplayComponent(BaseComponent):
 
 
     def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
-        super(DisplayComponent, self).__init__(classAlias)
 
-        self.__displayWidget = DisplayWidget.factories[widgetFactory].getClass(
-            classAlias)(box, parent)
+        W = Widget.widgets.get(classAlias)
+        if W is None:
+            super(DisplayComponent, self).__init__(classAlias)
+            self.__displayWidget = DisplayWidget.factories[widgetFactory].\
+                                   getClass(classAlias)(box, parent)
+        else:
+            super(DisplayComponent, self).__init__(W.alias)
+            self.__displayWidget = W(box, parent)
         self.__displayWidget.setReadOnly(True)
 
 
@@ -163,14 +163,18 @@ class DisplayComponent(BaseComponent):
 
 class EditableNoApplyComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory=None):
-        super(EditableNoApplyComponent, self).__init__(classAlias)
-
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.getClass(classAlias)(
-            box, self.__compositeWidget)
+        W = Widget.widgets.get(classAlias)
+        if W is None:
+            super(EditableNoApplyComponent, self).__init__(classAlias)
+            self.__editableWidget = EditableWidget.getClass(classAlias)(
+                                        box, self.__compositeWidget)
+        else:
+            super(EditableNoApplyComponent, self).__init__(W.alias)
+            self.__editableWidget = W(box, self.__compositeWidget)
         self.__editableWidget.setReadOnly(False)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
@@ -180,11 +184,6 @@ class EditableNoApplyComponent(BaseComponent):
 
         if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
-
-
-    def copy(self):
-        copyComponent = EditableNoApplyComponent(self.classAlias, **self.__initParams)
-        return copyComponent
 
 
     def _getWidgetCategory(self):
@@ -266,8 +265,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def __init__(self, classAlias, box, parent, widgetFactory=None):
-        super(EditableApplyLaterComponent, self).__init__(classAlias)
-
         self.__isEditableValueInit = True
         self.__currentDisplayValue = None
 
@@ -275,8 +272,14 @@ class EditableApplyLaterComponent(BaseComponent):
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__editableWidget = EditableWidget.getClass(classAlias)(
-            box, self.__compositeWidget)
+        W = Widget.widgets.get(classAlias)
+        if W is None:
+            super(EditableApplyLaterComponent, self).__init__(classAlias)
+            self.__editableWidget = EditableWidget.getClass(classAlias)(
+                                            box, self.__compositeWidget)
+        else:
+            super(EditableApplyLaterComponent, self).__init__(W.alias)
+            self.__editableWidget = W(box, self.__compositeWidget)
         self.__editableWidget.setReadOnly(False)
         self.__editableWidget.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.__editableWidget.widget)
@@ -343,12 +346,6 @@ class EditableApplyLaterComponent(BaseComponent):
             self.onStateChanged)
 
 
-    def copy(self):
-        copyComponent = EditableApplyLaterComponent(self.classAlias, **self.__initParams)
-        return copyComponent
-
-
-### getter and setter functions ###
     def _getWidgetCategory(self):
         return self.__editableWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
@@ -556,14 +553,15 @@ class EditableApplyLaterComponent(BaseComponent):
 
 class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory=None):
-        super(ChoiceComponent, self).__init__(classAlias)
-
-        self.__choiceWidget = EditableWidget.getClass(classAlias)(box, parent)
+        W = Widget.widgets.get(classAlias)
+        if W is None:
+            super(ChoiceComponent, self).__init__(classAlias)
+            self.__choiceWidget = EditableWidget.getClass(classAlias)(
+                                                    box, parent)
+        else:
+            super(ChoiceComponent, self).__init__(W.alias)
+            self.__choiceWidget = W(box, parent)
         self.widget.setEnabled(False)
-
-
-    def copy(self):
-        return ChoiceComponent(self.classAlias, **self.__initParams)
 
 
     def _getWidgetCategory(self):
