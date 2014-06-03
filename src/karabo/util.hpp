@@ -25,8 +25,6 @@
 #include "util/SimpleElement.hh"
 #include "util/VectorElement.hh"
 #include "util/ImageElement.hh"
-#include "util/InputElement.hh"
-#include "util/OutputElement.hh"
 #include "util/StringTools.hh"
 #include "util/Base64.hh"
 #include "util/ByteSwap.hh"
