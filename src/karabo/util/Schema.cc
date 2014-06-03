@@ -54,9 +54,9 @@ namespace karabo {
         }
 
 
-        const karabo::util::Hash& Schema::getParameterHash1() const {
-            return m_hash;
-        }
+//        const karabo::util::Hash& Schema::getParameterHash1() const {
+//            return m_hash;
+//        }
 
 
         std::vector<std::string> Schema::getKeys(const std::string& path) const {
@@ -929,7 +929,7 @@ namespace karabo {
         }
         
         bool similar(const Schema& left, const Schema& right) {
-            return similar(left.getParameterHash1(), right.getParameterHash1());
+            return similar(left.getParameterHash(), right.getParameterHash());
         }        
     }
 }

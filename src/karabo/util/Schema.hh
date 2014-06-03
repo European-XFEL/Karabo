@@ -25,25 +25,10 @@
 
 #include "karaboDll.hh"
 
-namespace karabo {
-    namespace util {
-        class Schema;
-    }
-}
-
-namespace schemawrap {
-    void updateAliasMap(karabo::util::Schema& schema);
-}
-
 /**
  * The main European XFEL namespace
  */
 namespace karabo {
-    
-    namespace io {
-        class SchemaXmlSerializer;
-        class SchemaBinarySerializer;
-    }
 
     /**
      * Namespace for package util
@@ -104,7 +89,7 @@ namespace karabo {
 
             #define KARABO_SCHEMA_OPTIONS "options"
             #define KARABO_SCHEMA_REQUIRED_ACCESS_LEVEL "requiredAccessLevel"
-            
+
             #define KARABO_SCHEMA_UNIT_ENUM "unitEnum"
             #define KARABO_SCHEMA_UNIT_NAME "unitName"
             #define KARABO_SCHEMA_UNIT_SYMBOL "unitSymbol"
@@ -123,7 +108,7 @@ namespace karabo {
 
             #define KARABO_SCHEMA_WARN_LOW "warnLow"
             #define KARABO_SCHEMA_WARN_HIGH "warnHigh"
-            
+
             #define KARABO_SCHEMA_ALARM_LOW "alarmLow"
             #define KARABO_SCHEMA_ALARM_HIGH "alarmHigh"
 
@@ -134,19 +119,10 @@ namespace karabo {
 
             #define KARABO_SCHEMA_OVERWRITE "overwrite"
 
-
+            // Grant friendship to the GenericElement
+            // GenericElement is the base class for all schema build-up helper classes
+            // It will use the private addElement function
             template <class T> friend class GenericElement;
-            template< class T> friend class SimpleElement;
-            friend class OverwriteElement;
-            template< typename T, template <typename, typename> class CONT> friend class VectorElement;
-            friend class ChoiceElement;
-            friend class ListElement;
-            friend class NodeElement;
-            friend class InputElement;
-            friend class OutputElement;
-            friend class karabo::io::SchemaXmlSerializer;
-            friend class karabo::io::SchemaBinarySerializer;
-            friend void schemawrap::updateAliasMap(Schema& schema);
 
             // Container
             Hash m_hash;
@@ -177,7 +153,6 @@ namespace karabo {
                 }
             };
 
-            
             enum NodeType {
 
                 LEAF,
@@ -222,10 +197,11 @@ namespace karabo {
 
         public:
 
-            // Constructs empty anonymous schema
-            //Schema();
-
-            // Constructs empty schema for given classId
+            /**
+             * Constructs empty schema for given classId
+             * @param classId The factory key of the configurable class (will be stored outside the inner hash)
+             * @param rules Assembly rules if the schema is assembled from a class configurations (filters access modes, states and access rights)
+             */
             Schema(const std::string& classId = "", const Schema::AssemblyRules& rules = Schema::AssemblyRules());
 
             void setAssemblyRules(const Schema::AssemblyRules& rules);
@@ -234,12 +210,19 @@ namespace karabo {
 
             const std::string& getRootName() const;
 
+            void setRootName(const std::string& rootName);
+
             const karabo::util::Hash& getParameterHash() const;
 
-            // temporary fix getParameterHash with const context does not work as public functions
-            // There is a private function which the compiler always want to use
-            // This function getParameterHash1 needs to be removed when the issue is fixed
-            const karabo::util::Hash& getParameterHash1() const;
+            karabo::util::Hash& getParameterHash();
+
+            void setParameterHash(const karabo::util::Hash& parameterDescription);
+
+            /**
+             * This function updates the internal mapping between keys and their aliases
+             * The function must be called after de-serialization in order to construct the proper inner structure
+             */
+            void updateAliasMap();
 
             /**
              * Returns all keys in the schema (no recursion)
@@ -284,7 +267,7 @@ namespace karabo {
             bool isChoiceOfNodes(const std::string& path) const;
 
             bool isListOfNodes(const std::string& path) const;
-            
+
             bool hasNodeType(const std::string& path) const;
 
             int getNodeType(const std::string& path) const;
@@ -388,8 +371,8 @@ namespace karabo {
             bool hasAllowedStates(const std::string& path) const;
 
             const std::vector<std::string>& getAllowedStates(const std::string& path) const;
-            
-            
+
+
             //**********************************************
             //                  RequiredAccessLevel                *
             //**********************************************
@@ -717,38 +700,7 @@ namespace karabo {
             KARABO_DECLSPEC friend std::ostream & operator<<(std::ostream& os, const Schema& schema);
 
 
-            //            Hash mergeUserInput(const std::vector<Hash>& userConfigurations);
-            //
-            //            Hash injectRootedDefaults(const Hash& user = Hash()) const;
-            //
-            //            Hash injectUnrootedDefaults(const Hash& user = Hash()) const;
-
-            //            /**
-            //             * The validate function validates any Hash against this Schema. Several flags control the detailed behavior of the validation.
-            //             * @param user
-            //             * @param forceRootedConfiguration
-            //             * @param allowAdditionalKeys
-            //             * @param allowMissingKeys
-            //             * @param injectDefaults
-            //             * @return 
-            //             */
-            //            Hash validate(const Hash& user, bool injectDefaults = true, bool allowUnrootedConfiguration = false, bool allowAdditionalKeys = false, bool allowMissingKeys = false);
-            //
-            //            /**
-            //             * Add schema descriptions defined externally to current schema definitions
-            //             * @param params user-defined schema container
-            //             * @return current schema 
-            //             */
-            //            Schema& addExternalSchema(const Schema& params);
-
-
-        private: // functions
-
-            void setParameterHash(const karabo::util::Hash& parameterDescription);
-
-            void setRootName(const std::string& rootName);
-
-            karabo::util::Hash& getParameterHash();
+        private: // functions            
 
             void addElement(Hash::Node& node);
 
@@ -773,11 +725,9 @@ namespace karabo {
             void processingStandardAttributes(const std::string& key, ostringstream & stream);
 
             std::string extractKey(const std::string& key);
-            
+
             bool checkRequiredAccessLevel(const std::string& path, const Schema::AccessLevel& accessLevel) const;
-            
-            void updateAliasMap();
-            
+
             void r_updateAliasMap(const std::vector<std::string> keys, const std::string oldPath = "");
 
         };

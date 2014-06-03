@@ -19,7 +19,7 @@ namespace karabo {
 
         void HashFilter::byTag(const Schema& schema, const Hash& input, Hash& result, const std::string& tags, const std::string& sep) {
 
-            const Hash& master = schema.getParameterHash1();
+            const Hash& master = schema.getParameterHash();
             std::set<std::string> tagSet = fromString<string, set>(tags, sep);
             for (Hash::const_iterator it = input.begin(); it != input.end(); ++it) {
                 r_byTag(master, *it, result, it->getKey(), tagSet);

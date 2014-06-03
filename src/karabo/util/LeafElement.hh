@@ -165,11 +165,12 @@ namespace karabo {
 
         public:
 
-            template< class U, class V> friend class LeafElement;
-            friend class ChoiceElement;
-            friend class ListElement;
-            friend class InputElement;
-            friend class OutputElement;
+            DefaultValue() : m_genericElement(0) {
+            }
+
+            void setElement(Element* el) {
+                m_genericElement = el;
+            }
 
             /**
              * The <b>defaultValue</b> method serves for setting up the default value to be used when User
@@ -202,19 +203,7 @@ namespace karabo {
              */
             Element& noDefaultValue() {
                 return *m_genericElement;
-            }
-
-        private:
-
-            // DefaultValue object can be only constructed by its friends
-
-            DefaultValue() : m_genericElement(0) {
-            }
-
-            void setElement(Element* el) {
-                m_genericElement = el;
-            }
-
+            }     
         };
 
         /**
