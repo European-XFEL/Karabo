@@ -118,37 +118,7 @@ class _Manager(QObject):
 
 
     def onReceivedData(self, instanceInfo):
-        type = instanceInfo.get("type")
-
-        if type == "brokerInformation":
-            Network()._handleBrokerInformation(instanceInfo)
-        elif type == "systemTopology":
-            self.handleSystemTopology(instanceInfo.get("systemTopology"))
-        elif type == "instanceNew":
-            self.handleInstanceNew(instanceInfo.get("topologyEntry"))
-        elif type == "instanceUpdated":
-            self.handleSystemTopology(instanceInfo.get("topologyEntry"))
-        elif type == "instanceGone":
-            self.handleInstanceGone(instanceInfo.get("instanceId"))
-        elif type == "classSchema":
-            self.handleClassSchema(instanceInfo)
-        elif type == "deviceSchema":
-            self.handleDeviceSchema(instanceInfo)
-        elif type == "configurationChanged":
-            self.handleConfigurationChanged(instanceInfo)
-        elif type == "log":
-            self.onLogDataAvailable(instanceInfo.get("message"))
-        elif type == "schemaUpdated":
-            self.handleDeviceSchemaUpdated(instanceInfo)
-        elif type == "notification":
-            self.handleNotification(instanceInfo)
-        elif type == "propertyHistory":
-            self.handleHistoricData(instanceInfo)
-        elif type == "invalidateCache":
-            print "invalidateCache"
-        else:
-            raise RuntimeError('Got unknown communication token "{}" '\
-                               'from server'.format(type))
+        getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
 
 
     def checkSystemHash(self):
@@ -280,9 +250,8 @@ class _Manager(QObject):
         self.signalNavigationItemSelectionChanged.emit(path)
 
 
-    def onLogDataAvailable(self, logData):
-        # Send message to logging panel
-        self.signalLogDataAvailable.emit(logData)
+    def handle_log(self, instanceInfo):
+        self.signalLogDataAvailable.emit(instanceInfo["message"])
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -439,7 +408,12 @@ class _Manager(QObject):
         self.projectTopology.updateData()
 
 
-    def handleSystemTopology(self, config):
+    def handle_brokerInformation(self, instanceInfo):
+        Network()._handleBrokerInformation(instanceInfo)
+
+
+    def handle_systemTopology(self, instanceInfo):
+        config = instanceInfo.get("systemTopology")
         if self.systemHash is None:
             self.systemHash = config
         else:
@@ -451,7 +425,7 @@ class _Manager(QObject):
         self.projectTopology.updateNeeded()
 
 
-    def handleInstanceNew(self, config):
+    def handle_instanceNew(self, instanceInfo):
         """
         This function gets the configuration for a new instance.
         Before the system topology is updated, it is checked whether this instance
@@ -460,7 +434,7 @@ class _Manager(QObject):
                   page..
         If \False, nothing is removed.
         """
-        
+        config = instanceInfo.get("topologyEntry")
         # Check for existing stuff and remove
         instanceIds = self.systemTopology.removeExistingInstances(config)
         for id in instanceIds:
@@ -474,7 +448,7 @@ class _Manager(QObject):
             self.onLogDataAvailable(logMessage)
 
         # Update system topology with new configuration
-        self.handleSystemTopology(config)
+        self.handle_systemTopology(dict(systemTopology=config))
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceKey = "device"
@@ -487,10 +461,11 @@ class _Manager(QObject):
                 self.potentiallyRefreshVisibleDevice(deviceId)
 
 
-    def handleInstanceGone(self, instanceId):
+    def handle_instanceGone(self, instanceInfo):
         """
         Remove instanceId from central hash and update
         """
+        instanceId = instanceInfo.get("instanceId")
         device = self.deviceData.get(instanceId)
         if device is not None:
             device.status = "offline"
@@ -515,7 +490,7 @@ class _Manager(QObject):
         self.projectTopology.updateNeeded()
 
 
-    def handleClassSchema(self, classInfo):
+    def handle_classSchema(self, classInfo):
         serverId = classInfo.get('serverId')
         classId = classInfo.get('classId')
         if (serverId, classId) not in self.serverClassData:
@@ -541,7 +516,7 @@ class _Manager(QObject):
         return self.serverClassData[serverId, classId]
     
     
-    def handleDeviceSchema(self, instanceInfo):
+    def handle_deviceSchema(self, instanceInfo):
         deviceId = instanceInfo['deviceId']
         if deviceId not in self.deviceData:
             print 'not requested schema for device {} arrived'.format(deviceId)
@@ -568,7 +543,7 @@ class _Manager(QObject):
         return c
 
 
-    def handleDeviceSchemaUpdated(self, instanceInfo):
+    def handle_schemaUpdated(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
@@ -578,7 +553,7 @@ class _Manager(QObject):
 
 
     # TODO: This function must be thread-safe!!
-    def handleConfigurationChanged(self, instanceInfo):
+    def handle_configurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         device = self.deviceData.get(deviceId)
         if device is None:
@@ -590,13 +565,13 @@ class _Manager(QObject):
             device.status = "alive"
 
 
-    def handleHistoricData(self, hash):
+    def handle_propertyHistory(self, hash):
         box = self.deviceData[hash["deviceId"]].getBox(
             hash["property"].split("."))
         box.signalHistoricData.emit(box, hash["data"])
 
 
-    def handleNotification(self, instanceInfo):
+    def handle_notification(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         timestamp = datetime.now()
         # TODO: better format for timestamp and timestamp generation in karabo
