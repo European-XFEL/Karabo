@@ -186,11 +186,6 @@ class EditableNoApplyComponent(BaseComponent):
             hLayout.addWidget(QLabel(unitLabel))
 
 
-    def copy(self):
-        copyComponent = EditableNoApplyComponent(self.classAlias, **self.__initParams)
-        return copyComponent
-
-
     def _getWidgetCategory(self):
         return self.__editableWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
@@ -351,12 +346,6 @@ class EditableApplyLaterComponent(BaseComponent):
             self.onStateChanged)
 
 
-    def copy(self):
-        copyComponent = EditableApplyLaterComponent(self.classAlias, **self.__initParams)
-        return copyComponent
-
-
-### getter and setter functions ###
     def _getWidgetCategory(self):
         return self.__editableWidget.category
     widgetCategory = property(fget=_getWidgetCategory)
@@ -573,10 +562,6 @@ class ChoiceComponent(BaseComponent):
             super(ChoiceComponent, self).__init__(W.alias)
             self.__choiceWidget = W(box, parent)
         self.widget.setEnabled(False)
-
-
-    def copy(self):
-        return ChoiceComponent(self.classAlias, **self.__initParams)
 
 
     def _getWidgetCategory(self):
