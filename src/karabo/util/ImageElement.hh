@@ -70,7 +70,7 @@ namespace karabo {
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
                 
-                m_child = inner.getParameterHash1();
+                m_child = inner.getParameterHash();
             }
 
         protected:
