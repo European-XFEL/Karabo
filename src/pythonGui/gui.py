@@ -14,6 +14,7 @@ from traceback import print_exception, format_exception
 
 from mainwindow import MainWindow
 from network import Network
+from manager import Manager
 
 from PyQt4.QtGui import QApplication, QMessageBox
 
@@ -47,6 +48,7 @@ def init(argv):
     window = MainWindow()
     window.signalServerConnection.connect(Network().onServerConnection)
     window.signalQuitApplication.connect(Network().onQuitApplication)
+    window.signalQuitApplication.connect(Manager().closeDatabaseConnection)
     Network().signalServerConnectionChanged.connect(
         window.onServerConnectionChanged)
     Network().signalUserChanged.connect(window.onUpdateAccessLevel)

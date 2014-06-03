@@ -272,7 +272,7 @@ class ParameterTreeWidget(QTreeWidget):
             boxes = [item.box for item in self.allItems()
                      if self.applyItem(item)]
 
-        Manager().onDeviceInstanceValuesChanged(boxes)
+        Network().onReconfigure(boxes)
 
 
     def onApplyAllRemoteChanges(self):

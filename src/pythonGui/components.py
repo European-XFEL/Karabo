@@ -13,6 +13,7 @@ __all__ = ["BaseComponent"]
 
 
 import manager
+from network import Network
 import icons
 
 from layouts import ProxyWidget
@@ -251,7 +252,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         # Refresh new widget...
         for key in self.__editableWidget.keys:
-            manager.Manager().onRefreshInstance(key)
+            Network().onRefreshInstance(key)
 
 
     def onEditingFinished(self, box, value):
@@ -489,7 +490,7 @@ class EditableApplyLaterComponent(BaseComponent):
         # TODO: KeWe function with key/value pair needed
         for box in self.__editableWidget.boxes:
             box.set(self.__editableWidget.value, None)
-        manager.Manager().onDeviceInstanceValuesChanged(self.__editableWidget.boxes)
+        Network().onReconfigure(self.__editableWidget.boxes)
         self.applyEnabled = False
 
 
