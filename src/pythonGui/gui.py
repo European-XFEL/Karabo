@@ -10,11 +10,12 @@ __author__="kerstin weger"
 
 import util # assure sip api is set first
 import sys
+from traceback import print_exception, format_exception
 
 from mainwindow import MainWindow
 from network import Network
 
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QMessageBox
 
 import numpy
 
@@ -52,6 +53,17 @@ def init(argv):
     return app
 
 
+def excepthook(type, value, traceback):
+    print_exception(type, value, traceback)
+    mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),
+                     getattr(value, "title", type.__name__),
+                     getattr(value, "message", "Unknown error occured") +
+                     "\n" + " " * 300 + "\n")
+    mb.setDetailedText("".join(format_exception(type, value, traceback)))
+    mb.exec_()
+
+
 if __name__ == "__main__":
+    sys.excepthook = excepthook
     app = init(sys.argv)
     sys.exit(app.exec_())
