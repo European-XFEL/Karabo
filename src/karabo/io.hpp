@@ -12,6 +12,8 @@
 #include "io/TextSerializer.hh"
 #include "io/Input.hh"
 #include "io/Output.hh"
+#include "io/OutputElement.hh"
+#include "io/InputElement.hh"
 #include "io/FileTools.hh"
 
 #include "io/h5/File.hh"
