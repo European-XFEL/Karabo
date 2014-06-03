@@ -4,9 +4,9 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals
-import hashtypes
-import xmlparser
+from __future__ import unicode_literals, absolute_import
+from karabo import hashtypes
+from karabo import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
@@ -16,12 +16,6 @@ import numpy
 
 from struct import pack, unpack, calcsize
 
-def schemaloader(s):
-    name, xml = s.split(":", 1)
-    ret = Schema()
-    ret.hash = parseXML(xml)
-    ret.name = name
-    return ret
 
 def _gettype(data):
     try:
@@ -361,9 +355,6 @@ class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
 
-class Schema(object):
-    def getKeys(self):
-        return self.hash.keys()
 
 def factory(tag, attrs):
     if attrs["KRB_Type"] == "HASH":
@@ -415,6 +406,7 @@ class XMLWriter(Writer):
 
 class BinaryParser(object):
     def readFormat(self, fmt):
+        fmt = fmt.encode("ascii")
         size = calcsize(fmt)
         self.pos += size
         return unpack(fmt, self.data[self.pos - size:self.pos])
@@ -434,7 +426,7 @@ class BinaryParser(object):
 
 class BinaryWriter(Writer):
     def writeFormat(self, fmt, data):
-        s = pack(fmt, data)
+        s = pack(fmt.encode("ascii"), data)
         self.file.write(s)
 
 
@@ -457,9 +449,3 @@ class BinaryWriter(Writer):
     def writeToFile(self, data, file):
         self.file = file
         hashtypes.Hash.write(self, data)
-
-
-class Schema(object):
-    def __init__(self, name, hash):
-        self.name = name
-        self.hash = hash
