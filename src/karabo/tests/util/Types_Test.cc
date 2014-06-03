@@ -223,6 +223,8 @@ void Types_Test::testFrom() {
     CPPUNIT_ASSERT(Types::from(1.23) == Types::DOUBLE);
     CPPUNIT_ASSERT(Types::from(12345678987654ULL) == Types::UINT64);
     CPPUNIT_ASSERT(Types::from(123456.789F) == Types::FLOAT);
+    std::vector<int> tmp(5);
+    CPPUNIT_ASSERT(Types::from(std::pair<const int*, size_t>(&tmp[0], tmp.size())) == Types::ARRAY_INT32);
 }
 
 void Types_Test::testTo() {

@@ -95,7 +95,7 @@ namespace karabo {
                 PTR_DOUBLE,
                 PTR_COMPLEX_FLOAT,
                 PTR_COMPLEX_DOUBLE,
-                PTR_STRING,
+                PTR_STRING,              
 
                 SCHEMA, // Schema
                 VECTOR_SCHEMA, // std::vector<Schema>
@@ -107,7 +107,21 @@ namespace karabo {
                 UNKNOWN, // unknown type
                 SIMPLE,
                 SEQUENCE,
-                POINTER
+                POINTER,
+                RAW_ARRAY,
+
+                ARRAY_BOOL, // std::pair<bool*, size_t>
+                ARRAY_CHAR, // std::pair<char*, size_t>
+                ARRAY_INT8, // std::pair<signed char*, size_t>
+                ARRAY_UINT8, // std::pair<unsigned char*, size_t>
+                ARRAY_INT16, // std::pair<short*, size_t>
+                ARRAY_UINT16, // std::pair<unsigned short*, size_t>
+                ARRAY_INT32, // std::pair<int*, size_t>
+                ARRAY_UINT32, // std::pair<unsigned int*, size_t>
+                ARRAY_INT64, // std::pair<long long*, size_t>
+                ARRAY_UINT64, // std::pair<unsigned long long*, size_t>
+                ARRAY_FLOAT, // std::pair<float*, size_t>
+                ARRAY_DOUBLE // std::pair<double*, size_t>
             };
 
             template <class From, class To>
@@ -182,6 +196,19 @@ namespace karabo {
                     case Types::PTR_COMPLEX_FLOAT:
                     case Types::PTR_COMPLEX_DOUBLE:
                         return SEQUENCE;
+                    case Types::ARRAY_CHAR:
+                    case Types::ARRAY_INT8:
+                    case Types::ARRAY_INT16:
+                    case Types::ARRAY_INT32:
+                    case Types::ARRAY_INT64:
+                    case Types::ARRAY_UINT8:
+                    case Types::ARRAY_UINT16:
+                    case Types::ARRAY_UINT32:
+                    case Types::ARRAY_UINT64:
+                    case Types::ARRAY_DOUBLE:
+                    case Types::ARRAY_FLOAT:
+                    case Types::ARRAY_BOOL:                    
+                        return RAW_ARRAY;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
                     case Types::HASH:
@@ -271,6 +298,27 @@ namespace karabo {
                 }
             }
 
+             static bool isRawArray(int type) {
+
+                switch (type) {
+                    case Types::ARRAY_CHAR:
+                    case Types::ARRAY_INT8:
+                    case Types::ARRAY_INT16:
+                    case Types::ARRAY_INT32:
+                    case Types::ARRAY_INT64:
+                    case Types::ARRAY_UINT8:
+                    case Types::ARRAY_UINT16:
+                    case Types::ARRAY_UINT32:
+                    case Types::ARRAY_UINT64:
+                    case Types::ARRAY_DOUBLE:
+                    case Types::ARRAY_FLOAT:
+                    case Types::ARRAY_BOOL:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
 
 
         };
@@ -319,6 +367,23 @@ namespace karabo {
 
         #undef _KARABO_HELPER_MACRO
 
+        #define _KARABO_HELPER_MACRO(RefType, CppType) \
+         template <> inline Types::ReferenceType Types::from<std::pair<const CppType*, size_t > >(const std::pair<const CppType*, size_t>&) { return Types::RefType; }
+
+        _KARABO_HELPER_MACRO(ARRAY_BOOL, bool)
+        _KARABO_HELPER_MACRO(ARRAY_CHAR, char)
+        _KARABO_HELPER_MACRO(ARRAY_INT8, signed char)
+        _KARABO_HELPER_MACRO(ARRAY_UINT8, unsigned char)
+        _KARABO_HELPER_MACRO(ARRAY_INT16, short)
+        _KARABO_HELPER_MACRO(ARRAY_UINT16, unsigned short)
+        _KARABO_HELPER_MACRO(ARRAY_INT32, int)
+        _KARABO_HELPER_MACRO(ARRAY_UINT32, unsigned int)
+        _KARABO_HELPER_MACRO(ARRAY_INT64, long long)
+        _KARABO_HELPER_MACRO(ARRAY_UINT64, unsigned long long)
+        _KARABO_HELPER_MACRO(ARRAY_FLOAT, float)
+        _KARABO_HELPER_MACRO(ARRAY_DOUBLE, double)
+
+        #undef _KARABO_HELPER_MACRO
 
     }
 }
