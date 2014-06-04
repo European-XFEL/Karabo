@@ -63,6 +63,12 @@ namespace karabo {
                         .readOnly()
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
+                STRING_ELEMENT(inner).key("type")
+                        .displayedName("Type")
+                        .description("Describes the underlying data type")
+                        .readOnly()
+                        .archivePolicy(Schema::NO_ARCHIVING)
+                        .commit();
                 BOOL_ELEMENT(inner).key("isBigEndian")
                         .displayedName("Is big endian")
                         .description("Flags whether the raw data are in big or little endian")

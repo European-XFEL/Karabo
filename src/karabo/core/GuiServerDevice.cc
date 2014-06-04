@@ -223,9 +223,10 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = info.get<string > ("deviceId");
-                Hash instanceInfo = createConfigurationChangedHash(deviceId, remote().get(deviceId));
 
-                channel->write(instanceInfo);
+                Hash hash("type", "configurationChanged", "deviceId", deviceId, "configuration", remote().get(deviceId));
+
+                channel->write(hash);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
             }
@@ -447,8 +448,8 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
-                // TODO Change this!! This is a performance hell!!!
-                Hash instanceInfo = createConfigurationChangedHash(deviceId, what);
+                
+                Hash hash("type", "configurationChanged", "deviceId", deviceId, "configuration", what);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
@@ -456,7 +457,7 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(instanceInfo);
+                        it->first->write(hash);
                     }
                 }
             } catch (const Exception& e) {
@@ -537,40 +538,6 @@ namespace karabo {
                 // Remove channel as such
                 m_channels.erase(it);
             }
-        }
-
-
-        void GuiServerDevice::preprocessImageData(karabo::util::Hash& modified) {
-
-            try {
-                for (Hash::iterator it = modified.begin(); it != modified.end(); it++) {
-                    if (it->hasAttribute("image")) {
-
-                        // Create a RawImageData object which shares the data of the hash
-                        karabo::xip::RawImageData img(it->getValue<Hash>(), true); // Must share data
-
-                        if (img.getDimensions().rank() < 2) continue;
-
-                        // Support for grayscale images
-                        if (img.getEncoding() == Encoding::GRAY) {
-                            //KARABO_LOG_DEBUG << "Preprocessing image";
-                            img.toRGBAPremultiplied();
-                        }
-                        // TODO: At the moment we don't touch color images!!!
-                        // TODO: Color image's support
-                    }
-                }
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in preprocessImageData(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        karabo::util::Hash GuiServerDevice::createConfigurationChangedHash(const std::string& deviceId, karabo::util::Hash modified) {
-            preprocessImageData(modified);
-            Hash instanceInfo("type", "configurationChanged", "deviceId", deviceId,
-                              "configuration", modified);
-            return instanceInfo;
         }
     }
 }

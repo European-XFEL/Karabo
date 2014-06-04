@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="94">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f8"
-                   displayName="Authenticator Binding"
+    <logicalFolder name="SourceFiles"
+                   displayName="binding specific"
                    projectFiles="true">
-      <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
-    </logicalFolder>
-    <logicalFolder name="f7" displayName="Binding Tools" projectFiles="true">
       <itemPath>../../../src/karathon/ScopedGILAcquire.hh</itemPath>
       <itemPath>../../../src/karathon/ScopedGILRelease.hh</itemPath>
       <itemPath>../../../src/karathon/Wrapper.cc</itemPath>
       <itemPath>../../../src/karathon/Wrapper.hh</itemPath>
+      <itemPath>../../../src/karathon/karathon.cc</itemPath>
     </logicalFolder>
-    <logicalFolder name="f5" displayName="DeviceClient Binding" projectFiles="true">
+    <logicalFolder name="f5" displayName="core" projectFiles="true">
       <itemPath>../../../src/karathon/DeviceClientWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyCoreDeviceClient.cc</itemPath>
-    </logicalFolder>
-    <logicalFolder name="f1" displayName="Hash Binding" projectFiles="true">
-      <itemPath>../../../src/karathon/AttributesNodeWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/AttributesWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
-      <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
     </logicalFolder>
     <logicalFolder name="f4" displayName="IO Binding" projectFiles="true">
       <itemPath>../../../src/karathon/PyH5Tools.cc</itemPath>
@@ -32,12 +22,10 @@
       <itemPath>../../../src/karathon/PythonOutputHandler.cc</itemPath>
       <itemPath>../../../src/karathon/PythonOutputHandler.hh</itemPath>
     </logicalFolder>
-    <logicalFolder name="f9" displayName="Logger Binding" projectFiles="true">
+    <logicalFolder name="f9" displayName="log" projectFiles="true">
       <itemPath>../../../src/karathon/PyLogLogger.cc</itemPath>
     </logicalFolder>
-    <logicalFolder name="f3"
-                   displayName="Point-2-Point Binding"
-                   projectFiles="true">
+    <logicalFolder name="f3" displayName="net" projectFiles="true">
       <itemPath>../../../src/karathon/ChannelWrap.cc</itemPath>
       <itemPath>../../../src/karathon/ChannelWrap.hh</itemPath>
       <itemPath>../../../src/karathon/ConnectionWrap.cc</itemPath>
@@ -45,16 +33,46 @@
       <itemPath>../../../src/karathon/IOServiceWrap.hh</itemPath>
       <itemPath>../../../src/karathon/p2pbinding.cc</itemPath>
     </logicalFolder>
-    <logicalFolder name="f2" displayName="Schema Binding" projectFiles="true">
-      <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXmsSlotElement.cc</itemPath>
-      <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
-      <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
+    <logicalFolder name="f10" displayName="util" projectFiles="true">
+      <logicalFolder name="f1" displayName="Hash" projectFiles="true">
+        <itemPath>../../../src/karathon/AttributesNodeWrap.hh</itemPath>
+        <itemPath>../../../src/karathon/AttributesWrap.hh</itemPath>
+        <itemPath>../../../src/karathon/HashWrap.cc</itemPath>
+        <itemPath>../../../src/karathon/HashWrap.hh</itemPath>
+        <itemPath>../../../src/karathon/NodeWrap.hh</itemPath>
+        <itemPath>../../../src/karathon/PyUtilHash.cc</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="Schema" projectFiles="true">
+        <itemPath>../../../src/karathon/PyUtilClassInfo.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilSchema.cc</itemPath>
+        <itemPath>../../../src/karathon/PyXmsSlotElement.cc</itemPath>
+        <itemPath>../../../src/karathon/PythonFactoryMacros.hh</itemPath>
+        <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="Tools" projectFiles="true">
+        <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
+        <itemPath>../../../src/karathon/PyUtilDateTimeString.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
+        <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
+      </logicalFolder>
     </logicalFolder>
-    <logicalFolder name="f6"
-                   displayName="SignalSlotable Binding"
-                   projectFiles="true">
+    <logicalFolder name="f8" displayName="webAuth" projectFiles="true">
+      <itemPath>../../../src/karathon/PyWebAuthenticator.cc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f11" displayName="xip" projectFiles="true">
+      <itemPath>../../../src/karathon/FromNumpy.cc</itemPath>
+      <itemPath>../../../src/karathon/FromNumpy.hh</itemPath>
+      <itemPath>../../../src/karathon/PyXipCpuImage.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXipRawImageData.cc</itemPath>
+      <itemPath>../../../src/karathon/PyXipStatistics.cc</itemPath>
+      <itemPath>../../../src/karathon/RawImageDataWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karathon/MemberSlotWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyXmsRequestor.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
@@ -62,27 +80,6 @@
       <itemPath>../../../src/karathon/SignalSlotableWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
-    </logicalFolder>
-    <logicalFolder name="SourceFiles"
-                   displayName="Source Files"
-                   projectFiles="true">
-      <itemPath>../../../src/karathon/karathon.cc</itemPath>
-    </logicalFolder>
-    <logicalFolder name="f10" displayName="Util Tools" projectFiles="true">
-      <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
-      <itemPath>../../../src/karathon/PyUtilDateTimeString.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilEpochstamp.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilTimeDuration.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilTimestamp.cc</itemPath>
-      <itemPath>../../../src/karathon/PyUtilTrainstamp.cc</itemPath>
-    </logicalFolder>
-    <logicalFolder name="f11" displayName="Xip Binding" projectFiles="true">
-      <itemPath>../../../src/karathon/PyXipCpuImage.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipImage.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipRawImageData.cc</itemPath>
-      <itemPath>../../../src/karathon/PyXipStatistics.cc</itemPath>
-      <itemPath>../../../src/karathon/RawImageDataWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -191,6 +188,10 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/FromNumpy.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/FromNumpy.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
         <ccTool>
@@ -431,6 +432,8 @@
       </item>
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karathon/ToNumpy.hh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
         <ccTool>
           <preprocessorList>
@@ -580,6 +583,10 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/DimsWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/FromNumpy.cc" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/FromNumpy.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/HashWrap.cc" ex="false" tool="1" flavor2="0">
         <ccTool>
@@ -818,6 +825,8 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karathon/ToNumpy.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/Wrapper.cc" ex="false" tool="1" flavor2="0">
         <ccTool>
