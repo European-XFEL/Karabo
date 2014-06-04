@@ -89,6 +89,9 @@ namespace karabo {
             virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
             }
 
+            virtual void disconnect(const std::string& instanceId, const std::string& channelName) {
+            }
+
             virtual bool canCompute() const {
                 return true;
             }
