@@ -86,6 +86,7 @@
         <itemPath>../../../src/karabo/io/Hdf5FileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileInput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Input.hh</itemPath>
+        <itemPath>../../../src/karabo/io/InputElement.hh</itemPath>
         <itemPath>../../../src/karabo/io/InputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaBinaryFileInput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaInput.cc</itemPath>
@@ -105,6 +106,7 @@
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Output.hh</itemPath>
+        <itemPath>../../../src/karabo/io/OutputElement.hh</itemPath>
         <itemPath>../../../src/karabo/io/OutputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaBinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaOutput.cc</itemPath>
@@ -225,11 +227,9 @@
         <itemPath>../../../src/karabo/util/HashFilter.cc</itemPath>
         <itemPath>../../../src/karabo/util/HashFilter.hh</itemPath>
         <itemPath>../../../src/karabo/util/ImageElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/InputElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/LeafElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/ListElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/NodeElement.hh</itemPath>
-        <itemPath>../../../src/karabo/util/OutputElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/OverwriteElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/PathElement.hh</itemPath>
         <itemPath>../../../src/karabo/util/Schema.cc</itemPath>
@@ -315,12 +315,16 @@
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/xip/CpuImageBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Environment.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/FromChannelSpace.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/FromChannelSpace.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Image.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageEnums.hh</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageData.cc</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageData.hh</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ToChannelSpace.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
         <itemPath>../../../src/karabo/xip/BinaryProcessor.hh</itemPath>
@@ -422,6 +426,8 @@
       <logicalFolder name="f7" displayName="xip_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/xip/Image_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/xip/Image_Test.hh</itemPath>
+        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.cc</itemPath>
+        <itemPath>../../../src/karabo/tests/xip/RawImageData_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/TestPathSetup.hh</itemPath>
         <itemPath>../../../src/karabo/tests/xip/xipTestRunner.cc</itemPath>
       </logicalFolder>
@@ -716,12 +722,22 @@
       </item>
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/InputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/InputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/OutputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/OutputHandler.hh"
             ex="false"
@@ -1471,6 +1487,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -1636,11 +1662,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/InputElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -1657,11 +1678,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/OutputElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -1910,7 +1926,22 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/FromChannelSpace.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/FromChannelSpace.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageEnums.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileReader.cc"
             ex="false"
@@ -1958,6 +1989,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToChannelSpace.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2429,12 +2465,22 @@
       </item>
       <item path="../../../src/karabo/io/Input.hh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../../../src/karabo/io/InputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/io/InputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/io/OutputElement.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/io/OutputHandler.hh"
             ex="false"
@@ -3193,6 +3239,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/tests/xip/RawImageData_Test.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/tests/xip/RawImageData_Test.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/tests/xip/TestPathSetup.hh"
             ex="false"
             tool="3"
@@ -3358,11 +3414,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/util/InputElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/util/LeafElement.hh"
             ex="false"
             tool="3"
@@ -3379,11 +3430,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/util/OrderedMap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/util/OutputElement.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3639,7 +3685,22 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/xip/FromChannelSpace.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/FromChannelSpace.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/xip/Image.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ImageEnums.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/ImageFileReader.cc"
             ex="false"
@@ -3693,6 +3754,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/Statistics.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/ToChannelSpace.hh"
             ex="false"
             tool="3"
             flavor2="0">

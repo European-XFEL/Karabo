@@ -265,65 +265,7 @@ namespace karabo {
 
             inline size_t offset(const size_t x, const size_t y = 0, const size_t z = 0) {
                 return m_cimg.offset(x, y, z);
-            }
-
-            /**
-             * Copies the content of the instance image into a hash.
-             * 
-             * @param imageHash The hash this instance should be copied into
-             * @return nothing
-             */
-            void copyTo(karabo::util::Hash& imageHash) const {
-                using namespace karabo::util;
-
-		karabo::xip::RawImageData raw(imageHash, true); // Shares data
-
-                // Fill data
-                raw.setByteSize(this->byteSize());
-                std::memcpy(raw.dataPointer(), this->pixelPointer(), this->byteSize());
-
-                // Set dims
-                raw.setDimensions(this->dims());
-
-                // Set encoding
-                raw.setEncoding(karabo::xip::Encoding::GRAY);
-
-                // Set endianness
-                raw.setIsBigEndian(false);
-
-                // Set channel space
-                karabo::xip::ChannelSpaceType channelSpace;
-                Types::ReferenceType type = Types::from<TPix>();
-                if (type == Types::UINT8) {
-                    channelSpace = karabo::xip::ChannelSpace::u_8_1;
-                } else if (type == Types::INT8) {
-                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
-                } else if (type == Types::CHAR) {
-                    channelSpace = karabo::xip::ChannelSpace::s_8_1;
-                } else if (type == Types::UINT16) {
-                    channelSpace = karabo::xip::ChannelSpace::u_16_2;
-                } else if (type == Types::INT16) {
-                    channelSpace = karabo::xip::ChannelSpace::s_16_2;
-                } else if (type == Types::UINT32) {
-                    channelSpace = karabo::xip::ChannelSpace::u_32_4;
-                } else if (type == Types::INT32) {
-                    channelSpace = karabo::xip::ChannelSpace::s_32_4;
-                } else if (type == Types::UINT64) {
-                    channelSpace = karabo::xip::ChannelSpace::u_64_8;
-                } else if (type == Types::INT64) {
-                    channelSpace = karabo::xip::ChannelSpace::s_64_8;
-                } else if (type == Types::FLOAT) {
-                    channelSpace = karabo::xip::ChannelSpace::f_32_4;
-                } else if (type == Types::DOUBLE) {
-                    channelSpace = karabo::xip::ChannelSpace::f_64_8;
-                } else {
-                    channelSpace = karabo::xip::ChannelSpace::UNDEFINED;
-                }
-                raw.setChannelSpace(channelSpace);
-
-                // Set header 
-                //raw.setHeader(this->getHeader());
-	    }
+            }            
 
             /***************************************
              *      Instance Characteristics       *

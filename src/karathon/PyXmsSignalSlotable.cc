@@ -12,8 +12,9 @@
 #include <karabo/xms/SignalSlotable.hh>
 #include "SignalSlotableWrap.hh"
 
-using namespace karabo::xms;
 using namespace karabo::util;
+using namespace karabo::io;
+using namespace karabo::xms;
 using namespace karathon;
 using namespace std;
 namespace bp = boost::python;
@@ -39,7 +40,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
     typedef karabo::io::Input<karabo::util::Hash> InputHashType;
     typedef karabo::io::Output<karabo::util::Hash> OutputHashType;
-    
+
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
             .def(bp::init<>())
             .def(bp::init<const std::string&>())
@@ -188,31 +189,53 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("emit", &SignalSlotableWrap::emitPy3, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3")))
             .def("emit", &SignalSlotableWrap::emitPy4, (bp::arg("signalFunction"), bp::arg("a1"), bp::arg("a2"), bp::arg("a3"), bp::arg("a4")))
 
+            .def("registerInputChannelHash"
+                 , (boost::shared_ptr<Input<Hash> > (SignalSlotableWrap::*)(const std::string&, const std::string& type, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::registerInputChannel<Hash>)
+                 , (bp::arg("name")
+                 , bp::arg("type") = "Network"
+                 , bp::arg("config") = Hash()
+                 , bp::arg("onRead") = bp::object()
+                 , bp::arg("onEndOfStream") = bp::object()))
+
+            .def("registerOutputChannelHash"
+                 , (boost::shared_ptr<Output<Hash> > (SignalSlotableWrap::*)(const std::string&, const std::string&, const Hash&, const bp::object&)) (&SignalSlotableWrap::registerOutputChannel<Hash>)
+                 , (bp::arg("name")
+                 , bp::arg("type") = "Network"
+                 , bp::arg("config") = Hash()
+                 , bp::arg("onOutputPossible") = bp::object()))
+
+            .def("connectChannels"
+                 , (bool (SignalSlotable::*)(string, const string&, string, const string&, const bool)) (&SignalSlotable::connectChannels)
+                 , (bp::arg("outputInstanceId")
+                 , bp::arg("outputName")
+                 , bp::arg("inputInstanceId")
+                 , bp::arg("inputName")
+                 , bp::arg("isVerbose") = true))
+
             .def("createInputChannelHash"
-                 , (boost::shared_ptr<InputHashType> (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const bp::object&, const boost::shared_ptr<InputHashType>&)) (&SignalSlotableWrap::createInputChannel<InputHashType>)
+                 , (boost::shared_ptr<karabo::io::Input<Hash> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::createInputChannel<karabo::io::Input<Hash> >)
                  , (bp::arg("name"), bp::arg("configuration")
                  , bp::arg("onInputAvailableHandler") = bp::object()
-                 , bp::arg("onEndOfStreamEventHandler") = bp::object()
-                 , bp::arg("never_use") = boost::shared_ptr<InputHashType>()))
-            
+                 , bp::arg("onEndOfStreamEventHandler") = bp::object()))
+
             .def("createOutputChannelHash"
-                 , (boost::shared_ptr<OutputHashType> (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const boost::shared_ptr<OutputHashType>&))(&SignalSlotableWrap::createOutputChannel<OutputHashType>)
-                 , (bp::arg("name"), bp::arg("configuration"), bp::arg("onOutputPossibleHandler") = bp::object(), bp::arg("never_use") = boost::shared_ptr<OutputHashType>()))
-            
+                 , (boost::shared_ptr<karabo::io::Output<Hash> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&)) (&SignalSlotableWrap::createOutputChannel<karabo::io::Output<Hash> >)
+                 , (bp::arg("name"), bp::arg("configuration"), bp::arg("onOutputPossibleHandler") = bp::object()))
+
             .def("getInputChannels", &SignalSlotableWrap::getInputChannels)
-            
+
             .def("getOutputChannels", &SignalSlotableWrap::getOutputChannels)
-            
+
             .def("exists"
                  , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::exists)
                  , (bp::arg("instanceId")))
-            
+
             .def("getAccessLevel"
                  , (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel)
                  , (bp::arg("instanceId")))
-            
+
             .def("connectInputChannels"
-                , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))
+                 , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))
             ;
 }
 

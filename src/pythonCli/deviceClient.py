@@ -18,6 +18,7 @@ import socket
 import datetime
 from dateutil import parser
 import pytz
+import tzlocal
 from threading import Thread
 
 import numpy as np
@@ -343,15 +344,20 @@ class DeviceClient(object):
         return self.__client.get(instanceId, propertyName)
     
     
-    def getFromPast(self, deviceId, propertyName, t0, t1 = None):
+    def getFromPast(self, deviceId, propertyName, t0, t1 = None, maxNumData = 0):
         utc_t0 = self._fromTimeStringToUtcString(t0)
         if t1 is None:            
-            return self.__client.getFromPast(deviceId, propertyName, utc_t0)
+            return self.__client.getFromPast(deviceId, propertyName, utc_t0, datetime.datetime.now().isoformat(), maxNumData)
         else:
             utc_t1 = self._fromTimeStringToUtcString(t1)
-            return self.__client.getFromPast(deviceId, propertyName, utc_t0, utc_t1)
+            return self.__client.getFromPast(deviceId, propertyName, utc_t0, utc_t1, maxNumData)
                 
     
+    def getDeviceHistory(self, deviceId, timepoint):
+        utc_timepoint = self._fromTimeStringToUtcString(timepoint)
+        return self.__client.getDeviceHistory(deviceId, utc_timepoint)
+    
+        
     def enableAdvancedMode(self):
         self.__client.enableAdvancedMode()
         
@@ -630,12 +636,12 @@ class DeviceClient(object):
     def _fromTimeStringToUtcString(self, timestamp):
         date = parser.parse(timestamp)
         if date.tzname() is None:
-            print "Assuming local time."
-            s = time.strftime("%Z", time.gmtime())
-            system_tz = pytz.timezone(s)
-            date = date.replace(tzinfo=system_tz)
-            date = date.astimezone(pytz.utc)        
-        return date.isoformat() + ".0"
+            print "Assuming local time for given date ", date
+            local_tz = tzlocal.get_localzone()
+            date = local_tz.localize(date)
+            date = date.astimezone(pytz.utc)
+        print date.isoformat()
+        return date.isoformat()
         
         
     def getMonitorValues(self):

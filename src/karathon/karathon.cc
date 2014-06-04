@@ -123,7 +123,7 @@ BOOST_PYTHON_MODULE(karathon) {
     
     exportPyIoBinarySerializer<karabo::util::Hash>();
     exportPyIoBinarySerializer<karabo::util::Schema>();
-    
+
     exportPyIoH5File();
     
     // webAuth

@@ -19,7 +19,6 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<RawImageData >, karabo::io::BinaryFileOutput<RawImageData>)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<RawImageData >, karabo::io::BinaryFileInput<RawImageData>)
                 
-        //KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::AbstractOutput, karabo::io::Output<RawImageData >, karabo::xms::NetworkOutput<RawImageData >) // TODO: Not needed?
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Output<RawImageData >, karabo::xms::NetworkOutput<RawImageData >)
         KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Input<RawImageData >, karabo::xms::NetworkInput<RawImageData >)
     }

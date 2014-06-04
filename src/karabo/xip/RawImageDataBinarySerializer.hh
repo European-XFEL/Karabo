@@ -41,14 +41,11 @@ namespace karabo {
             }
 
             void save(const RawImageData& image, std::vector<char>& archive) {
-                m_hashSerializer->save(image.toHash(), archive);
+                m_hashSerializer->save(image.hash(), archive);
             }
 
-            void load(RawImageData& image, const char* archive, const size_t nBytes) {
-                
-                karabo::util::Hash hash;
-                m_hashSerializer->load(hash, archive, nBytes);
-                RawImageData(hash).swap(image);
+            void load(RawImageData& image, const char* archive, const size_t nBytes) {                
+                m_hashSerializer->load(image.hash(), archive, nBytes);
             }
 
             virtual ~RawImageBinarySerializer() {

@@ -20,17 +20,20 @@
 
 __all__ = ["DisplayImageElement"]
 
-
 from widget import DisplayWidget
 import copy
 
+from karabo import hashtypes
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
+import numpy as np
 
 class DisplayImageElement(DisplayWidget):
     category = "ImageElement"
     alias = "Image Element"
+
+    colorTable = [QColor(i,i,i).rgb() for i in range(256)]
 
     def __init__(self, box, parent):
         self.__image = QLabel(parent)
@@ -42,6 +45,7 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
+
         super(DisplayImageElement, self).__init__(box)
 
 
@@ -62,12 +66,29 @@ class DisplayImageElement(DisplayWidget):
             if len(value.dims.value) != 2:
                 return
 
-            dimX, dimY = value.dims.value
+            # Data type information
+            type = value.type.value
+            type = hashtypes.Type.fromname[type].numpy
+
+            # Data itself
             data = value.data.value
-            
+            npy = np.frombuffer(data, type)
+
+            # Normalize
+            npy = npy - npy.min()
+            npy *= (255.0 / npy.max())
+
+            # Cast
+            npy = npy.astype(np.uint8)
+
+            # Shape
+            dimX, dimY = value.dims.value
+
+            # Safety
             if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
-            image = QImage(data, dimX, dimY, QImage.Format_ARGB32_Premultiplied)            
+            image = QImage(npy, dimX, dimY, QImage.Format_Indexed8)
+            image.setColorTable(self.colorTable)
             pixmap = QPixmap.fromImage(image)
             
             # Scale pixmap

@@ -273,7 +273,7 @@ class PythonComputeDevice(PythonDevice, ComputeFsm):
         ''' Put your specific algorithms here '''
 
     def _onInputAvailable(self, input):
-        if self.get("state") == "Ok.Finished" and  not self.get("autoIterate"):
+        if self.get("state") == "Ok.Finished" and not self.get("autoIterate"):
             pass
         else:
             self.start()

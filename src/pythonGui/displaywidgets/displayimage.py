@@ -12,7 +12,7 @@ from widget import DisplayWidget
 import numpy as np
 from guiqwt.plot import ImageDialog
 from guiqwt.builder import make
-
+from karabo import hashtypes
 
 class DisplayImage(DisplayWidget):
     category = "Image"
@@ -32,14 +32,22 @@ class DisplayImage(DisplayWidget):
         if value is None: return
 
         if self.value is None or value is not self.value:
-            dimX, dimY = value.dims.value
+
+            # Data type information
+            type = value.type.value
+            type = hashtypes.Type.fromname[type].numpy
+
+            # Data itself
             data = value.data.value
+            npy = np.frombuffer(data, type)
 
-            if dimX < 1 or dimY < 1 or len(data) != 4 * dimX * dimY:
-                return
+            # Shape
+            dimX, dimY = value.dims.value
+            npy.shape = dimY, dimX
 
-            npy = np.frombuffer(data, np.uint8)
-            npy.shape = dimY, dimX, 4
+            # Safety
+            if dimX < 1 or dimY < 1: return
+                        
             if self.__image is None:
                 self.__image = make.image(npy)
                 self.__plot.add_item(self.__image)

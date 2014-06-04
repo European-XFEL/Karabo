@@ -197,6 +197,8 @@ namespace karabo {
             // Provides information about p2p connectivity
             SLOT2(slotGetOutputChannelInformation, string /*ioChannelId*/, int /*pid*/)
 
+            SLOT2(slotConnectToOutputChannel, string /*inputChannelName*/, karabo::util::Hash /*outputChannelInfo */)
+
         }
 
 
@@ -508,6 +510,67 @@ namespace karabo {
 
         void SignalSlotable::instanceAvailableAgain(const std::string& instanceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" available again";
+        }
+
+        bool SignalSlotable::connectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose) {
+
+            if (outputInstanceId.empty()) outputInstanceId = m_instanceId;
+            if (inputInstanceId.empty()) inputInstanceId = m_instanceId;
+
+            bool outputChannelExists = false;
+            bool inputChannelExists = false;
+            karabo::util::Hash outputChannelInfo;
+
+            if (outputInstanceId == m_instanceId) { // Local output channel
+                outputChannelInfo = slotGetOutputChannelInformation(outputName, static_cast<int> (getpid()));
+                if (!outputChannelInfo.empty()) outputChannelExists = true;
+
+            } else { // Remote output channel
+                try {
+                    this->request(outputInstanceId, "slotGetOutputChannelInformation", outputName, static_cast<int> (getpid())).timeout(1000).receive(outputChannelExists, outputChannelInfo);
+                } catch (const karabo::util::TimeoutException&) {
+                    karabo::util::Exception::clearTrace();
+                    inputChannelExists = false;
+                }
+            }
+
+            if (outputChannelExists) {
+
+                if (inputInstanceId == m_instanceId) {// Local input channel                    
+                    inputChannelExists = slotConnectToOutputChannel(inputName, outputChannelInfo);
+
+                } else {
+                    try {
+                        this->request(inputInstanceId, "slotConnectToOutputChannel", inputName, outputChannelInfo).timeout(1000).receive(inputChannelExists);
+                    } catch (const karabo::util::TimeoutException&) {
+                        karabo::util::Exception::clearTrace();
+                        inputChannelExists = false;
+                    }
+                }
+            }
+
+            if (outputChannelExists && inputChannelExists) {
+                if (isVerbose) cout << "INFO   : Channel connection successfully established." << endl;
+                return true;
+            }
+            if (isVerbose) cout << "ERROR   : Channel connection could not be established." << endl;
+            return false;
+        }
+
+        bool SignalSlotable::slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo) {
+            try {
+                // Loop channels
+                InputChannels::const_iterator it = m_inputChannels.find(inputName);
+                if (it != m_inputChannels.end()) {
+                    it->second->connectNow(outputChannelInfo); // Synchronous
+                    reply(true);
+                    return true;
+                }
+                return false;
+            } catch (const Exception& e) {
+                reply(false);
+                return false;
+            }
         }
 
 
@@ -1111,7 +1174,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
+        karabo::util::Hash SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
                 karabo::util::Hash h(it->second->getInformation());
@@ -1121,8 +1184,10 @@ namespace karabo {
                     h.set("memoryLocation", "remote");
                 }
                 reply(true, h);
+                return h;
             } else {
                 reply(false, karabo::util::Hash());
+                return karabo::util::Hash();
             }
         }
 

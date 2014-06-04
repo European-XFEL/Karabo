@@ -162,21 +162,6 @@ namespace karabo {
                 return m_chunkStatus[channelIdx][chunkIdx];
             }
 
-            static void setChunkStatus(const size_t channelIdx, const size_t chunkIdx, const int status) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_chunkStatus[channelIdx][chunkIdx] = status;
-            }
-
-            static bool setChunkStatusFromTo(const size_t channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                if (m_chunkStatus[channelIdx][chunkIdx] == statusFrom) {
-                    m_chunkStatus[channelIdx][chunkIdx] = statusTo;
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
             static void read(DataType& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
                 data = *(m_cache[channelIdx][chunkIdx][dataIdx]);
             }
@@ -390,21 +375,6 @@ namespace karabo {
             static int getChunkStatus(const size_t channelIdx, const size_t chunkIdx) {
                 boost::mutex::scoped_lock lock(m_accessMutex);
                 return m_chunkStatus[channelIdx][chunkIdx];
-            }
-
-            static void setChunkStatus(const size_t channelIdx, const size_t chunkIdx, const int status) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                m_chunkStatus[channelIdx][chunkIdx] = status;
-            }
-
-            static bool setChunkStatusFromTo(const size_t channelIdx, const size_t chunkIdx, const int statusFrom, const int statusTo) {
-                boost::mutex::scoped_lock lock(m_accessMutex);
-                if (m_chunkStatus[channelIdx][chunkIdx] == statusFrom) {
-                    m_chunkStatus[channelIdx][chunkIdx] = statusTo;
-                    return true;
-                } else {
-                    return false;
-                }
             }
 
             static void read(DataType& data, const size_t dataIdx, const size_t channelIdx, const size_t chunkIdx) {
