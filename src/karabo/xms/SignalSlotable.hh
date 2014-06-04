@@ -240,12 +240,16 @@ namespace karabo {
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
+            // Deprecate
             virtual void instanceNotAvailable(const std::string& instanceId);
 
+            // Deprecate
             virtual void instanceAvailableAgain(const std::string& instanceId);
 
+            // Deprecate
             virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
+            // Deprecate
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
             const std::vector<std::pair<std::string, karabo::util::Hash> >& getAvailableInstances(const bool activateTracking = false);
@@ -344,7 +348,7 @@ namespace karabo {
              * This function establishes a connection between a signal and a slot.
              * The real functionality of the connection will be checked initially and be tracked throughout its lifetime.
              * The virtual function connectionNotAvailable(const string& instanceId, const Hash& affectedSignals, const Hash& affectedSlots) will be called
-             * in case the connection is/gets unavaible. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
+             * in case the connection is/gets unavailable. NOTE: This notification is delayed by at least the heartbeat-rate of the connected component.
              * Furthermore will the lost connection automatically be tried to be re-established once the lost component(s) get(s) available again.
              * The re-connection requests will fade out with the power of 4 and last maximum 17 hours. After that and at any other time all dangling connections
              * can actively tried to be re-connected by calling the function "slotTryReconnectNow()".
@@ -678,6 +682,39 @@ namespace karabo {
                 }
             }
 
+            template <class T>
+            boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name, const std::string& type, const karabo::util::Hash& config = karabo::util::Hash(),
+            const boost::function<void (const typename karabo::io::Input<T>::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename karabo::io::Input<T>::Pointer&) >(),
+            const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
+                using namespace karabo::util;
+                karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
+                channel->setInstanceId(m_instanceId);
+                channel->setInputHandlerType("c++", std::string(typeid (typename karabo::io::Input<T>).name()));
+                if (!onInputAvailableHandler.empty()) {
+                    channel->registerIOEventHandler(onInputAvailableHandler);
+                }
+                if (!onEndOfStreamEventHandler.empty()) {
+                    channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+                }
+                m_inputChannels[name] = channel;
+                return boost::static_pointer_cast<karabo::io::Input<T> >(channel);
+            }
+
+            template <class T>
+            boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name, const std::string& type, const karabo::util::Hash& config) {
+                using namespace karabo::util;
+                karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
+                channel->setInstanceId(m_instanceId);
+                channel->setOutputHandlerType("c++");
+                m_outputChannels[name] = channel;
+                return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
+            }
+
+            bool connectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
+
+            bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName, const std::string& inputInstanceId, const std::string& inputName);
+
+
             template <class InputType>
             boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, 
             const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
@@ -807,6 +844,8 @@ namespace karabo {
 
             void slotConnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
+            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo);
+
             void slotHasSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
 
             bool tryToDisconnectFromSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
@@ -842,7 +881,7 @@ namespace karabo {
 
             // IO channel related
 
-            void slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
+            karabo::util::Hash slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
             static int godEncode(const std::string& password);
 

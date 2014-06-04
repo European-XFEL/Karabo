@@ -101,10 +101,6 @@ namespace karabo {
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
 
             void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
-
-            void preprocessImageData(karabo::util::Hash& modified);
-
-            karabo::util::Hash createConfigurationChangedHash(const std::string& deviceId, karabo::util::Hash modified);
             
         };
     }

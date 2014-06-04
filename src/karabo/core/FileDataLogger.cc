@@ -331,7 +331,7 @@ namespace karabo {
                     const string& path = paths[i];
                     const Hash::Node& leafNode = changedConfig.getNode(path);
                     // Skip those elements which should not be archived
-                    if (schema.hasArchivePolicy(path) && (schema.getArchivePolicy(path) == Schema::NO_ARCHIVING)) continue;
+                    if (!schema.has(path) || (schema.hasArchivePolicy(path) && (schema.getArchivePolicy(path) == Schema::NO_ARCHIVING))) continue;
                     Hash val("v", leafNode.getValueAsAny());
                     val.setAttributes("v", leafNode.getAttributes());
                     boost::optional<Hash::Node&> node = tmp.find(path);

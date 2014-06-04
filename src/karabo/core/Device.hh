@@ -39,7 +39,7 @@ namespace karabo {
         #define KARABO_LOG_ERROR this->log() << log4cpp::Priority::ERROR 
 
         #define KARABO_NO_SERVER "__none__"
-        
+
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
 
         public:
@@ -237,10 +237,13 @@ namespace karabo {
             void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
 
-                Hash hash;
-                Hash& value = hash.bindReference<Hash>(key);
+                Dims dims(image.dimX(), image.dimY());
+                karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
 
-		image.copyTo(value);
+                Hash hash(key, raw.hash());
+                //Hash& value = hash.bindReference<Hash>(key);
+
+		//image.copyTo(value);
 
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -250,7 +253,7 @@ namespace karabo {
             void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
 
-                Hash hash(key, image.toHash());
+                Hash hash(key, image.hash());
 
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);

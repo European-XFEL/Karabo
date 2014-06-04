@@ -132,6 +132,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1760428615/stdsoap2.o \
 	${OBJECTDIR}/_ext/1103122620/CpuEnvironment.o \
 	${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o \
+	${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileReader.o \
 	${OBJECTDIR}/_ext/1103122620/ImageFileWriter.o \
 	${OBJECTDIR}/_ext/1103122620/RawImageData.o \
@@ -667,6 +668,11 @@ ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o: ../../../src/karabo/xip
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o ../../../src/karabo/xip/CpuImageBinarySerializer.cc
 
+${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o: ../../../src/karabo/xip/FromChannelSpace.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o ../../../src/karabo/xip/FromChannelSpace.cc
+
 ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o: ../../../src/karabo/xip/ImageFileReader.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
 	${RM} "$@.d"
@@ -752,7 +758,7 @@ ${TESTDIR}/TestFiles/f6: ${TESTDIR}/_ext/1856679435/Authenticate_Test.o ${TESTDI
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f6 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/936507918/xipTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f7: ${TESTDIR}/_ext/936507918/Image_Test.o ${TESTDIR}/_ext/936507918/RawImageData_Test.o ${TESTDIR}/_ext/936507918/xipTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f7 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
@@ -933,6 +939,12 @@ ${TESTDIR}/_ext/936507918/Image_Test.o: ../../../src/karabo/tests/xip/Image_Test
 	${MKDIR} -p ${TESTDIR}/_ext/936507918
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936507918/Image_Test.o ../../../src/karabo/tests/xip/Image_Test.cc
+
+
+${TESTDIR}/_ext/936507918/RawImageData_Test.o: ../../../src/karabo/tests/xip/RawImageData_Test.cc 
+	${MKDIR} -p ${TESTDIR}/_ext/936507918
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/include/hdf5 -I. `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936507918/RawImageData_Test.o ../../../src/karabo/tests/xip/RawImageData_Test.cc
 
 
 ${TESTDIR}/_ext/936507918/xipTestRunner.o: ../../../src/karabo/tests/xip/xipTestRunner.cc 
@@ -2212,6 +2224,19 @@ ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o: ${OBJECTDIR}/_ex
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o ../../../src/karabo/xip/CpuImageBinarySerializer.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer.o ${OBJECTDIR}/_ext/1103122620/CpuImageBinarySerializer_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/1103122620/FromChannelSpace_nomain.o: ${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o ../../../src/karabo/xip/FromChannelSpace.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1103122620
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122620/FromChannelSpace_nomain.o ../../../src/karabo/xip/FromChannelSpace.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/1103122620/FromChannelSpace.o ${OBJECTDIR}/_ext/1103122620/FromChannelSpace_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122620/ImageFileReader_nomain.o: ${OBJECTDIR}/_ext/1103122620/ImageFileReader.o ../../../src/karabo/xip/ImageFileReader.cc 
