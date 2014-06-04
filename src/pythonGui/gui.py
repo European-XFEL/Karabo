@@ -46,7 +46,6 @@ def init(argv):
 
     global window
     window = MainWindow()
-    window.signalServerConnection.connect(Network().onServerConnection)
     window.signalQuitApplication.connect(Network().onQuitApplication)
     window.signalQuitApplication.connect(Manager().closeDatabaseConnection)
     Network().signalServerConnectionChanged.connect(
