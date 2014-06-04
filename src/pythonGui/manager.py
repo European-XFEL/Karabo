@@ -323,19 +323,6 @@ class _Manager(QObject):
             return None
 
 
-    def currentConfigurationAsHash(self):
-        """
-        This function returns the configuration hash of the currently selected
-        device which can be part of the systemTopology or the projectTopology.
-        
-        Returns None, if no device is selected None.
-        """
-        conf, classId = self.currentConfigurationAndClassId()
-        if conf is None: return None
-        
-        return Hash(classId, conf.toHash())
-
-
     def onOpenFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
                                                QDir.tempPath(), "XML (*.xml)")
@@ -374,24 +361,27 @@ class _Manager(QObject):
 
 
     def onSaveToFile(self):
-        filename = QFileDialog.getSaveFileName(None, "Save configuration as", QDir.tempPath(), "XML (*.xml)")
-        if len(filename) < 1:
+        filename = QFileDialog.getSaveFileName(None, "Save configuration as",
+                                               QDir.tempPath(), "XML (*.xml)")
+        if not filename:
             return
-        
+
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".xml"
-        
-        config = self.currentConfigurationAsHash()
-        if config is None:
+
+
+        conf, classId = self.currentConfigurationAndClassId()
+        if conf is None:
             MessageBox.showError("Configuration save failed")
             return
-        
+        config = Hash(classId, conf.toHash())
+
         # Save configuration to file
         w = XMLWriter()
         with open(filename, 'w') as file:
             w.writeToFile(config, file)
- 
+
 
     def onSaveToProject(self):
         # Open dialog to select project to which configuration should be saved
