@@ -37,7 +37,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(NetworkInput, "Network-" + karabo::io::getIODataType<T>(), "1.0")
+            KARABO_CLASSINFO(NetworkInput, "Network", "1.0")
 
             virtual ~NetworkInput() {
                 // Close all connections
@@ -96,8 +96,6 @@ namespace karabo {
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
                         .commit();
-
-
 
                 BOOL_ELEMENT(expected).key("respondToEndOfStream")
                         .displayedName("Respond to end-of-stream")
@@ -286,7 +284,7 @@ namespace karabo {
 
                     // No mutex under callback
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering IOEvent";
-                    m_mutex.unlock();
+                    m_mutex.unlock(); // TODO scoped in case of exception thrown is callback code
                     this->triggerIOEvent();
                     m_mutex.lock();
 
