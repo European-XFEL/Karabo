@@ -263,12 +263,8 @@ class _Network(QObject):
 
 
     def onServerConnection(self, connect):
-        """
-        This slot is triggered from the MainWindow.
-        
-        If the user wants the connect the GUI client to the
-        GuiServer \connect is True, else False.
-        """
+        """ connect states wether we should connect to or disconnect from
+        the server. """
         if connect:
             self.connectToServer()
         else:

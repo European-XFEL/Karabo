@@ -18,6 +18,7 @@ import icons
 from docktabwindow import DockTabWindow
 import globals
 from enums import AccessLevel
+from network import Network
 
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
@@ -34,8 +35,6 @@ from PyQt4.QtGui import (QAction, QActionGroup, qApp, QKeySequence,
 
 
 class MainWindow(QMainWindow):
-    # signals
-    signalServerConnection = pyqtSignal(bool) # connect?
     signalQuitApplication = pyqtSignal()
     signalGlobalAccessLevelChanged = pyqtSignal()
 
@@ -130,7 +129,7 @@ class MainWindow(QMainWindow):
         self.acServerConnect.setStatusTip(text)
         self.acServerConnect.setToolTip(text)
         self.acServerConnect.setCheckable(True)
-        self.acServerConnect.triggered.connect(self.onServerConnection)
+        self.acServerConnect.triggered.connect(Network().onServerConnection)
 
         text = "Exit application"
         self.acExit = QAction(icons.exit, '&Exit', self)
@@ -187,7 +186,6 @@ class MainWindow(QMainWindow):
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
-        self.projectPanel.signalServerConnection.connect(self.onServerConnection)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
         leftArea.setStretchFactor(1,1)
@@ -263,11 +261,6 @@ class MainWindow(QMainWindow):
             event.ignore()
             return
         QMainWindow.closeEvent(self, event)
-
-
-### slots ###
-    def onServerConnection(self, connect):
-        self.signalServerConnection.emit(connect)
 
 
     def onExit(self):
