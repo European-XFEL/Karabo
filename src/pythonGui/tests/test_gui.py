@@ -16,23 +16,16 @@ import sys
 class Network(QObject):
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
+    called = [ ]
 
-    def onServerConnection(self, connect):
-        pass
+    def __getattr__(self, attr):
+        def f(*args):
+            self.called.append((attr, args))
+        return f
 
-
-    def onQuitApplication(self):
-        pass
-
-
-    def onGetClassSchema(self, a, b):
-        pass
-
-
-    def onGetDeviceSchema(self, a):
-        pass
 
 network.network = Network()
+net = network.network
 from gui import init
 
 
@@ -127,8 +120,10 @@ class Tests(TestCase):
         self.assertEqual(devices.child(4).text(), "offline")
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
 
+        self.assertEqual(Manager().deviceData["testdevice"].visible, 4)
 
-    def startstop(self):
+
+    def stop(self):
         Manager().handle_instanceGone(dict(instanceId="testdevice"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
@@ -146,11 +141,24 @@ class Tests(TestCase):
         self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
 
 
+    def scene(self):
+        scene = Manager().projectTopology.projects[0].scenes[0]
+        net.called = [ ]
+        scene.clean()
+        self.assertEqual(len(net.called), 2)
+        self.assertEqual(net.called[0][0], "onRemoveVisibleDevice")
+        self.assertEqual(net.called[1][0], "onRemoveVisibleDevice")
+        self.assertEqual(Manager().deviceData["testdevice"].visible, 0)
+        self.assertEqual(Manager().deviceData["incompatible"].visible, 0)
+
+
     def test_gui(self):
         self.systemTopology()
         self.schema()
         self.project()
-        self.startstop()
+        self.stop()
+        self.systemTopology() # restart the stopped stuff
+        self.scene()
         self.assertException()
 
 
