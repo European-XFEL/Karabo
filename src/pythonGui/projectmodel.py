@@ -113,7 +113,7 @@ class ProjectModel(QStandardItemModel):
                                           noserver=icons.deviceOfflineNoServer,
                                           noplugin=icons.deviceOfflineNoPlugin,
                                           offline=icons.deviceOffline,
-                                          incompatible=icons.deviceOffline
+                                          incompatible=icons.deviceIncompatible,
                                          ).get(
                                 device.status, icons.deviceInstance))
                 childItem.appendRow(leafItem)
