@@ -61,7 +61,7 @@ class BaseComponent(Loadable, QObject):
         boxes = []
         for k in elem.get(ns_karabo + 'keys').split(","):
             deviceId, path = k.split('.', 1)
-            conf = manager.Manager().getDevice(deviceId)
+            conf = manager.getDevice(deviceId)
             conf.addVisible()
             boxes.append(conf.getBox(path.split(".")))
         #commandEnabled=elem.get(ns_karabo + "commandEnabled") == "True"

@@ -507,15 +507,6 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def getClass(self, serverId, classId):
-        if (serverId, classId) not in self.serverClassData:
-            path = "{}.{}".format(serverId, classId)
-            self.serverClassData[serverId, classId] = Configuration(path,
-                                                                    'class')
-            Network().onGetClassSchema(serverId, classId)
-        return self.serverClassData[serverId, classId]
-    
-    
     def handle_deviceSchema(self, instanceInfo):
         deviceId = instanceInfo['deviceId']
         if deviceId not in self.deviceData:
@@ -530,17 +521,6 @@ class _Manager(QObject):
             self._triggerStateChange)
         
         self.onShowConfiguration(conf)
-
-
-    def getDevice(self, deviceId):
-        c = self.deviceData.get(deviceId)
-        if c is None:
-            c = self.deviceData[deviceId] = Configuration(deviceId, 'device')
-            c.updateStatus()
-        if c.descriptor is None and c.status not in ("offline", "requested"):
-            Network().onGetDeviceSchema(deviceId)
-            c.status = "requested"
-        return c
 
 
     def handle_schemaUpdated(self, instanceInfo):
@@ -581,6 +561,26 @@ class _Manager(QObject):
         detailedMsg = instanceInfo.get("detailedMsg")
         
         self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg, detailedMsg, deviceId)
+
+
+def getDevice(deviceId):
+    c = manager.deviceData.get(deviceId)
+    if c is None:
+        c = manager.deviceData[deviceId] = Configuration(deviceId, 'device')
+        c.updateStatus()
+    if c.descriptor is None and c.status not in ("offline", "requested"):
+        Network().onGetDeviceSchema(deviceId)
+        c.status = "requested"
+    return c
+
+
+def getClass(serverId, classId):
+    if (serverId, classId) not in manager.serverClassData:
+        path = "{}.{}".format(serverId, classId)
+        manager.serverClassData[serverId, classId] = Configuration(path,
+                                                                   'class')
+        Network().onGetClassSchema(serverId, classId)
+    return manager.serverClassData[serverId, classId]
 
 
 manager = _Manager()
