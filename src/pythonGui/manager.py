@@ -39,7 +39,6 @@ class _Manager(QObject):
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
     signalShowConfiguration = pyqtSignal(object) # configuration
-    signalDeviceInstanceChanged = pyqtSignal(dict, str)
 
     signalConflictStateChanged = pyqtSignal(object, bool) # key, hasConflict
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
@@ -223,10 +222,6 @@ class _Manager(QObject):
         Network().onKillServer(serverId)
 
 
-    def selectNavigationItemByKey(self, path):
-        self.signalNavigationItemSelectionChanged.emit(path)
-
-
     def handle_log(self, instanceInfo):
         self.signalLogDataAvailable.emit(instanceInfo["message"])
 
@@ -235,43 +230,9 @@ class _Manager(QObject):
         self.signalNewNavigationItem.emit(itemInfo)
 
 
-    def selectDeviceByPath(self, path):
-        if self.__isInitDeviceCurrentlyProcessed is True:
-            self.signalSelectNewNavigationItem.emit(path)
-            self.__isInitDeviceCurrentlyProcessed = False
-
-
-    def potentiallyRefreshVisibleDevice(self, deviceId):
-        # If deviceId is already visible in scene but was offline, force refresh
-        if (deviceId in self.visibleDeviceIdCount) and \
-           (self.visibleDeviceIdCount[deviceId] > 0):
-            self.signalSelectNewNavigationItem.emit(deviceId)
-            Network().onRefreshInstance(deviceId)
-
-
     def onShowConfiguration(self, conf):
         # Notify ConfigurationPanel
         self.signalShowConfiguration.emit(conf)
-
-
-    def onDeviceInstanceChanged(self, itemInfo, xml):
-        self.signalDeviceInstanceChanged.emit(itemInfo, xml)
-
-
-    def currentDeviceId(self):
-        """
-        This function returns the deviceId of the currently selected device.
-        
-        Returns None, if deviceId not available.
-        """
-        if self.systemTopology.currentIndex().isValid():
-            indexInfo = self.systemTopology.indexInfo(self.systemTopology.currentIndex())
-            return indexInfo.get("deviceId")
-        elif self.projectTopology.currentIndex().isValid():
-            indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
-            return indexInfo.get("deviceId")
-        else:
-            return None
 
 
     def currentConfigurationAndClassId(self):
@@ -418,14 +379,13 @@ class _Manager(QObject):
         self.handle_systemTopology(dict(systemTopology=config))
 
         # If device was instantiated from GUI, it should be selected after coming up
-        deviceKey = "device"
-        if config.has(deviceKey):
-            deviceConfig = config.get(deviceKey)
-            deviceIds = list()
-            deviceConfig.getKeys(deviceIds)
-            for deviceId in deviceIds:
-                self.selectDeviceByPath(deviceId)
-                self.potentiallyRefreshVisibleDevice(deviceId)
+        deviceConfig = config.get("device")
+        if deviceConfig is not None:
+            for deviceId in deviceConfig:
+                if self.__isInitDeviceCurrentlyProcessed:
+                    self.signalSelectNewNavigationItem.emit(deviceId)
+                    self.__isInitDeviceCurrentlyProcessed = False
+                conf = self.deviceData.get(deviceId)
 
 
     def handle_instanceGone(self, instanceInfo):
