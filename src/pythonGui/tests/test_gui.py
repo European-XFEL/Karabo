@@ -123,7 +123,7 @@ class Tests(TestCase):
         self.assertEqual(devices.child(2).text(), "noplugin")
         self.assertIcon(devices.child(2).icon(), icons.deviceOfflineNoPlugin)
         self.assertEqual(devices.child(3).text(), "incompatible")
-        self.assertIcon(devices.child(3).icon(), icons.deviceOffline)
+        self.assertIcon(devices.child(3).icon(), icons.deviceIncompatible)
         self.assertEqual(devices.child(4).text(), "offline")
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
 
@@ -133,13 +133,17 @@ class Tests(TestCase):
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
+        Manager().handle_instanceGone(dict(instanceId="testdevice"))
+        Manager().handle_instanceGone(dict(instanceId="incompatible"))
         Manager().handle_instanceGone(dict(instanceId="testserver"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
+        self.assertFalse(Manager().systemTopology.has("testserver"))
+
         self.assertIcon(devices.child(0).icon(), icons.deviceOfflineNoServer)
         self.assertIcon(devices.child(1).icon(), icons.deviceOfflineNoServer)
         self.assertIcon(devices.child(2).icon(), icons.deviceOfflineNoServer)
-        #self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
+        self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
 
 
     def test_gui(self):
