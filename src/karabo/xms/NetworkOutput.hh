@@ -102,7 +102,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(NetworkOutput, "Network-" + karabo::io::getIODataType<T>(), "1.0")
+            KARABO_CLASSINFO(NetworkOutput, "Network", "1.0")
 
             virtual ~NetworkOutput() {
                 if (m_dataThread.joinable()) {
@@ -135,6 +135,10 @@ namespace karabo {
                         .options("drop,queue,throw,wait")
                         .assignmentOptional().defaultValue("wait")
                         .init()
+                        .commit();
+
+                OVERWRITE_ELEMENT(expected).key("enableAppendMode")
+                        .setNowAdminAccess()
                         .commit();
 
 
@@ -558,7 +562,7 @@ namespace karabo {
                         } else if (m_onNoSharedInputChannelAvailable == "wait") {
                             KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Waiting for available (shared) input channel...";
                             while (!hasSharedInput(instanceId)) {
-                                boost::this_thread::sleep(boost::posix_time::millisec(100));
+                                boost::this_thread::sleep(boost::posix_time::millisec(1));
                             }
                             KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT found (shared) input channel after waiting, distributing now";
                             if (channelInfo.get<std::string > ("memoryLocation") == "local") {
@@ -599,7 +603,7 @@ namespace karabo {
                         } else if (m_onNoSharedInputChannelAvailable == "wait") {
                             KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Waiting for available (shared) input channel...";
                             while (m_shareNext.empty()) {
-                                boost::this_thread::sleep(boost::posix_time::millisec(100));
+                                boost::this_thread::sleep(boost::posix_time::millisec(1));
                             }
                             KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT found (shared) input channel after waiting, distributing now";
                             std::string instanceId = popShareNext();
@@ -682,7 +686,7 @@ namespace karabo {
                         m_registeredCopyInputs[i].get<std::deque<int> >("queuedChunks").push_back(chunkId);
                     } else if (onSlowness == "wait") {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Data (copied) is waiting for input channel of " << instanceId << " to be available";
-                        while (!hasCopyInput(instanceId)) boost::this_thread::sleep(boost::posix_time::millisec(100));
+                        while (!hasCopyInput(instanceId)) boost::this_thread::sleep(boost::posix_time::millisec(1));
                         KARABO_LOG_FRAMEWORK_DEBUG << "Found channel, copying now";
                         eraseCopyInput(instanceId);
                         if (channelInfo.get<std::string > ("memoryLocation") == "local") {
@@ -714,7 +718,7 @@ namespace karabo {
                 MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
 
                 tcpChannel->write(header, data);
-                
+
                 unregisterWriterFromChunk(chunkId);              
             }
         };
