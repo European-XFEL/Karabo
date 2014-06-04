@@ -3,6 +3,7 @@ import util # assure sip api is set first
 from PyQt4.QtCore import QObject, pyqtSignal
 import icons
 from manager import Manager
+import manager
 import network
 
 from karabo.hash import Hash, XMLParser
@@ -20,6 +21,14 @@ class Network(QObject):
 
 
     def onQuitApplication(self):
+        pass
+
+
+    def onGetClassSchema(self, a, b):
+        pass
+
+
+    def onGetDeviceSchema(self, a):
         pass
 
 network.network = Network()
@@ -42,7 +51,7 @@ class Tests(TestCase):
         d["incompatible", "serverId"] = "testserver"
         d["incompatible", "classId"] = "testclass"
         h = Hash("device", d, "server", s)
-        Manager().handleSystemTopology(h)
+        Manager().handle_systemTopology(dict(systemTopology=h))
         self.assertTrue(Manager().systemTopology.has("testserver"))
         self.assertTrue(Manager().systemTopology.has("testdevice"))
         self.assertTrue(Manager().systemTopology.has("incompatible"))
@@ -55,8 +64,8 @@ class Tests(TestCase):
             s = r.read(fin.read())
         h = Hash("serverId", "testserver", "classId", "testclass")
         h["schema"] = Schema_("testschema", s)
-        cls = Manager().getClass("testserver", "testclass")
-        Manager().handleClassSchema(h)
+        cls = manager.getClass("testserver", "testclass")
+        Manager().handle_classSchema(h)
 
         self.assertEqual(cls.type, "class")
         self.assertEqual(cls.value.int32.value, 1234)
@@ -105,10 +114,25 @@ class Tests(TestCase):
         self.assertIcon(devices.child(4).icon(), icons.deviceOffline)
 
 
+    def startstop(self):
+        Manager().handle_instanceGone(dict(instanceId="testdevice"))
+        root = Manager().projectTopology.invisibleRootItem()
+        devices = root.child(0).child(0)
+        self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
+        Manager().handle_instanceGone(dict(instanceId="testserver"))
+        root = Manager().projectTopology.invisibleRootItem()
+        devices = root.child(0).child(0)
+        self.assertIcon(devices.child(0).icon(), icons.deviceOfflineNoServer)
+        self.assertIcon(devices.child(1).icon(), icons.deviceOfflineNoServer)
+        self.assertIcon(devices.child(2).icon(), icons.deviceOfflineNoServer)
+        #self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
+
+
     def test_gui(self):
         self.systemTopology()
         self.schema()
         self.project()
+        self.startstop()
 
 
 if __name__ == "__main__":
