@@ -120,27 +120,6 @@ class _Manager(QObject):
         getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
 
 
-    def checkSystemHash(self):
-        """
-        This function checks whether the systemHash is set correctly.
-        If not, a signal to connect to the server is emitted.
-        """
-        if self.systemHash is not None:
-            return True
-
-        reply = QMessageBox.question(
-            None, "No server connection",
-            "There is no connection to the server.<br>"
-            "Do you want to establish a server connection?",
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-        if reply == QMessageBox.No:
-            return False
-
-        Network().connectToServer()
-        return False
-
-
     def onServerConnectionChanged(self, isConnected):
         """
         If the server connection is changed, the model needs an update.

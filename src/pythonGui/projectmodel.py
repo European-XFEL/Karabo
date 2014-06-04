@@ -376,9 +376,6 @@ class ProjectModel(QStandardItemModel):
         Depending on the given parameter \device (either None or set) it is
         either created or edited via the dialog.
         """
-        if not manager.Manager().checkSystemHash():
-            return
-        
         # Get project name
         project = self.currentProject()
         
@@ -497,9 +494,6 @@ class ProjectModel(QStandardItemModel):
         if not isinstance(device, Configuration):
             return
 
-        if not manager.Manager().checkSystemHash():
-            return
-
         # Check whether device is already online
         if device.isOnline():
             conf = manager.getDevice(device.id)
@@ -518,9 +512,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def onInitDevices(self):
-        if not manager.Manager().checkSystemHash():
-            return
-        
         project = self.currentProject()
         for device in project.devices:
             # TODO: check for startup behavior
@@ -529,9 +520,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
-        if not manager.Manager().checkSystemHash():
-            return
-        
         project = self.currentProject()
         for device in project.devices:
             if device.isOnline():
