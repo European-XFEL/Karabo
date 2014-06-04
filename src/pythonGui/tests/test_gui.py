@@ -11,6 +11,7 @@ from karabo.hashtypes import Schema_
 from itertools import count
 
 from os import path
+import sys
 
 class Network(QObject):
     signalServerConnectionChanged = pyqtSignal(bool)
@@ -38,7 +39,20 @@ from gui import init
 class Tests(TestCase):
     directory = path.dirname(__file__)
     def setUp(self):
+        sys.excepthook = self.excepthook
         self.app = init([])
+        self.excepttype = None
+
+
+    def excepthook(self, type, value, tb):
+        self.excepttype = type
+        self.exceptvalue = value
+        self.traceback = tb
+
+
+    def assertException(self):
+        if self.excepttype is not None:
+            raise self.exceptvalue
 
 
     def systemTopology(self):
@@ -133,6 +147,7 @@ class Tests(TestCase):
         self.schema()
         self.project()
         self.startstop()
+        self.assertException()
 
 
 if __name__ == "__main__":
