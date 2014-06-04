@@ -35,7 +35,6 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
-    signalServerConnection = pyqtSignal(bool) # connect?
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -138,8 +137,7 @@ class _Manager(QObject):
         if reply == QMessageBox.No:
             return False
 
-        # Send signal to establish server connection to projectpanel
-        self.signalServerConnection.emit(True)
+        Network().connectToServer()
         return False
 
 
