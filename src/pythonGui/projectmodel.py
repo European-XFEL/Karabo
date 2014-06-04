@@ -427,7 +427,7 @@ class ProjectModel(QStandardItemModel):
         classId = device.classId
         
         # Get class configuration
-        conf = manager.Manager().getClass(serverId, classId)
+        conf = manager.getClass(serverId, classId)
         
         conf.signalNewDescriptor.connect(device.onNewDescriptor)
         if conf.descriptor is not None:
@@ -502,7 +502,7 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether device is already online
         if device.isOnline():
-            conf = manager.Manager().getDevice(device.id)
+            conf = manager.getDevice(device.id)
         else:
             conf = device
 
