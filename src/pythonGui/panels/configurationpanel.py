@@ -347,7 +347,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.addContextAction(self.acApplyAll)
         twParameterEditor.addContextAction(self.acResetAll)
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
-        twParameterEditor.signalItemSelectionChanged.connect(self.onSelectionChanged)
+        twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
         
         if configuration.type == "class" or configuration.type == "projectClass":
             twParameterEditor.hideColumn(1)
@@ -601,14 +601,9 @@ class ConfigurationPanel(QWidget):
         self.hasConflicts = hasConflicts
 
 
-    def onSelectionChanged(self, path):
-        """
-        This function is call from the current parameterEditor whenever the
-        selection of this widget changed and this selection includes an apply
-        enabled.
-        
-        \path The path of the current parameterEditor.
-        """
+    def onSelectionChanged(self):
+        """ Update the apply and reset buttons """
+        path = self.sender().path
         self.updateApplyAllActions(path)
         self.updateResetAllActions(path)
 
