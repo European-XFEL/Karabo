@@ -45,13 +45,12 @@ class Project(QObject):
     PROJECT_SUFFIX = "krb"
 
 
-    def __init__(self, name="", directory=""):
+    def __init__(self, filename):
         super(Project, self).__init__()
 
         self.version = 1
-        self.name = name
-        self.directory = directory
-        
+        self.filename = filename
+
         # List of Configuration
         self.devices = []
         # List of Scene
@@ -61,6 +60,15 @@ class Project(QObject):
         self.macros = []
         self.resources = []
         self.monitors = []
+
+
+    @property
+    def name(self):
+        r = os.path.basename(self.filename)
+        if r.endswith(".krb"):
+            return r[:-4]
+        else:
+            return r
 
 
     def addDevice(self, device):
@@ -88,17 +96,14 @@ class Project(QObject):
             self.scenes.remove(object)
 
 
-    def unzip(self, filename):
-        with ZipFile(filename) as zf:
+    def unzip(self):
+        with ZipFile(self.filename, "r", ZIP_DEFLATED) as zf:
             data = zf.read("{}.xml".format(self.PROJECT_KEY))
             projectConfig = XMLParser().read(data)
 
             self.version = projectConfig[self.PROJECT_KEY, "version"]
-            self.name = projectConfig[self.PROJECT_KEY, "name"]
-            self.directory = projectConfig[self.PROJECT_KEY, "directory"]
 
             projectConfig = projectConfig[self.PROJECT_KEY]
-
             for d in projectConfig[self.DEVICES_KEY]:
                 filename = d.get("filename")
                 data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
@@ -131,12 +136,9 @@ class Project(QObject):
         """
         This method saves this project as a zip file.
         """
-        absoluteProjectPath = os.path.join(self.directory,
-                              "{}.{}".format(self.name, Project.PROJECT_SUFFIX))
         projectConfig = Hash()
 
-        with ZipFile(absoluteProjectPath, mode="w",
-                     compression=ZIP_DEFLATED) as zf:
+        with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
             for device in self.devices:
                 zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                             device.toXml())
@@ -161,8 +163,7 @@ class Project(QObject):
 
             # Create folder structure and save content
             projectConfig = Hash(self.PROJECT_KEY, projectConfig)
-            projectConfig[self.PROJECT_KEY, ...] = dict(
-                version=self.version, name=self.name, directory=self.directory)
+            projectConfig[self.PROJECT_KEY, "version"] = self.version
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
 
