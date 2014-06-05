@@ -63,21 +63,13 @@ class ProjectTreeView(QTreeView):
         If the default project already exists in the given directory it is opened,
         otherwise a new default project is created.
         """
-        projectName = "default_project"
-        directory = QDir.tempPath()
-        
-        projectFile = "{}.{}".format(projectName, Project.PROJECT_SUFFIX)
-        alreadyExists = self.model().projectExists(directory, projectFile)
-        if alreadyExists:
-            # Open existing default project
-            filename = os.path.join(directory, projectFile)
-            self.model().projectOpen(filename)
-            return
-
-        # Create new project or overwrite existing
-        _, project = self.model().projectNew(directory, projectName)
-        self.model().addScene(project, "default_scene")
-        project.zip()
+        filename = os.path.join(QDir.tempPath(), "default_project.krb")
+        if os.path.exists(filename):
+            project = self.model().projectOpen(filename)
+        else:
+            project = self.model().projectNew(filename)
+            self.model().addScene(project, "default_scene")
+            project.zip()
 
 
     def closeAllProjects(self):
@@ -87,7 +79,7 @@ class ProjectTreeView(QTreeView):
     def getProjectDir(self):
         fileDialog = QFileDialog(self, "Save project", QDir.tempPath())
         fileDialog.setFileMode(QFileDialog.Directory)
-        fileDialog.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        fileDialog.setDefaultSuffix("krb")
 
         if fileDialog.exec_() == QDialog.Rejected:
             return None
@@ -99,42 +91,29 @@ class ProjectTreeView(QTreeView):
         return directory[0]
 
 
+    def getSaveFileName(self, title):
+        dialog = QFileDialog(None, title, QDir.tempPath(),
+                             "Karabo Projects (*.krb)")
+        dialog.setDefaultSuffix("krb")
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.exec_()
+        if len(dialog.selectedFiles()) == 1:
+            return dialog.selectedFiles()[0]
+
+
     def projectNew(self):
-        projectName = QInputDialog.getText(self, "New project", \
-                                           "Enter project name:", QLineEdit.Normal, "")
-
-        if not projectName[1]:
-            return
-
-        if len(projectName[0]) < 1:
-            reply = QMessageBox.question(self, "Project name", "Please enter a name!",
-                QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
-
-            if reply == QMessageBox.Cancel:
-                return
-
-            # Call function again
-            self.projectNew()
-            return
-
-        projectName = projectName[0]
-
-        result = False
-        while not result:
-            directory = self.getProjectDir()
-            if directory is None:
-                return
-            result, project = self.model().projectNew(directory, projectName)
-        project.zip()
+        fn = self.getSaveFileName("New Project")
+        if fn is not None:
+            self.model().projectNew(fn)
 
 
     def projectOpen(self):
-        filename = QFileDialog.getOpenFileName(None, "Open project", \
-             QDir.tempPath(),
-             "{} (*.{})".format(Project.PROJECT_SUFFIX, Project.PROJECT_SUFFIX))
+        filename = QFileDialog.getOpenFileName(
+            None, "Open project", QDir.tempPath(), "Karabo Projects (*.krb)")
+
         if len(filename) < 1:
             return
-        
         self.model().projectOpen(filename)
 
 
@@ -143,12 +122,9 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSaveAs(self):
-        result = False
-        while not result:
-            directory = self.getProjectDir()
-            if directory is None:
-                return
-            result = self.model().projectSaveAs(directory)
+        fn = self.getSaveFileName("Save Project As")
+        if fn is not None:
+            self.model().projectSaveAs(fn)
 
 
     def mouseDoubleClickEvent(self, event):
