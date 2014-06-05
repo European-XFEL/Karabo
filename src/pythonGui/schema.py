@@ -101,7 +101,7 @@ class Box(QObject):
 
 
     def getFromPast(self, t0, t1, maxNumData):
-        manager.Manager().signalGetFromPast.emit(self, t0, t1, maxNumData)
+        Network().onGetFromPast(self, t0, t1, maxNumData)
 
 
 class Type(hashtypes.Type):

@@ -113,7 +113,7 @@ class ProjectModel(QStandardItemModel):
                                           noserver=icons.deviceOfflineNoServer,
                                           noplugin=icons.deviceOfflineNoPlugin,
                                           offline=icons.deviceOffline,
-                                          incompatible=icons.deviceOffline
+                                          incompatible=icons.deviceIncompatible,
                                          ).get(
                                 device.status, icons.deviceInstance))
                 childItem.appendRow(leafItem)
@@ -376,9 +376,6 @@ class ProjectModel(QStandardItemModel):
         Depending on the given parameter \device (either None or set) it is
         either created or edited via the dialog.
         """
-        if not manager.Manager().checkSystemHash():
-            return
-        
         # Get project name
         project = self.currentProject()
         
@@ -427,7 +424,7 @@ class ProjectModel(QStandardItemModel):
         classId = device.classId
         
         # Get class configuration
-        conf = manager.Manager().getClass(serverId, classId)
+        conf = manager.getClass(serverId, classId)
         
         conf.signalNewDescriptor.connect(device.onNewDescriptor)
         if conf.descriptor is not None:
@@ -497,12 +494,9 @@ class ProjectModel(QStandardItemModel):
         if not isinstance(device, Configuration):
             return
 
-        if not manager.Manager().checkSystemHash():
-            return
-
         # Check whether device is already online
         if device.isOnline():
-            conf = manager.Manager().getDevice(device.id)
+            conf = manager.getDevice(device.id)
         else:
             conf = device
 
@@ -518,9 +512,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def onInitDevices(self):
-        if not manager.Manager().checkSystemHash():
-            return
-        
         project = self.currentProject()
         for device in project.devices:
             # TODO: check for startup behavior
@@ -529,9 +520,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
-        if not manager.Manager().checkSystemHash():
-            return
-        
         project = self.currentProject()
         for device in project.devices:
             if device.isOnline():

@@ -17,6 +17,7 @@ __all__ = ["NavigationTreeView"]
 from enums import NavigationItemTypes
 import icons
 from manager import Manager
+import manager
 
 from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
@@ -189,10 +190,10 @@ class NavigationTreeView(QTreeView):
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-            conf = Manager().getClass(serverId, classId)
+            conf = manager.getClass(serverId, classId)
         elif level == 3:
             deviceId = index.data()
-            conf = Manager().getDevice(deviceId)
+            conf = manager.getDevice(deviceId)
         else:
             conf = None
 
