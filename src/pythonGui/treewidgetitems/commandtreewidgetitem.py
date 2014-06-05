@@ -15,6 +15,7 @@ from basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
 import icons
 import manager
+from network import Network
 
 from PyQt4.QtGui import QPushButton
 
@@ -71,8 +72,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         pass
 
 
-### slots ###
     def onCommandClicked(self):
-        args = [] # TODO slot arguments
-        manager.Manager().executeCommand(
-         dict(path=self.box.configuration.id, command=self.__command, args=args))
+        Network().onExecute(self.box)

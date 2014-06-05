@@ -33,8 +33,6 @@ class ProjectPanel(QWidget):
     #    pass
     ##########################################
 
-    # To import a plugin a server connection needs to be established
-    signalServerConnection = pyqtSignal(bool)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     
@@ -48,7 +46,6 @@ class ProjectPanel(QWidget):
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalAddScene.connect(self.signalAddScene)
         self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
-        manager.Manager().signalServerConnection.connect(self.signalServerConnection)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)

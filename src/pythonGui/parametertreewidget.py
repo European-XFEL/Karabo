@@ -23,8 +23,6 @@ from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 class ParameterTreeWidget(QTreeWidget):
     signalApplyChanged = pyqtSignal(object, bool, bool) # box, enable, hasConflicts
-    signalItemSelectionChanged = pyqtSignal(object)
-
 
     def __init__(self, path=None):
         # path - path of navigationItem
@@ -39,7 +37,6 @@ class ParameterTreeWidget(QTreeWidget):
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
         #self.setSortingEnabled(True)
         #self.sortByColumn(0, Qt.AscendingOrder)
-        self.itemSelectionChanged.connect(self.onItemSelectionChanged)
         
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.mContext = QMenu(self) # Actions from configurationPanel are added via addContextAction
@@ -272,22 +269,11 @@ class ParameterTreeWidget(QTreeWidget):
             boxes = [item.box for item in self.allItems()
                      if self.applyItem(item)]
 
-        Manager().onDeviceInstanceValuesChanged(boxes)
+        Network().onReconfigure(boxes)
 
 
     def onApplyAllRemoteChanges(self):
         self._r_applyAllRemoteChanges(self.invisibleRootItem())
-
-
-    def onItemSelectionChanged(self):
-        editableComponent = self.currentItem().editableComponent
-        if editableComponent is None:
-            return
-        if not isinstance(editableComponent, EditableApplyLaterComponent):
-            return
-        
-        if editableComponent.applyEnabled:
-            self.signalItemSelectionChanged.emit(self.path)
 
 
     def onCustomContextMenuRequested(self, pos):

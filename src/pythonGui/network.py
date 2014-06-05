@@ -15,7 +15,6 @@ from __future__ import unicode_literals
 __all__ = ["Network"]
 
 from dialogs.logindialog import LoginDialog
-from manager import Manager
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
@@ -34,6 +33,7 @@ class _Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
+    receivedData = pyqtSignal(object)
 
     def __init__(self):
         super(_Network, self).__init__()
@@ -53,23 +53,6 @@ class _Network(QObject):
         self.tcpSocket = None
         
         self.requestQueue = [ ]
-
-        Manager().signalKillDevice.connect(self.onKillDevice)
-        Manager().signalKillServer.connect(self.onKillServer)
-        Manager().signalRefreshInstance.connect(self.onRefreshInstance)
-        Manager().signalReconfigure.connect(self.onReconfigure)
-        Manager().signalInitDevice.connect(self.onInitDevice)
-        Manager().signalExecute.connect(self.onExecute)
-
-        Manager().signalNewVisibleDevice.connect(self.onNewVisibleDevice)
-        Manager().signalRemoveVisibleDevice.connect(self.onRemoveVisibleDevice)
-
-        Manager().signalGetClassSchema.connect(self.onGetClassSchema)
-        Manager().signalGetDeviceSchema.connect(self.onGetDeviceSchema)
-        Manager().signalGetFromPast.connect(self.onGetFromPast)
-        
-        self.signalServerConnectionChanged.connect(Manager().systemTopology.onServerConnectionChanged)
-        self.signalServerConnectionChanged.connect(Manager().onServerConnectionChanged)
 
 
     def connectToServer(self):
@@ -134,7 +117,7 @@ class _Network(QObject):
         End connection to server and database.
         """
         self._logout()
-        Manager().disconnectedFromServer()
+        self.signalServerConnectionChanged.emit(False)
         self.requestQueue = []
 
         if self.tcpSocket is None:
@@ -237,46 +220,7 @@ class _Network(QObject):
         dataBytes = yield dataSize
 
         instanceInfo = parser.read(dataBytes)
-
-        type = instanceInfo.get("type")
-        #print "Request: ", type
-
-        # "instanceNew" (instanceId, instanceInfo)
-        # "instanceUpdated" (instanceId, instanceInfo)
-        # "instanceGone" (instanceId)
-        # "configurationChanged" (config, instanceId)
-        # "log" (logMessage)
-        # "notification" (type, shortMsg, detailedMsg, instanceId)
-        # "invalidateCache" (instanceId)
-
-        if type == "brokerInformation":
-            self._handleBrokerInformation(instanceInfo)
-        elif type == "systemTopology":
-            Manager().handleSystemTopology(instanceInfo.get("systemTopology"))
-        elif type == "instanceNew":
-            Manager().handleInstanceNew(instanceInfo.get("topologyEntry"))
-        elif type == "instanceUpdated":
-            Manager().handleSystemTopology(instanceInfo.get("topologyEntry"))
-        elif type == "instanceGone":
-            Manager().handleInstanceGone(instanceInfo.get("instanceId"))
-        elif type == "classSchema":
-            Manager().handleClassSchema(instanceInfo)
-        elif type == "deviceSchema":
-            Manager().handleDeviceSchema(instanceInfo)
-        elif type == "configurationChanged":
-            Manager().handleConfigurationChanged(instanceInfo)
-        elif type == "log":
-            Manager().onLogDataAvailable(instanceInfo.get("message"))
-        elif type == "schemaUpdated":
-            Manager().handleDeviceSchemaUpdated(instanceInfo)
-        elif type == "notification":
-            Manager().handleNotification(instanceInfo)
-        elif type == "propertyHistory":
-            Manager().handleHistoricData(instanceInfo)
-        elif type == "invalidateCache":
-            print "invalidateCache"
-        else:
-            print "WARN : Got unknown communication token \"", type, "\" from server"
+        self.receivedData.emit(instanceInfo)
 
 
     def onSocketError(self, socketError):
@@ -319,12 +263,8 @@ class _Network(QObject):
 
 
     def onServerConnection(self, connect):
-        """
-        This slot is triggered from the MainWindow.
-        
-        If the user wants the connect the GUI client to the
-        GuiServer \connect is True, else False.
-        """
+        """ connect states wether we should connect to or disconnect from
+        the server. """
         if connect:
             self.connectToServer()
         else:
@@ -341,7 +281,6 @@ class _Network(QObject):
         the database connection as well.
         """
         self.endServerConnection()
-        Manager().closeDatabaseConnection()
 
 
     def onConnected(self):
@@ -390,12 +329,11 @@ class _Network(QObject):
         self._tcpWriteHash(instanceInfo)
 
 
-    def onExecute(self, deviceId, info):
+    def onExecute(self, box, *args):
         instanceInfo = Hash("type", "execute")
-        instanceInfo.set("deviceId", deviceId)
-        instanceInfo.set("command", info.get('command'))
+        instanceInfo.set("deviceId", box.configuration.id)
+        instanceInfo.set("command", box.path[-1])
 
-        args = info.get('args')
         if args is not None:
             i = 0
             for arg in args:

@@ -443,6 +443,7 @@ class ProxyWidget(QWidget):
                 self.addAction(aa)
 
 
+    @pyqtSlot(object, str)
     def showStatus(self, configuration, status):
         if status == "alive":
             self.marker.hide()
