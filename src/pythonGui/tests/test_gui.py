@@ -1,10 +1,13 @@
 from unittest import TestCase, main
 import util # assure sip api is set first
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
+from PyQt4.QtGui import QDropEvent, QWidget
 import icons
 from manager import Manager
 import manager
 import network
+import globals
+import widget
 
 from karabo.hash import Hash, XMLParser
 from karabo.hashtypes import Schema_
@@ -12,6 +15,7 @@ from itertools import count
 
 from os import path
 import sys
+import traceback
 
 class Network(QObject):
     signalServerConnectionChanged = pyqtSignal(bool)
@@ -22,6 +26,31 @@ class Network(QObject):
         def f(*args):
             self.called.append((attr, args))
         return f
+
+
+class DropEvent(QDropEvent):
+    def source(self):
+        return Manager().deviceData["testdevice"].parameterEditor
+
+
+class TestWidget(widget.EditableWidget, widget.DisplayWidget):
+    category = "Digit"
+    alias = "Test Widget"
+
+    instance = None
+
+    def __init__(self, box, parent):
+        super(TestWidget, self).__init__(box)
+        self.widget = QWidget(parent)
+        TestWidget.instance = self
+
+
+    def setReadOnly(self, ro):
+        assert not ro, "The example TestWidget is read only"
+
+
+    def valueChanged(self, box, value, timestamp=None):
+        self.value = value
 
 
 network.network = Network()
@@ -36,8 +65,15 @@ class Tests(TestCase):
         self.app = init([])
         self.excepttype = None
 
+        r = XMLParser()
+        with open(path.join(self.directory, "schema.xml"), "r") as fin:
+            self.testschema = Schema_("testschema", r.read(fin.read()))
+        with open(path.join(self.directory, "configuration.xml"), "r") as fin:
+            self.testconfiguration = r.read(fin.read())["ParameterTest"]
+        globals.GLOBAL_ACCESS_LEVEL=2
 
     def excepthook(self, type, value, tb):
+        traceback.print_exception(type, value, tb)
         self.excepttype = type
         self.exceptvalue = value
         self.traceback = tb
@@ -66,11 +102,8 @@ class Tests(TestCase):
 
 
     def schema(self):
-        r = XMLParser()
-        with open("tests/schema.xml", "r") as fin:
-            s = r.read(fin.read())
         h = Hash("serverId", "testserver", "classId", "testclass")
-        h["schema"] = Schema_("testschema", s)
+        h["schema"] = self.testschema
         cls = manager.getClass("testserver", "testclass")
         Manager().handle_classSchema(h)
 
@@ -102,9 +135,18 @@ class Tests(TestCase):
                                         self.findIcon(a), self.findIcon(b))
 
 
+    def assertCalled(self, function):
+        for f, arg in net.called:
+            if f == function:
+                return arg
+        self.fail("network method {} not called".format(function))
+
+
     def project(self):
+        net.called = [ ]
         Manager().projectTopology.projectOpen(path.join(self.directory,
                                               "project.krb"))
+        self.assertCalled("onGetDeviceSchema")
 
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
@@ -141,14 +183,43 @@ class Tests(TestCase):
         self.assertIcon(devices.child(3).icon(), icons.deviceOfflineNoServer)
 
 
+    def getItem(self, name):
+        pe = Manager().deviceData["testdevice"].parameterEditor
+        return pe.findItems(name, Qt.MatchExactly)[0]
+
+
     def scene(self):
         scene = Manager().projectTopology.projects[0].scenes[0]
+        Manager().handle_deviceSchema(dict(deviceId="testdevice",
+                                           schema=self.testschema))
+        testdevice = Manager().deviceData["testdevice"]
+        Manager().handle_configurationChanged(dict(
+            deviceId="testdevice", configuration=self.testconfiguration))
+        self.assertEqual(testdevice.value.targetSpeed.value, 0.5)
+        Manager().signalSelectNewNavigationItem.emit("testdevice")
+
+        self.getItem("Target Conveyor Speed").setSelected(True)
+        self.assertEqual(len(testdevice.parameterEditor.selectedItems()), 1)
+        mime = QMimeData()
+        mime.setData("sourceType", "ParameterTreeWidget")
+        de = DropEvent(QPoint(100, 100), Qt.CopyAction, mime, Qt.LeftButton,
+                       Qt.NoModifier, QDropEvent.Drop)
+        self.assertEqual(testdevice.visible, 4)
+        scene.dropEvent(de)
+        self.assertEqual(testdevice.visible, 6)
+
+        Manager().handle_configurationChanged(dict(
+            deviceId="testdevice",
+            configuration=Hash("targetSpeed", 1.5)))
+        self.assertEqual(testdevice.value.targetSpeed.value, 1.5)
+        self.assertEqual(TestWidget.instance.value, 1.5)
+
         net.called = [ ]
         scene.clean()
         self.assertEqual(len(net.called), 2)
         self.assertEqual(net.called[0][0], "onRemoveVisibleDevice")
         self.assertEqual(net.called[1][0], "onRemoveVisibleDevice")
-        self.assertEqual(Manager().deviceData["testdevice"].visible, 0)
+        self.assertEqual(testdevice.visible, 0)
         self.assertEqual(Manager().deviceData["incompatible"].visible, 0)
 
 
