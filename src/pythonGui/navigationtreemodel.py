@@ -402,8 +402,8 @@ class NavigationTreeModel(QAbstractItemModel):
         Reimplemented function of QAbstractItemModel.
         """
         if not index.isValid():
-            return None
-        
+            return Qt.NoItemFlags
+
         ret = Qt.ItemIsEnabled | Qt.ItemIsSelectable
         if self.getHierarchyLevel(index) > 0:
             ret |= Qt.ItemIsDragEnabled

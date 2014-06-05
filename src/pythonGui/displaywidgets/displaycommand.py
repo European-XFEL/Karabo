@@ -21,7 +21,7 @@
 __all__ = ["DisplayCommand"]
 
 
-from manager import Manager
+from network import Network
 from widget import DisplayWidget
 
 from PyQt4.QtCore import *
@@ -59,5 +59,4 @@ class DisplayCommand(DisplayWidget):
 
     def onCommandClicked(self):
         for box in self.boxes:
-            Manager().executeCommand(dict(path=box.configuration.id,
-                                          command=box.path[-1], args=[]))
+            Network().onExecute(box)

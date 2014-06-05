@@ -15,6 +15,7 @@ __all__ = ["Configuration"]
 
 from schema import Schema, Box
 import manager
+from network import Network
 
 from PyQt4.QtCore import pyqtSignal
 
@@ -47,7 +48,7 @@ class Configuration(Box):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
-                manager.Manager().signalNewVisibleDevice.emit(self.id)
+                Network().onNewVisibleDevice(self.id)
             self.status = "schema"
 
 
@@ -86,8 +87,7 @@ class Configuration(Box):
             return
 
         try:
-            attrs = manager.Manager().systemHash[
-                "device.{}".format(self.id), ...]
+            attrs = manager.Manager().systemHash["device"][self.id, ...]
         except KeyError as e:
             self.status = "offline"
         else:
@@ -97,11 +97,11 @@ class Configuration(Box):
             error_changed = error != self.error
             self.error = error
             if self.status == "offline" and self.visible > 0:
-                manager.Manager().signalGetDeviceSchema.emit(self.id)
+                Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
-            if self.status not in ("requested", "schema", "alive"):
+            elif self.status not in ("requested", "schema", "alive"):
                 self.status = "online"
-            elif error_changed:
+            else:
                 self.statusChanged.emit(self, self.status)
 
 
@@ -122,14 +122,14 @@ class Configuration(Box):
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
-            manager.Manager().signalNewVisibleDevice.emit(self.id)
+            Network().onNewVisibleDevice(self.id)
 
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status != "offline":
-            manager.Manager().signalRemoveVisibleDevice.emit(self.id)
+            Network().onRemoveVisibleDevice(self.id)
 
 
     def refresh(self):
-        manager.Manager().onRefreshInstance(self)
+        Network().onRefreshInstance(self)
