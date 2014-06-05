@@ -124,7 +124,7 @@ namespace karabo {
                     resolveTokens(args, resolved);
 
                     std::vector<std::string> tokenList;
-                    for (int i = 0; i < resolved.size(); ++i) {
+                    for (size_t i = 0; i < resolved.size(); ++i) {
                         parseToken("", resolved[i], tokenList);
                     }
 
@@ -194,7 +194,7 @@ namespace karabo {
                         vector<string> args, resolved;
                         boost::split(args, line, boost::is_any_of(" "));
                         resolveTokens(args, resolved);
-                        for (int i = 0; i < resolved.size(); ++i) {
+                        for (size_t i = 0; i < resolved.size(); ++i) {
                             parseToken(key, resolved[i], tokenList);
                         }
                     } else {
