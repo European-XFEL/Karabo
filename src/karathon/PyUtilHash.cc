@@ -338,6 +338,7 @@ void exportPyUtilHash() {
           "assert h.isType('b.y', Types.DOUBLE) == True\n\t"
           "assert h.isType('c', Types.VECTOR_INT32) == True");
     h.def(bp::self_ns::str(bp::self));
+    h.def(bp::self_ns::repr(bp::self));
     //h.def("copy", &HashWrap().pyDict2Hash, (bp::arg("dict"), bp::arg("sep") = "."), bp::return_value_policy<bp::copy_const_reference > ());
     //    h.def("update", &Hash::update, (bp::arg("hash")));
     h.def("flatten", &HashWrap().flatten, (bp::arg("flat"), bp::arg("sep") = "."),
