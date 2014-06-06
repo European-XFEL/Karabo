@@ -23,45 +23,45 @@ namespace bp = boost::python;
 
 namespace karathon {
 
-    class RawImageDataWrap {
+    class RawImageDataWrap : public karabo::xip::RawImageData {
 
-        boost::shared_ptr<karabo::xip::RawImageData> m_raw;
+        //boost::shared_ptr<karabo::xip::RawImageData> m_raw;
 
     public:
 
-        RawImageDataWrap() : m_raw(new karabo::xip::RawImageData()) {
+        RawImageDataWrap() : karabo::xip::RawImageData() {
         }
 
-        RawImageDataWrap(karabo::xip::RawImageData& other) : m_raw(new karabo::xip::RawImageData()) {
-            m_raw->swap(other);
-        }
+        //        RawImageDataWrap(karabo::xip::RawImageData& other) : m_raw(new karabo::xip::RawImageData()) {
+        //            m_raw->swap(other);
+        //        }
 
         RawImageDataWrap(bp::object& obj,
                          const karabo::util::Dims& dimensions,
                          const bool copy,
                          const karabo::xip::EncodingType encoding,
-                         const karabo::xip::ChannelSpaceType channelSpace,                         
+                         const karabo::xip::ChannelSpaceType channelSpace,
                          const bool isBigEndian) {
             if (!PyByteArray_Check(obj.ptr())) {
                 throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'bytearray'");
             }
             size_t size = PyByteArray_Size(obj.ptr());
             char* data = PyByteArray_AsString(obj.ptr());
-            m_raw = boost::shared_ptr<karabo::xip::RawImageData>(
-                    new karabo::xip::RawImageData(data,
-                                                  size,
-                                                  copy,
-                                                  dimensions,
-                                                  encoding,
-                                                  channelSpace,
-                                                  isBigEndian));
+
+            setData(data, size, copy);
+            if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
+            else setDimensions(dimensions);
+            setEncoding(encoding);
+            if (channelSpace == karabo::xip::ChannelSpace::UNDEFINED) setChannelSpace(channelSpace);
+            else setChannelSpace(channelSpace);
+            setIsBigEndian(isBigEndian);
         }
 
         RawImageDataWrap(bp::object& obj,
-                         const bool copy,
-                         const karabo::xip::EncodingType encoding,
-                         const bool isBigEndian) {
-                         
+                         const bool copy = true,
+                         const karabo::xip::EncodingType encoding = karabo::xip::Encoding::GRAY,
+                         const bool isBigEndian = karabo::util::isBigEndian()) {
+
 
             if (!PyArray_Check(obj.ptr())) throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'numpy array'");
 
@@ -81,26 +81,28 @@ namespace karathon {
             // ChannelSpace
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             karabo::xip::ChannelSpaceType channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
-            
-            m_raw = karabo::xip::RawImageData::Pointer(new karabo::xip::RawImageData(data,
-                                                                                     size,
-                                                                                     copy,
-                                                                                     dimensions,
-                                                                                     encoding,
-                                                                                     channelSpace,
-                                                                                     isBigEndian));
-                                                                                     
+
+            setData(data, size, copy);
+            if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
+            else setDimensions(dimensions);
+            setEncoding(encoding);
+            if (channelSpace == karabo::xip::ChannelSpace::UNDEFINED) setChannelSpace(channelSpace);
+            else setChannelSpace(channelSpace);
+            setIsBigEndian(isBigEndian);
+
         }
 
-        RawImageDataWrap(karabo::util::Hash& imageHash, bool copiesHash = true)
-        : m_raw(new karabo::xip::RawImageData(boost::ref(imageHash), copiesHash)) {
+        static boost::shared_ptr<RawImageData> make(bp::object& obj,
+                                                    const bool copy = true,
+                                                    const karabo::xip::EncodingType encoding = karabo::xip::Encoding::GRAY,
+                                                    const bool isBigEndian = karabo::util::isBigEndian()) {
+            return boost::shared_ptr<RawImageDataWrap>(new RawImageDataWrap(obj, copy, encoding, isBigEndian));
         }
 
-        boost::shared_ptr<karabo::xip::RawImageData> getRawImageDataPointer() {
-            return m_raw;
+        RawImageDataWrap(karabo::util::Hash& hash, bool copiesHash = true) : karabo::xip::RawImageData(hash, copiesHash) {
         }
 
-        void setDimensions(PyArrayObject* arr) {
+        void setDimensionsPy(PyArrayObject* arr) {
             // Dimensions (shape)
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
@@ -108,122 +110,69 @@ namespace karathon {
             for (int i = 0; i < rank; ++i) tmp[i] = shapes[i];
             karabo::util::Dims dims;
             dims.fromVector(tmp);
-            m_raw->setDimensions(dims);
+            setDimensions(dims);
         }
 
-        void setChannelSpace(PyArrayObject* arr) {
+        void setChannelSpacePy(PyArrayObject* arr) {
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             int channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
-            m_raw->setChannelSpace(channelSpace);
+            setChannelSpace(channelSpace);
         }
 
-        void setData(const bp::object& obj, const bool copy = true) {
+        void setDataPy(const bp::object& obj, const bool copy = true) {
 
             if (PyArray_Check(obj.ptr())) {
                 PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
 
                 // Adjust dimensions and channelSpace
-                setDimensions(arr);
-                setChannelSpace(arr);
+                setDimensionsPy(arr);
+                setChannelSpacePy(arr);
 
                 // Data pointer and size          
                 size_t size = PyArray_NBYTES(arr);
                 char* data = reinterpret_cast<char*> (PyArray_DATA(arr));
 
-                m_raw->setData(data, size, copy);
+                setData(data, size, copy);
 
             } else if (PyByteArray_Check(obj.ptr())) {
                 size_t size = PyByteArray_Size(obj.ptr());
                 char* data = PyByteArray_AsString(obj.ptr());
-                m_raw->setData(data, size, copy);
+                setData(data, size, copy);
             } else {
                 throw KARABO_PYTHON_EXCEPTION("The argument type in setData is not supported.");
             }
         }
 
-        bp::object getData() {
-            std::vector<unsigned long long> dims = m_raw->getDimensions().toVector();
+        bp::object getDataPy() {
+            std::vector<unsigned long long> dims = getDimensions().toVector();
             std::reverse(dims.begin(), dims.end()); // REVERSING
             npy_intp shape[dims.size()];
             for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
-            int npyType = karabo::util::Types::convert<karabo::xip::FromChannelSpace, ToNumpy>(m_raw->getChannelSpace());
+            int npyType = karabo::util::Types::convert<karabo::xip::FromChannelSpace, ToNumpy>(getChannelSpace());
             PyObject* pyobj = PyArray_SimpleNew(dims.size(), shape, npyType);
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(pyobj);
-            memcpy(PyArray_DATA(arr), &(m_raw->getData())[0], PyArray_NBYTES(arr));
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
+            memcpy(PyArray_DATA(arr), &(getData())[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // TODO Check whether a copy is involved here
 
         }
 
-        size_t getSize() {
-            return m_raw->getSize();
-        }
-
-        size_t getByteSize() {
-            return m_raw->getByteSize();
-        }
-
-        void setDimensions(const karabo::util::Dims & dimensions) {
-            m_raw->setDimensions(dimensions);
-        }
-
-        bp::object getDimensions() {
-            karabo::util::Dims d = m_raw->getDimensions();
+        bp::object getDimensionsPy() {
+            karabo::util::Dims d = getDimensions();
             return karathon::Wrapper::fromStdVectorToPyList(d.toVector());
         }
 
-        void setEncoding(const karabo::xip::Encoding::EncodingType encoding) {
-            m_raw->setEncoding(encoding);
-        }
+        //        bp::object getHeader() {
+        //            return bp::object(getHeader());
+        //        }
 
-        int getEncoding() {
-            return m_raw->getEncoding();
-        }
-
-        void setChannelSpace(const karabo::xip::ChannelSpace::ChannelSpaceType channelSpace) {
-            m_raw->setChannelSpace(channelSpace);
-        }
-
-        int getChannelSpace() {
-            return m_raw->getChannelSpace();
-        }
-
-        void setIsBigEndian(const bool isBigEndian) {
-            m_raw->setIsBigEndian(isBigEndian);
-        }
-
-        bool isBigEndian() {
-            return m_raw->isBigEndian();
-        }
-
-        bp::object getHeader() {
-            return bp::object(m_raw->getHeader());
-        }
-
-        void setHeader(const bp::object & obj) {
+        void setHeaderPy(const bp::object & obj) {
             // TODO also support dict here!!
             if (bp::extract<karabo::util::Hash>(obj).check()) {
                 const karabo::util::Hash& header = bp::extract<karabo::util::Hash>(obj);
-                m_raw->setHeader(header);
+                setHeader(header);
                 return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python type of the argument in setHeader must be Hash");
-        }
-
-        const karabo::util::Hash & toHash() {
-            return m_raw->hash();
-        }
-
-        void swap(RawImageDataWrap & image) {
-            boost::shared_ptr<karabo::xip::RawImageData> p = image.getRawImageDataPointer();
-            m_raw->swap(*p);
-        }
-
-        void swap(karabo::xip::RawImageData & image) {
-            m_raw->swap(image);
-        }
-
-        void toRGBAPremultiplied() {
-            m_raw->toRGBAPremultiplied();
         }
     };
 }
