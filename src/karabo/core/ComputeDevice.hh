@@ -119,6 +119,10 @@ namespace karabo {
             /*                    Transition Actions                      */
             /**************************************************************/
 
+            KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
+
+            KARABO_FSM_VE_ACTION0(ResetAction, resetAction)
+
             KARABO_FSM_V_ACTION0(ConnectAction, connectAction)
             
             KARABO_FSM_V_ACTION0(EndOfStreamAction, endOfStreamAction)
@@ -155,7 +159,7 @@ namespace karabo {
             Row< Finished, ResetEvent, Ready, none, none >,
             Row< Finished, StartEvent, Computing, NextIterationAction, none>,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, Ok, none, none >
+            Row< Error, ResetEvent, Ok, ResetAction, none >
             KARABO_FSM_TABLE_END
 
             //                         Name       Transition-Table      Initial-State         Context
