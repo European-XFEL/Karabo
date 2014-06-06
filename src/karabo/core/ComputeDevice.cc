@@ -178,6 +178,7 @@ namespace karabo {
 
 
         void ComputeDevice::connectAction() {
+            KARABO_LOG_FRAMEWORK_DEBUG << "Connection IO channels";
             this->connectInputChannels();
         }
 

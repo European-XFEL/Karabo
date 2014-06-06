@@ -24,15 +24,15 @@ namespace karabo {
             virtual void initFsmSlots() {
             }
 
-            virtual void errorFound(const std::string&, const std::string&) = 0;
+            virtual void exceptionFound(const std::string&, const std::string&) const = 0;
             
-            KARABO_FSM_ON_EXCEPTION(errorFound);
-            
-            KARABO_FSM_PV_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
+            KARABO_FSM_ON_EXCEPTION(exceptionFound);
 
-            virtual void onStateUpdate(const std::string& currentState) = 0;
+            KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) = 0;
+
+            virtual void updateState(const std::string& state) = 0;
             
-            KARABO_FSM_ON_CURRENT_STATE_CHANGE(onStateUpdate);
+            KARABO_FSM_ON_CURRENT_STATE_CHANGE(updateState);
             
             virtual void onNoStateTransition(const std::string& typeId, int state) = 0;
             

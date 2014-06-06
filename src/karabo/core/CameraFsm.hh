@@ -94,6 +94,8 @@ namespace karabo {
             
             KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
 
+            KARABO_FSM_VE_ACTION0(ResetAction, resetAction)
+
             KARABO_FSM_VE_ACTION0(AcquireAction, acquireAction)
 
             KARABO_FSM_VE_ACTION0(StopAction, stopAction)
@@ -122,7 +124,7 @@ namespace karabo {
             KARABO_FSM_TABLE_BEGIN(TransitionTable)
             Row< Initialization, none, Ok, none, none >,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
-            Row< Error, ResetEvent, Ok, none, none >
+            Row< Error, ResetEvent, Ok, ResetAction, none >
             KARABO_FSM_TABLE_END
 
 
