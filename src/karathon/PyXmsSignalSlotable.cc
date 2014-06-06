@@ -11,9 +11,11 @@
 
 #include <karabo/xms/SignalSlotable.hh>
 #include "SignalSlotableWrap.hh"
+#include <karabo/xip/RawImageData.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
+using namespace karabo::xip;
 using namespace karabo::xms;
 using namespace karathon;
 using namespace std;
@@ -37,9 +39,6 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
             .def(bp::init<const std::string&, const karabo::net::BrokerConnection::Pointer&>())
             ;
-
-    typedef karabo::io::Input<karabo::util::Hash> InputHashType;
-    typedef karabo::io::Output<karabo::util::Hash> OutputHashType;
 
     bp::class_<SignalSlotableWrap, boost::shared_ptr<SignalSlotableWrap>, bp::bases< SignalSlotable>, boost::noncopyable > ("SignalSlotable")
             .def(bp::init<>())
@@ -204,6 +203,21 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , bp::arg("config") = Hash()
                  , bp::arg("onOutputPossible") = bp::object()))
 
+             .def("registerInputChannelRawImageData"
+                 , (boost::shared_ptr<Input<RawImageData> > (SignalSlotableWrap::*)(const std::string&, const std::string& type, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::registerInputChannel<RawImageData>)
+                 , (bp::arg("name")
+                 , bp::arg("type") = "Network"
+                 , bp::arg("config") = Hash()
+                 , bp::arg("onRead") = bp::object()
+                 , bp::arg("onEndOfStream") = bp::object()))
+
+            .def("registerOutputChannelRawImageData"
+                 , (boost::shared_ptr<Output<RawImageData> > (SignalSlotableWrap::*)(const std::string&, const std::string&, const Hash&, const bp::object&)) (&SignalSlotableWrap::registerOutputChannel<RawImageData>)
+                 , (bp::arg("name")
+                 , bp::arg("type") = "Network"
+                 , bp::arg("config") = Hash()
+                 , bp::arg("onOutputPossible") = bp::object()))
+
             .def("connectChannels"
                  , (bool (SignalSlotable::*)(string, const string&, string, const string&, const bool)) (&SignalSlotable::connectChannels)
                  , (bp::arg("outputInstanceId")
@@ -220,6 +234,16 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("createOutputChannelHash"
                  , (boost::shared_ptr<karabo::io::Output<Hash> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&)) (&SignalSlotableWrap::createOutputChannel<karabo::io::Output<Hash> >)
+                 , (bp::arg("name"), bp::arg("configuration"), bp::arg("onOutputPossibleHandler") = bp::object()))
+
+            .def("createInputChannelRawImageData"
+                 , (boost::shared_ptr<karabo::io::Input<karabo::xip::RawImageData> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::createInputChannel<karabo::io::Input<karabo::xip::RawImageData> >)
+                 , (bp::arg("name"), bp::arg("configuration")
+                 , bp::arg("onInputAvailableHandler") = bp::object()
+                 , bp::arg("onEndOfStreamEventHandler") = bp::object()))
+
+            .def("createOutputChannelRawImageData"
+                 , (boost::shared_ptr<karabo::io::Output<karabo::xip::RawImageData> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&)) (&SignalSlotableWrap::createOutputChannel<karabo::io::Output<karabo::xip::RawImageData> >)
                  , (bp::arg("name"), bp::arg("configuration"), bp::arg("onOutputPossibleHandler") = bp::object()))
 
             .def("getInputChannels", &SignalSlotableWrap::getInputChannels)
