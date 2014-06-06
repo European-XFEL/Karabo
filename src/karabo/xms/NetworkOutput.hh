@@ -137,9 +137,9 @@ namespace karabo {
                         .init()
                         .commit();
 
-                OVERWRITE_ELEMENT(expected).key("enableAppendMode")
-                        .setNowAdminAccess()
-                        .commit();
+//                OVERWRITE_ELEMENT(expected).key("enableAppendMode")
+//                        .setNowAdminAccess()
+//                        .commit();
 
 
             }
@@ -172,7 +172,7 @@ namespace karabo {
                         m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnectionError, this, _1, _2));
                         m_dataIOService = m_dataConnection->getIOService();
                         m_dataConnection->startAsync(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnect, this, _1));
-
+                        
                         // Start data thread
                         m_dataThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_dataIOService));
 
