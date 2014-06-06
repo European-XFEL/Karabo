@@ -159,7 +159,7 @@ namespace karabo {
                         .displayedName("State")
                         .description("The current state the device is in")
                         .readOnly()
-                        .initialValue("uninitialized")
+                        .initialValue("Ok")
                         .commit();
 
                 FSM::expectedParameters(expected);
@@ -537,7 +537,7 @@ namespace karabo {
 
             // This function will polymorphically be called by the FSM template
 
-            virtual void onStateUpdate(const std::string& currentState) { // private
+            virtual void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
                     set("state", currentState);
@@ -555,8 +555,21 @@ namespace karabo {
                 reply(currentState);
             }
 
-            // This function will polymorphically be called by the FSM template
+            KARABO_DEPRECATED virtual void onStateUpdate(const std::string& currentState) {
+                this->updateState(currentState);
+            }
 
+            /**
+             * You can override this function to handle default caught exceptions differently
+             * @param shortMessage short error message
+             * @param detailedMessage detailed error message
+             */
+            void exceptionFound(const std::string& shortMessage, const std::string& detailedMessage) const {
+                KARABO_LOG_ERROR << shortMessage;
+                emit("signalNotification", std::string("EXCEPTION"), shortMessage, detailedMessage, m_deviceId);
+            }
+
+            // This function will polymorphically be called by the FSM template
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
                 boost::regex re(".*\\d+(.+Event).*");
@@ -571,8 +584,9 @@ namespace karabo {
                 emit("signalNoTransition", msg.str(), getInstanceId());
             }
 
-            virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
-                call("", "errorFound", shortMessage, detailedMessage);
+            // Use execute instead to trigger your error event
+            KARABO_DEPRECATED virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
+                this->exceptionFound(shortMessage, detailedMessage);
             }
             
             void execute(const std::string& command) const {
@@ -597,13 +611,6 @@ namespace karabo {
             template <class A1, class A2, class A3, class A4>
             void execute(const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) const {
                 call("", command, a1, a2, a3, a4);
-            }
-
-            // This function will polymorphically be called by the FSM template            
-
-            virtual void errorFoundAction(const std::string& shortMessage, const std::string& detailedMessage) {
-                KARABO_LOG_ERROR << shortMessage;
-                emit("signalNotification", std::string("ERROR"), shortMessage, detailedMessage, m_deviceId);
             }
 
         protected: // Functions and Classes
@@ -701,7 +708,7 @@ namespace karabo {
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
-                SLOT2(errorFound, std::string, std::string);
+                //SLOT2(errorFound, std::string, std::string);
             }
 
             // TODO deprecate
@@ -732,7 +739,7 @@ namespace karabo {
                         applyReconfiguration(validated);
                     }
                 } catch (const karabo::util::Exception& e) {
-                    this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
+                    this->exceptionFound(e.userFriendlyMsg(), e.detailedMsg());
                     reply(false, e.userFriendlyMsg());
                     return;
                 }
