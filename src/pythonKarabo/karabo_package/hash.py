@@ -309,8 +309,11 @@ class Hash(OrderedDict):
                 self[k, ...] = other[k, ...].copy()
 
 
-    def get(self, item):
-        return self[item]
+    def get(self, item, default=None):
+        try:
+            return self[item]
+        except KeyError:
+            return default
 
     def set(self, item, value):
         self[item] = value
