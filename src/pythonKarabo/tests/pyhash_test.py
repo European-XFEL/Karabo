@@ -58,6 +58,9 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(h["a"]["b"]["c"], 77)
         self.assertEqual(h["a.b.c"], 77)
 
+        self.assertIs(h.get("laber"), None)
+        self.assertEqual(h.get("laber", "whatever"), "whatever")
+
 
     def test_getSetVectorHash(self):
         h = Hash('a', [])
