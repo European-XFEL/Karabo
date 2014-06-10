@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>354</width>
-    <height>289</height>
+    <width>444</width>
+    <height>386</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
           </size>
          </property>
          <property name="text">
-          <string/>
+          <string>Open File</string>
          </property>
          <property name="icon">
           <iconset>
@@ -50,7 +50,7 @@
           </size>
          </property>
          <property name="text">
-          <string/>
+          <string>Paste Icon</string>
          </property>
          <property name="icon">
           <iconset>
@@ -61,6 +61,13 @@
            <width>24</width>
            <height>24</height>
           </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="copy">
+         <property name="text">
+          <string>Copy To Project</string>
          </property>
         </widget>
        </item>
