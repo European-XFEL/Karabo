@@ -14,7 +14,7 @@ __all__ = ["Project", "ProjectConfiguration", "Category"]
 
 
 from configuration import Configuration
-from graphicsview import GraphicsView
+from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
 import manager
 
@@ -92,7 +92,7 @@ class Project(QObject):
         """
         if isinstance(object, Configuration):
             self.devices.remove(object)
-        elif isinstance(object, GraphicsView):
+        elif isinstance(object, Scene):
             self.scenes.remove(object)
 
 
@@ -116,7 +116,7 @@ class Project(QObject):
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
-                scene = GraphicsView(self, s["filename"])
+                scene = Scene(self, s["filename"])
                 data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
                 scene.fromXml(data)
                 self.addScene(scene)
