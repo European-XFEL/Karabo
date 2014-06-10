@@ -33,7 +33,7 @@ class _Network(QObject):
     # signals
     signalServerConnectionChanged = pyqtSignal(bool)
     signalUserChanged = pyqtSignal()
-    receivedData = pyqtSignal(object)
+    signalReceivedData = pyqtSignal(object)
 
     def __init__(self):
         super(_Network, self).__init__()
@@ -220,7 +220,7 @@ class _Network(QObject):
         dataBytes = yield dataSize
 
         instanceInfo = parser.read(dataBytes)
-        self.receivedData.emit(instanceInfo)
+        self.signalReceivedData.emit(instanceInfo)
 
 
     def onSocketError(self, socketError):

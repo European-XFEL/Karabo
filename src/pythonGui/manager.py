@@ -71,7 +71,7 @@ class _Manager(QObject):
             self.onServerConnectionChanged)
         Network().signalServerConnectionChanged.connect(
             self.systemTopology.onServerConnectionChanged)
-        Network().receivedData.connect(self.onReceivedData)
+        Network().signalReceivedData.connect(self.onReceivedData)
 
         # Sets all parameters to start configuration
         self.reset()
@@ -83,11 +83,6 @@ class _Manager(QObject):
         self.serverClassData = dict()
         # Map stores { deviceId, Configuration }
         self.deviceData = dict()
-
-        # Map stores all keys and DataNofiers for editable widgets
-        self.__keyNotifierMapEditableValue = dict()
-        # Map stores all keys and DataNofiers for display widgets
-        self.__keyNotifierMapDisplayValue = dict()
         
         # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
         if hasattr(self, "visibleDeviceIdCount"):
@@ -115,6 +110,18 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(property, value)
 
 
+    def _handleSystemTopology(self, config):
+        if self.systemHash is None:
+            self.systemHash = config
+        else:
+            self.systemHash.merge(config, "merge")
+        # Update navigation and project treemodel
+        self.systemTopology.updateData(config)
+        for v in self.deviceData.itervalues():
+            v.updateStatus()
+        self.projectTopology.updateNeeded()
+
+
     def onReceivedData(self, instanceInfo):
         getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
 
@@ -132,22 +139,6 @@ class _Manager(QObject):
         self.reset()
         # Send reset signal to configurator to clear stacked widget
         self.signalReset.emit()
-
-
-    def _getDeviceIdFromInternalPath(self, internalPath):
-        """
-        This function gets as parameter the \internalPath of a device or a device
-        class.
-        
-        Only if this internal path belongs to a device, the deviceId is return,
-        otherwise return None.
-        """
-        splittedPath = internalPath.split('.')
-        if len(splittedPath) < 1:
-            # No device selected
-            return None
-
-        return splittedPath[0]
 
 
     def _triggerStateChange(self, box, value, timestamp):
@@ -341,16 +332,7 @@ class _Manager(QObject):
 
 
     def handle_systemTopology(self, instanceInfo):
-        config = instanceInfo.get("systemTopology")
-        if self.systemHash is None:
-            self.systemHash = config
-        else:
-            self.systemHash.merge(config, "merge")
-        # Update navigation and project treemodel
-        self.systemTopology.updateData(config)
-        for v in self.deviceData.itervalues():
-            v.updateStatus()
-        self.projectTopology.updateNeeded()
+        self._handleSystemTopology(instanceInfo.get("systemTopology"))
 
 
     def handle_instanceNew(self, instanceInfo):
@@ -386,6 +368,10 @@ class _Manager(QObject):
                     self.signalSelectNewNavigationItem.emit(deviceId)
                     self.__isInitDeviceCurrentlyProcessed = False
                 conf = self.deviceData.get(deviceId)
+
+
+    def handle_instanceUpdated(self, instanceInfo):
+        self._handleSystemTopology(instanceInfo.get("topologyEntry"))
 
 
     def handle_instanceGone(self, instanceInfo):
