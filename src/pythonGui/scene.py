@@ -37,7 +37,7 @@ from itertools import chain
 from cStringIO import StringIO
 
 
-__all__ = ["GraphicsView"]
+__all__ = ["Scene"]
 
 
 class Action(Registry):
@@ -831,9 +831,9 @@ class Lower(SimpleAction):
         self.parent.update()
 
 
-class GraphicsView(QSvgWidget):
+class Scene(QSvgWidget):
     def __init__(self, project, name, parent=None, designMode=True):
-        super(GraphicsView, self).__init__(parent)
+        super(Scene, self).__init__(parent)
 
         self.project = project
         self.filename = name
