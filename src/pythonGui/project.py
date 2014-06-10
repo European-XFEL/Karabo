@@ -22,7 +22,8 @@ from PyQt4.QtCore import pyqtSignal, QDir, QFileInfo, QObject
 #from PyQt4.QtGui import QMessageBox
 
 import os.path
-from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
+from tempfile import NamedTemporaryFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class Project(QObject):
@@ -97,7 +98,7 @@ class Project(QObject):
 
 
     def unzip(self):
-        with ZipFile(self.filename, "r", ZIP_DEFLATED) as zf:
+        with ZipFile(self.filename, "r") as zf:
             data = zf.read("{}.xml".format(self.PROJECT_KEY))
             projectConfig = XMLParser().read(data)
 
@@ -138,7 +139,13 @@ class Project(QObject):
         """
         projectConfig = Hash()
 
-        with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
+        if os.path.exists(self.filename):
+            file = NamedTemporaryFile(dir=os.path.dirname(self.filename),
+                                      delete=False)
+        else:
+            file = self.filename
+
+        with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
             for device in self.devices:
                 zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                             device.toXml())
@@ -166,6 +173,10 @@ class Project(QObject):
             projectConfig[self.PROJECT_KEY, "version"] = self.version
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
+
+            if file is not self.filename:
+                os.remove(self.filename)
+                os.rename(file.name, self.filename)
 
 
 class Device(Configuration):
