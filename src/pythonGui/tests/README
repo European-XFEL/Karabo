@@ -1,0 +1,9 @@
+To start the GUI test, you need to do the following:
+
+1) Zip project folder (only first time or if changes appeared):
+cd pythonGui/tests/project
+zip -r ../project.krb *
+
+2) Start test:
+cd pythonGui
+python -m tests.test_gui
