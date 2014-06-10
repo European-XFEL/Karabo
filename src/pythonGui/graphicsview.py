@@ -30,7 +30,7 @@ from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
-import xmlparser
+from karabo import xmlparser
 from functools import partial
 import os.path
 from itertools import chain
