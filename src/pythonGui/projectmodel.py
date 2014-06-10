@@ -269,51 +269,13 @@ class ProjectModel(QStandardItemModel):
         self.updateData()
 
 
-    def projectExists(self, directory, projectFile):
-        """
-        This functions checks whether a project with the \projectFile already exists.
-        """
-        absoluteProjectPath = os.path.join(directory, projectFile)
-        return is_zipfile(absoluteProjectPath)
-
-
-    def replaceExistingProject(self, directory, projectName):
-        """
-        This function checks whether the project with the \projectName already
-        exists in the \directory.
-        
-        Returns True, if it should be replaced or it does not yet exist,
-        else False.
-        """
-        projectFile = "{}.{}".format(projectName, Project.PROJECT_SUFFIX)
-        alreadyExists = self.projectExists(directory, projectFile)
-        if alreadyExists:
-            reply = QMessageBox.question(None, "Replace project",
-                "A project named \"<b>{}</b>\" already exists.<br>"
-                "Do you want to replace it?".format(projectFile),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
-
-            if reply == QMessageBox.No:
-                return False
-        
-        return True
-
-
-    def projectNew(self, directory, projectName):
-        """
-        This function updates the project list updates the view.
-        """
-        # Project name to lower case
-        projectName = projectName.lower()
-        
-        if not self.replaceExistingProject(directory, projectName):
-            return False, None
-        
-        project = Project(projectName, directory)
+    def projectNew(self, filename):
+        """ create and return a new project and add it to the model """
+        project = Project(filename)
+        project.zip()
         self.projects.append(project)
         self.updateData()
-
-        return True, project
+        return project
 
 
     def projectOpen(self, filename):
@@ -321,9 +283,9 @@ class ProjectModel(QStandardItemModel):
         This function opens a project file, creates a new projects, adds it to
         the project list and updates the view.
         """
-        project = Project()
+        project = Project(filename)
         try:
-            project.unzip(filename)
+            project.unzip()
         except Exception as e:
             e.message = "While reading the project a <b>critical error</b> " \
                         "occurred."
@@ -352,21 +314,18 @@ class ProjectModel(QStandardItemModel):
         project.zip()
 
 
-    def projectSaveAs(self, directory, project=None):
+    def projectSaveAs(self, filename, project=None):
         """
-        This function saves the \project into the \directory.
-        
+        This function saves the \project into the file \filename.
+
         If the \project is None, the current project is taken.
         """
         if project is None:
             project = self.currentProject()
-        
-        if not self.replaceExistingProject(directory, project.name):
-            return False
-        
-        project.directory = directory
+
+        project.filename = filename
         project.zip()
-        return True
+        self.updateData()
 
 
     def editDevice(self, device=None):
