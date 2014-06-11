@@ -18,6 +18,11 @@ try:
 except:
     print "*ERROR* The PyQt4 sql module is not installed"
 
+from sys import platform
+if "win" in platform:
+    from PyQt4.QtGui import QApplication
+    QApplication.addLibraryPath("C:/Python27/Lib/site-packages/PyQt4/plugins")
+
 
 class SqlDatabase(QSqlDatabase):
 
