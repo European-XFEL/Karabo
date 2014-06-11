@@ -214,12 +214,10 @@ class _Network(QObject):
 
 
     def processInput(self):
-        parser = BinaryParser()
-
-        dataSize, = unpack('I', (yield 4))
+        dataSize, = unpack(str("I"), (yield 4))
         dataBytes = yield dataSize
 
-        instanceInfo = parser.read(dataBytes)
+        instanceInfo = BinaryParser().read(dataBytes)
         self.signalReceivedData.emit(instanceInfo)
 
 
