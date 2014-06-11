@@ -57,7 +57,11 @@ class MainWindow(QMainWindow):
 
 ### initializations ###
     def _getVersion(self):
-        filePath = os.environ['HOME'] + "/.karabo/karaboFramework"
+        if os.environ.has_key('USERPROFILE'):
+            filePath = os.path.join(os.environ['USERPROFILE'], "karabo", "karaboFramework")
+        else:
+            filePath = os.path.join(os.environ['HOME'], ".karabo", "karaboFramework")
+        
         try:
             with open(filePath, 'r') as file:
                 karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
