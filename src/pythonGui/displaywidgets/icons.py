@@ -6,17 +6,18 @@ from widget import DisplayWidget
 from karabo import hashtypes
 
 from PyQt4 import uic
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, QByteArray, QBuffer
 from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
                          QPixmap)
 
 from os import path
+import urllib
 import re
 from xml.etree.ElementTree import Element
 
 
 class Label(QLabel):
-    imageChanged = pyqtSignal(str, object)
+    newMime = pyqtSignal(str)
 
 
     def __init__(self, parent):
@@ -26,19 +27,11 @@ class Label(QLabel):
 
 
     def dragEnterEvent(self, event):
-        if event.mimeData().hasFormat('text/uri-list'):
-            event.acceptProposedAction()
+        event.acceptProposedAction()
 
 
     def dropEvent(self, event):
-        name = event.mimeData().urls()[0].toLocalFile()
-        self.setFilename(name)
-
-
-    def setFilename(self, name):
-        pixmap = QPixmap(name)
-        self.setPixmap(pixmap)
-        self.imageChanged.emit(name, pixmap)
+        self.newMime.emit(mime.mimeData())
 
 
     def setPixmap(self, pixmap):
@@ -61,10 +54,13 @@ class Icons(DisplayWidget):
         self.dialog.addValue.clicked.connect(self.on_addValue_clicked)
         self.dialog.list.currentRowChanged.connect(
             self.on_list_currentRowChanged)
-        self.dialog.image.imageChanged.connect(self.on_image_imageChanged)
+        self.dialog.image.newMime.connect(self.setMime)
         self.dialog.open.clicked.connect(self.on_open_clicked)
         self.dialog.paste.clicked.connect(self.on_paste_clicked)
+        self.dialog.copy.clicked.connect(self.on_copy_clicked)
         self.dialog.finished.connect(self.on_dialog_finished)
+
+        self.list = [(None, None, None, None)]
         super(Icons, self).__init__(box)
 
 
@@ -72,15 +68,37 @@ class Icons(DisplayWidget):
         self.dialog.image.setPixmap(self.list[row][-1])
 
 
-    def on_image_imageChanged(self, name, pixmap):
+    def setMime(self, mime):
+        if mime.hasImage():
+            ba = QByteArray()
+            try:
+                buffer = QBuffer(ba)
+                buffer.open(QBuffer.WriteOnly)
+                image = mime.imageData().save(buffer, "PNG")
+                url = self.project.addResource("icon", buffer.data())
+            finally:
+                buffer.close()
+        else:
+            try:
+                url = mime.text().split()[0].strip()
+            except Exception as e:
+                e.message = "Could not open URL or Image"
+                raise
+        self.setURL(url)
+
+
+    def setURL(self, url):
         cr = self.dialog.list.currentRow()
-        self.list[cr] = self.list[cr][:-2] + (name, pixmap)
+        pixmap = self.getPixmap(url)
+        self.list[cr] = self.list[cr][:-2] + (url, pixmap)
+        self.dialog.image.setPixmap(pixmap)
 
 
     def on_open_clicked(self):
         name = QFileDialog.getOpenFileName(self.dialog, "Open Icon")
         if name:
-            self.dialog.image.setFilename(name)
+            url = "file://" + urllib.pathname2url(name)
+            self.dialog.image.setURL(url)
 
 
     def on_dialog_finished(self, result):
@@ -89,11 +107,14 @@ class Icons(DisplayWidget):
 
 
     def on_paste_clicked(self):
-        mime = QApplication.clipboard().mimeData()
-        if not mime.urls():
-            return
-        name = mime.urls()[0].toLocalFile()
-        self.dialog.image.setFilename(name)
+        self.setMime(QApplication.clipboard().mimeData())
+
+
+    def on_copy_clicked(self):
+        cr = self.dialog.list.currentRow()
+        url = self.project.addResource("icon",
+                                       self.project.getURL(self.list[cr][2]))
+        self.setURL(url)
 
 
     def on_deleteValue_clicked(self):
@@ -110,12 +131,25 @@ class Icons(DisplayWidget):
             self.widget.setPixmap(p)
 
 
+    def getPixmap(self, url):
+        pixmap = QPixmap()
+        if not pixmap.loadFromData(self.project.getURL(url)):
+            raise RuntimeError("could not read image from url {}".format(url))
+        return pixmap
+
+
     def loadImage(self, e):
-        name = e.get("image")
-        if name is None:
+        url = e.get("image")
+        if url is None:
             return None, None
         else:
-            return name, QPixmap(name)
+            return url, self.getPixmap(url)
+
+
+    def setItems(self, items):
+        self.dialog.list.clear()
+        self.dialog.list.addItems(list(items))
+        self.dialog.list.setCurrentRow(0)
 
 
 class TextIcons(Icons):
@@ -123,8 +157,8 @@ class TextIcons(Icons):
     alias = "Text Icons"
 
 
-    def typeChanged(self, box):
-        self.list = [(None, None, None, None)]
+    def __init__(self, box, parent):
+        super(TextIcons, self).__init__(box, parent)
         self.dialog.stack.setCurrentWidget(self.dialog.textPage)
         self.dialog.up.clicked.connect(self.on_up_clicked)
         self.dialog.down.clicked.connect(self.on_down_clicked)
@@ -142,7 +176,6 @@ class TextIcons(Icons):
     def on_down_clicked(self):
         l = self.dialog.list
         cr = l.currentRow()
-        print cr
         if cr >= len(self.list) - 2:
             return
         l.insertItem(cr + 1, l.takeItem(cr))
@@ -177,9 +210,8 @@ class TextIcons(Icons):
         self.list = [((re.compile(ee.text), ee.text)
                        if ee.text else (None, None)) +
                      self.loadImage(ee) for ee in e]
-        self.dialog.list.clear()
-        self.dialog.list.addItems(["default" if t is None else t
-                                   for _, t, _, _ in self.list])
+        self.setItems("default" if t is None else t
+                      for _, t, _, _ in self.list)
 
 
 class DigitIcons(Icons):
@@ -197,7 +229,6 @@ class DigitIcons(Icons):
 
 
     def typeChanged(self, box):
-        self.list = [(None, None, None, None)]
         if isinstance(box.descriptor, hashtypes.Integer):
             self.dialog.stack.setCurrentWidget(self.dialog.intPage)
             self.value = self.dialog.intValue
@@ -236,7 +267,6 @@ class DigitIcons(Icons):
         self.list = [((parse(ee.text), ee.get('equal') == 'true')
                        if ee.get('equal') else (None, None)) +
                      self.loadImage(ee) for ee in e]
-        self.dialog.list.clear()
-        self.dialog.list.addItems(["default" if v is None
-                                   else "{} {}".format("<=" if f else "<", v)
-                                   for v, f, _, _ in self.list])
+        self.setItems("default" if v is None
+                      else "{} {}".format("<=" if f else "<", v)
+                      for v, f, _, _ in self.list)
