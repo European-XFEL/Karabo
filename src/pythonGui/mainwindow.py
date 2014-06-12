@@ -294,6 +294,7 @@ class MainWindow(QMainWindow):
             divWidget = self.middleTab.widget(i)
             if divWidget.dockableWidget.scene == scene:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                break
 
 
     def onChangeAccessLevel(self, action):
