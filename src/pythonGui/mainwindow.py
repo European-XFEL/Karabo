@@ -12,6 +12,7 @@
 __all__ = ["MainWindow"]
 
 import os.path
+from sys import platform
 import qrc_icons # hopefully this goes one day
 import icons
 
@@ -41,6 +42,10 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
+        # Create projects folder, if not existent yet
+        if not os.path.exists(globals.KARABO_PROJECT_FOLDER):
+            os.mkdir(globals.KARABO_PROJECT_FOLDER)
+
         self.karaboVersion = self._getVersion()
 
         self._setupActions()
@@ -57,10 +62,11 @@ class MainWindow(QMainWindow):
 
 ### initializations ###
     def _getVersion(self):
-        if os.environ.has_key('USERPROFILE'):
+        if "win" in platform:
+            # TODO: use current working path pythonGui/VERSION
             filePath = os.path.join(os.environ['USERPROFILE'], "karabo", "karaboFramework")
         else:
-            filePath = os.path.join(os.environ['HOME'], ".karabo", "karaboFramework")
+            filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
         
         try:
             with open(filePath, 'r') as file:
@@ -289,6 +295,7 @@ class MainWindow(QMainWindow):
             divWidget = self.middleTab.widget(i)
             if divWidget.dockableWidget.scene == scene:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                break
 
 
     def onChangeAccessLevel(self, action):

@@ -54,6 +54,7 @@ class DockTabWindow(QTabWidget):
     def removeDockableTab(self, widget):
         divWidget = widget.parent()
         self.removeTab(self.indexOf(divWidget))
+        del divWidget
         self.updateTabsClosable()
 
 

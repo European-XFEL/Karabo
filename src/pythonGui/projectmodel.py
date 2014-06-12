@@ -419,21 +419,15 @@ class ProjectModel(QStandardItemModel):
         """
         scene = self._createScene(project, sceneName)
         self.updateData()
-        self.signalAddScene.emit(scene)
+        self.openScene(scene)
         
         self.selectItem(scene)
         
         return scene
 
 
-    def openScene(self, project, sceneName):
-        scene = self._createScene(project, sceneName)
-        self.updateData()
-        self.showScene(scene)
-
-
-    def showScene(self, scene):
-        scene.load()
+    def openScene(self, scene):
+        self.signalAddScene.emit(scene)
         
 
 ### slots ###
