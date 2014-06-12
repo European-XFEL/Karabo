@@ -34,6 +34,10 @@ class SqlDatabase(QSqlDatabase):
     def __init__(self):
         super(SqlDatabase, self).__init__(QSqlDatabase.addDatabase("QSQLITE"))
 
+        # Create karabo folder, if not exists
+        if not os.path.exists(globals.HIDDEN_KARABO_FOLDER):
+            os.mkdir(globals.HIDDEN_KARABO_FOLDER)
+
         # Use temp path for database stuff
         self.dbName = os.path.join(globals.HIDDEN_KARABO_FOLDER,
                       "xfelgui-{}.db".format(QCoreApplication.applicationPid()))
