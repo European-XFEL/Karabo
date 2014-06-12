@@ -19,7 +19,7 @@ import icons
 from karabo.hash import Hash, HashMergePolicy
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
-from graphicsview import GraphicsView
+from scene import Scene
 import manager
 from messagebox import MessageBox
 from project import Category, Device, Project
@@ -407,7 +407,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def _createScene(self, project, sceneName):
-        scene = GraphicsView(project, sceneName)
+        scene = Scene(project, sceneName)
         project.addScene(scene)
         
         return scene
