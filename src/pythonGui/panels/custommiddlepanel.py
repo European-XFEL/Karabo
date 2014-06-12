@@ -40,12 +40,12 @@ class CustomMiddlePanel(QScrollArea):
         super(CustomMiddlePanel, self).__init__()
 
         # Reference to underlying scene object
-        self.graphicsview = scene
-        self.graphicsview.setParent(self)
-        self.graphicsview.designMode = isConnectedToServer
-        self.setWidget(self.graphicsview)
+        self.scene = scene
+        self.scene.setParent(self)
+        self.scene.designMode = isConnectedToServer
+        self.setWidget(self.scene)
 
-        #Manager().signalReset.connect(self.graphicsview.reset)
+        #Manager().signalReset.connect(self.scene.reset)
         Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         
         self.setupActions(isConnectedToServer)
@@ -54,7 +54,7 @@ class CustomMiddlePanel(QScrollArea):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        if self.graphicsview.close():
+        if self.scene.close():
             event.accept()
         else:
             event.ignore()
@@ -70,16 +70,16 @@ class CustomMiddlePanel(QScrollArea):
         self.__acDesignMode.setEnabled(isConnectedToServer)
         self.__acDesignMode.toggled.connect(self.onDesignModeChanged)
        
-        self.graphicsactions = list(self.graphicsview.add_actions(self))
+        self.graphicsactions = list(self.scene.add_actions(self))
         
 
     def setupToolBars(self, standardToolBar, parent):
         standardToolBar.addAction(self.__acDesignMode)
 
         toolBar = ToolBar('Drawing')
-        toolBar.setVisible(self.graphicsview.designMode)
+        toolBar.setVisible(self.scene.designMode)
         parent.addToolBar(toolBar)
-        self.graphicsview.setFocusProxy(toolBar)
+        self.scene.setFocusProxy(toolBar)
         toolBar.setFocusPolicy(Qt.StrongFocus)
         
         toolBar.addSeparator()
@@ -111,14 +111,13 @@ class CustomMiddlePanel(QScrollArea):
             text = "Change to design mode"
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
-        self.graphicsview.designMode = isChecked
+        self.scene.designMode = isChecked
 
 
     def onUndock(self):
-        osize = self.graphicsview.size()
+        osize = self.scene.size()
         self.setWidgetResizable(True)
-        self.parent().resize(osize - self.graphicsview.size() +
-                             self.parent().size())
+        self.parent().resize(osize - self.scene.size() + self.parent().size())
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 

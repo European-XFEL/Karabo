@@ -89,6 +89,11 @@ class Widget(Registry, QObject):
         return
 
 
+    @property
+    def project(self):
+        return self.widget.parent().parent().parent().project
+
+
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
