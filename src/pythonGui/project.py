@@ -191,6 +191,7 @@ class Project(QObject):
                         XMLWriter().write(projectConfig))
 
         if file is not self.filename:
+            file.close()
             os.remove(self.filename)
             os.rename(file.name, self.filename)
 
