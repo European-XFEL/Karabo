@@ -21,6 +21,7 @@ from configuration import Configuration
 from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
+import globals
 from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from network import Network
@@ -254,7 +255,8 @@ class _Manager(QObject):
 
     def onOpenFromFile(self):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
-                                               QDir.tempPath(), "XML (*.xml)")
+                                               globals.HIDDEN_KARABO_FOLDER,
+                                               "XML (*.xml)")
         if len(filename) < 1:
             return
         
@@ -291,7 +293,8 @@ class _Manager(QObject):
 
     def onSaveToFile(self):
         filename = QFileDialog.getSaveFileName(None, "Save configuration as",
-                                               QDir.tempPath(), "XML (*.xml)")
+                                               globals.HIDDEN_KARABO_FOLDER,
+                                               "XML (*.xml)")
         if not filename:
             return
 
