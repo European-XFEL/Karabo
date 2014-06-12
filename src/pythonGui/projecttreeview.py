@@ -136,7 +136,7 @@ class ProjectTreeView(QTreeView):
         if isinstance(object, Device):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
-            self.model().showScene(object)
+            self.model().openScene(object)
 
 
 ### slots ###
