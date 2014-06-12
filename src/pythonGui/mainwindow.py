@@ -42,10 +42,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        # Create karabo folder, if not exists
-        if not os.path.exists(globals.HIDDEN_KARABO_FOLDER):
-            os.mkdir(globals.HIDDEN_KARABO_FOLDER)
-
         # Create projects folder, if not exists
         if not os.path.exists(globals.KARABO_PROJECT_FOLDER):
             os.mkdir(globals.KARABO_PROJECT_FOLDER)
