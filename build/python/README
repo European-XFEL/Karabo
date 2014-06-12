@@ -1,0 +1,10 @@
+To create the windows installer, type in the console:
+
+"python setup.py bdist_wininst"
+
+A folder called "dist" is created which contains the executable for Windows.
+We assume that "Python(x,y)" is already installed on the Windows machine.
+
+The executable for "Python(x,y)" can be found here: https://code.google.com/p/pythonxy/wiki/Downloads
+
+Needed packages: PyQt4, guidata, guiqwt etc.
