@@ -12,6 +12,7 @@
 __all__ = ["LogWidget", "LogTableView", "LogSqlQueryModel", "LogThread"]
 
 
+import globals
 from manager import Manager
 
 from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QDir, QFile, QFileInfo,
@@ -479,7 +480,8 @@ class LogWidget(QWidget):
     def onSaveToFile(self):
         # Write current database content to a file
         filename = QFileDialog.getSaveFileName(self, "Save file as",
-                                               QDir.tempPath(), "LOG (*.log)")
+                                               globals.HIDDEN_KARABO_FOLDER,
+                                               "LOG (*.log)")
         if len(filename) < 1:
             return
 

@@ -13,6 +13,7 @@ configuration panel containing the parameters of a device.
 
 __all__ = ["ProjectTreeView"]
 
+import globals
 
 from scene import Scene
 from manager import Manager
@@ -63,7 +64,7 @@ class ProjectTreeView(QTreeView):
         If the default project already exists in the given directory it is opened,
         otherwise a new default project is created.
         """
-        filename = os.path.join(QDir.tempPath(), "default_project.krb")
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, "default_project.krb")
         if os.path.exists(filename):
             project = self.model().projectOpen(filename)
         else:
@@ -77,7 +78,7 @@ class ProjectTreeView(QTreeView):
 
     
     def getProjectDir(self):
-        fileDialog = QFileDialog(self, "Save project", QDir.tempPath())
+        fileDialog = QFileDialog(self, "Save project", globals.KARABO_PROJECT_FOLDER)
         fileDialog.setFileMode(QFileDialog.Directory)
         fileDialog.setDefaultSuffix("krb")
 
@@ -92,7 +93,7 @@ class ProjectTreeView(QTreeView):
 
 
     def getSaveFileName(self, title):
-        dialog = QFileDialog(None, title, QDir.tempPath(),
+        dialog = QFileDialog(None, title, globals.KARABO_PROJECT_FOLDER,
                              "Karabo Projects (*.krb)")
         dialog.setDefaultSuffix("krb")
         dialog.setFileMode(QFileDialog.AnyFile)
@@ -110,7 +111,7 @@ class ProjectTreeView(QTreeView):
 
     def projectOpen(self):
         filename = QFileDialog.getOpenFileName(
-            None, "Open project", QDir.tempPath(), "Karabo Projects (*.krb)")
+            None, "Open project", globals.KARABO_PROJECT_FOLDER, "Karabo Projects (*.krb)")
 
         if len(filename) < 1:
             return
@@ -135,7 +136,7 @@ class ProjectTreeView(QTreeView):
         if isinstance(object, Device):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
-            self.model().showScene(object)
+            self.model().openScene(object)
 
 
 ### slots ###

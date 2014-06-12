@@ -12,18 +12,20 @@ This module contains a class which represents a database connection based on SQL
 __all__ = ["SqlDatabase"]
 
 
+import globals
+
 from PyQt4.QtCore import QCoreApplication, QDir, QFile
 try:
     from PyQt4.QtSql import QSqlDatabase, QSqlQuery
 except:
     print "*ERROR* The PyQt4 sql module is not installed"
 
+import os.path
 from sys import platform
 if "win" in platform:
     from PyQt4.QtGui import QApplication
     from distutils.sysconfig import get_python_lib
-    from os import path
-    QApplication.addLibraryPath(path.join(get_python_lib(), "PyQt4/plugins"))
+    QApplication.addLibraryPath(path.join(get_python_lib(), "PyQt4", "plugins"))
 
 
 class SqlDatabase(QSqlDatabase):
@@ -33,8 +35,8 @@ class SqlDatabase(QSqlDatabase):
         super(SqlDatabase, self).__init__(QSqlDatabase.addDatabase("QSQLITE"))
 
         # Use temp path for database stuff
-        xfelDir = QDir.tempPath()
-        self.dbName = "{}/xfelgui-{}.db".format(xfelDir, QCoreApplication.applicationPid())
+        self.dbName = os.path.join(globals.HIDDEN_KARABO_FOLDER,
+                      "xfelgui-{}.db".format(QCoreApplication.applicationPid()))
         #print "database:", self.dbName
         
         # Establish database connection
