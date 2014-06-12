@@ -21,7 +21,9 @@ except:
 from sys import platform
 if "win" in platform:
     from PyQt4.QtGui import QApplication
-    QApplication.addLibraryPath("C:/Python27/Lib/site-packages/PyQt4/plugins")
+    from distutils.sysconfig import get_python_lib
+    from os import path
+    QApplication.addLibraryPath(path.join(get_python_lib(), "PyQt4/plugins"))
 
 
 class SqlDatabase(QSqlDatabase):
