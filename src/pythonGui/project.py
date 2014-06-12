@@ -190,9 +190,9 @@ class Project(QObject):
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
 
-            if file is not self.filename:
-                os.remove(self.filename)
-                os.rename(file.name, self.filename)
+        if file is not self.filename:
+            os.remove(self.filename)
+            os.rename(file.name, self.filename)
 
 
     def addResource(self, category, data):
