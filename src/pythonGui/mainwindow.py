@@ -63,6 +63,7 @@ class MainWindow(QMainWindow):
 ### initializations ###
     def _getVersion(self):
         if "win" in platform:
+            # TODO: use current working path pythonGui/VERSION
             filePath = os.path.join(os.environ['USERPROFILE'], "karabo", "karaboFramework")
         else:
             filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
