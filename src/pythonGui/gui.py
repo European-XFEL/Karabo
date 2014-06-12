@@ -9,7 +9,6 @@ __author__="kerstin weger"
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
 import util # assure sip api is set first
-import sys
 from traceback import print_exception, format_exception
 
 from mainwindow import MainWindow
@@ -62,9 +61,3 @@ def excepthook(type, value, traceback):
                      "\n" + " " * 300 + "\n")
     mb.setDetailedText("".join(format_exception(type, value, traceback)))
     mb.exec_()
-
-
-if __name__ == "__main__":
-    sys.excepthook = excepthook
-    app = init(sys.argv)
-    sys.exit(app.exec_())
