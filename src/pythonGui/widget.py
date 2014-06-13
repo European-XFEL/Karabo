@@ -18,8 +18,6 @@ from registry import Loadable, Registry
 
 
 class Widget(Registry, QObject):
-    valueChanged = None
-    typeChanged = None
     widgets = { }
 
     def __init__(self, box):
@@ -35,7 +33,6 @@ class Widget(Registry, QObject):
         self.valueType = None
         if box is not None:
             self.boxes = [box]
-            self.connectBox(box)
 
 
     @classmethod
@@ -59,18 +56,6 @@ class Widget(Registry, QObject):
         return cls.categoryToAliases.get(category, [ ])
 
 
-    def connectBox(self, box):
-        """ connects this widget to the signals of the box """
-        if self.typeChanged is not None:
-            box.signalNewDescriptor.connect(self.typeChanged)
-            if box.descriptor is not None:
-                self.typeChanged(box)
-        if self.valueChanged is not None:
-            box.signalUpdateComponent.connect(self.valueChanged)
-            if box.hasValue():
-                self.valueChanged(box, box.value, box.timestamp)
-
-
     def addBox(self, box):
         """adds the *box* to the displayed or edited box.
 
@@ -81,12 +66,21 @@ class Widget(Registry, QObject):
 
     def save(self, element):
         """Saves the widget into the ElementTree element"""
-        return
 
 
     def load(self, element):
         """Loads the widgets from the ElementTree element"""
-        return
+
+
+    def valueChanged(self, box, value, timestamp=None):
+        """ notify the widget about a new value """
+
+
+    def typeChanged(self, box):
+        """ notify the widget that the type it's displaying has changed
+
+        this is also used to inform the widget about its type initially,
+        so put your type-dependent initialization code here. """
 
 
     @property

@@ -15,6 +15,7 @@ from components import EditableApplyLaterComponent
 import globals
 from karabo.hash import Hash
 from manager import Manager
+from network import Network
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
@@ -89,31 +90,22 @@ class ParameterTreeWidget(QTreeWidget):
         return mimeData
 
 
-### public functions ###
     def checkApplyButtonsEnabled(self):
         # Returns a tuple containing the enabled and the conflicted state
         return self._r_applyButtonsEnabled(self.invisibleRootItem())
 
 
     def applyItem(self, item):
-        """Applies the changed value in an item
-
-        Change the apply button of an editable component to show the busy
-        flag. Return if that was possible."""
+        """return a list of pairs (box, value) to be applied """
 
         editableComponent = item.editableComponent
-        if editableComponent is None:
-            return False
+        if (editableComponent is None or
+                not isinstance(editableComponent, EditableApplyLaterComponent)
+                or not editableComponent.applyEnabled):
+            return [ ]
 
-        if not isinstance(editableComponent, EditableApplyLaterComponent):
-            return False
-        
-        if editableComponent.applyEnabled:
-            editableComponent.changeApplyToBusy(True)
-            for box in editableComponent.boxes:
-                box.set(editableComponent.value, None)
-            return True
-        return False
+        return [(box, editableComponent.widgetFactory.value)
+                for box in editableComponent.boxes]
 
 
     def applyRemoteChanges(self, item):
@@ -123,9 +115,8 @@ class ParameterTreeWidget(QTreeWidget):
 
         if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
-        
-        if editableComponent.applyEnabled:
-            editableComponent.onApplyRemoteChanges(item.box)
+
+        editableComponent.onApplyRemoteChanges(item.box)
 
 
     def resetAll(self):
@@ -226,19 +217,19 @@ class ParameterTreeWidget(QTreeWidget):
             childItem = item.child(i)
             if isinstance(childItem, PropertyTreeWidgetItem):
                 result = self._r_applyButtonsEnabled(childItem)
-                if result[0] is True: # Bug: returns but
+                if result[0]: # Bug: returns but
                     return result
 
-        if not isinstance(item, PropertyTreeWidgetItem):
-            return (False, False)
+        if (not isinstance(item, PropertyTreeWidgetItem) or
+            item.editableComponent is None or
+            not isinstance(item.editableComponent,
+                           EditableApplyLaterComponent)):
+            return False, False
 
-        if (item.editableComponent is None) or (not isinstance(item.editableComponent, EditableApplyLaterComponent)):
-            return (False,False)
-
-        return (item.editableComponent.applyEnabled, item.editableComponent.hasConflict)
+        return (item.editableComponent.applyEnabled,
+                item.editableComponent.hasConflict)
 
 
-### slots ###
     def onApplyChanged(self, box, enable):
         # Called when apply button of editableComponent changed
         # Check if no apply button in tree is enabled/conflicted anymore
@@ -261,14 +252,10 @@ class ParameterTreeWidget(QTreeWidget):
     def onApplyAll(self):
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
-            config = Hash()
             selectedItems = self.selectedItems()
-            boxes = [item.box for item in selectedItems
-                     if self.applyItem(item)]
         else:
-            boxes = [item.box for item in self.allItems()
-                     if self.applyItem(item)]
-
+            selectedItems = self.allItems()
+        boxes = sum([self.applyItem(item) for item in selectedItems], [ ])
         Network().onReconfigure(boxes)
 
 
