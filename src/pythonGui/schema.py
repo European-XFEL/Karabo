@@ -84,7 +84,8 @@ class Box(QObject):
     def _set(self, value, timestamp):
         self._value = self.descriptor.cast(value)
         self.timestamp = timestamp
-        self.signalUpdateComponent.emit(self, self._value, timestamp)
+        if self.hasValue():
+            self.signalUpdateComponent.emit(self, self._value, timestamp)
 
 
     def hasValue(self):
