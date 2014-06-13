@@ -75,7 +75,8 @@ class Box(QObject):
         self._descriptor = d
         if self.hasValue() and d is not None:
             self._value = d.cast(self._value)
-        self.signalNewDescriptor.emit(self)
+        if d is not None:
+            self.signalNewDescriptor.emit(self)
 
 
     def fillWidget(self, parameterEditor, isClass):
@@ -88,6 +89,9 @@ class Box(QObject):
 
 
     def _set(self, value, timestamp):
+        """ this is the internal method that sets the value and notifies
+        listeners. The public set method is in the descriptors, so
+        they can take care that the values actually make sense """
         self._value = self.descriptor.cast(value)
         self.timestamp = timestamp
         if self.hasValue():
@@ -170,6 +174,12 @@ class Type(hashtypes.Type):
                 treeWidget.onApplyChanged)
         item.requiredAccessLevel = self.requiredAccessLevel
         return item
+
+
+    def redummy(self, box):
+        """ remove all values from box """
+        box._value = Dummy(box.path, box.configuration)
+        box.descriptor = None
 
 
 class Char(hashtypes.Char):
@@ -395,6 +405,16 @@ class Schema(hashtypes.Descriptor):
             getattr(box.value, k).setDefault()
 
 
+    def redummy(self, box):
+        d = Dummy(box.path, box.configuration)
+        for k, v in self.dict.iteritems():
+            b = getattr(box.value, k)
+            b.redummy()
+            setattr(d, k, b)
+        box._value = d
+        box.descriptor = None
+
+
 class ChoiceOfNodes(Schema):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
@@ -497,3 +517,8 @@ class ListOfNodes(hashtypes.Descriptor):
         except AttributeError:
             item.displayText = box.path[-1]
         item.requiredAccessLevel = 100
+
+
+    def redummy(self, box):
+        box._value = Dummy(box.path, box.configuration)
+        box.descriptor = None
