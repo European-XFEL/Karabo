@@ -57,14 +57,14 @@ class TestWidget(widget.EditableWidget, widget.DisplayWidget):
 
 network.network = Network()
 net = network.network
-from gui import init
+import gui
 
 
 class Tests(TestCase):
     directory = path.dirname(__file__)
     def setUp(self):
         sys.excepthook = self.excepthook
-        self.app = init([])
+        self.app = gui.init([])
         self.excepttype = None
 
         r = XMLParser()
@@ -72,7 +72,7 @@ class Tests(TestCase):
             self.testschema = Schema_("testschema", r.read(fin.read()))
         with open(path.join(self.directory, "configuration.xml"), "r") as fin:
             self.testconfiguration = r.read(fin.read())["ParameterTest"]
-        globals.GLOBAL_ACCESS_LEVEL=2
+        globals.GLOBAL_ACCESS_LEVEL = 2
 
     def excepthook(self, type, value, tb):
         traceback.print_exception(type, value, tb)
@@ -212,14 +212,18 @@ class Tests(TestCase):
 
         self.assertEqual(TestWidget.instance.value, 0.5)
         component = TestWidget.instance.proxy.parent().component
+        panel = gui.window.configurationPanel
         self.assertIcon(component.acApply.icon(), icons.applyGrey)
+        #self.assertFalse(panel.pbApplyAll.isEnabled())
         TestWidget.instance.value = 2.5
         TestWidget.instance.onEditingFinished(2.5)
         self.assertIcon(component.acApply.icon(), icons.apply)
+        self.assertTrue(panel.pbApplyAll.isEnabled())
         Manager().handle_configurationChanged(dict(
             deviceId="testdevice",
             configuration=Hash("targetSpeed", 1.5)))
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
+        self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed.value, 1.5)
 
         net.called = [ ]
