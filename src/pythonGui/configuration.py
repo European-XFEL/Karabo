@@ -45,6 +45,8 @@ class Configuration(Box):
 
 
     def setSchema(self, schema):
+        if self.descriptor is not None:
+            self.redummy()
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
