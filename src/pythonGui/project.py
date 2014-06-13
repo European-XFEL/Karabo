@@ -251,6 +251,8 @@ class Device(Configuration):
 
 
     def onNewDescriptor(self, conf):
+        if self.descriptor is not None:
+            self.redummy()
         self.descriptor = conf.descriptor
         self.mergeFutureConfig()
         manager.Manager().onShowConfiguration(self)

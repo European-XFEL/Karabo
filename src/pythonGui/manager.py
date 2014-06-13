@@ -445,7 +445,7 @@ class _Manager(QObject):
             self.deviceData[deviceId].schema = None
 
         self.handle_deviceSchema(instanceInfo)
-        Network().onRefreshInstance(deviceId)
+        Network().onRefreshInstance(self.deviceData[deviceId])
 
 
     # TODO: This function must be thread-safe!!
