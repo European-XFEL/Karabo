@@ -38,10 +38,12 @@ class TestWidget(widget.EditableWidget, widget.DisplayWidget):
     alias = "Test Widget"
 
     instance = None
+    value = None
 
     def __init__(self, box, parent):
         super(TestWidget, self).__init__(box)
         self.widget = QWidget(parent)
+        self.proxy = parent
         TestWidget.instance = self
 
 
@@ -208,11 +210,17 @@ class Tests(TestCase):
         scene.dropEvent(de)
         self.assertEqual(testdevice.visible, 6)
 
+        self.assertEqual(TestWidget.instance.value, 0.5)
+        component = TestWidget.instance.proxy.parent().component
+        self.assertIcon(component.acApply.icon(), icons.applyGrey)
+        TestWidget.instance.value = 2.5
+        TestWidget.instance.onEditingFinished(2.5)
+        self.assertIcon(component.acApply.icon(), icons.apply)
         Manager().handle_configurationChanged(dict(
             deviceId="testdevice",
             configuration=Hash("targetSpeed", 1.5)))
+        self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertEqual(testdevice.value.targetSpeed.value, 1.5)
-        self.assertEqual(TestWidget.instance.value, 1.5)
 
         net.called = [ ]
         scene.clean()
