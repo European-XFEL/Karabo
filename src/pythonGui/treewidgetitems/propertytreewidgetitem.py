@@ -17,6 +17,8 @@ from components import ChoiceComponent, DisplayComponent
 import icons
 from popupwidget import PopupWidget
 
+from karabo.hashtypes import Type
+
 from PyQt4.QtCore import Qt, QSize
 from PyQt4.QtGui import QAction, QCursor, QMenu
 
@@ -98,7 +100,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
             info["Key"] = self.box.key()
             d = self.box.descriptor
-            info["Value Type"] = d.hashname()
+            if isinstance(d, Type):
+                info["Value Type"] = d.hashname()
             if d.defaultValue is not None:
                 info["Default Value"] = d.defaultValue
             if d.alias is not None:
