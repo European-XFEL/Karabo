@@ -242,6 +242,7 @@ class Tests(TestCase):
         self.stop()
         self.systemTopology() # restart the stopped stuff
         self.scene()
+        self.schema()
         self.assertException()
 
 
