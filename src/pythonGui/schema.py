@@ -1,8 +1,14 @@
+#############################################################################
+# Author: martin.teichmann@xfel.eu>
+# Created on April 8, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
 from karabo.hash import Hash
 from karabo import hashtypes
 from enums import AccessMode
 from registry import Monkey
-import manager
+from network import Network
 import icons
 from timestamp import Timestamp
 from util import Weak
