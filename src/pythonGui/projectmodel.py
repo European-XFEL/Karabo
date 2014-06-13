@@ -199,8 +199,7 @@ class ProjectModel(QStandardItemModel):
         # Update project view and pluginDialog data
         self.updateData()
         if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(
-                manager.Manager().systemHash())
+            self.pluginDialog.updateServerTopology(manager.Manager().systemHash)
 
 
     def currentDevice(self):
@@ -474,16 +473,29 @@ class ProjectModel(QStandardItemModel):
     def onInitDevices(self):
         project = self.currentProject()
         for device in project.devices:
-            # TODO: check for startup behavior
-            serverId = device.futureConfig.get("serverId")
-            manager.Manager().initDevice(serverId, device.classId, device.toHash())
+            self.initDevice(device)
+
+
+    def initDevice(self, device):
+        if not device.ifexists == "restart": # ignore, never
+            return
+        
+        if device.isOnline():
+            self.killDevice(device)
+        
+        manager.Manager().initDevice(device.futureConfig.get("serverId"),
+                             device.classId, device.toHash())
 
 
     def onKillDevices(self):
         project = self.currentProject()
         for device in project.devices:
-            if device.isOnline():
-                manager.Manager().killDevice(device.id)
+            self.killDevice(device)
+
+
+    def killDevice(self, device):
+        if device.isOnline():
+            manager.Manager().killDevice(device.id)
 
 
     def onEditScene(self):
