@@ -302,6 +302,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer = QTimer(self)
         self.__busyTimer.setSingleShot(True)
         self.__busyTimer.timeout.connect(self.onTimeOut)
+        self._applyEnabled = False
 
         # In case of attributes (Hash-V2) connect another function here
         self.signalConflictStateChanged.connect(
@@ -338,21 +339,17 @@ class EditableApplyLaterComponent(BaseComponent):
         self.widgetFactory.addParameters(**params)
 
 
-    def _applyEnabled(self):
-        return self.acReset.isEnabled()
-    def _setApplyEnabled(self, enable):
-        if self.acReset.isEnabled() is enable:
-            return
+    @property
+    def applyEnabled(self):
+        return self._applyEnabled
 
-        self.acApply.setIcon(icons.apply if enable else icons.applyGrey)
-        self.acReset.setEnabled(enable)
 
-        if enable is False:
-            self.hasConflict = False
-
-        # Broadcast to ConfigurationPanel - treewidget
-        self.signalApplyChanged.emit(self.boxes[0], enable)
-    applyEnabled = property(fget=_applyEnabled, fset=_setApplyEnabled)
+    @applyEnabled.setter
+    def applyEnabled(self, value):
+        emit = value != self._applyEnabled
+        self._applyEnabled = value
+        if emit:
+            self.signalApplyChanged.emit(self.boxes[0], value)
 
 
     def addKeyValue(self, key, value):
@@ -449,6 +446,7 @@ class EditableApplyLaterComponent(BaseComponent):
             self.acApply.setIcon(icons.apply)
         self.acApply.setStatusTip(text)
         self.acApply.setToolTip(text)
+        self.applyEnabled = allowed and not isEqualEditable
 
 
     def onEditingFinished(self, key, value):
