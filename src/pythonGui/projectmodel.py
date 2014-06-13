@@ -199,8 +199,7 @@ class ProjectModel(QStandardItemModel):
         # Update project view and pluginDialog data
         self.updateData()
         if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(
-                manager.Manager().systemHash())
+            self.pluginDialog.updateServerTopology(manager.Manager().systemHash)
 
 
     def currentDevice(self):
@@ -350,27 +349,34 @@ class ProjectModel(QStandardItemModel):
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
         
-        config = Hash("deviceId", self.pluginDialog.deviceId,
-                      "serverId", self.pluginDialog.serverId)
-        
+        config = Hash()
         if device is not None:
+            # Get old configuration of device, if classId consistent
+            if device.classId == self.pluginDialog.classId:
+                config.merge(device.futureConfig, "merge")
             # Remove old device configuration
             project.remove(device)
+
+        config.set("deviceId", self.pluginDialog.deviceId)
+        config.set("serverId", self.pluginDialog.serverId)        
         
         # Add new device
-        device = self.addDevice(project, self.pluginDialog.deviceId, self.pluginDialog.classId, config)
+        device = self.addDevice(project, self.pluginDialog.deviceId,
+                                self.pluginDialog.classId,
+                                self.pluginDialog.startupBehaviour,
+                                config)
         
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, deviceId, classId, config):
+    def addDevice(self, project, deviceId, classId, ifexists, config):
         """
         Add a device configuration for the given \project with the given \classId
         and the \config.
         """
-        device = Device(deviceId, classId, config)
+        device = Device(deviceId, classId, ifexists, config)
         self.checkDescriptor(device)
         project.addDevice(device)
         self.updateData()
@@ -467,16 +473,29 @@ class ProjectModel(QStandardItemModel):
     def onInitDevices(self):
         project = self.currentProject()
         for device in project.devices:
-            # TODO: check for startup behavior
-            serverId = device.futureConfig.get("serverId")
-            manager.Manager().initDevice(serverId, device.classId, device.toHash())
+            self.initDevice(device)
+
+
+    def initDevice(self, device):
+        if not device.ifexists == "restart": # ignore, never
+            return
+        
+        if device.isOnline():
+            self.killDevice(device)
+        
+        manager.Manager().initDevice(device.futureConfig.get("serverId"),
+                             device.classId, device.toHash())
 
 
     def onKillDevices(self):
         project = self.currentProject()
         for device in project.devices:
-            if device.isOnline():
-                manager.Manager().killDevice(device.id)
+            self.killDevice(device)
+
+
+    def killDevice(self, device):
+        if device.isOnline():
+            manager.Manager().killDevice(device.id)
 
 
     def onEditScene(self):
