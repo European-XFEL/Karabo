@@ -57,10 +57,8 @@ class PluginDialog(QDialog):
         fLayout = QFormLayout(self.gbStartUp)
         fLayout.setContentsMargins(5,5,5,5)
         self.cbStartUp = QComboBox()
-        self.cbStartUp.addItems(["Instantiate, if not exists",
-                                   "Restart, if exists", "Never instantiate"])
+        self.cbStartUp.addItems(["ignore", "restart", "never"])
         self.cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.cbStartUp.currentIndexChanged[int].connect(self.onStartUpBehaviourChanged)
         fLayout.addRow("Startup behaviour:", self.cbStartUp)
         vLayout.addWidget(self.gbStartUp)
 
@@ -133,8 +131,6 @@ class PluginDialog(QDialog):
         self.cbServer.adjustSize()
 
         if device is not None:
-            classId = device.classId
-            
             config = device.futureConfig
             deviceId = config.get("deviceId")
             serverId = config.get("serverId")
@@ -142,8 +138,10 @@ class PluginDialog(QDialog):
             self.leDeviceId.setText(deviceId)
             index = self.cbServer.findText(serverId)
             self.cbServer.setCurrentIndex(index)
-            index = self.cbPlugin.findText(classId)
+            index = self.cbPlugin.findText(device.classId)
             self.cbPlugin.setCurrentIndex(index)
+            index = self.cbStartUp.findText(device.ifexists)
+            self.cbStartUp.setCurrentIndex(index)
         
         return True
 
@@ -161,6 +159,11 @@ class PluginDialog(QDialog):
     @property
     def serverId(self):
         return self.cbServer.currentText()
+
+
+    @property
+    def startupBehaviour(self):
+        return self.cbStartUp.currentText()
 
 
 ### Slots ###
@@ -185,8 +188,4 @@ class PluginDialog(QDialog):
         pass
         #data = self.cbPlugin.itemData(index)
         #print "onPluginChanged", data
-
-
-    def onStartUpBehaviourChanged(self, index):
-        print "onStartUpBehaviourChanged", index
 

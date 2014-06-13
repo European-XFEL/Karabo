@@ -116,8 +116,7 @@ class Project(QObject):
                 filename = filename[:-4]
 
                 for classId, conf in XMLParser().read(data).iteritems():
-                    device = Device(filename, classId, conf)
-                    device.ifexists = d.get("ifexists")
+                    device = Device(filename, classId, d.get("ifexists"), conf)
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
@@ -223,12 +222,12 @@ class Project(QObject):
 
 class Device(Configuration):
 
-    def __init__(self, path, classId, config, descriptor=None):
+    def __init__(self, path, classId, ifexists, config, descriptor=None):
         super(Device, self).__init__(path, "projectClass", descriptor)
 
         self.filename = "{}.xml".format(path)
         self.classId = classId
-        self.ifexists = "ignore" # restart, ignore, keep
+        self.ifexists = ifexists # restart, ignore, never
         # Needed in case the descriptor is not set yet
         self.futureConfig = config
         # Merge futureConfig, if descriptor is not None
