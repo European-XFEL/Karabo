@@ -350,27 +350,34 @@ class ProjectModel(QStandardItemModel):
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
         
-        config = Hash("deviceId", self.pluginDialog.deviceId,
-                      "serverId", self.pluginDialog.serverId)
-        
+        config = Hash()
         if device is not None:
+            # Get old configuration of device, if classId consistent
+            if device.classId == self.pluginDialog.classId:
+                config.merge(device.futureConfig, "merge")
             # Remove old device configuration
             project.remove(device)
+
+        config.set("deviceId", self.pluginDialog.deviceId)
+        config.set("serverId", self.pluginDialog.serverId)        
         
         # Add new device
-        device = self.addDevice(project, self.pluginDialog.deviceId, self.pluginDialog.classId, config)
+        device = self.addDevice(project, self.pluginDialog.deviceId,
+                                self.pluginDialog.classId,
+                                self.pluginDialog.startupBehaviour,
+                                config)
         
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, deviceId, classId, config):
+    def addDevice(self, project, deviceId, classId, ifexists, config):
         """
         Add a device configuration for the given \project with the given \classId
         and the \config.
         """
-        device = Device(deviceId, classId, config)
+        device = Device(deviceId, classId, ifexists, config)
         self.checkDescriptor(device)
         project.addDevice(device)
         self.updateData()
