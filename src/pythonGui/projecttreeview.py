@@ -199,7 +199,7 @@ class ProjectTreeView(QTreeView):
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
             
-            text = "Instantiate"
+            text = "Initiate"
             acInitDevice = QAction(text, self)
             acInitDevice.setStatusTip(text)
             acInitDevice.setToolTip(text)
@@ -227,10 +227,8 @@ class ProjectTreeView(QTreeView):
         index = self.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
         if not isinstance(object, Device): return
-        
-        config = object.toHash()
-        serverId = config.get("serverId")
-        Manager().initDevice(serverId, object.classId, config)
+
+        self.model().initDevice(object)
 
 
     def onKillDevice(self):
@@ -238,5 +236,5 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         if not isinstance(object, Device): return
         
-        Manager().killDevice(object.id)
+        self.model().killDevice(object)
 
