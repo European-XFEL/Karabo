@@ -444,7 +444,7 @@ class _Manager(QObject):
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
 
-        self.handleDeviceSchema(instanceInfo)
+        self.handle_deviceSchema(instanceInfo)
         Network().onRefreshInstance(deviceId)
 
 
