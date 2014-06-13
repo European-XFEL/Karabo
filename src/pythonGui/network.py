@@ -311,12 +311,20 @@ class _Network(QObject):
         self._tcpWriteHash(instanceInfo)
 
 
-    def onReconfigure(self, boxes):
+    def onReconfigure(self, changes):
+        """ set values in a device
+
+        changes is a list of pairs (box, value). They all must belong to
+        the same device."""
         instanceInfo = Hash()
         instanceInfo["type"] = "reconfigure"
-        instanceInfo["deviceId"] = boxes[0].configuration.id
-        for b in boxes:
-            instanceInfo["configuration." + ".".join(b.path)] = b.toHash()
+        id = changes[0][0].configuration.id
+        instanceInfo["deviceId"] = id
+        conf = Hash()
+        for box, value in changes:
+            assert id == box.configuration.id
+            conf[".".join(box.path)] = box.descriptor.cast(value)
+        instanceInfo["configuration"] = conf
         self._tcpWriteHash(instanceInfo)
 
 
