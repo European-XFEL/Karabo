@@ -108,9 +108,21 @@ class Box(QObject):
 
     def getFromPast(self, t0, t1, maxNumData):
         Network().onGetFromPast(self, t0, t1, maxNumData)
+        
+        
+class Descriptor(hashtypes.Descriptor):
+    # Means that parent class is overwritten/updated
+    __metaclass__ = Monkey
+
+    def setAssignment(self, item):
+        if self.assignment == 1: # Mandatory
+            f = item.font(0)
+            f.setBold(True)
+            item.setFont(0, f)
 
 
 class Type(hashtypes.Type):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
     icon = icons.undefined
 
@@ -160,6 +172,7 @@ class Type(hashtypes.Type):
 
 
 class Char(hashtypes.Char):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
 
     classAlias = "Text Field"
@@ -167,6 +180,7 @@ class Char(hashtypes.Char):
 
 
 class String(hashtypes.String):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
 
     classAlias = "Text Field"
@@ -186,24 +200,28 @@ class String(hashtypes.String):
 
 
 class Integer(hashtypes.Integer):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
     classAlias = 'Integer Field'
     icon = icons.int
 
 
 class Number(hashtypes.Number):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
     classAlias = "Float Field"
     icon = icons.float
 
 
 class Bool(hashtypes.Bool):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
     classAlias = "Toggle Field"
     icon = icons.boolean
 
 
 class Vector(hashtypes.Vector):
+    # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
     classAlias = 'Plot'
 
@@ -265,8 +283,8 @@ class Schema(hashtypes.Descriptor):
     def parseAttrs(self, attrs, parent):
         """parse the attributes from attrs. This should correspond to
         the C++ class util::Schema, where they are defined."""
-        copy = ['description', 'defaultValue', 'displayType', 'alias',
-                'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
+        copy = ['description', 'defaultValue', 'displayType', 'assignment',
+                'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
                 'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
                 'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy']
         for a in copy:
@@ -302,6 +320,7 @@ class Schema(hashtypes.Descriptor):
         item.displayText = self.displayedName
         item.allowedStates = self.allowedStates
         item.requiredAccessLevel = self.requiredAccessLevel
+        
         self._item(treeWidget, item, configuration, isClass)
         return item
 
@@ -314,7 +333,8 @@ class Schema(hashtypes.Descriptor):
                 except AttributeError:
                     print 'missing {} in {}'.format(k, box.value)
                 else:
-                    v.item(treeWidget, parent, c, isClass)
+                    item = v.item(treeWidget, parent, c, isClass)
+                    v.setAssignment(item)
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
@@ -378,7 +398,6 @@ class ChoiceOfNodes(Schema):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
-        self.assignment = attrs['assignment']
         self.classAlias = 'Choice Element'
         return self
 
@@ -390,10 +409,10 @@ class ChoiceOfNodes(Schema):
         except AttributeError:
             item.displayText = box.path[-1]
         item.allowedStates = self.allowedStates
-        if self.assignment == 1: # Mandatory
-            f = item.font(0)
-            f.setBold(True)
-            item.setFont(0, f)
+        #if self.assignment == 1: # Mandatory
+        #    f = item.font(0)
+        #    f.setBold(True)
+        #    item.setFont(0, f)
         item.defaultValue = self.defaultValue
         item.requiredAccessLevel = self.requiredAccessLevel
 
