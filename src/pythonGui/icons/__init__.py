@@ -56,7 +56,6 @@ float = Icon("type-float.png")
 boolean = Icon("type-boolean.png")
 undefined = Icon("type-undefined.png")
 apply = Icon("apply-32x32.png")
-applyGrey = apply
 applyConflict = Icon("apply-conflict-32x32.png")
 yes = Icon("yes.png")
 no = Icon("no.png")

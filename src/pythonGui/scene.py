@@ -1109,7 +1109,6 @@ class Scene(QSvgWidget):
                     proxy = ProxyWidget(self.inner)
 
                     editableComponent = EditableApplyLaterComponent(item.classAlias, box, proxy)
-                    editableComponent.isEditableValueInit = False
 
                     box.configuration.addVisible()
                     proxy.setComponent(editableComponent)
