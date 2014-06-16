@@ -21,8 +21,8 @@ class DisplayFileIn(DisplayWidget):
     category = "String"
     alias = "File In"
 
-    def __init__(self, **params):
-        super(DisplayFileIn, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayFileIn, self).__init__(box)
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
