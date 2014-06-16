@@ -116,8 +116,16 @@ class Tests(TestCase):
             node = root.child(i)
             if node.box.path[0] == "int32":
                 break
+        self.assertTrue(node.font(0).bold())
         self.assertEqual(node.displayComponent.widget.text(), "0x4D2")
+        self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
+                         1234)
         self.assertEqual(node.text(0), "32 bit integer")
+        for i in count():
+            node = root.child(i)
+            if node.box.path[0] == "int8":
+                break
+        self.assertFalse(node.font(0).bold())
 
 
     def findIcon(self, a):

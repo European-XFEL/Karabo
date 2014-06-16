@@ -158,6 +158,8 @@ class DisplayComponent(BaseComponent):
 
 
 class EditableNoApplyComponent(BaseComponent):
+    """ These components are used while editing the initial parameters
+    of a class. """
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -171,6 +173,8 @@ class EditableNoApplyComponent(BaseComponent):
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
             super(EditableNoApplyComponent, self).__init__(W.alias, box)
+        if box.hasValue():
+            self.widgetFactory.valueChanged(box, box.value, box.timestamp)
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
         hLayout.addWidget(self.widgetFactory.widget)
