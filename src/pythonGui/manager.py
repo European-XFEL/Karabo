@@ -389,7 +389,8 @@ class _Manager(QObject):
         device = self.deviceData.get(instanceId)
         if device is not None:
             device.status = "offline"
-            device.redummy()
+            if device.descriptor is not None:
+                device.redummy()
         # Update system topology
         parentPath = self.systemTopology.erase(instanceId)
         if parentPath is not None:
