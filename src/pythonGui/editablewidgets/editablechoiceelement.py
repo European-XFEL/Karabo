@@ -56,11 +56,12 @@ class EditableChoiceElement(EditableWidget):
 
 
     def addParameters(self, itemToBeAdded=None):
-        if itemToBeAdded:
-            self.__comboBox.blockSignals(True)
-            self.__comboBox.addItem(itemToBeAdded.text(0))
-            self.childItemList.append(itemToBeAdded)
-            self.__comboBox.blockSignals(False)
+        if itemToBeAdded is None: return
+
+        self.__comboBox.blockSignals(True)
+        self.__comboBox.addItem(itemToBeAdded.text(0))
+        self.childItemList.append(itemToBeAdded)
+        self.__comboBox.blockSignals(False)
 
 
     @property
@@ -108,7 +109,7 @@ class EditableChoiceElement(EditableWidget):
             if keys > 0:
                 value = keys[0]
         
-        index = self.__comboBox.findText(type(value).__name__)
+        index = self.__comboBox.findText(value)
         if index < 0:
             return
         

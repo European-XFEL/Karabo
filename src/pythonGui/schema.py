@@ -430,10 +430,6 @@ class ChoiceOfNodes(Schema):
         except AttributeError:
             item.displayText = box.path[-1]
         item.allowedStates = self.allowedStates
-        #if self.assignment == 1: # Mandatory
-        #    f = item.font(0)
-        #    f.setBold(True)
-        #    item.setFont(0, f)
         item.defaultValue = self.defaultValue
         item.requiredAccessLevel = self.requiredAccessLevel
 
@@ -458,18 +454,21 @@ class ChoiceOfNodes(Schema):
             item.editableComponent.signalApplyChanged.connect(
                 self.treeWidget.onApplyChanged)
 
-        defaultValue = item.defaultValue
-        for k, v in self.dict.iteritems():
+        for count, (k, v) in enumerate(self.dict.iteritems()):
             childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
-
-            if defaultValue is None:
-                childItem.setHidden(True)
-                defaultValue = False
-            elif  k != defaultValue:
-                childItem.setHidden(True)
+            
+            if item.defaultValue is None:
+                if count > 0:
+                    childItem.setHidden(True)
+            else:
+                if k != item.defaultValue:
+                    childItem.setHidden(True)
 
             if item.editableComponent is not None:
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
+
+        # Trigger change of combobox
+        item.editableComponent.widgetFactory.valueChanged(box, self.defaultValue, None)
         return item
 
 
