@@ -23,9 +23,10 @@ __all__ = ["EditableChoiceElement"]
 
 from widget import EditableWidget
 from karabo.hash import Hash
+from schema import Schema
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QEvent
+from PyQt4.QtGui import QComboBox
 
 
 class EditableChoiceElement(EditableWidget):
@@ -101,14 +102,9 @@ class EditableChoiceElement(EditableWidget):
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        if value is None:
+        if value is None or not isinstance(value, unicode):
             return
-        
-        if isinstance(value, Hash):
-            keys = value.keys()
-            if keys > 0:
-                value = keys[0]
-        
+
         index = self.__comboBox.findText(value)
         if index < 0:
             return
