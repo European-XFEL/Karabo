@@ -57,7 +57,7 @@ class PluginDialog(QDialog):
         fLayout = QFormLayout(self.gbStartUp)
         fLayout.setContentsMargins(5,5,5,5)
         self.cbStartUp = QComboBox()
-        self.cbStartUp.addItems(["ignore", "restart", "never"])
+        self.cbStartUp.addItems(["restart", "ignore"])
         self.cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         fLayout.addRow("Startup behaviour:", self.cbStartUp)
         vLayout.addWidget(self.gbStartUp)

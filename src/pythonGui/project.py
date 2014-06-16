@@ -227,7 +227,7 @@ class Device(Configuration):
 
         self.filename = "{}.xml".format(path)
         self.classId = classId
-        self.ifexists = ifexists # restart, ignore, never
+        self.ifexists = ifexists # restart, ignore
         # Needed in case the descriptor is not set yet
         self.futureConfig = config
         # Merge futureConfig, if descriptor is not None
