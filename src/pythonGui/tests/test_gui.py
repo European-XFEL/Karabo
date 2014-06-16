@@ -118,6 +118,8 @@ class Tests(TestCase):
                 break
         self.assertTrue(node.font(0).bold())
         self.assertEqual(node.displayComponent.widget.text(), "0x4D2")
+        self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
+                         1234)
         self.assertEqual(node.text(0), "32 bit integer")
         for i in count():
             node = root.child(i)
