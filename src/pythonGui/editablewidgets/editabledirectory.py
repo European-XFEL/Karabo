@@ -22,8 +22,8 @@ class EditableDirectory(EditableWidget):
     category = "String"
     alias = "Directory"
 
-    def __init__(self, value=None, **params):
-        super(EditableDirectory, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableDirectory, self).__init__(box)
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -41,8 +41,6 @@ class EditableDirectory(EditableWidget):
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onDirectoryClicked)
         hLayout.addWidget(self.__tbPath)
-
-        self.valueChanged(self.keys[0], value)
 
 
     @property
