@@ -127,6 +127,9 @@ class Tests(TestCase):
                 break
         self.assertFalse(node.font(0).bold())
 
+        cls.fromHash(Hash("int8", 42))
+        self.assertEqual(node.displayComponent.widget.text(), "42")
+
 
     def findIcon(self, a):
         for k in dir(icons):
