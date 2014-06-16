@@ -22,8 +22,8 @@ class EditableFileIn(EditableWidget):
     category = "String"
     alias = "File In"
 
-    def __init__(self, value=None, **params):
-        super(EditableFileIn, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(EditableFileIn, self).__init__(box)
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
@@ -41,8 +41,6 @@ class EditableFileIn(EditableWidget):
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onFileInClicked)
         hLayout.addWidget(self.__tbPath)
-
-        self.valueChanged(self.keys[0], value)
 
 
     @property
