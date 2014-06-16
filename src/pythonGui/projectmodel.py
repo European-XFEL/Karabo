@@ -477,7 +477,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
-        if not device.ifexists == "restart": # ignore, never
+        if not device.ifexists == "restart": # ignore
             return
         
         if device.isOnline():
