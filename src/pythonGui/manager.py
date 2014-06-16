@@ -123,6 +123,10 @@ class _Manager(QObject):
         self.projectTopology.updateNeeded()
 
 
+    def _handleLogData(self, logMessage):
+        self.signalLogDataAvailable.emit(logMessage)
+
+
     def onReceivedData(self, instanceInfo):
         getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
 
@@ -215,7 +219,7 @@ class _Manager(QObject):
 
 
     def handle_log(self, instanceInfo):
-        self.signalLogDataAvailable.emit(instanceInfo["message"])
+        self._handleLogData(instanceInfo["message"])
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -358,7 +362,7 @@ class _Manager(QObject):
                          "Detected dirty shutdown for instance \"" + id + "\", which " \
                          "is coming up now.#"
             # A log message is triggered
-            self.onLogDataAvailable(logMessage)
+            self._handleLogData(logMessage)
 
         # Update system topology with new configuration
         self.handle_systemTopology(dict(systemTopology=config))
