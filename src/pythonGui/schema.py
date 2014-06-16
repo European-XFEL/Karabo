@@ -198,15 +198,14 @@ class String(hashtypes.String):
     icon = icons.string
 
     def item(self, treeWidget, parent, box, isClass):
-        item = super(String, self).item(treeWidget, parent, box, isClass)
-
         try:
             ca = dict(directory='Directory', fileIn='File In',
                       fileOut='File Out')[self.displayType]
-            item.classAlias = ca
-            item.setIcon(0, icons.path)
+            self.classAlias = ca
+            String.icon = icons.path
         except (AttributeError, KeyError):
             pass
+        item = super(String, self).item(treeWidget, parent, box, isClass)
         return item
 
 

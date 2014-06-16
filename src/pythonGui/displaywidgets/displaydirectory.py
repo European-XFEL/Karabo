@@ -21,8 +21,8 @@ class DisplayDirectory(DisplayWidget):
     category = "String"
     alias = "Directory"
 
-    def __init__(self, **params):
-        super(DisplayDirectory, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayDirectory, self).__init__(box)
 
         self.__compositeWidget = QWidget()
         hLayout = QHBoxLayout(self.__compositeWidget)
