@@ -280,7 +280,7 @@ class _Manager(QObject):
             MessageBox.showError("Configuration open failed")
             return
 
-        conf.fromHash(config[classId])
+        conf.dispatchUserChanges(config[classId])
 
 
     def onOpenFromProject(self):
@@ -294,7 +294,7 @@ class _Manager(QObject):
             MessageBox.showError("Configuration open failed")
             return
         
-        conf.fromHash(dialog.projectConfiguration().hash[classId])
+        conf.dispatchUserChanges(dialog.projectConfiguration().hash[classId])
 
 
     def onSaveToFile(self):

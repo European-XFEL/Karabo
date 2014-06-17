@@ -222,6 +222,9 @@ class Tests(TestCase):
         self.assertEqual(testdevice.visible, 6)
 
         self.assertEqual(TestWidget.instance.value, 0.5)
+        testdevice.dispatchUserChanges(dict(targetSpeed=3.5))
+        self.assertEqual(TestWidget.instance.value, 3.5)
+        self.assertEqual(testdevice.value.targetSpeed.value, 0.5)
         component = TestWidget.instance.proxy.parent().component
         panel = gui.window.configurationPanel
         self.assertIcon(component.acApply.icon(), icons.applyGrey)
