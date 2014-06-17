@@ -36,6 +36,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
+    signalClearParameterPage = pyqtSignal(str, str) # removePath, selectPath
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -61,6 +62,7 @@ class _Manager(QObject):
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
                         connect(self.onNavigationTreeModelSelectionChanged)
+        self.systemTopology.signalClearParameterPage.connect(self.signalClearParameterPage)
         # Model for project views
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
@@ -391,10 +393,17 @@ class _Manager(QObject):
             device.status = "offline"
             if device.descriptor is not None:
                 device.redummy()
-        # Update system topology
-        parentPath = self.systemTopology.erase(instanceId)
-        if parentPath is not None:
-            self.signalInstanceGone.emit(instanceId, parentPath)
+            # Update system topology
+            self.systemTopology.eraseDevice(instanceId)
+        else:
+            # Update system topology
+            serverClassIds = self.systemTopology.eraseServer(instanceId)
+            for ids in serverClassIds:
+                try:
+                    del self.serverClassData[ids]
+                except KeyError:
+                    pass
+        
         path = "server." + instanceId
         if path in self.systemHash:
             del self.systemHash[path]
@@ -406,7 +415,6 @@ class _Manager(QObject):
                 del self.systemHash[path]
             else:
                 path = None
-        self.systemTopology.erase(path)
 
         self.projectTopology.updateNeeded()
 
