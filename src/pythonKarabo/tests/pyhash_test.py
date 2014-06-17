@@ -1,5 +1,7 @@
 import unittest
 from karabo.hash import Hash, XMLWriter, XMLParser, BinaryWriter, BinaryParser
+import numpy
+from numpy.testing import assert_equal
 
 class Hash_TestCase(unittest.TestCase):
 
@@ -121,6 +123,8 @@ class Hash_TestCase(unittest.TestCase):
         h["int"] = 4
         h["string"] = u"bla"
         h["chars"] = b"bla"
+        h["vector"] = numpy.arange(7)
+        h["emptyvector"] = numpy.array([])
         h["hash"] = Hash("a", 3, "b", 7.1)
 
         h["bool", "bool"] = False
@@ -132,7 +136,8 @@ class Hash_TestCase(unittest.TestCase):
 
 
     def check_test_hash(self, h):
-        self.assertEqual(h.keys(), ["bool", "int", "string", "chars", "hash"])
+        self.assertEqual(h.keys(), ["bool", "int", "string", "chars",
+                                    "vector", "emptyvector", "hash"])
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
@@ -141,6 +146,8 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(h["chars"], bytes))
         self.assertEqual(h["hash.a"], 3)
         self.assertEqual(h["hash.b"], 7.1)
+        assert_equal(h["vector"], numpy.arange(7))
+        assert_equal(h["emptyvector"], numpy.array([]))
 
         self.assertTrue(h["bool", "bool"] is False)
         self.assertEqual(h["int", "float"], 7.3)
