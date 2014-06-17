@@ -221,6 +221,8 @@ class VectorBool(NumpyVector, Bool):
 
 
 class Char(Simple, Type):
+    numpy = numpy.uint8 # actually not used, for convenience only
+
     @staticmethod
     def read(file):
         file.pos += 1
