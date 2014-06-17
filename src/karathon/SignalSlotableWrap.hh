@@ -321,16 +321,22 @@ namespace karathon {
 
         bp::object getInputChannels() {
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-            InputChannels ichannels = karabo::xms::SignalSlotable::getInputChannels();
+            const InputChannels& ichannels = karabo::xms::SignalSlotable::getInputChannels();
             bp::dict d;
             for (InputChannels::const_iterator it = ichannels.begin(); it != ichannels.end(); ++it) {
-                
+                d[it->first] = bp::object(it->second);
             }
-            return bp::object(karabo::xms::SignalSlotable::getInputChannels());
+            return bp::object(d);
         }
 
         bp::object getOutputChannels() {
-            return bp::object(karabo::xms::SignalSlotable::getOutputChannels());
+            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+            const OutputChannels& ochannels = karabo::xms::SignalSlotable::getOutputChannels();
+            bp::dict d;
+            for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
+                d[it->first] = bp::object(it->second);
+            }
+            return bp::object(d);
         }
 
     private: // members
