@@ -280,6 +280,7 @@ class EditableApplyLaterComponent(BaseComponent):
             super(EditableApplyLaterComponent, self).__init__(W.alias, box)
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         hLayout.addWidget(self.widgetFactory.widget)
 
         self.box = box
@@ -386,6 +387,7 @@ class EditableApplyLaterComponent(BaseComponent):
             self.box, oldWidget.parent())
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         oldWidget.parent().layout().insertWidget(0, self.widgetFactory.widget)
         oldWidget.setParent(None)
         self.widgetFactory.widget.show()

@@ -40,6 +40,9 @@ class Box(QObject):
 
     signalNewDescriptor = pyqtSignal(object)
     signalUpdateComponent = pyqtSignal(object, object, object) # box, value, timestamp
+    signalUserChanged = pyqtSignal(object, object) # box, value
+    # the user changed the value, but it is not yet applied, so the value
+    # in the box has not yet changed!
     signalHistoricData = pyqtSignal(object, object)
 
     def __init__(self, path, descriptor, configuration):
@@ -134,6 +137,10 @@ class Type(hashtypes.Type):
 
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
+
+
+    def dispatchUserChanges(self, box, hash):
+        box.signalUserChanged.emit(box, box.descriptor.cast(hash))
 
 
     def setDefault(self, box):
@@ -396,6 +403,11 @@ class Schema(hashtypes.Descriptor):
             else:
                 s(v, ts)
         box._set(box._value, timestamp)
+
+
+    def dispatchUserChanges(self, box, hash):
+        for k, v in hash.iteritems():
+            getattr(box._value, k).dispatchUserChanges(v)
 
 
     def setDefault(self, box):
