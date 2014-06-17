@@ -39,11 +39,11 @@ class DisplayPlot(DisplayWidget):
                  "lightgreen", "black"]
 
     def __init__(self, box, parent):
+        super(DisplayPlot, self).__init__(None)
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Plot")
         self.plot = self.widget.get_plot()
         self.curves = { }
-        super(DisplayPlot, self).__init__(None)
         self.addBox(box)
 
 
@@ -60,7 +60,6 @@ class DisplayPlot(DisplayWidget):
                            self.colorList[len(self.curves)])
         self.curves[box] = curve
         self.plot.add_item(curve)
-        self.connectBox(box)
         return True
 
 
