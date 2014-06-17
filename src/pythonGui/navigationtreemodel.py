@@ -25,7 +25,7 @@ from PyQt4.QtGui import QItemSelectionModel
 
 class NavigationTreeModel(QAbstractItemModel):
     # signal
-    signalInstanceNewReset = pyqtSignal(str) # path
+    signalClearParameterPage = pyqtSignal(str, str) # removePath, selectPath
 
 
     def __init__(self, parent=None):
@@ -151,23 +151,43 @@ class NavigationTreeModel(QAbstractItemModel):
 
     def has(self, path):
         return self.findIndex(path) is not None
-
-
-    def erase(self, instanceId):
+    
+    
+    def eraseDevice(self, instanceId):
         index = self.findIndex(instanceId)
         if (index is None) or (not index.isValid()):
             return None
-
+        
         self.beginResetModel()
         try:
-            childNode = index.internalPointer()
-            parentNode = childNode.parentNode
-            parentNode.removeChildNode(childNode)
+            node = index.internalPointer()
+            parentNode = node.parentNode
+            self.signalClearParameterPage.emit(node.path, parentNode.path)
+            parentNode.removeChildNode(node)
         finally:
-            self.endResetModel()
+            self.endResetModel() 
 
-        return parentNode.path
 
+    def eraseServer(self, instanceId):
+        index = self.findIndex(instanceId)
+        if (index is None) or (not index.isValid()):
+            return None
+        
+        serverClassIds = []
+        self.beginResetModel()
+        try:
+            node = index.internalPointer()
+            parentNode = node.parentNode
+            # There are children, if server
+            for childNode in node.childNodes:
+                # Remove configuration page for associated class
+                self.signalClearParameterPage.emit(childNode.path, parentNode.path)
+                serverClassIds.append((node.displayName, childNode.displayName))
+            parentNode.removeChildNode(node)
+        finally:
+            self.endResetModel()    
+        return serverClassIds
+        
 
     def removeExistingInstances(self, config):
         """
@@ -184,27 +204,28 @@ class NavigationTreeModel(QAbstractItemModel):
         # Check servers
         if config.has(serverKey):
             serverConfig = config.get(serverKey)
-            serverIds = serverConfig.keys()
-            for serverId in serverIds:
+            for serverId in serverConfig.keys():
                 # Check, if serverId is already in central hash
                 index = self.findIndex(serverId)
                 if index is None:
                     continue
-                
-                serverNode = index.internalPointer()
-                classNodes = serverNode.childNodes
-                for classNode in classNodes:
-                    # Check for running device instances on server
-                    deviceNodes = classNode.childNodes
-                    for deviceNode in deviceNodes:
-                        self.erase(deviceNode.path)
-                        removedInstanceIds.append(deviceNode.path)
-                    # Remove configuration page for associated class
-                    self.signalInstanceNewReset.emit(classNode.path)
                     
                 # Remove server from tree
-                self.erase(serverId)
+                self.eraseServer(serverId)
                 removedInstanceIds.append(serverId)
+        
+        deviceKey = "device"
+        if config.has(deviceKey):
+            deviceConfig = config.get(deviceKey)
+            deviceIds = deviceConfig.keys()
+            for deviceId in deviceConfig.keys():
+                # Check, if deviceId is already in central hash
+                index = self.findIndex(deviceId)
+                if index is None:
+                    continue
+                
+                self.eraseDevice(deviceId)
+                removedInstanceIds.append(deviceId)
         
         return removedInstanceIds
 
