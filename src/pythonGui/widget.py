@@ -91,17 +91,16 @@ class Widget(Registry, QObject):
 class DisplayWidget(Widget):
     menu = "Change display widget"
     factories = { }
-    categoryToAliases = { }
-    aliasConcreteClass = { }
+    displayCTA = categoryToAliases = { }
+    displayACC = aliasConcreteClass = { }
 
 
     @classmethod
     def register(cls, name, dict):
         super(DisplayWidget, cls).register(name, dict)
         if "alias" in dict:
-            DisplayWidget.categoryToAliases.setdefault(cls.category,
-                                                       [ ]).append(cls.alias)
-            DisplayWidget.aliasConcreteClass[cls.alias] = cls
+            cls.displayCTA.setdefault(cls.category, [ ]).append(cls.alias)
+            cls.displayACC[cls.alias] = cls
 
 
     def setReadOnly(self, ro):
@@ -111,6 +110,8 @@ class DisplayWidget(Widget):
 class VacuumWidget(DisplayWidget):
     menu = "Change vacuum widget"
     category = "State"
+    displayCTA = categoryToAliases = { }
+    displayACC = aliasConcreteClass = { }
 
     def __init__(self, box=None):
         DisplayWidget.__init__(box)
