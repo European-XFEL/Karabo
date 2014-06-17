@@ -59,6 +59,15 @@ if [ -z $KARABO ]; then
       echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework"
       echo "and create links to installed plugins"
     fi
+else
+    LOCALKARABOVERSION=$(cat $KARABO/VERSION)
+    if [ "$LOCALKARABOVERSION" == "$KARABOVERSION" ]; then
+       installDir=$KARABO/plugins
+    else
+       echo "Plugin was compiled with different karaboFramework version"
+       echo "than installed one: $KARABOVERSION vs. $LOCALKARABOVERSION"
+       echo " "
+    fi
 fi
 
 if [ "x${install_prefix_dir}x" != "xx" ]

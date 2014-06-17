@@ -53,6 +53,9 @@ NUM_CORES=2  # default
 if [ "$OS" = "Linux" ]; then
     DISTRO_ID=( $(lsb_release -is) )
     DISTRO_RELEASE=$(lsb_release -rs)
+    if [ "$DISTRO_ID" = "Scientific" ]; then
+       DISTRO_RELEASE=${DISTRO_RELEASE%%\.*}
+    fi
     NUM_CORES=`grep "processor" /proc/cpuinfo | wc -l`
 elif [ "$OS" = "Darwin" ]; then
     DISTRO_ID=MacOSX
