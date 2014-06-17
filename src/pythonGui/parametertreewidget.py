@@ -25,11 +25,10 @@ from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 class ParameterTreeWidget(QTreeWidget):
     signalApplyChanged = pyqtSignal(object, bool, bool) # box, enable, hasConflicts
 
-    def __init__(self, path=None):
-        # path - path of navigationItem
+    def __init__(self, conf=None):
         super(ParameterTreeWidget, self).__init__()
         
-        self.path = path
+        self.conf = conf
         # Store previous selected item for tooltip handling
         self.prevItem = None
 

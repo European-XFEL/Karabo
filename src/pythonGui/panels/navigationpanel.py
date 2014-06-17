@@ -40,7 +40,6 @@ class NavigationPanel(QWidget):
         self.setWindowTitle(title)
                 
         self.twNavigation = NavigationTreeView(self)
-        self.twNavigation.model().signalInstanceNewReset.connect(self.onResetPanel)
         
         Manager().signalReset.connect(self.onResetPanel)
         
