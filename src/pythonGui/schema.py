@@ -516,6 +516,10 @@ class ListOfNodes(hashtypes.Descriptor):
         return
 
 
+    def setAssignment(self, item):
+        return
+
+
     def toHash(self, box):
         return [ ]
 
