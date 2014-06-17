@@ -199,12 +199,12 @@ class String(hashtypes.String):
 
     def item(self, treeWidget, parent, box, isClass):
         try:
-            ca = dict(directory='Directory', fileIn='File In',
-                      fileOut='File Out')[self.displayType]
-            self.classAlias = ca
-            String.icon = icons.path
+            self.classAlias = dict(directory='Directory', fileIn='File In',
+                                   fileOut='File Out')[self.displayType]
         except (AttributeError, KeyError):
             pass
+        else:
+            self.icon = icons.path
         item = super(String, self).item(treeWidget, parent, box, isClass)
         return item
 
