@@ -59,6 +59,15 @@ if [ -z $KARABO ]; then
       echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework"
       echo "and create links to installed plugins"
     fi
+else
+    LOCALKARABOVERSION=$(cat $KARABO/VERSION)
+    if [ "$LOCALKARABOVERSION" == "$KARABOVERSION" ]; then
+       installDir=$KARABO/plugins
+    else
+       echo "Plugin was compiled with different karaboFramework version"
+       echo "than installed one: $KARABOVERSION vs. $LOCALKARABOVERSION"
+       echo " "
+    fi
 fi
 
 if [ "x${install_prefix_dir}x" != "xx" ]
@@ -101,6 +110,10 @@ echo -n "Running post install script..."
 #   #olddir=`pwd`; cd ${KARABO}/plugins; ln -sf $installDir/$PLUGINNAME-$VERSION/*; cd $olddir
 #   olddir=`pwd`; cd ${KARABO}/cppplugins; find $installDir/$PLUGINNAME-$VERSION -type f -exec ln -sf {} \; ; cd $olddir
 #fi
+# to do: loop for predefined dependencies to install
+#for dep in $intDeps; do
+#   echo "installing dependency $dep"
+#done
 echo " done."
 echo
 echo " Package was successfully installed to: $installDir/$PLUGINNAME-$VERSION-$KARABOVERSION"

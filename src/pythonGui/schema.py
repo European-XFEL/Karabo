@@ -40,6 +40,9 @@ class Box(QObject):
 
     signalNewDescriptor = pyqtSignal(object)
     signalUpdateComponent = pyqtSignal(object, object, object) # box, value, timestamp
+    signalUserChanged = pyqtSignal(object, object) # box, value
+    # the user changed the value, but it is not yet applied, so the value
+    # in the box has not yet changed!
     signalHistoricData = pyqtSignal(object, object)
 
     def __init__(self, path, descriptor, configuration):
@@ -136,6 +139,10 @@ class Type(hashtypes.Type):
         box._set(value, timestamp)
 
 
+    def dispatchUserChanges(self, box, hash):
+        box.signalUserChanged.emit(box, box.descriptor.cast(hash))
+
+
     def setDefault(self, box):
         if self.defaultValue is not None:
             self.set(box, self.defaultValue)
@@ -199,12 +206,12 @@ class String(hashtypes.String):
 
     def item(self, treeWidget, parent, box, isClass):
         try:
-            ca = dict(directory='Directory', fileIn='File In',
-                      fileOut='File Out')[self.displayType]
-            self.classAlias = ca
-            String.icon = icons.path
+            self.classAlias = dict(directory='Directory', fileIn='File In',
+                                   fileOut='File Out')[self.displayType]
         except (AttributeError, KeyError):
             pass
+        else:
+            self.icon = icons.path
         item = super(String, self).item(treeWidget, parent, box, isClass)
         return item
 
@@ -398,6 +405,11 @@ class Schema(hashtypes.Descriptor):
         box._set(box._value, timestamp)
 
 
+    def dispatchUserChanges(self, box, hash):
+        for k, v in hash.iteritems():
+            getattr(box._value, k).dispatchUserChanges(v)
+
+
     def setDefault(self, box):
         box._set(self.getClass()(box), None)
         for k, v in self.dict.iteritems():
@@ -501,6 +513,10 @@ class ListOfNodes(hashtypes.Descriptor):
 
 
     def setDefault(self, box):
+        return
+
+
+    def setAssignment(self, item):
         return
 
 

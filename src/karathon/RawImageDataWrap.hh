@@ -102,7 +102,7 @@ namespace karathon {
         RawImageDataWrap(karabo::util::Hash& hash, bool copiesHash = true) : karabo::xip::RawImageData(hash, copiesHash) {
         }
 
-        void setDimensionsPy(PyArrayObject* arr) {
+        static void setDimensionsPy(RawImageData& self, PyArrayObject* arr) {
             // Dimensions (shape)
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
@@ -110,54 +110,54 @@ namespace karathon {
             for (int i = 0; i < rank; ++i) tmp[i] = shapes[i];
             karabo::util::Dims dims;
             dims.fromVector(tmp);
-            setDimensions(dims);
+            self.setDimensions(dims);
         }
 
-        void setChannelSpacePy(PyArrayObject* arr) {
+        static void setChannelSpacePy(RawImageData& self, PyArrayObject* arr) {
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             int channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
-            setChannelSpace(channelSpace);
+            self.setChannelSpace(channelSpace);
         }
 
-        void setDataPy(const bp::object& obj, const bool copy = true) {
+        static void setDataPy(RawImageData& self, const bp::object& obj, const bool copy = true) {
 
             if (PyArray_Check(obj.ptr())) {
                 PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
 
                 // Adjust dimensions and channelSpace
-                setDimensionsPy(arr);
-                setChannelSpacePy(arr);
+                RawImageDataWrap::setDimensionsPy(self, arr);
+                RawImageDataWrap::setChannelSpacePy(self, arr);
 
                 // Data pointer and size          
                 size_t size = PyArray_NBYTES(arr);
                 char* data = reinterpret_cast<char*> (PyArray_DATA(arr));
 
-                setData(data, size, copy);
+                self.setData(data, size, copy);
 
             } else if (PyByteArray_Check(obj.ptr())) {
                 size_t size = PyByteArray_Size(obj.ptr());
                 char* data = PyByteArray_AsString(obj.ptr());
-                setData(data, size, copy);
+                self.setData(data, size, copy);
             } else {
                 throw KARABO_PYTHON_EXCEPTION("The argument type in setData is not supported.");
             }
         }
 
-        bp::object getDataPy() {
-            std::vector<unsigned long long> dims = getDimensions().toVector();
+        static bp::object getDataPy(RawImageData& self) {
+            std::vector<unsigned long long> dims = self.getDimensions().toVector();
             std::reverse(dims.begin(), dims.end()); // REVERSING
             npy_intp shape[dims.size()];
             for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
-            int npyType = karabo::util::Types::convert<karabo::xip::FromChannelSpace, ToNumpy>(getChannelSpace());
+            int npyType = karabo::util::Types::convert<karabo::xip::FromChannelSpace, ToNumpy>(self.getChannelSpace());
             PyObject* pyobj = PyArray_SimpleNew(dims.size(), shape, npyType);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
-            memcpy(PyArray_DATA(arr), &(getData())[0], PyArray_NBYTES(arr));
+            memcpy(PyArray_DATA(arr), &(self.getData())[0], PyArray_NBYTES(arr));
             return bp::object(bp::handle<>(pyobj)); // TODO Check whether a copy is involved here
 
         }
 
-        bp::object getDimensionsPy() {
-            karabo::util::Dims d = getDimensions();
+        static bp::object getDimensionsPy(const RawImageData& self) {
+            karabo::util::Dims d = self.getDimensions();
             return karathon::Wrapper::fromStdVectorToPyList(d.toVector());
         }
 
@@ -165,11 +165,11 @@ namespace karathon {
         //            return bp::object(getHeader());
         //        }
 
-        void setHeaderPy(const bp::object & obj) {
+        static void setHeaderPy(RawImageData& self, const bp::object & obj) {
             // TODO also support dict here!!
             if (bp::extract<karabo::util::Hash>(obj).check()) {
                 const karabo::util::Hash& header = bp::extract<karabo::util::Hash>(obj);
-                setHeader(header);
+                self.setHeader(header);
                 return;
             }
             throw KARABO_PYTHON_EXCEPTION("Python type of the argument in setHeader must be Hash");
