@@ -118,7 +118,10 @@ class NumpyVector(Vector):
 
     @classmethod
     def fromstring(cls, s):
-        return numpy.array([cls.numpy(x) for x in s.split(',')])
+        if s:
+            return numpy.array([cls.numpy(x) for x in s.split(',')])
+        else:
+            return numpy.array([], dtype=cls.numpy)
 
 
     @classmethod
