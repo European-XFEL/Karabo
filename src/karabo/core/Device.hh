@@ -117,7 +117,7 @@ namespace karabo {
                         .adminAccess()
                         .reconfigurable()
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("classId")
                         .displayedName("ClassID")
                         .description("The (factory)-name of the class of this device")
@@ -140,21 +140,21 @@ namespace karabo {
                         .assignmentOptional().noDefaultValue()
                         .init()
                         .commit();
-                
+
                 BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
                         .reconfigurable()
                         .assignmentOptional().defaultValue(true)
-                        .commit();                
-                
+                        .commit();
+
                 INT32_ELEMENT(expected).key("progress")
                         .displayedName("Progress")
                         .description("The progress of the current action")
                         .readOnly()
                         .initialValue(0)
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
@@ -241,10 +241,6 @@ namespace karabo {
                 karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
 
                 Hash hash(key, raw.hash());
-                //Hash& value = hash.bindReference<Hash>(key);
-
-		//image.copyTo(value);
-
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 emit("signalChanged", hash, getInstanceId());
@@ -291,13 +287,13 @@ namespace karabo {
                     emit("signalChanged", validated, getInstanceId());
                 }
             }
-            
+
             template <class ValueType>
             void setNoValidate(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 karabo::util::Hash h(key, value);
                 this->setNoValidate(h, timestamp);
             }
-            
+
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 // TODO Care about timestamps!!
                 if (!hash.empty()) {
@@ -305,7 +301,7 @@ namespace karabo {
                     emit("signalChanged", hash, getInstanceId());
                 }
             }
-            
+
             /**
              * Retrieves the current value of any device parameter (that was defined in the expectedParameters function)
              * @param key A valid parameter of the device (must be defined in the expectedParameters function)
@@ -569,7 +565,10 @@ namespace karabo {
                 emit("signalNotification", std::string("EXCEPTION"), shortMessage, detailedMessage, m_deviceId);
             }
 
+            //void notify("ERROR", const std::string& shortMessage, const std::string& detailedMessage)
+
             // This function will polymorphically be called by the FSM template
+
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
                 boost::regex re(".*\\d+(.+Event).*");
@@ -585,10 +584,11 @@ namespace karabo {
             }
 
             // Use execute instead to trigger your error event
+
             KARABO_DEPRECATED virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
                 this->exceptionFound(shortMessage, detailedMessage);
             }
-            
+
             void execute(const std::string& command) const {
                 call("", command);
             }
@@ -643,17 +643,17 @@ namespace karabo {
                 instanceInfo.set("classId", m_classId);
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
-                instanceInfo.set("version", Device::classInfo().getVersion());                
+                instanceInfo.set("version", Device::classInfo().getVersion());
                 instanceInfo.set("host", boost::asio::ip::host_name());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 // TODO Make heartbeat configurable
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, instanceInfo));
-                
+
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-                
+
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
                 // Repair classId
@@ -668,10 +668,10 @@ namespace karabo {
                 if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 m_objectStateChangeMutex.unlock();
-                
+
                 // Start the state machine
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
-                
+
                 t.join(); // Blocks 
             }
 
@@ -708,7 +708,7 @@ namespace karabo {
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
-                //SLOT2(errorFound, std::string, std::string);
+                        //SLOT2(errorFound, std::string, std::string);
             }
 
             // TODO deprecate
