@@ -93,10 +93,21 @@ class DisplayComponent(BaseComponent):
         else:
             self.widgetFactory = W(box, parent)
             super(DisplayComponent, self).__init__(W.alias, box)
+        self.widgetFactory.setReadOnly(True)
+        self.connectWidget(box)
+
+
+    def connectWidget(self, box):
         box.signalUpdateComponent.connect(self.widgetFactory.valueChanged)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
-        self.widgetFactory.setReadOnly(True)
+
+
+    def addBox(self, box):
+        if self.widgetFactory.addBox(box):
+            self.connectWidget(box)
+            return True
+        return False
 
 
     def _getWidgetCategory(self):
@@ -131,10 +142,6 @@ class DisplayComponent(BaseComponent):
         self.widgetFactory.setErrorState(isError)
 
 
-    def addBox(self, box):
-        return self.widgetFactory.addBox(box)
-
-
     def removeKey(self, key):
         self.widgetFactory.removeKey(key)
 
@@ -150,8 +157,10 @@ class DisplayComponent(BaseComponent):
         self.widgetFactory = factory.getClass(alias)(
             self.boxes[0], oldWidget.parent())
         self.widgetFactory.setReadOnly(True)
+        self.connectWidget(self.boxes[0])
         for b in self.boxes[1:]:
             self.widgetFactory.addBox(b)
+            self.connectWidget(b)
         oldWidget.parent().setWidget(self.widgetFactory.widget)
         oldWidget.setParent(None)
         self.widgetFactory.widget.show()
