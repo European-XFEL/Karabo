@@ -399,6 +399,8 @@ class EditableApplyLaterComponent(BaseComponent):
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
         self.__busyTimer.start(5000)
+        for b in self.boxes:
+            b.signalUserChanged.emit(b, self.widgetFactory.value)
         Network().onReconfigure([(b, self.widgetFactory.value)
                                  for b in self.boxes])
 
