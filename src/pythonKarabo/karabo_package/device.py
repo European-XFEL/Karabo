@@ -183,7 +183,7 @@ class PythonDevice(BaseFsm):
         self._ss.emit("signalChanged", hash, self.deviceid)
     
     def _setRawImageData(self, key, image):
-        hash = Hash(key, image.toHash())
+        hash = Hash(key, image.hash())
         hash.setAttribute(key, "image", 1)
         self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
         self._ss.emit("signalChanged", hash, self.deviceid)
