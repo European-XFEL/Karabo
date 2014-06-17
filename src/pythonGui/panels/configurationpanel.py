@@ -96,13 +96,12 @@ class ConfigurationPanel(QWidget):
         Manager().signalNewNavigationItem.connect(self.onNewNavigationItem)
         Manager().signalSelectNewNavigationItem.connect(self.onSelectNewNavigationItem)
         Manager().signalShowConfiguration.connect(self.onShowConfiguration)
-
-        Manager().signalInstanceGone.connect(self.onInstanceGone)
         
         Manager().signalConflictStateChanged.connect(self.onConflictStateChanged)
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
+        Manager().signalClearParameterPage.connect(self.onClearParameterPage)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -354,7 +353,9 @@ class ConfigurationPanel(QWidget):
 
         if configuration is not None:
             configuration.fillWidget(twParameterEditor)
-        return self.__swParameterEditor.addWidget(twParameterEditor)
+        
+        index = self.__swParameterEditor.addWidget(twParameterEditor)
+        return index
 
 
 ### getter functions ###
@@ -443,9 +444,9 @@ class ConfigurationPanel(QWidget):
         """
         for index in range(self.__swParameterEditor.count()):
             twParameterEditor = self.__swParameterEditor.widget(index)
-            if twParameterEditor.path is None:
+            if twParameterEditor.conf is None:
                 continue
-            if path.startswith(twParameterEditor.path):
+            if path.startswith(twParameterEditor.conf.id):
                 return twParameterEditor
         return None
 
@@ -471,14 +472,14 @@ class ConfigurationPanel(QWidget):
             if not hasattr(configuration, 'index'):
                 configuration.index = self._createNewParameterPage(configuration)
             self._setParameterEditorIndex(configuration.index)
-
+        
         if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
         
         self.prevConfiguration = configuration
 
 
-    def _removeParameterEditorPage(self, twParameterEditor):
+    def _clearParameterEditorPage(self, twParameterEditor):
         """
         The \twParameterEditor is remove from StackedWidget and all registered
         components get unregistered.
@@ -489,19 +490,31 @@ class ConfigurationPanel(QWidget):
         # Clear page
         twParameterEditor.clear()
         # Remove widget completely
-        self.__swParameterEditor.removeWidget(twParameterEditor)
+        #self.__swParameterEditor.removeWidget(twParameterEditor)
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
 
 ### slots ###
+    def onClearParameterPage(self, removePath, selectPath):
+        """
+        The parameter page with the following \path have to be removed.
+        """
+        for i in xrange(self.__swParameterEditor.count()):
+            twParameterPage = self.__swParameterEditor.widget(i)
+            if twParameterPage.conf is None: continue
+            if removePath == twParameterPage.conf.id:
+                self._clearParameterEditorPage(twParameterPage)
+                break
+
+
     def onResetPanel(self):
         """
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        while self.__swParameterEditor.count() > 1:
-            self._removeParameterEditorPage(self.__swParameterEditor.widget(self.__swParameterEditor.count()-1))
+        for i in xrange(self.__swParameterEditor.count()):
+            self._clearParameterEditorPage(self.__swParameterEditor.widget(i))
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -532,12 +545,6 @@ class ConfigurationPanel(QWidget):
             self.prevConfiguration.removeVisible()
         
         self.showParameterPage(configuration)
-
-
-    def onInstanceGone(self, instanceId, parentPath):
-        self._setParameterEditorIndex(0)
-        self._hideAllButtons()
-        self.twNavigation.selectItem(parentPath)
 
 
     def onConflictStateChanged(self, deviceId, hasConflict):
@@ -603,7 +610,7 @@ class ConfigurationPanel(QWidget):
 
     def onSelectionChanged(self):
         """ Update the apply and reset buttons """
-        path = self.sender().path
+        path = self.sender().conf.id
         self.updateApplyAllActions(path)
         self.updateResetAllActions(path)
 
