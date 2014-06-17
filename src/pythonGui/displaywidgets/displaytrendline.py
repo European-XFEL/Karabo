@@ -197,7 +197,7 @@ class DisplayTrendline(DisplayWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if timestamp is None:
-            timestamp = Timestamp()
+            return
 
         t = timestamp.toTimestamp()
         self.curves[box].addPoint(value, t)

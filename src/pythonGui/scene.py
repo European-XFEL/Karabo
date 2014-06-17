@@ -1050,7 +1050,7 @@ class Scene(QSvgWidget):
         if sourceType == "ParameterTreeWidget":
             source = event.source()
             if (source is not None) and (source is not self) and self.designMode \
-               and not (source.path.type == "class"):
+               and not (source.conf.type == "class"):
                 event.accept()
         QWidget.dragEnterEvent(self, event)
 

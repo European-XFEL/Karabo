@@ -610,9 +610,9 @@ class ConfigurationPanel(QWidget):
 
     def onSelectionChanged(self):
         """ Update the apply and reset buttons """
-        path = self.sender().conf.id
-        self.updateApplyAllActions(path)
-        self.updateResetAllActions(path)
+        conf = self.sender().conf
+        self.updateApplyAllActions(conf)
+        self.updateResetAllActions(conf)
 
 
     def onApplyAll(self):
