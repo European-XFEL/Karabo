@@ -5,7 +5,7 @@ from widget import DisplayWidget, EditableWidget
 from PyQt4.QtCore import QSize, Qt, pyqtSignal
 from PyQt4.QtGui import QWidget, QPainter
 
-class Bitfield(QWidget):
+class BitfieldWidget(QWidget):
     valueChanged = pyqtSignal(int)
 
 
@@ -54,18 +54,22 @@ class Bitfield(QWidget):
         self.update()
 
 
-class EditableBitfield(EditableWidget):
+class Bitfield(EditableWidget, DisplayWidget):
     category = "Digit"
     alias = "Bit Field"
 
     def __init__(self, box, parent):
-        self.widget = Bitfield(parent)
-        super(EditableBitfield, self).__init__(box)
+        super(Bitfield, self).__init__(box)
+        self.widget = BitfieldWidget(parent)
 
 
     def typeChanged(self, box):
         self.widget.size = box.descriptor.numpy().nbytes * 8
         self.widget.update()
+
+
+    def setReadOnly(self, ro):
+        self.widget.readonly = ro
 
 
     @property
@@ -82,27 +86,3 @@ class EditableBitfield(EditableWidget):
 
     def onEditingFinished(self, value):
         self.signalEditingFinished.emit(self.keys[0], value)
-
-
-class DisplayBitfield(DisplayWidget):
-    category = "Digit"
-    alias = "Bit Field"
-
-    def __init__(self, valueType, **params):
-        super(DisplayBitfield, self).__init__(**params)
-
-        self.widget = Bitfield(valueType)
-        self.widget.readonly = True
-
-
-    @property
-    def value(self):
-        return self.widget.value
-
-
-    def valueChanged(self, key, value, timestamp=None):
-        if value is None:
-            return
-
-        if value != self.value:
-            self.widget.setValue(value)

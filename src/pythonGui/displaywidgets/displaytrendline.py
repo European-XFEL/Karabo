@@ -174,7 +174,6 @@ class DisplayTrendline(DisplayWidget):
         curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
         self.curves[box] = Curve(box, curve)
         self.plot.add_item(curve)
-        self.connectBox(box)
         return True
 
 
