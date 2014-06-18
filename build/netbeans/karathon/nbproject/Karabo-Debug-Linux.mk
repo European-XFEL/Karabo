@@ -112,7 +112,7 @@ ${OBJECTDIR}/_ext/381567218/ConnectionWrap.o: ../../../src/karathon/ConnectionWr
 ${OBJECTDIR}/_ext/381567218/FromNumpy.o: ../../../src/karathon/FromNumpy.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/FromNumpy.o ../../../src/karathon/FromNumpy.cc
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/FromNumpy.o ../../../src/karathon/FromNumpy.cc
 
 ${OBJECTDIR}/_ext/381567218/HashWrap.o: ../../../src/karathon/HashWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -305,7 +305,7 @@ ${OBJECTDIR}/_ext/381567218/FromNumpy_nomain.o: ${OBJECTDIR}/_ext/381567218/From
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/FromNumpy_nomain.o ../../../src/karathon/FromNumpy.cc;\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 -I${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/FromNumpy_nomain.o ../../../src/karathon/FromNumpy.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/FromNumpy.o ${OBJECTDIR}/_ext/381567218/FromNumpy_nomain.o;\
 	fi
