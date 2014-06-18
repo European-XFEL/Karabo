@@ -79,7 +79,7 @@ namespace karabo {
                 // Register handlers
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
-                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1, _2));
 
                 // Connect the history slot
                 connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
@@ -430,15 +430,17 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
+        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
-                Hash instanceInfo("type", "instanceGone", "instanceId", instanceId);
+                std::string type("unknown");
+                if (instanceInfo.has("type")) instanceInfo.get("type", type);
+                Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                    it->first->write(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
