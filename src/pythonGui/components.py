@@ -184,6 +184,7 @@ class EditableNoApplyComponent(BaseComponent):
             super(EditableNoApplyComponent, self).__init__(W.alias, box)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
+        box.signalUpdateComponent.connect(self.widgetFactory.valueChanged)
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
         box.signalUserChanged.connect(self.widgetFactory.valueChanged)

@@ -102,8 +102,8 @@ class EditableChoiceElement(EditableWidget):
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        if value is None or not isinstance(value, unicode):
-            return
+        if not isinstance(value, basestring):
+            value = box.current
 
         index = self.__comboBox.findText(value)
         if index < 0:
