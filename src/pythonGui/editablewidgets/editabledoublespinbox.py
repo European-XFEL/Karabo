@@ -41,10 +41,8 @@ class EditableDoubleSpinBox(EditableWidget):
 
     def typeChanged(self, box):
         min, max = box.descriptor.getMinMax()
-        if min is not None:
-            self.validator.setBottom(min)
-        if max is not None:
-            self.validator.setTop(max)
+        self.validator.setBottom(min)
+        self.validator.setTop(max)
 
 
     @property
