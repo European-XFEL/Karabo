@@ -24,8 +24,6 @@ from PyQt4.QtGui import QItemSelectionModel
 
 
 class NavigationTreeModel(QAbstractItemModel):
-    # signal
-    signalClearParameterPage = pyqtSignal(str, str) # removePath, selectPath
 
 
     def __init__(self, parent=None):
@@ -162,7 +160,6 @@ class NavigationTreeModel(QAbstractItemModel):
         try:
             node = index.internalPointer()
             parentNode = node.parentNode
-            self.signalClearParameterPage.emit(node.path, parentNode.path)
             parentNode.removeChildNode(node)
         finally:
             self.endResetModel() 
@@ -180,8 +177,6 @@ class NavigationTreeModel(QAbstractItemModel):
             parentNode = node.parentNode
             # There are children, if server
             for childNode in node.childNodes:
-                # Remove configuration page for associated class
-                self.signalClearParameterPage.emit(childNode.path, parentNode.path)
                 serverClassIds.append((node.displayName, childNode.displayName))
             parentNode.removeChildNode(node)
         finally:
