@@ -101,7 +101,7 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalClearParameterPage.connect(self.onClearParameterPage)
+        Manager().signalShowEmptyConfigurationPage.connect(self.onShowEmptyPage)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -479,7 +479,7 @@ class ConfigurationPanel(QWidget):
         self.prevConfiguration = configuration
 
 
-    def _clearParameterEditorPage(self, twParameterEditor):
+    def _removeParameterEditorPage(self, twParameterEditor):
         """
         The \twParameterEditor is remove from StackedWidget and all registered
         components get unregistered.
@@ -490,22 +490,22 @@ class ConfigurationPanel(QWidget):
         # Clear page
         twParameterEditor.clear()
         # Remove widget completely
-        #self.__swParameterEditor.removeWidget(twParameterEditor)
+        self.__swParameterEditor.removeWidget(twParameterEditor)
+        self._showEmptyPage()
+
+
+    def _showEmptyPage(self):
+        """
+        This function shows the default page of the parameter editor stacked widget
+        and hides all buttons.
+        """
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
 
 ### slots ###
-    def onClearParameterPage(self, removePath, selectPath):
-        """
-        The parameter page with the following \path have to be removed.
-        """
-        for i in xrange(self.__swParameterEditor.count()):
-            twParameterPage = self.__swParameterEditor.widget(i)
-            if twParameterPage.conf is None: continue
-            if removePath == twParameterPage.conf.id:
-                self._clearParameterEditorPage(twParameterPage)
-                break
+    def onShowEmptyPage(self):
+        self._showEmptyPage()
 
 
     def onResetPanel(self):
@@ -513,8 +513,10 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        for i in xrange(self.__swParameterEditor.count()):
-            self._clearParameterEditorPage(self.__swParameterEditor.widget(i))
+        #for i in xrange(self.__swParameterEditor.count()):
+        while self.__swParameterEditor.count() > 1:
+            self._removeParameterEditorPage(self.__swParameterEditor
+                                    .widget(self.__swParameterEditor.count()-1))
 
 
     def onNewNavigationItem(self, itemInfo):
