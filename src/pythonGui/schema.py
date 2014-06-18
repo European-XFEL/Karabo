@@ -490,6 +490,13 @@ class ChoiceOfNodes(Schema):
         Schema.fromHash(self, box, value, timestamp)
 
 
+    def dispatchUserChanges(self, box, hash):
+        for k in hash:
+            box.signalUserChanged.emit(box, k)
+            break
+        Schema.dispatchUserChanges(self, box, hash)
+
+
     def setDefault(self, box):
         if self.defaultValue is not None:
             box.current = self.defaultValue
