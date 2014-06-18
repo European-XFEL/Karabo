@@ -482,14 +482,14 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
-        if not device.ifexists == "restart": # ignore
-            return
-        
         if device.isOnline():
-            self.killDevice(device)
+            if device.ifexists == "ignore":
+                return
+            elif device.ifexists == "restart":
+                self.killDevice(device)
         
         manager.Manager().initDevice(device.futureConfig.get("serverId"),
-                             device.classId, device.toHash())
+                                     device.classId, device.toHash())
 
 
     def onKillDevices(self):
