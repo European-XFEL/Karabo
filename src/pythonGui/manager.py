@@ -36,7 +36,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
-    signalClearParameterPage = pyqtSignal(str, str) # removePath, selectPath
+    signalShowEmptyConfigurationPage = pyqtSignal()
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -62,7 +62,6 @@ class _Manager(QObject):
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
                         connect(self.onNavigationTreeModelSelectionChanged)
-        self.systemTopology.signalClearParameterPage.connect(self.signalClearParameterPage)
         # Model for project views
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
@@ -395,14 +394,22 @@ class _Manager(QObject):
                 device.redummy()
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
+            # Clear corresponding parameter page
+            device.parameterEditor.clear()
         else:
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             for ids in serverClassIds:
                 try:
+                    conf = self.serverClassData[ids]
+                    # Clear corresponding parameter page
+                    conf.parameterEditor.clear()
                     del self.serverClassData[ids]
                 except KeyError:
                     pass
+        
+        # Send signal to Configurator to show nothing
+        self.signalShowEmptyConfigurationPage.emit()
         
         path = "server." + instanceId
         if path in self.systemHash:
