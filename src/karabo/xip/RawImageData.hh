@@ -18,8 +18,7 @@ namespace karabo {
 
         class RawImageData {
 
-            karabo::util::Hash* m_hash;
-            bool m_hashIsCopy;
+            karabo::util::Hash m_hash;
             size_t m_padX;
             size_t m_padY;
 
@@ -46,8 +45,7 @@ namespace karabo {
                          const karabo::util::Dims& dimensions = karabo::util::Dims(),
                          const karabo::xip::EncodingType encoding = Encoding::GRAY,
                          const karabo::xip::ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED,
-                         const bool isBigEndian = karabo::util::isBigEndian()) : m_hash(new karabo::util::Hash()), m_hashIsCopy(true) {
-
+                         const bool isBigEndian = karabo::util::isBigEndian()) : m_hash() {
                 setData(data, size, copy);
                 if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
                 else setDimensions(dimensions);
@@ -85,23 +83,23 @@ namespace karabo {
                 size_t byteSize = size * sizeof (T);
 
                 if (copy) {
-                    boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
+                    boost::optional<karabo::util::Hash::Node&> node = m_hash.find("data");
                     if (node) {
                         std::vector<char>& buffer = node->getValue<std::vector<char> >();
                         buffer.resize(byteSize);
                         std::memcpy(&buffer[0], reinterpret_cast<const char*> (data), byteSize);
                     } else {
-                        std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
+                        std::vector<char>& buffer = m_hash.bindReference<std::vector<char> >("data");
                         buffer.resize(byteSize);
                         std::memcpy(&buffer[0], reinterpret_cast<const char*> (data), byteSize);
                     }
                 } else {
                     // We have to be very careful with the exact type here. For the RTTI const T* and T* are different!
                     // The Type system currently knows only about pair<const T*, size_t> NOT pair<T*, size_t>
-                    m_hash->set("data", std::make_pair(reinterpret_cast<const char*> (data), byteSize));
+                    m_hash.set("data", std::make_pair(reinterpret_cast<const char*> (data), byteSize));
                 }
 
-                m_hash->set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
+                m_hash.set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
             }
 
             karabo::util::Dims getDimensions() const;
@@ -126,7 +124,7 @@ namespace karabo {
 
             karabo::util::Hash getHeader() const;
 
-            void setHeader(const karabo::util::Hash& header) const;
+            void setHeader(const karabo::util::Hash& header);
 
             const karabo::util::Hash& hash() const;
 

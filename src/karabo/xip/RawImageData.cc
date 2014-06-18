@@ -14,38 +14,30 @@ namespace karabo {
     namespace xip {
 
 
-        RawImageData::RawImageData() : m_hash(new Hash()), m_hashIsCopy(false) {
+        RawImageData::RawImageData() : m_hash() {
         }
 
 
-        RawImageData::RawImageData(karabo::util::Hash& hash, bool copiesHash) : m_hash(0), m_hashIsCopy(copiesHash) {
-            if (m_hashIsCopy) {
-                m_hash = new Hash();
-                *m_hash = hash;
-            } else {
-                m_hash = &hash;
-            }
+        RawImageData::RawImageData(karabo::util::Hash& hash, bool copiesHash) : m_hash(hash) {
         }
 
 
-        RawImageData::RawImageData(const RawImageData& other) {
-            m_hash = new Hash(*other.m_hash);
-            m_hashIsCopy = false;
+        RawImageData::RawImageData(const RawImageData& other) : m_hash(other.m_hash) {
         }
 
 
         RawImageData::~RawImageData() {
-            if (m_hashIsCopy && m_hash) delete m_hash;
+            m_hash.clear();
         }
 
 
         const char* RawImageData::getDataPointer() const {
-            boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
+            boost::optional<const karabo::util::Hash::Node&> node = m_hash.find("data");
             if (node) {
                 if (node->getType() == Types::VECTOR_CHAR) {
-                    return &(m_hash->get<std::vector<char> >("data"))[0];
+                    return &(m_hash.get<std::vector<char> >("data"))[0];
                 }
-                return m_hash->get<std::pair<const char*, size_t> >("data").first;
+                return m_hash.get<std::pair<const char*, size_t> >("data").first;
             }
             return 0;
         }
@@ -53,29 +45,29 @@ namespace karabo {
 
         const std::vector<char>& RawImageData::getData() {
             ensureDataOwnership();
-            return m_hash->get<std::vector<char> >("data");
+            return m_hash.get<std::vector<char> >("data");
         }
 
 
         size_t RawImageData::getByteSize() const {
-            boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
+            boost::optional<const karabo::util::Hash::Node&> node = m_hash.find("data");
             if (node) {
                 if (node->getType() == Types::VECTOR_CHAR) {
-                    return m_hash->get<std::vector<char> >("data").size();
+                    return m_hash.get<std::vector<char> >("data").size();
                 }
-                return m_hash->get<std::pair<const char*, size_t> >("data").second;
+                return m_hash.get<std::pair<const char*, size_t> >("data").second;
             }
             return 0;
         }
 
 
         karabo::util::Dims RawImageData::getDimensions() const {
-            return karabo::util::Dims(m_hash->get<std::vector<unsigned long long> >("dims"));
+            return karabo::util::Dims(m_hash.get<std::vector<unsigned long long> >("dims"));
         }
 
 
         void RawImageData::setDimensions(const karabo::util::Dims& dimensions) {
-            m_hash->set<std::vector<unsigned long long> >("dims", dimensions.toVector());
+            m_hash.set<std::vector<unsigned long long> >("dims", dimensions.toVector());
         }
 
 
@@ -85,64 +77,63 @@ namespace karabo {
 
 
         int RawImageData::getEncoding() const {
-            return m_hash->get<int>("encoding");
+            return m_hash.get<int>("encoding");
         }
 
 
         void RawImageData::setEncoding(const int encoding) {
-            m_hash->set<int>("encoding", encoding);
+            m_hash.set<int>("encoding", encoding);
         }
 
 
         const std::string& RawImageData::getType() const {
-            return m_hash->get<string>("type");
+            return m_hash.get<string>("type");
         }
 
 
         int RawImageData::getChannelSpace() const {
-            return m_hash->get<int>("channelSpace");
+            return m_hash.get<int>("channelSpace");
         }
 
 
         void RawImageData::setChannelSpace(const int channelSpace) {
-            m_hash->set<int>("channelSpace", channelSpace);
+            m_hash.set<int>("channelSpace", channelSpace);
         }
 
 
         void RawImageData::setIsBigEndian(const bool isBigEndian) {
-            m_hash->set<bool>("isBigEndian", isBigEndian);
+            m_hash.set<bool>("isBigEndian", isBigEndian);
         }
 
 
         bool RawImageData::isBigEndian() const {
-            return m_hash->get<bool>("isBigEndian");
+            return m_hash.get<bool>("isBigEndian");
         }
 
 
         Hash RawImageData::getHeader() const {
-            if (m_hash->has("header")) return m_hash->get<Hash>("header");
+            if (m_hash.has("header")) return m_hash.get<Hash>("header");
             return Hash();
         }
 
 
-        void RawImageData::setHeader(const karabo::util::Hash& header) const {
-            m_hash->set("header", header);
+        void RawImageData::setHeader(const karabo::util::Hash& header) {
+            m_hash.set<Hash>("header", header);
         }
 
 
         const karabo::util::Hash& RawImageData::hash() const {
-            return *m_hash;
+            return m_hash;
         }
 
 
         karabo::util::Hash& RawImageData::hash() {
-            return *m_hash;
+            return m_hash;
         }
 
 
         void RawImageData::swap(RawImageData& other) {
             std::swap(m_hash, other.m_hash);
-            std::swap(m_hashIsCopy, m_hashIsCopy);
             std::swap(m_padX, other.m_padX);
             std::swap(m_padY, other.m_padY);
         }
@@ -157,7 +148,7 @@ namespace karabo {
 
 
         bool RawImageData::dataIsCopy() const {
-            boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
+            boost::optional<const karabo::util::Hash::Node&> node = m_hash.find("data");
             if (node) return node->getType() == Types::VECTOR_CHAR;
             else return true;
         }
