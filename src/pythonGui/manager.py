@@ -395,7 +395,8 @@ class _Manager(QObject):
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
             # Clear corresponding parameter page
-            device.parameterEditor.clear()
+            if device.parameterEditor is not None:
+                device.parameterEditor.clear()
         else:
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
@@ -403,7 +404,8 @@ class _Manager(QObject):
                 try:
                     conf = self.serverClassData[ids]
                     # Clear corresponding parameter page
-                    conf.parameterEditor.clear()
+                    if conf.parameterEditor is not None:
+                        conf.parameterEditor.clear()
                     del self.serverClassData[ids]
                 except KeyError:
                     pass
