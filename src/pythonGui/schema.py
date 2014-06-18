@@ -116,8 +116,12 @@ class Box(QObject):
 
     def getFromPast(self, t0, t1, maxNumData):
         Network().onGetFromPast(self, t0, t1, maxNumData)
-        
-        
+
+
+    def __str__(self):
+        return "<Box {}>".format(self.key())
+
+
 class Descriptor(hashtypes.Descriptor):
     # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
