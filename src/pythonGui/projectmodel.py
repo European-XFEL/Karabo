@@ -460,10 +460,8 @@ class ProjectModel(QStandardItemModel):
 
         # Check whether device is already online
         if device.isOnline():
-            print "online", device.id
             conf = manager.getDevice(device.id)
         else:
-            print "offline", device.id
             conf = device
 
         self.signalItemChanged.emit(conf)
