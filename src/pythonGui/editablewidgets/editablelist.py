@@ -70,13 +70,12 @@ class EditableList(EditableWidget):
         return self.valueList
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = []
 
-        self.leList.blockSignals(True)
-        self.leList.setText(','.join(value))
-        self.leList.blockSignals(False)
+        with SignalBlocker(self.leList):
+            self.leList.setText(box.descriptor.toString(value))
 
 
     def onEditingFinished(self, text):
