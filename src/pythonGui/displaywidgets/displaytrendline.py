@@ -76,9 +76,9 @@ class Curve(QObject):
 
 
     def getFromPast(self, t0, t1):
-        t0 = datetime.datetime.utcfromtimestamp(t0)
-        t1 = datetime.datetime.utcfromtimestamp(t1)
-        self.box.getFromPast(t0.isoformat(), t1.isoformat(), self.maxHistory)
+        t0 = datetime.datetime.utcfromtimestamp(t0).isoformat().decode('ascii')
+        t1 = datetime.datetime.utcfromtimestamp(t1).isoformat().decode('ascii')
+        self.box.getFromPast(t0, t1, self.maxHistory)
 
 
     def changeInterval(self, t0, t1):
