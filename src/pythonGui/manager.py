@@ -128,8 +128,8 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logMessage)
 
 
-    def onReceivedData(self, instanceInfo):
-        getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
+    def onReceivedData(self, hash):
+        getattr(self, "handle_" + hash["type"])(hash)
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -382,11 +382,14 @@ class _Manager(QObject):
         self._handleSystemTopology(instanceInfo.get("topologyEntry"))
 
 
-    def handle_instanceGone(self, instanceInfo):
+    def handle_instanceGone(self, hash):
         """
         Remove instanceId from central hash and update
         """
-        instanceId = instanceInfo.get("instanceId")
+        instanceId = hash.get("instanceId")
+        # BH Added instanceType for whatever usage here
+        instanceType = hash.get("instanceType")
+        print "Instance", instanceId, "of type", instanceType, "died."
         device = self.deviceData.get(instanceId)
         if device is not None:
             device.status = "offline"
