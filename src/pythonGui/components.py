@@ -186,6 +186,7 @@ class EditableNoApplyComponent(BaseComponent):
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         hLayout.addWidget(self.widgetFactory.widget)
 
         unitLabel = (box.descriptor.metricPrefixSymbol +
@@ -484,6 +485,7 @@ class ChoiceComponent(BaseComponent):
             super(ChoiceComponent, self).__init__(W.alias, box)
         self.widget.setEnabled(False)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChanged)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
 
