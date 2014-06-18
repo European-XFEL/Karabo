@@ -58,7 +58,7 @@ namespace karabo {
             typedef std::map<std::string, unsigned int> InstanceUsage;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
-            typedef boost::function<void (const std::string& /*instanceId*/) > InstanceGoneHandler;
+            typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceGoneHandler;
             typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
             
             static const unsigned int CONNECTION_KEEP_ALIVE = 15;

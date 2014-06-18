@@ -92,7 +92,7 @@ namespace karabo {
 
             void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
 
-            void instanceGoneHandler(const std::string& instanceId);
+            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
             

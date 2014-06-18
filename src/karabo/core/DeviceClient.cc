@@ -242,7 +242,7 @@ namespace karabo {
                     disconnect(instanceId);
                 }
                 if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
-                if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
+                if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
             } catch (...) {
                 KARABO_RETHROW;
             }
@@ -262,7 +262,7 @@ namespace karabo {
             eraseFromRuntimeSystemDescription(path);
             disconnect(instanceId);            
             if (m_masterMode != HAS_MASTER) m_signalSlotable->stopTrackingExistenceOfInstance(instanceId);
-            if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId);
+            if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
         }
 
 
