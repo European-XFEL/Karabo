@@ -424,8 +424,9 @@ class Schema(hashtypes.Descriptor):
         d = Dummy(box.path, box.configuration)
         for k, v in self.dict.iteritems():
             b = getattr(box.value, k)
-            b.redummy()
-            setattr(d, k, b)
+            if b is not None:
+                b.redummy()
+                setattr(d, k, b)
         box._value = d
         box.descriptor = None
 
