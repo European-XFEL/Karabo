@@ -70,7 +70,7 @@ namespace karabo {
 
             //void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
 
-            void instanceGoneHandler(const std::string& instanceId);
+            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
             
             void tagDeviceToBeDiscontinued(const std::string& instanceId, const bool wasValidUpToNow, const char reason);
             
