@@ -18,6 +18,8 @@ namespace karabo {
 
         class RawImageData {
 
+        protected:
+
             karabo::util::Hash m_hash;
             size_t m_padX;
             size_t m_padY;
