@@ -24,15 +24,15 @@ class EditableFileIn(EditableWidget):
 
     def __init__(self, box, parent):
         super(EditableFileIn, self).__init__(box)
-
-        self.__compositeWidget = QWidget()
+        
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
         self.__lePath = QLineEdit()
         self.__lePath.textChanged.connect(self.onEditingFinished)
         hLayout.addWidget(self.__lePath)
-
+        
         text = "Select input file"
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
