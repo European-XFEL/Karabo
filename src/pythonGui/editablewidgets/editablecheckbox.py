@@ -32,9 +32,10 @@ class EditableCheckBox(EditableWidget):
     alias = "Toggle Field"
 
     def __init__(self, box, parent):
+        super(EditableCheckBox, self).__init__(box)
+        
         self.__checkBox = QCheckBox(parent)
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
-        super(EditableCheckBox, self).__init__(box)
 
 
     @property

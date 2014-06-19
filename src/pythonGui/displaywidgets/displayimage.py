@@ -19,13 +19,14 @@ class DisplayImage(DisplayWidget):
     alias = "Image View"
 
     def __init__(self, box, parent):
+        super(DisplayImage, self).__init__(box)
+        
         self.value = None
 
         self.widget = ImageDialog(edit=False, toolbar=True,
                                   wintitle=".".join(box.path))
         self.__image = None
         self.__plot = self.widget.get_plot()
-        super(DisplayImage, self).__init__(box)
 
 
     def valueChanged(self, key, value, timestamp=None):

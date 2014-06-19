@@ -19,12 +19,11 @@ class TaurusWheelEditWrapper(EditableWidget):
     category = "TaurusWidget"
     alias = "Taurus WheelEdit"
 
-    def __init__(self, value=None, **params):
-        super(TaurusWheelEditWrapper, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(TaurusWheelEditWrapper, self).__init__(box)
+        self.__wheelEdit = TaurusWheelEdit(parent)
         
-        self.__wheelEdit = TaurusWheelEdit()
-        
-        self.valueChanged(self.keys[0], value)
+        #self.valueChanged(self.keys[0], value)
 
 
     @property

@@ -42,14 +42,12 @@ class DisplayPyCodeHist(DisplayWidget):
     category = "Digit"
     alias = "Matplotlib Plot"
 
-    def __init__(self, **params):
-        super(DisplayPyCodeHist, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(DisplayPyCodeHist, self).__init__(box)
         
-        self.__compositeWidget = QWidget()
+        self.__compositeWidget = QWidget(parent)
         vLayout = QVBoxLayout(self.__compositeWidget)
         vLayout.setContentsMargins(0,0,0,0)
-        
-        
         
         #a rich text edit to output textual output from the kernel
         self.__response = QTextEdit()
