@@ -55,7 +55,7 @@ class EditableComboBox(EditableWidget):
 
     @property
     def value(self):
-        return self.widget.currentText()
+        return self.boxes[0].descriptor.fromstring(self.widget.currentText())
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
