@@ -66,20 +66,20 @@ class DeviceServer(object):
                     .init()
                     .commit()
                     ,                    
-            LIST_ELEMENT(expected).key("autoStart")
-                    .displayedName("Auto start")
-                    .description("Auto starts selected devices")
-                    .appendNodesOfConfigurationBase(PythonDevice)
-                    .assignmentOptional().noDefaultValue()
-                    .commit()
-                    ,
-            BOOL_ELEMENT(expected).key("scanPlugins")
-                    .displayedName("Scan plug-ins?")
-                    .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
-                    .expertAccess()
-                    .assignmentOptional().defaultValue(True)
-                    .commit()
-                    ,
+            #LIST_ELEMENT(expected).key("autoStart")
+            #        .displayedName("Auto start")
+            #        .description("Auto starts selected devices")
+            #        .appendNodesOfConfigurationBase(PythonDevice)
+            #        .assignmentOptional().noDefaultValue()
+            #        .commit()
+            #        ,
+            #BOOL_ELEMENT(expected).key("scanPlugins")
+            #        .displayedName("Scan plug-ins?")
+            #        .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
+            #        .expertAccess()
+            #        .assignmentOptional().defaultValue(True)
+            #        .commit()
+            #        ,
             PATH_ELEMENT(expected).key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
@@ -239,7 +239,7 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        self.autoStart = None
+        #self.autoStart = []
         self.needScanPlugins = True
         
         # set serverId
@@ -263,12 +263,12 @@ class DeviceServer(object):
             saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
         
         # Device configurations for those to automatically start
-        if "autoStart" in input:
-            self.autoStart = input['autoStart']
+        #if "autoStart" in input:
+        #    self.autoStart = input['autoStart']
             
         # Whether to scan for additional plug-ins at runtime
-        if "scanPlugins" in input:
-            self.needScanPlugins = input['scanPlugins']
+        #if "scanPlugins" in input:
+        #    self.needScanPlugins = input['scanPlugins']
         
         # What visibility this server should have
         self.visibility = input.get("visibility")
@@ -352,10 +352,11 @@ class DeviceServer(object):
         
     def idleStateOnEntry(self):
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
-        self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
-        self.pluginThread = threading.Thread(target = self.scanPlugins)
-        self.scanning = True
-        self.pluginThread.start()
+        if self.needScanPlugins:
+            self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
+            self.pluginThread = threading.Thread(target = self.scanPlugins)
+            self.scanning = True
+            self.pluginThread.start()
     
     def scanPlugins(self):
         self.blacklist = []
