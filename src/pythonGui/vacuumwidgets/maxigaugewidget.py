@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class MaxiGaugeWidget(VacuumWidget):
     alias = "Maxi gauge"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "MaxiGaugeWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
             self._setPixmap(QPixmap(":maxigauge-orange"))
         elif ("On" in value) or ("on" in value):

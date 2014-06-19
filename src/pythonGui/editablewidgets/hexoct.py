@@ -36,7 +36,7 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         self.widget.setInputMask(mask)
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         with SignalBlocker(self.widget):
             self.widget.setText("{:x}".format(value))
 

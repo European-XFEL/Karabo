@@ -160,7 +160,7 @@ class GraphicsInputChannelItem(QGraphicsObject):
 
 ### slots ###
     # Triggered by DataNotifier signalUpdateComponent
-    def onValueChanged(self, key, value):
+    def onValueChanged(self, box, value):
         if self.connectedOutputChannelsKey == key:
             if self.scene():
                 items = self.scene().items()

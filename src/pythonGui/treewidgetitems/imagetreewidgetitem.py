@@ -35,8 +35,3 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.setText(0, text)
     displayText = property(fset=_setText)
 
-
-### public functions ###
-    def setToolTipDialogVisible(self, show):
-        pass
-
