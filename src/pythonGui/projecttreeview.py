@@ -147,7 +147,16 @@ class ProjectTreeView(QTreeView):
         object = index.data(ProjectModel.ITEM_OBJECT)
         
         menu = None
-        if isinstance(object, Category) and (object.displayName == Project.DEVICES_LABEL):
+        if isinstance(object, Project):
+            text = "Close project"
+            acCloseProject = QAction(text, self)
+            acCloseProject.setStatusTip(text)
+            acCloseProject.setToolTip(text)
+            acCloseProject.triggered.connect(self.model().onCloseProject)
+
+            menu = QMenu()
+            menu.addAction(acCloseProject)
+        elif isinstance(object, Category) and (object.displayName == Project.DEVICES_LABEL):
             # Devices menu
             text = "Add device"
             acImportPlugin = QAction(text, self)

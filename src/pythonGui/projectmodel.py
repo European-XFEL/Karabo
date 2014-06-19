@@ -467,6 +467,13 @@ class ProjectModel(QStandardItemModel):
         self.signalItemChanged.emit(conf)
 
 
+    def onCloseProject(self):
+        index = self.selectionModel.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        del self.projects[self.projects.index(object)]
+        self.updateData()
+
+
     def onEditDevice(self):
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)

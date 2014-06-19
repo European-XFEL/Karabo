@@ -38,6 +38,8 @@ class DisplayLabel(DisplayWidget):
     alias = "Value Field"
   
     def __init__(self, box, parent):
+        super(DisplayLabel, self).__init__(box)
+        
         self.value = None
 
         self.widget = QLabel(parent)
@@ -47,7 +49,6 @@ class DisplayLabel(DisplayWidget):
         self.widget.setMinimumHeight(32)
         self.widget.setWordWrap(True)
         self.setErrorState(False)
-        super(DisplayLabel, self).__init__(box)
 
 
     def setErrorState(self, isError):

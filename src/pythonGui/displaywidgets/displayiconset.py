@@ -34,6 +34,8 @@ class DisplayIconset(DisplayWidget):
     alias = "Iconset"
 
     def __init__(self, box, parent):
+        super(DisplayIconset, self).__init__(box)
+        
         self.widget = QSvgWidget(parent)
         action = QAction("Change Iconset...", self.widget)
         action.triggered.connect(self.onChangeIcons)
@@ -41,7 +43,6 @@ class DisplayIconset(DisplayWidget):
         self.xml = ElementTree.ElementTree(ElementTree.fromstring(
             '<svg xmlns:svg="http://www.w3.org/2000/svg"/>'))
         self.filename = None
-        super(DisplayIconset, self).__init__(box)
 
 
     def save(self, e):
