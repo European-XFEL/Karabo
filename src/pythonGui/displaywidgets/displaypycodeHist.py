@@ -567,7 +567,9 @@ class DisplayPyCodeHist(DisplayWidget):
         return plotting_code
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
+        # TODO: review code
+        key = box.key()
         
         #if device hasn't initialized yet return
         try:

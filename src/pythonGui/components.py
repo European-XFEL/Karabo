@@ -407,8 +407,8 @@ class EditableApplyLaterComponent(BaseComponent):
                                  for b in self.boxes])
 
 
-    def onApplyRemoteChanges(self, key):
-        self.widgetFactory.valueChanged(key, self.__currentDisplayValue)
+    def onApplyRemoteChanges(self, box):
+        self.widgetFactory.valueChanged(box, self.__currentDisplayValue)
         self.updateButtons()
 
 
@@ -418,9 +418,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     @pyqtSlot(str, object)
-    def onDisplayValueChanged(self, key, value):
+    def onDisplayValueChanged(self, box, value):
         if self.__currentDisplayValue is None:
-            self.widgetFactory.valueChanged(key, value)
+            self.widgetFactory.valueChanged(box, value)
         self.__currentDisplayValue = value
         self.__busyTimer.stop()
         self.hasConflict = True
@@ -469,7 +469,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.acReset.setEnabled(not isEqualEditable)
 
 
-    def onEditingFinished(self, key, value):
+    def onEditingFinished(self, box, value):
         if self.__currentDisplayValue is None:
             return
         self.updateButtons()

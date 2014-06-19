@@ -14,8 +14,11 @@
 __all__ = ["BaseTreeWidgetItem"]
 
 
-import globals
-import manager
+from collections import OrderedDict
+
+from popupwidget import PopupWidget
+
+from karabo.hashtypes import Type
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCursor, QTreeWidgetItem
@@ -37,6 +40,9 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.__editableComponent = None
         
         self.mItem = None
+        
+        # Popup widget for tooltip info
+        self.popupWidget = None
 
 
     def setupContextMenu(self):
@@ -98,5 +104,45 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
     def setToolTipDialogVisible(self, show):
-        raise NotImplementedError, "BaseTreeWidget.setToolTipDialogVisible"
+        if not self.popupWidget:
+            self.popupWidget = PopupWidget(self.treeWidget())
+
+        if show:
+            info = self.updateToolTipDialog()
+            
+            pos = QCursor.pos()
+            pos.setX(pos.x() + 10)
+            pos.setY(pos.y() + 10)
+            self.popupWidget.move(pos)
+            self.popupWidget.show()
+        else:
+            self.popupWidget.hide()
+
+
+    def updateToolTipDialog(self):
+            info = OrderedDict()
+            
+            if len(self.text(0)) > 0:
+                info["Property"] = self.text(0)
+            if self.description is not None:
+                info["Description"] = self.description
+
+            info["Key"] = self.box.key()
+            d = self.box.descriptor
+            if isinstance(d, Type):
+                info["Value Type"] = d.hashname()
+            if d.defaultValue is not None:
+                info["Default Value"] = d.defaultValue
+            if d.alias is not None:
+                info["Alias"] = d.alias
+            if d.tags is not None:
+                info["Tags"] = ", ".join(d.tags)
+            if self.box.timestamp is not None:
+                info["Timestamp"] = self.box.timestamp.toLocal()
+            if d.displayType and d.displayType.startswith('bin|'):
+                info["Bits"] = d.displayType[4:]
+            if self.box.configuration.type == "device":
+                info["Value on device"] = self.box.value
+
+            self.popupWidget.setInfo(info)
 

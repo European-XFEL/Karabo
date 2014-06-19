@@ -36,6 +36,6 @@ class TaurusWheelEditWrapper(EditableWidget):
         return "TaurusWheelEditWrapper"
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             return

@@ -51,7 +51,7 @@ class EditableLineEdit(EditableWidget):
         return self.__lineEdit.text()
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = ""
         
