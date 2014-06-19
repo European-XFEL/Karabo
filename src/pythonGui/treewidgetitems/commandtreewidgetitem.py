@@ -68,9 +68,5 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 
-    def setToolTipDialogVisible(self, show):
-        pass
-
-
     def onCommandClicked(self):
         Network().onExecute(self.box)

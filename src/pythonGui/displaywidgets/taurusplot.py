@@ -39,6 +39,6 @@ class TaurusPlotWrapper(DisplayWidget):
     def value(self):
         return "TaurusPlotWrapper"
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return

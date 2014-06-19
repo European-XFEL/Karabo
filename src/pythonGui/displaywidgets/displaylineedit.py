@@ -44,7 +44,7 @@ class DisplayLineEdit(DisplayWidget):
         return self.widget.text()
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
         

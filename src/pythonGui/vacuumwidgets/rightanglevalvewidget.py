@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class RightAngleValveWidget(VacuumWidget):
     alias = "Right angle valve"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "RightAngleValveWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
             self._setPixmap(QPixmap(":rightanglevalve-orange"))
         elif ("On" in value) or ("on" in value):

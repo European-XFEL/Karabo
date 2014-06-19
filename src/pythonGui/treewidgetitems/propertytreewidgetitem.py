@@ -11,13 +11,10 @@
 
 __all__ = ["PropertyTreeWidgetItem"]
 
-from collections import OrderedDict
-from basetreewidgetitem import BaseTreeWidgetItem
-from components import ChoiceComponent, DisplayComponent
-import icons
-from popupwidget import PopupWidget
 
-from karabo.hashtypes import Type
+from basetreewidgetitem import BaseTreeWidgetItem
+from components import DisplayComponent
+import icons
 
 from PyQt4.QtCore import Qt, QSize
 from PyQt4.QtGui import QAction, QCursor, QMenu
@@ -27,10 +24,6 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
 
     def __init__(self, box, parent, parentItem=None):
         super(PropertyTreeWidgetItem, self).__init__(box, parent, parentItem)
-        
-        # Popup widget for tooltip info
-        self.__popupWidget = None
-        self.__currentValueOnDevice = None
         
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
@@ -76,55 +69,12 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         BaseTreeWidgetItem.setReadOnly(self, readOnly)
 
 
-    def setToolTipDialogVisible(self, show):
-        if not self.__popupWidget:
-            self.__popupWidget = PopupWidget(self.treeWidget())
-
-        if show:
-            info = self._updateToolTipDialog()
-            
-            pos = QCursor.pos()
-            pos.setX(pos.x() + 10)
-            pos.setY(pos.y() + 10)
-            self.__popupWidget.move(pos)
-            self.__popupWidget.show()
-        else:
-            self.__popupWidget.hide()
-
-
-    def _updateToolTipDialog(self):
-            info = OrderedDict()
-            info["Property"] = self.text(0)
-            if self.description is not None:
-                info["Description"] = self.description
-
-            info["Key"] = self.box.key()
-            d = self.box.descriptor
-            if isinstance(d, Type):
-                info["Value Type"] = d.hashname()
-            if d.defaultValue is not None:
-                info["Default Value"] = d.defaultValue
-            if d.alias is not None:
-                info["Alias"] = d.alias
-            if d.tags is not None:
-                info["Tags"] = ", ".join(d.tags)
-            if self.box.timestamp is not None:
-                info["Timestamp"] = self.box.timestamp.toLocal()
-            if d.displayType and d.displayType.startswith('bin|'):
-                info["Bits"] = d.displayType[4:]
-            if self.__currentValueOnDevice is not None:
-                info["Value on device"] = self.__currentValueOnDevice
-
-            self.__popupWidget.setInfo(info)
-
-
     def onSetToDefault(self):
         self.box.descriptor.setDefault(self.box)
 
 
-    def onDisplayValueChanged(self, key, value):
-        self.__currentValueOnDevice = value
+    def onDisplayValueChanged(self, box, value):
         # Update tooltip dialog, if visible
-        if self.__popupWidget and self.__popupWidget.isVisible():
-            self._updateToolTipDialog()
+        if self.popupWidget and self.popupWidget.isVisible():
+            self.updateToolTipDialog()
 

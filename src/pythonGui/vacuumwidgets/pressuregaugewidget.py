@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class PressureGaugeWidget(VacuumWidget):
     alias = "Pressure gauge"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "PressureGaugeWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
             self._setPixmap(QPixmap(":pressuregauge-orange"))
         elif ("On" in value) or ("on" in value) or ("AllOk" == value):
