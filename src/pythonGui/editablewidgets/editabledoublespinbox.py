@@ -53,7 +53,7 @@ class EditableDoubleSpinBox(EditableWidget):
         return float(self.widget.text())
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0.0
 

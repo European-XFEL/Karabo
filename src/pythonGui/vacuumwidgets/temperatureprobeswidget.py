@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class TemperatureProbeWidget(VacuumWidget):
     alias = "Temperature probe"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "TemperatureProbeWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
             self._setPixmap(QPixmap(":thermometer-orange"))
         elif ("On" in value) or ("on" in value):

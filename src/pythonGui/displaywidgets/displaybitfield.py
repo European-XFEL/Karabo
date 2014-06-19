@@ -77,7 +77,7 @@ class Bitfield(EditableWidget, DisplayWidget):
         return self.widget.value
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = 0
         self.widget.value = value
@@ -85,4 +85,4 @@ class Bitfield(EditableWidget, DisplayWidget):
 
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.keys[0], value)
+        self.signalEditingFinished.emit(self.boxes[0], value)
