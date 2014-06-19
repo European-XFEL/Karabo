@@ -66,6 +66,20 @@ class DeviceServer(object):
                     .init()
                     .commit()
                     ,                    
+            LIST_ELEMENT(expected).key("autoStart")
+                    .displayedName("Auto start")
+                    .description("Auto starts selected devices")
+                    .appendNodesOfConfigurationBase(PythonDevice)
+                    .assignmentOptional().noDefaultValue()
+                    .commit()
+                    ,
+            BOOL_ELEMENT(expected).key("scanPlugins")
+                    .displayedName("Scan plug-ins?")
+                    .description("Decides whether the server will scan the content of the plug-in folder and dynamically load found devices")
+                    .expertAccess()
+                    .assignmentOptional().defaultValue(True)
+                    .commit()
+                    ,
             PATH_ELEMENT(expected).key("pluginDirectory")
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
@@ -225,21 +239,39 @@ class DeviceServer(object):
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
-        self.visibility = input.get("visibility")
+        self.autoStart = None
+        self.needScanPlugins = True
         
         # set serverId
         serverIdFileName = "serverId.xml"
         if os.path.isfile(serverIdFileName): 
             hash = loadFromFile(serverIdFileName) 
-            if 'serverId' in hash: self.serverid = hash['serverId'] # If file exists, it has priority
-            elif 'serverId' in input: self.serverid = input['serverId'] # Else whatever was configured 
-            else: self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
+            if 'serverId' in input:
+                self.serverid = input['serverId'] # Else whatever was configured
+                saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
+            elif 'DeviceServer.serverId' in hash:
+                self.serverid = hash['DeviceServer.serverId'] # If file exists, it has priority
+            else:
+                print "WARN : Found serverId.xml without serverId contained"
+                self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
+                saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName, Hash("format.Xml.indentation", 3))
         else: # No file
             if 'serverId' in input:
                 self.serverid = input['serverId']
-                saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName)
             else:
                 self.serverid = self._generateDefaultServerId()
+            saveToFile(Hash("DeviceServer.serverId", self.serverid), serverIdFileName, Hash("format.Xml.indentation", 3))
+        
+        # Device configurations for those to automatically start
+        if "autoStart" in input:
+            self.autoStart = input['autoStart']
+            
+        # Whether to scan for additional plug-ins at runtime
+        if "scanPlugins" in input:
+            self.needScanPlugins = input['scanPlugins']
+        
+        # What visibility this server should have
+        self.visibility = input.get("visibility")
         
         self.connectionType = iter(input['connection']).next().getKey()
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
