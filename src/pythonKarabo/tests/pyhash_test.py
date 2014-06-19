@@ -117,7 +117,7 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(attrs["attr2"], 43)
 
 
-    def save_test_hash(self):
+    def create_hash(self):
         h = Hash()
         h["bool"] = True
         h["int"] = 4
@@ -135,7 +135,7 @@ class Hash_TestCase(unittest.TestCase):
         return h
 
 
-    def check_test_hash(self, h):
+    def check_hash(self, h):
         self.assertEqual(h.keys(), ["bool", "int", "string", "chars",
                                     "vector", "emptyvector", "hash"])
         self.assertTrue(h["bool"] is True)
@@ -161,19 +161,19 @@ class Hash_TestCase(unittest.TestCase):
     def test_xml(self):
         w = XMLWriter()
         r = XMLParser()
-        s = w.write(self.save_test_hash())
-        self.check_test_hash(r.read(s))
+        s = w.write(self.create_hash())
+        self.check_hash(r.read(s))
 
-        h = Hash("bla", self.save_test_hash())
+        h = Hash("bla", self.create_hash())
         s = w.write(h)
-        self.check_test_hash(r.read(s)["bla"])
+        self.check_hash(r.read(s)["bla"])
 
 
     def test_binary(self):
         w = BinaryWriter()
         r = BinaryParser()
-        s = w.write(self.save_test_hash())
-        self.check_test_hash(r.read(s))
+        s = w.write(self.create_hash())
+        self.check_hash(r.read(s))
 
 
 if __name__ == '__main__':
