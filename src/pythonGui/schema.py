@@ -88,6 +88,8 @@ class Box(QObject):
 
 
     def __getattr__(self, attr):
+        assert self.descriptor is not None, \
+            "Box.{} needs descriptor to work".format(attr)
         return partial(getattr(self.descriptor, attr), self)
 
 
