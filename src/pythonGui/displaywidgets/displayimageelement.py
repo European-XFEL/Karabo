@@ -87,7 +87,7 @@ class DisplayImageElement(DisplayWidget):
             # Safety
             if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
-            image = QImage(npy, dimX, dimY, QImage.Format_Indexed8)
+            image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
             image.setColorTable(self.colorTable)
             pixmap = QPixmap.fromImage(image)
             
