@@ -261,8 +261,8 @@ class Object(object):
                 self.__dict__[k] = b
 
 
-    def __setattr__(self, key, value):
-        getattr(self, key).set(value)
+    def __setattr__(self, box, value):
+        getattr(self, box).set(value)
 
 
 class Dummy(object):
