@@ -154,7 +154,7 @@ class NavigationTreeModel(QAbstractItemModel):
     def eraseDevice(self, instanceId):
         index = self.findIndex(instanceId)
         if (index is None) or (not index.isValid()):
-            return None
+            return
         
         self.beginResetModel()
         try:
@@ -168,7 +168,7 @@ class NavigationTreeModel(QAbstractItemModel):
     def eraseServer(self, instanceId):
         index = self.findIndex(instanceId)
         if (index is None) or (not index.isValid()):
-            return None
+            return []
         
         serverClassIds = []
         self.beginResetModel()
