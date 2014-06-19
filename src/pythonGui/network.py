@@ -385,6 +385,11 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
+    def onError(self, error):
+        h = Hash("type", "error", "traceback", error)
+        self._tcpWriteHash(h)
+
+
 ### private functions ###
     def _tcpWriteHash(self, h):
         # There might be a connect to server in progress, but without success
