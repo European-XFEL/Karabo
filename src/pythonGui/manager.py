@@ -162,7 +162,6 @@ class _Manager(QObject):
 
 
     def onConflictStateChanged(self, key, hasConflict):
-        print "conflictstatechanged", key
         self.signalConflictStateChanged.emit(key, hasConflict)
 
 
