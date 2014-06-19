@@ -23,8 +23,8 @@ class DisplayFileOut(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayFileOut, self).__init__(box)
-
-        self.__compositeWidget = QWidget()
+        
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 

@@ -36,6 +36,8 @@ class DisplayImageElement(DisplayWidget):
     colorTable = [QColor(i,i,i).rgb() for i in range(256)]
 
     def __init__(self, box, parent):
+        super(DisplayImageElement, self).__init__(box)
+
         self.__image = QLabel(parent)
         self.__image.setAutoFillBackground(True)
         self.__image.setAlignment(Qt.AlignCenter)
@@ -45,8 +47,6 @@ class DisplayImageElement(DisplayWidget):
         self.__image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
-
-        super(DisplayImageElement, self).__init__(box)
 
 
     @property

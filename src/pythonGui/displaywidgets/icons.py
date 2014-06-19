@@ -43,6 +43,8 @@ class Label(QLabel):
 
 class Icons(DisplayWidget):
     def __init__(self, box, parent):
+        super(Icons, self).__init__(box)
+        
         self.widget = QLabel(parent)
         action = QAction("Change Icons...", self.widget)
         self.widget.addAction(action)
@@ -61,7 +63,6 @@ class Icons(DisplayWidget):
         self.dialog.finished.connect(self.on_dialog_finished)
 
         self.list = [(None, None, None, None)]
-        super(Icons, self).__init__(box)
 
 
     def on_list_currentRowChanged(self, row):

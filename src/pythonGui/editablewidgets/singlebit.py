@@ -12,12 +12,12 @@ class SingleBit(DisplayWidget):
 
 
     def __init__(self, box, parent):
+        super(SingleBit, self).__init__(box)
         self.widget = QCheckBox(parent)
         action = QAction("Change Bit...", self.widget)
         action.triggered.connect(self.onChangeBit)
         self.widget.addAction(action)
         self.bit = 0
-        super(SingleBit, self).__init__(box)
 
 
     def setReadOnly(self, ro):
