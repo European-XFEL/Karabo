@@ -23,7 +23,6 @@ class EditableDoubleSpinBox(EditableWidget):
         self.widget = QLineEdit(parent)
         self.validator = QDoubleValidator(self.widget)
         self.widget.setValidator(self.validator)
-        self.widget.editingFinished.connect(self.onEditingFinished)
         self.widget.textChanged.connect(self.onTextChanged)
 
         # Needed for updates during input, otherwise cursor jumps to end of input
@@ -35,8 +34,11 @@ class EditableDoubleSpinBox(EditableWidget):
 
     def onTextChanged(self, text):
         self.widget.setPalette(self.normalPalette
-                                     if self.widget.hasAcceptableInput()
-                                     else self.errorPalette)
+                               if self.widget.hasAcceptableInput()
+                               else self.errorPalette)
+        if self.widget.hasAcceptableInput():
+            self.lastCursorPos = self.widget.cursorPosition()
+            self.signalEditingFinished.emit(self.boxes[0], self.value)
 
 
     def typeChanged(self, box):
@@ -62,8 +64,3 @@ class EditableDoubleSpinBox(EditableWidget):
         if forceRefresh:
             # Needs to be called to update possible apply buttons
             self.onEditingFinished(value)
-
-
-    def onEditingFinished(self):
-        self.lastCursorPos = self.widget.cursorPosition()
-        self.signalEditingFinished.emit(self.boxes[0], self.value)
