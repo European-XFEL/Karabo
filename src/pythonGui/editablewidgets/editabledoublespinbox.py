@@ -20,6 +20,7 @@ class EditableDoubleSpinBox(EditableWidget):
 
     def __init__(self, box, parent):
         super(EditableDoubleSpinBox, self).__init__(box)
+        
         self.widget = QLineEdit(parent)
         self.validator = QDoubleValidator(self.widget)
         self.widget.setValidator(self.validator)

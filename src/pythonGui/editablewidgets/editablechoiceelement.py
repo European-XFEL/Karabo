@@ -34,10 +34,10 @@ class EditableChoiceElement(EditableWidget):
     alias = "Choice Element"
 
     def __init__(self, box, parent):
+        super(EditableChoiceElement, self).__init__(box)
+        
         self.__comboBox = QComboBox(parent)
         self.__comboBox.setFrame(False)
-
-        super(EditableChoiceElement, self).__init__(box)
 
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
