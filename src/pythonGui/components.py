@@ -466,6 +466,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.acApply.setStatusTip(text)
         self.acApply.setToolTip(text)
         self.applyEnabled = allowed and not isEqualEditable
+        self.acReset.setEnabled(not isEqualEditable)
 
 
     def onEditingFinished(self, key, value):
