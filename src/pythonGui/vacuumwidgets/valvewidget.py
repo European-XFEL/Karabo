@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class ValveWidget(VacuumWidget):
     alias = "Valve"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "ValveWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
             self._setPixmap(QPixmap(":valve-orange"))
         elif ("On" in value) or ("on" in value):

@@ -50,7 +50,7 @@ class DisplayCommand(DisplayWidget):
 
     value = None
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         pass
 
 

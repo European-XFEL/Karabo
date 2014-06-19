@@ -12,6 +12,7 @@
 __all__ = ["DisplayFileOut"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
 from PyQt4.QtGui import (QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
@@ -52,12 +53,11 @@ class DisplayFileOut(DisplayWidget):
         return self.__lePath.text()
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
 
         if value != self.value:
-            self.__lePath.blockSignals(True)
-            self.__lePath.setText(value)
-            self.__lePath.blockSignals(False)
+            with SignalBlocker(self.__lePath):
+                self.__lePath.setText(value)
 

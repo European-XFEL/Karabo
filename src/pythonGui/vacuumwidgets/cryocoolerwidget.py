@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class CryoCoolerWidget(VacuumWidget):
     alias = "Cryo-cooler"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "CryoCoolerWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
             self._setPixmap(QPixmap(":cryocooler-orange"))
         elif ("On" in value) or ("on" in value):

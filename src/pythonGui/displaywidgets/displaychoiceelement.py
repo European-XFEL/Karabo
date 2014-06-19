@@ -74,7 +74,7 @@ class DisplayChoiceElement(DisplayWidget):
             self._r_updateChildItems(childItem)
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if not isinstance(value, str):
             return
         
