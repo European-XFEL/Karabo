@@ -74,6 +74,8 @@ class EditableList(EditableWidget):
         if value is None:
             value = []
 
+        self.valueList = value
+        
         with SignalBlocker(self.leList):
             self.leList.setText(box.descriptor.toString(value))
 
