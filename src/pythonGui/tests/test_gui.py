@@ -193,13 +193,17 @@ class Tests(TestCase):
 
 
     def stop(self):
-        Manager().handle_instanceGone(dict(instanceId="testdevice"))
+        Manager().handle_instanceGone(dict(instanceId="testdevice",
+                                           instanceType="device"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
-        Manager().handle_instanceGone(dict(instanceId="testdevice"))
-        Manager().handle_instanceGone(dict(instanceId="incompatible"))
-        Manager().handle_instanceGone(dict(instanceId="testserver"))
+        Manager().handle_instanceGone(dict(instanceId="testdevice",
+                                           instanceType="device"))
+        Manager().handle_instanceGone(dict(instanceId="incompatible",
+                                           instanceType="device"))
+        Manager().handle_instanceGone(dict(instanceId="testserver",
+                                           instanceType="server"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertFalse(Manager().systemTopology.has("testserver"))
