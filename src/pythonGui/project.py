@@ -270,7 +270,7 @@ class Device(Configuration):
         This function returns the configurations' XML file as a string.
         """
         config = self.toHash()
-        assert "deviceId" not in config
+        assert "deviceId" in config
         return XMLWriter().write(Hash(self.classId, self.toHash()))
 
 
