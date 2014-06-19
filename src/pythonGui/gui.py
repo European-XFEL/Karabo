@@ -4,8 +4,8 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+from __future__ import unicode_literals
 __author__="kerstin weger"
-
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
 import util # assure sip api is set first
@@ -59,5 +59,10 @@ def excepthook(type, value, traceback):
                      getattr(value, "title", type.__name__),
                      getattr(value, "message", "Unknown error occured") +
                      "\n" + " " * 300 + "\n")
-    mb.setDetailedText("".join(format_exception(type, value, traceback)))
+    text = "".join(format_exception(type, value, traceback))
+    mb.setDetailedText(text)
     mb.exec_()
+    try:
+        Network().onError(text)
+    except Exception:
+        print "could not sent exception to network"
