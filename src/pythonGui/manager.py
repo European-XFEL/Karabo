@@ -387,11 +387,11 @@ class _Manager(QObject):
         Remove instanceId from central hash and update
         """
         instanceId = hash.get("instanceId")
-        # BH Added instanceType for whatever usage here
         instanceType = hash.get("instanceType")
-        print "Instance", instanceId, "of type", instanceType, "died."
-        device = self.deviceData.get(instanceId)
-        if device is not None:
+        if instanceType == "device":
+            device = self.deviceData.get(instanceId)
+            if device is None:
+                return
             device.status = "offline"
             if device.descriptor is not None:
                 device.redummy()
@@ -400,7 +400,10 @@ class _Manager(QObject):
             # Clear corresponding parameter page
             if device.parameterEditor is not None:
                 device.parameterEditor.clear()
-        else:
+            path = "device." + instanceId
+            if path in self.systemHash:
+                del self.systemHash[path]
+        elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             for ids in serverClassIds:
@@ -412,21 +415,16 @@ class _Manager(QObject):
                     del self.serverClassData[ids]
                 except KeyError:
                     pass
-        
-        # Send signal to Configurator to show nothing
-        self.signalShowEmptyConfigurationPage.emit()
-        
-        path = "server." + instanceId
-        if path in self.systemHash:
-            del self.systemHash[path]
-            for v in self.deviceData.itervalues():
-                v.updateStatus()
-        else:
-            path = "device." + instanceId
+            path = "server." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
-            else:
-                path = None
+                for v in self.deviceData.itervalues():
+                    v.updateStatus()
+        else:
+            raise RuntimeError
+
+        # Send signal to Configurator to show nothing
+        self.signalShowEmptyConfigurationPage.emit()
 
         self.projectTopology.updateNeeded()
 
