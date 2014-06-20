@@ -6,6 +6,7 @@ __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
 import os
 import sys
+import signal
 import copy
 import socket
 import platform
@@ -224,7 +225,18 @@ class DeviceServer(object):
         
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
-    
+    def signal_handler(self, signum, frame):
+        if signum == signal.SIGINT:
+            print('INTERRUPT : You pressed Ctrl-C!')
+        else:
+            print('INTERRUPT : You terminate me!')
+        if self.ss is not None:
+            self.ss.call("", "slotKillServer")
+        else:
+            self.slotKillServer()
+        self.signalSlotableThread.join()
+        self.pluginThread.join()
+        os._exit(0)
     
     def __init__(self, input):
         '''Constructor'''
@@ -236,6 +248,8 @@ class DeviceServer(object):
         self.fsm = self.setupFsm()
 
         self.ss = None
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
         self.availableDevices = dict()
         self.deviceInstanceMap = dict()
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
@@ -276,7 +290,7 @@ class DeviceServer(object):
         self.connectionType = iter(input['connection']).next().getKey()
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create("PythonPluginLoader", Hash("pluginDirectory", input['pluginDirectory']))
-        self.loadLogger(input)                
+        self.loadLogger(input)
     
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -332,12 +346,11 @@ class DeviceServer(object):
         info["host"] = self.hostname
         info["visibility"] = self.visibility
         # TODO
-        t = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
-        t.start()
+        self.signalSlotableThread = threading.Thread(target=self.ss.runEventLoop, args = (10, info))
+        self.signalSlotableThread.start()
         time.sleep(0.01)  # for rescheduling, some garantie that runEventLoop will start before FSM
         self.fsm.start()
-        t.join()
-        self.pluginThread.join()
+        signal.pause()
     
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
