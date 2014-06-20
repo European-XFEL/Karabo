@@ -32,10 +32,11 @@ class DisplayLineEdit(DisplayWidget):
     alias = "Text Field"
 
     def __init__(self, box, parent):
+        super(DisplayLineEdit, self).__init__(box)
+        
         self.widget = QLineEdit(parent)
         self.widget.setMinimumSize(160, 24)
         self.widget.setReadOnly(True)
-        super(DisplayLineEdit, self).__init__(box)
 
 
     @property
@@ -43,7 +44,7 @@ class DisplayLineEdit(DisplayWidget):
         return self.widget.text()
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
         

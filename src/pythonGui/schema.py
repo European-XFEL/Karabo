@@ -88,6 +88,8 @@ class Box(QObject):
 
 
     def __getattr__(self, attr):
+        assert self.descriptor is not None, \
+            "Box.{} needs descriptor to work".format(attr)
         return partial(getattr(self.descriptor, attr), self)
 
 
@@ -116,8 +118,12 @@ class Box(QObject):
 
     def getFromPast(self, t0, t1, maxNumData):
         Network().onGetFromPast(self, t0, t1, maxNumData)
-        
-        
+
+
+    def __str__(self):
+        return "<Box {}>".format(self.key())
+
+
 class Descriptor(hashtypes.Descriptor):
     # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
@@ -255,8 +261,8 @@ class Object(object):
                 self.__dict__[k] = b
 
 
-    def __setattr__(self, key, value):
-        getattr(self, key).set(value)
+    def __setattr__(self, box, value):
+        getattr(self, box).set(value)
 
 
 class Dummy(object):
@@ -375,12 +381,12 @@ class Schema(hashtypes.Descriptor):
 
     def toHash(self, box):
         ret = Hash()
-        for k, v in box.value.__dict__.iteritems():
-            try:
-                if v.hasValue():
-                    ret[k] = v.toHash()
-            except AttributeError as e:
-                pass
+        for k in self.dict:
+            v = getattr(box.value, k, None)
+            if v is None:
+                continue
+            if v.hasValue():
+                ret[k] = v.toHash()
         return ret
 
 
@@ -420,8 +426,9 @@ class Schema(hashtypes.Descriptor):
         d = Dummy(box.path, box.configuration)
         for k, v in self.dict.iteritems():
             b = getattr(box.value, k)
-            b.redummy()
-            setattr(d, k, b)
+            if b is not None and b.descriptor is not None:
+                b.redummy()
+                setattr(d, k, b)
         box._value = d
         box.descriptor = None
 
@@ -431,6 +438,9 @@ class ChoiceOfNodes(Schema):
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
         self.classAlias = 'Choice Element'
+        assert self.defaultValue is None or self.defaultValue in self.dict, \
+            'the default value "{}" is not in {} for node {}'.format(
+                self.defaultValue, hash.keys(), key)
         return self
 
 
@@ -490,6 +500,13 @@ class ChoiceOfNodes(Schema):
         Schema.fromHash(self, box, value, timestamp)
 
 
+    def dispatchUserChanges(self, box, hash):
+        for k in hash:
+            box.signalUserChanged.emit(box, k)
+            break
+        Schema.dispatchUserChanges(self, box, hash)
+
+
     def setDefault(self, box):
         if self.defaultValue is not None:
             box.current = self.defaultValue
@@ -498,7 +515,10 @@ class ChoiceOfNodes(Schema):
 
     def toHash(self, box):
         ret = Schema.toHash(self, box)
-        return Hash(box.current, ret[box.current])
+        if box.current is None:
+            return Hash()
+        else:
+            return Hash(box.current, ret[box.current])
 
 
     def set(self, box, value, timestamp=None):

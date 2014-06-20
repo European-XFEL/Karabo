@@ -32,9 +32,10 @@ class EditableCheckBox(EditableWidget):
     alias = "Toggle Field"
 
     def __init__(self, box, parent):
+        super(EditableCheckBox, self).__init__(box)
+        
         self.__checkBox = QCheckBox(parent)
         self.__checkBox.stateChanged.connect(self.onEditingFinished)
-        super(EditableCheckBox, self).__init__(box)
 
 
     @property
@@ -47,7 +48,7 @@ class EditableCheckBox(EditableWidget):
         return self.__checkBox.checkState() == Qt.Checked
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = False
         

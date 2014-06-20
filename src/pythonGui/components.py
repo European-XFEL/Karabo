@@ -184,8 +184,10 @@ class EditableNoApplyComponent(BaseComponent):
             super(EditableNoApplyComponent, self).__init__(W.alias, box)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
+        box.signalUpdateComponent.connect(self.widgetFactory.valueChanged)
         self.widgetFactory.setReadOnly(False)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         hLayout.addWidget(self.widgetFactory.widget)
 
         unitLabel = (box.descriptor.metricPrefixSymbol +
@@ -405,8 +407,8 @@ class EditableApplyLaterComponent(BaseComponent):
                                  for b in self.boxes])
 
 
-    def onApplyRemoteChanges(self, key):
-        self.widgetFactory.valueChanged(key, self.__currentDisplayValue)
+    def onApplyRemoteChanges(self, box):
+        self.widgetFactory.valueChanged(box, self.__currentDisplayValue)
         self.updateButtons()
 
 
@@ -416,9 +418,9 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     @pyqtSlot(str, object)
-    def onDisplayValueChanged(self, key, value):
+    def onDisplayValueChanged(self, box, value):
         if self.__currentDisplayValue is None:
-            self.widgetFactory.valueChanged(key, value)
+            self.widgetFactory.valueChanged(box, value)
         self.__currentDisplayValue = value
         self.__busyTimer.stop()
         self.hasConflict = True
@@ -464,9 +466,10 @@ class EditableApplyLaterComponent(BaseComponent):
         self.acApply.setStatusTip(text)
         self.acApply.setToolTip(text)
         self.applyEnabled = allowed and not isEqualEditable
+        self.acReset.setEnabled(self.applyEnabled)
 
 
-    def onEditingFinished(self, key, value):
+    def onEditingFinished(self, box, value):
         if self.__currentDisplayValue is None:
             return
         self.updateButtons()
@@ -484,6 +487,7 @@ class ChoiceComponent(BaseComponent):
             super(ChoiceComponent, self).__init__(W.alias, box)
         self.widget.setEnabled(False)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChanged)
+        box.signalUserChanged.connect(self.widgetFactory.valueChanged)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
 

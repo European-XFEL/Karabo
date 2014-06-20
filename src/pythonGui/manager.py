@@ -36,7 +36,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
-    signalClearParameterPage = pyqtSignal(str, str) # removePath, selectPath
+    signalShowEmptyConfigurationPage = pyqtSignal()
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -62,7 +62,6 @@ class _Manager(QObject):
         self.systemTopology = NavigationTreeModel(self)
         self.systemTopology.selectionModel.selectionChanged. \
                         connect(self.onNavigationTreeModelSelectionChanged)
-        self.systemTopology.signalClearParameterPage.connect(self.signalClearParameterPage)
         # Model for project views
         self.projectTopology = ProjectModel(self)
         self.projectTopology.selectionModel.selectionChanged. \
@@ -129,8 +128,8 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logMessage)
 
 
-    def onReceivedData(self, instanceInfo):
-        getattr(self, "handle_" + instanceInfo["type"])(instanceInfo)
+    def onReceivedData(self, hash):
+        getattr(self, "handle_" + hash["type"])(hash)
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -383,38 +382,49 @@ class _Manager(QObject):
         self._handleSystemTopology(instanceInfo.get("topologyEntry"))
 
 
-    def handle_instanceGone(self, instanceInfo):
+    def handle_instanceGone(self, hash):
         """
         Remove instanceId from central hash and update
         """
-        instanceId = instanceInfo.get("instanceId")
-        device = self.deviceData.get(instanceId)
-        if device is not None:
+        instanceId = hash.get("instanceId")
+        instanceType = hash.get("instanceType")
+        if instanceType == "device":
+            device = self.deviceData.get(instanceId)
+            if device is None:
+                return
             device.status = "offline"
             if device.descriptor is not None:
                 device.redummy()
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
-        else:
+            # Clear corresponding parameter page
+            if device.parameterEditor is not None:
+                device.parameterEditor.clear()
+            path = "device." + instanceId
+            if path in self.systemHash:
+                del self.systemHash[path]
+        elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             for ids in serverClassIds:
                 try:
+                    conf = self.serverClassData[ids]
+                    # Clear corresponding parameter page
+                    if conf.parameterEditor is not None:
+                        conf.parameterEditor.clear()
                     del self.serverClassData[ids]
                 except KeyError:
                     pass
-        
-        path = "server." + instanceId
-        if path in self.systemHash:
-            del self.systemHash[path]
-            for v in self.deviceData.itervalues():
-                v.updateStatus()
-        else:
-            path = "device." + instanceId
+            path = "server." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
-            else:
-                path = None
+                for v in self.deviceData.itervalues():
+                    v.updateStatus()
+        else:
+            raise RuntimeError
+
+        # Send signal to Configurator to show nothing
+        self.signalShowEmptyConfigurationPage.emit()
 
         self.projectTopology.updateNeeded()
 

@@ -12,6 +12,7 @@
 __all__ = ["EditableFileOut"]
 
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton,
@@ -24,15 +25,15 @@ class EditableFileOut(EditableWidget):
 
     def __init__(self, box, parent):
         super(EditableFileOut, self).__init__(box)
-
-        self.__compositeWidget = QWidget()
+        
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
         self.__lePath = QLineEdit()
         self.__lePath.textChanged.connect(self.onEditingFinished)
         hLayout.addWidget(self.__lePath)
-
+        
         text = "Select output file"
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
@@ -53,13 +54,12 @@ class EditableFileOut(EditableWidget):
         return self.__lePath.text()
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = ""
 
-        self.__lePath.blockSignals(True)
-        self.__lePath.setText(value)
-        self.__lePath.blockSignals(False)
+        with SignalBlocker(self.__lePath):
+            self.__lePath.setText(value)
 
 
     def onFileOutClicked(self):

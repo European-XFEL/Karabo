@@ -34,10 +34,10 @@ class EditableChoiceElement(EditableWidget):
     alias = "Choice Element"
 
     def __init__(self, box, parent):
+        super(EditableChoiceElement, self).__init__(box)
+        
         self.__comboBox = QComboBox(parent)
         self.__comboBox.setFrame(False)
-
-        super(EditableChoiceElement, self).__init__(box)
 
         self.__comboBox.installEventFilter(self)
         self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
@@ -102,8 +102,8 @@ class EditableChoiceElement(EditableWidget):
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        if value is None or not isinstance(value, unicode):
-            return
+        if not isinstance(value, basestring):
+            value = box.current
 
         index = self.__comboBox.findText(value)
         if index < 0:
