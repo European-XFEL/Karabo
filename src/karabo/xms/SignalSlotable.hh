@@ -712,9 +712,9 @@ namespace karabo {
 
             bool connectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
 
-            bool disconnectChannels(const std::string& outputInstanceId, const std::string& outputName, const std::string& inputInstanceId, const std::string& inputName);
+            bool disconnectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
 
-
+            
             template <class InputType>
             boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input, 
             const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
@@ -844,7 +844,7 @@ namespace karabo {
 
             void slotConnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
-            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo);
+            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo, bool connect);
 
             void slotHasSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
 
