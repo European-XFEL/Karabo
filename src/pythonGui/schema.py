@@ -381,12 +381,12 @@ class Schema(hashtypes.Descriptor):
 
     def toHash(self, box):
         ret = Hash()
-        for k, v in box.value.__dict__.iteritems():
-            try:
-                if v.hasValue():
-                    ret[k] = v.toHash()
-            except AttributeError as e:
-                pass
+        for k in self.dict:
+            v = getattr(box.value, k, None)
+            if v is None:
+                continue
+            if v.hasValue():
+                ret[k] = v.toHash()
         return ret
 
 
