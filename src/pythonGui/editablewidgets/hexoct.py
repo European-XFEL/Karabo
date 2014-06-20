@@ -10,8 +10,8 @@ class Hexadecimal(EditableWidget, DisplayWidget):
     alias = "Hexadecimal"
 
     def __init__(self, box, parent):
-        self.widget = QLineEdit(parent)
         super(Hexadecimal, self).__init__(box)
+        self.widget = QLineEdit(parent)
 
 
     def setReadOnly(self, ro):
@@ -36,7 +36,7 @@ class Hexadecimal(EditableWidget, DisplayWidget):
         self.widget.setInputMask(mask)
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         with SignalBlocker(self.widget):
             self.widget.setText("{:x}".format(value))
 

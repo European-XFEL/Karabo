@@ -12,6 +12,7 @@
 __all__ = ["DisplayFileIn"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
 from PyQt4.QtGui import (QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
@@ -23,15 +24,15 @@ class DisplayFileIn(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayFileIn, self).__init__(box)
-
-        self.__compositeWidget = QWidget()
+        
+        self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
         self.__lePath = QLineEdit()
         self.__lePath.setReadOnly(True)
         hLayout.addWidget(self.__lePath)
-
+        
         text = "Select directory"
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
@@ -52,12 +53,11 @@ class DisplayFileIn(DisplayWidget):
         return self.__lePath.text()
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
 
         if value != self.value:
-            self.__lePath.blockSignals(True)
-            self.__lePath.setText(value)
-            self.__lePath.blockSignals(False)
+            with SignalBlocker(self.__lePath):
+                self.__lePath.setText(value)
 

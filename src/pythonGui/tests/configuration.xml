@@ -1,1 +1,93 @@
-<ParameterTest KRB_Type="HASH"><charDefault KRB_Type="CHAR">AA==</charDefault><reset KRB_Type="HASH" /><version KRB_Type="STRING">1.0</version><int32 KRB_Type="INT32">1234</int32><radius KRB_Type="FLOAT">10.0</radius><archive KRB_Type="BOOL">1</archive><int32Element KRB_Type="INT32">2</int32Element><vecDoubleReconfigStr KRB_Type="VECTOR_DOUBLE">1.1,2.2,3.3</vecDoubleReconfigStr><inputElement KRB_Type="HASH"><Network-Hash KRB_Type="HASH"><dataDistribution KRB_Type="STRING">copy</dataDistribution><keepDataUntilNew KRB_Type="BOOL">0</keepDataUntilNew><respondToEndOfStream KRB_Type="BOOL">1</respondToEndOfStream><minData KRB_Type="UINT32">1</minData><onSlowness KRB_Type="STRING">wait</onSlowness></Network-Hash></inputElement><start KRB_Type="HASH" /><state KRB_Type="STRING">Ok.Stopped</state><uint16 KRB_Type="UINT16">255</uint16><progress KRB_Type="INT32">0</progress><currentSpeed KRB_Type="FLOAT">0.0</currentSpeed><uint32 KRB_Type="UINT32">10</uint32><vecStringDefault KRB_Type="VECTOR_STRING" /><int16 KRB_Type="INT16">-128</int16><targetState KRB_Type="STRING" /><on KRB_Type="HASH" /><stop KRB_Type="HASH" /><visibility KRB_Type="INT32">0</visibility><uint8 KRB_Type="UINT8">128</uint8><uint64 KRB_Type="UINT64">10</uint64><deviceId KRB_Type="STRING">testdevice</deviceId><velocity KRB_Type="INT32">4</velocity><off KRB_Type="HASH" /><doubleDefault KRB_Type="DOUBLE">0.23</doubleDefault><int8 KRB_Type="INT8">-127</int8><classId KRB_Type="STRING">ParameterTest</classId><vecIntReconfigStr KRB_Type="VECTOR_INT32">11,22,33</vecIntReconfigStr><output KRB_Type="HASH"><Network-Hash KRB_Type="HASH"><enableAppendMode KRB_Type="BOOL">0</enableAppendMode><noInputShared KRB_Type="STRING">wait</noInputShared><distributionMode KRB_Type="STRING">load-balanced</distributionMode></Network-Hash></output><targetSpeed KRB_Type="FLOAT">0.5</targetSpeed><outputElement KRB_Type="HASH"><Network-Hash KRB_Type="HASH"><enableAppendMode KRB_Type="BOOL">0</enableAppendMode><noInputShared KRB_Type="STRING">wait</noInputShared><distributionMode KRB_Type="STRING">load-balanced</distributionMode></Network-Hash></outputElement><connection KRB_Type="HASH"><Jms KRB_Type="HASH"><username KRB_Type="STRING">guest</username><acknowledgeMode KRB_Type="STRING">explicit</acknowledgeMode><deliveryInhibition KRB_Type="BOOL">0</deliveryInhibition><protocol KRB_Type="STRING">TCP</protocol><acknowledgeTimeout KRB_Type="UINT32">0</acknowledgeTimeout><password KRB_Type="STRING">guest</password><hostname KRB_Type="STRING">exfl-broker.desy.de</hostname><ping KRB_Type="UINT32">20</ping><serializationType KRB_Type="STRING">binary</serializationType><destinationName KRB_Type="STRING">teichman</destinationName><acknowledgeSent KRB_Type="BOOL">0</acknowledgeSent><messageTimeToLive KRB_Type="INT32">10000</messageTimeToLive><trustBroker KRB_Type="BOOL">1</trustBroker><messagingDomain KRB_Type="STRING">publish-subscribe</messagingDomain><port KRB_Type="UINT32">7777</port></Jms></connection><int64 KRB_Type="INT64">1442244</int64><vecCharDefault KRB_Type="VECTOR_CHAR" /><reverseDirection KRB_Type="BOOL">0</reverseDirection><serverId KRB_Type="STRING">testserver</serverId><outputDefault KRB_Type="HASH"><Network-Hash KRB_Type="HASH"><enableAppendMode KRB_Type="BOOL">0</enableAppendMode><noInputShared KRB_Type="STRING">wait</noInputShared><distributionMode KRB_Type="STRING">load-balanced</distributionMode></Network-Hash></outputDefault></ParameterTest>
+<ParameterTest KRB_Type="HASH">
+  <charDefault KRB_Type="CHAR">AA==</charDefault>
+  <reset KRB_Type="HASH" />
+  <version KRB_Type="STRING">1.0</version>
+  <int32 KRB_Type="INT32">1234</int32>
+  <radius KRB_Type="FLOAT">10.0</radius>
+  <archive KRB_Type="BOOL">1</archive>
+  <int32Element KRB_Type="INT32">2</int32Element>
+  <vecDoubleReconfigStr KRB_Type="VECTOR_DOUBLE">
+  1.1,2.2,3.3</vecDoubleReconfigStr>
+  <inputElement KRB_Type="HASH">
+    <Network-Hash KRB_Type="HASH">
+      <dataDistribution KRB_Type="STRING">copy</dataDistribution>
+      <keepDataUntilNew KRB_Type="BOOL">0</keepDataUntilNew>
+      <respondToEndOfStream KRB_Type="BOOL">
+      1</respondToEndOfStream>
+      <minData KRB_Type="UINT32">1</minData>
+      <onSlowness KRB_Type="STRING">wait</onSlowness>
+    </Network-Hash>
+  </inputElement>
+  <start KRB_Type="HASH" />
+  <state KRB_Type="STRING">Ok.Stopped</state>
+  <uint16 KRB_Type="UINT16">255</uint16>
+  <progress KRB_Type="INT32">0</progress>
+  <currentSpeed KRB_Type="FLOAT">0.0</currentSpeed>
+  <uint32 KRB_Type="UINT32">10</uint32>
+  <vecStringDefault KRB_Type="VECTOR_STRING" />
+  <int16 KRB_Type="INT16">-128</int16>
+  <targetState KRB_Type="STRING" />
+  <on KRB_Type="HASH" />
+  <stop KRB_Type="HASH" />
+  <visibility KRB_Type="INT32">0</visibility>
+  <uint8 KRB_Type="UINT8">128</uint8>
+  <uint64 KRB_Type="UINT64">10</uint64>
+  <deviceId KRB_Type="STRING">testdevice</deviceId>
+  <velocity KRB_Type="INT32">4</velocity>
+  <off KRB_Type="HASH" />
+  <doubleDefault KRB_Type="DOUBLE">0.23</doubleDefault>
+  <int8 KRB_Type="INT8">-127</int8>
+  <classId KRB_Type="STRING">ParameterTest</classId>
+  <vecIntReconfigStr KRB_Type="VECTOR_INT32">
+  11,22,33</vecIntReconfigStr>
+  <output KRB_Type="HASH">
+    <Network-Hash KRB_Type="HASH">
+      <enableAppendMode KRB_Type="BOOL">0</enableAppendMode>
+      <noInputShared KRB_Type="STRING">wait</noInputShared>
+      <distributionMode KRB_Type="STRING">
+      load-balanced</distributionMode>
+    </Network-Hash>
+  </output>
+  <targetSpeed KRB_Type="FLOAT">0.5</targetSpeed>
+  <outputElement KRB_Type="HASH">
+    <Network-Hash KRB_Type="HASH">
+      <enableAppendMode KRB_Type="BOOL">0</enableAppendMode>
+      <noInputShared KRB_Type="STRING">wait</noInputShared>
+      <distributionMode KRB_Type="STRING">
+      load-balanced</distributionMode>
+    </Network-Hash>
+  </outputElement>
+  <connection KRB_Type="HASH">
+    <Jms KRB_Type="HASH">
+      <username KRB_Type="STRING">guest</username>
+      <acknowledgeMode KRB_Type="STRING">explicit</acknowledgeMode>
+      <deliveryInhibition KRB_Type="BOOL">0</deliveryInhibition>
+      <protocol KRB_Type="STRING">TCP</protocol>
+      <acknowledgeTimeout KRB_Type="UINT32">0</acknowledgeTimeout>
+      <password KRB_Type="STRING">guest</password>
+      <hostname KRB_Type="STRING">exfl-broker.desy.de</hostname>
+      <ping KRB_Type="UINT32">20</ping>
+      <serializationType KRB_Type="STRING">
+      binary</serializationType>
+      <destinationName KRB_Type="STRING">teichman</destinationName>
+      <acknowledgeSent KRB_Type="BOOL">0</acknowledgeSent>
+      <messageTimeToLive KRB_Type="INT32">10000</messageTimeToLive>
+      <trustBroker KRB_Type="BOOL">1</trustBroker>
+      <messagingDomain KRB_Type="STRING">
+      publish-subscribe</messagingDomain>
+      <port KRB_Type="UINT32">7777</port>
+    </Jms>
+  </connection>
+  <int64 KRB_Type="INT64">1442244</int64>
+  <vecCharDefault KRB_Type="VECTOR_CHAR" />
+  <reverseDirection KRB_Type="BOOL">0</reverseDirection>
+  <serverId KRB_Type="STRING">testserver</serverId>
+  <outputDefault KRB_Type="HASH">
+    <Network-Hash KRB_Type="HASH">
+      <enableAppendMode KRB_Type="BOOL">0</enableAppendMode>
+      <noInputShared KRB_Type="STRING">wait</noInputShared>
+      <distributionMode KRB_Type="STRING">
+      load-balanced</distributionMode>
+    </Network-Hash>
+  </outputDefault>
+</ParameterTest>

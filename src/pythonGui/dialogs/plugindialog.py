@@ -57,9 +57,9 @@ class PluginDialog(QDialog):
         fLayout = QFormLayout(self.gbStartUp)
         fLayout.setContentsMargins(5,5,5,5)
         self.cbStartUp = QComboBox()
-        self.cbStartUp.addItems(["restart", "ignore"])
+        self.cbStartUp.addItems(["ignore", "restart"])
         self.cbStartUp.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        fLayout.addRow("Startup behaviour:", self.cbStartUp)
+        fLayout.addRow("If already online:", self.cbStartUp)
         vLayout.addWidget(self.gbStartUp)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)

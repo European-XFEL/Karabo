@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class MotorWidget(VacuumWidget):
     alias = "Motor"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "MotorWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("Moving" in value):
             self._setPixmap(QPixmap(":motor-orange"))
         elif ("On" in value) or ("on" in value) or ("Idle" in value):

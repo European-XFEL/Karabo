@@ -19,13 +19,10 @@ class TaurusLabelWrapper(DisplayWidget):
     category = "TaurusWidget"
     alias = "Taurus Label"
 
-    def __init__(self, **params):
-        super(TaurusLabelWrapper, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(TaurusLabelWrapper, self).__init__(box)
         
-        # Minimum and maximum number of associated keys, 1 by default for each
-        self.__minMaxAssociatedKeys = (1,1) # tuple<min,max>
-        
-        self.__label = TaurusLabel()
+        self.__label = TaurusLabel(parent)
         
     @property
     def widget(self):
@@ -36,6 +33,6 @@ class TaurusLabelWrapper(DisplayWidget):
         return "TaurusLabelWrapper"
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return

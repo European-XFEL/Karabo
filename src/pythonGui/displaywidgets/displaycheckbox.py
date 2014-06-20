@@ -34,9 +34,10 @@ class DisplayCheckBox(DisplayWidget):
 
     
     def __init__(self, box, parent):
+        super(DisplayCheckBox, self).__init__(box)
+        
         self.widget = QCheckBox(parent)
         self.widget.setEnabled(False)
-        super(DisplayCheckBox, self).__init__(box)
 
 
     @property

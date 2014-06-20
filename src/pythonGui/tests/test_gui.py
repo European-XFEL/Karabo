@@ -103,6 +103,14 @@ class Tests(TestCase):
         self.assertFalse(Manager().systemTopology.has("something"))
 
 
+    def findNode(self, cls, name):
+        root = cls.parameterEditor.invisibleRootItem()
+        for i in count():
+            node = root.child(i)
+            if node.box.path[0] == name:
+                return node
+
+
     def schema(self):
         h = Hash("serverId", "testserver", "classId", "testclass")
         h["schema"] = self.testschema
@@ -111,24 +119,30 @@ class Tests(TestCase):
 
         self.assertEqual(cls.type, "class")
         self.assertEqual(cls.value.int32.value, 1234)
-        root = cls.parameterEditor.invisibleRootItem()
-        for i in count():
-            node = root.child(i)
-            if node.box.path[0] == "int32":
-                break
+        node = self.findNode(cls, "int32")
         self.assertTrue(node.font(0).bold())
         self.assertEqual(node.displayComponent.widget.text(), "0x4D2")
         self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
                          1234)
         self.assertEqual(node.text(0), "32 bit integer")
-        for i in count():
-            node = root.child(i)
-            if node.box.path[0] == "int8":
-                break
-        self.assertFalse(node.font(0).bold())
+        cls.dispatchUserChanges(dict(int32=3456))
+        self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
+                         3456)
 
+        node = self.findNode(cls, "int8")
+        self.assertFalse(node.font(0).bold())
         cls.fromHash(Hash("int8", 42))
         self.assertEqual(node.displayComponent.widget.text(), "42")
+
+        node = self.findNode(cls, "output")
+        self.assertEqual(
+            node.editableComponent.widgetFactory.widget.currentText(),
+            "BinaryFile")
+        cls.dispatchUserChanges(dict(output=dict(
+                        TextFile=dict(filename="abc"))))
+        self.assertEqual(
+            node.editableComponent.widgetFactory.widget.currentText(),
+            "TextFile")
 
 
     def findIcon(self, a):
@@ -179,13 +193,17 @@ class Tests(TestCase):
 
 
     def stop(self):
-        Manager().handle_instanceGone(dict(instanceId="testdevice"))
+        Manager().handle_instanceGone(dict(instanceId="testdevice",
+                                           instanceType="device"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
-        Manager().handle_instanceGone(dict(instanceId="testdevice"))
-        Manager().handle_instanceGone(dict(instanceId="incompatible"))
-        Manager().handle_instanceGone(dict(instanceId="testserver"))
+        Manager().handle_instanceGone(dict(instanceId="testdevice",
+                                           instanceType="device"))
+        Manager().handle_instanceGone(dict(instanceId="incompatible",
+                                           instanceType="device"))
+        Manager().handle_instanceGone(dict(instanceId="testserver",
+                                           instanceType="server"))
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertFalse(Manager().systemTopology.has("testserver"))

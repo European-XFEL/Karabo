@@ -35,8 +35,10 @@ class EditableListElement(EditableWidget):
     alias = "List Element Field"
     signalValueChanged = pyqtSignal(str, object) # key, value
     
-    def __init__(self, value=None, isDevIns=None, **params):
-        self.__pushButton = QPushButton("Edit list")
+    def __init__(self, box, parent):
+        super(EditableListElement, self).__init__(box)
+        
+        self.__pushButton = QPushButton("Edit list", parent)
         self.__pushButton.setStyleSheet("QPushButton { text-align: left; }")
         
         self.__choiceItemList = [] # list with hidden possible items of listelement
@@ -46,15 +48,14 @@ class EditableListElement(EditableWidget):
         
         self.__isInit = False
         
-        if isDevIns:
-            self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-        else:
-            self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
+        #if isDevIns:
+        #    self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
+        #else:
+        #    self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
         
         self.__pushButton.clicked.connect(self.onClicked)
         
-        self.valueChanged(self.keys[0], value)
-        super(EditableListElement, self).__init__(**params)
+        #self.valueChanged(self.keys[0], value)
 
 
     @property
@@ -102,7 +103,7 @@ class EditableListElement(EditableWidget):
             self.signalValueChanged.emit(copyItem.box, Hash())
 
 
-    def valueChanged(self, key, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             return
         

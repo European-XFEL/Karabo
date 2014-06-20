@@ -18,6 +18,7 @@ from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
 import pathparser
 import icons
+import manager
 
 from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
@@ -1082,21 +1083,28 @@ class Scene(QSvgWidget):
                 layout.addWidget(proxy)
                 proxy.show()
 
-                # Get Box
+                # Get Boxes. "box" is in the project, "realbox" the
+                # one on the device. They are the same if not from a project
                 box = item.box
+                realbox = manager.getDevice(box.configuration.id
+                                            ).getBox(box.path)
+                if realbox.descriptor is not None:
+                    box = realbox
 
                 # Create display component, if available
                 configDisplayComponent = item.displayComponent
                 if configDisplayComponent is not None:
                     proxy = ProxyWidget(self.inner)
-                    displayComponent = DisplayComponent(box.descriptor.classAlias, box, proxy)
+                    displayComponent = DisplayComponent(
+                        box.descriptor.classAlias, realbox, proxy)
                     proxy.setComponent(displayComponent)
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
-                    box.configuration.addVisible()
+                    realbox.configuration.addVisible()
 
-                    unit = (box.descriptor.metricPrefixSymbol + box.descriptor.unitSymbol)
+                    unit = (box.descriptor.metricPrefixSymbol +
+                            box.descriptor.unitSymbol)
                     if len(unit) > 0:
                         proxy = ProxyWidget(self.inner)
                         proxy.setWidget(QLabel(unit, proxy))
@@ -1108,9 +1116,10 @@ class Scene(QSvgWidget):
                 if configEditableComponent is not None:
                     proxy = ProxyWidget(self.inner)
 
-                    editableComponent = EditableApplyLaterComponent(item.classAlias, box, proxy)
+                    editableComponent = EditableApplyLaterComponent(
+                        box.descriptor.classAlias, realbox, proxy)
 
-                    box.configuration.addVisible()
+                    realbox.configuration.addVisible()
                     proxy.setComponent(editableComponent)
                     proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)

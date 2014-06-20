@@ -30,8 +30,7 @@ from PyQt4.QtGui import *
 class TurboPumpWidget(VacuumWidget):
     alias = "Turbo pump"
 
-    def valueChanged(self, key, value, timestamp=None):
-        #print "TurboPumpWidget.valueChanged", key, value
+    def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
             self._setPixmap(QPixmap(":turbopump-orange"))
         elif ("On" in value) or ("on" in value):

@@ -217,8 +217,8 @@ class _Network(QObject):
         dataSize, = unpack(b"I", (yield 4))
         dataBytes = yield dataSize
 
-        instanceInfo = BinaryParser().read(dataBytes)
-        self.signalReceivedData.emit(instanceInfo)
+        h = BinaryParser().read(dataBytes)
+        self.signalReceivedData.emit(h)
 
 
     def onSocketError(self, socketError):
@@ -294,21 +294,21 @@ class _Network(QObject):
 
 
     def onKillDevice(self, deviceId):
-        instanceInfo = Hash("type", "killDevice")
-        instanceInfo.set("deviceId", deviceId);
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "killDevice")
+        h.set("deviceId", deviceId);
+        self._tcpWriteHash(h)
 
 
     def onKillServer(self, serverId):
-        instanceInfo = Hash("type", "killServer")
-        instanceInfo.set("serverId", serverId)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "killServer")
+        h.set("serverId", serverId)
+        self._tcpWriteHash(h)
 
 
     def onRefreshInstance(self, configuration):
-        instanceInfo = Hash("type", "refreshInstance")
-        instanceInfo.set("deviceId", configuration.id)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "refreshInstance")
+        h.set("deviceId", configuration.id)
+        self._tcpWriteHash(h)
 
 
     def onReconfigure(self, changes):
@@ -316,88 +316,93 @@ class _Network(QObject):
 
         changes is a list of pairs (box, value). They all must belong to
         the same device."""
-        instanceInfo = Hash()
-        instanceInfo["type"] = "reconfigure"
+        h = Hash()
+        h["type"] = "reconfigure"
         id = changes[0][0].configuration.id
-        instanceInfo["deviceId"] = id
+        h["deviceId"] = id
         conf = Hash()
         for box, value in changes:
             assert id == box.configuration.id
             conf[".".join(box.path)] = box.descriptor.cast(value)
-        instanceInfo["configuration"] = conf
-        self._tcpWriteHash(instanceInfo)
+        h["configuration"] = conf
+        self._tcpWriteHash(h)
 
 
     def onInitDevice(self, serverId, config):
-        instanceInfo = Hash("type", "initDevice")
-        instanceInfo.set("serverId", serverId)
-        instanceInfo.set("configuration", config)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "initDevice")
+        h.set("serverId", serverId)
+        h.set("configuration", config)
+        self._tcpWriteHash(h)
 
 
     def onExecute(self, box, *args):
-        instanceInfo = Hash("type", "execute")
-        instanceInfo.set("deviceId", box.configuration.id)
-        instanceInfo.set("command", box.path[-1])
+        h = Hash("type", "execute")
+        h.set("deviceId", box.configuration.id)
+        h.set("command", box.path[-1])
 
         if args is not None:
             i = 0
             for arg in args:
                 i = i+1
                 argName = "a{}".format(i)
-                instanceInfo.set(argName, arg)
+                h.set(argName, arg)
 
-        self._tcpWriteHash(instanceInfo)
+        self._tcpWriteHash(h)
 
 
     def onNewVisibleDevice(self, deviceId):
-        instanceInfo = Hash("type", "newVisibleDevice")
-        instanceInfo.set("deviceId", deviceId)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "newVisibleDevice")
+        h.set("deviceId", deviceId)
+        self._tcpWriteHash(h)
 
 
     def onRemoveVisibleDevice(self, deviceId):
-        instanceInfo = Hash("type", "removeVisibleDevice")
-        instanceInfo.set("deviceId", deviceId)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "removeVisibleDevice")
+        h.set("deviceId", deviceId)
+        self._tcpWriteHash(h)
 
 
     def onGetClassSchema(self, serverId, classId):
-        instanceInfo = Hash("type", "getClassSchema")
-        instanceInfo.set("serverId", serverId)
-        instanceInfo.set("classId", classId)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "getClassSchema")
+        h.set("serverId", serverId)
+        h.set("classId", classId)
+        self._tcpWriteHash(h)
 
 
     def onGetDeviceSchema(self, deviceId):
-        instanceInfo = Hash("type", "getDeviceSchema")
-        instanceInfo.set("deviceId", deviceId)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "getDeviceSchema")
+        h.set("deviceId", deviceId)
+        self._tcpWriteHash(h)
 
 
     def onGetFromPast(self, box, t0, t1, maxNumData):
-        instanceInfo = Hash("type", "getFromPast")
-        instanceInfo.set("deviceId", box.configuration.id)
-        instanceInfo.set("property", ".".join(box.path))
-        instanceInfo.set("t0", t0)
-        instanceInfo.set("t1", t1)
-        instanceInfo.set("maxNumData", maxNumData)
-        self._tcpWriteHash(instanceInfo)
+        h = Hash("type", "getFromPast")
+        h.set("deviceId", box.configuration.id)
+        h.set("property", ".".join(box.path))
+        h.set("t0", t0)
+        h.set("t1", t1)
+        h.set("maxNumData", maxNumData)
+        self._tcpWriteHash(h)
+
+
+    def onError(self, error):
+        h = Hash("type", "error", "traceback", error)
+        self._tcpWriteHash(h)
 
 
 ### private functions ###
-    def _tcpWriteHash(self, instanceInfo):
+    def _tcpWriteHash(self, h):
         # There might be a connect to server in progress, but without success
         if self.tcpSocket is None or \
            self.tcpSocket.state() == QAbstractSocket.HostLookupState or \
            self.tcpSocket.state() == QAbstractSocket.ConnectingState:
             # Save request for connection established
-            self.requestQueue.append(instanceInfo)
+            self.requestQueue.append(h)
             return
 
         stream = QByteArray()
         writer = BinaryWriter()
-        dataBytes = writer.write(instanceInfo)
+        dataBytes = writer.write(h)
         stream.push_back(QByteArray(pack('I', len(dataBytes))))
         stream.push_back(dataBytes)
         self.tcpSocket.write(stream)
@@ -412,10 +417,10 @@ class _Network(QObject):
         self._tcpWriteHash(loginInfo)
 
 
-    def _handleBrokerInformation(self, instanceInfo):
-        self.brokerHost = instanceInfo.get("host")
-        self.brokerPort = instanceInfo.get("port")
-        self.brokerTopic = instanceInfo.get("topic")
+    def _handleBrokerInformation(self, h):
+        self.brokerHost = h.get("host")
+        self.brokerPort = h.get("port")
+        self.brokerTopic = h.get("topic")
         self._login()
 
 

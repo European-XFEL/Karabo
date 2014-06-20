@@ -467,6 +467,13 @@ class ProjectModel(QStandardItemModel):
         self.signalItemChanged.emit(conf)
 
 
+    def onCloseProject(self):
+        index = self.selectionModel.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        del self.projects[self.projects.index(object)]
+        self.updateData()
+
+
     def onEditDevice(self):
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
@@ -482,14 +489,14 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
-        if not device.ifexists == "restart": # ignore
-            return
-        
         if device.isOnline():
-            self.killDevice(device)
+            if device.ifexists == "ignore":
+                return
+            elif device.ifexists == "restart":
+                self.killDevice(device)
         
         manager.Manager().initDevice(device.futureConfig.get("serverId"),
-                             device.classId, device.toHash())
+                                     device.classId, device.toHash())
 
 
     def onKillDevices(self):

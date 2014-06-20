@@ -65,6 +65,9 @@ namespace karabo {
 
             m_loggerConnection = BrokerConnection::createChoice("loggerConnection", input);
             m_loggerIoService = m_loggerConnection->getIOService();
+
+            // This creates a connection in order to forward exceptions happened in the GUI
+            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug"));
         }
         
         GuiServerDevice::~GuiServerDevice() {            
@@ -79,7 +82,7 @@ namespace karabo {
                 // Register handlers
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
-                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1));
+                remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1, _2));
 
                 // Connect the history slot
                 connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
@@ -93,6 +96,10 @@ namespace karabo {
                 m_loggerChannel->setFilter("target = 'log'");
                 m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
+
+                // Start the guiDebugChannel
+                m_guiDebugChannel = m_guiDebugConnection->start();
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in okStateOnEntry(): " << e.userFriendlyMsg();
             }
@@ -155,6 +162,8 @@ namespace karabo {
                         onGetDeviceSchema(channel, info);
                     } else if (type == "getFromPast") {
                         onGetFromPast(channel, info);
+                    } else if (type == "error") {
+                        onGuiError(info);
                     }
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
@@ -162,6 +171,17 @@ namespace karabo {
                 channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
+                m_guiDebugChannel->write(hash, Hash() /*empty header*/);
+
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();
             }
         }
 
@@ -186,7 +206,7 @@ namespace karabo {
                 string deviceId = info.get<string > ("deviceId");
                 Hash config = info.get<Hash > ("configuration");
                 // TODO Supply user specific context
-                call(deviceId, "slotReconfigure", config);
+                call(deviceId, "slotReconfigure", config);             
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onReconfigure(): " << e.userFriendlyMsg();
             }
@@ -430,15 +450,17 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId) {
+        void GuiServerDevice::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting instance gone";
-                Hash instanceInfo("type", "instanceGone", "instanceId", instanceId);
+                std::string type("unknown");
+                if (instanceInfo.has("type")) instanceInfo.get("type", type);
+                Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                    it->first->write(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();

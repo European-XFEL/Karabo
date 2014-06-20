@@ -21,51 +21,16 @@
 __all__ = ["EditableList"]
 
 
+import icons
 from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QLabel, QFrame, QDialog
+from PyQt4.QtGui import QDialog, QFrame, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 import numbers
 import numpy
-
-
-class Label(QLabel):
-    valueChanged = pyqtSignal(list)
-
-    def __init__(self, parent):
-        super(Label, self).__init__(parent)
-        self.setAcceptDrops(True)
-        self.value = [ ]
-
-
-    def setValue(self, value):
-        l = [ ]
-        for v in value[:10]:
-            if (isinstance(v, (numbers.Real, numpy.floating)) and
-                    not isinstance(v, numbers.Integral)):
-                l.append("{:.6}".format(v))
-            else:
-                l.append("{}".format(v))
-        if len(value) > 10:
-            l.append("...")
-
-        with SignalBlocker(self):
-            self.setText(", ".join(l))
-        self.value = value
-
-
-    def mouseDoubleClickEvent(self, event) :
-        listEdit = ListEdit(self.valueType, True, self.value)
-        listEdit.setTexts("Add", "&Value", "Edit")
-
-        if listEdit.exec_() == QDialog.Accepted:
-            values = [listEdit.getListElementAt(i)
-                      for i in xrange(listEdit.getListCount())]
-            self.value = values
-            self.valueChanged.emit(values)
 
 
 class EditableList(EditableWidget):
@@ -73,26 +38,60 @@ class EditableList(EditableWidget):
     alias = "Plot"
 
     def __init__(self, box, parent):
-        self.widget = Label(parent)
-        self.widget.setMinimumWidth(160)
-        self.widget.setMaximumHeight(24)
-        self.widget.setFrameStyle(QFrame.Box)
-        self.widget.valueChanged.connect(self.onEditingFinished)
         super(EditableList, self).__init__(box)
+        
+        self.__compositeWidget = QWidget(parent)
+        hLayout = QHBoxLayout(self.__compositeWidget)
+        hLayout.setContentsMargins(0,0,0,0)
+        
+        self.leList = QLineEdit()
+        self.leList.textChanged.connect(self.onEditingFinished)
+        hLayout.addWidget(self.leList)
+
+        text = "Edit"
+        self.tbEdit = QToolButton()
+        self.tbEdit.setStatusTip(text)
+        self.tbEdit.setToolTip(text)
+        self.tbEdit.setIcon(icons.edit)
+        self.tbEdit.setMaximumSize(25,25)
+        self.tbEdit.clicked.connect(self.onEditClicked)
+        hLayout.addWidget(self.tbEdit)
+        
+        self.valueList = []
+
+
+    @property
+    def widget(self):
+        return self.__compositeWidget
+
 
     @property
     def value(self):
-        return self.widget.value
+        return self.valueList
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        self.widget.setValue(value)
+        if value is None:
+            value = []
+
+        self.valueList = value
+
+        with SignalBlocker(self.leList):
+            self.leList.setText(box.descriptor.toString(value))
 
 
-    def typeChanged(self, box):
-        self.widget.valueType = box.descriptor
+    def onEditingFinished(self, text):
+        self.valueList = text.split(',')
+        EditableWidget.onEditingFinished(self, self.valueList)
 
 
-    def onEditingFinished(self, value):
-        self.boxes[0].set(value)
-        self.signalEditingFinished.emit(self.boxes[0], value)
+    def onEditClicked(self):
+        listEdit = ListEdit(self.valueType, True, self.valueList)
+        listEdit.setTexts("Add", "&Value", "Edit")
+
+        if listEdit.exec_() == QDialog.Accepted:
+            values = [listEdit.getListElementAt(i)
+                      for i in xrange(listEdit.getListCount())]
+            self.valueList = values
+            self.valueChanged(self.boxes[0], self.valueList)
+

@@ -32,12 +32,13 @@ class DisplayComboBox(DisplayWidget):
     alias = "Selection Field"
     
     def __init__(self, box, parent):
+        super(DisplayComboBox, self).__init__(box)
+        
         self.widget = QComboBox(parent)
         self.widget.setFrame(False)
         self.widget.setEnabled(False)
         
         self.addItems(enumeration)
-        super(DisplayComboBox, self).__init__(box)
 
 
     @property
@@ -50,7 +51,7 @@ class DisplayComboBox(DisplayWidget):
             self.widget.addItems(texts)
 
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
 

@@ -24,10 +24,11 @@ class TaurusPlotWrapper(DisplayWidget):
     category = "TaurusWidget"
     alias = "Taurus Plot"
 
-    def __init__(self, **params):
-        super(TaurusPlotWrapper, self).__init__(**params)
+    def __init__(self, box, parent):
+        super(TaurusPlotWrapper, self).__init__(box)
         
-        self.__plot = TaurusPlot()
+        self.__plot = TaurusPlot(parent)
+
 
     @property
     def widget(self):
@@ -38,6 +39,6 @@ class TaurusPlotWrapper(DisplayWidget):
     def value(self):
         return "TaurusPlotWrapper"
 
-    def valueChanged(self, key, value, timestamp=None):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return

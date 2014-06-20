@@ -32,8 +32,8 @@ class EditableSpinBox(EditableWidget, DisplayWidget):
     alias = "Integer Field"
 
     def __init__(self, box, parent):
-        self.widget = QSpinBox(parent)
         super(EditableSpinBox, self).__init__(box)
+        self.widget = QSpinBox(parent)
 
 
     def setReadOnly(self, ro):

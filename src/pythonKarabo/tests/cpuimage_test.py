@@ -64,30 +64,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.getStatistics().getMin(), 37.0)
             self.assertEqual(img.getStatistics().getMax(), 255.0)
         except Exception as e:
-            self.fail("test_cpuimage_read exception: " + str(e))        
-            
-    def test_cpuimage_imageElement(self):
-        try:
-            img = CpuImageDOUBLE()
-            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
-            schema = Configurator(SomeClass).getSchema("SomeClassId")
-
-            h=Hash()
-            img.copyTo(h)
-            
-            rules = ValidatorValidationRules()
-            rules.allowAdditionalKeys        = True
-            rules.allowMissingKeys           = True
-            rules.allowUnrootedConfiguration = True
-            validator = Validator()
-            validator.setValidationRules(rules)
-            
-            configuration = Hash('myImageElement', h)
-            
-            validated = validator.validate(schema, configuration)
-
-        except Exception,e:
-            self.fail("test_cpuimage_imageElement exception: " + str(e))
+            self.fail("test_cpuimage_read exception: " + str(e))            
             
     def test_cpuimage_assign(self):
         try:

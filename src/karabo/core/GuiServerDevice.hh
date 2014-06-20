@@ -37,6 +37,11 @@ namespace karabo {
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
             std::map<std::string, int> m_visibleDevices;
 
+
+            karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
+            karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
+
+
         public:
 
             KARABO_CLASSINFO(GuiServerDevice, "GuiServerDevice", "1.0")
@@ -53,6 +58,8 @@ namespace karabo {
         private: // Functions
 
             void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
+
+            void onGuiError(const karabo::util::Hash& hash);
 
             void onConnect(karabo::net::Channel::Pointer channel);
 
@@ -92,7 +99,7 @@ namespace karabo {
 
             void instanceUpdatedHandler(const karabo::util::Hash& topologyEntry);
 
-            void instanceGoneHandler(const std::string& instanceId);
+            void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
             

@@ -226,6 +226,14 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , bp::arg("inputName")
                  , bp::arg("isVerbose") = true))
 
+            .def("disconnectChannels"
+                 , (bool (SignalSlotable::*)(string, const string&, string, const string&, const bool)) (&SignalSlotable::disconnectChannels)
+                 , (bp::arg("outputInstanceId")
+                 , bp::arg("outputName")
+                 , bp::arg("inputInstanceId")
+                 , bp::arg("inputName")
+                 , bp::arg("isVerbose") = true))
+
             .def("createInputChannelHash"
                  , (boost::shared_ptr<karabo::io::Input<Hash> > (SignalSlotableWrap::*)(const std::string&, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::createInputChannel<karabo::io::Input<Hash> >)
                  , (bp::arg("name"), bp::arg("configuration")

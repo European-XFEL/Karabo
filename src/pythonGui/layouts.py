@@ -36,6 +36,7 @@ class Layout(Loadable):
     def __init__(self):
         self.shapes = [ ]
         self.shape_geometry = None
+        self.fixed_geometry = None
         self.selected = False
 
 
@@ -131,7 +132,10 @@ class Layout(Loadable):
     def setGeometry(self, rect):
         super(Layout, self).setGeometry(rect)
         if self.shape_geometry is None:
-            self.shape_geometry = QRect(self.fixed_geometry)
+            if self.fixed_geometry is None:
+                self.shape_geometry = QRect(rect)
+            else:
+                self.shape_geometry = QRect(self.fixed_geometry)
         for s in self.shapes:
             s.translate(rect.topLeft() - self.shape_geometry.topLeft())
         self.shape_geometry = QRect(rect)
@@ -244,10 +248,10 @@ class FixedLayout(Layout, QLayout):
     def geometry(self):
         if self.entire is not None:
             return self.entire.geometry()
-        try:
-            return self.fixed_geometry
-        except AttributeError:
+        if self.fixed_geometry is None:
             return self.parentWidget().geometry()
+        else:
+            return self.fixed_geometry
 
 
     def translate(self, pos):

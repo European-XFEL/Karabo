@@ -40,6 +40,7 @@ class DisplayPlot(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayPlot, self).__init__(None)
+        
         self.widget = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Plot")
         self.plot = self.widget.get_plot()

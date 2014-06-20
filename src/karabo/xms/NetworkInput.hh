@@ -31,9 +31,31 @@ namespace karabo {
         class NetworkInput : public karabo::io::Input<T> {
 
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
-            typedef std::set<karabo::net::Channel::Pointer> TcpChannels;
+            typedef std::map<std::string, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<T> MemoryType;
 
+            std::vector<karabo::util::Hash> m_connectedOutputChannels;
+            std::string m_dataDistribution;
+            unsigned int m_minData;
+            bool m_keepDataUntilNew;
+            std::string m_onSlowness;
+
+            unsigned int m_channelId;
+
+            boost::mutex m_mutex;
+            boost::mutex m_swapBuffersMutex;
+
+            int m_activeChunk;
+            int m_inactiveChunk;
+
+            karabo::net::IOService::Pointer m_tcpIoService;
+            boost::thread m_tcpIoServiceThread;
+
+            TcpConnections m_tcpConnections;
+            TcpChannels m_tcpChannels;
+
+            bool m_isEndOfStream;
+            bool m_respondToEndOfStream;
 
         public:
 
@@ -123,9 +145,9 @@ namespace karabo {
                 m_channelId = Memory<T>::registerChannel();
                 m_inactiveChunk = Memory<T>::registerChunk(m_channelId);
                 m_activeChunk = Memory<T>::registerChunk(m_channelId);
-                
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Inputting on Channel " << m_channelId << " and chunkId " << m_activeChunk << " and " << m_inactiveChunk;
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Inputting on channel " << m_channelId << " (active) chunkId " << m_activeChunk << " and (inactive) chunkId " << m_inactiveChunk;
 
             }
 
@@ -167,11 +189,13 @@ namespace karabo {
                 return m_minData;
             }
 
-            void connectNow(const karabo::util::Hash& outputChannelInfo) {
+            KARABO_DEPRECATED void connectNow(const karabo::util::Hash& outputChannelInfo) {
+                connect(outputChannelInfo);
+            }
 
+            void connect(const karabo::util::Hash& outputChannelInfo) {
 
                 std::string connectionType = outputChannelInfo.get<std::string > ("connectionType");
-                std::string memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
 
                 if (connectionType == "tcp") {
 
@@ -183,23 +207,40 @@ namespace karabo {
                         // Get IO service and save for later sharing
                         m_tcpIoService = tcpConnection->getIOService();
                         // Establish connection (and define sub-type of server)
-                        startConnection(tcpConnection, memoryLocation);
+                        startConnection(tcpConnection, outputChannelInfo);
                         m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));
                     } else {
                         tcpConnection->setIOService(m_tcpIoService);
-                        startConnection(tcpConnection, memoryLocation);
+                        startConnection(tcpConnection, outputChannelInfo);
                     }
                 }
             }
 
-            karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& serverInfo) const {
-                const std::string& hostname = serverInfo.get<std::string > ("hostname");
-                const unsigned int& port = serverInfo.get<unsigned int>("port");
+            void disconnect(const karabo::util::Hash& outputChannelInfo) {
+
+                const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+                const std::string& port = outputChannelInfo.getAs<std::string>("port");
+                
+                TcpChannels::iterator it = m_tcpChannels.find(hostname + port);
+                if (it != m_tcpChannels.end()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting...";
+                    it->second->close(); // Closes channel
+                }
+            }
+
+            karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const {
+                const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+                const unsigned int& port = outputChannelInfo.get<unsigned int>("port");
                 karabo::util::Hash h("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port);
                 return h;
             }
 
-            void startConnection(karabo::net::Connection::Pointer connection, const std::string& memoryLocation) {
+            void startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
+
+                const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
+                const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+                const std::string& port = outputChannelInfo.getAs<std::string>("port");
+
                 karabo::net::Channel::Pointer channel;
                 bool connected = false;
                 int sleep = 1;
@@ -219,7 +260,7 @@ namespace karabo {
                 channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
 
                 m_tcpConnections.insert(connection); // TODO check whether really needed
-                m_tcpChannels.insert(channel);
+                m_tcpChannels.insert(std::make_pair(hostname + port, channel));
             }
 
             void onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
@@ -237,7 +278,7 @@ namespace karabo {
                 m_isEndOfStream = false;
 
                 if (header.has("endOfStream")) {
-                    
+
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Received EOS";
                     if (m_respondToEndOfStream) m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() <= 0) {
@@ -255,30 +296,30 @@ namespace karabo {
 
 
                 if (data.size() == 0 && header.has("channelId") && header.has("chunkId")) { // Local memory
-                                        
+
                     unsigned int channelId = header.get<unsigned int>("channelId");
                     unsigned int chunkId = header.get<unsigned int>("chunkId");
 
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Reading from local memory [" << channelId << "][" << chunkId << "]";
-                    
+
                     MemoryType::writeChunk(Memory<T>::readChunk(channelId, chunkId), m_channelId, m_inactiveChunk);
                     MemoryType::decrementChunkUsage(channelId, chunkId);
-                    
+
                 } else { // TCP data
-                    
+
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Reading from remote memory (over tcp)";
                     MemoryType::writeAsContiguosBlock(data, header, m_channelId, m_inactiveChunk);
-                    
+
                 }
 
                 size_t nInactiveData = MemoryType::size(m_channelId, m_inactiveChunk);
                 size_t nActiveData = MemoryType::size(m_channelId, m_activeChunk);
-                
+
                 if ((this->getMinimumNumberOfData()) <= 0 || (nInactiveData < this->getMinimumNumberOfData())) { // Not enough data, yet
                     KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Can read more data";
                     notifyOutputChannelForPossibleRead(channel);
                 } else if (nActiveData == 0) { // Data complete, second pot still empty
-                    
+
                     this->swapBuffers();
                     notifyOutputChannelForPossibleRead(channel);
 
@@ -334,7 +375,7 @@ namespace karabo {
 
                 // Fetch number of data pieces
                 size_t nActiveData = Memory<T>::size(m_channelId, m_activeChunk);
-                
+
                 // Notify all connected output channels for another read
                 if (nActiveData >= this->getMinimumNumberOfData()) {
                     notifyOutputChannelsForPossibleRead();
@@ -343,7 +384,7 @@ namespace karabo {
 
             void notifyOutputChannelsForPossibleRead() {
                 for (TcpChannels::const_iterator it = m_tcpChannels.begin(); it != m_tcpChannels.end(); ++it) {
-                    notifyOutputChannelForPossibleRead(*it);
+                    notifyOutputChannelForPossibleRead(it->second);
                 }
             }
 
@@ -355,33 +396,6 @@ namespace karabo {
             bool respondsToEndOfStream() {
                 return m_respondToEndOfStream;
             }
-
-
-        private: // members
-
-            std::vector<karabo::util::Hash> m_connectedOutputChannels;
-            std::string m_dataDistribution;
-            unsigned int m_minData;
-            bool m_keepDataUntilNew;
-            std::string m_onSlowness;
-
-            unsigned int m_channelId;
-
-            boost::mutex m_mutex;
-            boost::mutex m_swapBuffersMutex;
-
-            int m_activeChunk;
-            int m_inactiveChunk;
-
-            karabo::net::IOService::Pointer m_tcpIoService;
-            boost::thread m_tcpIoServiceThread;
-
-            TcpConnections m_tcpConnections;
-            TcpChannels m_tcpChannels;
-
-            bool m_isEndOfStream;
-            bool m_respondToEndOfStream;
-
 
         private: // functions
 

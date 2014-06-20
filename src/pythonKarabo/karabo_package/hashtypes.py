@@ -63,17 +63,21 @@ class Integer(Simple):
 class Number(Simple):
     def getMinMax(self):
         info = numpy.finfo(self.numpy)
-        min = self.minInc
+        min = self.minExc
         if min is None:
-            min = self.minExc
+            min = self.minInc
+        else:
+            min = min * (1 + numpy.sign(min) * info.eps) + info.tiny
         if min is None:
             min = info.min
 
-        max = self.maxInc
+        max = self.maxExc
         if max is None:
-            max = self.maxExc
+            max = self.maxInc
+        else:
+            max = max * (1 - numpy.sign(max) * info.eps) - info.tiny
         if max is None:
-            min = info.max
+            max = info.max
 
         return min, max
 

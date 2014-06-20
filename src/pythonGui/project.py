@@ -115,8 +115,8 @@ class Project(QObject):
                 assert filename.endswith(".xml")
                 filename = filename[:-4]
 
-                for classId, conf in XMLParser().read(data).iteritems():
-                    device = Device(filename, classId, d.get("ifexists"), conf)
+                for classId, config in XMLParser().read(data).iteritems():
+                    device = Device(filename, classId, d.get("ifexists"), config)
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
@@ -269,7 +269,9 @@ class Device(Configuration):
         """
         This function returns the configurations' XML file as a string.
         """
-        return XMLWriter().write(Hash(self.classId, self.toHash()))
+        config = self.toHash()
+        assert "deviceId" in config
+        return XMLWriter().write(Hash(self.classId, config))
 
 
     def onStatusChanged(self, conf, status):
