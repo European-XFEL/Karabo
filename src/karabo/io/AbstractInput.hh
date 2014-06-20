@@ -86,10 +86,13 @@ namespace karabo {
                 std::vector<int> v;
             }
 
-            virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
+            KARABO_DEPRECATED virtual void connectNow(const karabo::util::Hash& outputChannelInfo) {
             }
 
-            virtual void disconnect(const std::string& instanceId, const std::string& channelName) {
+            virtual void connect(const karabo::util::Hash& outputChannelInfo) {
+            }
+
+            virtual void disconnect(const karabo::util::Hash& outputChannelInfo) {
             }
 
             virtual bool canCompute() const {
