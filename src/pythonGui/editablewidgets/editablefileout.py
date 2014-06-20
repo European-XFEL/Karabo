@@ -12,6 +12,7 @@
 __all__ = ["EditableFileOut"]
 
 
+from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
@@ -63,9 +64,9 @@ class EditableFileOut(EditableWidget):
 
 
     def onFileOutClicked(self):
-        fileOut = QFileDialog.getSaveFileName(None, "Select output file")
-        if len(fileOut) < 1:
+        filename = getSaveFileName("Select output file")
+        if not filename:
             return
 
-        self.__lePath.setText(fileOut)
+        self.__lePath.setText(filename)
 

@@ -4,6 +4,8 @@ sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 sip.setapi("QUrl", 2)
 
+from PyQt4.QtGui import QFileDialog
+
 import weakref
 
 class Weak(object):
@@ -43,3 +45,13 @@ class SignalBlocker(object):
 
     def __exit__(self, a, b, c):
         self.object.blockSignals(self.state)
+
+
+def getSaveFileName(title, dir="", description="", suffix=""):
+    dialog = QFileDialog(None, title, dir, description)
+    dialog.setDefaultSuffix(suffix)
+    dialog.setFileMode(QFileDialog.AnyFile)
+    dialog.setAcceptMode(QFileDialog.AcceptSave)
+    dialog.exec_()
+    if len(dialog.selectedFiles()) == 1:
+        return dialog.selectedFiles()[0]
