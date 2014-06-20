@@ -248,10 +248,10 @@ class FixedLayout(Layout, QLayout):
     def geometry(self):
         if self.entire is not None:
             return self.entire.geometry()
-        try:
-            return self.fixed_geometry
-        except AttributeError:
+        if self.fixed_geometry is None:
             return self.parentWidget().geometry()
+        else:
+            return self.fixed_geometry
 
 
     def translate(self, pos):
