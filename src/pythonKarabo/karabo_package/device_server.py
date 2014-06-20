@@ -226,6 +226,7 @@ class DeviceServer(object):
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
     def signal_handler(self, signum, frame):
+        self.signal_handled = True
         if signum == signal.SIGINT:
             print('INTERRUPT : You pressed Ctrl-C!')
         else:
@@ -248,6 +249,7 @@ class DeviceServer(object):
         self.fsm = self.setupFsm()
 
         self.ss = None
+        self.signal_handled = False
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
         self.availableDevices = dict()
@@ -429,6 +431,9 @@ class DeviceServer(object):
     
     def stopDeviceServer(self):
         self.scanning = False
+        if not self.signal_handled:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGTERM)
     
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
