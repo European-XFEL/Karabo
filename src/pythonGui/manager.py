@@ -28,8 +28,9 @@ from network import Network
 from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
+from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
+from PyQt4.QtCore import (pyqtSignal, QDir, QIODevice, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 
@@ -255,13 +256,9 @@ class _Manager(QObject):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
                                                globals.HIDDEN_KARABO_FOLDER,
                                                "XML (*.xml)")
-        if len(filename) < 1:
+        if not filename:
             return
-        
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
-        
+
         conf, classId = self.currentConfigurationAndClassId()
         
         r = XMLParser()
@@ -290,16 +287,11 @@ class _Manager(QObject):
 
 
     def onSaveToFile(self):
-        filename = QFileDialog.getSaveFileName(None, "Save configuration as",
-                                               globals.HIDDEN_KARABO_FOLDER,
-                                               "XML (*.xml)")
+        filename = getSaveFileName(
+            "Save configuration as", globals.HIDDEN_KARABO_FOLDER,
+            "Configuration (*.xml)", "xml")
         if not filename:
             return
-
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".xml"
-
 
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
