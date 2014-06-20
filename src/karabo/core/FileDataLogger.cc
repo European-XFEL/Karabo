@@ -89,7 +89,7 @@ namespace karabo {
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::FileDataLogger::instanceNewHandler, this, _1));
             //remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::FileDataLogger::instanceUpdatedHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::FileDataLogger::instanceGoneHandler, this, _1));
+            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::FileDataLogger::instanceGoneHandler, this, _1, _2));
 
             // Prepare backend to persist data
             if (!boost::filesystem::exists("karaboHistory")) {
@@ -190,7 +190,7 @@ namespace karabo {
         }
 
 
-        void FileDataLogger::instanceGoneHandler(const std::string& instanceId) {
+        void FileDataLogger::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
                 tagDeviceToBeDiscontinued(instanceId, true, 'd'); // 2nd arguments means: was valid up to now
             } catch (const Exception& e) {
