@@ -14,11 +14,11 @@ __all__ = ["LogWidget", "LogTableView", "LogSqlQueryModel", "LogThread"]
 
 import globals
 from manager import Manager
+from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QDir, QFile, QFileInfo,
-                          QIODevice, QMutex, QMutexLocker, Qt, QTextStream,
-                          QThread)
-from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit, QFileDialog,
+from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QIODevice, QMutex,
+                          QMutexLocker, Qt, QThread)
+from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
                          QHeaderView, QIcon, QItemSelectionModel, QLabel,
                          QLineEdit, QPushButton, QTableView, QToolButton,
@@ -477,40 +477,32 @@ class LogWidget(QWidget):
 
 
     def onSaveToFile(self):
-        # Write current database content to a file
-        filename = QFileDialog.getSaveFileName(self, "Save file as",
-                                               globals.HIDDEN_KARABO_FOLDER,
-                                               "LOG (*.log)")
-        if len(filename) < 1:
+        """ Write current database content to a file """
+        filename = getSaveFileName(
+            "Save file as",globals.HIDDEN_KARABO_FOLDER,
+            "Log files (*.log)", "log")
+        if not filename:
             return
 
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".log"
+        with open(filename, "w") as out:
+            model = QSqlQueryModel()
+            queryText = """SELECT id, dateTime, messageType, instanceId,
+                               description, additionalDescription
+                           FROM tLog ORDER BY dateTime DESC;"""
+            model.setQuery(queryText, Manager().sqlDatabase)
 
-        logFile = QFile(filename)
-        if not logFile.open(QIODevice.WriteOnly | QIODevice.Text):
-            return
-        out = QTextStream(logFile)
+            for i in xrange(model.rowCount()):
+                id = model.record(i).value("id")
+                dateTime = model.record(i).value("dateTime")
+                messageType = model.record(i).value("messageType")
+                instanceId = model.record(i).value("instanceId")
+                description = model.record(i).value("description")
+                additionalDescription = model.record(i).value(
+                    "additionalDescription")
 
-        model = QSqlQueryModel()
-        queryText = "SELECT id, dateTime, messageType, instanceId, description, \
-                     additionalDescription FROM tLog order by dateTime DESC;"
-        model.setQuery(queryText, Manager().sqlDatabase)
-
-        for i in xrange(model.rowCount()):
-            id = model.record(i).value("id")
-            dateTime = model.record(i).value("dateTime")
-            messageType = model.record(i).value("messageType")
-            instanceId = model.record(i).value("instanceId")
-            description = model.record(i).value("description")
-            additionalDescription = model.record(i).value("additionalDescription")
-
-            logMessage = "{} | {} | {} | {} | {} | {}#\n" \
-                         .format(id, dateTime, messageType, instanceId,
-                                 description, additionalDescription)
-            out << logMessage
-        logFile.close()
+                out.write("{} | {} | {} | {} | {} | {}#\n".
+                          format(id, dateTime, messageType, instanceId,
+                                 description, additionalDescription))
 
 
     def onClearLog(self):
