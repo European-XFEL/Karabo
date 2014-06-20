@@ -227,14 +227,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _createCustomMiddlePanel(self, scene):
-        """
-        This function creates a new CustomMiddlePanel and returns it.
-        """
-        customViewPanel = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
-        return customViewPanel
-
-
     def _quit(self):
         self.signalQuitApplication.emit()
 
@@ -294,8 +286,8 @@ class MainWindow(QMainWindow):
     def onAddScene(self, scene):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
             self._showStartUpPage(False, False)
-        
-        customView = self._createCustomMiddlePanel(scene)
+            
+        customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
