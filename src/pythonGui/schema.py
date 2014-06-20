@@ -438,6 +438,9 @@ class ChoiceOfNodes(Schema):
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
         self.classAlias = 'Choice Element'
+        assert self.defaultValue is None or self.defaultValue in self.dict, \
+            'the default value "{}" is not in {} for node {}'.format(
+                self.defaultValue, hash.keys(), key)
         return self
 
 
@@ -512,7 +515,10 @@ class ChoiceOfNodes(Schema):
 
     def toHash(self, box):
         ret = Schema.toHash(self, box)
-        return Hash(box.current, ret[box.current])
+        if box.current is None:
+            return Hash()
+        else:
+            return Hash(box.current, ret[box.current])
 
 
     def set(self, box, value, timestamp=None):
