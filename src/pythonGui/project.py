@@ -271,7 +271,7 @@ class Device(Configuration):
         """
         config = self.toHash()
         assert "deviceId" in config
-        return XMLWriter().write(Hash(self.classId, self.toHash()))
+        return XMLWriter().write(Hash(self.classId, config))
 
 
     def onStatusChanged(self, conf, status):
