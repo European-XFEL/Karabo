@@ -129,7 +129,6 @@ class _Manager(QObject):
 
 
     def _clearServerClassParameterPage(self, serverClassIds):
-        print "_clearServerClassParameterPage", serverClassIds
         for serverClassId in serverClassIds:
             try:
                 conf = self.serverClassData[serverClassId]
@@ -368,7 +367,6 @@ class _Manager(QObject):
         config = instanceInfo.get("topologyEntry")
         # Check for existing stuff and remove
         instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(config)
-        print "dirty shutdown", instanceIds
         for id in instanceIds:
             timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
