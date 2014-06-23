@@ -426,8 +426,6 @@ class _Manager(QObject):
                 del self.systemHash[path]
                 for v in self.deviceData.itervalues():
                     v.updateStatus()
-        else:
-            raise RuntimeError
 
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
