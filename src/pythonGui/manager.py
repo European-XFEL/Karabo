@@ -441,7 +441,7 @@ class _Manager(QObject):
             return
         
         schema = classInfo.get('schema')
-        
+
         conf = self.serverClassData[serverId, classId]
         conf.setSchema(schema)
         # Set default values for configuration
@@ -458,6 +458,7 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         schema = instanceInfo['schema']
+        
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
