@@ -69,4 +69,4 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 
 
     def onCommandClicked(self):
-        Network().onExecute(self.box)
+        self.box.execute()
