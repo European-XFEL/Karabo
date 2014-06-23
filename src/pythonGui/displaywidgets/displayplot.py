@@ -57,7 +57,7 @@ class DisplayPlot(DisplayWidget):
 
 
     def addBox(self, box):
-        curve = make.curve(arange(len(box.value)), box.value, box.path[-1],
+        curve = make.curve([0, 1], [0, 1], box.path[-1],
                            self.colorList[len(self.curves)])
         self.curves[box] = curve
         self.plot.add_item(curve)
