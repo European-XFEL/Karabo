@@ -93,5 +93,5 @@ class EditableList(EditableWidget):
             values = [listEdit.getListElementAt(i)
                       for i in xrange(listEdit.getListCount())]
             self.valueList = values
-            self.valueChanged(self.boxes[0], self.valueList)
+            EditableWidget.onEditingFinished(self, self.valueList)
 
