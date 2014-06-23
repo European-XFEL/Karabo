@@ -220,8 +220,13 @@ class ProjectModel(QStandardItemModel):
         and selects the corresponding item.
         """
         index = self.findIndex(object)
-        if index is not None:
+        if index is not None and object is not None:
             self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+        else:
+            self.selectionModel.clear()
+            # TODO: for some reason the selectionChanged signal is not emitted
+            # that's why it is done manually here
+            self.signalSelectionChanged.emit([])
 
 
     def findIndex(self, object):
@@ -247,14 +252,16 @@ class ProjectModel(QStandardItemModel):
         This function returns the current project from which something might
         be selected.
         """
-        index = self.selectionModel.currentIndex()
+        index = self.currentIndex()
         if not index.isValid():
             return None
 
-        while not isinstance(index.parent().data(ProjectModel.ITEM_OBJECT), Project):
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        while (object is not None) and not isinstance(object, Project):
             index = index.parent()
+            object = index.data(ProjectModel.ITEM_OBJECT)
 
-        return index.parent().data(ProjectModel.ITEM_OBJECT)
+        return object
 
 
     def closeAllProjects(self):
@@ -274,6 +281,7 @@ class ProjectModel(QStandardItemModel):
         project.zip()
         self.projects.append(project)
         self.updateData()
+        self.selectItem(project)
         return project
 
 
@@ -292,6 +300,7 @@ class ProjectModel(QStandardItemModel):
 
         self.projects.append(project)
         self.updateData()
+        self.selectItem(project)
         
         for device in project.devices:
             self.checkDescriptor(device)
@@ -426,7 +435,7 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.updateData()
         self.openScene(scene)
-        
+
         self.selectItem(scene)
         
         return scene
@@ -522,5 +531,7 @@ class ProjectModel(QStandardItemModel):
             return
         
         # Remove data from project
-        self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
+        project = self.currentProject()
+        project.remove(index.data(ProjectModel.ITEM_OBJECT))
         self.updateData()
+        self.selectItem(project)
