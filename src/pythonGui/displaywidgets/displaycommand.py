@@ -60,4 +60,4 @@ class DisplayCommand(DisplayWidget):
 
     def onCommandClicked(self):
         for box in self.boxes:
-            Network().onExecute(box)
+            box.execute()
