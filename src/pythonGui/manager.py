@@ -128,6 +128,51 @@ class _Manager(QObject):
         self.signalLogDataAvailable.emit(logMessage)
 
 
+    def _clearServerClassParameterPage(self, serverClassIds):
+        print "_clearServerClassParameterPage", serverClassIds
+        for serverClassId in serverClassIds:
+            try:
+                conf = self.serverClassData[serverClassId]
+                # Clear corresponding parameter page
+                if conf.parameterEditor is not None:
+                    conf.parameterEditor.clear()
+                del self.serverClassData[serverClassId]
+            except KeyError:
+                pass
+
+
+    def initDevice(self, serverId, classId, config=None):
+        if config is None:
+            # Use standard configuration for server/classId
+            config = self.serverClassData[serverId, classId].toHash()
+       
+        # Send signal to network
+        Network().onInitDevice(serverId, Hash(classId, config))
+        self.__isInitDeviceCurrentlyProcessed = True
+
+
+    def killDevice(self, deviceId):
+        reply = QMessageBox.question(None, 'Message',
+            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+
+        Network().onKillDevice(deviceId)
+
+
+    def killServer(self, serverId):
+        reply = QMessageBox.question(None, 'Message',
+            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+
+        Network().onKillServer(serverId)
+
+
     def onReceivedData(self, hash):
         getattr(self, "handle_" + hash["type"])(hash)
 
@@ -185,42 +230,6 @@ class _Manager(QObject):
             return
 
         self.systemTopology.selectionModel.clear()
-
-
-    def initDevice(self, serverId, classId, config=None):
-        if config is None:
-            # Use standard configuration for server/classId
-            config = self.serverClassData[serverId, classId].toHash()
-       
-        # Send signal to network
-        Network().onInitDevice(serverId, Hash(classId, config))
-        self.__isInitDeviceCurrentlyProcessed = True
-
-
-    def killDevice(self, deviceId):
-        reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.No:
-            return
-
-        Network().onKillDevice(deviceId)
-
-
-    def killServer(self, serverId):
-        reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.No:
-            return
-
-        Network().onKillServer(serverId)
-
-
-    def handle_log(self, instanceInfo):
-        self._handleLogData(instanceInfo["message"])
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -335,6 +344,10 @@ class _Manager(QObject):
         self.projectTopology.updateData()
 
 
+    def handle_log(self, instanceInfo):
+        self._handleLogData(instanceInfo["message"])
+
+
     def handle_brokerInformation(self, instanceInfo):
         Network()._handleBrokerInformation(instanceInfo)
 
@@ -354,7 +367,8 @@ class _Manager(QObject):
         """
         config = instanceInfo.get("topologyEntry")
         # Check for existing stuff and remove
-        instanceIds = self.systemTopology.removeExistingInstances(config)
+        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(config)
+        print "dirty shutdown", instanceIds
         for id in instanceIds:
             timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
@@ -364,6 +378,8 @@ class _Manager(QObject):
                          "is coming up now.#"
             # A log message is triggered
             self._handleLogData(logMessage)
+
+        self._clearServerClassParameterPage(serverClassIds)
 
         # Update system topology with new configuration
         self.handle_systemTopology(dict(systemTopology=config))
@@ -406,15 +422,7 @@ class _Manager(QObject):
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
-            for ids in serverClassIds:
-                try:
-                    conf = self.serverClassData[ids]
-                    # Clear corresponding parameter page
-                    if conf.parameterEditor is not None:
-                        conf.parameterEditor.clear()
-                    del self.serverClassData[ids]
-                except KeyError:
-                    pass
+            self._clearServerClassParameterPage(serverClassIds)
             path = "server." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
