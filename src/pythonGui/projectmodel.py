@@ -142,9 +142,6 @@ class ProjectModel(QStandardItemModel):
                 # Add item for device it belongs to
                 leafItem = QStandardItem(deviceId)
                 leafItem.setEditable(False)
-                # next line is magic: there must be data in every item,
-                # otherwise currentProject does not work TODO currentProject
-                leafItem.setData(0, ProjectModel.ITEM_OBJECT)
                 childItem.appendRow(leafItem)
 
                 for config in configList:
@@ -254,12 +251,10 @@ class ProjectModel(QStandardItemModel):
         if not index.isValid():
             return None
 
-        # this algorithm is flawed. sometimes data has no ITEM_OBJECT
-        # look for the corresponding TODO
-        while (index.parent().data(ProjectModel.ITEM_OBJECT) is not None):
+        while not isinstance(index.parent().data(ProjectModel.ITEM_OBJECT), Project):
             index = index.parent()
 
-        return index.data(ProjectModel.ITEM_OBJECT)
+        return index.parent().data(ProjectModel.ITEM_OBJECT)
 
 
     def closeAllProjects(self):
