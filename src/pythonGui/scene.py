@@ -368,6 +368,7 @@ class Label(Action, Loadable):
     def mousePressEvent(self, parent, event):
         p = ProxyWidget(parent.inner)
         label = QLabel('', p)
+        label.hasBackground = False
         p.setWidget(label)
         dialog = TextDialog(label)
         dialog.exec_()
@@ -390,21 +391,18 @@ class Label(Action, Loadable):
         label = QLabel(elem.get(ns_karabo + "text"), proxy)
         proxy.setWidget(label)
         layout.loadPosition(elem, proxy)
-        font = QFont()
-        font.fromString(elem.get(ns_karabo + "font"))
-        label.setFont(font)
-        palette = QPalette(label.palette())
-        palette.setColor(QPalette.Foreground, QColor(
-            elem.get(ns_karabo + 'foreground', 'black')))
+        ss = [ ]
+        ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
+        ss.append("color: {};".format(
+                    elem.get(ns_karabo + "foreground", "black")))
         bg = elem.get(ns_karabo + 'background')
         if bg is not None:
-            label.setAutoFillBackground(True)
-            palette.setColor(QPalette.Background, QColor(bg))
-        label.setPalette(palette)
+            ss.append("background-color: {};".format(bg))
+        label.hasBackground = bg is not None
         fw = elem.get(ns_karabo + "frameWidth")
         if fw is not None:
-            label.setFrameShape(QFrame.Box)
-            label.setLineWidth(int(fw))
+            ss.append("border: {}px;".format(fw))
+        label.setStyleSheet("".join(ss))
         return proxy
 
 

@@ -493,7 +493,7 @@ class ProxyWidget(QWidget):
             d[ns_karabo + "font"] = w.font().toString()
             d[ns_karabo + "foreground"] = "#{:06x}".format(
                 w.palette().color(QPalette.Foreground).rgb() & 0xffffff)
-            if w.autoFillBackground():
+            if w.hasBackground:
                 d[ns_karabo + "background"] = "#{:06x}".format(
                     w.palette().color(QPalette.Background).rgb() & 0xffffff)
             if w.frameShape() == QFrame.Box:
