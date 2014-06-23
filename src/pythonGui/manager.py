@@ -477,11 +477,10 @@ class _Manager(QObject):
         Network().onRefreshInstance(self.deviceData[deviceId])
 
 
-    # TODO: This function must be thread-safe!!
     def handle_configurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         device = self.deviceData.get(deviceId)
-        if device is None:
+        if device is None or device.descriptor is None:
             return
 
         config = instanceInfo.get("configuration")
