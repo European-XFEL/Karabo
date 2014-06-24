@@ -402,18 +402,21 @@ class _Manager(QObject):
         """
         instanceId = hash.get("instanceId")
         instanceType = hash.get("instanceType")
+        
         if instanceType == "device":
             device = self.deviceData.get(instanceId)
-            if device is None:
-                return
-            device.status = "offline"
-            if device.descriptor is not None:
-                device.redummy()
+            if device is not None:
+                device.status = "offline"
+                if device.descriptor is not None:
+                    device.redummy()
+                # Clear corresponding parameter page
+                if device.parameterEditor is not None:
+                    device.parameterEditor.clear()
+            
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
-            # Clear corresponding parameter page
-            if device.parameterEditor is not None:
-                device.parameterEditor.clear()
+            
+            # Remove device from systemHash
             path = "device." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
@@ -421,6 +424,8 @@ class _Manager(QObject):
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
             self._clearServerClassParameterPage(serverClassIds)
+            
+            # Remove server from systemHash
             path = "server." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
