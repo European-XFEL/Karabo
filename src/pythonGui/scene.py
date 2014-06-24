@@ -351,15 +351,53 @@ class Select(Action):
             painter.drawRect(QRect(self.selection_start, self.selection_stop))
 
 
-class Label(Action, Loadable):
+class Label(QLabel, Loadable):
+    hasBackground = False
+
+
+    def save(self, ele):
+        ele.set(ns_karabo + "class", "Label")
+        ele.set(ns_karabo + "text", self.text())
+        ele.set(ns_karabo + "font", self.font().toString())
+        ele.set(ns_karabo + "foreground",
+                self.palette().color(QPalette.Foreground).name())
+        if self.hasBackground:
+            ele.set(ns_karabo + "background",
+                    self.palette().color(QPalette.Background).name())
+        if self.frameShape() == QFrame.Box:
+            ele.set(ns_karabo + 'frameWidth', "{}".format(self.lineWidth()))
+
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        label = Label(elem.get(ns_karabo + "text"), proxy)
+        proxy.setWidget(label)
+        layout.loadPosition(elem, proxy)
+        ss = [ ]
+        ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
+        ss.append("color: {};".format(
+                    elem.get(ns_karabo + "foreground", "black")))
+        bg = elem.get(ns_karabo + 'background')
+        if bg is not None:
+            ss.append("background-color: {};".format(bg))
+            label.hasBackground = True
+        fw = elem.get(ns_karabo + "frameWidth")
+        if fw is not None:
+            ss.append("border: {}px;".format(fw))
+        label.setStyleSheet("".join(ss))
+        return proxy
+
+
+class LabelAction(Action):
     text = "Add text"
     icon = icons.text
 
 
     @classmethod
     def add_action(cls, source, parent):
-        action = super(Label, cls).add_action(source, parent)
-        c = Label()
+        action = super(LabelAction, cls).add_action(source, parent)
+        c = LabelAction()
         c.action = action
         action.triggered.connect(partial(parent.set_current_action, c))
         return action
@@ -367,8 +405,7 @@ class Label(Action, Loadable):
 
     def mousePressEvent(self, parent, event):
         p = ProxyWidget(parent.inner)
-        label = QLabel('', p)
-        label.hasBackground = False
+        label = Label('', p)
         p.setWidget(label)
         dialog = TextDialog(label)
         dialog.exec_()
@@ -383,27 +420,6 @@ class Label(Action, Loadable):
 
     mouseMoveEvent = mouseReleaseEvent
     draw = mouseReleaseEvent
-
-
-    @staticmethod
-    def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
-        label = QLabel(elem.get(ns_karabo + "text"), proxy)
-        proxy.setWidget(label)
-        layout.loadPosition(elem, proxy)
-        ss = [ ]
-        ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
-        ss.append("color: {};".format(
-                    elem.get(ns_karabo + "foreground", "black")))
-        bg = elem.get(ns_karabo + 'background')
-        if bg is not None:
-            ss.append("background-color: {};".format(bg))
-        label.hasBackground = bg is not None
-        fw = elem.get(ns_karabo + "frameWidth")
-        if fw is not None:
-            ss.append("border: {}px;".format(fw))
-        label.setStyleSheet("".join(ss))
-        return proxy
 
 
 class Line(Shape):
@@ -1077,7 +1093,9 @@ class Scene(QSvgWidget):
                 # Create label
                 displayName = item.text(0)
                 proxy = ProxyWidget(self.inner)
-                proxy.setWidget(QLabel(displayName, proxy))
+                label = Label(displayName, proxy)
+                label.hasBackground = False
+                proxy.setWidget(label)
                 layout.addWidget(proxy)
                 proxy.show()
 
@@ -1105,7 +1123,7 @@ class Scene(QSvgWidget):
                             box.descriptor.unitSymbol)
                     if len(unit) > 0:
                         proxy = ProxyWidget(self.inner)
-                        proxy.setWidget(QLabel(unit, proxy))
+                        proxy.setWidget(Label(unit, proxy))
                         layout.addWidget(proxy)
                         proxy.show()
 
