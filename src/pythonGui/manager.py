@@ -121,8 +121,6 @@ class _Manager(QObject):
         self.systemTopology.updateData(config)
         for v in self.deviceData.itervalues():
             v.updateStatus()
-        for k in self.serverClassData.keys():
-            getClass(k[0], k[1])
 
         self.projectTopology.updateNeeded()
 
@@ -384,6 +382,10 @@ class _Manager(QObject):
 
         # Update system topology with new configuration
         self._handleSystemTopology(config)
+        
+        # Request schema for already viewed classes
+        for k in self.serverClassData.keys():
+            getClass(k[0], k[1])
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -392,7 +394,6 @@ class _Manager(QObject):
                 if self.__isInitDeviceCurrentlyProcessed:
                     self.signalSelectNewNavigationItem.emit(deviceId)
                     self.__isInitDeviceCurrentlyProcessed = False
-                conf = self.deviceData.get(deviceId)
 
 
     def handle_instanceUpdated(self, instanceInfo):
