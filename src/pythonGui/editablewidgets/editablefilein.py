@@ -12,10 +12,11 @@
 __all__ = ["EditableFileIn"]
 
 
+import icons
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton,
+from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)
 
 
@@ -38,7 +39,7 @@ class EditableFileIn(EditableWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":filein"))
+        self.__tbPath.setIcon(icons.filein)
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onFileInClicked)
         hLayout.addWidget(self.__tbPath)

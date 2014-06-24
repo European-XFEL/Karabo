@@ -14,16 +14,18 @@ __all__ = ["ConfigurationPanel"]
 
 from docktabwindow import DockTabWindow
 from documentationpanel import DocumentationPanel
+import icons
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 
 from PyQt4.QtCore import pyqtSignal, Qt, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QLabel, QMenu, 
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
+
 
 class ConfigurationPanel(QWidget):
     ##########################################
@@ -118,7 +120,7 @@ class ConfigurationPanel(QWidget):
         hLayout.setContentsMargins(0,5,5,5)
         
         text = "Initiate device"
-        self.pbInitDevice = QPushButton(QIcon(":start"), text)
+        self.pbInitDevice = QPushButton(icons.start, text)
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
         self.pbInitDevice.setVisible(False)
@@ -127,13 +129,13 @@ class ConfigurationPanel(QWidget):
         hLayout.addWidget(self.pbInitDevice)
 
         text = "Kill instance"
-        self.pbKillInstance = QPushButton(QIcon(":delete"), text)
+        self.pbKillInstance = QPushButton(icons.kill, text)
         self.pbKillInstance.setStatusTip(text)
         self.pbKillInstance.setToolTip(text)
         self.pbKillInstance.setVisible(False)
         self.pbKillInstance.setMinimumSize(140,32)
         # use action for button to reuse
-        self.acKillInstance = QAction(QIcon(":delete"), text, self)
+        self.acKillInstance = QAction(icons.kill, text, self)
         self.acKillInstance.setStatusTip(text)
         self.acKillInstance.setToolTip(text)
         self.acKillInstance.triggered.connect(self.onKillInstance)
@@ -143,14 +145,14 @@ class ConfigurationPanel(QWidget):
         self.__hasConflicts = False
 
         text = "Apply all"
-        self.pbApplyAll = QPushButton(QIcon(":apply"), text)
+        self.pbApplyAll = QPushButton(icons.apply, text)
         self.pbApplyAll.setToolTip(text)
         self.pbApplyAll.setStatusTip(text)
         self.pbApplyAll.setVisible(False)
         self.pbApplyAll.setEnabled(False)
         self.pbApplyAll.setMinimumSize(140,32)
         # use action for button to reuse
-        self.acApplyAll = QAction(QIcon(":apply"), text, self)
+        self.acApplyAll = QAction(icons.apply, text, self)
         self.acApplyAll.setStatusTip(text)
         self.acApplyAll.setToolTip(text)
         self.acApplyAll.setEnabled(False)
@@ -192,14 +194,14 @@ class ConfigurationPanel(QWidget):
         hLayout.addWidget(self.pbApplyAll)
         
         text = "Reset all"
-        self.pbResetAll = QPushButton(QIcon(":no"), text)
+        self.pbResetAll = QPushButton(icons.no, text)
         self.pbResetAll.setToolTip(text)
         self.pbResetAll.setStatusTip(text)
         self.pbResetAll.setVisible(False)
         self.pbResetAll.setEnabled(False)
         self.pbResetAll.setMinimumSize(140,32)
         # use action for button to reuse
-        self.acResetAll = QAction(QIcon(":no"), text, self)
+        self.acResetAll = QAction(icons.no, text, self)
         self.acResetAll.setStatusTip(text)
         self.acResetAll.setToolTip(text)
         self.acResetAll.setEnabled(False)
@@ -227,13 +229,13 @@ class ConfigurationPanel(QWidget):
 
     def setupActions(self):
         text = "Open configuration from file (*.xml)"
-        self.acOpenFromFile = QAction(QIcon(":open"), text, self)
+        self.acOpenFromFile = QAction(icons.open, text, self)
         self.acOpenFromFile.setStatusTip(text)
         self.acOpenFromFile.setToolTip(text)
         self.acOpenFromFile.triggered.connect(Manager().onOpenFromFile)
 
         text = "Open configuration from project"
-        self.acOpenFromProject = QAction(QIcon(":open"), text, self)
+        self.acOpenFromProject = QAction(icons.open, text, self)
         self.acOpenFromProject.setStatusTip(text)
         self.acOpenFromProject.setToolTip(text)
         self.acOpenFromProject.triggered.connect(Manager().onOpenFromProject)
@@ -243,7 +245,7 @@ class ConfigurationPanel(QWidget):
         self.openMenu.addAction(self.acOpenFromProject)
         text = "Open configuration"
         self.tbOpenConfig = QToolButton()
-        self.tbOpenConfig.setIcon(QIcon(":open"))
+        self.tbOpenConfig.setIcon(icons.open)
         self.tbOpenConfig.setStatusTip(text)
         self.tbOpenConfig.setToolTip(text)
         self.tbOpenConfig.setVisible(False)
@@ -251,13 +253,13 @@ class ConfigurationPanel(QWidget):
         self.tbOpenConfig.setMenu(self.openMenu)
 
         text = "Save configuration to file (*.xml)"
-        self.acSaveToFile = QAction(QIcon(":save-as"), text, self)
+        self.acSaveToFile = QAction(icons.saveAs, text, self)
         self.acSaveToFile.setStatusTip(text)
         self.acSaveToFile.setToolTip(text)
         self.acSaveToFile.triggered.connect(Manager().onSaveToFile)
 
         text = "Save configuration to project"
-        self.acSaveToProject = QAction(QIcon(":save-as"), text, self)
+        self.acSaveToProject = QAction(icons.saveAs, text, self)
         self.acSaveToProject.setStatusTip(text)
         self.acSaveToProject.setToolTip(text)
         self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
@@ -267,7 +269,7 @@ class ConfigurationPanel(QWidget):
         self.saveMenu.addAction(self.acSaveToProject)
         text = "Save configuration"
         self.tbSaveConfig = QToolButton()
-        self.tbSaveConfig.setIcon(QIcon(":save-as"))
+        self.tbSaveConfig.setIcon(icons.saveAs)
         self.tbSaveConfig.setStatusTip(text)
         self.tbSaveConfig.setToolTip(text)
         self.tbSaveConfig.setVisible(False)
@@ -376,7 +378,7 @@ class ConfigurationPanel(QWidget):
         self.__hasConflicts = hasConflicts
         
         if hasConflicts is True:
-            icon = QIcon(":apply-conflict")
+            icon = icons.applyConflict
             text = "Resolve conflict"
             self.pbApplyAll.setIcon(icon)
             self.pbApplyAll.setStatusTip(text)
@@ -391,7 +393,7 @@ class ConfigurationPanel(QWidget):
             self.pbResetAll.setEnabled(False)
             self.acResetAll.setEnabled(False)
         else:
-            icon = QIcon(":apply")
+            icon = icons.apply
             text = "Apply all"
             self.pbApplyAll.setIcon(icon)
             self.pbApplyAll.setStatusTip(text)

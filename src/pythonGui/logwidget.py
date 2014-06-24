@@ -13,6 +13,7 @@ __all__ = ["LogWidget", "LogTableView", "LogSqlQueryModel", "LogThread"]
 
 
 import globals
+import icons
 from manager import Manager
 from util import getSaveFileName
 
@@ -20,7 +21,7 @@ from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QIODevice, QMutex,
                           QMutexLocker, Qt, QThread)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QHeaderView, QIcon, QItemSelectionModel, QLabel,
+                         QHeaderView, QItemSelectionModel, QLabel,
                          QLineEdit, QPushButton, QTableView, QToolButton,
                          QVBoxLayout, QWidget)
 
@@ -206,7 +207,7 @@ class LogWidget(QWidget):
 
         text = "Show debug messages"
         self.pbFilterDebug = QToolButton()
-        self.pbFilterDebug.setIcon(QIcon(':log-debug'))
+        self.pbFilterDebug.setIcon(icons.logDebug)
         self.pbFilterDebug.setMinimumSize(32,32)
         self.pbFilterDebug.setStatusTip(text)
         self.pbFilterDebug.setToolTip(text)
@@ -216,7 +217,7 @@ class LogWidget(QWidget):
 
         text = "Show information messages"
         self.pbFilterInfo = QToolButton()
-        self.pbFilterInfo.setIcon(QIcon(':log-info'))
+        self.pbFilterInfo.setIcon(icons.logInfo)
         self.pbFilterInfo.setMinimumSize(32,32)
         self.pbFilterInfo.setStatusTip(text)
         self.pbFilterInfo.setToolTip(text)
@@ -226,7 +227,7 @@ class LogWidget(QWidget):
 
         text = "Show warn messages"
         self.pbFilterWarn = QToolButton()
-        self.pbFilterWarn.setIcon(QIcon(':log-warning'))
+        self.pbFilterWarn.setIcon(icons.logWarning)
         self.pbFilterWarn.setMinimumSize(32,32)
         self.pbFilterWarn.setStatusTip(text)
         self.pbFilterWarn.setToolTip(text)
@@ -236,7 +237,7 @@ class LogWidget(QWidget):
 
         text = "Show error messages"
         self.pbFilterError = QToolButton()
-        self.pbFilterError.setIcon(QIcon(':log-error'))
+        self.pbFilterError.setIcon(icons.logError)
         self.pbFilterError.setMinimumSize(32,32)
         self.pbFilterError.setStatusTip(text)
         self.pbFilterError.setToolTip(text)
@@ -246,7 +247,7 @@ class LogWidget(QWidget):
 
         text = "Show alarm messages"
         self.pbFilterAlarm = QToolButton()
-        self.pbFilterAlarm.setIcon(QIcon(':log-alarm'))
+        self.pbFilterAlarm.setIcon(icons.logAlarm)
         self.pbFilterAlarm.setMinimumSize(32,32)
         self.pbFilterAlarm.setStatusTip(text)
         self.pbFilterAlarm.setToolTip(text)
@@ -256,7 +257,7 @@ class LogWidget(QWidget):
 
         text = "Show warning messages"
         self.pbFilterWarning = QToolButton()
-        self.pbFilterWarning.setIcon(QIcon(':log-warning'))
+        self.pbFilterWarning.setIcon(icons.logWarning)
         self.pbFilterWarning.setMinimumSize(32,32)
         self.pbFilterWarning.setStatusTip(text)
         self.pbFilterWarning.setToolTip(text)
@@ -636,18 +637,10 @@ class LogSqlQueryModel(QSqlQueryModel):
         #    self.fetchMore()
 
 
-    def getIcon(self, value):
-        if value == 'DEBUG':
-            return QIcon(':log-debug')
-        elif value == 'INFO':
-            return QIcon(':log-info')
-        elif (value == 'WARN') or (value == 'WARN_LOW') or (value == 'WARN_HIGH'):
-            return QIcon(':log-warning')
-        elif value == 'ERROR':
-            return QIcon(':log-error')
-        elif (value == 'ALARM_LOW') or (value == 'ALARM_HIGH'):
-            return QIcon(':log-alarm')
-        return None
+    icons = dict(DEBUG=icons.logDebug, INFO=icons.logInfo,
+                 WARN=icons.logWarning, WARN_LOW=icons.logWarning,
+                 WARN_HIGH=icons.logWarning, ERROR=icons.logError,
+                 ALARM_LOW=icons.logAlarm, ALARM_HIGH=icons.logAlarm)
 
 
     def getTextColor(self, value):
@@ -671,7 +664,7 @@ class LogSqlQueryModel(QSqlQueryModel):
         if role == Qt.DecorationRole and index.column() == 2:
             # Get text for comparison to get correct icon
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
-            return self.getIcon(modelIndex.data(Qt.DisplayRole))
+            return self.icons.get(modelIndex.data(Qt.DisplayRole)).icon
         elif role == Qt.TextColorRole and index.column() == 2:
             # Get text for comparison to get correct text color
             modelIndex = QSqlQueryModel.index(self, index.row(), index.column())
