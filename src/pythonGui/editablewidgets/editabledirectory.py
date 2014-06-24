@@ -12,10 +12,11 @@
 __all__ = ["EditableDirectory"]
 
 
+import icons
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton,
+from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)
 
 
@@ -38,7 +39,7 @@ class EditableDirectory(EditableWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":open"))
+        self.__tbPath.setIcon(icons.open)
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onDirectoryClicked)
         hLayout.addWidget(self.__tbPath)

@@ -13,7 +13,6 @@ __all__ = ["MainWindow"]
 
 import os.path
 from sys import platform
-import qrc_icons # hopefully this goes one day
 import icons
 
 from docktabwindow import DockTabWindow

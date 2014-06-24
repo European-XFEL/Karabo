@@ -12,10 +12,11 @@
 __all__ = ["DisplayFileOut"]
 
 
+import icons
 from util import SignalBlocker
 from widget import DisplayWidget
 
-from PyQt4.QtGui import (QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
+from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class DisplayFileOut(DisplayWidget):
@@ -37,7 +38,7 @@ class DisplayFileOut(DisplayWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":fileout"))
+        self.__tbPath.setIcon(icons.fileout)
         self.__tbPath.setEnabled(False)
         self.__tbPath.setMaximumSize(25,25)
         hLayout.addWidget(self.__tbPath)

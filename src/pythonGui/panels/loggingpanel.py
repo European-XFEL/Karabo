@@ -12,10 +12,11 @@
 __all__ = ["LoggingPanel"]
 
 
+import icons
 from manager import Manager
 from logwidget import LogWidget
 
-from PyQt4.QtGui import QAction, QIcon, QVBoxLayout, QWidget
+from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
 class LoggingPanel(QWidget):
@@ -50,13 +51,13 @@ class LoggingPanel(QWidget):
 
     def setupActions(self):
         text = "Save log data to file"
-        self.__acSaveLog = QAction(QIcon(":save"), "&Save log data (.log)", self)
+        self.__acSaveLog = QAction(icons.save, "&Save log data (.log)", self)
         self.__acSaveLog.setToolTip(text)
         self.__acSaveLog.setStatusTip(text)
         self.__acSaveLog.triggered.connect(self.__logWidget.onSaveToFile)
 
         text = "Clear log"
-        self.__acClearLog = QAction(QIcon(":edit-clear"), text, self)
+        self.__acClearLog = QAction(icons.editClear, text, self)
         self.__acClearLog.setToolTip(text)
         self.__acClearLog.setStatusTip(text)
         self.__acClearLog.triggered.connect(self.__logWidget.onClearLog)
