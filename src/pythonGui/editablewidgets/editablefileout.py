@@ -11,12 +11,12 @@
 
 __all__ = ["EditableFileOut"]
 
-
+import icons
 from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton,
+from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)
 
 
@@ -39,7 +39,7 @@ class EditableFileOut(EditableWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":fileout"))
+        self.__tbPath.setIcon(icons.fileout)
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onFileOutClicked)
         hLayout.addWidget(self.__tbPath)
