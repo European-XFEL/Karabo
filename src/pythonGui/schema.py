@@ -417,9 +417,10 @@ class Schema(hashtypes.Descriptor):
 
 
     def setDefault(self, box):
-        box._set(self.getClass()(box), None)
+        box._value = self.getClass()(box)
         for k, v in self.dict.iteritems():
             getattr(box.value, k).setDefault()
+        box._set(box._value, None)
 
 
     def redummy(self, box):
