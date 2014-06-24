@@ -121,6 +121,9 @@ class _Manager(QObject):
         self.systemTopology.updateData(config)
         for v in self.deviceData.itervalues():
             v.updateStatus()
+        for k in self.serverClassData.keys():
+            getClass(k[0], k[1])
+
         self.projectTopology.updateNeeded()
 
 
@@ -380,7 +383,7 @@ class _Manager(QObject):
         self._clearServerClassParameterPage(serverClassIds)
 
         # Update system topology with new configuration
-        self.handle_systemTopology(dict(systemTopology=config))
+        self._handleSystemTopology(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -448,9 +451,11 @@ class _Manager(QObject):
         schema = classInfo.get('schema')
 
         conf = self.serverClassData[serverId, classId]
-        conf.setSchema(schema)
-        # Set default values for configuration
-        conf.setDefault()
+        if len(schema.hash) > 0:
+            # Set schema only, if data is available
+            conf.setSchema(schema)
+            # Set default values for configuration
+            conf.setDefault()
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
@@ -523,12 +528,14 @@ def getDevice(deviceId):
 
 
 def getClass(serverId, classId):
-    if (serverId, classId) not in manager.serverClassData:
+    c = manager.serverClassData.get((serverId, classId))
+    if c is None:
         path = "{}.{}".format(serverId, classId)
-        manager.serverClassData[serverId, classId] = Configuration(path,
-                                                                   'class')
+        c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+    if c.descriptor is None or c.status != "requested":
         Network().onGetClassSchema(serverId, classId)
-    return manager.serverClassData[serverId, classId]
+        c.status = "requested"
+    return c
 
 
 manager = _Manager()
