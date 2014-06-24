@@ -44,7 +44,6 @@ def init(app):
     global window
     window = MainWindow()
     window.signalQuitApplication.connect(Network().onQuitApplication)
-    window.signalQuitApplication.connect(Manager().closeDatabaseConnection)
     Manager().signalUpdateScenes.connect(window.onUpdateScenes)
     Network().signalServerConnectionChanged.connect(
         window.onServerConnectionChanged)

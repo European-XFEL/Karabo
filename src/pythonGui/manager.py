@@ -27,7 +27,6 @@ from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from network import Network
 from projectmodel import ProjectModel
-from sqldatabase import SqlDatabase
 from util import getSaveFileName
 
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
@@ -61,13 +60,9 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
-        
+
         # Check GUI version
         self._checkVersion()
-        
-        # Initiate database connection
-        self.sqlDatabase = SqlDatabase()
-        self.sqlDatabase.openConnection()
         
         # Model for navigation views
         self.systemTopology = NavigationTreeModel(self)
@@ -125,10 +120,6 @@ class _Manager(QObject):
         
         # State, if instantiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
-
-
-    def closeDatabaseConnection(self):
-        self.sqlDatabase.closeConnection()
 
 
     def _clearDeviceParameterPage(self, deviceId):
