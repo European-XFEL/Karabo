@@ -138,14 +138,17 @@ class Project(QObject):
                               projectConfig["resources"].iteritems()}
 
 
-    def zip(self):
+    def zip(self, filename=None):
         """
         This method saves this project as a zip file.
         """
         projectConfig = Hash()
 
-        if os.path.exists(self.filename):
-            file = NamedTemporaryFile(dir=os.path.dirname(self.filename),
+        if filename is None:
+            filename = self.filename
+
+        if os.path.exists(filename):
+            file = NamedTemporaryFile(dir=os.path.dirname(filename),
                                       delete=False)
         else:
             file = self.filename
@@ -189,10 +192,10 @@ class Project(QObject):
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
 
-        if file is not self.filename:
+        if file is not filename:
             file.close()
-            os.remove(self.filename)
-            os.rename(file.name, self.filename)
+            os.remove(filename)
+            os.rename(file.name, filename)
 
 
     def addResource(self, category, data):
@@ -269,7 +272,10 @@ class Device(Configuration):
         """
         This function returns the configurations' XML file as a string.
         """
-        config = self.toHash()
+        if self.descriptor is not None:
+            config = self.toHash()
+        else:
+            config = self.futureConfig
         assert "deviceId" in config
         return XMLWriter().write(Hash(self.classId, config))
 
