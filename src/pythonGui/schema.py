@@ -121,7 +121,7 @@ class Box(QObject):
 
 
     def __str__(self):
-        return "<Box {}>".format(self.key())
+        return "<{} {}>".format(type(self).__name__, self.key())
 
 
 class Descriptor(hashtypes.Descriptor):
