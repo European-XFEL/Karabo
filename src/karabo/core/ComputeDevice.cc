@@ -114,7 +114,14 @@ namespace karabo {
 
 
         ComputeDevice::~ComputeDevice() {
-            m_deviceIsDead = true;
+            {
+                boost::lock_guard<boost::mutex> lock(m_computeMutex);
+                boost::lock_guard<boost::mutex> lockIO(m_waitingIOMutex);
+                m_deviceIsDead = true;
+            }
+            m_computeCond.notify_one();
+            m_waitingIOCond.notify_one();
+            
             if (m_computeThread.joinable()) m_computeThread.join();
             if (m_waitingIOThread.joinable()) m_waitingIOThread.join();
             KARABO_LOG_DEBUG << "dead.";
@@ -255,7 +262,11 @@ namespace karabo {
 
 
         bool ComputeDevice::registerAbort() {
-            m_isAborted = true;
+            {
+                boost::lock_guard<boost::mutex> lock(m_computeMutex);
+                boost::lock_guard<boost::mutex> lockIO(m_waitingIOMutex);
+                m_isAborted = true;
+            }
             return true;
         }
 
@@ -276,7 +287,7 @@ namespace karabo {
         void ComputeDevice::doWait() try {
             while (true) {
                 //m_waitingIOMutex.lock();
-                boost::unique_lock<boost::mutex> lock(m_computeMutex);
+                boost::unique_lock<boost::mutex> lock(m_waitingIOMutex);
                 m_waitingIOCond.wait(lock);
                 if (m_deviceIsDead) return;
                 try {
@@ -321,7 +332,11 @@ namespace karabo {
 
 
         void ComputeDevice::abortedOnEntry() {
-            m_isAborted = false;
+            {
+                boost::lock_guard<boost::mutex> lock(m_computeMutex);
+                boost::lock_guard<boost::mutex> lockIO(m_waitingIOMutex);
+                m_isAborted = false;
+            }
         }
 
 
