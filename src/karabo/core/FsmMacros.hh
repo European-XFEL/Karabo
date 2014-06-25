@@ -108,10 +108,28 @@ namespace karabo {
                 visitor->visitState(this);
             }
 
+            void setTimeout(int timeout) {
+                m_timeout = timeout;
+            }
+            
+            int getTimeout() const {
+                return m_timeout;
+            }
+            
+            void setRepetition(int cycles) {
+                m_repetition = cycles;
+            }
+            
+            int getRepetition() const {
+                return m_repetition;
+            }
+            
         private:
             std::string m_stateName;
             std::string m_fsmName;
             bool m_isContained;
+            int m_timeout;
+            int m_repetition;
         };
     }
 }
@@ -541,14 +559,14 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
 #define KARABO_FSM_STATE_A(name, TargetAction) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             this->setContained(f.is_contained()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -597,7 +615,7 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_STATE_IMPL_AE(name, TargetAction, entryFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -605,7 +623,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -782,14 +800,14 @@ virtual void exitFunc()  = 0;
 #define _KARABO_FSM_STATE_IMPL_AEE(name, TargetAction, entryFunc, exitFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -923,13 +941,13 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 #define KARABO_FSM_INTERRUPT_STATE_A(name, event, TargetAction) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -979,14 +997,14 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AE(name, event, TargetAction, entryFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -1059,14 +1077,14 @@ virtual void exitFunc()  = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AEE(name, event, TargetAction, entryFunc, exitFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    name() : _ta() {this->setStateName(#name);} \
+    name() : _ta() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+            f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -1219,7 +1237,7 @@ virtual void exitFunc()  = 0;
                 try { \
                 KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                 _ta.setContext(f.getContext()); \
-                f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+                f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1241,7 +1259,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : _ta(), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
         private: \
             CTX* m_context; \
         }; \
@@ -1292,7 +1310,7 @@ virtual void entryFunc() = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
-                    f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+                    f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1314,7 +1332,7 @@ virtual void entryFunc() = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : _ta(),m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
         private: \
             CTX* m_context; \
         }; \
@@ -1387,7 +1405,7 @@ virtual void exitFunc()  = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
-                    f.getContext()->getWorker().set(_ta, _ta.getTimeout(), _ta.getRepetition()).start(); \
+                    f.getContext()->getWorker().set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1410,7 +1428,7 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : m_context(0) {this->setStateName(#name); this->setFsmName(#name);} \
+            name ## _() : _ta(),m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
         private: \
             CTX* m_context; \
         }; \
