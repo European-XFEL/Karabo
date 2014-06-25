@@ -46,8 +46,6 @@ class _Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalInstanceGone = pyqtSignal(str, str) # path, parentPath
-
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
@@ -135,6 +133,7 @@ class _Manager(QObject):
                 conf = self.serverClassData[serverClassId]
                 # Clear corresponding parameter page
                 if conf.parameterEditor is not None:
+                    print "_clearServerClassParameterPage", serverClassId
                     conf.parameterEditor.clear()
                 del self.serverClassData[serverClassId]
             except KeyError:
@@ -436,10 +435,13 @@ class _Manager(QObject):
                 for v in self.deviceData.itervalues():
                     v.updateStatus()
 
+            # Clear corresponding parameter pages
+            self.projectTopology.clearParameterPages(serverClassIds)
+        
+        self.projectTopology.updateNeeded()
+        
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
-
-        self.projectTopology.updateNeeded()
 
 
     def handle_classSchema(self, classInfo):
@@ -452,12 +454,14 @@ class _Manager(QObject):
         schema = classInfo.get('schema')
 
         conf = self.serverClassData[serverId, classId]
+        if conf.descriptor is not None:
+            return
+        
         if len(schema.hash) > 0:
             # Set schema only, if data is available
             conf.setSchema(schema)
             # Set default values for configuration
             conf.setDefault()
-        print "     handle_classSchema", serverId, classId
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
@@ -476,7 +480,6 @@ class _Manager(QObject):
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
-        print "     handle_deviceSchema", deviceId
         self.onShowConfiguration(conf)
 
 
