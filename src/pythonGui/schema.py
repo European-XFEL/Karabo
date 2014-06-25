@@ -76,9 +76,8 @@ class Box(QObject):
     @descriptor.setter
     def descriptor(self, d):
         self._descriptor = d
-        if self.hasValue() and d is not None:
-            self._value = d.cast(self._value)
         if d is not None:
+            self._value = self.dummyCast()
             self.signalNewDescriptor.emit(self)
 
 
@@ -193,6 +192,14 @@ class Type(hashtypes.Type):
         """ remove all values from box """
         box._value = Dummy(box.path, box.configuration)
         box.descriptor = None
+
+
+    def dummyCast(self, box):
+        """dummy-aware casting of box"""
+        if box.hasValue():
+            return self.cast(box.value)
+        else:
+            return box.value
 
 
 class Char(hashtypes.Char):
@@ -379,6 +386,13 @@ class Schema(hashtypes.Descriptor):
                 self.name, other))
 
 
+    def dummyCast(self, box):
+        if box.hasValue():
+            return self.cast(box.value)
+        else:
+            return self.getClass()(box)
+
+
     def toHash(self, box):
         ret = Hash()
         for k in self.dict:
@@ -391,8 +405,6 @@ class Schema(hashtypes.Descriptor):
 
 
     def fromHash(self, box, value, timestamp=None):
-        if isinstance(box._value, Dummy):
-            box._value = self.getClass()(box)
         for k, v, a in value.iterall():
             try:
                 vv = getattr(box._value, k)
