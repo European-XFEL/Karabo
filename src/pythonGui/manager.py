@@ -437,10 +437,10 @@ class _Manager(QObject):
             # Clear corresponding parameter pages
             self.projectTopology.clearParameterPages(serverClassIds)
         
-        self.projectTopology.updateNeeded()
-        
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
+        
+        self.projectTopology.updateNeeded()
 
 
     def handle_classSchema(self, classInfo):
