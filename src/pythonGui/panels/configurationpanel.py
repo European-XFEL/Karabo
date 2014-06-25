@@ -536,7 +536,6 @@ class ConfigurationPanel(QWidget):
         else:
             configuration.index = self._createNewParameterPage(configuration)
         
-        print "+++ onShowConfiguration", configuration, configuration.index
         if (self.__swParameterEditor.currentIndex() == configuration.index) and \
            (configuration.descriptor is not None):
             self.updateButtonsVisibility = (configuration.type == 'class' or \
@@ -544,9 +543,7 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, type, configuration):
-        print ""
-        print "### onDeviceItemChanged", type, configuration
-        
+        # Update buttons
         if type == "other" or (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()
         else:
@@ -556,7 +553,7 @@ class ConfigurationPanel(QWidget):
         
         if self.prevConfiguration not in (None, configuration) and (self.prevConfiguration.type == "device"):
             self.prevConfiguration.removeVisible()
-        
+
         self.showParameterPage(configuration)
 
 
