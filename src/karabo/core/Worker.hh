@@ -189,6 +189,10 @@ namespace karabo {
             : Worker<bool>(callback, timeout, repetition) {
             }
 
+            virtual ~FsmWorker() {
+                abort().join();
+            }
+            
             bool cond(const bool& data) {
                 return data;
             }
