@@ -484,31 +484,33 @@ _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
 virtual bool func(const t1&, const t2&, const t3&);
 
 
-#define _KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, context, func) \
-template<class CTX = context> \
+/**************************************************************/
+/*                 In State Action                            */
+/**************************************************************/
+
+#define _KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, func) \
 struct name { \
     name() : m_timeout(timeout) {} \
-    void setContext(CTX* const ctx) { m_context = ctx; } \
+    void setContext(Self* const ctx) { m_context = ctx; } \
     void operator()() { \
-            KARABO_LOG_FRAMEWORK_DEBUG << #name; \
             m_context->func(); \
     } \
     int getTimeout() const { return m_timeout; } \
 private: \
     int m_timeout; \
-    CTX* m_context; \
+    Self* m_context; \
 };
-#define KARABO_FSM_ACTION_IN_STATE(name, timeout, context, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, context, func) \
+#define KARABO_FSM_ACTION_IN_STATE(name, timeout, func) \
+_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, func) \
 void func();
-#define KARABO_FSM_V_ACTION_IN_STATE(name, timeout, context, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, context, func) \
+#define KARABO_FSM_V_ACTION_IN_STATE(name, timeout, func) \
+_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, func) \
 virtual void func();
-#define KARABO_FSM_VE_ACTION_IN_STATE(name, timeout, context, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, context, func) \
+#define KARABO_FSM_VE_ACTION_IN_STATE(name, timeout, func) \
+_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, func) \
 virtual void func() {}
-#define KARABO_FSM_PV_ACTION_IN_STATE(name, timeout, context, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, context, func) \
+#define KARABO_FSM_PV_ACTION_IN_STATE(name, timeout, func) \
+_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, func) \
 virtual void func() = 0;
 
 
@@ -778,7 +780,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     name() : _ta() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \

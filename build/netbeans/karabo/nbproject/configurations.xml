@@ -12,7 +12,7 @@
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Patterns" projectFiles="true">
-        <itemPath>../../../../../branch/karaboFramework/src/karabo/core/Worker.hh</itemPath>
+        <itemPath>../../../src/karabo/core/Worker.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f1" displayName="State Machines" projectFiles="true">
         <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
@@ -494,11 +494,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../../../branch/karaboFramework/src/karabo/core/Worker.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -577,6 +572,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
@@ -2242,11 +2239,6 @@
         <packFileList>
         </packFileList>
       </packaging>
-      <item path="../../../../../branch/karaboFramework/src/karabo/core/Worker.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/BaseFsm.hh"
             ex="false"
             tool="3"
@@ -2325,6 +2317,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/Worker.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/AbstractInput.hh"
             ex="false"
