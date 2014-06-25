@@ -8,6 +8,7 @@
 #ifndef KARABO_CORE_FSMBASE_HH_hh
 #define	KARABO_CORE_FSMBASE_HH_hh
 
+#include <karabo/core/Worker.hh>
 #include <karabo/core/FsmMacros.hh>
 #include <karabo/util/karaboDll.hh>
 
@@ -40,6 +41,12 @@ namespace karabo {
 
             virtual void startFsm() {}
 
+            FsmWorker& getWorker() {
+                return m_worker;
+            }
+            
+        private:
+            FsmWorker m_worker;
         };
     }
 }
