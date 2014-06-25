@@ -326,6 +326,7 @@ namespace karabo {
         }
 
 
+        // TODO Try to implement this function to be completely event driven
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema";
@@ -346,9 +347,9 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 string deviceId = info.get<string > ("deviceId");
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash instanceInfo("type", "deviceSchema", "deviceId", deviceId,
-                                  "schema", remote().getDeviceSchema(deviceId));
-                channel->write(instanceInfo);
+                Hash hash("type", "deviceSchema", "deviceId", deviceId,
+                                  "schema", remote().getDeviceSchema(deviceId), "configuration", remote().get(deviceId));
+                channel->write(hash);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
             }
@@ -497,7 +498,10 @@ namespace karabo {
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                    // Optimization: broadcast only to visible DeviceInstances
+                    if (it->second.find(deviceId) != it->second.end()) {
+                        it->first->write(instanceInfo);
+                    }
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotSchemaUpdated(): " << e.userFriendlyMsg();

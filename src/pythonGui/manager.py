@@ -352,7 +352,7 @@ class _Manager(QObject):
         Network()._handleBrokerInformation(instanceInfo)
 
 
-    def handle_systemTopology(self, instanceInfo):
+    def handle_systemTopology(self, instanceInfo):        
         self._handleSystemTopology(instanceInfo.get("systemTopology"))
 
 
@@ -467,19 +467,23 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_deviceSchema(self, instanceInfo):
-        deviceId = instanceInfo['deviceId']
+    def handle_deviceSchema(self, hash):
+        deviceId = hash['deviceId']
         if deviceId not in self.deviceData:
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = instanceInfo['schema']
-        
+        schema = hash['schema']
+
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)
+
+        conf.fromHash(hash['configuration'])
+        if conf.status == "schema":
+            conf.status = "alive"
         
         self.onShowConfiguration(conf)
 
