@@ -134,7 +134,9 @@ class _Manager(QObject):
                 # Clear corresponding parameter page
                 if conf.parameterEditor is not None:
                     conf.parameterEditor.clear()
-                del self.serverClassData[serverClassId]
+                
+                if conf.descriptor is not None:
+                    conf.redummy()
             except KeyError:
                 pass
 
@@ -537,6 +539,7 @@ def getClass(serverId, classId):
     if c is None:
         path = "{}.{}".format(serverId, classId)
         c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+
     if c.descriptor is None or c.status != "requested":
         Network().onGetClassSchema(serverId, classId)
         c.status = "requested"

@@ -202,7 +202,6 @@ class ProjectModel(QStandardItemModel):
                 if (serverId, device.classId) in serverClassIds:
                     if device.parameterEditor is not None:
                         device.parameterEditor.clear()
-                        device.descriptor = None
         
 
 
