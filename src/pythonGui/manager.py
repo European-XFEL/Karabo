@@ -133,7 +133,6 @@ class _Manager(QObject):
                 conf = self.serverClassData[serverClassId]
                 # Clear corresponding parameter page
                 if conf.parameterEditor is not None:
-                    print "_clearServerClassParameterPage", serverClassId
                     conf.parameterEditor.clear()
                 del self.serverClassData[serverClassId]
             except KeyError:
