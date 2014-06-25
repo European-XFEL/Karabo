@@ -457,6 +457,7 @@ class _Manager(QObject):
             conf.setSchema(schema)
             # Set default values for configuration
             conf.setDefault()
+        print "     handle_classSchema", serverId, classId
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
@@ -475,6 +476,7 @@ class _Manager(QObject):
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)
         
+        print "     handle_deviceSchema", deviceId
         self.onShowConfiguration(conf)
 
 
