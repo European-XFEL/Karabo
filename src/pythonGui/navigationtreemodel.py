@@ -162,7 +162,7 @@ class NavigationTreeModel(QAbstractItemModel):
             parentNode = node.parentNode
             parentNode.removeChildNode(node)
         finally:
-            self.endResetModel() 
+            self.endResetModel()
 
 
     def eraseServer(self, instanceId):

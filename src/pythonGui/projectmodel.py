@@ -195,6 +195,17 @@ class ProjectModel(QStandardItemModel):
             self.selectItem(lastSelectionObj)
 
 
+    def clearParameterPages(self, serverClassIds=[]):
+        for project in self.projects:
+            for device in project.devices:
+                serverId = device.futureConfig.get("serverId")
+                if (device.id == deviceId) or (serverId, device.classId) in serverClassIds:
+                    if device.parameterEditor is not None:
+                        device.parameterEditor.clear()
+                        device.descriptor = None
+        
+
+
     def updateNeeded(self):
         # Update project view and pluginDialog data
         self.updateData()
