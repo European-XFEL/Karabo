@@ -33,7 +33,7 @@ from zipfile import is_zipfile
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
-    signalItemChanged = pyqtSignal(object)
+    signalItemChanged = pyqtSignal(str, object) # type, configuration
     signalSelectionChanged = pyqtSignal(list)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
@@ -193,6 +193,16 @@ class ProjectModel(QStandardItemModel):
         # Set last selected object
         if lastSelectionObj is not None:
             self.selectItem(lastSelectionObj)
+
+
+    def clearParameterPages(self, serverClassIds=[]):
+        for project in self.projects:
+            for device in project.devices:
+                serverId = device.futureConfig.get("serverId")
+                if (serverId, device.classId) in serverClassIds:
+                    if device.parameterEditor is not None:
+                        device.parameterEditor.clear()
+        
 
 
     def updateNeeded(self):
@@ -458,17 +468,18 @@ class ProjectModel(QStandardItemModel):
         index = selectedIndexes[0]
 
         device = index.data(ProjectModel.ITEM_OBJECT)
-        if device is None: return
-        if not isinstance(device, Configuration):
-            return
-
-        # Check whether device is already online
-        if device.isOnline():
-            conf = manager.getDevice(device.id)
+        if device is not None and isinstance(device, Configuration):
+            # Check whether device is already online
+            if device.isOnline():
+                conf = manager.getDevice(device.id)
+            else:
+                conf = device
+            type = conf.type
         else:
-            conf = device
+            conf = None
+            type = "other"
 
-        self.signalItemChanged.emit(conf)
+        self.signalItemChanged.emit(type, conf)
 
 
     def onCloseProject(self):

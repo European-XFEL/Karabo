@@ -46,8 +46,6 @@ class _Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalInstanceGone = pyqtSignal(str, str) # path, parentPath
-
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
@@ -121,8 +119,6 @@ class _Manager(QObject):
         self.systemTopology.updateData(config)
         for v in self.deviceData.itervalues():
             v.updateStatus()
-        for k in self.serverClassData.keys():
-            getClass(k[0], k[1])
 
         self.projectTopology.updateNeeded()
 
@@ -138,7 +134,9 @@ class _Manager(QObject):
                 # Clear corresponding parameter page
                 if conf.parameterEditor is not None:
                     conf.parameterEditor.clear()
-                del self.serverClassData[serverClassId]
+                
+                if conf.descriptor is not None:
+                    conf.redummy()
             except KeyError:
                 pass
 
@@ -384,6 +382,10 @@ class _Manager(QObject):
 
         # Update system topology with new configuration
         self._handleSystemTopology(config)
+        
+        # Request schema for already viewed classes
+        for k in self.serverClassData.keys():
+            getClass(k[0], k[1])
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -392,7 +394,6 @@ class _Manager(QObject):
                 if self.__isInitDeviceCurrentlyProcessed:
                     self.signalSelectNewNavigationItem.emit(deviceId)
                     self.__isInitDeviceCurrentlyProcessed = False
-                conf = self.deviceData.get(deviceId)
 
 
     def handle_instanceUpdated(self, instanceInfo):
@@ -435,9 +436,12 @@ class _Manager(QObject):
                 for v in self.deviceData.itervalues():
                     v.updateStatus()
 
+            # Clear corresponding parameter pages
+            self.projectTopology.clearParameterPages(serverClassIds)
+        
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
-
+        
         self.projectTopology.updateNeeded()
 
 
@@ -451,6 +455,9 @@ class _Manager(QObject):
         schema = classInfo.get('schema')
 
         conf = self.serverClassData[serverId, classId]
+        if conf.descriptor is not None:
+            return
+        
         if len(schema.hash) > 0:
             # Set schema only, if data is available
             conf.setSchema(schema)
@@ -532,6 +539,7 @@ def getClass(serverId, classId):
     if c is None:
         path = "{}.{}".format(serverId, classId)
         c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+
     if c.descriptor is None or c.status != "requested":
         Network().onGetClassSchema(serverId, classId)
         c.status = "requested"
