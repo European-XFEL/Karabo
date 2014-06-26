@@ -276,13 +276,22 @@ class ProjectModel(QStandardItemModel):
 
     def closeAllProjects(self):
         """
-        This function removes all projects and closes its open scenes.
+        This function removes all projects and updates the model.
         """
         for project in self.projects:
-            for scene in project.scenes:
-                self.signalRemoveScene.emit(scene)
-        self.projects = []
+            self.projectClose(project)
         self.updateData()
+
+
+    def projectClose(self, project):
+        """
+        This function closes the project related scenes and removes it from the
+        project list.
+        """
+        for scene in project.scenes:
+            self.signalRemoveScene.emit(scene)
+        
+        del self.projects[self.projects.index(project)]
 
 
     def projectNew(self, filename):
@@ -483,9 +492,12 @@ class ProjectModel(QStandardItemModel):
 
 
     def onCloseProject(self):
+        """
+        This slot closes the currently selected projects and updates the model.
+        """
         index = self.selectionModel.currentIndex()
         object = index.data(ProjectModel.ITEM_OBJECT)
-        del self.projects[self.projects.index(object)]
+        self.projectClose(object)
         self.updateData()
 
 
