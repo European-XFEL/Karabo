@@ -161,6 +161,48 @@ namespace karabo {
 
 #define KARABO_FSM_SET_CONTEXT_SUB3(context, fsmInstance, SubFsm1, SubFsm2, SubFsm3) fsmInstance->get_state<SubFsm1* >()->get_state<SubFsm2* >()->get_state<SubFsm3* >()->setContext(context);
 
+// Getting State pointer to the state in deeply nested state machines...
+#define KARABO_FSM_DECLARE_GETFSM(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; }
+
+// On top level we have state "A" we are interested in. "a" will be a pointer to "A"
+#define KARABO_FSM_GET_STATE_PTR(A, a) A* a; \
+    { a = getFsm()->get_state<A*>(); }
+
+// "A" has state "B" we are interested in. "b" will be a pointer to "B"
+#define KARABO_FSM_GET_STATE_PTR2(A, B, b)  B* b; \
+    { A* A##_ptr = getFsm()->get_state<A*>(); \
+    b = A##_ptr->get_state<B*>(); }
+
+// "A" has subfsm "B". "B" has state "C" we are interested in. "c" will be a pointer to "C"
+#define KARABO_FSM_GET_STATE_PTR3(A, B, C, c) C* c; \
+    { A* A##_ptr = getFsm()->get_state<A*>(); \
+    B* B##_ptr = A##_ptr->get_state<B*>(); \
+    c = B##_ptr->get_state<C*>(); }
+
+// "A" has subfsm "B". "B" has subfsm "C", "C" has state D we are interested in, "d" will be a pointer to "D"
+#define KARABO_FSM_GET_STATE_PTR4(A, B, C, D, d) D* d; \
+    { A* A##_ptr = getFsm()->get_state<A*>(); \
+    B* B##_ptr = A##_ptr->get_state<B*>(); \
+    C* C##_ptr = B##_ptr->get_state<C*>(); \
+    d = C##_ptr->get_state<D*>(); }
+
+// "A" has subfsm "B". "B" has subfsm "C", "C" has subfsm "D", "D" has state "E" we are interested in, "e" will be a pointer to "E"
+#define KARABO_FSM_GET_STATE_PTR5(A, B, C, D, E, e) E* e; \
+    { A* A##_ptr = getFsm()->get_state<A*>(); \
+    B* B##_ptr = A##_ptr->get_state<B*>(); \
+    C* C##_ptr = B##_ptr->get_state<C*>(); \
+    D* D##_ptr = C##_ptr->get_state<D*>(); \
+    e = D##_ptr->get_state<E*>(); }
+
+// "A" has subfsm "B". "B" has subfsm "C", "C" has subfsm "D", "D" has subfsm "E", "E" has state "F" we are interested in, "f" will be a pointer to "F"
+#define KARABO_FSM_GET_STATE_PTR6(A, B, C, D, E, F, f) F* f; \
+    { A* A##_ptr = getFsm()->get_state<A*>(); \
+    B* B##_ptr = A##_ptr->get_state<B*>(); \
+    C* C##_ptr = B##_ptr->get_state<C*>(); \
+    D* D##_ptr = C##_ptr->get_state<D*>(); \
+    E* E##_ptr = D##_ptr->get_state<E*>(); \
+    f = E##_ptr->get_state<F*>(); }
+        
 // Produces a static function that calls errorFunction of the state machine's context
 #define KARABO_FSM_ON_EXCEPTION(errorFunction) \
 template <class Fsm> \
@@ -509,7 +551,7 @@ virtual bool func(const t1&, const t2&, const t3&);
 // WARNING: The following macro may be used only in classes where KARABO_CLASSINFO is used.
 // It relies on the fact that 'Self' is properly defined (typedef to the class type)
 
-#define _KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, repetition, func) \
+#define _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 struct name { \
     name() : m_timeout(timeout), m_repetition(repetition) {} \
     void setContext(Self* const ctx) { m_context = ctx; } \
@@ -523,17 +565,17 @@ private: \
     int m_repetition; \
     Self* m_context; \
 };
-#define KARABO_FSM_ACTION_IN_STATE(name, timeout, repetition, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, repetition, func) \
+#define KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, func) \
+_KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 void func();
-#define KARABO_FSM_V_ACTION_IN_STATE(name, timeout, repetition, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, repetition, func) \
+#define KARABO_FSM_V_PERIODIC_ACTION(name, timeout, repetition, func) \
+_KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 virtual void func();
-#define KARABO_FSM_VE_ACTION_IN_STATE(name, timeout, repetition, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, repetition, func) \
+#define KARABO_FSM_VE_PERIODIC_ACTION(name, timeout, repetition, func) \
+_KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 virtual void func() {}
-#define KARABO_FSM_PV_ACTION_IN_STATE(name, timeout, repetition, func) \
-_KARABO_FSM_ACTION_IN_STATE_IMPL1(name, timeout, repetition, func) \
+#define KARABO_FSM_PV_PERIODIC_ACTION(name, timeout, repetition, func) \
+_KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 virtual void func() = 0;
 
 
