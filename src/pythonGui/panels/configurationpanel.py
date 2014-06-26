@@ -478,13 +478,16 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, configuration):
         """ Show the parameters for configuration """
-        print "showparameterpage"
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
             if not hasattr(configuration, 'index'):
                 configuration.index = self._createNewParameterPage(configuration)
-            self._setParameterEditorIndex(configuration.index)
+                index = 1
+            else:
+                index = configuration.index
+            # Show waiting page
+            self._setParameterEditorIndex(index)#configuration.index)
         
         if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
@@ -512,7 +515,6 @@ class ConfigurationPanel(QWidget):
         This function shows the default page of the parameter editor stacked widget
         and hides all buttons.
         """
-        print "showempty"
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
@@ -547,6 +549,7 @@ class ConfigurationPanel(QWidget):
             twParameterEditor = self.__swParameterEditor.widget(configuration.index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
+            self._setParameterEditorIndex(configuration.index)
         else:
             configuration.index = self._createNewParameterPage(configuration)
         
