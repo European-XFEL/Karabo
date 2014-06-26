@@ -66,6 +66,15 @@ namespace karabo {
                     .displayedName("Auto end-of-stream")
                     .description("If true, automatically forwards the end-of-stream signal to all connected (downstream) devices")
                     .reconfigurable()
+                    .expertAccess()
+                    .assignmentOptional().defaultValue(true)
+                    .commit();
+
+            BOOL_ELEMENT(expected).key("autoUpdate")
+                    .displayedName("Auto update")
+                    .description("If true, automatically updates all input and output channels")
+                    .reconfigurable()
+                    .expertAccess()
                     .assignmentOptional().defaultValue(true)
                     .commit();
 
@@ -73,7 +82,8 @@ namespace karabo {
                     .displayedName("Auto iterate")
                     .description("If true, automatically iterates cyclic workflows")
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(false)
+                    .expertAccess()
+                    .assignmentOptional().defaultValue(true)
                     .commit();
 
             INT32_ELEMENT(expected).key("iteration")
@@ -82,25 +92,13 @@ namespace karabo {
                     .readOnly()
                     .initialValue(0)
                     .commit();
-
-            /*BOOL_ELEMENT(expected).key("singleEndOfStreamSuffice")
-                    .displayedName("Single EOS suffices")
-                    .description("If true, a single EOS on one input channel will signal EOS on all output channels")
-                    .reconfigurable()
-                    .assignmentOptional().defaultValue(false)
-                    .commit();*/
-
-
-
         }
 
 
         ComputeDevice::ComputeDevice(const Hash& input) : Device<>(input), m_isAborted(false), m_isEndOfStream(false), m_deviceIsDead(false), m_nEndOfStreams(0), m_iterationCount(0) {
 
-            m_computeMutex.lock();
             m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));
 
-            m_waitingIOMutex.lock();
             m_waitingIOThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doWait, this));
 
             SLOT0(start);
@@ -108,16 +106,26 @@ namespace karabo {
             SLOT0(abort);
             SLOT0(endOfStream);
             SLOT0(reset);
+
+
         }
 
 
         ComputeDevice::~ComputeDevice() {
-            m_deviceIsDead = true;
-            m_computeMutex.unlock();
-            m_computeThread.join();
-            m_waitingIOMutex.unlock();
-            m_waitingIOThread.join();
+            setDeviceDead();
+            m_computeCond.notify_one();
+            m_waitingIOCond.notify_one();
+
+            if (m_computeThread.joinable()) m_computeThread.join();
+            if (m_waitingIOThread.joinable()) m_waitingIOThread.join();
             KARABO_LOG_DEBUG << "dead.";
+        }
+
+
+        void ComputeDevice::setDeviceDead() {
+            boost::lock_guard<boost::mutex> lock(m_computeMutex);
+            boost::lock_guard<boost::mutex> lockIO(m_waitingIOMutex);
+            m_deviceIsDead = true;
         }
 
 
@@ -132,13 +140,14 @@ namespace karabo {
 
             size_t m_expectedEndOfStreams = 0;
 
+            // Count all channels that should respond to eos
             const InputChannels& inputChannels = this->getInputChannels();
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
                 if (it->second->respondsToEndOfStream()) m_expectedEndOfStreams++;
             }
 
-            m_nEndOfStreams++;
-            if (m_nEndOfStreams >= m_expectedEndOfStreams) { // || get<bool>("singleEndOfStreamSuffice")) {
+            m_nEndOfStreams++; // Counts this function call
+            if (m_nEndOfStreams >= m_expectedEndOfStreams) {
                 m_nEndOfStreams = 0;
                 m_isEndOfStream = true;
                 this->endOfStream();
@@ -156,6 +165,8 @@ namespace karabo {
             }
         }
 
+        // User hook
+
 
         void ComputeDevice::onEndOfStream() {
 
@@ -163,12 +174,14 @@ namespace karabo {
 
 
         void ComputeDevice::update() {
-            const InputChannels& inputChannels = this->getInputChannels();
-            const OutputChannels& outputChannels = this->getOutputChannels();
-            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it)
-                it->second->update();
-            for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
-                it->second->update();
+            if (get<bool>("autoUpdate")) {
+                const InputChannels& inputChannels = this->getInputChannels();
+                const OutputChannels& outputChannels = this->getOutputChannels();
+                for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it)
+                    it->second->update();
+                for (OutputChannels::const_iterator it = outputChannels.begin(); it != outputChannels.end(); ++it)
+                    it->second->update();
+            }
         }
 
 
@@ -178,8 +191,9 @@ namespace karabo {
 
 
         void ComputeDevice::connectAction() {
-            KARABO_LOG_FRAMEWORK_DEBUG << "Connection IO channels";
+            KARABO_LOG_FRAMEWORK_DEBUG << "Connecting IO channels";
             this->connectInputChannels();
+
         }
 
 
@@ -194,59 +208,81 @@ namespace karabo {
 
         bool ComputeDevice::canCompute() {
 
-            size_t m_expectedEndOfStreams = 0;
+            //            size_t m_expectedEndOfStreams = 0;
+            //
+            //            const InputChannels& inputChannels = this->getInputChannels();
+            //            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+            //                if (it->second->respondsToEndOfStream()) m_expectedEndOfStreams++;
+            //            }
 
+
+            //            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
+            //                if (!it->second->canCompute() && (it->second->respondsToEndOfStream() || m_expectedEndOfStreams == 0)) return false;
+            //            }
+
+            // Moved logic of the upper code into the canCompute function of the input channel, thus:
             const InputChannels& inputChannels = this->getInputChannels();
             for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
-                if (it->second->respondsToEndOfStream()) m_expectedEndOfStreams++;
+                if (!it->second->canCompute()) {
+                    return false;
+                }
             }
-
-
-            for (InputChannels::const_iterator it = inputChannels.begin(); it != inputChannels.end(); ++it) {
-                if (!it->second->canCompute() && (it->second->respondsToEndOfStream() || m_expectedEndOfStreams == 0)) return false;
-            }
-
-
-
             return true;
         }
 
 
-        void ComputeDevice::computingStateOnEntry() {
-            m_computeMutex.unlock();
+        void ComputeDevice::computingStateOnEntry() {           
+            m_computeCond.notify_one();
         }
 
 
         void ComputeDevice::doCompute() try {
+
+            boost::unique_lock<boost::mutex> lock(m_computeMutex);
+
             while (true) {
-                m_computeMutex.lock();
-                if (m_deviceIsDead) return;
-                this->compute();
-                m_computeMutex.unlock();
-                if (!m_isAborted) this->computeFinished();
+
+                m_computeCond.wait(lock);
+
+                if (m_deviceIsDead) {
+                    return;
+                }
+
+                if (!m_isAborted) {
+
+                    try {
+
+                        this->compute();
+                        m_abortCond.notify_one();
+
+                    } catch (const karabo::util::Exception& e) {
+                        KARABO_LOG_ERROR << "Caught exception in compute thread: " << e.userFriendlyMsg();
+                    } catch (...) {
+                        KARABO_LOG_ERROR << "Caught unknown exception in compute thread";
+                    }
+                    this->computeFinished();
+
+                }
             }
         } catch (const karabo::util::Exception& e) {
-            KARABO_LOG_FRAMEWORK_ERROR << e.what();
-            KARABO_LOG_FRAMEWORK_ERROR << "Restarting compute thread...";
-            if (m_computeThread.joinable()) m_computeThread.join();
-            m_computeMutex.lock();
-            m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));
-        } catch (...) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Caught unknown exception in compute thread";
-            KARABO_LOG_FRAMEWORK_ERROR << "Restarting compute thread...";
-            if (m_computeThread.joinable()) m_computeThread.join();
-            m_computeMutex.lock();
-            m_computeThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doCompute, this));
+            KARABO_LOG_ERROR << e;
         }
 
 
         void ComputeDevice::computingStateOnExit() {
-            m_computeMutex.lock();
         }
 
 
         bool ComputeDevice::registerAbort() {
-            m_isAborted = true;
+            {
+                boost::lock_guard<boost::mutex> lock(m_computeMutex);
+                m_isAborted = true;
+            }
+            m_computeCond.notify_one();
+
+            boost::unique_lock<boost::mutex> lock(m_abortMutex);
+            m_abortCond.wait(lock);
+
             return true;
         }
 
@@ -257,41 +293,40 @@ namespace karabo {
 
 
         void ComputeDevice::waitingIOOnEntry() {
-            m_waitingIOMutex.unlock();
+            //if(!m_waitingIOMutex.try_lock()){
+            //    m_waitingIOMutex.unlock();
+            //}
+            m_waitingIOCond.notify_one();
         }
 
 
         void ComputeDevice::doWait() try {
             while (true) {
-                m_waitingIOMutex.lock();
+                //m_waitingIOMutex.lock();
+                boost::unique_lock<boost::mutex> lock(m_waitingIOMutex);
+                m_waitingIOCond.wait(lock);
                 if (m_deviceIsDead) return;
                 try {
                     update();
                 } catch (const Exception& e) {
-                    m_waitingIOMutex.unlock();
+                    //m_waitingIOMutex.unlock();
                     this->errorFound(e.userFriendlyMsg(), e.detailedMsg());
                     return;
                 }
-                m_waitingIOMutex.unlock();
+                //m_waitingIOMutex.unlock();
                 this->updatedIO();
             }
         } catch (const karabo::util::Exception& e) {
             KARABO_LOG_FRAMEWORK_ERROR << e.what();
             KARABO_LOG_FRAMEWORK_ERROR << "Restarting IO thread...";
             if (m_waitingIOThread.joinable()) m_waitingIOThread.join();
-            m_waitingIOMutex.lock();
+            //m_waitingIOMutex.lock();
             m_waitingIOThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doWait, this));
-        } catch (...) {
-            KARABO_LOG_FRAMEWORK_ERROR << "Caught unknown exception in IO thread";
-            KARABO_LOG_FRAMEWORK_ERROR << "Restarting IO thread...";
-            if (m_waitingIOThread.joinable()) m_waitingIOThread.join();
-            m_waitingIOMutex.lock();
-            m_waitingIOThread = boost::thread(boost::bind(&karabo::core::ComputeDevice::doWait, this));
-        }
+        } 
 
 
         void ComputeDevice::waitingIOOnExit() {
-            m_waitingIOMutex.lock();
+            //m_waitingIOMutex.lock();
         }
 
 
@@ -307,7 +342,10 @@ namespace karabo {
 
 
         void ComputeDevice::abortedOnEntry() {
-            m_isAborted = false;
+            {
+                boost::lock_guard<boost::mutex> lock(m_computeMutex);
+                m_isAborted = false;
+            }
         }
 
 

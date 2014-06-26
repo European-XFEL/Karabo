@@ -46,8 +46,6 @@ class _Manager(QObject):
     signalChangingState = pyqtSignal(object, bool) # deviceId, isChanging
     signalErrorState = pyqtSignal(object, bool) # deviceId, inErrorState
 
-    signalInstanceGone = pyqtSignal(str, str) # path, parentPath
-
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
 
@@ -121,11 +119,58 @@ class _Manager(QObject):
         self.systemTopology.updateData(config)
         for v in self.deviceData.itervalues():
             v.updateStatus()
+
         self.projectTopology.updateNeeded()
 
 
     def _handleLogData(self, logMessage):
         self.signalLogDataAvailable.emit(logMessage)
+
+
+    def _clearServerClassParameterPage(self, serverClassIds):
+        for serverClassId in serverClassIds:
+            try:
+                conf = self.serverClassData[serverClassId]
+                # Clear corresponding parameter page
+                if conf.parameterEditor is not None:
+                    conf.parameterEditor.clear()
+                
+                if conf.descriptor is not None:
+                    conf.redummy()
+            except KeyError:
+                pass
+
+
+    def initDevice(self, serverId, classId, config=None):
+        if config is None:
+            # Use standard configuration for server/classId
+            config = self.serverClassData[serverId, classId].toHash()
+       
+        # Send signal to network
+        Network().onInitDevice(serverId, Hash(classId, config))
+        self.__isInitDeviceCurrentlyProcessed = True
+
+
+    def killDevice(self, deviceId):
+        reply = QMessageBox.question(None, 'Message',
+            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+
+        Network().onKillDevice(deviceId)
+
+
+    def killServer(self, serverId):
+        reply = QMessageBox.question(None, 'Message',
+            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+
+        Network().onKillServer(serverId)
 
 
     def onReceivedData(self, hash):
@@ -185,42 +230,6 @@ class _Manager(QObject):
             return
 
         self.systemTopology.selectionModel.clear()
-
-
-    def initDevice(self, serverId, classId, config=None):
-        if config is None:
-            # Use standard configuration for server/classId
-            config = self.serverClassData[serverId, classId].toHash()
-       
-        # Send signal to network
-        Network().onInitDevice(serverId, Hash(classId, config))
-        self.__isInitDeviceCurrentlyProcessed = True
-
-
-    def killDevice(self, deviceId):
-        reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.No:
-            return
-
-        Network().onKillDevice(deviceId)
-
-
-    def killServer(self, serverId):
-        reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.No:
-            return
-
-        Network().onKillServer(serverId)
-
-
-    def handle_log(self, instanceInfo):
-        self._handleLogData(instanceInfo["message"])
 
 
     def onNewNavigationItem(self, itemInfo):
@@ -335,11 +344,15 @@ class _Manager(QObject):
         self.projectTopology.updateData()
 
 
+    def handle_log(self, instanceInfo):
+        self._handleLogData(instanceInfo["message"])
+
+
     def handle_brokerInformation(self, instanceInfo):
         Network()._handleBrokerInformation(instanceInfo)
 
 
-    def handle_systemTopology(self, instanceInfo):
+    def handle_systemTopology(self, instanceInfo):        
         self._handleSystemTopology(instanceInfo.get("systemTopology"))
 
 
@@ -354,7 +367,7 @@ class _Manager(QObject):
         """
         config = instanceInfo.get("topologyEntry")
         # Check for existing stuff and remove
-        instanceIds = self.systemTopology.removeExistingInstances(config)
+        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(config)
         for id in instanceIds:
             timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
@@ -365,8 +378,14 @@ class _Manager(QObject):
             # A log message is triggered
             self._handleLogData(logMessage)
 
+        self._clearServerClassParameterPage(serverClassIds)
+
         # Update system topology with new configuration
-        self.handle_systemTopology(dict(systemTopology=config))
+        self._handleSystemTopology(config)
+        
+        # Request schema for already viewed classes
+        for k in self.serverClassData.keys():
+            getClass(k[0], k[1])
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -375,7 +394,6 @@ class _Manager(QObject):
                 if self.__isInitDeviceCurrentlyProcessed:
                     self.signalSelectNewNavigationItem.emit(deviceId)
                     self.__isInitDeviceCurrentlyProcessed = False
-                conf = self.deviceData.get(deviceId)
 
 
     def handle_instanceUpdated(self, instanceInfo):
@@ -388,44 +406,42 @@ class _Manager(QObject):
         """
         instanceId = hash.get("instanceId")
         instanceType = hash.get("instanceType")
+        
         if instanceType == "device":
             device = self.deviceData.get(instanceId)
-            if device is None:
-                return
-            device.status = "offline"
-            if device.descriptor is not None:
-                device.redummy()
+            if device is not None:
+                device.status = "offline"
+                if device.descriptor is not None:
+                    device.redummy()
+                # Clear corresponding parameter page
+                if device.parameterEditor is not None:
+                    device.parameterEditor.clear()
+            
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
-            # Clear corresponding parameter page
-            if device.parameterEditor is not None:
-                device.parameterEditor.clear()
+            
+            # Remove device from systemHash
             path = "device." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
-            for ids in serverClassIds:
-                try:
-                    conf = self.serverClassData[ids]
-                    # Clear corresponding parameter page
-                    if conf.parameterEditor is not None:
-                        conf.parameterEditor.clear()
-                    del self.serverClassData[ids]
-                except KeyError:
-                    pass
+            self._clearServerClassParameterPage(serverClassIds)
+            
+            # Remove server from systemHash
             path = "server." + instanceId
             if path in self.systemHash:
                 del self.systemHash[path]
                 for v in self.deviceData.itervalues():
                     v.updateStatus()
-        else:
-            raise RuntimeError
 
+            # Clear corresponding parameter pages
+            self.projectTopology.clearParameterPages(serverClassIds)
+        
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
-
+        
         self.projectTopology.updateNeeded()
 
 
@@ -437,27 +453,37 @@ class _Manager(QObject):
             return
         
         schema = classInfo.get('schema')
-        
+
         conf = self.serverClassData[serverId, classId]
-        conf.setSchema(schema)
-        # Set default values for configuration
-        conf.setDefault()
+        if conf.descriptor is not None:
+            return
+        
+        if len(schema.hash) > 0:
+            # Set schema only, if data is available
+            conf.setSchema(schema)
+            # Set default values for configuration
+            conf.setDefault()
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
 
-    def handle_deviceSchema(self, instanceInfo):
-        deviceId = instanceInfo['deviceId']
+    def handle_deviceSchema(self, hash):
+        deviceId = hash['deviceId']
         if deviceId not in self.deviceData:
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = instanceInfo['schema']
+        schema = hash['schema']
+
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)
+
+        conf.fromHash(hash['configuration'])
+        if conf.status == "schema":
+            conf.status = "alive"
         
         self.onShowConfiguration(conf)
 
@@ -471,11 +497,10 @@ class _Manager(QObject):
         Network().onRefreshInstance(self.deviceData[deviceId])
 
 
-    # TODO: This function must be thread-safe!!
     def handle_configurationChanged(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         device = self.deviceData.get(deviceId)
-        if device is None:
+        if device is None or device.descriptor is None:
             return
 
         config = instanceInfo.get("configuration")
@@ -514,12 +539,15 @@ def getDevice(deviceId):
 
 
 def getClass(serverId, classId):
-    if (serverId, classId) not in manager.serverClassData:
+    c = manager.serverClassData.get((serverId, classId))
+    if c is None:
         path = "{}.{}".format(serverId, classId)
-        manager.serverClassData[serverId, classId] = Configuration(path,
-                                                                   'class')
+        c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
+
+    if c.descriptor is None or c.status != "requested":
         Network().onGetClassSchema(serverId, classId)
-    return manager.serverClassData[serverId, classId]
+        c.status = "requested"
+    return c
 
 
 manager = _Manager()

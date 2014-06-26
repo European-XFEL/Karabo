@@ -162,7 +162,7 @@ class NavigationTreeModel(QAbstractItemModel):
             parentNode = node.parentNode
             parentNode.removeChildNode(node)
         finally:
-            self.endResetModel() 
+            self.endResetModel()
 
 
     def eraseServer(self, instanceId):
@@ -184,17 +184,17 @@ class NavigationTreeModel(QAbstractItemModel):
         return serverClassIds
         
 
-    def removeExistingInstances(self, config):
+    def detectExistingInstances(self, config):
         """
         This function checks whether instances already exist in the tree.
         
-        if \True, these instance is erased from the tree
-        if \False, nothing happens
-        
-        A list with removed instances is returned.
+        \Returns a list with all existing instanceIds and a list with existing
+        serverClassIds.
         """
         
-        removedInstanceIds = []
+        existingIds = []
+        serverClassIds = []
+        
         serverKey = "server"
         # Check servers
         if config.has(serverKey):
@@ -204,15 +204,13 @@ class NavigationTreeModel(QAbstractItemModel):
                 index = self.findIndex(serverId)
                 if index is None:
                     continue
-                    
-                # Remove server from tree
-                self.eraseServer(serverId)
-                removedInstanceIds.append(serverId)
+                
+                serverClassIds.extend(self.eraseServer(serverId))
+                existingIds.append(serverId)
         
         deviceKey = "device"
         if config.has(deviceKey):
             deviceConfig = config.get(deviceKey)
-            deviceIds = deviceConfig.keys()
             for deviceId in deviceConfig.keys():
                 # Check, if deviceId is already in central hash
                 index = self.findIndex(deviceId)
@@ -220,9 +218,9 @@ class NavigationTreeModel(QAbstractItemModel):
                     continue
                 
                 self.eraseDevice(deviceId)
-                removedInstanceIds.append(deviceId)
+                existingIds.append(deviceId)
         
-        return removedInstanceIds
+        return existingIds, serverClassIds
 
                 
     def globalAccessLevelChanged(self):

@@ -36,7 +36,11 @@ class DisplayImage(DisplayWidget):
 
             # Data type information
             type = value.type.value
-            type = hashtypes.Type.fromname[type].numpy
+            try:
+                type = hashtypes.Type.fromname[type].numpy
+            except KeyError as e:
+                e.message = 'image has improper type "{}"'.format(type)
+                raise
 
             # Data itself
             data = value.data.value
@@ -44,11 +48,17 @@ class DisplayImage(DisplayWidget):
 
             # Shape
             dimX, dimY = value.dims.value
-            npy.shape = dimY, dimX
+            try:
+                npy.shape = dimY, dimX
+            except ValueError as e:
+                e.message = 'image has improper shape ({}, {}) for size {}'. \
+                    format(dimX, dimY, len(npy))
+                raise
 
             # Safety
-            if dimX < 1 or dimY < 1: return
-                        
+            if dimX < 1 or dimY < 1:
+                raise RuntimeError('image has less than two dimensions')
+
             if self.__image is None:
                 self.__image = make.image(npy)
                 self.__plot.add_item(self.__image)

@@ -29,7 +29,10 @@ namespace karabo {
             boost::thread m_waitingIOThread;
             boost::mutex m_computeMutex;
             boost::mutex m_waitingIOMutex;
-            
+            boost::mutex m_abortMutex;
+            boost::condition_variable m_computeCond;
+            boost::condition_variable m_waitingIOCond;
+            boost::condition_variable m_abortCond;
            
 
         public:
@@ -178,6 +181,9 @@ namespace karabo {
             
             void doCompute();
             void doWait();
+
+            void setDeviceDead();
+            void setComputationAborted();
         };
     }
 }

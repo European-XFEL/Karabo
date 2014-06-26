@@ -24,7 +24,7 @@ from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 
 class NavigationTreeView(QTreeView):
-    signalItemChanged = pyqtSignal(object)
+    signalItemChanged = pyqtSignal(str, object) # type, configuration
     
     
     def __init__(self, parent):
@@ -186,18 +186,24 @@ class NavigationTreeView(QTreeView):
         classId = None
         path = ""
 
+        if level == 0:
+            conf = None
+            type = "other"
+        elif level == 1:
+            conf = None
+            type = "server"
         if level == 2:
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
             conf = manager.getClass(serverId, classId)
+            type = conf.type
         elif level == 3:
             deviceId = index.data()
             conf = manager.getDevice(deviceId)
-        else:
-            conf = None
+            type = conf.type
 
-        self.signalItemChanged.emit(conf)
+        self.signalItemChanged.emit(type, conf)
 
 
     def mimeData(self, items):
