@@ -20,7 +20,8 @@ from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 
 from PyQt4.QtCore import pyqtSignal, Qt, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
+from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QLabel, QMenu, 
+                         QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
@@ -78,6 +79,17 @@ class ConfigurationPanel(QWidget):
         twInitalParameterEditorPage = ParameterTreeWidget()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+        
+        # Wait page
+        waitWidget = QLabel()
+        waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        waitWidget.setAutoFillBackground(True)
+        waitWidget.setBackgroundRole(QPalette.Base)
+        movie = QMovie(":wait")
+        waitWidget.setMovie(movie)
+        movie.start()
+        self.__swParameterEditor.addWidget(waitWidget)
+        
         self.prevConfiguration = None
 
         topWidget = QWidget(mainSplitter)
@@ -466,6 +478,7 @@ class ConfigurationPanel(QWidget):
 
     def showParameterPage(self, configuration):
         """ Show the parameters for configuration """
+        print "showparameterpage"
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
@@ -499,6 +512,7 @@ class ConfigurationPanel(QWidget):
         This function shows the default page of the parameter editor stacked widget
         and hides all buttons.
         """
+        print "showempty"
         self._setParameterEditorIndex(0)
         self._hideAllButtons()
 
