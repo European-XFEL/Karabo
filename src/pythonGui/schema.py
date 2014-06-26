@@ -566,6 +566,10 @@ class ListOfNodes(hashtypes.Descriptor):
         item.requiredAccessLevel = 100
 
 
+    def dummyCast(self, box):
+        return box.value
+
+
     def redummy(self, box):
         box._value = Dummy(box.path, box.configuration)
         box.descriptor = None
