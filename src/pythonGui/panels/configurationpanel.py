@@ -549,9 +549,12 @@ class ConfigurationPanel(QWidget):
             twParameterEditor = self.__swParameterEditor.widget(configuration.index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
-            self._setParameterEditorIndex(configuration.index)
         else:
             configuration.index = self._createNewParameterPage(configuration)
+        
+        if self.__swParameterEditor.currentIndex() == 1:
+            # Waiting page is shown
+            self._setParameterEditorIndex(configuration.index)
         
         if (self.__swParameterEditor.currentIndex() == configuration.index) and \
            (configuration.descriptor is not None):
