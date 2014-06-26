@@ -128,7 +128,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
             if d.description is not None:
                 info["Description"] = d.description
 
-            info["Key"] = self.box.key()
+            info["Key"] = '.'.join(self.box.path)
             if isinstance(d, Type):
                 info["Value Type"] = d.hashname()
             if d.defaultValue is not None:
