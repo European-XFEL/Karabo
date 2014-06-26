@@ -33,7 +33,7 @@ from zipfile import is_zipfile
 
 class ProjectModel(QStandardItemModel):
     # To import a plugin a server connection needs to be established
-    signalItemChanged = pyqtSignal(object)
+    signalItemChanged = pyqtSignal(str, object) # type, configuration
     signalSelectionChanged = pyqtSignal(list)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
@@ -142,9 +142,6 @@ class ProjectModel(QStandardItemModel):
                 # Add item for device it belongs to
                 leafItem = QStandardItem(deviceId)
                 leafItem.setEditable(False)
-                # next line is magic: there must be data in every item,
-                # otherwise currentProject does not work TODO currentProject
-                leafItem.setData(0, ProjectModel.ITEM_OBJECT)
                 childItem.appendRow(leafItem)
 
                 for config in configList:
@@ -198,6 +195,16 @@ class ProjectModel(QStandardItemModel):
             self.selectItem(lastSelectionObj)
 
 
+    def clearParameterPages(self, serverClassIds=[]):
+        for project in self.projects:
+            for device in project.devices:
+                serverId = device.futureConfig.get("serverId")
+                if (serverId, device.classId) in serverClassIds:
+                    if device.parameterEditor is not None:
+                        device.parameterEditor.clear()
+        
+
+
     def updateNeeded(self):
         # Update project view and pluginDialog data
         self.updateData()
@@ -223,8 +230,13 @@ class ProjectModel(QStandardItemModel):
         and selects the corresponding item.
         """
         index = self.findIndex(object)
-        if index is not None:
+        if index is not None and object is not None:
             self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+        else:
+            self.selectionModel.clear()
+            # TODO: for some reason the selectionChanged signal is not emitted
+            # that's why it is done manually here
+            self.signalSelectionChanged.emit([])
 
 
     def findIndex(self, object):
@@ -250,16 +262,16 @@ class ProjectModel(QStandardItemModel):
         This function returns the current project from which something might
         be selected.
         """
-        index = self.selectionModel.currentIndex()
+        index = self.currentIndex()
         if not index.isValid():
             return None
 
-        # this algorithm is flawed. sometimes data has no ITEM_OBJECT
-        # look for the corresponding TODO
-        while (index.parent().data(ProjectModel.ITEM_OBJECT) is not None):
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        while (object is not None) and not isinstance(object, Project):
             index = index.parent()
+            object = index.data(ProjectModel.ITEM_OBJECT)
 
-        return index.data(ProjectModel.ITEM_OBJECT)
+        return object
 
 
     def closeAllProjects(self):
@@ -279,6 +291,7 @@ class ProjectModel(QStandardItemModel):
         project.zip()
         self.projects.append(project)
         self.updateData()
+        self.selectItem(project)
         return project
 
 
@@ -297,6 +310,7 @@ class ProjectModel(QStandardItemModel):
 
         self.projects.append(project)
         self.updateData()
+        self.selectItem(project)
         
         for device in project.devices:
             self.checkDescriptor(device)
@@ -327,8 +341,8 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
 
+        project.zip(filename)
         project.filename = filename
-        project.zip()
         self.updateData()
 
 
@@ -431,7 +445,7 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.updateData()
         self.openScene(scene)
-        
+
         self.selectItem(scene)
         
         return scene
@@ -454,17 +468,18 @@ class ProjectModel(QStandardItemModel):
         index = selectedIndexes[0]
 
         device = index.data(ProjectModel.ITEM_OBJECT)
-        if device is None: return
-        if not isinstance(device, Configuration):
-            return
-
-        # Check whether device is already online
-        if device.isOnline():
-            conf = manager.getDevice(device.id)
+        if device is not None and isinstance(device, Configuration):
+            # Check whether device is already online
+            if device.isOnline():
+                conf = manager.getDevice(device.id)
+            else:
+                conf = device
+            type = conf.type
         else:
-            conf = device
+            conf = None
+            type = "other"
 
-        self.signalItemChanged.emit(conf)
+        self.signalItemChanged.emit(type, conf)
 
 
     def onCloseProject(self):
@@ -527,5 +542,7 @@ class ProjectModel(QStandardItemModel):
             return
         
         # Remove data from project
-        self.currentProject().remove(index.data(ProjectModel.ITEM_OBJECT))
+        project = self.currentProject()
+        project.remove(index.data(ProjectModel.ITEM_OBJECT))
         self.updateData()
+        self.selectItem(project)
