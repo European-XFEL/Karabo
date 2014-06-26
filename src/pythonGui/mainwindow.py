@@ -240,22 +240,27 @@ class MainWindow(QMainWindow):
         self.signalQuitApplication.emit()
 
 
-    def _showStartPage(self, show):
+    def _showStartPage(self, show, loadDefaultProject=True):
         if show:
             if self.placeholderPanel is not None:
                 return
             
             # Close all projects
-            self.projectPanel.closeAllProjects()
-            # Add startup page
-            self.placeholderPanel = PlaceholderPanel()
-            self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+            # If this was successful, you can be sure that _showStartPage
+            # was already called - no need to do it again ;)
+            projectsToClose = self.projectPanel.closeAllProjects()
+            # if no projects available to close, placeholderPanel was not yet set
+            if not projectsToClose:
+                # Add startup page
+                self.placeholderPanel = PlaceholderPanel()
+                self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
         else:
             # Remove startup page
             self.middleTab.removeDockableTab(self.placeholderPanel)
             self.placeholderPanel = None
-            # Setup default project
-            self.projectPanel.setupDefaultProject()
+            if loadDefaultProject:
+                # Setup default project
+                self.projectPanel.setupDefaultProject()
 
 
 ### virtual functions ###
@@ -284,6 +289,9 @@ class MainWindow(QMainWindow):
 
 
     def onAddScene(self, scene):
+        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
+            self._showStartPage(False, False)
+        
         customView = self._createCustomMiddlePanel(scene)
         self.middleTab.addDockableTab(customView, scene.filename)
         if self.middleTab.count()-1 > 0:
@@ -296,6 +304,10 @@ class MainWindow(QMainWindow):
             if divWidget.dockableWidget.scene == scene:
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
                 break
+        
+        # If tabwidget is empty - show start page instead
+        if self.middleTab.count() < 1:
+            self._showStartPage(True)
 
 
     def onChangeAccessLevel(self, action):
