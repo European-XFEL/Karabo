@@ -13,8 +13,6 @@ __all__ = ["ParameterTreeWidget"]
 
 from components import EditableApplyLaterComponent
 import globals
-from karabo.hash import Hash
-from manager import Manager
 from network import Network
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
