@@ -485,23 +485,13 @@ class ProxyWidget(QWidget):
 
     def element(self):
         g = self.geometry()
-        d = { "x": g.x(), "y": g.y(), "width": g.width(), "height": g.height() }
-        if self.component is None:
-            w = self.widget
-            d[ns_karabo + "class"] = "Label"
-            d[ns_karabo + "text"] = w.text()
-            d[ns_karabo + "font"] = w.font().toString()
-            d[ns_karabo + "foreground"] = "#{:06x}".format(
-                w.palette().color(QPalette.Foreground).rgb() & 0xffffff)
-            if w.autoFillBackground():
-                d[ns_karabo + "background"] = "#{:06x}".format(
-                    w.palette().color(QPalette.Background).rgb() & 0xffffff)
-            if w.frameShape() == QFrame.Box:
-                d[ns_karabo + 'frameWidth'] = unicode(w.lineWidth())
+        d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
         ret = ElementTree.Element(ns_svg + "rect",
                                   {k: unicode(v) for k, v in d.iteritems()})
         if self.component is not None:
             self.component.save(ret)
+        else:
+            self.widget.save(ret)
         return ret
 
 
