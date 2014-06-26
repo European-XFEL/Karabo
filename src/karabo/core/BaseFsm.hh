@@ -39,6 +39,8 @@ namespace karabo {
             
             KARABO_FSM_ON_NO_STATE_TRANSITION(onNoStateTransition);
 
+            virtual void preStartFsm() {}
+            
             virtual void startFsm() {}
 
             FsmWorker& getWorker() {
