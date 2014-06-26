@@ -20,7 +20,8 @@ from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 
 from PyQt4.QtCore import pyqtSignal, Qt, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QMenu, QPushButton,
+from PyQt4.QtGui import (QAction, QHBoxLayout, QIcon, QLabel, QMenu, 
+                         QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
@@ -78,6 +79,17 @@ class ConfigurationPanel(QWidget):
         twInitalParameterEditorPage = ParameterTreeWidget()
         twInitalParameterEditorPage.setHeaderLabels(["Parameter", "Value"])
         self.__swParameterEditor.addWidget(twInitalParameterEditorPage)
+        
+        # Wait page
+        waitWidget = QLabel()
+        waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        waitWidget.setAutoFillBackground(True)
+        waitWidget.setBackgroundRole(QPalette.Base)
+        movie = QMovie(":wait")
+        waitWidget.setMovie(movie)
+        movie.start()
+        self.__swParameterEditor.addWidget(waitWidget)
+        
         self.prevConfiguration = None
 
         topWidget = QWidget(mainSplitter)
@@ -471,7 +483,11 @@ class ConfigurationPanel(QWidget):
         else:
             if not hasattr(configuration, 'index'):
                 configuration.index = self._createNewParameterPage(configuration)
-            self._setParameterEditorIndex(configuration.index)
+                index = 1
+            else:
+                index = configuration.index
+            # Show waiting page
+            self._setParameterEditorIndex(index)#configuration.index)
         
         if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
@@ -535,6 +551,10 @@ class ConfigurationPanel(QWidget):
             configuration.fillWidget(twParameterEditor)
         else:
             configuration.index = self._createNewParameterPage(configuration)
+        
+        if self.__swParameterEditor.currentIndex() == 1:
+            # Waiting page is shown
+            self._setParameterEditorIndex(configuration.index)
         
         if (self.__swParameterEditor.currentIndex() == configuration.index) and \
            (configuration.descriptor is not None):
