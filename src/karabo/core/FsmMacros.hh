@@ -163,45 +163,12 @@ namespace karabo {
 
 // Getting State pointer to the state in deeply nested state machines...
 #define KARABO_FSM_DECLARE_GETFSM(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; }
-
-// On top level we have state "A" we are interested in. "a" will be a pointer to "A"
-#define KARABO_FSM_GET_STATE_PTR(A, a) A* a; \
-    { a = getFsm()->get_state<A*>(); }
-
-// "A" has state "B" we are interested in. "b" will be a pointer to "B"
-#define KARABO_FSM_GET_STATE_PTR2(A, B, b)  B* b; \
-    { A* A##_ptr = getFsm()->get_state<A*>(); \
-    b = A##_ptr->get_state<B*>(); }
-
-// "A" has subfsm "B". "B" has state "C" we are interested in. "c" will be a pointer to "C"
-#define KARABO_FSM_GET_STATE_PTR3(A, B, C, c) C* c; \
-    { A* A##_ptr = getFsm()->get_state<A*>(); \
-    B* B##_ptr = A##_ptr->get_state<B*>(); \
-    c = B##_ptr->get_state<C*>(); }
-
-// "A" has subfsm "B". "B" has subfsm "C", "C" has state D we are interested in, "d" will be a pointer to "D"
-#define KARABO_FSM_GET_STATE_PTR4(A, B, C, D, d) D* d; \
-    { A* A##_ptr = getFsm()->get_state<A*>(); \
-    B* B##_ptr = A##_ptr->get_state<B*>(); \
-    C* C##_ptr = B##_ptr->get_state<C*>(); \
-    d = C##_ptr->get_state<D*>(); }
-
-// "A" has subfsm "B". "B" has subfsm "C", "C" has subfsm "D", "D" has state "E" we are interested in, "e" will be a pointer to "E"
-#define KARABO_FSM_GET_STATE_PTR5(A, B, C, D, E, e) E* e; \
-    { A* A##_ptr = getFsm()->get_state<A*>(); \
-    B* B##_ptr = A##_ptr->get_state<B*>(); \
-    C* C##_ptr = B##_ptr->get_state<C*>(); \
-    D* D##_ptr = C##_ptr->get_state<D*>(); \
-    e = D##_ptr->get_state<E*>(); }
-
-// "A" has subfsm "B". "B" has subfsm "C", "C" has subfsm "D", "D" has subfsm "E", "E" has state "F" we are interested in, "f" will be a pointer to "F"
-#define KARABO_FSM_GET_STATE_PTR6(A, B, C, D, E, F, f) F* f; \
-    { A* A##_ptr = getFsm()->get_state<A*>(); \
-    B* B##_ptr = A##_ptr->get_state<B*>(); \
-    C* C##_ptr = B##_ptr->get_state<C*>(); \
-    D* D##_ptr = C##_ptr->get_state<D*>(); \
-    E* E##_ptr = D##_ptr->get_state<E*>(); \
-    f = E##_ptr->get_state<F*>(); }
+#define KARABO_FSM_GET_STATE_PTR(A) getFsm()->get_state<A*>()
+#define KARABO_FSM_GET_STATE_PTR2(A, B) getFsm()->get_state<A*>()->get_state<B*>()
+#define KARABO_FSM_GET_STATE_PTR3(A, B, C) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()
+#define KARABO_FSM_GET_STATE_PTR4(A, B, C, D) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()get_state<D*>()
+#define KARABO_FSM_GET_STATE_PTR5(A, B, C, D, E) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()
+#define KARABO_FSM_GET_STATE_PTR6(A, B, C, D, E, F) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()->get_state<F*>()
         
 // Produces a static function that calls errorFunction of the state machine's context
 #define KARABO_FSM_ON_EXCEPTION(errorFunction) \
