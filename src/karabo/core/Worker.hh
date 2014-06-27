@@ -15,7 +15,7 @@
 
 namespace karabo {
     namespace core {
-        
+
         /**
          * WorkerBase class contains one queue: <b>request</b> and can start auxiliary thread
          * that will run on opposite end of the queue:
@@ -25,12 +25,12 @@ namespace karabo {
         template <typename T>
         class Worker {
         public:
-            
+
             Worker()
             : m_callback()
             , m_timeout(-1)
             , m_repetition(-1)
-            , m_running(true)
+            , m_running(false)
             , m_abort(false)
             , m_request()
             , m_thread()
@@ -38,6 +38,7 @@ namespace karabo {
             , m_condRequest()
             , m_mutexPrint() {
             }
+
             /**
              * Construct worker with callback and time and repetition parameters
              * @param callback this function will be called periodically
@@ -48,7 +49,7 @@ namespace karabo {
             : m_callback(callback)
             , m_timeout(timeout)
             , m_repetition(repetition)
-            , m_running(true)
+            , m_running(false)
             , m_abort(false)
             , m_request()
             , m_thread()
@@ -72,7 +73,7 @@ namespace karabo {
                 m_repetition = repetition;
                 return *this;
             }
-            
+
             /**
              * Starts auxiliary thread that works on far ends of the queues
              * Default settings are "waiting forever" and "repeat forever"
@@ -101,9 +102,16 @@ namespace karabo {
              * This function stops thread immediately despite the fact like nonempty queue.
              */
             Worker& abort() {
-                m_abort = true;
-                m_condRequest.notify_all();
+                if (!m_abort) {
+                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    m_abort = true;
+                    m_condRequest.notify_all();
+                }
                 return *this;
+            }
+
+            bool is_running() {
+                return m_running;
             }
 
             /**
@@ -124,7 +132,7 @@ namespace karabo {
                     m_condRequest.notify_all();
                 }
             }
-            
+
             virtual bool cond(const T& t) = 0;
 
         private:
@@ -165,21 +173,25 @@ namespace karabo {
                     if (repetition > 0)
                         repetition--;
                 }
+                if (m_running) {
+                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    m_running = false;
+                }
             }
 
         private:
-            boost::function<void()> m_callback;         // this callback defined once in constructor
-            int m_timeout;                              // timeout (milliseconds), 0 = nowait, -1 = wait forever
-            int m_repetition;                           // number of periodic cycles, <0 = no limit
-            bool m_running;                             // "running" flag, mostly is true
-            bool m_abort;                               // "abort" flag, mostli is false
-            std::queue<T> m_request;                    // request queue
-            boost::thread m_thread;                     // auxiliary thread
-            boost::mutex m_mutexRequest;                // mutex of request queue
-            boost::condition_variable m_condRequest;    // condition variable of the request queue
-            boost::mutex m_mutexPrint;                  // mutex guarding the cout stream
+            boost::function<void() > m_callback; // this callback defined once in constructor
+            int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
+            int m_repetition; // number of periodic cycles, <0 = no limit
+            bool m_running; // "running" flag
+            bool m_abort; // "abort" flag
+            std::queue<T> m_request; // request queue
+            boost::thread m_thread; // auxiliary thread
+            boost::mutex m_mutexRequest; // mutex of request queue
+            boost::condition_variable m_condRequest; // condition variable of the request queue
+            boost::mutex m_mutexPrint; // mutex guarding the cout stream
         };
-        
+
         struct FsmWorker : public Worker<bool> {
 
             FsmWorker() : Worker<bool>() {
@@ -192,11 +204,11 @@ namespace karabo {
             virtual ~FsmWorker() {
                 abort().join();
             }
-            
+
             bool cond(const bool& data) {
                 return data;
             }
-        };        
+        };
     }
 }
 
