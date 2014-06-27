@@ -784,8 +784,8 @@ namespace karabo {
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
                 preDestruction(); // Give devices a chance to react
-                if (getWorker().is_running()) {
-                    getWorker().abort().join();
+                if (this->getWorker().is_running()) {
+                    this->getWorker().abort().join();
                 }
                 stopEventLoop();
             }
