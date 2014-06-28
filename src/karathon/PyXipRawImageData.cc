@@ -102,7 +102,6 @@ void exportPyXipRawImageData() {
             .def("getSize", &RawImageDataWrap::getSize)
             .def("getByteSize", &RawImageDataWrap::getByteSize)
             .def("getDimensions", &RawImageDataWrap::getDimensionsPy)
-            .def("setDimensions", &RawImageDataWrap::setDimensionsPy, (bp::arg("numpy_array")))
             .def("getROIOffsets", &RawImageDataWrap::getROIOffsetsPy)
             .def("setROIOffsets", &RawImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
             .def("getEncoding", &RawImageDataWrap::getEncoding)
