@@ -162,13 +162,14 @@ namespace karabo {
 #define KARABO_FSM_SET_CONTEXT_SUB3(context, fsmInstance, SubFsm1, SubFsm2, SubFsm3) fsmInstance->get_state<SubFsm1* >()->get_state<SubFsm2* >()->get_state<SubFsm3* >()->setContext(context);
 
 // Getting State pointer to the state in deeply nested state machines...
-#define KARABO_FSM_DECLARE_GETFSM(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; }
-#define KARABO_FSM_GET_STATE_PTR(A) getFsm()->get_state<A*>()
-#define KARABO_FSM_GET_STATE_PTR2(A, B) getFsm()->get_state<A*>()->get_state<B*>()
-#define KARABO_FSM_GET_STATE_PTR3(A, B, C) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()
-#define KARABO_FSM_GET_STATE_PTR4(A, B, C, D) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()get_state<D*>()
-#define KARABO_FSM_GET_STATE_PTR5(A, B, C, D, E) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()
-#define KARABO_FSM_GET_STATE_PTR6(A, B, C, D, E, F) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()->get_state<F*>()
+#define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; }
+#define KARABO_FSM_GET0() getFsm() 
+#define KARABO_FSM_GET1(A) getFsm()->get_state<A*>()
+#define KARABO_FSM_GET2(A, B) getFsm()->get_state<A*>()->get_state<B*>()
+#define KARABO_FSM_GET3(A, B, C) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()
+#define KARABO_FSM_GET4(A, B, C, D) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()get_state<D*>()
+#define KARABO_FSM_GET5(A, B, C, D, E) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()
+#define KARABO_FSM_GET6(A, B, C, D, E, F) getFsm()->get_state<A*>()->get_state<B*>()->get_state<C*>()->get_state<D*>()->get_state<E*>()->get_state<F*>()
         
 // Produces a static function that calls errorFunction of the state machine's context
 #define KARABO_FSM_ON_EXCEPTION(errorFunction) \
