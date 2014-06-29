@@ -171,7 +171,7 @@ namespace karabo {
 #define KARABO_FSM_GET4(A,B,C,D)      KARABO_FSM_GET3(A,B,C)->get_state<D*>()
 #define KARABO_FSM_GET5(A,B,C,D,E)    KARABO_FSM_GET4(A,B,C,D)->get_state<E*>()
 #define KARABO_FSM_GET6(A,B,C,D,E,F)  KARABO_FSM_GET5(A,B,C,D,E)->get_state<F*>() 
-#define KARABO_FSM_GET(n,args...) KARABO_FSM_GET ## n(args)
+#define KARABO_FSM_GET(n,...) KARABO_FSM_GET ## n(__VA_ARGS__)
 
 // Produces a static function that calls errorFunction of the state machine's context
 #define KARABO_FSM_ON_EXCEPTION(errorFunction) \
