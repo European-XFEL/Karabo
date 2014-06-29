@@ -22,6 +22,8 @@
 #include <boost/msm/front/euml/operator.hpp>
 // for func_state and func_state_machine
 #include <boost/msm/front/euml/state_grammar.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/arithmetic/sub.hpp>
 
 #include <karabo/log/Logger.hh>
 
@@ -170,8 +172,12 @@ namespace karabo {
 #define KARABO_FSM_GET3(A,B,C)        KARABO_FSM_GET2(A,B)->get_state<C*>()
 #define KARABO_FSM_GET4(A,B,C,D)      KARABO_FSM_GET3(A,B,C)->get_state<D*>()
 #define KARABO_FSM_GET5(A,B,C,D,E)    KARABO_FSM_GET4(A,B,C,D)->get_state<E*>()
-#define KARABO_FSM_GET6(A,B,C,D,E,F)  KARABO_FSM_GET5(A,B,C,D,E)->get_state<F*>() 
-#define KARABO_FSM_GET(n,...) KARABO_FSM_GET ## n(__VA_ARGS__)
+#define KARABO_FSM_GET6(A,B,C,D,E,F)  KARABO_FSM_GET5(A,B,C,D,E)->get_state<F*>()
+
+#define KARABO_FSM_GETN(n,...) KARABO_FSM_GET ## n(__VA_ARGS__)
+#define KARABO_FSM_VSIZE(...) BOOST_PP_SUB(KARABO_FSM_VSIZE_I(e0,##__VA_ARGS__,10,9,8,7,6,5,4,3,2,1),1) 
+#define KARABO_FSM_VSIZE_I(e1,e2,e3,e4,e5,e6,e7,e8,e9,e10,N,...) N
+#define KARABO_FSM_GET(...) BOOST_PP_CAT(KARABO_FSM_GET,KARABO_FSM_VSIZE(__VA_ARGS__))(__VA_ARGS__)
 
 // Produces a static function that calls errorFunction of the state machine's context
 #define KARABO_FSM_ON_EXCEPTION(errorFunction) \
