@@ -422,7 +422,7 @@ class _Manager(QObject):
             
             # Remove device from systemHash
             path = "device." + instanceId
-            if path in self.systemHash:
+            if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
         elif instanceType == "server":
             # Update system topology
@@ -431,10 +431,11 @@ class _Manager(QObject):
             
             # Remove server from systemHash
             path = "server." + instanceId
-            if path in self.systemHash:
+            if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
-                for v in self.deviceData.itervalues():
-                    v.updateStatus()
+            
+            for v in self.deviceData.itervalues():
+                v.updateStatus()
 
             # Clear corresponding parameter pages
             self.projectTopology.clearParameterPages(serverClassIds)
