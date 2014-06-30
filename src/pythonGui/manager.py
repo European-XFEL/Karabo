@@ -383,9 +383,10 @@ class _Manager(QObject):
         # Update system topology with new configuration
         self._handleSystemTopology(config)
         
-        # Request schema for already viewed classes
-        for k in self.serverClassData.keys():
-            getClass(k[0], k[1])
+        if config.has("server"):
+            # Request schema for already viewed classes, if a server is new
+            for k in self.serverClassData.keys():
+                getClass(k[0], k[1])
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
