@@ -48,8 +48,14 @@ namespace karathon {
             char* data = PyByteArray_AsString(obj.ptr());
 
             setData(data, size, copy);
-            if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
-            else setDimensions(dimensions);
+            if (dimensions.size() == 0) {
+                setDimensions(karabo::util::Dims(size));
+                setROIOffsets(karabo::util::Dims(0));
+            } else {
+                setDimensions(dimensions);
+                std::vector<unsigned long long> offsets(dimensions.rank(), 0);
+                setROIOffsets(karabo::util::Dims(offsets));
+            }
             setEncoding(encoding);
             if (channelSpace == karabo::xip::ChannelSpace::UNDEFINED) setChannelSpace(channelSpace);
             else setChannelSpace(channelSpace);
@@ -80,7 +86,7 @@ namespace karathon {
             for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
             karabo::util::Dims dimensions;
             dimensions.fromVector(tmp);
-
+         
             // ChannelSpace
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             karabo::xip::ChannelSpaceType channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
@@ -90,8 +96,14 @@ namespace karathon {
             // We need to fix the type here
             m_hash.set("type", karabo::util::Types::convert<FromNumpy, karabo::util::ToLiteral>(dtype->type_num));
 
-            if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
-            else setDimensions(dimensions);
+            if (dimensions.size() == 0) {
+                setDimensions(karabo::util::Dims(size));
+                setROIOffsets(karabo::util::Dims(0));
+            } else {
+                setDimensions(dimensions);
+                std::vector<unsigned long long> offsets(dimensions.rank(), 0);
+                setROIOffsets(karabo::util::Dims(offsets));
+            }
             setEncoding(encoding);
             if (channelSpace == karabo::xip::ChannelSpace::UNDEFINED) setChannelSpace(channelSpace);
             else setChannelSpace(channelSpace);
