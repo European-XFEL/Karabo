@@ -52,7 +52,7 @@ class Box(QObject):
         self._descriptor = descriptor
         self.configuration = configuration
         self.timestamp = None
-        self._value = Dummy(path, configuration)
+        self._value = Dummy()
         self.initialized = False
         self.current = None # Support for choice of nodes
 
@@ -112,7 +112,7 @@ class Box(QObject):
 
         return (self.descriptor is None or
                 self.descriptor.allowedStates is None or
-                self.configuration.value.state.value in
+                self.configuration.value.state in
                     self.descriptor.allowedStates)
 
 
@@ -122,6 +122,33 @@ class Box(QObject):
 
     def __str__(self):
         return "<{} {}>".format(type(self).__name__, self.key())
+
+
+    @property
+    def boxvalue(self):
+        """ don't get the actual value of a box, but a proxy to get the
+        sub-boxes of a value """
+        r = _BoxValue()
+        r.__dict__["__box__"] = self
+        return r
+
+
+class _BoxValue(object):
+    def __getattr__(self, attr):
+        try:
+            return self.__box__.value.__dict__[attr]
+        except KeyError:
+            if isinstance(self.__box__.value, Dummy):
+                r = Box(self.__box__.path + (unicode(attr),), None,
+                        self.__box__.configuration)
+                self.__box__.value.__dict__[attr] = r
+                return r
+            else:
+                raise AttributeError(attr)
+
+
+    def __setattr__(self, attr, value):
+        self.value.__dict__[attr] = value
 
 
 class Descriptor(hashtypes.Descriptor):
@@ -136,6 +163,14 @@ class Descriptor(hashtypes.Descriptor):
         item.requiredAccessLevel = self.requiredAccessLevel
         item.displayText = self.displayedName
         item.allowedStates = self.allowedStates
+
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.key].value
+
+
+    def __set__(self, instance, value):
+        instance.__dict__[self.key].set(value)
 
 
 class Type(hashtypes.Type):
@@ -183,13 +218,16 @@ class Type(hashtypes.Type):
 
     def redummy(self, box):
         """ remove all values from box """
-        box._value = Dummy(box.path, box.configuration)
+        box._value = Dummy()
         box.initialized = False
         box.descriptor = None
 
 
     def dummyCast(self, box):
-        """dummy-aware casting of box"""
+        """dummy-aware casting of box
+
+        if the box has a value, cast it to our type, if it has not,
+        just leave it as is."""
         if box.hasValue():
             return self.cast(box.value)
         else:
@@ -255,7 +293,7 @@ class Object(object):
     def __init__(self, box):
         for k, v in type(self).__dict__.iteritems():
             if isinstance(v, hashtypes.Descriptor):
-                b = getattr(box.value, k, None)
+                b = getattr(box.boxvalue, k, None)
                 if b is None:
                     b = Box(box.path + (k,), v, box.configuration)
                 else:
@@ -263,23 +301,12 @@ class Object(object):
                 self.__dict__[k] = b
 
 
-    def __setattr__(self, box, value):
-        getattr(self, box).set(value)
-
-
 class Dummy(object):
     """this class represents a not-yet-loaded value.
     it seems to contain all possible attributes, as we don't know yet
-    which attributes might come..."""
-    def __init__(self, path, configuration):
-        self._path = path
-        self._configuration = configuration
+    which attributes might come...
 
-
-    def __getattr__(self, attr):
-        r = Box(self._path + (unicode(attr),), None, self._configuration)
-        setattr(self, attr, r)
-        return r
+    All the actual functionality is done in Box."""
 
 
 class Schema(hashtypes.Descriptor):
@@ -327,6 +354,7 @@ class Schema(hashtypes.Descriptor):
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
         ret.displayedName = key
+        ret.key = key
         Schema.parseAttrs(ret, attrs, parent)
         if ret.options is not None:
             ret.classAlias = "Selection Field"
@@ -348,7 +376,7 @@ class Schema(hashtypes.Descriptor):
         for k, v in self.dict.iteritems():
             if isinstance(v, hashtypes.Descriptor):
                 try:
-                    c = getattr(box.value, k)
+                    c = getattr(box.boxvalue, k)
                 except AttributeError:
                     print 'missing {} in {}'.format(k, box.value)
                 else:
@@ -384,7 +412,7 @@ class Schema(hashtypes.Descriptor):
     def toHash(self, box):
         ret = Hash()
         for k in self.dict:
-            v = getattr(box.value, k, None)
+            v = getattr(box.boxvalue, k, None)
             if v is None:
                 continue
             if v.hasValue():
@@ -395,7 +423,7 @@ class Schema(hashtypes.Descriptor):
     def fromHash(self, box, value, timestamp=None):
         for k, v, a in value.iterall():
             try:
-                vv = getattr(box._value, k)
+                vv = getattr(box.boxvalue, k)
             except AttributeError:
                 continue
             try:
@@ -414,20 +442,20 @@ class Schema(hashtypes.Descriptor):
 
     def dispatchUserChanges(self, box, hash):
         for k, v in hash.iteritems():
-            getattr(box._value, k).dispatchUserChanges(v)
+            getattr(box.boxvalue, k).dispatchUserChanges(v)
 
 
     def setDefault(self, box):
         box._value = self.getClass()(box)
         for k, v in self.dict.iteritems():
-            getattr(box.value, k).setDefault()
+            getattr(box.boxvalue, k).setDefault()
         box._set(box._value, None)
 
 
     def redummy(self, box):
-        d = Dummy(box.path, box.configuration)
+        d = Dummy()
         for k, v in self.dict.iteritems():
-            b = getattr(box.value, k)
+            b = getattr(box.boxvalue, k)
             if b is not None and b.descriptor is not None:
                 b.redummy()
                 setattr(d, k, b)
@@ -577,6 +605,6 @@ class ListOfNodes(hashtypes.Descriptor):
 
 
     def redummy(self, box):
-        box._value = Dummy(box.path, box.configuration)
+        box._value = Dummy()
         box.initialized = False
         box.descriptor = None
