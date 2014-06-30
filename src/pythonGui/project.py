@@ -321,10 +321,7 @@ class ProjectConfiguration(object):
         # Reference to the project this scene belongs to
         self.project = project
 
-        self.filename = name
-        fi = QFileInfo(self.filename)
-        if len(fi.suffix()) < 1:
-            self.filename = "{}.xml".format(self.filename)
+        self.filename = "{}.xml".format(name)
         
         self.hash = hash
 
