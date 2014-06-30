@@ -524,6 +524,9 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
+        if device.descriptor is None:
+            return
+        
         if device.isOnline():
             if device.ifexists == "ignore":
                 return
