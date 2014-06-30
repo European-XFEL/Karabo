@@ -462,8 +462,9 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.value.state.signalUpdateComponent.connect(self._triggerStateChange)
-        
+        conf.boxvalue.state.signalUpdateComponent.connect(
+            self._triggerStateChange)
+
         self.onShowConfiguration(conf)
 
 

@@ -110,7 +110,7 @@ class Configuration(Box):
     def getBox(self, path):
         box = self
         for p in path:
-            box = getattr(box.value, p)
+            box = getattr(box.boxvalue, p)
         return box
 
 
