@@ -54,7 +54,7 @@ namespace karabo {
                     setROIOffsets(karabo::util::Dims(0));
                 } else {
                     setDimensions(dimensions);
-                    std::vector<unsigned long long> offsets(dimensions.size(), 0);
+                    std::vector<unsigned long long> offsets(dimensions.rank(), 0);
                     setROIOffsets(karabo::util::Dims(offsets));
                 }
                 setEncoding(encoding);
