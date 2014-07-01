@@ -14,30 +14,32 @@
 
 #include "Device.hh"
 
+
+#include <boost/thread/future.hpp>
+#include <boost/atomic.hpp>
+
 namespace karabo {
     namespace core {
 
         class ComputeDevice : public Device<> {
 
-            bool m_isAborted;
+            boost::atomic<bool> m_isAborted;
             bool m_isEndOfStream;
-            bool m_deviceIsDead;
+            boost::atomic<bool> m_deviceIsDead;
+            bool m_isPaused;
             unsigned int m_nEndOfStreams;
             unsigned int m_iterationCount;
             
             boost::thread m_computeThread;
-            boost::thread m_waitingIOThread;
             boost::mutex m_computeMutex;
-            boost::mutex m_waitingIOMutex;
-            boost::mutex m_abortMutex;
             boost::condition_variable m_computeCond;
-            boost::condition_variable m_waitingIOCond;
-            boost::condition_variable m_abortCond;
-           
+
+            boost::promise<bool> m_workIsFinished;
+            
 
         public:
 
-            KARABO_CLASSINFO(ComputeDevice, "ComputeDevice", "1.0")
+            KARABO_CLASSINFO(ComputeDevice, "ComputeDevice", "1.2")
             
             #define KARABO_INPUT_CHANNEL(type, name, configuration) this->createInputChannel<type>(name, configuration, boost::bind(&karabo::core::ComputeDevice::_onInputAvailable, this, _1), boost::bind(&karabo::core::ComputeDevice::_onEndOfStream, this) );
             #define KARABO_OUTPUT_CHANNEL(type, name, configuration) this->createOutputChannel<type>(name, configuration);
@@ -50,6 +52,7 @@ namespace karabo {
             
             /**
              * Put your specific algorithms here
+             * 
              */
             virtual void compute() = 0;
             
@@ -110,13 +113,13 @@ namespace karabo {
 
             KARABO_FSM_STATE_V_EE(Computing, computingStateOnEntry, computingStateOnExit)
 
-            KARABO_FSM_STATE_V_EE(WaitingIO, waitingIOOnEntry, waitingIOOnExit)
+            //KARABO_FSM_STATE_V_EE(WaitingIO, waitingIOOnEntry, waitingIOOnExit)
 
-            KARABO_FSM_STATE(Paused)
+            KARABO_FSM_STATE_V_EE(Paused, pausedStateOnEntry, pausedStateOnExit)
 
             KARABO_FSM_STATE_V_EE(Finished, finishedOnEntry, finishedOnExit)
 
-            KARABO_FSM_STATE_V_E(Aborted, abortedOnEntry)
+            KARABO_FSM_STATE_V_EE(Aborted, abortedOnEntry, abortedOnExit)
             
             /**************************************************************/
             /*                    Transition Actions                      */
@@ -136,11 +139,13 @@ namespace karabo {
             /*                           Guards                           */
             /**************************************************************/
 
-            KARABO_FSM_V_GUARD0(CanCompute, canCompute)
+            //KARABO_FSM_V_GUARD0(CanCompute, canCompute)
             
             KARABO_FSM_V_GUARD0(AbortGuard, registerAbort)
             
             KARABO_FSM_V_GUARD0(PauseGuard, registerPause)
+            
+            KARABO_FSM_V_GUARD0(PauseEndOfStreamGuard, checkPauseEOSAllowed)
             
             /**************************************************************/
             /*                      AllOkState Machine                    */
@@ -149,17 +154,19 @@ namespace karabo {
             //  Source-State      Event    Target-State    Action     Guard
             KARABO_FSM_TABLE_BEGIN(TransitionTable)
             Row< ConnectingIO, none, Ready, ConnectAction, none >,
-            Row< Ready, StartEvent, Computing, none, CanCompute >,
+            Row< Ready, StartEvent, Computing, none, none >,
             Row< Ready, PauseEvent, Paused, none, none >,
-            Row< Ready, AbortEvent, Aborted, none, none >,
-            Row< Ready, EndOfStreamEvent, Finished, EndOfStreamAction, none >,
-            Row< Paused, ResetEvent, Ready, none, CanCompute >,
-            Row< Computing, ComputeFinishedEvent, WaitingIO, none, none >,
+            //Row< Ready, AbortEvent, Aborted, none, none >,
+            Row< Paused, StartEvent, Computing, none, none >,
+            Row< Paused, EndOfStreamEvent, Finished, EndOfStreamAction, PauseEndOfStreamGuard>,
+            Row< Computing, EndOfStreamEvent, Finished, EndOfStreamAction, none >,
+            Row< Computing, ComputeFinishedEvent, Finished, none, none >,
             Row< Computing, AbortEvent, Aborted, none, AbortGuard >,
             Row< Computing, PauseEvent, Paused, none, PauseGuard >,
-            Row< WaitingIO, UpdatedIOEvent, Ready, none, none >,
-            Row< Aborted, ResetEvent, Ready, none, none >,
-            Row< Finished, ResetEvent, Ready, none, none >,
+            //Row< WaitingIO, UpdatedIOEvent, Ready, none, none >,
+            Row< Aborted, ResetEvent, Paused, none, none >,
+            Row< Finished, ResetEvent, Paused, none, none >,
+            Row< Finished, EndOfStreamEvent, Finished, EndOfStreamAction, none >,
             Row< Finished, StartEvent, Computing, NextIterationAction, none>,
             Row< Ok, ErrorFoundEvent, Error, ErrorFoundAction, none >,
             Row< Error, ResetEvent, Ok, ResetAction, none >
@@ -180,10 +187,14 @@ namespace karabo {
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
             
             void doCompute();
-            void doWait();
+            bool canCompute();
+            //void doWait();
 
             void setDeviceDead();
             void setComputationAborted();
+            
+            void preReconfigure(karabo::util::Hash& incomingReconfiguration);
+            bool checkAutoComputeValidity(const bool & requestedValue);
         };
     }
 }

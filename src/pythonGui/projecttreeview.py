@@ -74,7 +74,7 @@ class ProjectTreeView(QTreeView):
 
 
     def closeAllProjects(self):
-        self.model().closeAllProjects()
+        return self.model().closeAllProjects()
 
     
     def getProjectDir(self):

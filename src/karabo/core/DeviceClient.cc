@@ -54,7 +54,6 @@ namespace karabo {
 
         void DeviceClient::setupSlots() {
             m_signalSlotable->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
@@ -169,9 +168,11 @@ namespace karabo {
                 notifyDeviceChangedMonitors(hash, instanceId);
                 notifyPropertyChangedMonitors(hash, instanceId);
             } else {
+                m_runtimeSystemDescription.set("device." + instanceId + ".configuration", hash);
                 m_runtimeSystemDescriptionMutex.unlock();
+                notifyDeviceChangedMonitors(hash, instanceId);
+                notifyPropertyChangedMonitors(hash, instanceId);
             }
-
         }
 
 
@@ -260,23 +261,9 @@ namespace karabo {
             }
             string path = prepareTopologyPath(instanceId, instanceInfo);
             eraseFromRuntimeSystemDescription(path);
-            disconnect(instanceId);            
+            disconnect(instanceId);
             if (m_masterMode != HAS_MASTER) m_signalSlotable->stopTrackingExistenceOfInstance(instanceId);
             if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
-        }
-
-
-        void DeviceClient::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
-            {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                string path("device." + deviceId + ".fullSchema");
-                boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
-                if (node) node->setValue(schema);
-
-                path = "device." + deviceId + ".activeSchema";
-                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
-            }
-            if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(schema, deviceId);
         }
 
 
@@ -447,6 +434,37 @@ namespace karabo {
         }
 
 
+        karabo::util::Schema DeviceClient::getDeviceSchemaNoWait(const std::string& instanceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::string path("device." + instanceId + ".fullSchema");
+            const boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (!node) { // Not found, request it
+                m_signalSlotable->call(instanceId, "slotGetSchema", false);
+                return Schema();
+            }
+            return node->getValue<Schema>();
+        }
+
+
+        void DeviceClient::slotSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Hash& configuration, const std::string& deviceId) {
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated";
+                string path("device." + deviceId + ".fullSchema");
+                m_runtimeSystemDescription.set(path, schema);
+
+                path = "device." + deviceId + ".activeSchema";
+                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
+
+                if (m_runtimeSystemDescription.has("device." + deviceId + ".configuration")) {
+                    Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + deviceId + ".configuration");
+                    tmp.merge(configuration);
+                }
+            }
+            if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(deviceId, schema, configuration);
+        }
+
+
         karabo::util::Schema DeviceClient::getActiveSchema(const std::string& instanceId) {
             return cacheAndGetActiveSchema(instanceId);
         }
@@ -498,6 +516,30 @@ namespace karabo {
                 return m_runtimeSystemDescription.set(path, schema).getValue<Schema>();
             }
             return node->getValue<Schema>();
+        }
+
+
+        karabo::util::Schema DeviceClient::getClassSchemaNoWait(const std::string& serverId, const std::string& classId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::string path("server." + serverId + ".classes." + classId + ".description");
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            if (!node) { // Not found, request and cache it
+                // Request schema                
+                m_signalSlotable->call(serverId, "slotGetClassSchema", classId);
+                return Schema();
+            }
+            return node->getValue<Schema>();
+        }
+
+
+        void DeviceClient::slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId) {
+            {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated";
+                std::string path("server." + serverId + ".classes." + classId + ".description");
+                m_runtimeSystemDescription.set(path, schema);
+            }
+            if (m_classSchemaHandler) m_classSchemaHandler(serverId, classId, schema);
         }
 
 
@@ -714,10 +756,25 @@ namespace karabo {
         }
 
 
+        karabo::util::Hash DeviceClient::getConfigurationNoWait(const std::string& deviceId) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            std::string path("device." + deviceId + ".configuration");
+            boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
+            stayConnected(deviceId);
+            if (!node) { // Not found, request and cache              
+                m_signalSlotable->call(deviceId, "slotGetConfiguration");
+                return Hash();
+            }
+            stayConnected(deviceId);
+            return node->getValue<Hash>();
+        }
+
+
         std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
             return getPropertyHistory(deviceId, key, from, to, maxNumData);
         }
-        
+
+
         karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
             vector<Hash> result;
@@ -727,7 +784,7 @@ namespace karabo {
             return result;
         }
 
-        
+
         std::pair<karabo::util::Hash, karabo::util::Schema> DeviceClient::getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
             Hash hash;
             Schema schema;
@@ -735,7 +792,7 @@ namespace karabo {
             return make_pair(hash, schema);
         }
 
-            
+
         void DeviceClient::registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction) {
             m_instanceNewHandler = callBackFunction;
         }
@@ -752,16 +809,23 @@ namespace karabo {
 
 
         void DeviceClient::registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction) {
+            m_signalSlotable->registerSlot<Schema, Hash, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2, _3), "slotSchemaUpdated", SignalSlotable::GLOBAL);
             m_schemaUpdatedHandler = callBackFunction;
         }
 
 
-        void DeviceClient::registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
+        void DeviceClient::registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction) {
+            m_signalSlotable->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema", SignalSlotable::GLOBAL);
+            m_classSchemaHandler = callBackFunction;
+        }
+
+
+        void DeviceClient::registerDeviceMonitor(const std::string& deviceId, const boost::function<void (const std::string& /*deviceId*/, const karabo::util::Hash& /*config*/)> & callbackFunction) {
             boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            // Make sure we are caching this instanceId
-            this->cacheAndGetConfiguration(instanceId);
-            m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction);
-            immortalize(instanceId);
+            m_signalSlotable->call(deviceId, "slotGetConfiguration");
+            stayConnected(deviceId);
+            m_deviceChangedHandlers.set(deviceId + "._function", callbackFunction);
+            immortalize(deviceId);
         }
 
 

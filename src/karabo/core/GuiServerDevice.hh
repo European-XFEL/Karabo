@@ -102,8 +102,10 @@ namespace karabo {
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void deviceChangedHandler(const std::string& instanceId, const karabo::util::Hash& what);
+
+            void classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema);
             
-            void slotSchemaUpdated(const karabo::util::Schema& description, const std::string& deviceId);
+            void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema, const karabo::util::Hash& configuration);
 
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
 

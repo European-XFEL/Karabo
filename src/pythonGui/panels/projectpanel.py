@@ -95,7 +95,7 @@ class ProjectPanel(QWidget):
 
 
     def closeAllProjects(self):
-        self.twProject.closeAllProjects()
+        return self.twProject.closeAllProjects()
 
 
 ### slots ###

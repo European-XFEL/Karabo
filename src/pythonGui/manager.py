@@ -383,9 +383,10 @@ class _Manager(QObject):
         # Update system topology with new configuration
         self._handleSystemTopology(config)
         
-        # Request schema for already viewed classes
-        for k in self.serverClassData.keys():
-            getClass(k[0], k[1])
+        if config.has("server"):
+            # Request schema for already viewed classes, if a server is new
+            for k in self.serverClassData.keys():
+                getClass(k[0], k[1])
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -422,7 +423,7 @@ class _Manager(QObject):
             
             # Remove device from systemHash
             path = "device." + instanceId
-            if path in self.systemHash:
+            if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
         elif instanceType == "server":
             # Update system topology
@@ -431,10 +432,11 @@ class _Manager(QObject):
             
             # Remove server from systemHash
             path = "server." + instanceId
-            if path in self.systemHash:
+            if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
-                for v in self.deviceData.itervalues():
-                    v.updateStatus()
+            
+            for v in self.deviceData.itervalues():
+                v.updateStatus()
 
             # Clear corresponding parameter pages
             self.projectTopology.clearParameterPages(serverClassIds)
@@ -479,22 +481,18 @@ class _Manager(QObject):
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
-            self._triggerStateChange)
-
-        conf.fromHash(hash['configuration'])
-        if conf.status == "schema":
-            conf.status = "alive"
+            self._triggerStateChange)        
         
         self.onShowConfiguration(conf)
 
 
-    def handle_schemaUpdated(self, instanceInfo):
-        deviceId = instanceInfo.get("deviceId")
+    def handle_schemaUpdated(self, hash):
+        deviceId = hash.get("deviceId")
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
 
-        self.handle_deviceSchema(instanceInfo)
-        Network().onRefreshInstance(self.deviceData[deviceId])
+        self.handle_deviceSchema(hash)
+        #Network().onRefreshInstance(self.deviceData[deviceId])
 
 
     def handle_configurationChanged(self, instanceInfo):

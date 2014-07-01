@@ -319,7 +319,7 @@ namespace karabo {
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", boost::asio::ip::host_name());
             instanceInfo.set("visibility", m_visibility);
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 10, instanceInfo));
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 20, instanceInfo));
             this->startFsm();
             t.join();
             
@@ -332,8 +332,10 @@ namespace karabo {
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
+            SIGNAL3("signalClassSchema", karabo::util::Schema /*classSchema*/, string /*classId*/, string /*deviceId*/);
 
-            // Connect to global slot
+            // Connect to global slot(s))
+            connectN("", "signalClassSchema", "*", "slotClassSchema");
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
         }
 
@@ -542,6 +544,7 @@ namespace karabo {
 
         void DeviceServer::slotGetClassSchema(const std::string & classId) {
             Schema schema = BaseDevice::getSchema(classId);
+            emit("signalClassSchema", schema, classId, this->getInstanceId());
             reply(schema);
         }
 
