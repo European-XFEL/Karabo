@@ -378,7 +378,7 @@ _KARABO_FSM_GUARD_IMPL0(name, func) \
 virtual bool func();
 #define KARABO_FSM_VE_GUARD0(name, func) \
 _KARABO_FSM_GUARD_IMPL0(name, func) \
-virtual bool func() {}
+virtual bool func() {return true;}
 #define KARABO_FSM_PV_GUARD0(name, func) \
 _KARABO_FSM_GUARD_IMPL0(name, func) \
 virtual bool func() = 0;
@@ -403,7 +403,7 @@ _KARABO_FSM_GUARD_IMPL1(name, func, t1) \
 virtual bool func(const t1&);
 #define KARABO_FSM_VE_GUARD1(name, func, t1) \
 _KARABO_FSM_GUARD_IMPL1(name, func, t1) \
-virtual bool func(const t1&) {}
+virtual bool func(const t1&) {return true;}
 #define KARABO_FSM_PV_GUARD1(name, func, t1) \
 _KARABO_FSM_GUARD_IMPL1(name, func, t1) \
 virtual bool func(const t1&) = 0;
@@ -428,7 +428,7 @@ _KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
 virtual bool func(const t1&, const t2&);
 #define KARABO_FSM_VE_GUARD2(name, func, t1, t2) \
 _KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
-virtual bool func(const t1&, const t2&) {}
+virtual bool func(const t1&, const t2&) {return true;}
 #define KARABO_FSM_PV_GUARD2(name, func, t1, t2) \
 _KARABO_FSM_GUARD_IMPL2(name, func, t1, t2) \
 virtual bool func(const t1&, const t2&) = 0;
@@ -453,7 +453,7 @@ _KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
 virtual bool func(const t1&, const t2&, const t3&);
 #define KARABO_FSM_VE_GUARD3(name, func, t1, t2, t3) \
 _KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
-virtual bool func(const t1&, const t2&, const t3&) {}
+virtual bool func(const t1&, const t2&, const t3&) {return true;}
 #define KARABO_FSM_PV_GUARD3(name, func, t1, t2, t3) \
 _KARABO_FSM_GUARD_IMPL3(name, func, t1, t2, t3) \
 virtual bool func(const t1&, const t2&, const t3&) = 0;
@@ -478,7 +478,7 @@ _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
 virtual bool func(const t1&, const t2&, const t3&);
 #define KARABO_FSM_VE_GUARD4(name, func, a1, a2, a3, a4) \
 _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
-virtual bool func(const t1&, const t2&, const t3&) {}
+virtual bool func(const t1&, const t2&, const t3&) {return true;}
 #define KARABO_FSM_PV_GUARD4(name, func, a1, a2, a3, a4) \
 _KARABO_FSM_GUARD_IMPL4(name, func, t1, t2, t3, t4) \
 virtual bool func(const t1&, const t2&, const t3&);
@@ -776,7 +776,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
