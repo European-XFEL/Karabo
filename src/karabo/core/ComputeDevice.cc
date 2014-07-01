@@ -344,7 +344,7 @@ namespace karabo {
                 }
                 
                 m_workIsFinished.set_value(true);
-                //m_workingCond.notify_one();
+               
             }
         } catch (const karabo::util::Exception& e) {
             KARABO_LOG_ERROR << e;

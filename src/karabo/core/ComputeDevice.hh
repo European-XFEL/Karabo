@@ -31,15 +31,9 @@ namespace karabo {
             unsigned int m_iterationCount;
             
             boost::thread m_computeThread;
-            boost::thread m_waitingIOThread;
             boost::mutex m_computeMutex;
-            //boost::mutex m_waitingIOMutex;
-            boost::mutex m_workingMutex;
-            
             boost::condition_variable m_computeCond;
-            boost::condition_variable m_waitingIOCond;
-            boost::condition_variable m_workingCond;
-            
+
             boost::promise<bool> m_workIsFinished;
             
 
