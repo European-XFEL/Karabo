@@ -379,12 +379,15 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-
-                    KARABO_LOG_INFO << "Schema updated";
-                    // Notify the distributed system
-                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                   
                 }
+
                 set(validated);
+
+                KARABO_LOG_INFO << "Schema updated";
+
+                // Notify the distributed system
+                emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
             }
 
             /**
@@ -432,7 +435,7 @@ namespace karabo {
                 KARABO_LOG_INFO << "Schema updated";
 
                 // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
             }
 
             void setProgress(const int value, const std::string& associatedText = "") {
@@ -649,7 +652,7 @@ namespace karabo {
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
                 // TODO Make heartbeat configurable
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 10, instanceInfo));
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 20, instanceInfo));
 
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
@@ -691,24 +694,23 @@ namespace karabo {
             void initDeviceSlots() {
                 using namespace std;
 
-                SIGNAL2("signalChanged", karabo::util::Hash, string); // changeHash, instanceId
+                SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
                 connectN("", "signalChanged", "*", "slotChanged");
 
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 
-                SIGNAL4("signalNotification", string, string, string, string); // type, messageShort, messageDetail, deviceId
+                SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
                 connectN("", "signalNotification", "*", "slotNotification");
 
-                SIGNAL2("signalSchemaUpdated", karabo::util::Schema, string); // schema, deviceId
-                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
+                SIGNAL3("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");                               
 
                 SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 SLOT0(slotRefresh) // Deprecate
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
-                SLOT0(slotKillDevice)
-                        //SLOT2(errorFound, std::string, std::string);
+                SLOT0(slotKillDevice)                        
             }
 
             // TODO deprecate
@@ -719,6 +721,7 @@ namespace karabo {
             }
 
             void slotGetConfiguration() {
+                emit("signalChanged", m_parameters, m_deviceId);
                 reply(m_parameters);
             }
 
@@ -770,8 +773,11 @@ namespace karabo {
             void slotGetSchema(bool onlyCurrentState) {
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
-                    reply(getStateDependentSchema(currentState));
+                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);
+                    emit("signalSchemaUpdated", schema, m_parameters, m_deviceId);
+                    reply(schema);
                 } else {
+                    emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
                     reply(m_fullSchema);
                 }
             }

@@ -481,22 +481,18 @@ class _Manager(QObject):
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
-            self._triggerStateChange)
-
-        conf.fromHash(hash['configuration'])
-        if conf.status == "schema":
-            conf.status = "alive"
+            self._triggerStateChange)        
         
         self.onShowConfiguration(conf)
 
 
-    def handle_schemaUpdated(self, instanceInfo):
-        deviceId = instanceInfo.get("deviceId")
+    def handle_schemaUpdated(self, hash):
+        deviceId = hash.get("deviceId")
         if deviceId in self.deviceData:
             self.deviceData[deviceId].schema = None
 
-        self.handle_deviceSchema(instanceInfo)
-        Network().onRefreshInstance(self.deviceData[deviceId])
+        self.handle_deviceSchema(hash)
+        #Network().onRefreshInstance(self.deviceData[deviceId])
 
 
     def handle_configurationChanged(self, instanceInfo):

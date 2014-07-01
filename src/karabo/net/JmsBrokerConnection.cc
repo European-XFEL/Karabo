@@ -149,7 +149,7 @@ namespace karabo {
                     .key("messageTimeToLive")
                     .displayedName("Message Time to Live")
                     .description("Time to live for an individual message send by a producer (0 = unlimited) [ms]")
-                    .assignmentOptional().defaultValue(10000)
+                    .assignmentOptional().defaultValue(100000)
                     .minInc(0)
                     .expertAccess()
                     .commit();
