@@ -37,7 +37,7 @@ namespace karabo {
                     .appendNodesOfConfigurationBase<BrokerConnection>()
                     .assignmentOptional().defaultValue("Jms")
                     .commit();
-            
+
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_GuiServer_0")
                     .commit();
@@ -51,10 +51,11 @@ namespace karabo {
 
         GuiServerDevice::GuiServerDevice(const Hash& input) : Device<OkErrorFsm>(input) {
 
-            GLOBAL_SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
+            //GLOBAL_SLOT3(slotSchemaUpdated, Schema /*description*/, Hash /*configuration*/, string /*deviceId*/)
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
+            //GLOBAL_SLOT2(slotDeviceSchemaAvailable)
             SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
-            
+
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
             config.set("type", "server");
@@ -69,8 +70,9 @@ namespace karabo {
             // This creates a connection in order to forward exceptions happened in the GUI
             m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug"));
         }
-        
-        GuiServerDevice::~GuiServerDevice() {            
+
+
+        GuiServerDevice::~GuiServerDevice() {
             m_ioService->stop();
             m_dataConnection->stop();
             m_loggerIoService->stop();
@@ -83,6 +85,8 @@ namespace karabo {
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
                 remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceGoneHandler, this, _1, _2));
+                remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::schemaUpdatedHandler, this, _1, _2, _3));
+                remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
                 // Connect the history slot
                 connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
@@ -206,7 +210,7 @@ namespace karabo {
                 string deviceId = info.get<string > ("deviceId");
                 Hash config = info.get<Hash > ("configuration");
                 // TODO Supply user specific context
-                call(deviceId, "slotReconfigure", config);             
+                call(deviceId, "slotReconfigure", config);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onReconfigure(): " << e.userFriendlyMsg();
             }
@@ -244,9 +248,13 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
                 string deviceId = info.get<string > ("deviceId");
 
-                Hash hash("type", "configurationChanged", "deviceId", deviceId, "configuration", remote().get(deviceId));
+                Hash config = remote().getConfigurationNoWait(deviceId);
 
-                channel->write(hash);
+                if (!config.empty()) {
+                    Hash h("type", "configurationChanged", "deviceId", deviceId, "configuration", remote().get(deviceId));
+                    channel->write(h);
+                }
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
             }
@@ -325,17 +333,20 @@ namespace karabo {
             }
         }
 
-
-        // TODO Try to implement this function to be completely event driven
+        
         void GuiServerDevice::onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetClassSchema";
                 string serverId = info.get<string > ("serverId");
                 string classId = info.get<string> ("classId");
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash classInfo("type", "classSchema", "serverId", serverId,
-                               "classId", classId, "schema", remote().getClassSchema(serverId, classId));
-                channel->write(classInfo);
+                Schema schema = remote().getClassSchemaNoWait(serverId, classId);
+                if (!schema.empty()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    Hash h("type", "classSchema", "serverId", serverId,
+                                   "classId", classId, "schema", schema);
+                    channel->write(h);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
             }
@@ -346,10 +357,21 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceSchema";
                 string deviceId = info.get<string > ("deviceId");
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                Hash hash("type", "deviceSchema", "deviceId", deviceId,
-                                  "schema", remote().getDeviceSchema(deviceId), "configuration", remote().get(deviceId));
-                channel->write(hash);
+
+                Schema schema = remote().getDeviceSchemaNoWait(deviceId);
+                Hash config = remote().getConfigurationNoWait(deviceId);
+
+                if (!schema.empty()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    Hash h("type", "deviceSchema", "deviceId", deviceId,
+                           "schema", schema);
+                    if (!config.empty()) {
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Adding configuration, too";
+                        h.set("configuration", config);
+                    }
+                    channel->write(h);
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetDeviceSchema(): " << e.userFriendlyMsg();
             }
@@ -367,26 +389,26 @@ namespace karabo {
                 if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
 
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
-                call("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, property, args);               
+                call("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, property, args);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
             }
         }
-        
-        
+
+
         void GuiServerDevice::slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting property history";
-                
+
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
                        "property", property, "data", data);
-                
+
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs (which is shit here, but the current solution...)
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
 
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {                    
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     if (it->second.find(deviceId) != it->second.end()) {
                         it->first->write(h);
                     }
@@ -395,7 +417,6 @@ namespace karabo {
                 KARABO_LOG_ERROR << "Problem in slotPropertyHistory " << e.userFriendlyMsg();
             }
         }
-
 
 
         void GuiServerDevice::sendSystemTopology(karabo::net::Channel::Pointer channel) {
@@ -471,8 +492,8 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
-                
-                Hash hash("type", "configurationChanged", "deviceId", deviceId, "configuration", what);
+
+                Hash h("type", "configurationChanged", "deviceId", deviceId, "configuration", what);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
@@ -480,7 +501,7 @@ namespace karabo {
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(hash);
+                        it->first->write(h);
                     }
                 }
             } catch (const Exception& e) {
@@ -489,19 +510,35 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
+        void GuiServerDevice::classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "classSchemaHandler";
+                Hash h("type", "classSchema", "serverId", serverId,
+                       "classId", classId, "schema", classSchema);
+                // Broadcast to all GUIs
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    it->first->write(h);
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGetClassSchema(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema, const karabo::util::Hash& configuration) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
-                Hash instanceInfo("type", "schemaUpdated", "deviceId", deviceId,
-                                  "schema", schema);
+
+                Hash h("type", "schemaUpdated", "deviceId", deviceId,
+                       "schema", schema, "configuration", configuration);
+
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    // Optimization: broadcast only to visible DeviceInstances
-                    if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(instanceInfo);
-                    }
+                    // TODO This could be optimized by selecting the proper clients
+                    it->first->write(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotSchemaUpdated(): " << e.userFriendlyMsg();
