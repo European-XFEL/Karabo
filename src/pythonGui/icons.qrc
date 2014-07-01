@@ -73,6 +73,7 @@
     <file alias="arrow">icons/arrow-32x32.png</file>
     <file alias="rect">icons/rect-32x32.png</file>
     <file alias="lock">icons/lock-32x32.png</file>
+    <file alias="wait">icons/wait.gif</file>
     
     <file alias="cryocooler">icons/vacuum/cryo-cooler.png</file>
     <file alias="cryocooler-green">icons/vacuum/cryo-cooler-green.png</file>

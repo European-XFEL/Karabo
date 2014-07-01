@@ -14,14 +14,11 @@
 namespace karabo {
 
     namespace core {
-        
+
         // Forward
         template <class T>
         class Device;
-        
-        
-        
-      
+
         /**
          * The Karabo Device Client
          * This class can be used to (remotely) control devices of the distributed system
@@ -51,18 +48,19 @@ namespace karabo {
          * 
          */
         class DeviceClient {
-                                    
+
             template<class T>
             friend class Device;
-            
+
             typedef std::map<std::string, unsigned int> InstanceUsage;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceGoneHandler;
-            typedef boost::function<void (const karabo::util::Schema& /*schema*/, const std::string& /*deviceId*/) > SchemaUpdatedHandler;
-            
+            typedef boost::function<void (const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/, const karabo::util::Hash& /*configuration*/) > SchemaUpdatedHandler;
+            typedef boost::function<void (const std::string& /*serverId*/, const std::string& /*classId*/, const karabo::util::Schema& /*schema*/) > ClassSchemaHandler;
+
             static const unsigned int CONNECTION_KEEP_ALIVE = 15;
-           
+
         protected: // members
 
             enum MasterMode {
@@ -116,22 +114,23 @@ namespace karabo {
 
             std::string m_masterDeviceId;
 
-            bool m_isAdvancedMode;  // DEPRECATED
+            bool m_isAdvancedMode; // DEPRECATED
 
             MasterMode m_masterMode;
 
             boost::thread m_ageingThread;
-            
+
             bool m_getOlder;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;
             InstanceGoneHandler m_instanceGoneHandler;
             SchemaUpdatedHandler m_schemaUpdatedHandler;
+            ClassSchemaHandler m_classSchemaHandler;
 
             std::set<std::string> m_immortals;
             mutable boost::mutex m_immortalsMutex;
-            
+
         public:
 
             KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.0");
@@ -150,15 +149,15 @@ namespace karabo {
              * @param signalSlotable An instance of the SignalSlotable lass
              */
             DeviceClient(const boost::shared_ptr<karabo::xms::SignalSlotable>& signalSlotable);
-            
+
             /**
              * Destructor joins the underlying event thread,
              * i.e. execution takes some time (1-2 seconds).
              */
             virtual ~DeviceClient();
-            
+
             bool login(const std::string& username, const std::string& password, const std::string& provider = "LOCAL");
-            
+
             bool logout();
 
             /**
@@ -178,13 +177,13 @@ namespace karabo {
 
             // DEPRECATE
             void disableAdvancedMode();
-            
+
             /**
              * Set ageing on or off (on by default)
              * @return 
              */
             void setAgeing(bool toggle);
-            
+
 
 
             /**
@@ -231,6 +230,17 @@ namespace karabo {
              */
             karabo::util::Schema getDeviceSchema(const std::string& instanceId);
 
+
+            /**
+             * Retrieves the full Schema (parameter description) of the given instance
+             * The call is non-blocking, if no Schema is currently available the return
+             * will be empty. However, the schema request will be sent and should lead to
+             * later arrival of a schema.
+             * @param instanceId Device's instance ID
+             * @return full Schema
+             */
+            karabo::util::Schema getDeviceSchemaNoWait(const std::string& instanceId);
+
             /**
              * Retrieves the currently active Schema (filtered by allowed states and allowed roles)
              * of the given instance
@@ -248,6 +258,8 @@ namespace karabo {
              * @return Schema describing parameters available at instantiation time
              */
             karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId);
+
+            karabo::util::Schema getClassSchemaNoWait(const std::string& serverId, const std::string& classId);
 
             std::vector<std::string> getProperties(const std::string& deviceId);
 
@@ -286,6 +298,8 @@ namespace karabo {
 
             void get(const std::string& instanceId, karabo::util::Hash& hash);
 
+            karabo::util::Hash getConfigurationNoWait(const std::string& deviceId);
+
             template<class T>
             T get(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
@@ -305,7 +319,7 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
                 }
             }
-            
+
             template<class T>
             T getAs(const std::string& instanceId, const std::string& key, const char keySep = '.') {
                 try {
@@ -315,11 +329,11 @@ namespace karabo {
                     throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
                 }
             }
-            
+
             karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0);
-            
+
             karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0);
-            
+
             std::pair<karabo::util::Hash, karabo::util::Schema> getConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             void registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction);
@@ -329,6 +343,8 @@ namespace karabo {
             void registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction);
 
             void registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction);
+
+            void registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction);
 
             template <class ValueType>
             bool registerPropertyMonitor(const std::string& instanceId, const std::string& key,
@@ -368,6 +384,7 @@ namespace karabo {
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&)>& callbackFunction);
 
             // TODO Adapt function to above style (i.e. add return value)
+
             template <class UserDataType>
             void registerDeviceMonitor(const std::string& instanceId, const boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)>& callbackFunction,
                                        const UserDataType& userData) {
@@ -389,7 +406,7 @@ namespace karabo {
                 tmp.set(key, value, keySep);
                 return set(instanceId, tmp, timeoutInSeconds);
             }
-            
+
             template <class T>
             void setNoWait(const std::string& instanceId, const std::string& key, const T& value, const char keySep = '.') {
 
@@ -536,7 +553,9 @@ namespace karabo {
 
             virtual void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Hash& configuration, const std::string& deviceId);
+
+            virtual void slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
 
 
 
@@ -555,7 +574,7 @@ namespace karabo {
             karabo::util::Hash cacheAndGetConfiguration(const std::string& instanceId);
 
             void stayConnected(const std::string& instanceId);
-            
+
             void disconnect(const std::string& instanceId);
 
             virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
@@ -577,19 +596,19 @@ namespace karabo {
             virtual void slotProvideSystemTopology();
 
             void age();
-            
+
             void immortalize(const std::string& deviceId);
-            
+
             void mortalize(const std::string& deviceId);
-            
+
             bool isImmortal(const std::string& deviceId) const;
-            
+
             void mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry);
-            
+
             bool existsInRuntimeSystemDescription(const std::string& path) const;
-            
+
             void eraseFromRuntimeSystemDescription(const std::string& path);
-            
+
         };
     }
 }
