@@ -238,8 +238,12 @@ class Device(Configuration):
 
         self.serverId = serverId
         self.classId = classId
+<<<<<<< HEAD
+        #self.serverId =
+=======
         
         self.filename = "{}.xml".format(deviceId)
+>>>>>>> duplicateProjectDevices
         self.ifexists = ifexists # restart, ignore
         
         actual = manager.getDevice(deviceId)
@@ -247,6 +251,21 @@ class Device(Configuration):
         self.onStatusChanged(actual, actual.status)
 
 
+<<<<<<< HEAD
+    def mergeFutureConfig(self):
+        """
+        This function merges the \self.futureConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.descriptor is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        #self.fromHash(self.futureConfig)
+
+
+=======
+>>>>>>> duplicateProjectDevices
     def onNewDescriptor(self, conf):
         if self.descriptor is not None:
             self.redummy()
