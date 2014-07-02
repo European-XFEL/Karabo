@@ -69,7 +69,7 @@ namespace karathon {
 
         static void connectNow(AbstractInput::Pointer self, const karabo::util::Hash& config) {
             ScopedGILRelease nogil;
-            self->connectNow(config);
+            self->connect(config);
         }
 
 
@@ -82,13 +82,7 @@ namespace karathon {
             ScopedGILRelease nogil;
             self->update();
         }
-
-
-        static void setEndOfStream(AbstractInput::Pointer self) {
-            ScopedGILRelease nogil;
-            self->setEndOfStream();
-        }
-
+        
 
         static void registerIOEventHandler(AbstractInput::Pointer self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
@@ -228,7 +222,6 @@ void exportPyIo() {
                 .def("connectNow", &karathon::AbstractInputWrap::connectNow, (bp::arg("outputChannelInfo")))
                 .def("canCompute", &karathon::AbstractInputWrap::canCompute)
                 .def("update", &karathon::AbstractInputWrap::update)
-                .def("setEndOfStream", &karathon::AbstractInputWrap::setEndOfStream)
                 .def("registerIOEventHandler", &karathon::AbstractInputWrap::registerIOEventHandler, (bp::arg("handler")))
                 .def("registerEndOfStreamEventHandler", &karathon::AbstractInputWrap::registerEndOfStreamEventHandler, (bp::arg("handler")))
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
