@@ -141,13 +141,13 @@ class _Manager(QObject):
                 pass
 
 
-    def initDevice(self, serverId, classId, config=None):
+    def initDevice(self, serverId, classId, deviceId, config=None):
         if config is None:
             # Use standard configuration for server/classId
             config = self.serverClassData[serverId, classId].toHash()
        
         # Send signal to network
-        Network().onInitDevice(serverId, Hash(classId, config))
+        Network().onInitDevice(serverId, classId, deviceId, config)
         self.__isInitDeviceCurrentlyProcessed = True
 
 

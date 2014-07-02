@@ -534,7 +534,7 @@ class ProjectModel(QStandardItemModel):
                 self.killDevice(device)
         
         manager.Manager().initDevice(device.futureConfig.get("serverId"),
-                                     device.classId, device.toHash())
+                                     device.classId, device.futureConfig.get("deviceId"), device.toHash())
 
 
     def onKillDevices(self):

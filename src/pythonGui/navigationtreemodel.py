@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 1, 2013
@@ -452,7 +453,7 @@ class NavigationTreeModel(QAbstractItemModel):
             parentIndex = index.parent()
             serverId = parentIndex.data()
             classId = index.data()
-            return dict(type=type, serverId=serverId, classId=classId)
+            return dict(type=type, serverId=serverId, classId=classId, deviceId='')
         elif level == 3:
             type = NavigationItemTypes.DEVICE
             parentIndex = index.parent()
