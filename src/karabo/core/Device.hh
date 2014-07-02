@@ -395,13 +395,14 @@ namespace karabo {
                     m_fullSchema.merge(m_injectedSchema);
 
                 }
-
-                set(validated);
-
-                KARABO_LOG_INFO << "Schema updated";
-
+               
                 // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
+                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+
+                // Merge all parameters
+                set(validated);                
+
+                 KARABO_LOG_INFO << "Schema updated";
             }
 
             /**
@@ -442,14 +443,16 @@ namespace karabo {
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
                 }
-
-                // Merge all parameters
-                set(validated);
-
-                KARABO_LOG_INFO << "Schema updated";
+              
+                KARABO_LOG_INFO << "Schema updated";                
 
                 // Notify the distributed system
-                emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
+                emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+
+                // Merge all parameters
+                set(validated);                
+
+                KARABO_LOG_INFO << "Schema updated";
             }
 
             void setProgress(const int value, const std::string& associatedText = "") {
@@ -721,7 +724,7 @@ namespace karabo {
                 SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
                 connectN("", "signalNotification", "*", "slotNotification");
 
-                SIGNAL3("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, karabo::util::Hash /*configuration*/, string /*deviceId*/);
+                SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
 
                 SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)               
@@ -785,10 +788,10 @@ namespace karabo {
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
                     const karabo::util::Schema& schema = getStateDependentSchema(currentState);
-                    emit("signalSchemaUpdated", schema, m_parameters, m_deviceId);
+                    emit("signalSchemaUpdated", schema, m_deviceId);
                     reply(schema);
                 } else {
-                    emit("signalSchemaUpdated", m_fullSchema, m_parameters, m_deviceId);
+                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
                     reply(m_fullSchema);
                 }
             }
