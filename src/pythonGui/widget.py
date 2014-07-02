@@ -12,7 +12,7 @@
 __all__ = ["DisplayWidget"]
 
 
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel
 from registry import Loadable, Registry
 
@@ -81,6 +81,18 @@ class Widget(Registry, QObject):
 
         this is also used to inform the widget about its type initially,
         so put your type-dependent initialization code here. """
+
+
+    @pyqtSlot(object, object, object)
+    def valueChangedSlot(self, box, value, timestamp=None):
+        """ avoid having to declare valueChanged a slot in every widget """
+        self.valueChanged(box, value, timestamp)
+
+
+    @pyqtSlot(object)
+    def typeChangedSlot(self, box):
+        """ avoid having to declare typeChanged a slot in every widget """
+        self.typeChanged(box)
 
 
     @property
