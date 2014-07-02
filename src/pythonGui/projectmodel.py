@@ -199,8 +199,7 @@ class ProjectModel(QStandardItemModel):
     def clearParameterPages(self, serverClassIds=[]):
         for project in self.projects:
             for device in project.devices:
-                serverId = device.futureConfig.get("serverId")
-                if (serverId, device.classId) in serverClassIds:
+                if (device.serverId, device.classId) in serverClassIds:
                     if device.parameterEditor is not None:
                         device.parameterEditor.clear()
         
@@ -429,8 +428,9 @@ class ProjectModel(QStandardItemModel):
 
         for i in xrange(dialog.startIndex, dialog.count):
             deviceId = "{}{}".format(dialog.deviceIdPrefix, i)
-            self.addDevice(self.currentProject(), device.serverId,
-                           device.classId, deviceId, device.ifexists)
+            newDevice = self.addDevice(self.currentProject(), device.serverId,
+                                       device.classId, deviceId, device.ifexists)
+            newDevice.fromHash(device.toHash())
 
 
     def checkDescriptor(self, device):
