@@ -7,6 +7,7 @@
 
 __all__ = ["EditableDoubleSpinBox"]
 
+
 from util import SignalBlocker
 from widget import EditableWidget
 

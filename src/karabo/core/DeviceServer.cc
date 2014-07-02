@@ -33,7 +33,7 @@ namespace karabo {
     namespace core {
 
         //template class Runner<DeviceServer>;
-                
+
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
@@ -46,7 +46,7 @@ namespace karabo {
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
 
         void DeviceServer::expectedParameters(Schema& expected) {
-            
+
             STRING_ELEMENT(expected).key("serverId")
                     .displayedName("Server ID")
                     .description("The device-server instance id uniquely identifies a device-server instance in the distributed system")
@@ -76,7 +76,7 @@ namespace karabo {
                     .description("Decides whether this device-server runs as a master")
                     .assignmentOptional().defaultValue(false)
                     .commit();
-            
+
             LIST_ELEMENT(expected).key("autoStart")
                     .displayedName("Auto start")
                     .description("Auto starts selected devices")
@@ -90,7 +90,7 @@ namespace karabo {
                     .expertAccess()
                     .assignmentOptional().defaultValue(true)
                     .commit();
-            
+
             PATH_ELEMENT(expected)
                     .key("pluginDirectory")
                     .displayedName("Plugin Directory")
@@ -99,7 +99,7 @@ namespace karabo {
                     .isDirectory()
                     .expertAccess()
                     .commit();
-                       
+
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -123,8 +123,8 @@ namespace karabo {
 
             OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.filename")
                     .setNewDefaultValue("device-server.log")
-                    .commit();            
-            
+                    .commit();
+
             NODE_ELEMENT(expected).key("Logger.network")
                     .description("Log Appender settings for Network")
                     .displayedName("Network Appender")
@@ -183,15 +183,15 @@ namespace karabo {
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {            
-            
+        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {
+
             string serverIdFileName("serverId.xml");
-            
+
             // Set serverId
-            if (boost::filesystem::exists(serverIdFileName)) { 
+            if (boost::filesystem::exists(serverIdFileName)) {
                 Hash hash;
                 karabo::io::loadFromFile(hash, serverIdFileName);
-                if (input.has("serverId")) { 
+                if (input.has("serverId")) {
                     input.get("serverId", m_serverId);
                     // Update file for next startup
                     karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
@@ -203,43 +203,43 @@ namespace karabo {
                 }
             } else { // No file
                 if (input.has("serverId")) {
-                    input.get("serverId", m_serverId);                   
+                    input.get("serverId", m_serverId);
                 } else {
                     m_serverId = generateDefaultServerId();
                 }
                 // Generate file for next startup
                 karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
             }
-            
+
             // Device configurations for those to automatically start
             if (input.has("autoStart")) input.get("autoStart", m_autoStart);
-            
+
             // Whether to scan for additional plug-ins at runtime
             input.get("scanPlugins", m_scanPlugins);
-            
+
             // What visibility this server should have
             input.get("visibility", m_visibility);
 
             // Deprecate the isMaster in future
             input.get("isMaster", m_isMaster);
             if (m_isMaster) {
-                
-//                cerr << "\n#### WARNING ####\nThe \"isMaster\" option will be deprecated!\n" 
-//                        << "If you were using the startMasterDeviceServer script,\n"
-//                        << "please delete the whole masterDeviceServer folder and use \"make test\" (in base folder) instead."
-//                        << "\n##################\n\n";
-                
+
+                //                cerr << "\n#### WARNING ####\nThe \"isMaster\" option will be deprecated!\n"
+                //                        << "If you were using the startMasterDeviceServer script,\n"
+                //                        << "please delete the whole masterDeviceServer folder and use \"make test\" (in base folder) instead."
+                //                        << "\n##################\n\n";
+
                 m_visibility = 5;
                 m_scanPlugins = false;
                 m_autoStart.resize(2);
                 m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
                 m_autoStart[1] = Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0");
             }
-            
+
             m_connectionConfiguration = input.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", input);
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", input.get<string>("pluginDirectory")));
-            loadLogger(input);            
+            loadLogger(input);
         }
 
 
@@ -254,7 +254,7 @@ namespace karabo {
 
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
-            
+
 
             // make a copy of additional appenders defined by user
             vector<Hash> appenders = config.get < vector<Hash> >("appenders");
@@ -264,8 +264,8 @@ namespace karabo {
             newAppenders[0].set("Ostream", config.get<Hash>("ostream"));
             newAppenders[1].set("RollingFile", config.get<Hash>("rollingFile"));
             newAppenders[2].set("Network", config.get<Hash>("network"));
-            
-            
+
+
 
             config.erase("ostream");
             config.erase("rollingFile");
@@ -279,18 +279,18 @@ namespace karabo {
                 newAppenders.push_back(appenders[i]);
             }
 
-            
+
             config.set("appenders", newAppenders);
-            
+
             config.set("appenders[2].Network.layout", Hash());
             config.set("appenders[2].Network.layout.Pattern.format", "%d{%F %H:%M:%S} | %p | %c | %m");
             config.set("appenders[2].Network.connection", m_connectionConfiguration);
-            
+
             Hash category = config.get<Hash>("karabo");
             category.set("name", "karabo");
             config.set("categories[0].Category", category);
             config.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
-            config.erase("karabo");            
+            config.erase("karabo");
             // cerr << "loadLogger final:" << endl << config << endl;
             Logger::configure(config);
         }
@@ -322,18 +322,18 @@ namespace karabo {
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 20, instanceInfo));
             this->startFsm();
             t.join();
-            
+
         }
 
 
         void DeviceServer::registerAndConnectSignalsAndSlots() {
             SIGNAL3("signalNewDeviceClassAvailable", string /*serverId*/, string /*classId*/, Schema /*classSchema*/)
+            SIGNAL3("signalClassSchema", karabo::util::Schema /*classSchema*/, string /*classId*/, string /*deviceId*/);
             SLOT1(slotStartDevice, Hash /*configuration*/)
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
-            SIGNAL3("signalClassSchema", karabo::util::Schema /*classSchema*/, string /*classId*/, string /*deviceId*/);
-
+            
             // Connect to global slot(s))
             connectN("", "signalClassSchema", "*", "slotClassSchema");
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
@@ -359,14 +359,15 @@ namespace karabo {
                 inbuildDevicesAvailable();
             }
 
+
             BOOST_FOREACH(Hash device, m_autoStart) {
-                slotStartDevice(device);                
+                slotStartDevice(device);
             }
-            
+
             if (m_scanPlugins) {
                 KARABO_LOG_INFO << "Keep watching directory: " << m_pluginLoader->getPluginDirectory() << " for Device plugins";
                 m_pluginThread = boost::thread(boost::bind(&karabo::core::DeviceServer::scanPlugins, this));
-            }            
+            }
         }
 
 
@@ -424,7 +425,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::errorFoundAction(const std::string& user, const std::string & detail) {
+        void DeviceServer::errorFoundAction(const std::string& user, const std::string& detail) {
             KARABO_LOG_ERROR << "[short] " << user;
             KARABO_LOG_ERROR << "[detailed] " << detail;
         }
@@ -435,22 +436,73 @@ namespace karabo {
         }
 
 
-        void DeviceServer::startDeviceAction(const karabo::util::Hash & config) {
+        void DeviceServer::startDeviceAction(const karabo::util::Hash& hash) {
+
+            if (hash.has("classId")) {
+                instantiateNew(hash);
+            } else {
+                instantiateOld(hash);
+            }
+        }
+
+
+        void DeviceServer::instantiateNew(const karabo::util::Hash& hash) {
             try {
-                std::string classId = config.begin()->getKey();
+
+                std::string classId = hash.get<string>("classId");
 
                 KARABO_LOG_INFO << "Trying to start " << classId << "...";
-                KARABO_LOG_DEBUG << "with the following configuration:\n" << config;
+                KARABO_LOG_DEBUG << "with the following configuration:\n" << hash;
+
+                // Get configuration
+                Hash config = hash.get<Hash>("configuration");
+
+                // Inject serverId
+                config.set("_serverId_", m_serverId);
+
+                // Inject deviceId
+                if (!hash.has("deviceId")) {
+                    config.set("_deviceId_", this->generateDefaultDeviceId(classId));
+                } else if (hash.get<string>("deviceId").empty()) {
+                    config.set("_deviceId_", this->generateDefaultDeviceId(classId));
+                } else {
+                    config.set("_deviceId_", hash.get<string>("deviceId"));
+                }
+
+                BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
+                boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
+
+                // Associate deviceInstance with its thread
+                string deviceInstanceId = device->getInstanceId();
+                m_deviceInstanceMap[deviceInstanceId] = t;
+
+                // Answer initiation of device
+                reply(true, deviceInstanceId); // TODO think about
+
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Device could not be started because: " << e.userFriendlyMsg();
+                reply(false, "Device could not be started because: " + e.userFriendlyMsg());
+                return;
+            }
+        }
+
+
+        void DeviceServer::instantiateOld(const karabo::util::Hash& hash) {
+            try {
+                std::string classId = hash.begin()->getKey();
+
+                KARABO_LOG_INFO << "Trying to start " << classId << "...";
+                KARABO_LOG_DEBUG << "with the following configuration:\n" << hash;
 
                 // Inject device-server information
-                Hash modifiedConfig(config);
+                Hash modifiedConfig(hash);
                 Hash& tmp = modifiedConfig.begin()->getValue<Hash>();
-                tmp.set("serverId", m_serverId);
+                tmp.set("_serverId_", m_serverId);
                 // Apply sensible default in case no device instance id is supplied
                 if (!tmp.has("deviceId")) {
-                    tmp.set("deviceId", this->generateDefaultDeviceId(classId));
+                    tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
                 } else if (tmp.get<string>("deviceId").empty()) {
-                    tmp.set("deviceId", this->generateDefaultDeviceId(classId));
+                    tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
                 }
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));

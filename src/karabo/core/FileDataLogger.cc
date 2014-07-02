@@ -61,7 +61,7 @@ namespace karabo {
                     .setNewDefaultValue(5)
                     .commit();
             
-            OVERWRITE_ELEMENT(expected).key("deviceId")
+            OVERWRITE_ELEMENT(expected).key("_deviceId_")
                     .setNewDefaultValue("Karabo_FileDataLogger_0")
                     .commit();
         }
@@ -119,7 +119,7 @@ namespace karabo {
 
             // Start slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            SLOT3(slotSchemaUpdated, Schema /*description*/, Hash /*configuration*/, string /*deviceId*/)
+            SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
             SLOT3(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*to (string) from (string) maxNumData (unsigned int)*/);
             SLOT2(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
@@ -179,7 +179,7 @@ namespace karabo {
                 Hash hash = remote().get(deviceId);
 
                 // call slotSchemaUpdated updated by hand
-                slotSchemaUpdated(schema, hash, deviceId);
+                slotSchemaUpdated(schema, deviceId);
 
                 // call slotChanged by hand
                 slotChanged(hash, deviceId);
@@ -343,7 +343,7 @@ namespace karabo {
         }
 
 
-        void FileDataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Hash& configuration, const std::string& deviceId) {
+        void FileDataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
 
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
 

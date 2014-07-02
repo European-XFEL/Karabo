@@ -29,9 +29,17 @@ class PythonDevice(BaseFsm):
     @staticmethod
     def expectedParameters(expected):
         (
-            STRING_ELEMENT(expected).key("version")
-                    .displayedName("Version").description("The version of this device class")
+            STRING_ELEMENT(expected).key("compatibility")
+                    .displayedName("Compatibility").description("The compatibility of this device to the Karabo framework")
                     .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
+                    ,
+            STRING_ELEMENT(expected).key("_serverId_")
+                    .displayedName("_ServerID_").description("Do not set this property, it will be set by the device-server")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    ,
+            STRING_ELEMENT(expected).key("_deviceId_")
+                    .displayedName("_DeviceID_").description("Do not set this property, it will be set by the device-server")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
                     ,
             INT32_ELEMENT(expected).key("visibility")
                     .displayedName("Visibility").description("Configures who is allowed to see this device at all")
@@ -44,12 +52,19 @@ class PythonDevice(BaseFsm):
                     ,
             STRING_ELEMENT(expected).key("serverId")
                     .displayedName("ServerID").description("The device-server on which this device is running on")
-                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    .expertAccess().readOnly().commit()
                     ,
             STRING_ELEMENT(expected).key("deviceId")
                     .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
-                    .assignmentOptional().noDefaultValue().init().commit()
+                    .readOnly().commit()
                     ,
+            BOOL_ELEMENT(expected).key("archive")
+                        .displayedName("Archive")
+                        .description("Decides whether the properties of this device will be logged or not")
+                        .reconfigurable()
+                        .assignmentOptional().defaultValue(True)
+                        .commit()
+                        ,
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit()
@@ -74,13 +89,13 @@ class PythonDevice(BaseFsm):
         super(PythonDevice, self).__init__(configuration)
         
         self.parameters = configuration
-        if "serverId" in self.parameters:
-            self.serverid = self.parameters["serverId"]
+        if "_serverId_" in self.parameters:
+            self.serverid = self.parameters["_serverId_"]
         else:
             self.serverid = "__none__"    
         
-        if "deviceId" in self.parameters:
-            self.deviceid = self.parameters["deviceId"]
+        if "_deviceId_" in self.parameters:
+            self.deviceid = self.parameters["_deviceId_"]
         else:
             self.deviceid = "__none__"    #TODO: generate uuid
         
@@ -148,7 +163,12 @@ class PythonDevice(BaseFsm):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["status"] = "ok"
+        info["archive"] = self.get("archive")
         #... add here more info entries if needed
+
+        self.parameters.set("classId", self.classid)
+        self.parameters.set("deviceId", self.deviceid)
+        self.parameters.set("serverId", self.serverid)
         
         # Run event loop ( in a thread ) with given info
         # TODO Make configurable
@@ -327,10 +347,10 @@ class PythonDevice(BaseFsm):
     
     def setProgress(self, value, associatedText = ""):
         v = self.progressMin + value / (self.progressMax - self.progressMin)
-        self._ss.emit("signalProgressUpdated", v, associatedText, self.deviceid)
-    
+        self.set("progress", v)
+            
     def resetProgress(self):
-        self._ss.emit("signalProgressUpdated", self.progressMin, "")
+        set("progress", self.progressMin)
     
     def setProgressRange(self, minimum, maximum):
         self.progressMin, self.progressMax = minimum, maximum
@@ -396,12 +416,20 @@ class PythonDevice(BaseFsm):
         self.fullSchema = Schema(self.classid)
         self.fullSchema.copy(self.staticSchema)
         
-    def onStateUpdate(self, currentState):
+    def updateState(self, currentState):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
         if self["state"] != currentState:
             self["state"] = currentState
         self._ss.reply(currentState)  # reply new state to interested event initiators
-    
+
+    def onStateUpdate(self, currentState):
+        print "onStateUpdate() is deprecated, use updateState() instead"
+        self.updateState(currentState)
+
+    def exceptionFound(self, shortMessage, detailedMessage):
+        self.log.ERROR(shortMessage)
+        self._ss.emit("signalNotification", "EXCEPTION", shortMessage, detailedMessage)
+
     def noStateTransition(self):
         self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
         
@@ -417,21 +445,17 @@ class PythonDevice(BaseFsm):
         self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
         
         self._ss.registerSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
-        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)
-        
-        self._ss.registerSignal("signalProgressUpdated", int, str, str)         # Progress value [0,100], label, deviceid
-        self._ss.connect("", "signalProgressUpdated", "*", "slotProgressUpdated", ConnectionType.NO_TRACK, False)
+        self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)                
         
         #---------------------------------------------- register intrinsic slots
-        self._ss.registerSlot(self.slotReconfigure)
-        self._ss.registerSlot(self.slotRefresh)
+        self._ss.registerSlot(self.slotReconfigure)        
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
-        self._ss.registerSlot(self.slotKillDevice)
-        self._ss.registerSlot(self.errorFound)
+        self._ss.registerSlot(self.slotKillDevice)        
 
     def triggerError(self, s, d):
-        self._ss.call("", "errorFound", s, d)
+        print "The triggerError() function is deprecated, use execute() instead"
+        self.exceptionFound(s, d)
         
     def execute(self, command, *args):
         if len(args) == 0:
@@ -446,12 +470,10 @@ class PythonDevice(BaseFsm):
             self._ss.call("", command, args[0], args[1], args[2], args[3])
         else:
             raise AttributeError,"Number of command parameters should not exceed 4"
-        
-    def slotRefresh(self):
-        self._ss.emit("signalChanged", self.parameters, self.deviceid);
-        self._ss.reply(self.parameters);
+          
     
     def slotGetConfiguration(self):
+        self._ss.emit("signalChanged", self.parameters, self.deviceid)
         self._ss.reply(self.parameters)
         
     def slotReconfigure(self, newConfiguration):
@@ -491,8 +513,11 @@ class PythonDevice(BaseFsm):
     def slotGetSchema(self, onlyCurrentState):
         if onlyCurrentState:
             currentState = self["state"]
-            self._ss.reply(self._getStateDependentSchema(currentState))
+            schema = self._getStateDependentSchema(currentState)
+            self._ss.emit("signalSchemaUpdated", schema, self.deviceid)
+            self._ss.reply(schema)
         else:
+            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
             self._ss.reply(self.fullSchema)
    
     def slotKillDevice(self):
@@ -548,12 +573,9 @@ class PythonDevice(BaseFsm):
 def launchPythonDevice():
     script, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
-    if classid in config:
-        configuration = config[classid]
-    else:
-        configuration = Hash()
+   
     try:
-        device = Configurator(PythonDevice).create(classid, configuration)
+        device = Configurator(PythonDevice).create(classid, config)
         device.run()
         device.__del__()
     except Exception as e:

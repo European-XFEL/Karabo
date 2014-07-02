@@ -1,3 +1,13 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on April 8, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
+__all__ = ["Hexadecimal"]
+
+
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 

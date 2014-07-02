@@ -93,6 +93,7 @@ class StartStopFsm(base.BaseFsm):
         sigslot.registerSlot(self.start)
         sigslot.registerSlot(self.stop)
         sigslot.registerSlot(self.reset)
+        sigslot.registerSlot(self.errorFound)
 
     def initializationStateOnEntry(self):
         '''Actions executed on entry to 'Initialization' state

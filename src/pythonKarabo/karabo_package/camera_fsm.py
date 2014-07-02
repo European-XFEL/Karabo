@@ -103,6 +103,7 @@ class CameraFsm(base.BaseFsm):
         sigslot.registerSlot(self.trigger)
         sigslot.registerSlot(self.stop)
         sigslot.registerSlot(self.reset)
+        sigslot.registerSlot(self.errorFound)
         
     def initializationStateOnEntry(self):
         '''Actions executed on entry to 'Initialization' state

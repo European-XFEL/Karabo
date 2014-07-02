@@ -61,6 +61,7 @@ class OkErrorFsm(base.BaseFsm):
     
     def initFsmSlots(self, sigslot):
         sigslot.registerSlot(self.reset)
+        sigslot.registerSlot(self.errorFound)
         
     def errorStateOnEntry(self):
         '''Actions executed on entry to 'Error' state
