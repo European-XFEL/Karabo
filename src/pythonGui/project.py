@@ -119,9 +119,8 @@ class Project(QObject):
                 filename = filename[:-4]
 
                 for classId, config in XMLParser().read(data).iteritems():
-                    device = Device(serverId, classId, deviceId, d.get("ifexists"))
-                    device.filename = filename
-                    device.fromHash(config)
+                    device = Device(serverId, classId, filename, d.get("ifexists"))
+                    device.setFutureConfig(config)
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
@@ -164,7 +163,6 @@ class Project(QObject):
                             device.toXml())
             projectConfig[self.DEVICES_KEY] = [Hash("serverId", device.serverId,
                                                     "classId", device.classId,
-                                                    "deviceId", device.id,
                                                     "filename", device.filename,
                                                     "ifexists", device.ifexists)
                                             for device in self.devices]
@@ -242,17 +240,38 @@ class Device(Configuration):
         self.filename = "{}.xml".format(deviceId)
         self.ifexists = ifexists # restart, ignore
         
+        # Needed in case the descriptor is not set yet
+        self.__futureConfig = None
+        
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status)
+
+
+    def setFutureConfig(self, config):
+        self.__futureConfig = config
+        # Merge futureConfig, if descriptor is not None
+        self.mergeFutureConfig()
+
+
+    def mergeFutureConfig(self):
+        """
+        This function merges the \self.futureConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.descriptor is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        if self.__futureConfig is not None:
+            self.fromHash(self.__futureConfig)
 
 
     def onNewDescriptor(self, conf):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = conf.descriptor
-        # Set default values for configuration
-        self.setDefault()
+        self.mergeFutureConfig()
         manager.Manager().onShowConfiguration(self)
 
 
@@ -270,7 +289,7 @@ class Device(Configuration):
         if self.descriptor is not None:
             config = self.toHash()
         else:
-            config = Hash()
+            config = self.__futureConfig
         return XMLWriter().write(Hash(self.classId, config))
 
 
@@ -286,7 +305,7 @@ class Device(Configuration):
         if status == "offline":
             try:
                 attrs = manager.Manager().systemHash[
-                    "server.{}".format(self.futureConfig["serverId"]), ...]
+                    "server.{}".format(self.serverId), ...]
             except KeyError:
                 self.status = "noserver"
             else:
@@ -296,7 +315,7 @@ class Device(Configuration):
                     self.status = "offline"
         else:
             if (conf.classId == self.classId and
-                    conf.serverId == self.futureConfig.get("serverId")):
+                    conf.serverId == self.serverId):
                 self.status = status
             else:
                 self.status = "incompatible"

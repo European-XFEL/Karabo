@@ -145,7 +145,7 @@ class _Manager(QObject):
         if config is None:
             # Use standard configuration for server/classId
             config = self.serverClassData[serverId, classId].toHash()
-       
+
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config)
         self.__isInitDeviceCurrentlyProcessed = True
@@ -352,7 +352,7 @@ class _Manager(QObject):
         Network()._handleBrokerInformation(instanceInfo)
 
 
-    def handle_systemTopology(self, instanceInfo):        
+    def handle_systemTopology(self, instanceInfo): 
         self._handleSystemTopology(instanceInfo.get("systemTopology"))
 
 
