@@ -192,8 +192,8 @@ class Tests(TestCase):
         self.assertEqual(Manager().deviceData["testdevice"].visible, 4)
 
         Manager().projectTopology.projectSaveAs("/tmp/test.krb")
-        Manager().projectTopology.projectOpen("/tmp/test.krb")
         Manager().projectTopology.onCloseProject()
+        Manager().projectTopology.projectOpen("/tmp/test.krb")
 
 
     def stop(self):
