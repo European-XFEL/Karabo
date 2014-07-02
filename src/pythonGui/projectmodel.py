@@ -16,7 +16,8 @@ __all__ = ["ProjectModel"]
 
 from configuration import Configuration
 import icons
-from karabo.hash import Hash, HashMergePolicy
+from karabo.hash import Hash
+from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 from scene import Scene
@@ -62,9 +63,9 @@ class ProjectModel(QStandardItemModel):
         object = index.data(ProjectModel.ITEM_OBJECT)
         
         if isinstance(object, Device):
-            return dict(serverId=object.futureConfig.get("serverId"),
+            return dict(serverId=object.serverId,
                         classId=object.classId,
-                        deviceId=object.futureConfig.get("deviceId"),
+                        deviceId=object.id,
                         config=object.toHash())
         
         return { }
@@ -198,8 +199,7 @@ class ProjectModel(QStandardItemModel):
     def clearParameterPages(self, serverClassIds=[]):
         for project in self.projects:
             for device in project.devices:
-                serverId = device.futureConfig.get("serverId")
-                if (serverId, device.classId) in serverClassIds:
+                if (device.serverId, device.classId) in serverClassIds:
                     if device.parameterEditor is not None:
                         device.parameterEditor.clear()
         
@@ -375,8 +375,7 @@ class ProjectModel(QStandardItemModel):
         
         # Show dialog to select plugin
         self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(
-                manager.Manager().systemHash, device):
+        if not self.pluginDialog.updateServerTopology(manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
@@ -385,34 +384,44 @@ class ProjectModel(QStandardItemModel):
         if self.pluginDialog.exec_() == QDialog.Rejected:
             return
         
-        config = Hash()
         if device is not None:
-            # Get old configuration of device, if classId consistent
+            print "device", device, device.id
+            # Get configuration of device, if classId is the same
             if device.classId == self.pluginDialog.classId:
-                config.merge(device.futureConfig, "merge")
-            # Remove old device configuration
-            project.remove(device)
-
-        config.set("deviceId", self.pluginDialog.deviceId)
-        config.set("serverId", self.pluginDialog.serverId)        
-        
-        # Add new device
-        device = self.addDevice(project, self.pluginDialog.deviceId,
-                                self.pluginDialog.classId,
-                                self.pluginDialog.startupBehaviour,
-                                config)
+                config = device.futureConfig
+            else:
+                config = None
+            
+            # Remove device of project and get index for later insert to keep the
+            # order
+            index = project.remove(device)
+            device = self.insertDevice(index, project,
+                                       self.pluginDialog.serverId,
+                                       self.pluginDialog.classId,
+                                       self.pluginDialog.deviceId,
+                                       self.pluginDialog.startupBehaviour)
+            
+            # Set config, if set
+            if config is not None:
+                device.futureConfig = config
+        else:
+            # Add new device
+            device = self.addDevice(project,
+                                    self.pluginDialog.serverId,
+                                    self.pluginDialog.classId,
+                                    self.pluginDialog.deviceId,
+                                    self.pluginDialog.startupBehaviour)
         
         self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
 
-    def addDevice(self, project, deviceId, classId, ifexists, config):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists):
         """
-        Add a device configuration for the given \project with the given \classId
-        and the \config.
+        Add a device for the given \project with the given data.
         """
-        device = Device(deviceId, classId, ifexists, config)
+        device = Device(serverId, classId, deviceId, ifexists)
         self.checkDescriptor(device)
         project.addDevice(device)
         self.updateData()
@@ -420,12 +429,33 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
-    def checkDescriptor(self, device):
-        serverId = device.futureConfig.get("serverId")
-        classId = device.classId
+    def insertDevice(self, index, project, serverId, classId, deviceId, ifexists):
+        """
+        Insert a device for the given \project with the given data.
+        """
+        device = Device(serverId, classId, deviceId, ifexists)
+        self.checkDescriptor(device)
+        project.insertDevice(index, device)
+        self.updateData()
         
+        return device
+
+
+    def duplicateDevice(self, device):
+        dialog = DuplicateDialog(device)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        for i in xrange(dialog.startIndex, dialog.count):
+            deviceId = "{}{}".format(dialog.deviceIdPrefix, i)
+            newDevice = self.addDevice(self.currentProject(), device.serverId,
+                                       device.classId, deviceId, device.ifexists)
+            newDevice.fromHash(device.toHash())
+
+
+    def checkDescriptor(self, device):
         # Get class configuration
-        conf = manager.getClass(serverId, classId)
+        conf = manager.getClass(device.serverId, device.classId)
         
         conf.signalNewDescriptor.connect(device.onNewDescriptor)
         if conf.descriptor is not None:
@@ -517,6 +547,10 @@ class ProjectModel(QStandardItemModel):
         self.editDevice(object)
 
 
+    def onDuplicateDevice(self):
+        self.duplicateDevice(self.currentDevice())
+
+
     def onInitDevices(self):
         project = self.currentProject()
         for device in project.devices:
@@ -533,8 +567,8 @@ class ProjectModel(QStandardItemModel):
             elif device.ifexists == "restart":
                 self.killDevice(device)
         
-        manager.Manager().initDevice(device.futureConfig.get("serverId"),
-                                     device.classId, device.futureConfig.get("deviceId"), device.toHash())
+        manager.Manager().initDevice(device.serverId, device.classId, device.id,
+                                     device.toHash())
 
 
     def onKillDevices(self):

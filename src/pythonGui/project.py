@@ -80,6 +80,10 @@ class Project(QObject):
         self.devices.append(device)
 
 
+    def insertDevice(self, index, device):
+        self.devices.insert(index, device)
+
+
     def addScene(self, scene):
         self.scenes.append(scene)
 
@@ -94,11 +98,17 @@ class Project(QObject):
     def remove(self, object):
         """
         The \object should be removed from this project.
+        
+        Returns \index of the object in the list.
         """
         if isinstance(object, Configuration):
-            self.devices.remove(object)
+            index = self.devices.index(object)
+            self.devices.pop(index)
+            return index
         elif isinstance(object, Scene):
-            self.scenes.remove(object)
+            index = self.devices.index(object)
+            self.scenes.pop(index)
+            return index
 
 
     def unzip(self):
@@ -110,13 +120,17 @@ class Project(QObject):
 
             projectConfig = projectConfig[self.PROJECT_KEY]
             for d in projectConfig[self.DEVICES_KEY]:
+                serverId = d.get("serverId")
+                deviceId = d.get("deviceId")
+                
                 filename = d.get("filename")
                 data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
                 assert filename.endswith(".xml")
                 filename = filename[:-4]
 
                 for classId, config in XMLParser().read(data).iteritems():
-                    device = Device(filename, classId, d.get("ifexists"), config)
+                    device = Device(serverId, classId, filename, d.get("ifexists"))
+                    device.futureConfig = config
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
@@ -157,9 +171,11 @@ class Project(QObject):
             for device in self.devices:
                 zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                             device.toXml())
-            projectConfig[self.DEVICES_KEY] = [
-                Hash("classId", device.classId, "filename", device.filename,
-                     "ifexists", device.ifexists) for device in self.devices]
+            projectConfig[self.DEVICES_KEY] = [Hash("serverId", device.serverId,
+                                                    "classId", device.classId,
+                                                    "filename", device.filename,
+                                                    "ifexists", device.ifexists)
+                                            for device in self.devices]
 
             for scene in self.scenes:
                 zf.writestr("{}/{}".format(self.SCENES_KEY, scene.filename),
@@ -225,21 +241,33 @@ class Project(QObject):
 
 class Device(Configuration):
 
-    def __init__(self, path, classId, ifexists, config, descriptor=None):
-        super(Device, self).__init__(path, "projectClass", descriptor)
+    def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
+        super(Device, self).__init__(deviceId, "projectClass", descriptor)
 
-        self.filename = "{}.xml".format(path)
+        self.serverId = serverId
         self.classId = classId
-        #self.serverId =
+        
+        self.filename = "{}.xml".format(deviceId)
         self.ifexists = ifexists # restart, ignore
+        
         # Needed in case the descriptor is not set yet
-        self.futureConfig = config
-        # Merge futureConfig, if descriptor is not None
-        self.mergeFutureConfig()
-
-        actual = manager.getDevice(config["deviceId"])
+        self._futureConfig = None
+        
+        actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status)
+
+
+    @property
+    def futureConfig(self):
+        return self._futureConfig
+
+
+    @futureConfig.setter
+    def futureConfig(self, config):
+        self._futureConfig = config
+        # Merge futureConfig, if descriptor is not None
+        self.mergeFutureConfig()
 
 
     def mergeFutureConfig(self):
@@ -251,7 +279,8 @@ class Device(Configuration):
 
         # Set default values for configuration
         self.setDefault()
-        #self.fromHash(self.futureConfig)
+        if self._futureConfig is not None:
+            self.fromHash(self._futureConfig)
 
 
     def onNewDescriptor(self, conf):
@@ -276,8 +305,7 @@ class Device(Configuration):
         if self.descriptor is not None:
             config = self.toHash()
         else:
-            config = self.futureConfig
-        assert "deviceId" in config
+            config = self._futureConfig
         return XMLWriter().write(Hash(self.classId, config))
 
 
@@ -293,7 +321,7 @@ class Device(Configuration):
         if status == "offline":
             try:
                 attrs = manager.Manager().systemHash[
-                    "server.{}".format(self.futureConfig["serverId"]), ...]
+                    "server.{}".format(self.serverId), ...]
             except KeyError:
                 self.status = "noserver"
             else:
@@ -303,7 +331,7 @@ class Device(Configuration):
                     self.status = "offline"
         else:
             if (conf.classId == self.classId and
-                    conf.serverId == self.futureConfig.get("serverId")):
+                    conf.serverId == self.serverId):
                 self.status = status
             else:
                 self.status = "incompatible"

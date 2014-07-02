@@ -12,6 +12,7 @@
 __all__ = ["DisplayDirectory"]
 
 
+from util import SignalBlocker
 from widget import DisplayWidget
 
 from PyQt4.QtGui import (QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
