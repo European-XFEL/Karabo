@@ -444,7 +444,7 @@ class PythonDevice(BaseFsm):
         self._ss.registerSignal("signalNotification", str, str, str, str)     # type, shortMessage, detailedMessage, deviceId
         self._ss.connect("", "signalNotification", "*", "slotNotification", ConnectionType.NO_TRACK, False)
         
-        self._ss.registerSignal("signalSchemaUpdated", Schema, Hash, str)           # schema, configuration, deviceid
+        self._ss.registerSignal("signalSchemaUpdated", Schema, str)           # schema, deviceid
         self._ss.connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", ConnectionType.NO_TRACK, False)                
         
         #---------------------------------------------- register intrinsic slots
@@ -514,10 +514,10 @@ class PythonDevice(BaseFsm):
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            self._ss.emit("signalSchemaUpdated", schema, self.parameters, self.deviceid)
+            self._ss.emit("signalSchemaUpdated", schema, self.deviceid)
             self._ss.reply(schema)
         else:
-            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.parameters, self.deviceid)
+            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
             self._ss.reply(self.fullSchema)
    
     def slotKillDevice(self):
