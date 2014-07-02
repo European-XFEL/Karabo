@@ -686,9 +686,10 @@ class ConfigurationPanel(QWidget):
         
         serverId = indexInfo.get('serverId')
         classId = indexInfo.get('classId')
+        deviceId = indexInfo.get('deviceId')
         config = indexInfo.get('config')
 
-        Manager().initDevice(serverId, classId, config)
+        Manager().initDevice(serverId, classId, deviceId, config)
 
 
     def onGlobalAccessLevelChanged(self):

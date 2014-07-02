@@ -230,6 +230,7 @@ class Device(Configuration):
 
         self.filename = "{}.xml".format(path)
         self.classId = classId
+        #self.serverId =
         self.ifexists = ifexists # restart, ignore
         # Needed in case the descriptor is not set yet
         self.futureConfig = config
@@ -250,7 +251,7 @@ class Device(Configuration):
 
         # Set default values for configuration
         self.setDefault()
-        self.fromHash(self.futureConfig)
+        #self.fromHash(self.futureConfig)
 
 
     def onNewDescriptor(self, conf):
