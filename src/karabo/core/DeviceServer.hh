@@ -171,7 +171,11 @@ namespace karabo {
 
             std::string generateDefaultServerId() const;
             
-            std::string generateDefaultDeviceId(const std::string& classId);            
+            std::string generateDefaultDeviceId(const std::string& classId);
+
+            void instantiateOld(const karabo::util::Hash& hash);
+
+            void instantiateNew(const karabo::util::Hash& hash);
 
         private: // Member variables
 

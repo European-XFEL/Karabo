@@ -101,10 +101,7 @@ namespace karabo {
 
             virtual void update() {
             }
-
-            virtual void setEndOfStream() const {
-            }
-            
+           
             virtual bool respondsToEndOfStream() {
                 return true;
             }

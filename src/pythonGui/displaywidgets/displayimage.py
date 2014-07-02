@@ -29,8 +29,9 @@ class DisplayImage(DisplayWidget):
         self.__plot = self.widget.get_plot()
 
 
-    def valueChanged(self, box, value, timestamp=None):
-        if value is None: return
+    def valueChanged(self, box, value, timestamp=None):        
+        if value is None or value.type.value == '0':
+            return
 
         if self.value is None or value is not self.value:
 

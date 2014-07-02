@@ -66,6 +66,9 @@ mkdir -p $PACKAGEDIR
 # cp -f src/*.py $PACKAGEDIR
 find src -maxdepth 1 -type f -not -name main.py -name \*.py -exec cp {} $PACKAGEDIR \;
 
+# copy DEPENDS file if exists
+if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
+
 # run custom script
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
