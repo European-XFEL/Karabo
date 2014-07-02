@@ -43,7 +43,7 @@ class LoginDialog(QDialog):
             username = "operator"
         self.__leUsername = QLineEdit(username)
         formLayout.addRow("Username:", self.__leUsername)
-        self.__leUsername.textChanged.connect(self.onUsernameChanged)
+        #self.__leUsername.textChanged.connect(self.onUsernameChanged)
         
         if not password:
             password = "karabo"
