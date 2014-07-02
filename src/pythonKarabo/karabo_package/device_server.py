@@ -230,7 +230,7 @@ class DeviceServer(object):
         if signum == signal.SIGINT:
             print('INTERRUPT : You pressed Ctrl-C!')
         else:
-            print('INTERRUPT : You terminate me!')
+            print('INTERRUPT : You terminated me!')
         if self.ss is not None:
             self.ss.call("", "slotKillServer")
         else:
@@ -356,11 +356,14 @@ class DeviceServer(object):
     
     def _registerAndConnectSignalsAndSlots(self):
         self.ss.registerSignal("signalNewDeviceClassAvailable", str, str, Schema) # serverid, classid, Schema
+        self.ss.registerSignal("signalClassSchema", Schema, str, str) # classSchema, classid, deviceid
         self.ss.registerSlot(self.slotStartDevice)
         self.ss.registerSlot(self.slotKillServer)
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
+
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
+        self.ss.connect("", "signalClassSchema", "*", "slotClassSchema", ConnectionType.NO_TRACK, False)
 
     def onStateUpdate(self, currentState):
         self.ss.reply(currentState)
@@ -441,21 +444,16 @@ class DeviceServer(object):
     def endErrorAction(self):
         pass
 
-    def startDeviceAction(self, config):
-        # Input 'config' parameter comes from GUI or DeviceClient
-        classid = iter(config).next().getKey()
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(config))
-        modified = copy.copy(config) 
-        configuration = modified[classid]
-        configuration["serverId"] = self.serverid
-        if "deviceId" in configuration:
-            deviceid = configuration["deviceId"]
+    def startDeviceAction(self, hash):
+
+        config = Hash()
+
+        if hash.has('classId'):
+            classid, config = self.parseNew(hash)
         else:
-            deviceid = self._generateDefaultDeviceInstanceId(classid)
-            configuration["deviceId"] = deviceid
-        # Add logger configuration from DeviceServer:
-        configuration["Logger"] = copy.copy(self.loggerConfiguration)
+            classid, config = self.parseOld(hash)
+
+        
         # create temporary instance to check the configuration parameters are valid
         try:
             pluginDir = self.pluginLoader.getPluginDirectory()
@@ -465,9 +463,9 @@ class DeviceServer(object):
             schema = UserDevice.getSchema(classid)
             validator = Validator()
             self.log.DEBUG("Trying to validate  the configuration on device server")
-            validated = validator.validate(schema, configuration)
+            validated = validator.validate(schema, config)
             self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
-            launcher = Launcher(pluginDir, modname, classid, modified)
+            launcher = Launcher(pluginDir, modname, classid, config)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
             del validated
@@ -475,6 +473,47 @@ class DeviceServer(object):
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
             return
+
+    def parseNew(self, hash):
+        classid = hash['classId']
+        self.log.INFO("Trying to start {}...".format(classid))
+        self.log.DEBUG("with the following configuration:\n{}".format(hash))
+
+        # Get configuration
+        config = copy.copy(hash['configuration'])
+
+        # Inject serverId
+        config['_serverId_'] = self.serverid
+
+        # Inject deviceId
+        if 'deviceId' not in hash:
+            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
+        elif len(hash['deviceId']) == 0:
+            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
+        else:
+            config['_deviceId_'] = hash['deviceId']
+
+        # Add logger configuration from DeviceServer:
+        config['Logger'] = copy.copy(self.loggerConfiguration)
+        return classid, config
+
+
+    def parseOld(self, hash):
+         # Input 'config' parameter comes from GUI or DeviceClient
+        classid = iter(hash).next().getKey()
+        self.log.INFO("Trying to start {}...".format(classid))
+        self.log.DEBUG("with the following configuration:\n{}".format(hash))        
+        configuration = copy.copy(hash[classid])
+        configuration["serverId"] = self.serverid
+        if "deviceId" in configuration:
+            deviceid = configuration["deviceId"]
+        else:
+            deviceid = self._generateDefaultDeviceInstanceId(classid)
+            configuration["deviceId"] = deviceid
+        # Add logger configuration from DeviceServer:
+        configuration["Logger"] = copy.copy(self.loggerConfiguration)
+        return classid, configuration
+
         
     def notifyNewDeviceAction(self):
         deviceClasses = []
@@ -513,6 +552,7 @@ class DeviceServer(object):
 
     def slotGetClassSchema(self, classid):
         schema = Configurator(PythonDevice).getSchema(classid)
+        self.ss.emit("signalClassSchema", schema, classid, self.serverid)
         self.ss.reply(schema)
         
     def processEvent(self, event):
@@ -547,10 +587,10 @@ class Launcher(threading.Thread):
         # hide complaints from 'threading' module
         threading._DummyThread._Thread__stop = lambda x: 42
         
-        if "deviceId" in config[classid]:
-            self.device = config[classid]["deviceId"]
+        if "_deviceId_" in config:
+            self.device = config["_deviceId_"]
         else:
-            raise RuntimeError, "Access to " + classid + ".deviceId failed"
+            raise RuntimeError, "Access to " + classid + "._deviceId_ failed"
         
         try:
             self.script = os.path.realpath(pluginDir + "/" + modname + ".py")

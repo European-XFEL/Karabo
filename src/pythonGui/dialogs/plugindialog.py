@@ -131,12 +131,8 @@ class PluginDialog(QDialog):
         self.cbServer.adjustSize()
 
         if device is not None:
-            config = device.futureConfig
-            deviceId = config.get("deviceId")
-            serverId = config.get("serverId")
-
-            self.leDeviceId.setText(deviceId)
-            index = self.cbServer.findText(serverId)
+            self.leDeviceId.setText(device.id)
+            index = self.cbServer.findText(device.serverId)
             self.cbServer.setCurrentIndex(index)
             index = self.cbPlugin.findText(device.classId)
             self.cbPlugin.setCurrentIndex(index)
