@@ -69,6 +69,9 @@ mkdir -p $PACKAGEDIR
 # cp -rf $DISTDIR/$CONF/$PLATFORM/*.so $PACKAGEDIR
 find $DISTDIR/$CONF/$PLATFORM -maxdepth 1 -type f -name \*.so -exec cp {} $PACKAGEDIR \;
 
+# copy DEPENDS file if exists
+if [ -e DEPENDS ]; then cp DEPENDS $PACKAGEDIR; fi
+
 # run custom script
 if [ -e $(pwd)/custom.sh ]; then $(pwd)/custom.sh; fi
 
