@@ -80,6 +80,10 @@ class Project(QObject):
         self.devices.append(device)
 
 
+    def insertDevice(self, index, device):
+        self.devices.insert(index, device)
+
+
     def addScene(self, scene):
         self.scenes.append(scene)
 
@@ -94,11 +98,17 @@ class Project(QObject):
     def remove(self, object):
         """
         The \object should be removed from this project.
+        
+        Returns \index of the object in the list.
         """
         if isinstance(object, Configuration):
-            self.devices.remove(object)
+            index = self.devices.index(object)
+            self.devices.pop(index)
+            return index
         elif isinstance(object, Scene):
-            self.scenes.remove(object)
+            index = self.devices.index(object)
+            self.scenes.pop(index)
+            return index
 
 
     def unzip(self):
@@ -120,7 +130,7 @@ class Project(QObject):
 
                 for classId, config in XMLParser().read(data).iteritems():
                     device = Device(serverId, classId, filename, d.get("ifexists"))
-                    device.setFutureConfig(config)
+                    device.futureConfig = config
                     break # there better be only one!
                 self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
@@ -241,15 +251,21 @@ class Device(Configuration):
         self.ifexists = ifexists # restart, ignore
         
         # Needed in case the descriptor is not set yet
-        self.__futureConfig = None
+        self._futureConfig = None
         
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status)
 
 
-    def setFutureConfig(self, config):
-        self.__futureConfig = config
+    @property
+    def futureConfig(self):
+        return self._futureConfig
+
+
+    @futureConfig.setter
+    def futureConfig(self, config):
+        self._futureConfig = config
         # Merge futureConfig, if descriptor is not None
         self.mergeFutureConfig()
 
@@ -263,8 +279,8 @@ class Device(Configuration):
 
         # Set default values for configuration
         self.setDefault()
-        if self.__futureConfig is not None:
-            self.fromHash(self.__futureConfig)
+        if self._futureConfig is not None:
+            self.fromHash(self._futureConfig)
 
 
     def onNewDescriptor(self, conf):
@@ -289,7 +305,7 @@ class Device(Configuration):
         if self.descriptor is not None:
             config = self.toHash()
         else:
-            config = self.__futureConfig
+            config = self._futureConfig
         return XMLWriter().write(Hash(self.classId, config))
 
 
