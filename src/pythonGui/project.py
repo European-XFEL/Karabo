@@ -165,7 +165,7 @@ class Project(QObject):
             file = NamedTemporaryFile(dir=os.path.dirname(filename),
                                       delete=False)
         else:
-            file = self.filename
+            file = filename
 
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
             for device in self.devices:
