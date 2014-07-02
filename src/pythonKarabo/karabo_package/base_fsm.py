@@ -30,15 +30,16 @@ class BaseFsm(object):
         pass
     
     @abstractmethod
-    def errorFound(self, shortMessage, detailedMessage):
+    def exceptionFound(self, shortMessage, detailedMessage):
         pass
-    
-    @abstractmethod
-    def errorFoundAction(self, shortMessage, detailedMessage):
-        pass
-    
+
+    # TODO Deprecate
     @abstractmethod
     def onStateUpdate(self, currentState):
+        pass   
+
+    @abstractmethod
+    def updateState(self, currentState):
         pass
     
     def noStateTransition(self):
@@ -51,20 +52,20 @@ class BaseFsm(object):
             try:
                 fsm.start()
             except Exception as e:
-                self.errorFound("Exception while processing event '{}'".format("Start state machine"), str(e))
+                self.exceptionFound("Exception while processing event '{}'".format("Start state machine"), str(e))
                 return
             # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
             state = fsm.get_state()
             if state[0] == '[' and state[len(state)-1] == ']':
                 state = state[1:len(state)-1]
-            self.onStateUpdate(state)
+            self.updateState(state)
     
     def processEvent(self, event):
         """Process input event, i.e. drive state machine to the next state."""
         with self.processEventLock:
             fsm = self.getFsm()
             if fsm is not None:
-                self.onStateUpdate("Changing...")
+                self.updateState("Changing...")
                 try:
                     fsm.process_event(event)
                 except Exception as e:
@@ -74,5 +75,5 @@ class BaseFsm(object):
                 # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
                 if state[0] == '[' and state[len(state)-1] == ']':
                     state = state[1:len(state)-1]
-                self.onStateUpdate(state)
+                self.updateState(state)
     
