@@ -53,6 +53,7 @@ class Box(QObject):
         self.configuration = configuration
         self.timestamp = None
         self._value = Dummy(path, configuration)
+        self.initialized = False
         self.current = None # Support for choice of nodes
 
 
@@ -97,13 +98,13 @@ class Box(QObject):
         listeners. The public set method is in the descriptors, so
         they can take care that the values actually make sense """
         self._value = self.descriptor.cast(value)
+        self.initialized = True
         self.timestamp = timestamp
-        if self.hasValue():
-            self.signalUpdateComponent.emit(self, self._value, timestamp)
+        self.signalUpdateComponent.emit(self, self._value, timestamp)
 
 
     def hasValue(self):
-        return not isinstance(self._value, Dummy)
+        return self.initialized
 
 
     def isAllowed(self):
@@ -191,6 +192,7 @@ class Type(hashtypes.Type):
     def redummy(self, box):
         """ remove all values from box """
         box._value = Dummy(box.path, box.configuration)
+        box.initialized = False
         box.descriptor = None
 
 
@@ -443,6 +445,7 @@ class Schema(hashtypes.Descriptor):
                 b.redummy()
                 setattr(d, k, b)
         box._value = d
+        box.initialized = False
         box.descriptor = None
 
 
@@ -572,4 +575,5 @@ class ListOfNodes(hashtypes.Descriptor):
 
     def redummy(self, box):
         box._value = Dummy(box.path, box.configuration)
+        box.initialized = False
         box.descriptor = None
