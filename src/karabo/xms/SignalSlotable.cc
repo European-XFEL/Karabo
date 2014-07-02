@@ -296,9 +296,9 @@ namespace karabo {
                     m_trackedComponents.set(instanceId + ".instanceInfo", instanceInfo);
                     m_heartbeatMutex.unlock();
 
-                    m_connectMutex.lock();
-                    m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
-                    m_connectMutex.unlock();
+//                    m_connectMutex.lock();
+//                    m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
+//                    m_connectMutex.unlock();
 
                     trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
                 }
@@ -386,7 +386,7 @@ namespace karabo {
                     // Filter out service slots // TODO finally update to last set of those
                     if (function == "slotConnect" || function == "slotDisconnect" || function == "slotGetAvailableFunctions" ||
                             function == "slotHasSlot" || function == "slotHeartbeat" || function == "slotPing" || function == "slotPingAnswer" ||
-                            function == "slotRefresh" || function == "slotRefreshAll" || function == "slotStopTrackingExistenceOfConnection") {
+                            function == "slotStopTrackingExistenceOfConnection") {
                         continue;
                     }
                     functions.push_back(it->first);
