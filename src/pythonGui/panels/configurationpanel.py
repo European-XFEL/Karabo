@@ -679,6 +679,7 @@ class ConfigurationPanel(QWidget):
         elif self.twProject.currentIndex().isValid():
             indexInfo = self.twProject.indexInfo()
         else:
+            indexInfo = {}
             print "No device for initiation selected."
 
         if len(indexInfo) == 0:
@@ -695,7 +696,8 @@ class ConfigurationPanel(QWidget):
     def onGlobalAccessLevelChanged(self):
         for index in xrange(self.__swParameterEditor.count()):
             twParameterEditor = self.__swParameterEditor.widget(index)
-            twParameterEditor.globalAccessLevelChanged()
+            if isinstance(twParameterEditor, ParameterTreeWidget):
+                twParameterEditor.globalAccessLevelChanged()
 
 
     def onSaveToFile(self):

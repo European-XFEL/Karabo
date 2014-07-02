@@ -39,9 +39,9 @@ class Configuration(Box):
         self.error = False
         self.parameterEditor = None
 
-        if type == "device":
-            self.serverId = None
-            self.classId = None
+        #if type == "device":
+        self.serverId = None
+        self.classId = None
 
 
     def setSchema(self, schema):
@@ -96,7 +96,7 @@ class Configuration(Box):
             self.classId = attrs.get("classId")
             self.serverId = attrs.get("serverId")
             error = attrs.get("status") == "error"
-            error_changed = error != self.error
+            #error_changed = error != self.error
             self.error = error
             if self.status == "offline" and self.visible > 0:
                 Network().onGetDeviceSchema(self.id)
