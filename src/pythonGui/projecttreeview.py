@@ -201,7 +201,13 @@ class ProjectTreeView(QTreeView):
                 acEdit.triggered.connect(self.model().onEditDevice)
             elif isinstance(object, Scene):
                 acEdit.triggered.connect(self.model().onEditScene)
-             
+
+            text = "Duplicate"
+            acDuplicate = QAction(text, self)
+            acDuplicate.setStatusTip(text)
+            acDuplicate.setToolTip(text)
+            acDuplicate.triggered.connect(self.model().onDuplicateDevice)
+
             text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
@@ -222,6 +228,7 @@ class ProjectTreeView(QTreeView):
             
             menu = QMenu()
             menu.addAction(acEdit)
+            menu.addAction(acDuplicate)
             menu.addAction(acRemove)
             menu.addSeparator()
             menu.addAction(acInitDevice)
