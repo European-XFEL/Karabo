@@ -61,7 +61,7 @@ namespace karabo {
                     .setNewDefaultValue(5)
                     .commit();
             
-            OVERWRITE_ELEMENT(expected).key("deviceId")
+            OVERWRITE_ELEMENT(expected).key("_deviceId_")
                     .setNewDefaultValue("Karabo_FileDataLogger_0")
                     .commit();
         }
