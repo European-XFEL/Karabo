@@ -105,7 +105,7 @@ namespace karabo {
 
             void classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema);
             
-            void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema, const karabo::util::Hash& configuration);
+            void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
 
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash& header);
 

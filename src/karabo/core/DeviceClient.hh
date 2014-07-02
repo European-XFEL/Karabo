@@ -56,7 +56,7 @@ namespace karabo {
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Hash& /*topologyEntry*/) > InstanceUpdatedHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceGoneHandler;
-            typedef boost::function<void (const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/, const karabo::util::Hash& /*configuration*/) > SchemaUpdatedHandler;
+            typedef boost::function<void (const std::string& /*deviceId*/, const karabo::util::Schema& /*schema*/) > SchemaUpdatedHandler;
             typedef boost::function<void (const std::string& /*serverId*/, const std::string& /*classId*/, const karabo::util::Schema& /*schema*/) > ClassSchemaHandler;
 
             static const unsigned int CONNECTION_KEEP_ALIVE = 15;
@@ -553,7 +553,7 @@ namespace karabo {
 
             virtual void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const karabo::util::Hash& configuration, const std::string& deviceId);
+            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
             virtual void slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
 
