@@ -547,8 +547,13 @@ class ProjectModel(QStandardItemModel):
             elif device.ifexists == "restart":
                 self.killDevice(device)
         
+<<<<<<< HEAD
+        manager.Manager().initDevice(device.futureConfig.get("serverId"),
+                                     device.classId, device.futureConfig.get("deviceId"), device.toHash())
+=======
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
                                      device.toHash())
+>>>>>>> duplicateProjectDevices
 
 
     def onKillDevices(self):
