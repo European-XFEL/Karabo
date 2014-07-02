@@ -93,12 +93,28 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::util;
 
-                STRING_ELEMENT(expected).key("version")
-                        .displayedName("Version")
-                        .description("The version of this device class")
+                STRING_ELEMENT(expected).key("compatibility")
+                        .displayedName("Compatibility")
+                        .description("The compatibility of this device to the Karabo framework")
                         .expertAccess()
                         .readOnly()
                         .initialValue(Device::classInfo().getVersion())
+                        .commit();
+
+                STRING_ELEMENT(expected).key("_serverId_")
+                        .displayedName("_ServerID_")
+                        .description("Do not set this property, it will be set by the device-server")
+                        .adminAccess()
+                        .assignmentOptional().noDefaultValue()
+                        .init()
+                        .commit();
+
+                STRING_ELEMENT(expected).key("_deviceId_")
+                        .displayedName("_DeviceID_")
+                        .description("Do not set this property, it will be set by the device-server")
+                        .adminAccess()
+                        .assignmentOptional().noDefaultValue()
+                        .init()
                         .commit();
 
                 CHOICE_ELEMENT(expected).key("connection")
@@ -130,15 +146,13 @@ namespace karabo {
                         .displayedName("ServerID")
                         .description("The device-server on which this device is running on")
                         .expertAccess()
-                        .assignmentOptional().noDefaultValue()
-                        .init()
+                        .readOnly()
                         .commit();
 
                 STRING_ELEMENT(expected).key("deviceId")
                         .displayedName("DeviceID")
                         .description("The device instance ID uniquely identifies a device instance in the distributed system")
-                        .assignmentOptional().noDefaultValue()
-                        .init()
+                        .readOnly()
                         .commit();
 
                 BOOL_ELEMENT(expected).key("archive")
@@ -171,11 +185,11 @@ namespace karabo {
                 m_parameters = configuration;
 
                 // Set serverId
-                if (configuration.has("serverId")) configuration.get("serverId", m_serverId);
+                if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
 
                 // Set instanceId
-                if (configuration.has("deviceId")) configuration.get("deviceId", m_deviceId);
+                if (configuration.has("_deviceId_")) configuration.get("_deviceId_", m_deviceId);
                 else m_deviceId = "__none__";
 
                 // Setup the validation classes
@@ -379,7 +393,7 @@ namespace karabo {
 
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
-                   
+
                 }
 
                 set(validated);
@@ -659,8 +673,12 @@ namespace karabo {
 
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
-                // Repair classId
+                // ClassId
                 m_parameters.set("classId", m_classId);
+                // DeviceId
+                m_parameters.set("deviceId", m_deviceId);
+                // ServerId
+                m_parameters.set("serverId", m_serverId);
 
                 // Validate first time to assign timestamps
                 m_objectStateChangeMutex.lock();
@@ -704,21 +722,14 @@ namespace karabo {
                 connectN("", "signalNotification", "*", "slotNotification");
 
                 SIGNAL3("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, karabo::util::Hash /*configuration*/, string /*deviceId*/);
-                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");                               
+                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
 
-                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
-                SLOT0(slotRefresh) // Deprecate
+                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)               
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
-                SLOT0(slotKillDevice)                        
-            }
-
-            // TODO deprecate
-
-            void slotRefresh() {
-                emit("signalChanged", m_parameters, m_deviceId);
-                reply(m_parameters);
-            }
+                SLOT0(slotKillDevice)
+            }     
+           
 
             void slotGetConfiguration() {
                 emit("signalChanged", m_parameters, m_deviceId);
