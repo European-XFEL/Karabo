@@ -35,9 +35,12 @@ class BaseComponent(Loadable, QObject):
     signalValueChanged = pyqtSignal(object, object) # key, value
 
 
-    def __init__(self, classAlias, box, parent):
+    def __init__(self, classAlias, parent):
         super(BaseComponent, self).__init__(parent)
         self.classAlias = classAlias
+
+
+    def connectWidget(self, box):
         box.signalNewDescriptor.connect(self.widgetFactory.typeChangedSlot)
         self.widgetFactory.setParent(self)
         if box.descriptor is not None:
@@ -90,15 +93,16 @@ class DisplayComponent(BaseComponent):
         if W is None:
             self.widgetFactory = DisplayWidget.factories[widgetFactory].\
                                    getClass(classAlias)(box, parent)
-            super(DisplayComponent, self).__init__(classAlias, box, parent)
+            super(DisplayComponent, self).__init__(classAlias, parent)
         else:
             self.widgetFactory = W(box, parent)
-            super(DisplayComponent, self).__init__(W.alias, box, parent)
+            super(DisplayComponent, self).__init__(W.alias, parent)
         self.widgetFactory.setReadOnly(True)
         self.connectWidget(box)
 
 
     def connectWidget(self, box):
+        BaseComponent.connectWidget(self, box)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
@@ -158,7 +162,6 @@ class DisplayComponent(BaseComponent):
         self.widgetFactory.setParent(None)
         self.widgetFactory = factory.getClass(alias)(
             self.boxes[0], oldWidget.parent())
-        self.widgetFactory.setParent(self)
         self.widgetFactory.setReadOnly(True)
         self.connectWidget(self.boxes[0])
         for b in self.boxes[1:]:
@@ -181,18 +184,12 @@ class EditableNoApplyComponent(BaseComponent):
         if W is None:
             self.widgetFactory = EditableWidget.getClass(classAlias)(
                                         box, self.__compositeWidget)
-            super(EditableNoApplyComponent, self).__init__(classAlias, box,
-                                                           parent)
+            super(EditableNoApplyComponent, self).__init__(classAlias, parent)
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
-            super(EditableNoApplyComponent, self).__init__(W.alias, box,
-                                                           parent)
-        if box.hasValue():
-            self.widgetFactory.valueChanged(box, box.value, box.timestamp)
-        box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
+            super(EditableNoApplyComponent, self).__init__(W.alias, parent)
+        self.connectWidget(box)
         self.widgetFactory.setReadOnly(False)
-        self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
-        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
         hLayout.addWidget(self.widgetFactory.widget)
 
         unitLabel = (box.descriptor.metricPrefixSymbol +
@@ -200,6 +197,15 @@ class EditableNoApplyComponent(BaseComponent):
 
         if unitLabel:
             hLayout.addWidget(QLabel(unitLabel))
+
+
+    def connectWidget(self, box):
+        BaseComponent.connectWidget(self, box)
+        if box.hasValue():
+            self.widgetFactory.valueChanged(box, box.value, box.timestamp)
+        box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
+        self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
 
 
     def _getWidgetCategory(self):
@@ -281,15 +287,12 @@ class EditableApplyLaterComponent(BaseComponent):
         if W is None:
             self.widgetFactory = EditableWidget.getClass(classAlias)(
                                             box, self.__compositeWidget)
-            super(EditableApplyLaterComponent, self).__init__(classAlias, box,
+            super(EditableApplyLaterComponent, self).__init__(classAlias,
                                                               parent)
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
-            super(EditableApplyLaterComponent, self).__init__(W.alias, box,
-                                                              parent)
-        self.widgetFactory.setReadOnly(False)
-        self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
-        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
+            super(EditableApplyLaterComponent, self).__init__(W.alias, parent)
+
         hLayout.addWidget(self.widgetFactory.widget)
 
         self.box = box
@@ -327,10 +330,17 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__busyTimer.timeout.connect(self.onTimeOut)
         self._applyEnabled = False
 
+        self.connectWidget(box)
+        self.widgetFactory.setReadOnly(False)
         # In case of attributes (Hash-V2) connect another function here
         self.signalConflictStateChanged.connect(
             manager.Manager().onConflictStateChanged)
 
+
+    def connectWidget(self, box):
+        BaseComponent.connectWidget(self, box)
+        self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
+        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
         if box.hasValue():
             self.onDisplayValueChanged(box, box.value)
@@ -394,9 +404,9 @@ class EditableApplyLaterComponent(BaseComponent):
         oldWidget = self.widgetFactory.widget
         self.widgetFactory = factory.getClass(alias)(
             self.box, oldWidget.parent())
+        self.__currentDisplayValue = None
         self.widgetFactory.setReadOnly(False)
-        self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
-        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
+        self.connectWidget(self.box)
         oldWidget.parent().layout().insertWidget(0, self.widgetFactory.widget)
         oldWidget.setParent(None)
         self.widgetFactory.widget.show()
@@ -488,11 +498,16 @@ class ChoiceComponent(BaseComponent):
         if W is None:
             self.widgetFactory = EditableWidget.getClass(classAlias)(
                                                     box, parent)
-            super(ChoiceComponent, self).__init__(classAlias, box, parent)
+            super(ChoiceComponent, self).__init__(classAlias, parent)
         else:
             self.widgetFactory = W(box, parent)
-            super(ChoiceComponent, self).__init__(W.alias, box, parent)
+            super(ChoiceComponent, self).__init__(W.alias, parent)
         self.widget.setEnabled(False)
+        self.connectWidget(box)
+
+
+    def connectWidget(self, box):
+        BaseComponent.connectWidget(self, box)
         box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
         box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
         if box.hasValue():
