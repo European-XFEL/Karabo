@@ -963,92 +963,89 @@ class DisplayImage(DisplayWidget):
         if value is None:
             return
 
-        if self.value is None or value is not self.value:
-            # Store original value with type
-            self.value = value #copy.copy(value)
+        self.value = value
 
-            if len(value.dims.value) < 3:
-                return
-            dimX, dimY, dimZ = value.dims.value
-            data = value.data.value
-            channelSpace = value.channelSpace.value
-
-            if not dimX and not dimY and not dimZ and not data:
-                return
-            if (dimX < 1 or dimY < 1 or dimZ < 1 or
-                len(data) < dimX * dimY * dimZ *
-                            _returnRawByteWidth(channelSpace)):
-                return
+        if len(value.dims.value) != 3:
+            return
+        dimX, dimY, dimZ = value.dims.value
+        data = value.data.value
+        channelSpace = value.channelSpace.value
+        if not dimX and not dimY and not dimZ and not data:
+            return
+        if (dimX < 1 or dimY < 1 or dimZ < 1 or
+            len(data) < dimX * dimY * dimZ *
+                        _returnRawByteWidth(channelSpace)):
+            return
 
 
-            imageLayouts = self.__imageLayouts
-            detectorLayout = self.__detectorLayout
-            self.__imageLayouts = None
-            self.__detectorLayout = None
+        imageLayouts = self.__imageLayouts
+        detectorLayout = self.__detectorLayout
+        self.__imageLayouts = None
+        self.__detectorLayout = None
 
-            #provide default layout (1 tile on 1 module if none exists)
-            if self.__imageLayouts is None:
-                imLayouts = []
-                for i in range(dimZ):
-                    imLayouts.append({"module": 1, "tileRow": 1, "tileCol": 1})
-                self.__imageLayouts = imLayouts
+        #provide default layout (1 tile on 1 module if none exists)
+        if self.__imageLayouts is None:
+            imLayouts = []
+            for i in range(dimZ):
+                imLayouts.append({"module": 1, "tileRow": 1, "tileCol": 1})
+            self.__imageLayouts = imLayouts
 
-            if self.__detectorLayout is None:
-                self.__detectorLayout={"moduleRows": 1, "moduleCols": 1,
-                                       "tileRows": 1, "tileCols": 1}
+        if self.__detectorLayout is None:
+            self.__detectorLayout={"moduleRows": 1, "moduleCols": 1,
+                                   "tileRows": 1, "tileCols": 1}
 
-            if detectorLayout is not self.__detectorLayout:
-                self._updateTileLayoutWidget()
+        if detectorLayout is not self.__detectorLayout:
+            self._updateTileLayoutWidget()
 
-            forceNew = False
-            nItems = self.__listModel.rowCount()
+        forceNew = False
+        nItems = self.__listModel.rowCount()
 
-            if dimZ != nItems:
-                forceNew = True
-                #delete previous items in listview
-                #print "Deleting previous stack..."
-                cnt = 0
-                while self.__listModel.item(cnt):
-                    self.__listModel.item(cnt).getWidget().hide()
-                    self.__listModel.item(cnt).getWidget().setParent(None)
-                    cnt += 1
-                self.__listModel.clear()
+        if dimZ != nItems:
+            forceNew = True
+            #delete previous items in listview
+            #print "Deleting previous stack..."
+            cnt = 0
+            while self.__listModel.item(cnt):
+                self.__listModel.item(cnt).getWidget().hide()
+                self.__listModel.item(cnt).getWidget().setParent(None)
+                cnt += 1
+            self.__listModel.clear()
 
-            newModel = self.__listModel
+        newModel = self.__listModel
 
-            #hide widget to allow for more reasonable refresh
-            self.__selectionWidget.hide()
+        #hide widget to allow for more reasonable refresh
+        self.__selectionWidget.hide()
 
-            if forceNew:
-                for slice in range(dimZ):
-                    sliceInfo = "({module}-{tileRow}/{tileCol})".format(
-                                                **self.__imageLayouts[slice])
-                    imageItem = ImageListItem(str(slice), newModel)
-                    imageItem.setHistBins(self.__histBins)
-                    imageItem.setTitle(str(slice) + sliceInfo)
-                    imageItem.setSliceId(slice)
-                    imageItem.setWidth(self.__imageWidth)
-                    imageItem.setLayout(self.__imageLayouts[slice]["tileRow"],
-                                        self.__imageLayouts[slice]["tileCol"],
-                                        self.__imageLayouts[slice]["module"])
-                    #update grid
-                    newModel.appendRow(imageItem)
-
-            items = [newModel.item(i) for i in range(newModel.rowCount())
-                     if newModel.item(i) is not None]
-
-            for item in items:
-                item.prepareImageData(value)
-                item.sigRenderImage()
-            if forceNew:
-                self.emit(SIGNAL("valueChangedCallback()"))
-            else:
-                self.__selectionWidget.emit(SIGNAL("show()"))
-
+        if forceNew:
             for slice in range(dimZ):
-                self.__gridLayout.setRowStretch(slice, 1)
-            self.__listModel = newModel
-            self.__listWidget.setModel(self.__listModel)
+                sliceInfo = "({module}-{tileRow}/{tileCol})".format(
+                                            **self.__imageLayouts[slice])
+                imageItem = ImageListItem(str(slice), newModel)
+                imageItem.setHistBins(self.__histBins)
+                imageItem.setTitle(str(slice) + sliceInfo)
+                imageItem.setSliceId(slice)
+                imageItem.setWidth(self.__imageWidth)
+                imageItem.setLayout(self.__imageLayouts[slice]["tileRow"],
+                                    self.__imageLayouts[slice]["tileCol"],
+                                    self.__imageLayouts[slice]["module"])
+                #update grid
+                newModel.appendRow(imageItem)
+
+        items = [newModel.item(i) for i in range(newModel.rowCount())
+                 if newModel.item(i) is not None]
+
+        for item in items:
+            item.prepareImageData(value)
+            item.sigRenderImage()
+        if forceNew:
+            self.emit(SIGNAL("valueChangedCallback()"))
+        else:
+            self.__selectionWidget.show()
+
+        for slice in range(dimZ):
+            self.__gridLayout.setRowStretch(slice, 1)
+        self.__listModel = newModel
+        self.__listWidget.setModel(self.__listModel)
 
 
     def _setNumCols(self, cols):
