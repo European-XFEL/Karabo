@@ -871,11 +871,10 @@ class DisplayImage(DisplayWidget):
 
 
     def _getListModelItems(self):
-        items = []
         for slice in range(self.__listModel.rowCount()):
-            if self.__listModel.item(slice) is not None:
-                items.append(self.__listModel.item(slice))
-        return items
+            y = self.__listModel.item(slice)
+            if y is not None:
+                yield y
 
 
     def _histTypeChange(self):
