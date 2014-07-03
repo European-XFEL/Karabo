@@ -555,7 +555,7 @@ class DisplayImage(DisplayWidget):
         self.__columnSlider.setTickInterval(2)
         self.__columnSlider.setTickPosition(QSlider.TicksAbove)
         self.__columnSlider.setSliderPosition(self.__cols)
-        self.__columnSlider.setRange(1,10)
+        self.__columnSlider.setRange(1, 10)
         self.__columnSlider.setSingleStep(1)
         self.__columnSlider.setOrientation(Qt.Horizontal)
         self.connect(self.__columnSlider, SIGNAL('valueChanged(int)'),
@@ -708,7 +708,7 @@ class DisplayImage(DisplayWidget):
 
         self.__selectionWidget = QWidget()
         self.__selectionWidget.setMinimumHeight(self.__minHeight)
-        self.__selectionWidget.setMinimumWidth(self.__minWidth-20)
+        self.__selectionWidget.setMinimumWidth(self.__minWidth - 20)
         self.__selectionWidget.resizeEvent = self._onResize
 
         self.connect(self, SIGNAL("valueChangedCallback()"),
@@ -873,7 +873,7 @@ class DisplayImage(DisplayWidget):
             aggHist.set_titles("Aggregate Histograms of Selected Curves",
                                "Pixel units", "Counts")
             abscnt = 0
-            for cnt in range(0,self.__listModel.rowCount()):
+            for cnt in range(self.__listModel.rowCount()):
                 if self.__listModel.item(cnt).checkState():
                     curve = self.__listModel.item(cnt).getHistCurve()
                     #curve.setTitle(str(cnt))
@@ -890,7 +890,7 @@ class DisplayImage(DisplayWidget):
 
     def _getListModelItems(self):
         items = []
-        for slice in range(0,self.__listModel.rowCount()):
+        for slice in range(self.__listModel.rowCount()):
             if self.__listModel.item(slice) is not None:
                 items.append(self.__listModel.item(slice))
         return items
@@ -909,12 +909,12 @@ class DisplayImage(DisplayWidget):
         for item in self._getListModelItems():
             item.setHistType(self.__histType)
             item.sigShowHist()
-        self.__selectionWidget.emit(SIGNAL("show()"))
+        self.__selectionWidget.show()
 
 
     def _activateCmap(self, action):
         cmapName = str(action.text())
-        for slice in range(0,self.__listModel.rowCount()):
+        for slice in range(self.__listModel.rowCount()):
             if self.__listModel.item(slice) is not None:
                 self.__listModel.item(slice).updateColorMap(cmapName)
         self.__colorMapSelector.setIcon(build_icon_from_cmap_name(cmapName))
