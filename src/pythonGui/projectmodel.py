@@ -450,7 +450,7 @@ class ProjectModel(QStandardItemModel):
             deviceId = "{}{}".format(dialog.deviceIdPrefix, i)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
-            newDevice.fromHash(device.toHash())
+            newDevice.futureConfig = device.toHash()
 
 
     def checkDescriptor(self, device):
