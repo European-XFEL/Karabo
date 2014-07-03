@@ -47,6 +47,10 @@ class RangeSlider(QSlider):
         This class emits the same signals as the QSlider base class, with the
         exception of valueChanged
     """
+
+    sliderMoved = pyqtSignal(int, int)
+    sliderReleased = pyqtSignal(int, int)
+
     def __init__(self, *args):
         super(RangeSlider, self).__init__(*args)
 
@@ -182,12 +186,11 @@ class RangeSlider(QSlider):
         self.click_offset = new_pos
 
         self.update()
-        self.emit(SIGNAL('sliderMoved(int,int)'), new_pos, self.active_slider)
+        self.sliderMoved.emit(new_pos, self.active_slider)
 
     def mouseReleaseEvent(self, event):
         event.accept()
-        self.emit(SIGNAL('sliderReleased(int,int)'), self.click_offset,
-                    self.active_slider)
+        self.sliderReleased.emit(self.click_offset, self.active_slider)
 
     def __pick(self, pt):
         if self.orientation() == Qt.Horizontal:
@@ -237,11 +240,6 @@ class ImagePlotItem(ImagePlot):
         self.__LUTrange = None
         self.__ColorMap = 'jet'
         self.disable_autoscale()
-
-        self.connect(self, SIGNAL("updateColorMap(PyQt_PyObject)"),
-                     self.updateColorMap)
-        self.connect(self, SIGNAL("updateLUTRange(PyQt_PyObject)"),
-                     self.updateLUTRange)
 
 
     def mousePressEvent(self, me):
@@ -436,10 +434,10 @@ class ImageListItem(QStandardItem):
             self.setHist(None)
 
     def setLUTLimits(self, r):
-        self.__imageWidget.emit(SIGNAL("updateLUTRange(PyQt_PyObject)"), r)
+        self.__imageWidget.updateLUTRange(r)
 
     def updateColorMap(self, map):
-        self.__imageWidget.emit(SIGNAL("updateColorMap(PyQt_PyObject)"), map)
+        self.__imageWidget.updateColorMap(map)
 
     def setHistBins(self, bins):
         self.__bins = bins
@@ -558,8 +556,7 @@ class DisplayImage(DisplayWidget):
         self.__columnSlider.setRange(1, 10)
         self.__columnSlider.setSingleStep(1)
         self.__columnSlider.setOrientation(Qt.Horizontal)
-        self.connect(self.__columnSlider, SIGNAL('valueChanged(int)'),
-                     self._setNumCols)
+        self.__columnSlider.valueChanged[int].connect(self._setNumCols)
         self.__toolBarLayout.addWidget(QLabel("Cols:"))
         self.__toolBarLayout.addWidget(self.__columnSlider)
 
@@ -574,8 +571,7 @@ class DisplayImage(DisplayWidget):
         self.__histTypeButton.setIcon(icons.histHist)
         self.__histTypeButton.setToolTip(text)
         self.__histTypeButton.setStatusTip(text)
-        self.connect(self.__histTypeButton, SIGNAL("clicked()"),
-                     self._histTypeChange)
+        self.__histTypeButton.clicked.connect(self._histTypeChange)
         self.__imageToolBar.addWidget(self.__histTypeButton)
 
 
@@ -586,8 +582,7 @@ class DisplayImage(DisplayWidget):
         self.__lockLUTCheckButton.setStatusTip(text)
         self.__lockLUTCheckButton.setCheckable(True)
         self.__lockLUTCheckButton.setChecked(True)
-        self.connect(self.__lockLUTCheckButton, SIGNAL("clicked()"),
-                     self._lockLUTChange)
+        self.__lockLUTCheckButton.clicked.connect(self._lockLUTChange)
         self.__imageToolBar.addWidget(self.__lockLUTCheckButton)
 
         text = "Toggle auto range computation of images"
@@ -597,16 +592,14 @@ class DisplayImage(DisplayWidget):
         self.__autoRangeCheckButton.setStatusTip(text)
         self.__autoRangeCheckButton.setCheckable(True)
         self.__autoRangeCheckButton.setChecked(True)
-        self.connect(self.__autoRangeCheckButton, SIGNAL("clicked()"),
-                     self._autoRangeChange)
+        self.__autoRangeCheckButton.clicked.connect(self._autoRangeChange)
         self.__imageToolBar.addWidget(self.__autoRangeCheckButton)
 
         self.__minRangeBox = QSpinBox()
         #self.__minRangeBox.setValidator(QIntValidator())
         self.__minRangeBox.setAccelerated(True)
         self.__minRangeBox.setKeyboardTracking(False)
-        self.connect(self.__minRangeBox, SIGNAL("valueChanged(int)"),
-                     self._manualRangeChangeMin)
+        self.__minRangeBox.valueChanged[int].connect(self._manualRangeChangeMin)
         self.__imageToolBar.addWidget(self.__minRangeBox)
 
         self.__rangeSlider = RangeSlider(Qt.Horizontal)
@@ -615,16 +608,14 @@ class DisplayImage(DisplayWidget):
         self.__rangeSlider.setLow(0)
         self.__rangeSlider.setHigh(255)
         self.__rangeSlider.setTickPosition(QSlider.TicksBelow)
-        self.connect(self.__rangeSlider, SIGNAL('sliderReleased(int,int)'),
-                     self._manualRangeChange)
+        self.__rangeSlider.sliderReleased.connect(self._manualRangeChange)
         self.__imageToolBar.addWidget(self.__rangeSlider)
 
         self.__maxRangeBox = QSpinBox()
         #self.__maxRangeBox.setValidator(QIntValidator())
         self.__maxRangeBox.setAccelerated(True)
         self.__maxRangeBox.setKeyboardTracking(False)
-        self.connect(self.__maxRangeBox, SIGNAL("valueChanged(int)"),
-                     self._manualRangeChangeMax)
+        self.__maxRangeBox.valueChanged[int].connect(self._manualRangeChangeMax)
         self.__imageToolBar.addWidget(self.__maxRangeBox)
 
         self.__rangeSlider.setEnabled(False)
@@ -645,8 +636,7 @@ class DisplayImage(DisplayWidget):
             action = self.__colorMapSelectorMenu.addAction(icon, cmapName)
             action.setEnabled(True)
         self.__colorMapSelector.setMenu(self.__colorMapSelectorMenu)
-        self.connect(self.__colorMapSelectorMenu, SIGNAL("triggered(QAction*)"),
-                     self._activateCmap)
+        self.__colorMapSelectorMenu.triggered.connect(self._activateCmap)
 
         self.__imageToolBar.addWidget(self.__colorMapSelector)
 
@@ -655,8 +645,7 @@ class DisplayImage(DisplayWidget):
         self.__aggHistButton.setIcon(icons.histHist)
         self.__aggHistButton.setToolTip(text)
         self.__aggHistButton.setStatusTip(text)
-        self.connect(self.__aggHistButton, SIGNAL("clicked()"),
-                     self._createAggHist)
+        self.__aggHistButton.clicked.connect(self._createAggHist)
         self.__imageToolBar.addWidget(self.__aggHistButton)
 
         self.__splitterWidget = QSplitter()
@@ -687,8 +676,7 @@ class DisplayImage(DisplayWidget):
         self.__CompressButton.setStatusTip(text)
         self.__CompressButton.setCheckable(True)
         self.__CompressButton.setChecked(False)
-        self.connect(self.__CompressButton, SIGNAL("clicked()"),
-                     self._toggleCompress)
+        self.__CompressButton.clicked.connect(self._toggleCompress)
         self.__selectControlLayout.addWidget(self.__CompressButton)
 
         self.__listWidget = QListView()
@@ -710,11 +698,6 @@ class DisplayImage(DisplayWidget):
         self.__selectionWidget.setMinimumHeight(self.__minHeight)
         self.__selectionWidget.setMinimumWidth(self.__minWidth - 20)
         self.__selectionWidget.resizeEvent = self._onResize
-
-        self.connect(self, SIGNAL("valueChangedCallback()"),
-                     self._valueChangedCallback)
-        self.connect(self, SIGNAL("updateRangeWidgetsCallback()"),
-                     self._updateRangeWidgetsCallback)
 
         self.__gridLayout = QGridLayout()
         self.__selectionWidget.setLayout(self.__gridLayout)
@@ -852,8 +835,7 @@ class DisplayImage(DisplayWidget):
                         tileButton = TileSelectButton(m, tR, tC)
                         tileButton.setCheckable(True)
                         tileButton.setChecked(False)
-                        self.connect(tileButton, SIGNAL("clicked()"),
-                                     self._tileSelectionChange)
+                        tileButton.clicked.connect(self._tileSelectionChange)
                         innerTileLayout.addWidget(tileButton, tR, tC, 1, 1)
                         self.__tileButtons.append(tileButton)
                 m += 1
@@ -955,7 +937,7 @@ class DisplayImage(DisplayWidget):
 
     def _valueChangedCallback(self):
         self._setLimits()
-        self.emit(SIGNAL("updateRangeWidgetsCallback()"))
+        self._updateRangeWidgetsCallback()
 
     def valueChanged(self, box, value, timestamp=None):
         startTime = time.time()
@@ -1038,7 +1020,7 @@ class DisplayImage(DisplayWidget):
             item.prepareImageData(value)
             item.sigRenderImage()
         if forceNew:
-            self.emit(SIGNAL("valueChangedCallback()"))
+            self._valueChangedCallback()
         else:
             self.__selectionWidget.show()
 
