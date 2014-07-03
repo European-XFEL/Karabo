@@ -201,6 +201,9 @@ class ProjectModel(QStandardItemModel):
             for device in project.devices:
                 if (device.serverId, device.classId) in serverClassIds:
                     if device.parameterEditor is not None:
+                        # Put current configuration to future config so that it
+                        # does not get lost
+                        device.futureConfig = device.toHash()
                         device.parameterEditor.clear()
         
 
@@ -385,7 +388,6 @@ class ProjectModel(QStandardItemModel):
             return
         
         if device is not None:
-            print "device", device, device.id
             # Get configuration of device, if classId is the same
             if device.classId == self.pluginDialog.classId:
                 config = device.futureConfig
@@ -572,14 +574,21 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
+        reply = QMessageBox.question(None, 'Message',
+            "Do you really want to kill all devices?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+        
         project = self.currentProject()
         for device in project.devices:
-            self.killDevice(device)
+            self.killDevice(device, False)
 
 
-    def killDevice(self, device):
+    def killDevice(self, device, showConfirm=True):
         if device.isOnline():
-            manager.Manager().killDevice(device.id)
+            manager.Manager().killDevice(device.id, showConfirm)
 
 
     def onEditScene(self):
