@@ -122,6 +122,13 @@ class _Manager(QObject):
 
         self.projectTopology.updateNeeded()
 
+    
+    def _updateServerClassDataWithTopology(self, config):
+        if config.has("server"):
+            # Request schema for already viewed classes, if a server is new
+            for k in self.serverClassData.keys():
+                getClass(k[0], k[1])
+
 
     def _handleLogData(self, logMessage):
         self.signalLogDataAvailable.emit(logMessage)
@@ -151,13 +158,14 @@ class _Manager(QObject):
         self.__isInitDeviceCurrentlyProcessed = True
 
 
-    def killDevice(self, deviceId):
-        reply = QMessageBox.question(None, 'Message',
-            "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    def killDevice(self, deviceId, showConfirm=True):
+        if showConfirm:
+            reply = QMessageBox.question(None, 'Message',
+                "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-        if reply == QMessageBox.No:
-            return
+            if reply == QMessageBox.No:
+                return
 
         Network().onKillDevice(deviceId)
 
@@ -352,7 +360,7 @@ class _Manager(QObject):
         Network()._handleBrokerInformation(instanceInfo)
 
 
-    def handle_systemTopology(self, instanceInfo): 
+    def handle_systemTopology(self, instanceInfo):
         self._handleSystemTopology(instanceInfo.get("systemTopology"))
 
 
@@ -382,11 +390,9 @@ class _Manager(QObject):
 
         # Update system topology with new configuration
         self._handleSystemTopology(config)
-        
-        if config.has("server"):
-            # Request schema for already viewed classes, if a server is new
-            for k in self.serverClassData.keys():
-                getClass(k[0], k[1])
+
+        # Topology changed so send new class schema requests
+        self._updateServerClassDataWithTopology(config)
 
         # If device was instantiated from GUI, it should be selected after coming up
         deviceConfig = config.get("device")
@@ -398,7 +404,10 @@ class _Manager(QObject):
 
 
     def handle_instanceUpdated(self, instanceInfo):
-        self._handleSystemTopology(instanceInfo.get("topologyEntry"))
+        config = instanceInfo.get("topologyEntry")
+        self._handleSystemTopology(config)
+        # Topology changed so send new class schema requests
+        self._updateServerClassDataWithTopology(config)
 
 
     def handle_instanceGone(self, hash):
@@ -443,7 +452,7 @@ class _Manager(QObject):
         
         # Send signal to Configurator to show nothing
         self.signalShowEmptyConfigurationPage.emit()
-        
+
         self.projectTopology.updateNeeded()
 
 
