@@ -487,13 +487,11 @@ class _Manager(QObject):
 
 
     def handle_schemaUpdated(self, hash):
-        print "handle_schemaUpdated"
         deviceId = hash.get("deviceId")
         if deviceId in self.deviceData:
             conf = self.deviceData[deviceId]
             # Schema already existent -> schema injected
             if conf.status == "alive":
-                print "Extra refresh"
                 Network().onRefreshInstance(self.deviceData[deviceId])
             conf.schema = None
 
