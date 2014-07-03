@@ -7,7 +7,6 @@ from __future__ import absolute_import, division
 __all__ = ["DisplayImageStack"]
 
 from widget import DisplayWidget
-from thread import start_new_thread, allocate_lock
 import time
 import datetime
 import copy
@@ -501,95 +500,6 @@ class ImageListItem(QStandardItem):
        self.setHistLimits((np.min(imData), np.max(imData)))
        self.setLUTLimits((np.min(imData), np.max(imData)))
 
-class BackgroundWorker(object):
-
-    def __init__(self, **params):
-        self.__activeWorkers = 0
-        self.__workersStarted = False
-        self.__workerLock = allocate_lock()
-        self.__workQueue = []
-        self.__alive = True
-        self.__maxWorkers = 10
-        self.__supervisor = start_new_thread(self._backgroundWorkSupervisor, ())
-        self.__globalCallBacks = []
-
-
-    def __exit__(self, type, value, traceback):
-        while not self.__workersStarted:
-            pass
-        while self.__activeWorkers > 0:
-            pass
-        self.__alive = False
-
-    def _backgroundWorker(self, func, args=None, callBack=None):
-        self.__workerLock.acquire()
-        self.__activeWorkers += 1
-        self.__workersStarted = True
-        self.__workerLock.release()
-
-        if args is None:
-            func()
-        else:
-            func(args)
-
-        self.__workerLock.acquire()
-        self.__activeWorkers -= 1
-        self.__workerLock.release()
-
-        if callBack is not None:
-            callBack()
-
-
-    def _backgroundWorkSupervisor(self):
-        while self.__alive:
-            if self.__workQueue:
-                #print "Working"
-                workTask = self.__workQueue.pop(0)
-                objs = workTask["objs"]
-                func = workTask["func"]
-                args = workTask["args"]
-                callBack = workTask["callBack"]
-
-                while self.__activeWorkers > self.__maxWorkers:
-                    #time.sleep(0.1)
-                    pass
-
-                for i, obj in enumerate(objs):
-                    if isinstance(args, list) and len(args) == len(objs):
-                        thisarg = args[i]
-                    else:
-                        thisarg = args
-
-                    if callBack is not None:
-                        start_new_thread(self._backgroundWorker,
-                                         (getattr(obj, func), thisarg,
-                                          getattr(obj, callBack)))
-                    else:
-                        start_new_thread(self._backgroundWorker,
-                                         (getattr(obj, func), thisarg))
-            self.__workerLock.acquire()
-            if self.__activeWorkers == 0 and self.__workersStarted == True:
-                self.__workersStarted = False
-                self.__workerLock.release()
-                while self.__globalCallBacks:
-                    cb = self.__globalCallBacks.pop(0)
-                    try:
-                        cb["obj"].emit(SIGNAL(cb["sig"]))
-                    except:
-                        cb()
-                        pass
-            else:
-                self.__workerLock.release()
-            #time.sleep(0.1)
-
-    def startJob(self, objs, func, args=None, callBack=None,
-                 globalCallBack=None):
-        startTime = time.time()
-        if globalCallBack is not None:
-            self.__globalCallBacks.append(globalCallBack)
-        self.__workQueue.append({"objs": objs, "func": func, "args": args,
-                                 "callBack": callBack})
-
 
 class TileSelectButton(QToolButton):
     def __init__(self, module, tileRow, tileCol, **params):
@@ -613,7 +523,6 @@ class DisplayImage(DisplayWidget):
         self.__mainWidget = QWidget(parent)
         self.__mainLayout = QVBoxLayout()
         self.__mainWidget.setLayout(self.__mainLayout)
-        self.__BackgroundWorker = BackgroundWorker()
 
         self.__colPadding = 10
         self.__rowPadding = 20
@@ -801,8 +710,6 @@ class DisplayImage(DisplayWidget):
         self.__selectionWidget.setMinimumHeight(self.__minHeight)
         self.__selectionWidget.setMinimumWidth(self.__minWidth-20)
         self.__selectionWidget.resizeEvent = self._onResize
-        self.connect(self.__selectionWidget, SIGNAL("show()"),
-                     self.__selectionWidget.show)
 
         self.connect(self, SIGNAL("valueChangedCallback()"),
                      self._valueChangedCallback)
@@ -998,9 +905,11 @@ class DisplayImage(DisplayWidget):
             self.__histTypeButton.setIcon(icons.histHist)
         self.__selectionWidget.hide()
 
-        self.__BackgroundWorker.startJob(
-            self._getListModelItems(), "setHistType", self.__histType,
-            "sigShowHist", {"obj": self.__selectionWidget, "sig": "show()"})
+
+        for item in self._getListModelItems():
+            item.setHistType(self.__histType)
+            item.sigShowHist()
+        self.__selectionWidget.emit(SIGNAL("show()"))
 
 
     def _activateCmap(self, action):
@@ -1039,13 +948,14 @@ class DisplayImage(DisplayWidget):
                 self.__listModel.indexFromItem(self.__listModel.item(slice))
             ).height() - 2)
 
-        self.__BackgroundWorker.startJob(
-            self._getListModelItems(), "setHist", heights, None,
-            {"obj": self.__selectionWidget, "sig": "show()"})
+        for item, height in zip(self._getListModelItems(), heights):
+            item.setHist(height)
+        self.__selectionWidget.show()
+
 
     def _valueChangedCallback(self):
-        cB = {"obj": self, "sig": "updateRangeWidgetsCallback()"}
-        self._setLimits(cB)
+        self._setLimits()
+        self.emit(SIGNAL("updateRangeWidgetsCallback()"))
 
     def valueChanged(self, box, value, timestamp=None):
         startTime = time.time()
@@ -1127,14 +1037,13 @@ class DisplayImage(DisplayWidget):
             items = [newModel.item(i) for i in range(newModel.rowCount())
                      if newModel.item(i) is not None]
 
+            for item in items:
+                item.prepareImageData(value)
+                item.sigRenderImage()
             if forceNew:
-                self.__BackgroundWorker.startJob(
-                    items, "prepareImageData", value, "sigRenderImage",
-                    {"obj": self, "sig": "valueChangedCallback()"})
+                self.emit(SIGNAL("valueChangedCallback()"))
             else:
-                self.__BackgroundWorker.startJob(
-                    items, "prepareImageData", value, "sigRenderImage",
-                    {"obj": self.__selectionWidget, "sig": "show()"})
+                self.__selectionWidget.emit(SIGNAL("show()"))
 
             for slice in range(dimZ):
                 self.__gridLayout.setRowStretch(slice, 1)
@@ -1246,39 +1155,27 @@ class DisplayImage(DisplayWidget):
         self.__minPixelValueAuto = np.min(imData)
         self.__maxPixelValueAuto = np.max(imData)
 
-    def _finalizeLimitSet(self, cB):
+    def _finalizeLimitSet(self):
         if self.__lockLUTs:
             if self.__autoRange:
-                self.__BackgroundWorker.startJob(
-                    self._getListModelItems(), "setHistLimits",
-                    [self.__minPixelValueAuto, self.__maxPixelValueAuto],
-                    None, cB)
-                self.__BackgroundWorker.startJob(
-                    self._getListModelItems(), "setLUTLimits",
-                    [self.__minPixelValueAuto, self.__maxPixelValueAuto],
-                    None, cB)
+                r = self.__minPixelValueAuto, self.__maxPixelValueAuto
             else:
-                self.__BackgroundWorker.startJob(
-                    self._getListModelItems(), "setHistLimits",
-                    [self.__minPixelValue, self.__maxPixelValue], None, cB)
-                self.__BackgroundWorker.startJob(
-                    self._getListModelItems(), "setLUTLimits",
-                    [self.__minPixelValue, self.__maxPixelValue], None, cB)
+                r = self.__minPixelValue, self.__maxPixelValue
+            for item in self._getListModelItems():
+                item.setHistLimits(r)
+                item.setLUTLimits(r)
 
-    def _setLimits(self, cB=None):
-        if cB is None:
-            cB = {"obj": self.__selectionWidget, "sig": "show()"}
-
+    def _setLimits(self):
         self.__selectionWidget.hide()
         if self.__autoRange and self.__lockLUTs:
-            self.__BackgroundWorker.startJob(
-                [self], "_getAutoRangeLocked", self.value, None,
-                lambda: self._finalizeLimitSet(cB))
+            self._getAutoRangeLocked(self.value)
+            self._finalizeLimitSet()
         elif not self.__autoRange and self.__lockLUTs:
-            self._finalizeLimitSet(cB)
+            self._finalizeLimitSet()
         else:
-            self.__BackgroundWorker.startJob(
-                self._getListModelItems(), "setNonLockedLimits", None, None, cB)
+            for item in self._getListModelItems():
+                item.setNonLockedLimits()
+        self.__selectionWidget.show()
         self._updateAggHist()
 
     def _onResize(self, event):
