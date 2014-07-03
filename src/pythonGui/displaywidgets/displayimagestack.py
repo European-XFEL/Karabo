@@ -459,18 +459,14 @@ class ImageListItem(QStandardItem):
                 widgetWidth + 20)
 
     def prepareImageData(self, value):
-        dims = value.get('dims')
-        if len(dims) < 2: return
-        dimX = dims[0]
-        dimY = dims[1]
-        dimZ = dims[2]
-        encoding = value.get('encoding')
-        channelSpace = value.get('channelSpace')
-        data = value.get('data')
+        dimX, dimY, dimZ = value.dims.value
+        encoding = value.encoding.value
+        channelSpace = value.channelSpace.value
+        data = value.data.value
 
         imData = None
 
-        if enums[encoding] == "RGBA":
+        if encoding == "RGBA":
             sliceData = data[int(self.__sliceId * dimX * dimY * 4):
                              int((self.__sliceId + 1) * dimX * dimY * 4)]
             image = QImage(sliceData, dimX, dimY,
@@ -1080,13 +1076,6 @@ class DisplayImage(DisplayWidget):
             self.__imageLayouts = None
             self.__detectorLayout = None
 
-            if value.has('header'):
-                header = value.get('header')
-                if header.has('imageLayouts'):
-                    self.__imageLayouts = header.get('imageLayouts')
-                if header.has('layout'):
-                    self.__detectorLayout = header.get('layout')
-
             #provide default layout (1 tile on 1 module if none exists)
             if self.__imageLayouts is None:
                 imLayouts = []
@@ -1135,7 +1124,7 @@ class DisplayImage(DisplayWidget):
                     #update grid
                     newModel.appendRow(imageItem)
 
-            items = [newModel.item(i) for i in newModel.rowCount()
+            items = [newModel.item(i) for i in range(newModel.rowCount())
                      if newModel.item(i) is not None]
 
             if forceNew:
@@ -1240,17 +1229,12 @@ class DisplayImage(DisplayWidget):
         self._setLimits()
 
     def _getAutoRangeLocked(self, value):
-        dims = value.get('dims')
-        if len(dims) < 2:
-            return
-        dimX = dims[0]
-        dimY = dims[1]
-        dimZ = dims[2]
-        data = value.get('data')
-        encoding = value.get('encoding')
-        channelSpace = value.get('channelSpace')
+        dimX, dimY, dimZ = value.dims.value
+        data = value.data.value
+        encoding = value.encoding.value
+        channelSpace = value.channelSpace.value
         imData = None
-        if encoding == kt.EncodingType.RGBA:
+        if encoding == "RGBA":
             image = QImage(data, dimX, dimY * dimZ,
                            QImage.Format_ARGB32_Premultiplied)
             dataQw = image.bits().asstring(image.numBytes())
