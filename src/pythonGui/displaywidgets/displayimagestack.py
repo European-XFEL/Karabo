@@ -942,11 +942,11 @@ class DisplayImage(DisplayWidget):
         self.__maxRangeBox.setValue(int(self.__maxPixelValue))
         self.__selectionWidget.show()
 
-        heights = []
-        for slice in range(self.__listModel.rowCount()):
-            heights.append(self.__listWidget.rectForIndex(
-                self.__listModel.indexFromItem(self.__listModel.item(slice))
-            ).height() - 2)
+        heights = [max(1, self.__listWidget.rectForIndex(
+                                self.__listModel.indexFromItem(
+                                    self.__listModel.item(slice))
+                          ).height() - 2)
+                   for slice in range(self.__listModel.rowCount())]
 
         for item, height in zip(self._getListModelItems(), heights):
             item.setHist(height)
@@ -1202,7 +1202,7 @@ class DisplayImage(DisplayWidget):
 
         self.__actCols = self.__cols
         if selected < self.__actCols:
-            self.__actCols = selected
+            self.__actCols = max(1, selected)
 
         for i in reversed(range(self.__gridLayout.count())):
             self.__gridLayout.itemAt(i).widget().hide()
