@@ -45,6 +45,9 @@ class NavigationTreeModel(QAbstractItemModel):
             return
 
         for serverId, _, attrs in config["server"].iterall():
+            if len(attrs) < 1:
+                continue
+            
             host = attrs.get("host", "UNKNOWN")
             version = attrs.get("version")
             visibility = attrs.get("visibility", AccessLevel.OBSERVER)
@@ -81,6 +84,9 @@ class NavigationTreeModel(QAbstractItemModel):
             return
 
         for deviceId, _, attrs in config["device"].iterall():
+            if len(attrs) < 1:
+                continue
+            
             visibility = attrs.get("visibility", AccessLevel.OBSERVER)
             host = attrs.get("host", "UNKNOWN")
             serverId = attrs.get("serverId", "unknown-server")
