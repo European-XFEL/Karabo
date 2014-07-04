@@ -121,7 +121,6 @@ class Project(QObject):
             projectConfig = projectConfig[self.PROJECT_KEY]
             for d in projectConfig[self.DEVICES_KEY]:
                 serverId = d.get("serverId")
-                deviceId = d.get("deviceId")
                 
                 filename = d.get("filename")
                 data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
@@ -165,7 +164,7 @@ class Project(QObject):
             file = NamedTemporaryFile(dir=os.path.dirname(filename),
                                       delete=False)
         else:
-            file = self.filename
+            file = filename
 
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
             for device in self.devices:
@@ -276,7 +275,7 @@ class Device(Configuration):
         This is only possible, if the descriptor has been set before.
         """
         if self.descriptor is None: return
-
+        
         # Set default values for configuration
         self.setDefault()
         if self._futureConfig is not None:

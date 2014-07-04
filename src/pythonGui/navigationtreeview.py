@@ -19,7 +19,7 @@ import icons
 from manager import Manager
 import manager
 
-from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtCore import pyqtSignal, QModelIndex, Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 
@@ -173,18 +173,16 @@ class NavigationTreeView(QTreeView):
 
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
+        
         if not selectedIndexes:
             return
         
         index = selectedIndexes[0]
 
         if not index.isValid():
-            return
-
-        level = self.model().getHierarchyLevel(index)
-
-        classId = None
-        path = ""
+            level = 0
+        else:
+            level = self.model().getHierarchyLevel(index)
 
         if level == 0:
             conf = None

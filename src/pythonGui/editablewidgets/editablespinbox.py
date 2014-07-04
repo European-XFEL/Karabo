@@ -30,7 +30,7 @@ from PyQt4.QtGui import QSpinBox
 
 class EditableSpinBox(EditableWidget, DisplayWidget):
     category = "Digit"
-    alias = "Integer Field"
+    alias = "Integer Spin Box"
 
     def __init__(self, box, parent):
         super(EditableSpinBox, self).__init__(box)

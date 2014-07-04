@@ -11,7 +11,7 @@
 
 __all__ = ["ParameterTreeWidget"]
 
-from components import EditableApplyLaterComponent
+from components import BaseComponent, EditableApplyLaterComponent
 import globals
 from network import Network
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
@@ -42,6 +42,16 @@ class ParameterTreeWidget(QTreeWidget):
 
         self.model().setSupportedDragActions(Qt.CopyAction)
         self.setDragEnabled(True)
+
+
+    def clear(self):
+        """The components in the tree are children of this widget.
+        They must be deleted by Qt, otherwise they'll still receive
+        signals."""
+        QTreeWidget.clear(self)
+        for c in self.children():
+            if isinstance(c, BaseComponent):
+                c.setParent(None)
 
 
 ### protected ###

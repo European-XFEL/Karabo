@@ -122,12 +122,10 @@ class Tests(TestCase):
         node = self.findNode(cls, "int32")
         self.assertTrue(node.font(0).bold())
         self.assertEqual(node.displayComponent.widget.text(), "0x4D2")
-        self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
-                         1234)
+        self.assertEqual(node.editableComponent.widgetFactory.value, 1234)
         self.assertEqual(node.text(0), "32 bit integer")
         cls.dispatchUserChanges(dict(int32=3456))
-        self.assertEqual(node.editableComponent.widgetFactory.widget.value(),
-                         3456)
+        self.assertEqual(node.editableComponent.widgetFactory.value, 3456)
 
         node = self.findNode(cls, "int8")
         self.assertFalse(node.font(0).bold())
@@ -192,8 +190,8 @@ class Tests(TestCase):
         self.assertEqual(Manager().deviceData["testdevice"].visible, 4)
 
         Manager().projectTopology.projectSaveAs("/tmp/test.krb")
-        Manager().projectTopology.projectOpen("/tmp/test.krb")
         Manager().projectTopology.onCloseProject()
+        Manager().projectTopology.projectOpen("/tmp/test.krb")
 
 
     def stop(self):
