@@ -413,7 +413,10 @@ class ProjectModel(QStandardItemModel):
         if device is not None:
             # Get configuration of device, if classId is the same
             if device.classId == self.pluginDialog.classId:
-                config = device.futureConfig
+                if device.descriptor is None:
+                    config = device.futureConfig
+                else:
+                    config = device.toHash()
             else:
                 config = None
             
