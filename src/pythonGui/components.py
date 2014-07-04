@@ -203,6 +203,7 @@ class EditableNoApplyComponent(BaseComponent):
         BaseComponent.connectWidget(self, box)
         if box.hasValue():
             self.widgetFactory.valueChanged(box, box.value, box.timestamp)
+        box.signalUpdateComponent.connect(self.widgetFactory.valueChangedSlot)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
         box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
 

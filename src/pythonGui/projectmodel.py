@@ -413,7 +413,10 @@ class ProjectModel(QStandardItemModel):
         if device is not None:
             # Get configuration of device, if classId is the same
             if device.classId == self.pluginDialog.classId:
-                config = device.futureConfig
+                if device.descriptor is None:
+                    config = device.futureConfig
+                else:
+                    config = device.toHash()
             else:
                 config = None
             
@@ -471,8 +474,8 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for i in xrange(dialog.startIndex, dialog.count):
-            deviceId = "{}{}".format(dialog.deviceIdPrefix, i)
+        for i in xrange(dialog.count):
+            deviceId = "{}{}".format(dialog.deviceIdPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             newDevice.futureConfig = device.toHash()
