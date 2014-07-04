@@ -474,8 +474,8 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for i in xrange(dialog.startIndex, dialog.count):
-            deviceId = "{}{}".format(dialog.deviceIdPrefix, i)
+        for i in xrange(dialog.count):
+            deviceId = "{}{}".format(dialog.deviceIdPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             newDevice.futureConfig = device.toHash()
