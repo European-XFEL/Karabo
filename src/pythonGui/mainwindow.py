@@ -241,7 +241,6 @@ class MainWindow(QMainWindow):
 
 
     def _showStartPage(self, show, loadDefaultProject=True):
-        print "_showStartPage", show, loadDefaultProject
         if show:
             if self.placeholderPanel is not None:
                 return
@@ -323,7 +322,7 @@ class MainWindow(QMainWindow):
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
         elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
-        
+
         self.signalGlobalAccessLevelChanged.emit()
 
 
