@@ -67,6 +67,10 @@ class ProjectTreeView(QTreeView):
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, "default_project.krb")
         if os.path.exists(filename):
             project = self.model().projectOpen(filename)
+            # default project should always have a default_scene
+            if not project.scenes:
+                self.model().addScene(project, "default_scene")
+                project.zip()
         else:
             project = self.model().projectNew(filename)
             self.model().addScene(project, "default_scene")
