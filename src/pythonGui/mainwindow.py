@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Message',
+        reply = QMessageBox.question(self, 'Quit',
             "Are you sure to quit?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
 
@@ -302,6 +302,7 @@ class MainWindow(QMainWindow):
         for i in xrange(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if divWidget.dockableWidget.scene == scene:
+                scene.clean()
                 self.middleTab.removeDockableTab(divWidget.dockableWidget)
                 break
         
@@ -321,7 +322,7 @@ class MainWindow(QMainWindow):
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.EXPERT
         elif action is self.acAdmin:
             globals.GLOBAL_ACCESS_LEVEL = AccessLevel.ADMIN
-        
+
         self.signalGlobalAccessLevelChanged.emit()
 
 
