@@ -241,6 +241,7 @@ class MainWindow(QMainWindow):
 
 
     def _showStartPage(self, show, loadDefaultProject=True):
+        print "_showStartPage", show, loadDefaultProject
         if show:
             if self.placeholderPanel is not None:
                 return
@@ -265,7 +266,7 @@ class MainWindow(QMainWindow):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Message',
+        reply = QMessageBox.question(self, 'Quit',
             "Are you sure to quit?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
 

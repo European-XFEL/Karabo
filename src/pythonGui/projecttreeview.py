@@ -21,8 +21,8 @@ from project import Category, Device, Project
 from projectmodel import ProjectModel
 
 from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import (QAction, QCursor, QDialog, QFileDialog, QInputDialog,
-                         QLineEdit, QMenu, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
+                         QFileDialog, QInputDialog, QLineEdit, QMenu, QTreeView)
 import os.path
 
 
@@ -67,6 +67,10 @@ class ProjectTreeView(QTreeView):
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, "default_project.krb")
         if os.path.exists(filename):
             project = self.model().projectOpen(filename)
+            # default project should always have a default_scene
+            if not project.scenes:
+                self.model().addScene(project, "default_scene")
+                project.zip()
         else:
             project = self.model().projectNew(filename)
             self.model().addScene(project, "default_scene")
@@ -139,6 +143,14 @@ class ProjectTreeView(QTreeView):
             self.model().openScene(object)
 
 
+    def currentDevice(self):
+        index = self.currentIndex()
+        object = index.data(ProjectModel.ITEM_OBJECT)
+        if isinstance(object, Device):
+            return object
+        return None
+
+
 ### slots ###
     def onCustomContextMenuRequested(self, pos):
         index = self.currentIndex()
@@ -176,11 +188,19 @@ class ProjectTreeView(QTreeView):
             acKillDevices.setToolTip(text)
             acKillDevices.triggered.connect(self.model().onKillDevices)
 
+            text = "Remove all"
+            acRemoveDevices = QAction(text, self)
+            acRemoveDevices.setStatusTip(text)
+            acRemoveDevices.setToolTip(text)
+            acRemoveDevices.triggered.connect(self.model().onRemoveDevices)
+
             menu = QMenu()
             menu.addAction(acImportPlugin)
             menu.addSeparator()
             menu.addAction(acInitDevices)
             menu.addAction(acKillDevices)
+            menu.addSeparator()
+            menu.addAction(acRemoveDevices)
         elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
             # Scenes menu
             text = "Add scene"
@@ -240,17 +260,15 @@ class ProjectTreeView(QTreeView):
 
 
     def onInitDevice(self):
-        index = self.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(object, Device): return
+        device = self.currentDevice()
+        if device is None: return
 
-        self.model().initDevice(object)
+        self.model().initDevice(device)
 
 
     def onKillDevice(self):
-        index = self.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(object, Device): return
+        device = self.currentDevice()
+        if device is None: return
         
-        self.model().killDevice(object)
+        self.model().killDevice(device)
 
