@@ -173,10 +173,11 @@ class NavigationTreeView(QTreeView):
 
     def onSelectionChanged(self, selected, deselected):
         selectedIndexes = selected.indexes()
+        
         if not selectedIndexes:
-            index = QModelIndex()
-        else:
-            index = selectedIndexes[0]
+            return
+        
+        index = selectedIndexes[0]
 
         if not index.isValid():
             level = 0
