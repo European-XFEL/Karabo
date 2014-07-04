@@ -533,7 +533,7 @@ class ProjectModel(QStandardItemModel):
         selectedIndexes = selected.indexes()
         # Send signal to projectPanel to update toolbar actions
         self.signalSelectionChanged.emit(selectedIndexes)
-        
+
         if not selectedIndexes:
             index = QModelIndex()
         else:

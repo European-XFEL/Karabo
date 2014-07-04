@@ -21,7 +21,7 @@ import icons
 
 from PyQt4.QtCore import (QAbstractItemModel, QByteArray, QMimeData,
                           QModelIndex, Qt, pyqtSignal)
-from PyQt4.QtGui import QItemSelectionModel
+from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 
 class NavigationTreeModel(QAbstractItemModel):
@@ -136,11 +136,7 @@ class NavigationTreeModel(QAbstractItemModel):
         The incoming \config represents the system topology.
         """
         # Get last selection path
-        selectedIndexes = self.selectionModel.selectedIndexes()
-        if selectedIndexes:
-            lastSelectionPath = selectedIndexes[0].internalPointer().path
-        else:
-            lastSelectionPath = None
+        lastSelectionPath = self.currentSelectionPath()
 
         self.beginResetModel()
         try:
@@ -152,6 +148,18 @@ class NavigationTreeModel(QAbstractItemModel):
         # Set last selection path
         if lastSelectionPath is not None:
             self.selectPath(lastSelectionPath)
+
+    
+    def currentSelectionPath(self):
+        """
+        Returns the current selection path, else None.
+        """
+        # Get last selection path
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        if selectedIndexes:
+            return selectedIndexes[0].internalPointer().path
+        else:
+            return None
 
 
     def has(self, path):
@@ -231,7 +239,10 @@ class NavigationTreeModel(QAbstractItemModel):
 
                 
     def globalAccessLevelChanged(self):
+        lastSelectionPath = self.currentSelectionPath()
         self.modelReset.emit()
+        if lastSelectionPath is not None:
+            self.selectPath(lastSelectionPath)
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -289,7 +300,8 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def selectIndex(self, index):
-        if not index:
+        if index is None:
+            self.selectionModel.selectionChanged.emit(QItemSelection(), QItemSelection())
             return
 
         self.selectionModel.setCurrentIndex(index,
@@ -315,9 +327,7 @@ class NavigationTreeModel(QAbstractItemModel):
 
     def selectPath(self, path):
         index = self.findIndex(path)
-        if index is not None:
-            self.selectionModel.select(index,
-                                       QItemSelectionModel.ClearAndSelect)
+        self.selectIndex(index)
 
 
     def index(self, row, column, parent=QModelIndex()):
