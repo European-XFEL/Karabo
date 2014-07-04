@@ -265,7 +265,7 @@ class MainWindow(QMainWindow):
 
 ### virtual functions ###
     def closeEvent(self, event):
-        reply = QMessageBox.question(self, 'Message',
+        reply = QMessageBox.question(self, 'Quit',
             "Are you sure to quit?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
 
