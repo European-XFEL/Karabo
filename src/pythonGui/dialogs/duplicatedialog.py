@@ -38,12 +38,12 @@ class DuplicateDialog(QDialog):
         
         self.sbStartIndex = QSpinBox()
         self.sbStartIndex.setRange(0, globals.MAX_INT32)
-        self.sbStartIndex.valueChanged.connect(self.onStartIndexChanged)
+        self.sbStartIndex.valueChanged.connect(self.onChanged)
         fLayout.addRow("Start:", self.sbStartIndex)
         
         self.sbCount = QSpinBox()
         self.sbCount.setRange(0, globals.MAX_INT32)
-        self.sbCount.valueChanged.connect(self.onCountChanged)
+        self.sbCount.valueChanged.connect(self.onChanged)
         fLayout.addRow("Count:", self.sbCount)
         vLayout.addLayout(fLayout)
         
@@ -77,18 +77,3 @@ class DuplicateDialog(QDialog):
                   and self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
-
-    def onStartIndexChanged(self, value):
-        if value >= self.sbCount.value():
-            with SignalBlocker(self.sbCount):
-                self.sbCount.setValue(value+1)
-
-        self.onChanged()
-
-
-    def onCountChanged(self, value):
-        if value <= self.sbStartIndex.value():
-            with SignalBlocker(self.sbStartIndex):
-                self.sbStartIndex.setValue(value-1)
-        
-        self.onChanged()
