@@ -277,6 +277,24 @@ class ProjectModel(QStandardItemModel):
         return object
 
 
+    def closeExistentProject(self, filename):
+        """
+        If a project with the \filename already exists, it is removed from the
+        project list.
+        """
+        # Check for projects with the same filename and remove
+        for p in self.projects:
+            if p.filename == filename:
+                self.projectClose(p)
+                #self.updateData()
+                break
+
+
+    def removeProject(self, project):
+        index = self.projects.index(project)
+        del self.projects[index]
+
+
     def closeAllProjects(self):
         """
         This function removes all projects and updates the model.
@@ -298,15 +316,16 @@ class ProjectModel(QStandardItemModel):
         This function closes the project related scenes and removes it from the
         project list.
         """
-        index = self.projects.index(project)
-        del self.projects[index]
+        self.removeProject(project)
         
         for scene in project.scenes:
             self.signalRemoveScene.emit(scene)
 
 
     def projectNew(self, filename):
-        """ create and return a new project and add it to the model """
+        """ Create and return a new project and add it to the model """
+        self.closeExistentProject(filename)
+        
         project = Project(filename)
         project.zip()
         self.projects.append(project)
@@ -320,6 +339,8 @@ class ProjectModel(QStandardItemModel):
         This function opens a project file, creates a new projects, adds it to
         the project list and updates the view.
         """
+        self.closeExistentProject(filename)
+        
         project = Project(filename)
         try:
             project.unzip()
@@ -338,6 +359,8 @@ class ProjectModel(QStandardItemModel):
         # Open new loaded project scenes
         for scene in project.scenes:
             self.signalAddScene.emit(scene)
+        
+        return project
 
 
     def projectSave(self, project=None):
