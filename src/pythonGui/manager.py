@@ -160,7 +160,7 @@ class _Manager(QObject):
 
     def killDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            reply = QMessageBox.question(None, 'Message',
+            reply = QMessageBox.question(None, 'Kill device',
                 "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
@@ -171,7 +171,7 @@ class _Manager(QObject):
 
 
     def killServer(self, serverId):
-        reply = QMessageBox.question(None, 'Message',
+        reply = QMessageBox.question(None, 'Kill device server',
             "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 

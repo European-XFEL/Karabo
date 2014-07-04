@@ -25,7 +25,7 @@ import manager
 from messagebox import MessageBox
 from project import Category, Device, Project
 
-from PyQt4.QtCore import pyqtSignal, QDir, Qt
+from PyQt4.QtCore import pyqtSignal, QDir, QModelIndex, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
@@ -512,9 +512,9 @@ class ProjectModel(QStandardItemModel):
         self.signalSelectionChanged.emit(selectedIndexes)
         
         if not selectedIndexes:
-            return
-
-        index = selectedIndexes[0]
+            index = QModelIndex()
+        else:
+            index = selectedIndexes[0]
 
         device = index.data(ProjectModel.ITEM_OBJECT)
         if device is not None and isinstance(device, Configuration):
@@ -536,6 +536,15 @@ class ProjectModel(QStandardItemModel):
         This slot closes the currently selected projects and updates the model.
         """
         index = self.selectionModel.currentIndex()
+        
+        reply = QMessageBox.question(None, 'Close project',
+            "Do you really want to close the project \"<b>{}</b>\"?"
+            .format(index.data()),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+        
         object = index.data(ProjectModel.ITEM_OBJECT)
         self.projectClose(object)
         self.updateData()
@@ -574,7 +583,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onKillDevices(self):
-        reply = QMessageBox.question(None, 'Message',
+        reply = QMessageBox.question(None, 'Kill devices',
             "Do you really want to kill all devices?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
@@ -608,7 +617,28 @@ class ProjectModel(QStandardItemModel):
             return
         
         # Remove data from project
+        self.removeObject(self.currentProject(), index.data(ProjectModel.ITEM_OBJECT))
+
+
+    def onRemoveDevices(self):
+        reply = QMessageBox.question(None, 'Remove devices',
+            "Do you really want to remove all devices?",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        if reply == QMessageBox.No:
+            return
+        
         project = self.currentProject()
-        project.remove(index.data(ProjectModel.ITEM_OBJECT))
+        while len(project.devices) > 0:
+            object = project.devices[-1]
+            self.removeObject(project, object)
+
+
+    def removeObject(self, project, object):
+        """
+        The \object is removed from the \project.
+        """
+        project.remove(object)
         self.updateData()
         self.selectItem(project)
+        
