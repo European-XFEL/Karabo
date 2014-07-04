@@ -241,6 +241,7 @@ class MainWindow(QMainWindow):
 
 
     def _showStartPage(self, show, loadDefaultProject=True):
+        print "_showStartPage", show, loadDefaultProject
         if show:
             if self.placeholderPanel is not None:
                 return
