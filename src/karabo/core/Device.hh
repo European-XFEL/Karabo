@@ -33,15 +33,14 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-        #define KARABO_LOG_DEBUG this->log() << log4cpp::Priority::DEBUG 
-        #define KARABO_LOG_INFO  this->log() << log4cpp::Priority::INFO 
-        #define KARABO_LOG_WARN  this->log() << log4cpp::Priority::WARN 
-        #define KARABO_LOG_ERROR this->log() << log4cpp::Priority::ERROR 
+#define KARABO_LOG_DEBUG this->log() << log4cpp::Priority::DEBUG 
+#define KARABO_LOG_INFO  this->log() << log4cpp::Priority::INFO 
+#define KARABO_LOG_WARN  this->log() << log4cpp::Priority::WARN 
+#define KARABO_LOG_ERROR this->log() << log4cpp::Priority::ERROR 
 
-        #define KARABO_NO_SERVER "__none__"
+#define KARABO_NO_SERVER "__none__"
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
-
         public:
 
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
@@ -60,7 +59,6 @@ namespace karabo {
          */
         template <class FSM = BaseFsm>
         class Device : public BaseDevice, public FSM {
-
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
 
@@ -801,15 +799,15 @@ namespace karabo {
                 std::string senderId = getSenderInfo("slotKillDevice")->getInstanceIdOfSender();
                 if (senderId == m_serverId) { // Our server killed us
                     KARABO_LOG_INFO << "Device is going down as instructed by server";
-                    preDestruction(); // Give devices a chance to react
-                    stopEventLoop();
-
                 } else { // Someone else wants to see us dead, we should inform our server
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
-                    preDestruction(); // Give devices a chance to react
-                    stopEventLoop();
                 }
+                preDestruction(); // Give devices a chance to react
+                if (this->getWorker().is_running()) {
+                    this->getWorker().abort().join();
+                }
+                stopEventLoop();
             }
 
             karabo::util::Schema& getStateDependentSchema(const std::string& currentState) {
