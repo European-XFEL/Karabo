@@ -255,6 +255,11 @@ class Device(Configuration):
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status)
+        
+        # This flag states whether the descriptor was checked already
+        # This should only happen once when the device was selected the first
+        # time in the project view
+        self.descriptorRequested = False
 
 
     @property
