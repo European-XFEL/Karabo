@@ -49,14 +49,8 @@ namespace karabo {
                          const karabo::xip::ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED,
                          const bool isBigEndian = karabo::util::isBigEndian()) : m_hash() {
                 setData(data, size, copy);
-                if (dimensions.size() == 0) {
-                    setDimensions(karabo::util::Dims(size));
-                    setROIOffsets(karabo::util::Dims(0));
-                } else {
-                    setDimensions(dimensions);
-                    std::vector<unsigned long long> offsets(dimensions.rank(), 0);
-                    setROIOffsets(karabo::util::Dims(offsets));
-                }
+                if (dimensions.size() == 0) setDimensions(karabo::util::Dims(size));
+                else setDimensions(dimensions);
                 setEncoding(encoding);
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
@@ -113,10 +107,6 @@ namespace karabo {
             karabo::util::Dims getDimensions() const;
 
             void setDimensions(const karabo::util::Dims& dimensions);
-
-            karabo::util::Dims getROIOffsets() const;
-
-            void setROIOffsets(const karabo::util::Dims& offsets);
 
             size_t getSize() const;
 

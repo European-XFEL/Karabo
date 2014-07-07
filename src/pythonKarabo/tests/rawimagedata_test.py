@@ -27,12 +27,6 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertFalse(rdata.isBigEndian())
             dims = rdata.getDimensions()
             self.assertEqual(dims, [1024L, 1024L])
-            roiOffsets = rdata.getROIOffsets()
-            self.assertEqual(roiOffsets, [0L, 0L]) # default setting
-            
-            rdata.setROIOffsets([1L, 2L])
-            roiOffsets = rdata.getROIOffsets()
-            self.assertEqual(roiOffsets, [1L, 2L])
             
             h = rdata.hash()
             self.assertFalse(h["isBigEndian"])   # default setting     
