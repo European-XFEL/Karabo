@@ -51,12 +51,6 @@ namespace karabo {
                         .readOnly()
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
-                VECTOR_UINT32_ELEMENT(inner).key("roiOffsets")
-                        .displayedName("ROI Offsets")
-                        .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
-                        .readOnly()
-                        .archivePolicy(Schema::NO_ARCHIVING)
-                        .commit();
                 INT32_ELEMENT(inner).key("encoding")
                         .displayedName("Encoding")
                         .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
