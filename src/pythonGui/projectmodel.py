@@ -352,9 +352,6 @@ class ProjectModel(QStandardItemModel):
         self.projects.append(project)
         self.updateData()
         self.selectItem(project)
-        
-        for device in project.devices:
-            self.checkDescriptor(device)
 
         # Open new loaded project scenes
         for scene in project.scenes:
@@ -450,7 +447,6 @@ class ProjectModel(QStandardItemModel):
         Add a device for the given \project with the given data.
         """
         device = Device(serverId, classId, deviceId, ifexists)
-        self.checkDescriptor(device)
         project.addDevice(device)
         self.updateData()
         
@@ -462,7 +458,6 @@ class ProjectModel(QStandardItemModel):
         Insert a device for the given \project with the given data.
         """
         device = Device(serverId, classId, deviceId, ifexists)
-        self.checkDescriptor(device)
         project.insertDevice(index, device)
         self.updateData()
         
@@ -550,6 +545,11 @@ class ProjectModel(QStandardItemModel):
             else:
                 conf = device
             type = conf.type
+            
+            # Check descriptor only with first selection
+            if device.descriptorRequested is False:
+                self.checkDescriptor(device)
+                device.descriptorRequested = True
         else:
             conf = None
             type = "other"
@@ -595,17 +595,19 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
-        if device.descriptor is None:
-            return
-        
         if device.isOnline():
             if device.ifexists == "ignore":
                 return
             elif device.ifexists == "restart":
                 self.killDevice(device)
         
+        if device.descriptor is None:
+            config = device.futureConfig
+        else:
+            config = device.toHash()
+        
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
-                                     device.toHash())
+                                     config)
 
 
     def onKillDevices(self):
@@ -657,13 +659,21 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         while len(project.devices) > 0:
             object = project.devices[-1]
-            self.removeObject(project, object)
+            self.removeObject(project, object, False)
 
 
-    def removeObject(self, project, object):
+    def removeObject(self, project, object, showConfirm=True):
         """
         The \object is removed from the \project.
         """
+        if showConfirm:
+            reply = QMessageBox.question(None, 'Remove object',
+                "Do you really want to remove the object?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
+        
         project.remove(object)
         self.updateData()
         
