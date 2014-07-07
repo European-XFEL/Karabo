@@ -657,13 +657,21 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         while len(project.devices) > 0:
             object = project.devices[-1]
-            self.removeObject(project, object)
+            self.removeObject(project, object, False)
 
 
-    def removeObject(self, project, object):
+    def removeObject(self, project, object, showConfirm=True):
         """
         The \object is removed from the \project.
         """
+        if showConfirm:
+            reply = QMessageBox.question(None, 'Remove object',
+                "Do you really want to remove the object?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
+        
         project.remove(object)
         self.updateData()
         
