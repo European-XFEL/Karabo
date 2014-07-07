@@ -299,6 +299,10 @@ namespace configurationTest {
     struct TestStruct1 {
         KARABO_CLASSINFO(TestStruct1, "TestStruct1", "1.0");
 
+        TestStruct1(const karabo::util::Hash& config) {
+            
+        }
+
         virtual ~TestStruct1() {
         }
 
@@ -390,6 +394,28 @@ namespace configurationTest {
                     .readOnly()
                     .commit();
         }
+    };
+
+    struct TestStruct2 : public TestStruct1 {
+        KARABO_CLASSINFO(TestStruct2, "TestStruct2", "1.0");
+
+        TestStruct2(const karabo::util::Hash& config) : TestStruct1(config) {
+
+        }
+
+        static void expectedParameters(Schema& schema) {
+
+            OVERWRITE_ELEMENT(schema).key("exampleKey2")
+                    .setNewAlias<int>(20)
+                    .commit();
+
+            OVERWRITE_ELEMENT(schema).key("exampleKey3")
+                    .setNewAlias<int>(20)
+                    .commit();
+
+
+        }
+
     };
 
 
