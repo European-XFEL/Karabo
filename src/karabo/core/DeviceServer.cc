@@ -503,6 +503,8 @@ namespace karabo {
                     tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
                 } else if (tmp.get<string>("deviceId").empty()) {
                     tmp.set("_deviceId_", this->generateDefaultDeviceId(classId));
+                } else {
+                    tmp.set("_deviceId_", tmp.get<string>("deviceId"));
                 }
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
