@@ -71,16 +71,6 @@ namespace karabo {
         }
 
 
-        karabo::util::Dims RawImageData::getROIOffsets() const {
-            return karabo::util::Dims(m_hash.get<std::vector<unsigned long long> >("roiOffsets"));
-        }
-
-
-        void RawImageData::setROIOffsets(const karabo::util::Dims& offsets) {
-            m_hash.set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
-        }
-
-
         size_t RawImageData::getSize() const {
             return getDimensions().size();
         }

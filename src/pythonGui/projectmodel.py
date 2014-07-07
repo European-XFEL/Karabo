@@ -78,10 +78,10 @@ class ProjectModel(QStandardItemModel):
             lastSelectionObj = selectedIndexes[0].data(ProjectModel.ITEM_OBJECT)
         else:
             lastSelectionObj = None
-
+        
         self.beginResetModel()
-        if self.hasChildren():
-            self.removeRows(0, self.rowCount())
+        self.clear()
+        self.setHorizontalHeaderLabels(["Projects"])
 
         rootItem = self.invisibleRootItem()
         
@@ -666,4 +666,5 @@ class ProjectModel(QStandardItemModel):
         """
         project.remove(object)
         self.updateData()
+        self.selectItem(project)
         
