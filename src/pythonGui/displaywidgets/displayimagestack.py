@@ -224,7 +224,6 @@ class RangeSlider(QSlider):
 
 
 class ImagePlotItem(ImagePlot):
-
     def __init__(self, **params):
         #define view of parent
         self.__gridParam = make.gridparam(major_enabled=(False, False),
@@ -290,7 +289,7 @@ class ImagePlotItem(ImagePlot):
                 self.__image.set_data(im)
             self.__image.set_color_map(self.__ColorMap)
 
-            self.__dialogImage  = make.image(im, interpolation="nearest")
+            self.__dialogImage = make.image(im, interpolation="nearest")
 
             self.__dialogImage.set_color_map(self.__ColorMap)
             self.add_item(self.__image)
@@ -302,7 +301,7 @@ class ImagePlotItem(ImagePlot):
             if self.__dialogPlot is not None:
                 self.__dialogPlot.replot()
             self.replot()
-        for i in range(0, 4):
+        for i in range(4):
             self.enableAxis(i, False)
 
         self.__imageData = im
@@ -381,7 +380,7 @@ class ImageListItem(QStandardItem):
         h, e = np.histogram(im.flatten(), bins=self.__bins,
                             range=self.__histRange)
         self.__histValues = h
-        self.__histEdges = (e[:-1]+e[1:])/2.
+        self.__histEdges = (e[:-1] + e [1:]) / 2.
 
         self.__histCurve = make.curve(e, h, str(self.__sliceId))
         self.__histCurvePublic = copy.copy(self.__histCurve)
@@ -596,7 +595,6 @@ class DisplayImage(DisplayWidget):
         self.__imageToolBar.addWidget(self.__autoRangeCheckButton)
 
         self.__minRangeBox = QSpinBox()
-        #self.__minRangeBox.setValidator(QIntValidator())
         self.__minRangeBox.setAccelerated(True)
         self.__minRangeBox.setKeyboardTracking(False)
         self.__minRangeBox.valueChanged[int].connect(self._manualRangeChangeMin)
@@ -612,7 +610,6 @@ class DisplayImage(DisplayWidget):
         self.__imageToolBar.addWidget(self.__rangeSlider)
 
         self.__maxRangeBox = QSpinBox()
-        #self.__maxRangeBox.setValidator(QIntValidator())
         self.__maxRangeBox.setAccelerated(True)
         self.__maxRangeBox.setKeyboardTracking(False)
         self.__maxRangeBox.valueChanged[int].connect(self._manualRangeChangeMax)
@@ -733,13 +730,13 @@ class DisplayImage(DisplayWidget):
         self.__splitterWidget.addWidget(self.__leftWidget)
         self.__splitterWidget.addWidget(self.__selectionScrollArea)
 
-        self.__splitterWidget.setStretchFactor(0,0)
-        self.__splitterWidget.setStretchFactor(1,1)
+        self.__splitterWidget.setStretchFactor(0, 0)
+        self.__splitterWidget.setStretchFactor(1, 1)
 
         self.__mainLayout.addWidget(self.__toolBar)
         self.__mainLayout.addWidget(self.__imageToolBar)
         self.__mainLayout.addWidget(self.__splitterWidget)
-        self.__splitterWidget.setSizes([250,400])
+        self.__splitterWidget.setSizes([250, 400])
 
 
         self.__imageWidth = (self.__splitterWidget.sizes()[1] / self.__cols -
@@ -823,8 +820,8 @@ class DisplayImage(DisplayWidget):
         tileCols = self.__detectorLayout["tileCols"]
         self.__tileButtons = []
         m = 0
-        for mR in range(0, modRows):
-            for mC in range(0, modCols):
+        for mR in range(modRows):
+            for mC in range(modCols):
                 innerTileWidget = QWidget()
                 innerTileLayout = QGridLayout()
                 innerTileWidget.setLayout(innerTileLayout)
@@ -886,7 +883,6 @@ class DisplayImage(DisplayWidget):
             self.__histTypeButton.setIcon(icons.histHist)
         self.__selectionWidget.hide()
 
-
         for item in self._getListModelItems():
             item.setHistType(self.__histType)
             item.sigShowHist()
@@ -917,8 +913,8 @@ class DisplayImage(DisplayWidget):
             int(self.__minPixelValueAuto - addRange),
             int(self.__maxPixelValueAuto + addRange) - 1)
         self.__maxRangeBox.setRange(
-            int(self.__minPixelValueAuto-addRange) + 1,
-            int(self.__maxPixelValueAuto+addRange))
+            int(self.__minPixelValueAuto - addRange) + 1,
+            int(self.__maxPixelValueAuto + addRange))
         self.__minRangeBox.setValue(int(self.__minPixelValue))
         self.__maxRangeBox.setValue(int(self.__maxPixelValue))
         self.__selectionWidget.show()
@@ -958,7 +954,6 @@ class DisplayImage(DisplayWidget):
                         _returnRawByteWidth(channelSpace)):
             return
 
-
         imageLayouts = self.__imageLayouts
         detectorLayout = self.__detectorLayout
         self.__imageLayouts = None
@@ -972,8 +967,8 @@ class DisplayImage(DisplayWidget):
             self.__imageLayouts = imLayouts
 
         if self.__detectorLayout is None:
-            self.__detectorLayout={"moduleRows": 1, "moduleCols": 1,
-                                   "tileRows": 1, "tileCols": 1}
+            self.__detectorLayout = {"moduleRows": 1, "moduleCols": 1,
+                                     "tileRows": 1, "tileCols": 1}
 
         if detectorLayout is not self.__detectorLayout:
             self._updateTileLayoutWidget()
@@ -1081,7 +1076,7 @@ class DisplayImage(DisplayWidget):
         csmin = self.__rangeSlider.maximum()
 
         self.__rangeSlider.setLow(v)
-        self.__minPixelValue  = v
+        self.__minPixelValue = v
         self.__maxRangeBox.setMinimum(int(self.__minPixelValue + 1))
         self._setLimits()
 
@@ -1108,7 +1103,7 @@ class DisplayImage(DisplayWidget):
             self.__maxRangeBox.setValue(int(self.__maxPixelValue))
             self.__minRangeBox.setMaximum(int(self.__maxPixelValueAuto) - 1)
         else:
-            dV = self.__maxPixelValue-self.__minPixelValue
+            dV = self.__maxPixelValue - self.__minPixelValue
             self.__maxPixelValue  = v
             self.__minPixelValue = v - dV
             self.__maxRangeBox.setMinimum(int(self.__minPixelValue + 1))
