@@ -277,8 +277,6 @@ class ImagePlotItem(ImagePlot):
 
 
     def setImage(self, im):
-        for i in range(4):
-            self.enableAxis(i, True)
         if self.__image is None:
             self.__image = TrImageItem()#make.image(im)
             self.__image.set_interpolation("nearest")
