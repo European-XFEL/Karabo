@@ -36,7 +36,6 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
-    signalShowEmptyConfigurationPage = pyqtSignal()
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -429,7 +428,7 @@ class _Manager(QObject):
             
             # Update system topology
             self.systemTopology.eraseDevice(instanceId)
-            
+
             # Remove device from systemHash
             path = "device." + instanceId
             if self.systemHash is not None and path in self.systemHash:
@@ -450,9 +449,6 @@ class _Manager(QObject):
             # Clear corresponding parameter pages
             self.projectTopology.clearParameterPages(serverClassIds)
         
-        # Send signal to Configurator to show nothing
-        self.signalShowEmptyConfigurationPage.emit()
-
         self.projectTopology.updateNeeded()
 
 
