@@ -419,7 +419,8 @@ class Schema(hashtypes.Descriptor):
             try:
                 s = vv.fromHash
             except AttributeError:
-                print 'bullshit in', k, vv, vv.descriptor
+                pass
+                #print 'bullshit in', k, vv, vv.descriptor
             else:
                 s(v, ts)
         box._set(box._value, timestamp)
