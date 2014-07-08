@@ -889,16 +889,16 @@ class ImageStack(DisplayWidget):
         self.__rangeSlider.setLow(self.__minPixelValue)
         self.__rangeSlider.setHigh(self.__maxPixelValue)
         self.__rangeSlider.setTickInterval(
-            int((self.__rangeSlider.maximum() -
-                 self.__rangeSlider.minimum()) / 10))
+            (self.__rangeSlider.maximum() -
+                 self.__rangeSlider.minimum()) // 10)
         self.__minRangeBox.setRange(
-            int(self.__minPixelValueAuto - addRange),
-            int(self.__maxPixelValueAuto + addRange) - 1)
+            self.__minPixelValueAuto - addRange,
+            self.__maxPixelValueAuto + addRange - 1)
         self.__maxRangeBox.setRange(
-            int(self.__minPixelValueAuto - addRange) + 1,
-            int(self.__maxPixelValueAuto + addRange))
-        self.__minRangeBox.setValue(int(self.__minPixelValue))
-        self.__maxRangeBox.setValue(int(self.__maxPixelValue))
+            self.__minPixelValueAuto - addRange + 1,
+            self.__maxPixelValueAuto + addRange)
+        self.__minRangeBox.setValue(self.__minPixelValue)
+        self.__maxRangeBox.setValue(self.__maxPixelValue)
         self.__selectionWidget.show()
 
         heights = [self.__listWidget.rectForIndex(
@@ -1025,16 +1025,16 @@ class ImageStack(DisplayWidget):
             self.__rangeSlider.setLow(self.__minPixelValue)
             self.__rangeSlider.setHigh(self.__maxPixelValue)
             self.__rangeSlider.setTickInterval(
-                int((self.__rangeSlider.maximum() -
-                     self.__rangeSlider.minimum()) / 10))
+                (self.__rangeSlider.maximum() -
+                     self.__rangeSlider.minimum()) // 10)
             self.__minRangeBox.setRange(
-                int(self.__minPixelValueAuto - addRange),
-                int(self.__maxPixelValueAuto + addRange) - 1)
+                self.__minPixelValueAuto - addRange,
+                self.__maxPixelValueAuto + addRange - 1)
             self.__maxRangeBox.setRange(
-                int(self.__minPixelValueAuto-addRange) + 1,
-                int(self.__maxPixelValueAuto+addRange))
-            self.__minRangeBox.setValue(int(self.__minPixelValue))
-            self.__maxRangeBox.setValue(int(self.__maxPixelValue))
+                self.__minPixelValueAuto - addRange + 1,
+                self.__maxPixelValueAuto + addRange)
+            self.__minRangeBox.setValue(self.__minPixelValue)
+            self.__maxRangeBox.setValue(self.__maxPixelValue)
         else:
             self.__rangeSlider.setEnabled(False)
             self.__minRangeBox.setEnabled(False)
@@ -1042,46 +1042,36 @@ class ImageStack(DisplayWidget):
         self._setLimits()
 
     def _manualRangeChangeMin(self, v):
-        try:
-            v = int(v)
-        except:
-            print "Couldnt convert value "+str(v)+" to int"
-
         csmin = self.__rangeSlider.maximum()
 
         self.__rangeSlider.setLow(v)
         self.__minPixelValue = v
-        self.__maxRangeBox.setMinimum(int(self.__minPixelValue + 1))
+        self.__maxRangeBox.setMinimum(self.__minPixelValue + 1)
         self._setLimits()
 
     def _manualRangeChangeMax(self, v):
-        try:
-            v = int(v)
-        except:
-            print "Couldnt convert value "+str(v)+" to int"
-
         csmax = self.__rangeSlider.maximum()
 
         self.__rangeSlider.setHigh(v)
         self.__maxPixelValue  = v
-        self.__minRangeBox.setMaximum(int(self.__minPixelValueAuto - 1))
+        self.__minRangeBox.setMaximum(self.__minPixelValueAuto - 1)
         self._setLimits()
 
     def _manualRangeChange(self, v, sliderId):
         if sliderId == 0:
             self.__minPixelValue = v
-            self.__minRangeBox.setValue(int(self.__minPixelValue))
-            self.__maxRangeBox.setMinimum(int(self.__minPixelValueAuto + 1))
+            self.__minRangeBox.setValue(self.__minPixelValue)
+            self.__maxRangeBox.setMinimum(self.__minPixelValueAuto + 1)
         elif sliderId == 1:
             self.__maxPixelValue  = v
-            self.__maxRangeBox.setValue(int(self.__maxPixelValue))
-            self.__minRangeBox.setMaximum(int(self.__maxPixelValueAuto) - 1)
+            self.__maxRangeBox.setValue(self.__maxPixelValue)
+            self.__minRangeBox.setMaximum(self.__maxPixelValueAuto - 1)
         else:
             dV = self.__maxPixelValue - self.__minPixelValue
             self.__maxPixelValue  = v
             self.__minPixelValue = v - dV
-            self.__maxRangeBox.setMinimum(int(self.__minPixelValue + 1))
-            self.__minRangeBox.setMaximum(int(self.__maxPixelValue - 1))
+            self.__maxRangeBox.setMinimum(self.__minPixelValue + 1)
+            self.__minRangeBox.setMaximum(self.__maxPixelValue - 1)
         self._setLimits()
 
     def _getAutoRangeLocked(self, value):
