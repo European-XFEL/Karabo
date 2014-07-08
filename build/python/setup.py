@@ -10,7 +10,6 @@ def getVersion():
     except IOError:
         return ""
 
-print getVersion() + "haha"
 
 setup(name="KaraboGUI",
     version=getVersion(),
