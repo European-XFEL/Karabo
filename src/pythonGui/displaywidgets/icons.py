@@ -121,8 +121,8 @@ class Icons(DisplayWidget):
     def on_deleteValue_clicked(self):
         cr = self.dialog.list.currentRow()
         if self.list[cr][0] is not None:
-            del self.list[cr]
             self.dialog.list.takeItem(cr)
+            del self.list[cr]
 
 
     def setPixmap(self, p):
