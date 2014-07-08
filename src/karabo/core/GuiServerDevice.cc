@@ -38,7 +38,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue("Jms")
                     .commit();
 
-            OVERWRITE_ELEMENT(expected).key("_deviceId_")
+            OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_GuiServer_0")
                     .commit();
 
@@ -46,6 +46,10 @@ namespace karabo {
                     .setNewDefaultValue(5)
                     .commit();
 
+            // Slow beats on GuiServer
+            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
+                    .setNewDefaultValue(60)
+                    .commit();
         }
 
 
@@ -479,9 +483,16 @@ namespace karabo {
                 Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
+                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator channelIterator;
                 for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(h);
+                    // Set all visibilities to 0
+                    std::map<std::string, int>::iterator jt = m_visibleDevices.find(instanceId);
+                    if (jt != m_visibleDevices.end()) {
+                        m_visibleDevices.erase(jt);
+                    }
+                    // and remove the instance from channel
+                    it->second.erase(instanceId);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
@@ -512,6 +523,11 @@ namespace karabo {
         void GuiServerDevice::classSchemaHandler(const std::string& serverId, const std::string& classId, const karabo::util::Schema& classSchema) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "classSchemaHandler";
+
+                // If e.g. a schema of an non-existing plugin was requested the schema could well be empty
+                // In this case we would not answer
+                if (classSchema.empty()) return;
+
                 Hash h("type", "classSchema", "serverId", serverId,
                        "classId", classId, "schema", classSchema);
                 // Broadcast to all GUIs
@@ -528,6 +544,10 @@ namespace karabo {
         void GuiServerDevice::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting schema updated";
+
+                if (schema.empty()) {
+                    KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema, should not happen...";
+                }
 
                 Hash h("type", "schemaUpdated", "deviceId", deviceId,
                        "schema", schema);
