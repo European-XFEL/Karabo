@@ -533,9 +533,9 @@ class ProjectModel(QStandardItemModel):
         self.signalSelectionChanged.emit(selectedIndexes)
 
         if not selectedIndexes:
-            index = QModelIndex()
-        else:
-            index = selectedIndexes[0]
+            return
+        
+        index = selectedIndexes[0]
 
         device = index.data(ProjectModel.ITEM_OBJECT)
         if device is not None and isinstance(device, Configuration):
