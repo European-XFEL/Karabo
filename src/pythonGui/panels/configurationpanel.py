@@ -113,7 +113,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalShowEmptyConfigurationPage.connect(self.onShowEmptyPage)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -520,10 +519,6 @@ class ConfigurationPanel(QWidget):
 
 
 ### slots ###
-    def onShowEmptyPage(self):
-        self._showEmptyPage()
-
-
     def onResetPanel(self):
         """
         This slot is called when the configurator needs a reset which means all
