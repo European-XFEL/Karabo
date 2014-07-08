@@ -758,19 +758,10 @@ class ImageStack(DisplayWidget):
 
     def _toggleCompress(self):
         self.__selectionWidget.hide()
-        if self.__CompressButton.isChecked() is True:
-            cnt = 0
-            while self.__listModel.item(cnt):
-                if not self.__listModel.item(cnt).checkState():
-                    self.__listWidget.setRowHidden(cnt, True)
-                else:
-                    self.__listWidget.setRowHidden(cnt, False)
-                cnt += 1
-        else:
-            cnt = 0
-            while self.__listModel.item(cnt):
-                self.__listWidget.setRowHidden(cnt, False)
-                cnt += 1
+        compress = self.__CompressButton.isChecked()
+        for cnt, item in enumerate(self._getListModelItems()):
+            self.__listWidget.setRowHidden(
+                cnt, compress and not item.checkState())
         self.__selectionWidget.show()
 
 
@@ -787,10 +778,7 @@ class ImageStack(DisplayWidget):
 
     def _onTileSelectInvert(self):
         for tileButton in self.__tileButtons:
-            if tileButton.isChecked() is True:
-                tileButton.setChecked(False)
-            else:
-                tileButton.setChecked(True)
+            tileButton.setChecked(not tileButton.isChecked())
         self._onSelectInvert()
 
     def _tileSelectionChange(self):
@@ -799,14 +787,12 @@ class ImageStack(DisplayWidget):
             item.setCheckState(Qt.Unchecked)
 
         for tileButton in self.__tileButtons:
-            if tileButton.isChecked() is True:
-                cnt = 0
-                while self.__listModel.item(cnt):
-                    itemLayout = self.__listModel.item(cnt).getLayout()
+            if tileButton.isChecked():
+                for item in self._getListModelItems():
+                    itemLayout = item.getLayout()
                     buttonLayout = tileButton.getLayout()
                     if itemLayout == buttonLayout:
-                        self.__listModel.item(cnt).setCheckState(Qt.Checked)
-                    cnt += 1
+                        item.setCheckState(Qt.Checked)
         self.noupdate = False
         self._onSelectionChanged()
 
@@ -850,10 +836,9 @@ class ImageStack(DisplayWidget):
             aggHist.set_titles("Aggregate Histograms of Selected Curves",
                                "Pixel units", "Counts")
             abscnt = 0
-            for cnt in range(self.__listModel.rowCount()):
-                if self.__listModel.item(cnt).checkState():
-                    curve = self.__listModel.item(cnt).getHistCurve()
-                    #curve.setTitle(str(cnt))
+            for item in self._getListModelItems():
+                if item.checkState():
+                    curve = item.getHistCurve()
                     pen = QPen(QColor(self.__lineColors[
                             abscnt % self.__availableLineColors]))
                     curve.setPen(pen)
@@ -889,9 +874,8 @@ class ImageStack(DisplayWidget):
 
     def _activateCmap(self, action):
         cmapName = str(action.text())
-        for slice in range(self.__listModel.rowCount()):
-            if self.__listModel.item(slice) is not None:
-                self.__listModel.item(slice).updateColorMap(cmapName)
+        for item in self._getListModelItems():
+            item.updateColorMap(cmapName)
         self.__colorMapSelector.setIcon(build_icon_from_cmap_name(cmapName))
 
 
@@ -917,20 +901,15 @@ class ImageStack(DisplayWidget):
         self.__maxRangeBox.setValue(int(self.__maxPixelValue))
         self.__selectionWidget.show()
 
-        heights = [max(1, self.__listWidget.rectForIndex(
-                                self.__listModel.indexFromItem(
-                                    self.__listModel.item(slice))
-                          ).height() - 2)
-                   for slice in range(self.__listModel.rowCount())]
+        heights = [self.__listWidget.rectForIndex(
+                                self.__listModel.indexFromItem(item)
+                          ).height() - 2
+                   for item in self._getListModelItems()]
 
         for item, height in zip(self._getListModelItems(), heights):
             item.setHist(height)
         self.__selectionWidget.show()
 
-
-    def _valueChangedCallback(self):
-        self._setLimits()
-        self._updateRangeWidgetsCallback()
 
     def valueChanged(self, box, value, timestamp=None):
         startTime = time.time()
@@ -978,11 +957,9 @@ class ImageStack(DisplayWidget):
             forceNew = True
             #delete previous items in listview
             #print "Deleting previous stack..."
-            cnt = 0
-            while self.__listModel.item(cnt):
-                self.__listModel.item(cnt).getWidget().hide()
-                self.__listModel.item(cnt).getWidget().setParent(None)
-                cnt += 1
+            for item in self._getListModelItems():
+                item.getWidget().hide()
+                item.getWidget().setParent(None)
             self.__listModel.clear()
 
         newModel = self.__listModel
@@ -1154,10 +1131,9 @@ class ImageStack(DisplayWidget):
     def _onResize(self, event):
         self.__imageWidth = (self.__splitterWidget.sizes()[1] / self.__cols -
                              self.__colPadding)
-        cnt = 0
-        while self.__listModel.item(cnt):
-            self.__listModel.item(cnt).setWidth(self.__imageWidth)
-            cnt += 1
+
+        for item in self._getListModelItems():
+            item.setWidth(self.__imageWidth)
 
         if self.__listModel.item(0):
             self.__selectionWidget.setMinimumHeight(
@@ -1185,15 +1161,14 @@ class ImageStack(DisplayWidget):
         if selected == 0:
             return
 
-        while self.__listModel.item(cnt):
-            if self.__listModel.item(cnt).checkState():
-                widget = self.__listModel.item(cnt).getWidget()
+        selCnt = 0
+        for item in self._getListModelItems():
+            if item.checkState():
+                widget = item.getWidget()
                 widget.show()
-                self.__gridLayout.addWidget(
-                    widget, np.floor(selCnt / self.__actCols),
-                    selCnt % self.__actCols, 1, 1)
+                self.__gridLayout.addWidget(widget, selCnt // self.__actCols,
+                                            selCnt % self.__actCols)
                 selCnt += 1
-            cnt += 1
 
         #set size of grid widget
         self.__selectionWidget.setMinimumHeight(
