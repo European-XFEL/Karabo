@@ -964,9 +964,6 @@ class ImageStack(DisplayWidget):
 
         newModel = self.__listModel
 
-        #hide widget to allow for more reasonable refresh
-        self.__selectionWidget.hide()
-
         if forceNew:
             for slice in range(dimZ):
                 sliceInfo = "({module}-{tileRow}/{tileCol})".format(
