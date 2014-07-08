@@ -748,6 +748,7 @@ class ImageStack(DisplayWidget):
         self.__detectorLayout = None
         self.__tileButtons = []
         self.selected = set()
+        self.noupdate = False
 
 
     @property
@@ -793,11 +794,9 @@ class ImageStack(DisplayWidget):
         self._onSelectInvert()
 
     def _tileSelectionChange(self):
-        self.__listModel.itemChanged.disconnect(self._onSelectionChanged)
-        cnt = 0
-        while self.__listModel.item(cnt):
-            self.__listModel.item(cnt).setCheckState(Qt.Unchecked)
-            cnt += 1
+        self.noupdate = True
+        for item in self._getListModelItems():
+            item.setCheckState(Qt.Unchecked)
 
         for tileButton in self.__tileButtons:
             if tileButton.isChecked() is True:
@@ -808,8 +807,8 @@ class ImageStack(DisplayWidget):
                     if itemLayout == buttonLayout:
                         self.__listModel.item(cnt).setCheckState(Qt.Checked)
                     cnt += 1
-        self.__listModel.itemChanged.connect(self._onSelectionChanged)
-        self._onSelectionChanged(None)
+        self.noupdate = False
+        self._onSelectionChanged()
 
 
     def _updateTileLayoutWidget(self):
@@ -1169,7 +1168,7 @@ class ImageStack(DisplayWidget):
     def _onSelectionChanged(self, item=None, force=False):
         selected = {item for item in self._getListModelItems()
                     if item.checkState()}
-        if self.selected == selected and not force:
+        if self.selected == selected and not force or self.noupdate:
             return
         self.selected = selected
 
@@ -1205,31 +1204,23 @@ class ImageStack(DisplayWidget):
 
 
     def _onSelectAll(self):
-        cnt = 0
-        self.__listModel.itemChanged.disconnect(self._onSelectionChanged)
-        while self.__listModel.item(cnt):
-            self.__listModel.item(cnt).setCheckState(Qt.Checked)
-            cnt += 1
-        self.__listModel.itemChanged.connect(self._onSelectionChanged)
-        self._onSelectionChanged(None)
+        self.noupdate = True
+        for item in self._getListModelItems():
+            item.setCheckState(Qt.Checked)
+        self.noupdate = False
+        self._onSelectionChanged()
 
     def _onSelectNone(self):
-        cnt = 0
-        self.__listModel.itemChanged.disconnect(self._onSelectionChanged)
-        while self.__listModel.item(cnt):
-            self.__listModel.item(cnt).setCheckState(Qt.Unchecked)
-            cnt += 1
-        self.__listModel.itemChanged.connect(self._onSelectionChanged)
-        self._onSelectionChanged(None)
+        self.noupdate = True
+        for item in self._getListModelItems():
+            item.setCheckState(Qt.Unchecked)
+        self.noupdate = False
+        self._onSelectionChanged()
 
     def _onSelectInvert(self):
-        cnt = 0
-        self.__listModel.itemChanged.disconnect(self._onSelectionChanged)
-        while self.__listModel.item(cnt):
-            if self.__listModel.item(cnt).checkState():
-                self.__listModel.item(cnt).setCheckState(Qt.Unchecked)
-            else:
-                self.__listModel.item(cnt).setCheckState(Qt.Checked)
-            cnt += 1
-        self.__listModel.itemChanged.connect(self._onSelectionChanged)
-        self._onSelectionChanged(None)
+        self.noupdate = True
+        for item in self._getListModelItems():
+            item.setCheckState(Qt.Unchecked
+                               if item.checkState() else Qt.Checked)
+        self.noupdate = False
+        self._onSelectionChanged()
