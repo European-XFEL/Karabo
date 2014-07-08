@@ -16,14 +16,18 @@ from karabo import enums
 import numpy as np
 from guiqwt.plot import ImageDialog, CurveDialog
 from guiqwt.image import ImagePlot, ImageItem, TrImageItem
-from guiqwt.colormap import *
+from guiqwt.colormap import (build_icon_from_cmap, build_icon_from_cmap_name,
+                             get_cmap, get_colormap_list)
 from guiqwt.curve import CurvePlot
 from guiqwt.builder import make
-from guiqwt.styles import *
+from guiqwt.styles import COLORS
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
+from PyQt4.QtCore import Qt, pyqtSignal
+from PyQt4.QtGui import (
+    QAction, QColor, QGridLayout, QHBoxLayout, QImage, QLabel, QListView,
+    QMenu, QPen, QPainter, QPixmap, QScrollArea, QSplitter, QStandardItem,
+    QStandardItemModel, QSlider, QSpinBox, QStyle, QStyleOptionSlider,
+    QToolBar, QToolButton, QVBoxLayout, QWidget, qRgb)
 
 def _returnRawByteWidth(cs):
     _, l, _ = enums.ChannelSpaceType[cs].split("_")
