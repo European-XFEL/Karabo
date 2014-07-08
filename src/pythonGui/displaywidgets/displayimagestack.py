@@ -325,13 +325,6 @@ class ImageListItem(QStandardItem):
         self.__viewModel = model
         self.__name = name
 
-        self.__viewModel.connect(self.__viewModel,
-                                 SIGNAL("showHist" + str(self.__name) + "()"),
-                                 self.showHist)
-        self.__viewModel.connect(self.__viewModel,
-                                 SIGNAL("renderImage" + str(self.__name) + "()"),
-                                 self.renderImage)
-
         self.__imageWidget = ImagePlotItem()
         self.__gridParam = make.gridparam(major_enabled=(True, True),
                                           minor_enabled=(False, False))
@@ -392,16 +385,10 @@ class ImageListItem(QStandardItem):
         self.__cmapHist = np.array(a, np.uint8).tostring()
 
         if showHist:
-            self.__viewModel.emit(SIGNAL("showHist"+str(self.__name)+"()"))
+            self.showHist()
 
     def setHistType(self, type):
         self.__histType = type
-
-    def sigShowHist(self):
-        self.__viewModel.emit(SIGNAL("showHist"+str(self.__name)+"()"))
-
-    def sigRenderImage(self):
-        self.__viewModel.emit(SIGNAL("renderImage"+str(self.__name)+"()"))
 
     def showHist(self):
         if self.__histType == "cmap":
@@ -868,7 +855,7 @@ class ImageStack(DisplayWidget):
 
         for item in self._getListModelItems():
             item.setHistType(self.__histType)
-            item.sigShowHist()
+            item.showHist()
         self.__selectionWidget.show()
 
 
@@ -988,7 +975,7 @@ class ImageStack(DisplayWidget):
 
         for item in items:
             item.prepareImageData(value)
-            item.sigRenderImage()
+            item.renderImage()
             item.setHist(None)
         if forceNew:
             self._setLimits()
