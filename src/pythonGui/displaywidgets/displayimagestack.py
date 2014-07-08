@@ -373,7 +373,8 @@ class ImageListItem(QStandardItem):
         im = self.__imageData
         if height is not None:
             self.__height = height
-
+        if self.__height is None:
+            return
 
         h, e = np.histogram(im.flatten(), bins=self.__bins,
                             range=self.__histRange)
@@ -383,7 +384,6 @@ class ImageListItem(QStandardItem):
         self.__histCurve = make.curve(e, h, str(self.__sliceId))
         self.__histCurvePublic = copy.copy(self.__histCurve)
 
-        h = self.__histValues
         s = np.array(h, float)
         a = np.rot90(np.repeat(s, self.__height).reshape(
                                 (self.__bins, self.__height)))
@@ -747,6 +747,7 @@ class ImageStack(DisplayWidget):
         self.__imageLayouts = None
         self.__detectorLayout = None
         self.__tileButtons = []
+        self.selected = set()
 
 
     @property
@@ -1005,28 +1006,30 @@ class ImageStack(DisplayWidget):
                 #update grid
                 newModel.appendRow(imageItem)
 
+        self.__listModel = newModel
+        self.__listWidget.setModel(self.__listModel)
+
+
         items = [newModel.item(i) for i in range(newModel.rowCount())
                  if newModel.item(i) is not None]
 
         for item in items:
             item.prepareImageData(value)
             item.sigRenderImage()
+            item.setHist(None)
         if forceNew:
-            self._valueChangedCallback()
-        else:
-            self.__selectionWidget.show()
+            self._setLimits()
+            self._updateRangeWidgetsCallback()
 
         for slice in range(dimZ):
             self.__gridLayout.setRowStretch(slice, 1)
-        self.__listModel = newModel
-        self.__listWidget.setModel(self.__listModel)
 
 
     def _setNumCols(self, cols):
         self.__cols = cols
         self.__imageWidth = (self.__splitterWidget.sizes()[1] / self.__cols -
                              self.__colPadding)
-        self._onSelectionChanged(None)
+        self._onSelectionChanged(force=True)
 
 
     def _lockLUTChange(self):
@@ -1163,24 +1166,22 @@ class ImageStack(DisplayWidget):
                  self.__rowPadding) * self.__gridLayout.rowCount() /
                 self.__actCols)
 
-    def _onSelectionChanged(self, item):
-        selected = 0
-        cnt = 0
-        while self.__listModel.item(cnt):
-            if self.__listModel.item(cnt).checkState():
-                selected += 1
-            cnt += 1
+    def _onSelectionChanged(self, item=None, force=False):
+        selected = {item for item in self._getListModelItems()
+                    if item.checkState()}
+        if self.selected == selected and not force:
+            return
+        self.selected = selected
+
+        for i in range(self.__gridLayout.count()):
+            self.__gridLayout.itemAt(0).widget().setParent(None)
+
+        if not selected:
+            return
 
         self.__actCols = self.__cols
-        if selected < self.__actCols:
-            self.__actCols = max(1, selected)
-
-        for i in reversed(range(self.__gridLayout.count())):
-            self.__gridLayout.itemAt(i).widget().hide()
-            self.__gridLayout.removeWidget(self.__gridLayout.itemAt(i).widget())
-
-        cnt = 0
-        selCnt = 0
+        if len(selected) < self.__actCols:
+            self.__actCols = len(selected)
 
         if selected == 0:
             return
