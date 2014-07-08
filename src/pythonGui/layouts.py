@@ -145,6 +145,16 @@ class Layout(Loadable):
         pass
 
 
+    def addWidget(self, widget, *args, **kwargs):
+        """This method is a mere no-op. It just calls the inherited
+        version of itself.
+
+        This is a workaround for a bug in PyQt4, which makes widgets
+        disappear magically."""
+        super(Layout, self).addWidget(widget, *args, **kwargs)
+        widget.setParent(widget.parent()) # this ought to be a no-op, but isn't
+
+
 class FixedLayout(Layout, QLayout):
     xmltag = ns_svg + "g"
 
