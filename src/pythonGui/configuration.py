@@ -129,7 +129,7 @@ class Configuration(Box):
 
     def removeVisible(self):
         self.visible -= 1
-        if self.visible == 0 and self.status != "offline":
+        if self.visible == 0:
             Network().onRemoveVisibleDevice(self.id)
 
 
