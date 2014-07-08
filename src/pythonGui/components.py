@@ -424,8 +424,9 @@ class EditableApplyLaterComponent(BaseComponent):
                                  for b in self.boxes])
 
 
-    def onApplyRemoteChanges(self, box):
-        self.widgetFactory.valueChanged(box, self.__currentDisplayValue)
+    def onApplyRemoteChanges(self):
+        for b in self.boxes:
+            self.widgetFactory.valueChanged(b, self.__currentDisplayValue)
         self.updateButtons()
 
 
