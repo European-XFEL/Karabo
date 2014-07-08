@@ -173,11 +173,15 @@ class NavigationTreeModel(QAbstractItemModel):
         
         self.beginResetModel()
         try:
+            wasSelected = self.selectionModel.isSelected(index)
             node = index.internalPointer()
             parentNode = node.parentNode
             parentNode.removeChildNode(node)
         finally:
             self.endResetModel()
+            if wasSelected:
+                # If the erased device was selected, select parent
+                self.selectPath(parentNode.path)
 
 
     def eraseServer(self, instanceId):
