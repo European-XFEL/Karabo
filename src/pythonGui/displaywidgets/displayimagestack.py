@@ -509,13 +509,13 @@ class TileSelectButton(QToolButton):
         return (self.__tileRow, self.__tileCol, self.__module)
 
 
-class DisplayImage(DisplayWidget):
+class ImageStack(DisplayWidget):
     category = "Image"
     alias = "Image Stack View"
 
     def __init__(self, box, parent):
         self.value = None
-        super(DisplayImage, self).__init__(box)
+        super(ImageStack, self).__init__(box)
 
         self.__mainWidget = QWidget(parent)
         self.__mainLayout = QVBoxLayout()
