@@ -19,7 +19,7 @@ import icons
 from manager import Manager
 import manager
 
-from PyQt4.QtCore import pyqtSignal, QModelIndex, Qt
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 
