@@ -733,7 +733,7 @@ Separator()
 class SelectAll(SimpleAction):
     text = 'Select All'
     icon = icons.selectAll
-    shortcut = QKeySequence.Paste
+    shortcut = QKeySequence.SelectAll
 
 
     def run(self):
