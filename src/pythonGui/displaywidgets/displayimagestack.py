@@ -439,30 +439,8 @@ class ImageListItem(QStandardItem):
         return (self.__imageData.shape[1] / self.__imageData.shape[0] *
                 widgetWidth + 20)
 
-    def prepareImageData(self, value):
-        dimX, dimY, dimZ = value.dims.value
-        encoding = value.encoding.value
-        channelSpace = value.channelSpace.value
-        data = value.data.value
-
-        imData = None
-
-        if encoding == "RGBA":
-            sliceData = data[int(self.__sliceId * dimX * dimY * 4):
-                             int((self.__sliceId + 1) * dimX * dimY * 4)]
-            image = QImage(sliceData, dimX, dimY,
-                           QImage.Format_ARGB32_Premultiplied)
-            dataQw = image.bits().asstring(image.numBytes())
-            imData = np.frombuffer(dataQw, np.uint8)
-            imData.shape = image.height(), image.bytesPerLine() / 4, 4
-        else:
-            sliceData = data[int(self.__sliceId * dimX * dimY *
-                                _returnRawByteWidth(channelSpace)):
-                             int((self.__sliceId + 1) * dimX * dimY *
-                                 _returnRawByteWidth(channelSpace))]
-            imData = _returnRawArray(sliceData, dimX, dimY, channelSpace)
-
-        self.__imageData = imData
+    def prepareImageData(self, data):
+        self.__imageData = data[self.__sliceId, ...]
 
     def renderImage(self):
         self.setWidth(self.__imageWidth)
@@ -499,7 +477,7 @@ class ImageStack(DisplayWidget):
     alias = "Image Stack View"
 
     def __init__(self, box, parent):
-        self.value = None
+        self.data = None
         super(ImageStack, self).__init__(box)
 
         self.__mainWidget = QWidget(parent)
@@ -904,8 +882,6 @@ class ImageStack(DisplayWidget):
         if value is None:
             return
 
-        self.value = value
-
         if len(value.dims.value) != 3:
             return
         dimX, dimY, dimZ = value.dims.value
@@ -917,6 +893,10 @@ class ImageStack(DisplayWidget):
             len(data) < dimX * dimY * dimZ *
                         _returnRawByteWidth(channelSpace)):
             return
+
+        s, l, _ = enums.ChannelSpaceType[channelSpace].split("_")
+        t = getattr(np, dict(s="int", u="uint", f="float")[s] + l)
+        data = np.frombuffer(value.data.value, t).reshape((dimZ, dimY, dimX))
 
         imageLayouts = self.__imageLayouts
         detectorLayout = self.__detectorLayout
@@ -974,7 +954,7 @@ class ImageStack(DisplayWidget):
                  if newModel.item(i) is not None]
 
         for item in items:
-            item.prepareImageData(value)
+            item.prepareImageData(data)
             item.renderImage()
             item.setHist(None)
         if forceNew:
@@ -1061,23 +1041,10 @@ class ImageStack(DisplayWidget):
             self.__minRangeBox.setMaximum(self.__maxPixelValue - 1)
         self._setLimits()
 
-    def _getAutoRangeLocked(self, value):
-        dimX, dimY, dimZ = value.dims.value
-        data = value.data.value
-        encoding = value.encoding.value
-        channelSpace = value.channelSpace.value
-        imData = None
-        if encoding == "RGBA":
-            image = QImage(data, dimX, dimY * dimZ,
-                           QImage.Format_ARGB32_Premultiplied)
-            dataQw = image.bits().asstring(image.numBytes())
-            imData = np.frombuffer(dataQw, np.uint8)
-            imData.shape = image.height(), image.bytesPerLine() / 4, 4
-        else:
-            imData = _returnRawArray(data, dimX, dimY * dimZ, channelSpace)
-
-        self.__minPixelValueAuto = np.min(imData)
-        self.__maxPixelValueAuto = np.max(imData)
+    def _getAutoRangeLocked(self, data):
+        if data is not None:
+            self.__minPixelValueAuto = data.min()
+            self.__maxPixelValueAuto = data.max()
 
     def _finalizeLimitSet(self):
         if self.__lockLUTs:
@@ -1092,7 +1059,7 @@ class ImageStack(DisplayWidget):
     def _setLimits(self):
         self.__selectionWidget.hide()
         if self.__autoRange and self.__lockLUTs:
-            self._getAutoRangeLocked(self.value)
+            self._getAutoRangeLocked(self.data)
             self._finalizeLimitSet()
         elif not self.__autoRange and self.__lockLUTs:
             self._finalizeLimitSet()
