@@ -61,8 +61,13 @@ namespace karabo {
                     .setNewDefaultValue(5)
                     .commit();
             
-            OVERWRITE_ELEMENT(expected).key("_deviceId_")
+            OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_FileDataLogger_0")
+                    .commit();
+
+            // Slow beats
+            OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
+                    .setNewDefaultValue(60)
                     .commit();
         }
 
