@@ -308,7 +308,7 @@ class ImagePlotItem(ImagePlot):
 class ImageListItem(QStandardItem):
     def __init__(self, name, model, **params):
         super(ImageListItem,self).__init__(name, **params)
-        self.__sliceId = None
+        self.sliceId = None
         self.__image = None
         self.__histRange = (0, 100)
         self.__histPxY = 15
@@ -318,18 +318,17 @@ class ImageListItem(QStandardItem):
         self.__height = None
         self.__imageWidth = None
         self.__cmapHist = None
+        self.histType = "cmap"
 
         self.__histValues = None
         self.__histEdges = None
-        self.__histType = "cmap"
         self.__viewModel = model
         self.__name = name
 
-        self.__imageWidget = ImagePlotItem()
+        self.imageWidget = ImagePlotItem()
         self.__gridParam = make.gridparam(major_enabled=(True, True),
                                           minor_enabled=(False, False))
-        self.__histCurvePublic = None
-        self.__histCurve = None
+        self.histCurve = None
         self.setCheckable(True)
 
         #layout params
@@ -351,16 +350,9 @@ class ImageListItem(QStandardItem):
     def isTile(self, row, col):
         return self.__tileRow == row and self.__tileCol == col
 
-    def setSliceId(self, id):
-        self.__sliceId = id
-
     def setTitle(self, title):
         self.setText(str(title))
-        self.__imageWidget.set_title(str(title))
-
-    def getSliceId(self):
-        return self.__sliceId
-
+        self.imageWidget.set_title(str(title))
 
     def setHist(self, height, showHist=True):
         im = self.__imageData
@@ -374,8 +366,7 @@ class ImageListItem(QStandardItem):
         self.__histValues = h
         self.__histEdges = (e[:-1] + e [1:]) / 2.
 
-        self.__histCurve = make.curve(e, h, str(self.__sliceId))
-        self.__histCurvePublic = copy.copy(self.__histCurve)
+        self.histCurve = make.curve(e, h, str(self.sliceId))
 
         s = np.array(h, float)
         a = np.rot90(np.repeat(s, self.__height).reshape(
@@ -387,11 +378,8 @@ class ImageListItem(QStandardItem):
         if showHist:
             self.showHist()
 
-    def setHistType(self, type):
-        self.__histType = type
-
     def showHist(self):
-        if self.__histType == "cmap":
+        if self.histType == "cmap":
             image = QImage(self.__cmapHist, self.__bins, self.__height,
                            QImage.Format_Indexed8)
             image.setColorTable(self.__colorTable)
@@ -402,15 +390,12 @@ class ImageListItem(QStandardItem):
             plot = CurvePlot(gridparam=self.__gridParam)
             plot.setFixedWidth(self.__bins)
             plot.setFixedHeight(2 * self.__height)
-            plot.add_item(self.__histCurve)
+            plot.add_item(self.histCurve)
             for i in range(4):
                 plot.enableAxis(i, False)
             plot.replot()
             self.__histData = QPixmap.grabWidget(plot)
             self.setData(self.__histData, Qt.DecorationRole)
-
-    def getHistCurve(self):
-        return self.__histCurvePublic
 
     def setHistLimits(self, r):
         self.__histRange = r
@@ -418,20 +403,20 @@ class ImageListItem(QStandardItem):
             self.setHist(None)
 
     def setLUTLimits(self, r):
-        self.__imageWidget.updateLUTRange(r)
+        self.imageWidget.updateLUTRange(r)
 
     def updateColorMap(self, map):
-        self.__imageWidget.updateColorMap(map)
+        self.imageWidget.updateColorMap(map)
 
     def setHistBins(self, bins):
         self.__bins = bins
 
     def setWidth(self, widgetWidth):
         if self.__imageData is not None:
-            self.__imageWidget.setFixedWidth(widgetWidth)
-            self.__imageWidget.setFixedHeight(self._heightForWidth(widgetWidth))
-            self.__imageWidget.setMinimumWidth(widgetWidth)
-            self.__imageWidget.setMinimumHeight(
+            self.imageWidget.setFixedWidth(widgetWidth)
+            self.imageWidget.setFixedHeight(self._heightForWidth(widgetWidth))
+            self.imageWidget.setMinimumWidth(widgetWidth)
+            self.imageWidget.setMinimumHeight(
                 self._heightForWidth(widgetWidth))
         self.__imageWidth = widgetWidth
 
@@ -440,23 +425,14 @@ class ImageListItem(QStandardItem):
                 widgetWidth + 20)
 
     def prepareImageData(self, data):
-        self.__imageData = data[self.__sliceId, ...]
+        self.__imageData = data[self.sliceId, ...]
 
     def renderImage(self):
         self.setWidth(self.__imageWidth)
-        self.__imageWidget.setImage(self.__imageData)
-
-    def setImage(self, im):
-        self.__imageWidget.setImage(im)
-
-    def getImage(self):
-        return self.__imageData
-
-    def getWidget(self):
-        return self.__imageWidget
+        self.imageWidget.setImage(self.__imageData)
 
     def setNonLockedLimits(self):
-       imData = self.getImage()
+       imData = self.__imageData
        self.setHistLimits((np.min(imData), np.max(imData)))
        self.setLUTLimits((np.min(imData), np.max(imData)))
 
@@ -480,9 +456,9 @@ class ImageStack(DisplayWidget):
         self.data = None
         super(ImageStack, self).__init__(box)
 
-        self.__mainWidget = QWidget(parent)
+        self.widget = QWidget(parent)
         self.__mainLayout = QVBoxLayout()
-        self.__mainWidget.setLayout(self.__mainLayout)
+        self.widget.setLayout(self.__mainLayout)
 
         self.__colPadding = 10
         self.__rowPadding = 20
@@ -497,7 +473,7 @@ class ImageStack(DisplayWidget):
         self.__lockLUTs = True
         self.__autoRange = True
         self.__profiles = False
-        self.__histType = "cmap"
+        self.histType = "cmap"
         self.__aggHistDialog  = None
         self.__lineColors = copy.copy(COLORS)
         #delete white
@@ -716,11 +692,6 @@ class ImageStack(DisplayWidget):
         self.noupdate = False
 
 
-    @property
-    def widget(self):
-        return self.__mainWidget
-
-
     def _toggleCompress(self):
         self.__selectionWidget.hide()
         compress = self.__CompressButton.isChecked()
@@ -803,7 +774,7 @@ class ImageStack(DisplayWidget):
             abscnt = 0
             for item in self._getListModelItems():
                 if item.checkState():
-                    curve = item.getHistCurve()
+                    curve = copy.copy(item.histCurve)
                     pen = QPen(QColor(self.__lineColors[
                             abscnt % self.__availableLineColors]))
                     curve.setPen(pen)
@@ -823,16 +794,16 @@ class ImageStack(DisplayWidget):
 
 
     def _histTypeChange(self):
-        if self.__histType == "cmap":
-            self.__histType = "hist"
+        if self.histType == "cmap":
+            self.histType = "hist"
             self.__histTypeButton.setIcon(icons.histColorMap)
         else:
-            self.__histType = "cmap"
+            self.histType = "cmap"
             self.__histTypeButton.setIcon(icons.histHist)
         self.__selectionWidget.hide()
 
         for item in self._getListModelItems():
-            item.setHistType(self.__histType)
+            item.histType = self.histType
             item.showHist()
         self.__selectionWidget.show()
 
@@ -925,8 +896,8 @@ class ImageStack(DisplayWidget):
             #delete previous items in listview
             #print "Deleting previous stack..."
             for item in self._getListModelItems():
-                item.getWidget().hide()
-                item.getWidget().setParent(None)
+                item.imageWidget.hide()
+                item.imageWidget.setParent(None)
             self.__listModel.clear()
 
         newModel = self.__listModel
@@ -938,7 +909,7 @@ class ImageStack(DisplayWidget):
                 imageItem = ImageListItem(str(slice), newModel)
                 imageItem.setHistBins(self.__histBins)
                 imageItem.setTitle(str(slice) + sliceInfo)
-                imageItem.setSliceId(slice)
+                imageItem.sliceId = slice
                 imageItem.setWidth(self.__imageWidth)
                 imageItem.setLayout(self.__imageLayouts[slice]["tileRow"],
                                     self.__imageLayouts[slice]["tileCol"],
@@ -1078,7 +1049,7 @@ class ImageStack(DisplayWidget):
 
         if self.__listModel.item(0):
             self.__selectionWidget.setMinimumHeight(
-                (self.__listModel.item(0).getWidget().height() +
+                (self.__listModel.item(0).imageWidget.height() +
                  self.__rowPadding) * self.__gridLayout.rowCount() /
                 self.__actCols)
 
@@ -1105,7 +1076,7 @@ class ImageStack(DisplayWidget):
         selCnt = 0
         for item in self._getListModelItems():
             if item.checkState():
-                widget = item.getWidget()
+                widget = item.imageWidget
                 widget.show()
                 self.__gridLayout.addWidget(widget, selCnt // self.__actCols,
                                             selCnt % self.__actCols)
