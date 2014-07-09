@@ -38,7 +38,7 @@ class DisplayComboBox(DisplayWidget):
         self.widget.setFrame(False)
         self.widget.setEnabled(False)
         
-        self.addItems(enumeration)
+        self.addItems(box.descriptor.options)
 
 
     @property
