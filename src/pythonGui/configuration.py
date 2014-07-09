@@ -91,12 +91,12 @@ class Configuration(Box):
         try:
             attrs = manager.Manager().systemHash["device"][self.id, ...]
         except KeyError as e:
+            self.error = False
             self.status = "offline"
         else:
             self.classId = attrs.get("classId")
             self.serverId = attrs.get("serverId")
             error = attrs.get("status") == "error"
-            #error_changed = error != self.error
             self.error = error
             if self.status == "offline" and self.visible > 0:
                 Network().onGetDeviceSchema(self.id)
