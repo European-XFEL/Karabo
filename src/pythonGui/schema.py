@@ -162,15 +162,9 @@ class Type(hashtypes.Type):
             item.displayText = box.path[-1]
         item.allowedStates = self.allowedStates
 
-        if self.options is not None:
-            item.enumeration = self.options
-            item.classAlias = "Selection Field"
-            item.setIcon(0, icons.enum)
-        else:
-            item.enumeration = None
-            item.classAlias = self.classAlias
-            item.setIcon(0, self.icon)
-
+        item.setIcon(0, self.icon if self.options is None else icons.enum)
+        item.enumeration = self.options
+        item.classAlias = self.classAlias
         component = None
         item.editableComponent = None
         if isClass:
@@ -334,6 +328,8 @@ class Schema(hashtypes.Descriptor):
         ret = Type.fromname[attrs['valueType']]()
         ret.displayedName = key
         Schema.parseAttrs(ret, attrs, parent)
+        if ret.options is not None:
+            ret.classAlias = "Selection Field"
         return ret
 
 
