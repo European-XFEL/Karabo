@@ -254,7 +254,7 @@ class Device(Configuration):
         
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
-        self.onStatusChanged(actual, actual.status)
+        self.onStatusChanged(actual, actual.status, actual.error)
         
         # This flag states whether the descriptor was checked already
         # This should only happen once when the device was selected the first
@@ -313,10 +313,10 @@ class Device(Configuration):
         return XMLWriter().write(Hash(self.classId, config))
 
 
-    def onStatusChanged(self, conf, status):
+    def onStatusChanged(self, conf, status, error):
         """ this method gets the status of the corresponding real device,
         and finds out the gory details for this project device """
-        self.error = conf.error
+        self.error = error
 
         if manager.Manager().systemHash is None:
             self.status = "offline"
