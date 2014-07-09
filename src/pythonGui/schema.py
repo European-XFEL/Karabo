@@ -255,7 +255,7 @@ class Bool(hashtypes.Bool):
 class Vector(hashtypes.Vector):
     # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
-    classAlias = 'Plot'
+    classAlias = 'List'
 
 
 class Object(object):
