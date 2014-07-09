@@ -24,7 +24,7 @@ __all__ = ["EditableList"]
 import icons
 from listedit import ListEdit
 from util import SignalBlocker
-from widget import EditableWidget
+from widget import EditableWidget, DisplayWidget
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import QDialog, QFrame, QHBoxLayout, QLineEdit, QToolButton, QWidget
@@ -33,20 +33,29 @@ import numbers
 import numpy
 
 
-class EditableList(EditableWidget):
+class EditableList(EditableWidget, DisplayWidget):
     category = "List"
-    alias = "Plot"
+    alias = "List"
 
     def __init__(self, box, parent):
         super(EditableList, self).__init__(box)
         
         self.__compositeWidget = QWidget(parent)
-        hLayout = QHBoxLayout(self.__compositeWidget)
-        hLayout.setContentsMargins(0,0,0,0)
-        
+        self.hLayout = QHBoxLayout(self.__compositeWidget)
+        self.hLayout.setContentsMargins(0,0,0,0)
+
         self.leList = QLineEdit()
+        self.hLayout.addWidget(self.leList)
+
+        self.valueList = []
+
+
+    def setReadOnly(self, ro):
+        self.leList.setReadOnly(ro)
+        if ro:
+            return
+
         self.leList.textChanged.connect(self.onEditingFinished)
-        hLayout.addWidget(self.leList)
 
         text = "Edit"
         self.tbEdit = QToolButton()
@@ -55,9 +64,7 @@ class EditableList(EditableWidget):
         self.tbEdit.setIcon(icons.edit)
         self.tbEdit.setMaximumSize(25,25)
         self.tbEdit.clicked.connect(self.onEditClicked)
-        hLayout.addWidget(self.tbEdit)
-        
-        self.valueList = []
+        self.hLayout.addWidget(self.tbEdit)
 
 
     @property
