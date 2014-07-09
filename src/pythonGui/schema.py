@@ -502,7 +502,7 @@ class ChoiceOfNodes(Schema):
                 item.editableComponent.addParameters(itemToBeAdded=childItem)
 
         # Trigger change of combobox
-        item.editableComponent.widgetFactory.valueChanged(box, self.defaultValue, None)
+        item.editableComponent.widgetFactory.valueChanged(box, box.current)
         return item
 
 
