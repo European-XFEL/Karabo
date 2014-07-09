@@ -107,7 +107,7 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
-                if device.error:
+                if device.status != "offline" and device.error:
                     leafItem.setIcon(icons.deviceInstanceError)
                 else:
                     leafItem.setIcon(dict(error=icons.deviceInstanceError,
