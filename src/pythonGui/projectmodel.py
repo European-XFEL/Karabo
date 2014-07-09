@@ -223,6 +223,14 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
+    def currentScene(self):
+        scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(scene, Scene):
+            return None
+        
+        return scene
+
+
     def currentIndex(self):
         return self.selectionModel.currentIndex()
 
@@ -319,7 +327,9 @@ class ProjectModel(QStandardItemModel):
         self.removeProject(project)
         
         for scene in project.scenes:
-            self.signalRemoveScene.emit(scene)
+            if scene.isVisible():
+                # Only send signal, if scene is currently visible
+                self.signalRemoveScene.emit(scene)
 
 
     def projectNew(self, filename):
@@ -465,12 +475,12 @@ class ProjectModel(QStandardItemModel):
 
 
     def duplicateDevice(self, device):
-        dialog = DuplicateDialog(device)
+        dialog = DuplicateDialog(device.id)
         if dialog.exec_() == QDialog.Rejected:
             return
 
         for i in xrange(dialog.count):
-            deviceId = "{}{}".format(dialog.deviceIdPrefix, i+dialog.startIndex)
+            deviceId = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             newDevice.futureConfig = device.toHash()
@@ -519,6 +529,16 @@ class ProjectModel(QStandardItemModel):
         self.selectItem(scene)
         
         return scene
+
+
+    def duplicateScene(self, scene):
+        dialog = DuplicateDialog(scene.filename[:-4])
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        for i in xrange(dialog.count):
+            filename = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
+            self.addScene(self.currentProject(), filename)
 
 
     def openScene(self, scene):
@@ -577,11 +597,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onEditDevice(self):
-        index = self.selectionModel.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Category):
-            object = None
-        self.editDevice(object)
+        self.editDevice(self.currentDevice())
 
 
     def onDuplicateDevice(self):
@@ -629,11 +645,11 @@ class ProjectModel(QStandardItemModel):
 
 
     def onEditScene(self):
-        index = self.selectionModel.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Category):
-            object = None
-        self.editScene(object)
+        self.editScene(self.currentScene())
+
+
+    def onDuplicateScene(self):
+        self.duplicateScene(self.currentScene())
 
 
     def onRemove(self):
