@@ -22,7 +22,7 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
 
 class DuplicateDialog(QDialog):
 
-    def __init__(self, device):
+    def __init__(self, name):
         super(DuplicateDialog, self).__init__()
 
         self.setWindowTitle("Duplicate")
@@ -32,9 +32,9 @@ class DuplicateDialog(QDialog):
         fLayout = QFormLayout()
         fLayout.setContentsMargins(5,5,5,5)
         
-        self.leDeviceIdPrefix = QLineEdit(device.id)
-        self.leDeviceIdPrefix.textChanged.connect(self.onChanged)
-        fLayout.addRow("Device ID prefix:", self.leDeviceIdPrefix)
+        self.leDisplayPrefix = QLineEdit(name)
+        self.leDisplayPrefix.textChanged.connect(self.onChanged)
+        fLayout.addRow("Prefix:", self.leDisplayPrefix)
         
         self.sbStartIndex = QSpinBox()
         self.sbStartIndex.setRange(0, globals.MAX_INT32)
@@ -55,8 +55,8 @@ class DuplicateDialog(QDialog):
 
 
     @property
-    def deviceIdPrefix(self):
-        return self.leDeviceIdPrefix.text()
+    def displayPrefix(self):
+        return self.leDisplayPrefix.text()
 
 
     @property
@@ -73,7 +73,7 @@ class DuplicateDialog(QDialog):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        enabled = len(self.leDeviceIdPrefix.text()) > 0 \
+        enabled = len(self.leDisplayPrefix.text()) > 0 \
                   and self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 
