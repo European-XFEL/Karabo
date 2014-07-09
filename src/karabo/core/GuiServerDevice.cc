@@ -502,7 +502,6 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "deviceChangedHandler";
                 Hash h("type", "configurationChanged", "deviceId", deviceId, "configuration", what);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
