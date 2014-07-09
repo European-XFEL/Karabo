@@ -226,7 +226,11 @@ class ProjectTreeView(QTreeView):
             acDuplicate = QAction(text, self)
             acDuplicate.setStatusTip(text)
             acDuplicate.setToolTip(text)
-            acDuplicate.triggered.connect(self.model().onDuplicateDevice)
+            
+            if isinstance(object, Device):
+                acDuplicate.triggered.connect(self.model().onDuplicateDevice)
+            elif isinstance(object, Scene):
+                acDuplicate.triggered.connect(self.model().onDuplicateScene)
 
             text = "Remove"
             acRemove = QAction(text, self)
