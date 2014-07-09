@@ -495,7 +495,7 @@ namespace karabo {
                     it->second.erase(instanceId);
                 }
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in instanceUpdatedHandler(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in instanceGoneHandler(): " << e.userFriendlyMsg();
             }
         }
 
