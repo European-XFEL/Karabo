@@ -106,7 +106,7 @@ class Project(QObject):
             self.devices.pop(index)
             return index
         elif isinstance(object, Scene):
-            index = self.devices.index(object)
+            index = self.scenes.index(object)
             self.scenes.pop(index)
             return index
 
