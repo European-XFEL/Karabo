@@ -31,12 +31,13 @@ class IPythonWidget(RichIPythonWidget):
         self.kernel_client = kernel_client = self._kernel_manager.client()
         kernel_client.start_channels()
 
-        def stop():
-            kernel_client.stop_channels()
-            kernel_manager.shutdown_kernel()
-            guisupport.get_app_qt4().exit()
-            
-        self.exit_requested.connect(stop)
+        self.exit_requested.connect(self.stop)
+
+
+    def stop(self):
+        self.kernel_client.stop_channels()
+        self.kernel_manager.shutdown_kernel()
+        guisupport.get_app_qt4().exit()
 
 
     def pushVariables(self,variableDict):
