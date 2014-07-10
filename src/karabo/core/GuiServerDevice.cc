@@ -559,7 +559,7 @@ namespace karabo {
                     it->first->write(h);
                 }
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in slotSchemaUpdated(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in schemaUpdatedHandler(): " << e.userFriendlyMsg();
             }
         }
 
