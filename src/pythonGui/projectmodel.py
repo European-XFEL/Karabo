@@ -456,6 +456,23 @@ class ProjectModel(QStandardItemModel):
         """
         Add a device for the given \project with the given data.
         """
+        
+        for d in project.devices:
+            if deviceId == d.id:
+                reply = QMessageBox.question(None, 'Device already exists',
+                    "Another device with the same device ID \"<b>{}</b>\" <br> "
+                    "already exists. Do you want to overwrite it?".format(deviceId),
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.No:
+                    return None
+
+                # Overwrite existing device
+                index = project.remove(d)
+                device = self.insertDevice(index, project, serverId,
+                                           classId, deviceId, ifexists)
+                return device
+        
         device = Device(serverId, classId, deviceId, ifexists)
         project.addDevice(device)
         self.updateData()
