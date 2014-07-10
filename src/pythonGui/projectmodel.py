@@ -52,7 +52,7 @@ class ProjectModel(QStandardItemModel):
         self.pluginDialog = None
         
         self.setHorizontalHeaderLabels(["Projects"])
-        self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
