@@ -647,6 +647,8 @@ namespace karabo {
 
         void Schema::addElement(Hash::Node& node) {
 
+            // TODO It seems the condition below can never be true
+            // TODO If so, get rid of this code entirely
             if (node.hasAttribute(KARABO_SCHEMA_OVERWRITE)) {
                 this->overwriteAttributes(node);
                 return;
