@@ -27,7 +27,7 @@ import datetime
 from manager import Manager
 from widget import DisplayWidget
 
-from PyQt4.QtCore import Qt, QObject, QTimer
+from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
 from PyQt4.QtGui import QColor
 
 import numpy
@@ -52,6 +52,7 @@ class Curve(QObject):
     maxHistory = 400 # Limits amount of data from past
 
     def __init__(self, box, curve):
+        QObject.__init__(self)
         self.curve = curve
         self.box = box
         self.data = numpy.empty((self.ini, 2), dtype=float) # Data container 
@@ -91,6 +92,7 @@ class Curve(QObject):
         self.curve.set_data(self.data[:self.fill, 1], self.data[:self.fill, 0])
 
 
+    @pyqtSlot(object, object)
     def onHistoricData(self, box, data):
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
