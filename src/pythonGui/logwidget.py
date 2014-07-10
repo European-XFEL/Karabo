@@ -197,6 +197,7 @@ class LogWidget(QWidget):
 
         # Filter buttons
         hFilterLayout = QHBoxLayout()
+        vFilterLayout.addLayout(hFilterLayout)
         hFilterLayout.setSpacing(25)
         self.laFilter = QLabel("Filter message type: ")
         font = self.laFilter.font()
@@ -303,8 +304,6 @@ class LogWidget(QWidget):
             self.pbFilterAlarm.setVisible(True)
             self.pbFilterWarning.setChecked(True)
             self.pbFilterWarning.setVisible(True)
-
-        vFilterLayout.addLayout(hFilterLayout)
 
         return filterWidget
 

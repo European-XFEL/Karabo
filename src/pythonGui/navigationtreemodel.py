@@ -34,7 +34,7 @@ class NavigationTreeModel(QAbstractItemModel):
         self.rootNode = TreeNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel = QItemSelectionModel(self, self)
 
 
     def _handleServerData(self, config):
