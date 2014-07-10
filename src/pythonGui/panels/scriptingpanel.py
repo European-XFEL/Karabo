@@ -15,7 +15,6 @@ import atexit
 
 from ipythonwidget import IPythonWidget
 
-from PyQt4.QtCore import QTimer
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
