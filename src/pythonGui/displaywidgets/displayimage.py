@@ -34,6 +34,8 @@ class DisplayImage(DisplayWidget):
             return
 
         if self.value is None or value is not self.value:
+            if len(value.dims.value) != 2:
+                return
 
             # Data type information
             type = value.type.value
