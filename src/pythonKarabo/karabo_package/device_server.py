@@ -551,8 +551,10 @@ class DeviceServer(object):
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
     def slotGetClassSchema(self, classid):
+        slotInfo = self.ss.getSenderInfo("slotGetClassSchema")
+        senderId = slotInfo.getInstanceIdOfSender()
         schema = Configurator(PythonDevice).getSchema(classid)
-        self.ss.emit("signalClassSchema", schema, classid, self.serverid)
+        self.ss.call(senderId, "slotClassSchema", schema, classid, self.serverid)
         self.ss.reply(schema)
         
     def processEvent(self, event):

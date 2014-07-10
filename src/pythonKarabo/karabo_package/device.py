@@ -160,7 +160,7 @@ class PythonDevice(BaseFsm):
         info["classId"] = self.classid
         info["serverId"] = self.serverid
         info["visibility"] = self["visibility"]
-        info["version"] = self.__class__.__version__
+        info["compatibility"] = self.__class__.__version__
         info["host"] = self.hostname
         info["status"] = "ok"
         info["archive"] = self.get("archive")
@@ -172,7 +172,7 @@ class PythonDevice(BaseFsm):
         
         # Run event loop ( in a thread ) with given info
         # TODO Make configurable
-        t = threading.Thread(target = self._ss.runEventLoop, args = (10, info))
+        t = threading.Thread(target = self._ss.runEventLoop, args = (20, info))
         t.start()
         time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
         self.startFsm()
@@ -473,7 +473,8 @@ class PythonDevice(BaseFsm):
           
     
     def slotGetConfiguration(self):
-        self._ss.emit("signalChanged", self.parameters, self.deviceid)
+        senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
+        self._ss.call(senderId, "slotChanged", self.parameters, self.deviceid)
         self._ss.reply(self.parameters)
         
     def slotReconfigure(self, newConfiguration):
@@ -511,13 +512,16 @@ class PythonDevice(BaseFsm):
         self.postReconfigure()
     
     def slotGetSchema(self, onlyCurrentState):
+
+        senderId = self._ss.getSenderInfo("slotGetSchema").getInstanceIdOfSender()
+
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            self._ss.emit("signalSchemaUpdated", schema, self.deviceid)
+            self._ss.call(senderId, "slotSchemaUpdated", schema, self.deviceid)
             self._ss.reply(schema)
         else:
-            self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+            self._ss.call(senderId, "slotSchemaUpdated", self.fullSchema, self.deviceid)
             self._ss.reply(self.fullSchema)
    
     def slotKillDevice(self):
