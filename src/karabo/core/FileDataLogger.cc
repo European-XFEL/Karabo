@@ -93,7 +93,6 @@ namespace karabo {
 
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::FileDataLogger::instanceNewHandler, this, _1));
-            //remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::FileDataLogger::instanceUpdatedHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::FileDataLogger::instanceGoneHandler, this, _1, _2));
 
             // Prepare backend to persist data
@@ -115,6 +114,7 @@ namespace karabo {
                     tagDeviceToBeDiscontinued(deviceId, false, 'l'); // 2nd arg means: device was not valid up to now, 3rd means logger
                     refreshDeviceInformation(deviceId);
                     connectT(deviceId, "signalChanged", "", "slotChanged");
+                    connectT(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
                 }
             }
 
@@ -155,6 +155,7 @@ namespace karabo {
 
                     // Finally start listening to the changes
                     connectT(deviceId, "signalChanged", "", "slotChanged");
+                    connectT(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
 
                 }
 

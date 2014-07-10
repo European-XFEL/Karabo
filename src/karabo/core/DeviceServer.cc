@@ -317,6 +317,9 @@ namespace karabo {
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
+            KARABO_LOG_INFO << "ServerId: " << m_serverId;
+            KARABO_LOG_INFO << "Broker (host/port/topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << "/"
+                    << m_connectionConfiguration.get<unsigned int>("Jms.port") << "/" << m_connectionConfiguration.get<string>("Jms.destinationName");
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection);
@@ -345,7 +348,6 @@ namespace karabo {
             SLOT1(slotGetClassSchema, string /*classId*/)
 
             // Connect to global slot(s))
-            connectN("", "signalClassSchema", "*", "slotClassSchema");
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
         }
 
@@ -479,6 +481,9 @@ namespace karabo {
                     config.set("_deviceId_", hash.get<string>("deviceId"));
                 }
 
+                // Inject connection
+                config.set("_connection_", m_connectionConfiguration);
+
                 BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
@@ -516,6 +521,10 @@ namespace karabo {
                 } else {
                     tmp.set("_deviceId_", tmp.get<string>("deviceId"));
                 }
+
+                // Inject connection
+                tmp.set("_connection_", m_connectionConfiguration);
+
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
@@ -606,9 +615,11 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotGetClassSchema(const std::string & classId) {
+        void DeviceServer::slotGetClassSchema(const std::string& classId) {
             Schema schema = BaseDevice::getSchema(classId);
-            emit("signalClassSchema", schema, classId, this->getInstanceId());
+            std::string senderId = getSenderInfo("slotGetClassSchema")->getInstanceIdOfSender();
+            // TODO One could ship also the to be called slot, to make things more generic
+            call(senderId, "slotClassSchema", schema, classId, this->getInstanceId());
             reply(schema);
         }
 

@@ -117,7 +117,7 @@ namespace karabo {
                         .init()
                         .commit();
 
-                CHOICE_ELEMENT(expected).key("connection")
+                CHOICE_ELEMENT(expected).key("_connection_")
                         .displayedName("Connection")
                         .description("The connection to the communication layer of the distributed system")
                         .appendNodesOfConfigurationBase<karabo::net::BrokerConnection>()
@@ -214,7 +214,7 @@ namespace karabo {
                 m_log = &(karabo::log::Logger::getLogger(m_deviceId)); // TODO use later: "device." + instanceId
 
                 // Instantiate connection
-                karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("connection", configuration);
+                karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::createChoice("_connection_", configuration);
 
                 // Initialize the SignalSlotable instance
                 init(m_deviceId, connection);
@@ -403,14 +403,14 @@ namespace karabo {
                     m_fullSchema.merge(m_injectedSchema);
 
                 }
-               
+
                 // Notify the distributed system
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
-                set(validated);                
+                set(validated);
 
-                 KARABO_LOG_INFO << "Schema updated";
+                KARABO_LOG_INFO << "Schema updated";
             }
 
             /**
@@ -451,14 +451,14 @@ namespace karabo {
                     // Merge to full schema
                     m_fullSchema.merge(m_injectedSchema);
                 }
-              
-                KARABO_LOG_INFO << "Schema updated";                
+
+                KARABO_LOG_INFO << "Schema updated";
 
                 // Notify the distributed system
                 emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
 
                 // Merge all parameters
-                set(validated);                
+                set(validated);
 
                 KARABO_LOG_INFO << "Schema updated";
             }
@@ -671,7 +671,7 @@ namespace karabo {
                 instanceInfo.set("classId", m_classId);
                 instanceInfo.set("serverId", m_serverId);
                 instanceInfo.set("visibility", this->get<int >("visibility"));
-                instanceInfo.set("version", Device::classInfo().getVersion());
+                instanceInfo.set("compatibility", Device::classInfo().getVersion());
                 instanceInfo.set("host", boost::asio::ip::host_name());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
@@ -734,15 +734,15 @@ namespace karabo {
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
                 connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
 
-                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)               
+                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
-            }     
-           
+            }
 
             void slotGetConfiguration() {
-                emit("signalChanged", m_parameters, m_deviceId);
+                std::string senderId = this->getSenderInfo("slotGetConfiguration")->getInstanceIdOfSender();
+                call(senderId, "slotChanged", m_parameters, m_deviceId);
                 reply(m_parameters);
             }
 
@@ -792,13 +792,16 @@ namespace karabo {
             }
 
             void slotGetSchema(bool onlyCurrentState) {
+
+                std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
+
                 if (onlyCurrentState) {
                     const std::string& currentState = get<std::string > ("state");
                     const karabo::util::Schema& schema = getStateDependentSchema(currentState);
-                    emit("signalSchemaUpdated", schema, m_deviceId);
+                    call(senderId, "slotSchemaUpdated", schema, m_deviceId);
                     reply(schema);
                 } else {
-                    emit("signalSchemaUpdated", m_fullSchema, m_deviceId);
+                    call(senderId, "slotSchemaUpdated", m_fullSchema, m_deviceId);
                     reply(m_fullSchema);
                 }
             }
