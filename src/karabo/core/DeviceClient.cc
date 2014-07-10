@@ -61,7 +61,7 @@ namespace karabo {
             m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
 
             // Uncomment this for debugging
-            //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
+            karabo::log::Logger::configure(Hash("priority", "DEBUG"));
         }
 
 
@@ -186,16 +186,13 @@ namespace karabo {
             bool hasInstance = existsInRuntimeSystemDescription(path);
 
             if (hasInstance) {
-                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";
-                eraseFromRuntimeSystemDescription(path);
+                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";                
             } else {
                 KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
                 Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
                 mergeIntoRuntimeSystemDescription(entry);
                 if (m_instanceNewHandler) m_instanceNewHandler(entry);
-            }
-            //if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceNew", instanceId, instanceInfo);
-            //else if (m_masterMode == NO_MASTER) slotInstanceNew(instanceId, instanceInfo);           
+            }                  
         }
 
 
