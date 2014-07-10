@@ -16,13 +16,11 @@ __all__ = ["ProjectModel"]
 
 from configuration import Configuration
 import icons
-from karabo.hash import Hash
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
 from scene import Scene
 import manager
-from messagebox import MessageBox
 from project import Category, Device, Project
 
 from PyQt4.QtCore import pyqtSignal, QDir, QModelIndex, Qt
@@ -94,6 +92,7 @@ class ProjectModel(QStandardItemModel):
             font.setBold(True)
             item.setFont(font)
             item.setIcon(QIcon(":folder"))
+            item.setToolTip(project.filename)
             rootItem.appendRow(item)
             
             # Devices
@@ -101,6 +100,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setData(Category(Project.DEVICES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
+            childItem.setToolTip(Project.DEVICES_LABEL)
             item.appendRow(childItem)
             for device in project.devices:
                 leafItem = QStandardItem(device.id)
@@ -117,6 +117,7 @@ class ProjectModel(QStandardItemModel):
                                           incompatible=icons.deviceIncompatible,
                                          ).get(
                                 device.status, icons.deviceInstance))
+                leafItem.setToolTip(device.id)
                 childItem.appendRow(leafItem)
 
             # Scenes
@@ -124,12 +125,14 @@ class ProjectModel(QStandardItemModel):
             childItem.setData(Category(Project.SCENES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
+            childItem.setToolTip(Project.SCENES_LABEL)
             item.appendRow(childItem)
             for scene in project.scenes:
                 leafItem = QStandardItem(scene.filename)
                 leafItem.setIcon(icons.image)
                 leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
+                leafItem.setToolTip(scene.filename)
                 childItem.appendRow(leafItem)
 
             # Configurations
@@ -137,12 +140,14 @@ class ProjectModel(QStandardItemModel):
             childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
             childItem.setIcon(QIcon(":folder"))
+            childItem.setToolTip(Project.CONFIGURATIONS_LABEL)
             item.appendRow(childItem)
             
             for deviceId, configList in project.configurations.iteritems():
                 # Add item for device it belongs to
                 leafItem = QStandardItem(deviceId)
                 leafItem.setEditable(False)
+                leafItem.setToolTip(deviceId)
                 childItem.appendRow(leafItem)
 
                 for config in configList:
@@ -151,6 +156,7 @@ class ProjectModel(QStandardItemModel):
                     subLeafItem.setIcon(icons.file)
                     subLeafItem.setData(config, ProjectModel.ITEM_OBJECT)
                     subLeafItem.setEditable(False)
+                    subLeafItem.setToolTip(config.filename)
                     leafItem.appendRow(subLeafItem)
 
             # Macros
