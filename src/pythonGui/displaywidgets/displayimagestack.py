@@ -7,8 +7,6 @@ from __future__ import absolute_import, division
 __all__ = ["DisplayImageStack"]
 
 from widget import DisplayWidget
-import time
-import datetime
 import copy
 import icons
 from karabo import enums
@@ -28,16 +26,6 @@ from PyQt4.QtGui import (
     QMenu, QPen, QPainter, QPixmap, QScrollArea, QSplitter, QStandardItem,
     QStandardItemModel, QSlider, QSpinBox, QStyle, QStyleOptionSlider,
     QToolBar, QToolButton, QVBoxLayout, QWidget, qRgb)
-
-def _returnRawByteWidth(cs):
-    _, l, _ = enums.ChannelSpaceType[cs].split("_")
-    return int(l) // 8
-
-
-def _returnRawArray(data, dimX, dimY, cs):
-    s, l, _ = enums.ChannelSpaceType[cs].split("_")
-    t = getattr(np, dict(s="int", u="uint", f="float")[s] + l)
-    return np.frombuffer(data, t).reshape((dimX, dimY))
 
 
 #from https://www.mail-archive.com/pyqt@riverbankcomputing.com/msg22889.html
@@ -118,7 +106,6 @@ class RangeSlider(QSlider):
         event.accept()
 
         style = self.style()
-        button = event.button()
 
         # In a normal slider control, when the user clicks on a point in the 
         # slider's total range, but not on the slider part of the control the
@@ -126,7 +113,7 @@ class RangeSlider(QSlider):
         # For this control, clicks which are not direct hits will slide both
         # slider parts
 
-        if button:
+        if event.button():
             opt = QStyleOptionSlider()
             self.initStyleOption(opt)
 
@@ -147,8 +134,7 @@ class RangeSlider(QSlider):
 
             if self.active_slider < 0:
                 self.pressed_control = QStyle.SC_SliderHandle
-                self.click_offset = self.__pixelPosToRangeValue(
-                                        self.__pick(event.pos()))
+                self.click_offset = self._pixelPosToRangeValue(event.pos())
                 self.triggerAction(self.SliderMove)
                 self.setRepeatAction(self.SliderNoAction)
         else:
@@ -160,7 +146,7 @@ class RangeSlider(QSlider):
             return
 
         event.accept()
-        new_pos = self.__pixelPosToRangeValue(self.__pick(event.pos()))
+        new_pos = self._pixelPosToRangeValue(event.pos())
         opt = QStyleOptionSlider()
         self.initStyleOption(opt)
 
@@ -196,14 +182,9 @@ class RangeSlider(QSlider):
         event.accept()
         self.sliderReleased.emit(self.click_offset, self.active_slider)
 
-    def __pick(self, pt):
-        if self.orientation() == Qt.Horizontal:
-            return pt.x()
-        else:
-            return pt.y()
 
-
-    def __pixelPosToRangeValue(self, pos):
+    def _pixelPosToRangeValue(self, pt):
+        pos = pt.x() if self.orientation() == Qt.Horizontal else pt.y()
         opt = QStyleOptionSlider()
         self.initStyleOption(opt)
         style = self.style()
@@ -228,12 +209,11 @@ class RangeSlider(QSlider):
 
 
 class ImagePlotItem(ImagePlot):
-    def __init__(self, **params):
+    def __init__(self):
         #define view of parent
         self.__gridParam = make.gridparam(major_enabled=(False, False),
                                           minor_enabled=(False, False))
-        super(ImagePlotItem, self).__init__(gridparam=self.__gridParam,
-                                            **params)
+        super(ImagePlotItem, self).__init__(gridparam=self.__gridParam)
 
         self.__imageDialogWidget = None
         self.__image = None
@@ -246,7 +226,7 @@ class ImagePlotItem(ImagePlot):
 
 
     def mousePressEvent(self, me):
-        if(me.modifiers() and Qt.ShiftModifier):
+        if me.modifiers() & Qt.ShiftModifier:
             if self.__imageDialogWidget is None:
                 self.__imageDialogWidget = ImageDialog(edit=False, toolbar=True)
                 self.__dialogPlot = self.__imageDialogWidget.get_plot()
@@ -254,15 +234,11 @@ class ImagePlotItem(ImagePlot):
             self.setImage(self.__imageData)
             self.__imageDialogWidget.show()
 
-    def setImageDialogWidget(self, idw):
-        self.__imageDialogWidget = idw
-
 
     def updateLUTRange(self, r):
         self.__LUTrange = r
 
         if self.__image is not None:
-            #self.__image.set_lut_range(self.__LUTrange)
             self.__image.set_data(self.__imageData, lut_range=self.__LUTrange)
 
         if self.__dialogPlot is not None:
@@ -282,10 +258,9 @@ class ImagePlotItem(ImagePlot):
 
     def setImage(self, im):
         if self.__image is None:
-            self.__image = TrImageItem()#make.image(im)
+            self.__image = TrImageItem()
             self.__image.set_interpolation("nearest")
             if self.__LUTrange is not None:
-                #self.__image.set_lut_range(self.__LUTrange)
                 self.__image.set_data(im, lut_range=self.__LUTrange)
             else:
                 self.__image.set_data(im)
@@ -310,8 +285,8 @@ class ImagePlotItem(ImagePlot):
 
 
 class ImageListItem(QStandardItem):
-    def __init__(self, name, model, **params):
-        super(ImageListItem,self).__init__(name, **params)
+    def __init__(self, name, model):
+        super(ImageListItem, self).__init__(name)
         self.sliceId = None
         self.__image = None
         self.__histRange = (0, 100)
@@ -336,27 +311,14 @@ class ImageListItem(QStandardItem):
         self.setCheckable(True)
 
         #layout params
-        self.__tileRow = None
-        self.__tileCol = None
-        self.__module = None
+        self.tileRow = None
+        self.tileCol = None
+        self.module = None
 
-    def setLayout(self, tileRow, tileCol, module):
-        self.__tileRow = tileRow
-        self.__tileCol = tileCol
-        self.__module = module
-
-    def getLayout(self):
-        return (self.__tileRow, self.__tileCol, self.__module)
-
-    def isOnModule(self, module):
-        return self.__module == module
-
-    def isTile(self, row, col):
-        return self.__tileRow == row and self.__tileCol == col
 
     def setTitle(self, title):
-        self.setText(str(title))
-        self.imageWidget.set_title(str(title))
+        self.setText(title)
+        self.imageWidget.set_title(title)
 
     def setHist(self, height, showHist=True):
         im = self.__imageData
@@ -365,26 +327,22 @@ class ImageListItem(QStandardItem):
         if self.__height is None:
             return
 
-        h, e = np.histogram(im.flatten(), bins=self.__bins,
+        h, e = np.histogram(im.flatten(), bins=self.bins,
                             range=self.__histRange)
         self.__histValues = h
         self.__histEdges = (e[:-1] + e [1:]) / 2.
 
         self.histCurve = make.curve(e, h, str(self.sliceId))
 
-        s = np.array(h, float)
-        a = np.rot90(np.repeat(s, self.__height).reshape(
-                                (self.__bins, self.__height)))
-        a /= np.max(a)
-        a *= 255
-        self.__cmapHist = np.array(a, np.uint8).tostring()
+        h = (h * 255 // h.max()).astype(np.uint8)
+        self.__cmapHist = np.tile(h, (self.__height, 1))
 
         if showHist:
             self.showHist()
 
     def showHist(self):
         if self.histType == "cmap":
-            image = QImage(self.__cmapHist, self.__bins, self.__height,
+            image = QImage(self.__cmapHist, self.bins, self.__height,
                            QImage.Format_Indexed8)
             image.setColorTable(self.__colorTable)
 
@@ -392,7 +350,7 @@ class ImageListItem(QStandardItem):
             self.setData(self.__histData, Qt.DecorationRole)
         else:
             plot = CurvePlot(gridparam=self.__gridParam)
-            plot.setFixedWidth(self.__bins)
+            plot.setFixedWidth(self.bins)
             plot.setFixedHeight(2 * self.__height)
             plot.add_item(self.histCurve)
             for i in range(4):
@@ -408,12 +366,6 @@ class ImageListItem(QStandardItem):
 
     def setLUTLimits(self, r):
         self.imageWidget.updateLUTRange(r)
-
-    def updateColorMap(self, map):
-        self.imageWidget.updateColorMap(map)
-
-    def setHistBins(self, bins):
-        self.__bins = bins
 
     def setWidth(self, widgetWidth):
         if self.__imageData is not None:
@@ -441,17 +393,6 @@ class ImageListItem(QStandardItem):
        self.setLUTLimits((np.min(imData), np.max(imData)))
 
 
-class TileSelectButton(QToolButton):
-    def __init__(self, module, tileRow, tileCol, **params):
-        super(TileSelectButton, self).__init__(**params)
-        self.__module = module
-        self.__tileRow = tileRow
-        self.__tileCol = tileCol
-
-    def getLayout(self):
-        return (self.__tileRow, self.__tileCol, self.__module)
-
-
 class ImageStack(DisplayWidget):
     category = "Image"
     alias = "Image Stack View"
@@ -461,8 +402,7 @@ class ImageStack(DisplayWidget):
         super(ImageStack, self).__init__(box)
 
         self.widget = QWidget(parent)
-        self.__mainLayout = QVBoxLayout()
-        self.widget.setLayout(self.__mainLayout)
+        mainLayout = QVBoxLayout(self.widget)
 
         self.__colPadding = 10
         self.__rowPadding = 20
@@ -474,74 +414,68 @@ class ImageStack(DisplayWidget):
         self.__maxPixelValue = 255
         self.__minPixelValueAuto = 0
         self.__maxPixelValueAuto = 255
-        self.__lockLUTs = True
-        self.__autoRange = True
         self.__profiles = False
         self.histType = "cmap"
         self.__aggHistDialog  = None
-        self.__lineColors = copy.copy(COLORS)
+        self.lineColors = copy.copy(COLORS)
         #delete white
-        del self.__lineColors["w"]
-        self.__lineColors = self.__lineColors.values()
-        self.__availableLineColors = len(self.__lineColors)
+        del self.lineColors["w"]
+        self.lineColors = self.lineColors.values()
 
 
         #selection and column tool bar
-        self.__toolBar = QWidget()
-        self.__toolBarLayout = QHBoxLayout()
-        self.__toolBar.setLayout(self.__toolBarLayout)
+        toolBarLayout = QHBoxLayout()
 
-        self.__columnSlider = QSlider()
-        self.__columnSlider.setTickInterval(2)
-        self.__columnSlider.setTickPosition(QSlider.TicksAbove)
-        self.__columnSlider.setSliderPosition(self.__cols)
-        self.__columnSlider.setRange(1, 10)
-        self.__columnSlider.setSingleStep(1)
-        self.__columnSlider.setOrientation(Qt.Horizontal)
-        self.__columnSlider.valueChanged[int].connect(self._setNumCols)
-        self.__toolBarLayout.addWidget(QLabel("Cols:"))
-        self.__toolBarLayout.addWidget(self.__columnSlider)
+        columnSlider = QSlider()
+        columnSlider.setTickInterval(2)
+        columnSlider.setTickPosition(QSlider.TicksAbove)
+        columnSlider.setSliderPosition(self.__cols)
+        columnSlider.setRange(1, 10)
+        columnSlider.setSingleStep(1)
+        columnSlider.setOrientation(Qt.Horizontal)
+        columnSlider.valueChanged[int].connect(self._setNumCols)
+        toolBarLayout.addWidget(QLabel("Cols:"))
+        toolBarLayout.addWidget(columnSlider)
+        mainLayout.addLayout(toolBarLayout)
 
         #image display toolbar
-        self.__imageToolBar = QToolBar()
-        #self.__imageToolBarLayout = QHBoxLayout()
-        #self.__imageToolBar.setLayout(self.__imageToolBarLayout)
+        imageToolBar = QToolBar()
 
 
         text = "Toggle between histograms and color bars"
-        self.__histTypeButton = QToolButton()
-        self.__histTypeButton.setIcon(icons.histHist)
-        self.__histTypeButton.setToolTip(text)
-        self.__histTypeButton.setStatusTip(text)
-        self.__histTypeButton.clicked.connect(self._histTypeChange)
-        self.__imageToolBar.addWidget(self.__histTypeButton)
+        self.histTypeAction = QAction(self.widget)
+        self.histTypeAction.setIcon(icons.histHist)
+        self.histTypeAction.setToolTip(text)
+        self.histTypeAction.setStatusTip(text)
+        self.histTypeAction.triggered.connect(self._histTypeChange)
+        imageToolBar.addAction(self.histTypeAction)
 
 
         text = "Toggle locking of LUT between images"
-        self.__lockLUTCheckButton = QToolButton()
-        self.__lockLUTCheckButton.setIcon(icons.lock)
-        self.__lockLUTCheckButton.setToolTip(text)
-        self.__lockLUTCheckButton.setStatusTip(text)
-        self.__lockLUTCheckButton.setCheckable(True)
-        self.__lockLUTCheckButton.setChecked(True)
-        self.__lockLUTCheckButton.clicked.connect(self._lockLUTChange)
-        self.__imageToolBar.addWidget(self.__lockLUTCheckButton)
+        self.lockLUTs = QAction(self.widget)
+        self.lockLUTs.setIcon(icons.lock)
+        self.lockLUTs.setToolTip(text)
+        self.lockLUTs.setStatusTip(text)
+        self.lockLUTs.setCheckable(True)
+        self.lockLUTs.setChecked(True)
+        self.lockLUTs.triggered.connect(self._setLimits)
+        imageToolBar.addAction(self.lockLUTs)
 
         text = "Toggle auto range computation of images"
-        self.__autoRangeCheckButton = QToolButton()
-        self.__autoRangeCheckButton.setIcon(icons.entire)
-        self.__autoRangeCheckButton.setToolTip(text)
-        self.__autoRangeCheckButton.setStatusTip(text)
-        self.__autoRangeCheckButton.setCheckable(True)
-        self.__autoRangeCheckButton.setChecked(True)
-        self.__autoRangeCheckButton.clicked.connect(self._autoRangeChange)
-        self.__imageToolBar.addWidget(self.__autoRangeCheckButton)
+        self.autoRange = QAction(self.widget)
+        self.autoRange.setIcon(icons.entire)
+        self.autoRange.setToolTip(text)
+        self.autoRange.setStatusTip(text)
+        self.autoRange.setCheckable(True)
+        self.autoRange.setChecked(True)
+        self.autoRange.triggered.connect(self._autoRangeChange)
+        imageToolBar.addAction(self.autoRange)
 
         self.__minRangeBox = QSpinBox()
         self.__minRangeBox.setAccelerated(True)
         self.__minRangeBox.setKeyboardTracking(False)
         self.__minRangeBox.valueChanged[int].connect(self._manualRangeChangeMin)
-        self.__imageToolBar.addWidget(self.__minRangeBox)
+        imageToolBar.addWidget(self.__minRangeBox)
 
         self.__rangeSlider = RangeSlider(Qt.Horizontal)
         self.__rangeSlider.setMinimum(0)
@@ -550,88 +484,82 @@ class ImageStack(DisplayWidget):
         self.__rangeSlider.setHigh(255)
         self.__rangeSlider.setTickPosition(QSlider.TicksBelow)
         self.__rangeSlider.sliderReleased.connect(self._manualRangeChange)
-        self.__imageToolBar.addWidget(self.__rangeSlider)
+        imageToolBar.addWidget(self.__rangeSlider)
 
         self.__maxRangeBox = QSpinBox()
         self.__maxRangeBox.setAccelerated(True)
         self.__maxRangeBox.setKeyboardTracking(False)
         self.__maxRangeBox.valueChanged[int].connect(self._manualRangeChangeMax)
-        self.__imageToolBar.addWidget(self.__maxRangeBox)
+        imageToolBar.addWidget(self.__maxRangeBox)
 
         self.__rangeSlider.setEnabled(False)
         self.__minRangeBox.setEnabled(False)
         self.__maxRangeBox.setEnabled(False)
 
         text = "Change colormap"
-        self.__colorMapSelector = QToolButton()
-        self.__colorMapSelector.setIcon(build_icon_from_cmap(get_cmap("jet"),
+        self.colorMapSelector = QToolButton()
+        self.colorMapSelector.setPopupMode(QToolButton.InstantPopup)
+        self.colorMapSelector.setIcon(build_icon_from_cmap(get_cmap("jet"),
                                                  width=16, height=16))
-        self.__colorMapSelector.setToolTip(text)
-        self.__colorMapSelector.setStatusTip(text)
-        self.__colorMapSelector.setPopupMode(QToolButton.InstantPopup)
-        self.__colorMapSelectorMenu = QMenu()
+        self.colorMapSelector.setToolTip(text)
+        self.colorMapSelector.setStatusTip(text)
+        menu = QMenu()
         for cmapName in get_colormap_list():
             cmap = get_cmap(cmapName)
             icon = build_icon_from_cmap(cmap)
-            action = self.__colorMapSelectorMenu.addAction(icon, cmapName)
+            action = menu.addAction(icon, cmapName)
             action.setEnabled(True)
-        self.__colorMapSelector.setMenu(self.__colorMapSelectorMenu)
-        self.__colorMapSelectorMenu.triggered.connect(self._activateCmap)
+        self.colorMapSelector.setMenu(menu)
+        menu.triggered.connect(self._activateCmap)
+        imageToolBar.addWidget(self.colorMapSelector)
 
-        self.__imageToolBar.addWidget(self.__colorMapSelector)
 
         text = "Pop up aggregate histogram window"
-        self.__aggHistButton = QToolButton()
-        self.__aggHistButton.setIcon(icons.histHist)
-        self.__aggHistButton.setToolTip(text)
-        self.__aggHistButton.setStatusTip(text)
-        self.__aggHistButton.clicked.connect(self._createAggHist)
-        self.__imageToolBar.addWidget(self.__aggHistButton)
+        aggHistButton = QAction(self.widget)
+        aggHistButton.setIcon(icons.histHist)
+        aggHistButton.setToolTip(text)
+        aggHistButton.setStatusTip(text)
+        aggHistButton.triggered.connect(self._createAggHist)
+        imageToolBar.addAction(aggHistButton)
+        mainLayout.addWidget(imageToolBar)
 
         self.__splitterWidget = QSplitter()
         self.__splitterWidget.setChildrenCollapsible(False)
 
-        self.__leftWidget = QWidget()
-        self.__leftLayout = QVBoxLayout()
-        self.__leftWidget.setLayout(self.__leftLayout)
+        leftWidget = QWidget()
+        leftLayout = QVBoxLayout(leftWidget)
 
-        self.__selectControlWidget = QWidget()
-        self.__selectControlLayout = QHBoxLayout()
-        self.__selectControlWidget.setLayout(self.__selectControlLayout)
-        self.__selectBar = QToolBar()
-        self.__selectBar.addAction(QAction('A', self,
-                                           triggered=self._onSelectAll))
-        self.__selectBar.addAction(QAction('N', self,
-                                           triggered=self._onSelectNone))
-        self.__selectBar.addAction(QAction('I', self,
-                                           triggered=self._onSelectInvert))
-        self.__selectBar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-        self.__selectControlLayout.addWidget(QLabel("Select:"))
-        self.__selectControlLayout.addWidget(self.__selectBar)
+        selectControlLayout = QHBoxLayout()
+        selectBar = QToolBar()
+        selectBar.addAction(QAction('A', self, triggered=self._onSelectAll))
+        selectBar.addAction(QAction('N', self, triggered=self._onSelectNone))
+        selectBar.addAction(QAction('I', self, triggered=self._onSelectInvert))
+        selectBar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        selectControlLayout.addWidget(QLabel("Select:"))
+        selectControlLayout.addWidget(selectBar)
+        leftLayout.addLayout(selectControlLayout)
 
         text = "Toggle display of all images or all selected images in selection box"
-        self.__CompressButton = QToolButton()
-        self.__CompressButton.setText("C")
-        self.__CompressButton.setToolTip(text)
-        self.__CompressButton.setStatusTip(text)
-        self.__CompressButton.setCheckable(True)
-        self.__CompressButton.setChecked(False)
-        self.__CompressButton.clicked.connect(self._toggleCompress)
-        self.__selectControlLayout.addWidget(self.__CompressButton)
+        self.compressButton = QToolButton()
+        self.compressButton.setText("C")
+        self.compressButton.setToolTip(text)
+        self.compressButton.setStatusTip(text)
+        self.compressButton.setCheckable(True)
+        self.compressButton.setChecked(False)
+        self.compressButton.clicked.connect(self._toggleCompress)
+        selectControlLayout.addWidget(self.compressButton)
 
         self.__listWidget = QListView()
         self.__listWidget.setMinimumWidth(250)
-
-
-        #self.__listWidget.setSizePolicy(QSizePolicy.Minimum)
+        leftLayout.addWidget(self.__listWidget)
         self.__listModel = QStandardItemModel(self.__listWidget)
         self.__listModel.itemChanged.connect(self._onSelectionChanged)
 
 
-        self.__selectionScrollArea = QScrollArea()
-        self.__selectionScrollArea.setWidgetResizable(True)
-        self.__selectionScrollArea.setMinimumWidth(self.__minWidth)
-        self.__selectionScrollArea.setMinimumHeight(self.__minHeight)
+        selectionScrollArea = QScrollArea()
+        selectionScrollArea.setWidgetResizable(True)
+        selectionScrollArea.setMinimumWidth(self.__minWidth)
+        selectionScrollArea.setMinimumHeight(self.__minHeight)
 
 
         self.__selectionWidget = QWidget()
@@ -639,46 +567,32 @@ class ImageStack(DisplayWidget):
         self.__selectionWidget.setMinimumWidth(self.__minWidth - 20)
         self.__selectionWidget.resizeEvent = self._onResize
 
-        self.__gridLayout = QGridLayout()
-        self.__selectionWidget.setLayout(self.__gridLayout)
+        self.__gridLayout = QGridLayout(self.__selectionWidget)
 
-        self.__selectionScrollArea.setWidget(self.__selectionWidget)
+        selectionScrollArea.setWidget(self.__selectionWidget)
 
         #tile selection controls
-        self.__tileSelectionWidget = QWidget()
-        self.__tileSelectionLayout = QGridLayout()
-        self.__tileSelectionWidget.setLayout(self.__tileSelectionLayout)
+        self.tileSelection = QGridLayout()
+        leftLayout.addLayout(self.tileSelection)
 
 
         #selection controls
-        self.__selectTileControlWidget = QWidget()
-        self.__selectTileControlLayout = QHBoxLayout()
-        self.__selectTileControlWidget.setLayout(self.__selectTileControlLayout)
-        self.__selectTileBar = QToolBar()
-        self.__selectTileBar.addAction(QAction('A', self,
-                                       triggered=self._onTileSelectAll))
-        self.__selectTileBar.addAction(QAction('N', self,
-                                       triggered=self._onTileSelectNone))
-        self.__selectTileBar.addAction(QAction('I', self,
-                                       triggered=self._onTileSelectInvert))
-        self.__selectTileBar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
-        self.__selectTileControlLayout.addWidget(QLabel("Tiles:"))
-        self.__selectTileControlLayout.addWidget(self.__selectTileBar)
+        selectTileControlLayout = QHBoxLayout()
+        bar = QToolBar()
+        bar.addAction(QAction('A', self, triggered=self._onTileSelectAll))
+        bar.addAction(QAction('N', self, triggered=self._onTileSelectNone))
+        bar.addAction(QAction('I', self, triggered=self._onTileSelectInvert))
+        bar.setToolButtonStyle(Qt.ToolButtonFollowStyle)
+        selectTileControlLayout.addWidget(QLabel("Tiles:"))
+        selectTileControlLayout.addWidget(bar)
+        leftLayout.addLayout(selectTileControlLayout)
 
-        self.__leftLayout.addWidget(self.__selectControlWidget)
-        self.__leftLayout.addWidget(self.__listWidget)
-        self.__leftLayout.addWidget(self.__tileSelectionWidget)
-        self.__leftLayout.addWidget(self.__selectTileControlWidget)
-
-        self.__splitterWidget.addWidget(self.__leftWidget)
-        self.__splitterWidget.addWidget(self.__selectionScrollArea)
+        self.__splitterWidget.addWidget(leftWidget)
+        self.__splitterWidget.addWidget(selectionScrollArea)
 
         self.__splitterWidget.setStretchFactor(0, 0)
         self.__splitterWidget.setStretchFactor(1, 1)
-
-        self.__mainLayout.addWidget(self.__toolBar)
-        self.__mainLayout.addWidget(self.__imageToolBar)
-        self.__mainLayout.addWidget(self.__splitterWidget)
+        mainLayout.addWidget(self.__splitterWidget)
         self.__splitterWidget.setSizes([250, 400])
 
 
@@ -698,7 +612,7 @@ class ImageStack(DisplayWidget):
 
     def _toggleCompress(self):
         self.__selectionWidget.hide()
-        compress = self.__CompressButton.isChecked()
+        compress = self.compressButton.isChecked()
         for cnt, item in enumerate(self._getListModelItems()):
             self.__listWidget.setRowHidden(
                 cnt, compress and not item.checkState())
@@ -726,12 +640,11 @@ class ImageStack(DisplayWidget):
         for item in self._getListModelItems():
             item.setCheckState(Qt.Unchecked)
 
-        for tileButton in self.__tileButtons:
-            if tileButton.isChecked():
+        for tb in self.__tileButtons:
+            if tb.isChecked():
                 for item in self._getListModelItems():
-                    itemLayout = item.getLayout()
-                    buttonLayout = tileButton.getLayout()
-                    if itemLayout == buttonLayout:
+                    if ((item.tileRow, item.tileCol, item.module) ==
+                            (tb.tileRow, tb.tileCol, tb.module)):
                         item.setCheckState(Qt.Checked)
         self.noupdate = False
         self._onSelectionChanged()
@@ -747,13 +660,14 @@ class ImageStack(DisplayWidget):
         for mR in range(modRows):
             for mC in range(modCols):
                 innerTileWidget = QWidget()
-                innerTileLayout = QGridLayout()
-                innerTileWidget.setLayout(innerTileLayout)
-                self.__tileSelectionLayout.addWidget(innerTileWidget, mR, mC,
-                                                     1, 1)
+                innerTileLayout = QGridLayout(innerTileWidget)
+                self.tileSelection.addWidget(innerTileWidget, mR, mC, 1, 1)
                 for tR in range(tileRows):
                     for tC in range(tileCols):
-                        tileButton = TileSelectButton(m, tR, tC)
+                        tileButton = QToolButton()
+                        tileButton.module = m
+                        tileButton.tileRow = tR
+                        tileButton.tileCol = tC
                         tileButton.setCheckable(True)
                         tileButton.setChecked(False)
                         tileButton.clicked.connect(self._tileSelectionChange)
@@ -779,8 +693,8 @@ class ImageStack(DisplayWidget):
             for item in self._getListModelItems():
                 if item.checkState():
                     curve = copy.copy(item.histCurve)
-                    pen = QPen(QColor(self.__lineColors[
-                            abscnt % self.__availableLineColors]))
+                    pen = QPen(QColor(self.lineColors[
+                                            abscnt % len(self.lineColors)]))
                     curve.setPen(pen)
                     curve.curveparam.update_param(curve)
                     aggHist.add_item(curve)
@@ -800,10 +714,10 @@ class ImageStack(DisplayWidget):
     def _histTypeChange(self):
         if self.histType == "cmap":
             self.histType = "hist"
-            self.__histTypeButton.setIcon(icons.histColorMap)
+            self.histTypeAction.setIcon(icons.histColorMap)
         else:
             self.histType = "cmap"
-            self.__histTypeButton.setIcon(icons.histHist)
+            self.histTypeAction.setIcon(icons.histHist)
         self.__selectionWidget.hide()
 
         for item in self._getListModelItems():
@@ -813,10 +727,10 @@ class ImageStack(DisplayWidget):
 
 
     def _activateCmap(self, action):
-        cmapName = str(action.text())
+        cmapName = action.text()
         for item in self._getListModelItems():
-            item.updateColorMap(cmapName)
-        self.__colorMapSelector.setIcon(build_icon_from_cmap_name(cmapName))
+            item.imageWidget.updateColorMap(cmapName)
+        self.colorMapSelector.setIcon(build_icon_from_cmap_name(cmapName))
 
 
     def _updateRangeWidgetsCallback(self):
@@ -852,8 +766,6 @@ class ImageStack(DisplayWidget):
 
 
     def valueChanged(self, box, value, timestamp=None):
-        startTime = time.time()
-
         if value is None:
             return
 
@@ -861,15 +773,15 @@ class ImageStack(DisplayWidget):
             return
         dimX, dimY, dimZ = value.dims.value
         data = value.data.value
-        channelSpace = value.channelSpace.value
+        cs = value.channelSpace.value
         if not dimX and not dimY and not dimZ and not data:
             return
         if (dimX < 1 or dimY < 1 or dimZ < 1 or
             len(data) < dimX * dimY * dimZ *
-                        _returnRawByteWidth(channelSpace)):
+                        int(enums.ChannelSpaceType[cs].split("_")[1]) // 8):
             return
 
-        s, l, _ = enums.ChannelSpaceType[channelSpace].split("_")
+        s, l, _ = enums.ChannelSpaceType[cs].split("_")
         t = getattr(np, dict(s="int", u="uint", f="float")[s] + l)
         data = np.frombuffer(value.data.value, t).reshape((dimZ, dimY, dimX))
 
@@ -898,7 +810,6 @@ class ImageStack(DisplayWidget):
         if dimZ != nItems:
             forceNew = True
             #delete previous items in listview
-            #print "Deleting previous stack..."
             for item in self._getListModelItems():
                 item.imageWidget.hide()
                 item.imageWidget.setParent(None)
@@ -911,13 +822,14 @@ class ImageStack(DisplayWidget):
                 sliceInfo = "({module}-{tileRow}/{tileCol})".format(
                                             **self.__imageLayouts[slice])
                 imageItem = ImageListItem(str(slice), newModel)
-                imageItem.setHistBins(self.__histBins)
+                imageItem.bins = self.__histBins
                 imageItem.setTitle(str(slice) + sliceInfo)
                 imageItem.sliceId = slice
                 imageItem.setWidth(self.__imageWidth)
-                imageItem.setLayout(self.__imageLayouts[slice]["tileRow"],
-                                    self.__imageLayouts[slice]["tileCol"],
-                                    self.__imageLayouts[slice]["module"])
+                ils = self.__imageLayouts[slice]
+                imageItem.tileRow = ils["tileRow"]
+                imageItem.tileCol = ils["tileCol"]
+                imageItem.module = ils["module"]
                 #update grid
                 newModel.appendRow(imageItem)
 
@@ -947,16 +859,9 @@ class ImageStack(DisplayWidget):
         self._onSelectionChanged(force=True)
 
 
-    def _lockLUTChange(self):
-        self.__lockLUTs = self.__lockLUTCheckButton.isChecked()
-        self._setLimits()
-
-    def _autoRangeChange(self):
-        self.__autoRange = self.__autoRangeCheckButton.isChecked()
-
-        if not self.__autoRange:
-            self.__lockLUTCheckButton.setChecked(True)
-            self.__lockLUTs = True
+    def _autoRangeChange(self, checked):
+        if not checked:
+            self.lockLUTs.setChecked(True)
             self.__rangeSlider.setEnabled(True)
             self.__minRangeBox.setEnabled(True)
             self.__maxRangeBox.setEnabled(True)
@@ -996,18 +901,18 @@ class ImageStack(DisplayWidget):
 
         self.__rangeSlider.setHigh(v)
         self.__maxPixelValue  = v
-        self.__minRangeBox.setMaximum(self.__minPixelValueAuto - 1)
+        self.__minRangeBox.setMaximum(self.__maxPixelValue - 1)
         self._setLimits()
 
     def _manualRangeChange(self, v, sliderId):
         if sliderId == 0:
             self.__minPixelValue = v
             self.__minRangeBox.setValue(self.__minPixelValue)
-            self.__maxRangeBox.setMinimum(self.__minPixelValueAuto + 1)
+            self.__maxRangeBox.setMinimum(self.__minPixelValue + 1)
         elif sliderId == 1:
             self.__maxPixelValue  = v
             self.__maxRangeBox.setValue(self.__maxPixelValue)
-            self.__minRangeBox.setMaximum(self.__maxPixelValueAuto - 1)
+            self.__minRangeBox.setMaximum(self.__maxPixelValue - 1)
         else:
             dV = self.__maxPixelValue - self.__minPixelValue
             self.__maxPixelValue  = v
@@ -1022,8 +927,8 @@ class ImageStack(DisplayWidget):
             self.__maxPixelValueAuto = data.max()
 
     def _finalizeLimitSet(self):
-        if self.__lockLUTs:
-            if self.__autoRange:
+        if self.lockLUTs.isChecked():
+            if self.autoRange.isChecked():
                 r = self.__minPixelValueAuto, self.__maxPixelValueAuto
             else:
                 r = self.__minPixelValue, self.__maxPixelValue
@@ -1033,10 +938,10 @@ class ImageStack(DisplayWidget):
 
     def _setLimits(self):
         self.__selectionWidget.hide()
-        if self.__autoRange and self.__lockLUTs:
+        if self.autoRange.isChecked() and self.lockLUTs.isChecked():
             self._getAutoRangeLocked(self.data)
             self._finalizeLimitSet()
-        elif not self.__autoRange and self.__lockLUTs:
+        elif not self.autoRange.isChecked() and self.lockLUTs.isChecked():
             self._finalizeLimitSet()
         else:
             for item in self._getListModelItems():
@@ -1074,7 +979,7 @@ class ImageStack(DisplayWidget):
         if len(selected) < self.__actCols:
             self.__actCols = len(selected)
 
-        if selected == 0:
+        if not selected:
             return
 
         selCnt = 0
