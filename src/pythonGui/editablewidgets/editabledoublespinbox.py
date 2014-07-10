@@ -69,7 +69,7 @@ class DoubleLineEdit(NumberLineEdit):
     alias = "Float Field"
 
     def __init__(self, box, parent):
-        self.validator = QDoubleValidator()
+        self.validator = QDoubleValidator(None)
         NumberLineEdit.__init__(self, box, parent)
 
 

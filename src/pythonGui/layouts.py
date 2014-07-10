@@ -145,6 +145,16 @@ class Layout(Loadable):
         pass
 
 
+    def addWidget(self, widget, *args, **kwargs):
+        """This method is a mere no-op. It just calls the inherited
+        version of itself.
+
+        This is a workaround for a bug in PyQt4, which makes widgets
+        disappear magically."""
+        super(Layout, self).addWidget(widget, *args, **kwargs)
+        widget.setParent(widget.parent()) # this ought to be a no-op, but isn't
+
+
 class FixedLayout(Layout, QLayout):
     xmltag = ns_svg + "g"
 
@@ -430,7 +440,7 @@ class ProxyWidget(QWidget):
         box = self.component.boxes[0]
         self.setToolTip(box.key())
         box.configuration.statusChanged.connect(self.showStatus)
-        self.showStatus(None, box.configuration.status)
+        self.showStatus(None, box.configuration.status, box.configuration.error)
 
         for text, factory in component.factories.iteritems():
             aliases = factory.getAliasesViaCategory(
@@ -447,15 +457,18 @@ class ProxyWidget(QWidget):
                 self.addAction(aa)
 
 
-    @pyqtSlot(object, str)
-    def showStatus(self, configuration, status):
-        if status == "alive":
+    @pyqtSlot(object, str, bool)
+    def showStatus(self, configuration, status, error):
+        if status == "alive" and not error:
             self.marker.hide()
         else:
-            icon = dict(requested=icons.device_requested,
-                        schema=icons.device_schema,
-                        dead=icons.device_dead,
-                        offline=icons.deviceOffline).get(status)
+            if error:
+                icon = icons.device_error
+            else:
+                icon = dict(requested=icons.device_requested,
+                            schema=icons.device_schema,
+                            dead=icons.device_dead,
+                            offline=icons.deviceOffline).get(status)
             if icon is not None:
                 self.marker.setPixmap(icon.pixmap(16))
                 self.marker.setText("")
@@ -468,6 +481,7 @@ class ProxyWidget(QWidget):
         if self.layout().count() > 1:
             self.layout().takeAt(0)
         self.layout().insertWidget(0, widget)
+        widget.setParent(widget.parent()) # see Layout.addWidget
         self.widget = widget
 
 

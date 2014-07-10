@@ -11,5 +11,5 @@ __all__ = ["displaybitfield",
     "displaycommand", "displaydirectory", "displaydoublespinbox",
     "displayfilein", "displayfileout", "displayplot", "displayiconset",
     "displayimageelement", "displayimage", "displaylabel",
-    "displaylineedit", "displaypycodeHist", "displaypycode",
-    "displaytrendline", "icons", "tauruslabel", "taurusplot"]
+    "displaylineedit", "displaypycode", "displaytrendline",
+    "icons", "tauruslabel", "taurusplot"]

@@ -261,6 +261,7 @@ namespace karabo {
         template <typename ELEM, typename = std::less<ELEM>, typename = std::allocator<ELEM> > class CONT>
         inline CONT<T> fromString(const std::string& value, const std::string& separator = ",") {
             try {
+                if (value.empty()) return CONT<T>();
                 CONT<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
@@ -285,6 +286,7 @@ namespace karabo {
         template <>
         inline std::vector<int> fromString(const std::string& value, const std::string& separator) {
             try {
+                if (value.empty()) return std::vector<int>();
                 std::vector<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
@@ -310,6 +312,7 @@ namespace karabo {
         template <>
         inline std::vector<unsigned int> fromString(const std::string& value, const std::string& separator) {
             try {
+                if (value.empty()) return std::vector<unsigned int>();
                 std::vector<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
@@ -335,6 +338,7 @@ namespace karabo {
         template <>
         inline std::vector<long long> fromString(const std::string& value, const std::string& separator) {
             try {
+                if (value.empty()) return std::vector<long long>();
                 std::vector<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);
@@ -360,6 +364,7 @@ namespace karabo {
         template <>
         inline std::vector<unsigned long long> fromString(const std::string& value, const std::string& separator) {
             try {
+                if (value.empty()) return std::vector<unsigned long long>();
                 std::vector<std::string> elements;
                 std::string tmp(value);
                 boost::trim(tmp);

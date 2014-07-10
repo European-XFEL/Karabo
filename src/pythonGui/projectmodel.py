@@ -80,8 +80,8 @@ class ProjectModel(QStandardItemModel):
             lastSelectionObj = None
         
         self.beginResetModel()
-        self.clear()
-        self.setHorizontalHeaderLabels(["Projects"])
+        if self.hasChildren():
+            self.removeRows(0, self.rowCount())
 
         rootItem = self.invisibleRootItem()
         
@@ -107,7 +107,7 @@ class ProjectModel(QStandardItemModel):
                 leafItem.setData(device, ProjectModel.ITEM_OBJECT)
                 leafItem.setEditable(False)
 
-                if device.error:
+                if device.status != "offline" and device.error:
                     leafItem.setIcon(icons.deviceInstanceError)
                 else:
                     leafItem.setIcon(dict(error=icons.deviceInstanceError,
@@ -223,6 +223,14 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
+    def currentScene(self):
+        scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(scene, Scene):
+            return None
+        
+        return scene
+
+
     def currentIndex(self):
         return self.selectionModel.currentIndex()
 
@@ -319,7 +327,9 @@ class ProjectModel(QStandardItemModel):
         self.removeProject(project)
         
         for scene in project.scenes:
-            self.signalRemoveScene.emit(scene)
+            if scene.isVisible():
+                # Only send signal, if scene is currently visible
+                self.signalRemoveScene.emit(scene)
 
 
     def projectNew(self, filename):
@@ -352,9 +362,6 @@ class ProjectModel(QStandardItemModel):
         self.projects.append(project)
         self.updateData()
         self.selectItem(project)
-        
-        for device in project.devices:
-            self.checkDescriptor(device)
 
         # Open new loaded project scenes
         for scene in project.scenes:
@@ -450,7 +457,6 @@ class ProjectModel(QStandardItemModel):
         Add a device for the given \project with the given data.
         """
         device = Device(serverId, classId, deviceId, ifexists)
-        self.checkDescriptor(device)
         project.addDevice(device)
         self.updateData()
         
@@ -462,7 +468,6 @@ class ProjectModel(QStandardItemModel):
         Insert a device for the given \project with the given data.
         """
         device = Device(serverId, classId, deviceId, ifexists)
-        self.checkDescriptor(device)
         project.insertDevice(index, device)
         self.updateData()
         
@@ -470,12 +475,12 @@ class ProjectModel(QStandardItemModel):
 
 
     def duplicateDevice(self, device):
-        dialog = DuplicateDialog(device)
+        dialog = DuplicateDialog(device.id)
         if dialog.exec_() == QDialog.Rejected:
             return
 
         for i in xrange(dialog.count):
-            deviceId = "{}{}".format(dialog.deviceIdPrefix, i+dialog.startIndex)
+            deviceId = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             newDevice.futureConfig = device.toHash()
@@ -526,6 +531,16 @@ class ProjectModel(QStandardItemModel):
         return scene
 
 
+    def duplicateScene(self, scene):
+        dialog = DuplicateDialog(scene.filename[:-4])
+        if dialog.exec_() == QDialog.Rejected:
+            return
+
+        for i in xrange(dialog.count):
+            filename = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
+            self.addScene(self.currentProject(), filename)
+
+
     def openScene(self, scene):
         self.signalAddScene.emit(scene)
         
@@ -538,9 +553,9 @@ class ProjectModel(QStandardItemModel):
         self.signalSelectionChanged.emit(selectedIndexes)
 
         if not selectedIndexes:
-            index = QModelIndex()
-        else:
-            index = selectedIndexes[0]
+            return
+        
+        index = selectedIndexes[0]
 
         device = index.data(ProjectModel.ITEM_OBJECT)
         if device is not None and isinstance(device, Configuration):
@@ -550,6 +565,11 @@ class ProjectModel(QStandardItemModel):
             else:
                 conf = device
             type = conf.type
+            
+            # Check descriptor only with first selection
+            if device.descriptorRequested is False:
+                self.checkDescriptor(device)
+                device.descriptorRequested = True
         else:
             conf = None
             type = "other"
@@ -577,11 +597,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def onEditDevice(self):
-        index = self.selectionModel.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Category):
-            object = None
-        self.editDevice(object)
+        self.editDevice(self.currentDevice())
 
 
     def onDuplicateDevice(self):
@@ -595,17 +611,19 @@ class ProjectModel(QStandardItemModel):
 
 
     def initDevice(self, device):
-        if device.descriptor is None:
-            return
-        
         if device.isOnline():
             if device.ifexists == "ignore":
                 return
             elif device.ifexists == "restart":
                 self.killDevice(device)
         
+        if device.descriptor is None:
+            config = device.futureConfig
+        else:
+            config = device.toHash()
+        
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
-                                     device.toHash())
+                                     config)
 
 
     def onKillDevices(self):
@@ -627,11 +645,11 @@ class ProjectModel(QStandardItemModel):
 
 
     def onEditScene(self):
-        index = self.selectionModel.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Category):
-            object = None
-        self.editScene(object)
+        self.editScene(self.currentScene())
+
+
+    def onDuplicateScene(self):
+        self.duplicateScene(self.currentScene())
 
 
     def onRemove(self):
@@ -657,14 +675,21 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         while len(project.devices) > 0:
             object = project.devices[-1]
-            self.removeObject(project, object)
+            self.removeObject(project, object, False)
 
 
-    def removeObject(self, project, object):
+    def removeObject(self, project, object, showConfirm=True):
         """
         The \object is removed from the \project.
         """
+        if showConfirm:
+            reply = QMessageBox.question(None, 'Remove object',
+                "Do you really want to remove the object?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
+        
         project.remove(object)
         self.updateData()
-        self.selectItem(project)
         

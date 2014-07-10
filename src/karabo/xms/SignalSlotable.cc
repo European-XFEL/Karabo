@@ -296,9 +296,9 @@ namespace karabo {
                     m_trackedComponents.set(instanceId + ".instanceInfo", instanceInfo);
                     m_heartbeatMutex.unlock();
 
-//                    m_connectMutex.lock();
-//                    m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
-//                    m_connectMutex.unlock();
+                    m_connectMutex.lock();
+                    m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
+                    m_connectMutex.unlock();
 
                     trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
                 }
@@ -503,7 +503,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::instanceNotAvailable(const std::string& instanceId) {
+        KARABO_DEPRECATED void SignalSlotable::instanceNotAvailable(const std::string& instanceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" not available anymore";
         }
 
@@ -622,9 +622,9 @@ namespace karabo {
             }
             if (isVerbose) cout << "ERROR   : Channel connection could not be released." << endl;
             return false;
-        }      
+        }
 
-        
+
         bool SignalSlotable::connect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, ConnectionType connectionType, const bool isVerbose) {
 
             if (signalInstanceId.empty()) signalInstanceId = m_instanceId;
@@ -1045,11 +1045,18 @@ namespace karabo {
                             if (entry.get<bool>("isExplicitlyTracked") == true) {
                                 Hash instanceInfo;
                                 if (entry.has("instanceInfo")) entry.get("instanceInfo", instanceInfo);
-                                instanceNotAvailable(it->getKey()); // DEPRECATE
+
+                                // NEVER EVER CALL-BACK UNDER LOCK!!
+                                m_heartbeatMutex.unlock();
                                 if (m_instanceNotAvailableHandler) m_instanceNotAvailableHandler(it->getKey(), instanceInfo); // Inform via callback
+                                m_heartbeatMutex.lock();
                             }
                             if (entry.get<vector<Hash> >("connections").size() > 0) {
+
+                                m_heartbeatMutex.unlock();
                                 connectionLost(it->getKey(), entry.get<vector<Hash> >("connections")); // This cleans signals, removes dead connections tracking and informs the user
+                                m_heartbeatMutex.lock();
+
                                 if (entry.get<vector<Hash> >("connections").empty()) m_trackedComponents.erase(it->getKey());
                             }
 

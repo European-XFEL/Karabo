@@ -292,6 +292,9 @@ namespace karabo {
 
             try {
                 std::string value = this->getValueAsString();
+                
+                if (value.empty()) return Cont<T>();
+                
                 return karabo::util::fromString<T, Cont > (value);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));

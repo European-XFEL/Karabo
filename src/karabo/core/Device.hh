@@ -157,6 +157,7 @@ namespace karabo {
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
                         .reconfigurable()
+                        .expertAccess()
                         .assignmentOptional().defaultValue(true)
                         .commit();
 
@@ -165,6 +166,13 @@ namespace karabo {
                         .description("The progress of the current action")
                         .readOnly()
                         .initialValue(0)
+                        .commit();
+
+                INT32_ELEMENT(expected).key("heartbeatInterval")
+                        .displayedName("Heartbeat interval")
+                        .description("The heartbeat interval")
+                        .assignmentOptional().defaultValue(20)
+                        .adminAccess()
                         .commit();
 
                 STRING_ELEMENT(expected).key("state")
@@ -666,8 +674,7 @@ namespace karabo {
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
-                // TODO Make heartbeat configurable
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, 20, instanceInfo));
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
 
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
