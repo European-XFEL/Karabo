@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
         sigdelset(&signal_mask, SIGSEGV);
         sigdelset(&signal_mask, SIGFPE);
         sigdelset(&signal_mask, SIGBUS);
+        sigdelset(&signal_mask, SIGHUP);
         int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
         pthread_t sig_thr_id; // Signal handler thread ID

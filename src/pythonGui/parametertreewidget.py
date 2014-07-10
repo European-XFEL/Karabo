@@ -123,7 +123,7 @@ class ParameterTreeWidget(QTreeWidget):
         if not isinstance(editableComponent, EditableApplyLaterComponent):
             return
 
-        editableComponent.onApplyRemoteChanges(item.box)
+        editableComponent.onApplyRemoteChanges()
 
 
     def resetAll(self):

@@ -64,7 +64,7 @@ class NavigationTreeModel(QAbstractItemModel):
                 serverNode = TreeNode(serverId, serverId, hostNode)
                 hostNode.appendChildNode(serverNode)
             serverNode.visibility = visibility
-
+            serverNode.attributes = attrs
 
             for classId, visibility in zip(attrs.get("deviceClasses", []),
                                            attrs.get("visibilities", [])):
@@ -126,6 +126,7 @@ class NavigationTreeModel(QAbstractItemModel):
                 classNode.appendChildNode(deviceNode)
             deviceNode.status = status
             deviceNode.visibility = visibility
+            deviceNode.attributes = attrs
 
 
     def updateData(self, config):
@@ -173,11 +174,15 @@ class NavigationTreeModel(QAbstractItemModel):
         
         self.beginResetModel()
         try:
+            wasSelected = self.selectionModel.isSelected(index)
             node = index.internalPointer()
             parentNode = node.parentNode
             parentNode.removeChildNode(node)
         finally:
             self.endResetModel()
+            if wasSelected:
+                # If the erased device was selected, select parent
+                self.selectPath(parentNode.path)
 
 
     def eraseServer(self, instanceId):

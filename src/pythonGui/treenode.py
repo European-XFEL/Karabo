@@ -29,6 +29,9 @@ class TreeNode(object):
         
         self.visibility = AccessLevel.OBSERVER
         self.status = "ok"
+        
+        # A dict which stores all node associated attributes, e.g. version
+        self.attributes = dict()
 
 
     def appendChildNode(self, childNode):
