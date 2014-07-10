@@ -77,6 +77,12 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
+            BOOL_ELEMENT(expected).key("debugMode")
+                    .displayedName("Is Debug Mode?")
+                    .description("Decides whether this device-server runs in debug or production mode")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             LIST_ELEMENT(expected).key("autoStart")
                     .displayedName("Auto start")
                     .description("Auto starts selected devices")
@@ -178,8 +184,6 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
                     .setNewDefaultValue("device-server.log")
                     .commit();
-
-
         }
 
 
@@ -221,6 +225,7 @@ namespace karabo {
             input.get("visibility", m_visibility);
 
             // Deprecate the isMaster in future
+            input.get("debugMode", m_debugMode);
             input.get("isMaster", m_isMaster);
             if (m_isMaster) {
 
@@ -246,6 +251,11 @@ namespace karabo {
         std::string DeviceServer::generateDefaultServerId() const {
             return string(boost::asio::ip::host_name() + "_Server_" + karabo::util::toString(getpid()));
         }
+
+
+        bool DeviceServer::isDebugMode() {
+            return m_debugMode;
+        };
 
 
         DeviceServer::~DeviceServer() {
@@ -333,7 +343,7 @@ namespace karabo {
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
-            
+
             // Connect to global slot(s))
             connectN("", "signalClassSchema", "*", "slotClassSchema");
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");

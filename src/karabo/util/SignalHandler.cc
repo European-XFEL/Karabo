@@ -83,6 +83,8 @@ namespace karabo {
                 signum = FloatingPointException::GetSignalNumber();
             } catch (InterruptSignal&) {
                 signum = InterruptSignal::GetSignalNumber();
+            } catch (HangupSignal&) {
+                signum = HangupSignal::GetSignalNumber();
             } catch (QuitSignal&) {
                 signum = QuitSignal::GetSignalNumber();
             } catch (TerminateSignal&) {
@@ -126,6 +128,8 @@ namespace karabo {
             sigdelset(&signal_mask, SIGSEGV);
             sigdelset(&signal_mask, SIGFPE);
             sigdelset(&signal_mask, SIGBUS);
+//            sigdelset(&signal_mask, SIGINT);
+//            sigdelset(&signal_mask, SIGHUP);
 
             while (true) {
                 int sig_num;
@@ -144,14 +148,11 @@ namespace karabo {
                     }
                     case SIGINT: /* process SIGINT  */
                     case SIGTERM: /* process SIGTERM */
-                        //cerr << "\nSignal -> " << sig_caught << ": " << string(strsignal(sig_caught)) << endl;
+                    case SIGHUP: /* process SIGHUP  */
+                        cerr << "\nSignal -> " << sig_num << ": " << string(strsignal(sig_num)) << endl;
                         break;
-                    case SIGUSR1:
-                        //cerr << "\nSignal -> " << sig_caught << ": " << string(strsignal(sig_caught)) << endl;
-                        //exit(sig_caught);
-                        //break;
                     default: /* should normally not happen */
-                        // cerr << "\nUnexpected signal " << sig_caught << ": " << string(strsignal(sig_caught)) << endl;
+                        // cerr << "\nUnexpected signal " << sig_num << ": " << string(strsignal(sig_num)) << endl;
                         continue;
                         break;
                 }
