@@ -5,7 +5,6 @@
 #############################################################################
 
 
-from dialogs.dialogs import TextDialog
 import icons
 import manager
 from registry import Loadable
@@ -516,12 +515,6 @@ class ProxyWidget(QWidget):
 
     def set_geometry(self, rect):
         self.fixed_geometry = rect
-
-
-    def edit(self):
-        if isinstance(self.widget, QLabel):
-            dialog = TextDialog(self.widget)
-            dialog.exec_()
 
 
     def dropEvent(self, event):
