@@ -27,14 +27,14 @@ namespace karabo {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 20, Hash()));
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 60, Hash()));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
 
             this->setupSlots();
             this->checkMaster();
-            this->cacheAvailableInstances();
+            this->cacheAvailableInstances();            
 
         }
 
@@ -59,6 +59,9 @@ namespace karabo {
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
             m_signalSlotable->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
             m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
+
+            // Uncomment this for debugging
+            //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
         }
 
 
@@ -213,7 +216,7 @@ namespace karabo {
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
 
             // Track the instance if we are running without master
-            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId);
+            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId, instanceInfo);
 
         }
 
@@ -804,13 +807,13 @@ namespace karabo {
 
 
         void DeviceClient::registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction) {
-            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
             m_schemaUpdatedHandler = callBackFunction;
         }
 
 
         void DeviceClient::registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction) {
-            m_signalSlotable->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema");
             m_classSchemaHandler = callBackFunction;
         }
 
