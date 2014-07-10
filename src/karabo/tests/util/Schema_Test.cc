@@ -633,3 +633,13 @@ void Schema_Test::testHelpFunction() {
     schema.help("triangle");
      */
 }
+
+
+void Schema_Test::testOverwriteElement() {
+    Schema schema = Configurator<TestStruct1>::getSchema("TestStruct2");
+    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey2") == 20);
+
+    schema = Configurator<TestStruct1>::getSchema("TestStruct2", Schema::AssemblyRules(WRITE));
+    CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 20);
+}
+

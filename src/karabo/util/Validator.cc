@@ -13,13 +13,16 @@
 namespace karabo {
     namespace util {
 
+
         Validator::Validator() : m_injectDefaults(true), m_allowUnrootedConfiguration(true),
         m_allowAdditionalKeys(false), m_allowMissingKeys(false), m_injectTimestamps(false) {
         }
 
+
         Validator::Validator(const ValidationRules rules) {
             this->setValidationRules(rules);
         }
+
 
         void Validator::setValidationRules(const Validator::ValidationRules& rules) {
             m_injectDefaults = rules.injectDefaults;
@@ -28,6 +31,7 @@ namespace karabo {
             m_allowUnrootedConfiguration = rules.allowUnrootedConfiguration;
             m_injectTimestamps = rules.injectTimestamps;
         }
+
 
         Validator::ValidationRules Validator::getValidationRules() const {
             Validator::ValidationRules rules;
@@ -38,6 +42,7 @@ namespace karabo {
             rules.injectTimestamps = m_injectTimestamps;
             return rules;
         }
+
 
         std::pair<bool, std::string> Validator::validate(const Schema& schema, const Hash& unvalidatedInput, Hash& validatedOutput, const Timestamp& timestamp) {
 
@@ -78,6 +83,7 @@ namespace karabo {
                 else return std::make_pair<bool, string > (false, validationFailedReport.str());
             }
         }
+
 
         void Validator::r_validate(const Hash& master, const Hash& user, Hash& working, std::ostringstream& report, std::string scope) {
             std::set<std::string> keys;
@@ -222,6 +228,7 @@ namespace karabo {
                             Hash::Node& workNode = working.set(key, std::vector<Hash>()); // TODO use bindReference here
                             vector<Hash>& workNodes = workNode.getValue<vector<Hash> >();
 
+
                             BOOST_FOREACH(string optionName, optionNames) {
                                 Hash tmp;
                                 r_validate(it->getValue<Hash > ().get<Hash > (optionName), Hash(), tmp, report, currentScope + "." + optionName);
@@ -248,6 +255,7 @@ namespace karabo {
                                 report << "Too many options given for (list-)parameter: \"" << key << "\". Expecting at most " << it->getAttribute<int>(KARABO_SCHEMA_MAX);
                                 return;
                             }
+
 
                             BOOST_FOREACH(string optionName, optionNames) {
                                 cout << "Silently converting from STRING" << endl;
@@ -287,8 +295,17 @@ namespace karabo {
                                     string optionName = rootNode.getKey();
                                     if (validOptions.find(optionName) != validOptions.end()) { // Is a valid option
                                         Hash tmp;
-                                        r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
+
+                                        if (rootNode.getType() == Types::STRING && rootNode.getValue<string>().empty()) {
+                                            // Silently taking empty string as Hash
+                                            Hash faked;
+                                            r_validate(it->getValue<Hash > ().get<Hash > (optionName), faked, tmp, report, currentScope + "." + optionName);
+                                        } else {
+                                            r_validate(it->getValue<Hash > ().get<Hash > (optionName), rootNode.getValue<Hash>(), tmp, report, currentScope + "." + optionName);
+                                        }
+
                                         workNodes.push_back(Hash(optionName, tmp));
+                                        
                                     } else {
                                         report << "Provided parameter: \"" << optionName << "\" is not a valid option for list: \"" << key << "\". ";
                                         report << "Valid options are: " << karabo::util::toString(validOptions) << endl;
@@ -308,6 +325,7 @@ namespace karabo {
 
             if (!m_allowAdditionalKeys && !keys.empty()) {
 
+
                 BOOST_FOREACH(string key, keys) {
                     string currentScope;
                     if (scope.empty()) currentScope = key;
@@ -316,6 +334,7 @@ namespace karabo {
                 }
             }
         }
+
 
         void Validator::validateLeaf(const Hash::Node& masterNode, Hash::Node& workNode, std::ostringstream& report, std::string scope) {
 
@@ -445,6 +464,7 @@ namespace karabo {
             }
         }
 
+
         void Validator::attachTimestampIfNotAlreadyThere(Hash::Node& node) {
             if (m_injectTimestamps) {
                 Hash::Attributes& attributes = node.getAttributes();
@@ -454,9 +474,11 @@ namespace karabo {
             }
         }
 
+
         bool Validator::hasParametersInWarnOrAlarm() const {
             return !m_parametersInWarnOrAlarm.empty();
         }
+
 
         const Hash& Validator::getParametersInWarnOrAlarm() const {
             return m_parametersInWarnOrAlarm;

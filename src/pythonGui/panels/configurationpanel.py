@@ -113,7 +113,6 @@ class ConfigurationPanel(QWidget):
         Manager().signalChangingState.connect(self.onChangingState)
         Manager().signalErrorState.connect(self.onErrorState)
         Manager().signalReset.connect(self.onResetPanel)
-        Manager().signalShowEmptyConfigurationPage.connect(self.onShowEmptyPage)
 
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
@@ -427,7 +426,7 @@ class ConfigurationPanel(QWidget):
         self.__swParameterEditor.blockSignals(True)
         self.__swParameterEditor.setCurrentIndex(index)
         self.__swParameterEditor.blockSignals(False)
-
+        
         show = index != 0
         self.acOpenConfig.setVisible(show)
         self.acSaveConfig.setVisible(show)
@@ -520,17 +519,13 @@ class ConfigurationPanel(QWidget):
 
 
 ### slots ###
-    def onShowEmptyPage(self):
-        self._showEmptyPage()
-
-
     def onResetPanel(self):
         """
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
-        #for i in xrange(self.__swParameterEditor.count()):
-        while self.__swParameterEditor.count() > 1:
+        # Do not remove the first two widgets (empty page and waiting page)
+        while self.__swParameterEditor.count() > 2:
             self._removeParameterEditorPage(self.__swParameterEditor
                                     .widget(self.__swParameterEditor.count()-1))
 
