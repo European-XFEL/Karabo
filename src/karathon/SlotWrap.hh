@@ -14,6 +14,7 @@
 #include <boost/python.hpp>
 #include <karabo/xms/Slot.hh>
 #include <karabo/net/BrokerChannel.hh>
+#include "ScopedGILAcquire.hh"
 #include "HashWrap.hh"
 
 namespace bp = boost::python;
@@ -50,7 +51,9 @@ namespace karathon {
 
         void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
 
-            PyGILState_STATE gstate = PyGILState_Ensure();
+            ScopedGILAcquire gil;
+
+            extractSenderInformation(header);
 
             try {
 
@@ -72,13 +75,13 @@ namespace karathon {
                 }
 
                 handlePossibleReply(header);
-                PyGILState_Release(gstate);
+               
 
             } catch (const karabo::util::Exception& e) {
                 std::cout << e.userFriendlyMsg();
-                PyGILState_Release(gstate);
+                invalidateSenderInformation();
             }
-
+            invalidateSenderInformation();
         }
 
         bool callFunction0(const karabo::util::Hash& body) {
