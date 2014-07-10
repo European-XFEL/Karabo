@@ -69,20 +69,19 @@ namespace karabo {
         template <class SignalExceptionClass> class SignalHandler {
 
         private:
-
             class Singleton {
 
             public:
 
                 Singleton() {
                     // TODO: save/restore previous signal handler
-                    struct sigaction sa;
-                    memset(&sa, 0, sizeof (struct sigaction));
-                    sigemptyset(&sa.sa_mask);
-                    sa.sa_sigaction = HandleSignal;
-                    sa.sa_flags = SA_SIGINFO | SA_ONSTACK; // | SA_RESTART | SA_RESETHAND
+                    struct sigaction action, old_action;
+                    memset(&action, 0, sizeof (struct sigaction));
+                    sigemptyset(&action.sa_mask);
+                    action.sa_sigaction = HandleSignal;
+                    action.sa_flags = SA_SIGINFO | SA_ONSTACK; // | SA_RESTART | SA_RESETHAND
 
-                    sigaction(SignalExceptionClass::GetSignalNumber(), &sa, NULL);
+                    sigaction(SignalExceptionClass::GetSignalNumber(), &action, &old_action);
                 }
 
                 static void HandleSignal(int signum, siginfo_t *siginfo, void *ctx) {
@@ -120,7 +119,6 @@ namespace karabo {
                 return 0;
             }
         };
-        SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
 
         // Handler for generic exception
 
@@ -136,7 +134,6 @@ namespace karabo {
                 return 0;
             }
         };
-        SignalHandler<GenericException> __GenericExceptionHandler;
 
         // Handler for SIGFPE
 
@@ -152,7 +149,6 @@ namespace karabo {
                 return 0;
             }
         };
-        SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
 
         // Handler for SIGINT
 
@@ -168,7 +164,6 @@ namespace karabo {
                 return 1;
             }
         };
-        SignalHandler<InterruptSignal> __InterruptSignalHandler;
 
         // Handler for SIGQUIT
 
@@ -182,7 +177,6 @@ namespace karabo {
 
             static int PreProcessing();
         };
-        SignalHandler<QuitSignal> __QuitSignalHandler;
 
         // Handler for SIGTERM
 
@@ -198,7 +192,21 @@ namespace karabo {
                 return 1;
             }
         };
-        SignalHandler<TerminateSignal> __TerminateSignalHandler;
+
+        // Handler for SIGHUP
+
+        class HangupSignal : public std::exception {
+
+        public:
+
+            static int GetSignalNumber() {
+                return SIGHUP;
+            }
+
+            static int PreProcessing() {
+                return 1;
+            }
+        };
 
         /*************************************************************
          * 
@@ -235,9 +243,6 @@ namespace karabo {
                 static Singleton __GlobalExceptionHandler;
             }
         };
-
-        // Global instance of ExceptionHandler
-        GlobalExceptionHandler __GlobalExceptionHandler;
 
         #endif
 
