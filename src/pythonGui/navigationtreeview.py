@@ -16,15 +16,13 @@ __all__ = ["NavigationTreeView"]
 from enums import NavigationItemTypes
 import icons
 from manager import Manager
-import manager
 from treewidgetitems.popupwidget import PopupWidget
 
-from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
 
 
 class NavigationTreeView(QTreeView):
-    signalItemChanged = pyqtSignal(str, object) # type, configuration
     
     
     def __init__(self, parent):
@@ -42,8 +40,6 @@ class NavigationTreeView(QTreeView):
         self._setupContextMenu()
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         self.setDragEnabled(True)
-        
-        self.model().selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _setupContextMenu(self):
@@ -196,39 +192,6 @@ class NavigationTreeView(QTreeView):
             self.acKillDevice.setVisible(True)
             self.acAbout.setVisible(True)
             self.mDeviceItem.exec_(QCursor.pos())
-
-
-    def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
-        
-        if not selectedIndexes:
-            return
-        
-        index = selectedIndexes[0]
-
-        if not index.isValid():
-            level = 0
-        else:
-            level = self.model().getHierarchyLevel(index)
-
-        if level == 0:
-            conf = None
-            type = "other"
-        elif level == 1:
-            conf = None
-            type = "server"
-        if level == 2:
-            parentIndex = index.parent()
-            serverId = parentIndex.data()
-            classId = index.data()
-            conf = manager.getClass(serverId, classId)
-            type = conf.type
-        elif level == 3:
-            deviceId = index.data()
-            conf = manager.getDevice(deviceId)
-            type = conf.type
-
-        self.signalItemChanged.emit(type, conf)
 
 
     def mimeData(self, items):
