@@ -157,13 +157,13 @@ class ConfigurationPanel(QWidget):
         self.acApplyAll.triggered.connect(self.onApplyAll)
         self.pbApplyAll.clicked.connect(self.acApplyAll.triggered)
 
-        text = "Accept all local changes"
+        text = "Apply all my changes"
         self.acApplyLocalChanges = QAction(text, self)
         self.acApplyLocalChanges.setStatusTip(text)
         self.acApplyLocalChanges.setToolTip(text)
         self.acApplyLocalChanges.triggered.connect(self.onApplyAll)
 
-        text = "Accept all remote changes"
+        text = "Adjust to current values on device"
         self.acApplyRemoteChanges = QAction(text, self)
         self.acApplyRemoteChanges.setStatusTip(text)
         self.acApplyRemoteChanges.setToolTip(text)
