@@ -157,7 +157,7 @@ namespace karabo {
         void SignalSlotable::registerDefaultSignalsAndSlots() {
 
             // Emits a "still-alive" signal
-            SIGNAL3("signalHeartbeat", string /*instanceId*/, int /*timeToLiveInSec*/, Hash /*instanceInfo*/)
+            SIGNAL3("signalHeartbeat", string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
             // Signals a successful connection
             //SIGNAL4("signalConnected", string /*signalInstanceId*/, string /*signalFunction*/, string /*slotInstanceId*/, string /*slotFunction*/)
@@ -169,7 +169,7 @@ namespace karabo {
             SIGNAL1("signalGotPinged", string /*instanceId*/)
 
             // Listener for heartbeats
-            SLOT3(slotHeartbeat, string /*instanceId*/, int /*timeToLive*/, Hash /*instanceInfo*/)
+            SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
             // Global ping listener
             GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, bool /*replyIfSame*/, bool /*trackPingedInstance*/)
@@ -202,17 +202,21 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::runEventLoop(int heartbeatIntervall, const karabo::util::Hash& instanceInfo) {
+        void SignalSlotable::runEventLoop(int heartbeatInterval, const karabo::util::Hash& instanceInfo) {
 
-            m_timeToLive = heartbeatIntervall;
+            m_heartbeatInterval = heartbeatInterval;
             m_instanceInfo = instanceInfo;
+
+            // Inject the heartbeat interval to instanceInfo
+            m_instanceInfo.set("heartbeatInterval", heartbeatInterval);
+
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
 
-            if (m_timeToLive > 0) {
+            if (m_heartbeatInterval > 0) {
                 m_sendHeartbeats = true;
-                // Send heartbeat and sleep for m_timeToLive seconds
+                // Send heartbeat and sleep for m_heartbeatInterval seconds
                 boost::thread heartbeatThread(boost::bind(&karabo::xms::SignalSlotable::emitHeartbeat, this));
                 m_ioService->work(); // blocks
                 m_sendHeartbeats = false;
@@ -266,11 +270,11 @@ namespace karabo {
             while (m_sendHeartbeats) {
                 {
                     boost::this_thread::disable_interruption di; // disable interruption in this block
-                    emit("signalHeartbeat", getInstanceId(), m_timeToLive, m_instanceInfo);
+                    emit("signalHeartbeat", getInstanceId(), m_heartbeatInterval, m_instanceInfo);
                 }
                 // here the interruption enabled again
                 try {
-                    boost::this_thread::sleep(boost::posix_time::seconds(m_timeToLive));
+                    boost::this_thread::sleep(boost::posix_time::seconds(m_heartbeatInterval));
                 } catch (const boost::thread_interrupted&) {
                 }
             }
@@ -291,16 +295,15 @@ namespace karabo {
                     if (instanceId == m_instanceId) continue;
 
                     m_heartbeatMutex.lock();
-                    if (!m_trackedComponents.has(instanceId)) addTrackedComponent(instanceId);
+                    if (!m_trackedComponents.has(instanceId)) addTrackedComponent(instanceId, instanceInfo);
                     m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
-                    m_trackedComponents.set(instanceId + ".instanceInfo", instanceInfo);
                     m_heartbeatMutex.unlock();
 
                     m_connectMutex.lock();
                     m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
                     m_connectMutex.unlock();
 
-                    trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
+                    registerConnectionForTracking(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
                 }
             }
             return m_availableInstances;
@@ -336,7 +339,6 @@ namespace karabo {
                 m_connectMutex.lock();
                 m_signalInstances["signalHeartbeat"]->registerSlot(instanceId, "slotHeartbeat");
                 m_connectMutex.unlock();
-                //trackExistenceOfConnection(m_instanceId, "signalHeartbeat", instanceId, "slotHeartbeat", TRACK);
             }
         }
 
@@ -401,13 +403,9 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::slotHeartbeat(const std::string& networkId, const int& timeToLive, const Hash& instanceInfo) {
-            refreshTimeToLiveForConnectedSlot(networkId, timeToLive, instanceInfo);
+        void SignalSlotable::slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const Hash& instanceInfo) {
+            refreshTimeToLiveForConnectedSlot(networkId, heartbeatInterval, instanceInfo);
         }
-
-        //        void SignalSlotable::setInstanceId(const std::string& instanceId) {
-        //            m_instanceId = instanceId;
-        //        }
 
 
         const std::string& SignalSlotable::getInstanceId() const {
@@ -461,35 +459,35 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::trackExistenceOfInstance(const std::string& instanceId) {
+        void SignalSlotable::trackExistenceOfInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             if (instanceId == m_instanceId) return;
             {
                 boost::mutex::scoped_lock lock(m_heartbeatMutex);
                 if (!m_trackedComponents.has(instanceId)) {
-                    addTrackedComponent(instanceId);
+                    addTrackedComponent(instanceId, instanceInfo);
                 }
-                m_trackedComponents.set(instanceId + ".countDown", m_timeToLive);
                 m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
-                // TODO Could do a call to slotPing in order to find out about the instanceType
             }
             connect(instanceId, "signalHeartbeat", "", "slotHeartbeat", TRACK, false);
         }
 
 
         void SignalSlotable::stopTrackingExistenceOfInstance(const std::string& instanceId) {
-            m_heartbeatMutex.lock();
+            boost::mutex::scoped_lock lock (m_heartbeatMutex);
             if (m_trackedComponents.has(instanceId)) {
-                if (m_trackedComponents.get<std::vector<Hash> >(instanceId + ".connections").empty()) {
-                    m_trackedComponents.erase(instanceId);
+                const vector<Hash>& connections = m_trackedComponents.get<std::vector<Hash> >(instanceId + ".connections");
+                for (size_t i = 0; i < connections.size(); ++i) {
+                    const string& signalInstanceId = connections[i].get<string>("signalInstanceId");
+                    const string& signalFunction = connections[i].get<string>("signalFunction");
+                    const string& slotInstanceId = connections[i].get<string>("slotInstanceId");
+                    const string& slotFunction = connections[i].get<string>("slotFunction");
                     m_heartbeatMutex.unlock();
-                    disconnect(instanceId, "signalHeartbeat", "", "slotHeartbeat", false);
-                } else {
-                    m_trackedComponents.set(instanceId + ".isExplicitlyTracked", false);
-                    m_heartbeatMutex.unlock();
+                    cout << "LOW LEVEL DEBUG: Disconnecting: " << signalInstanceId << ":" << signalFunction << " <-> " << slotInstanceId << ":" << slotFunction << endl;
+                    disconnect(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
+                    m_heartbeatMutex.lock();
                 }
-            } else {
-                m_heartbeatMutex.unlock();
-            }
+                m_trackedComponents.erase(instanceId);
+            } 
         }
 
 
@@ -537,7 +535,7 @@ namespace karabo {
 
             if (outputChannelExists) {
 
-                if (inputInstanceId == m_instanceId) {// Local input channel                    
+                if (inputInstanceId == m_instanceId) {// Local input channel
                     inputChannelExists = slotConnectToOutputChannel(inputName, outputChannelInfo, true);
 
                 } else {
@@ -661,7 +659,7 @@ namespace karabo {
                     if (connectionType != NO_TRACK) {
                         // Equip own heartbeat with slot information
                         m_signalInstances["signalHeartbeat"]->registerSlot(slotInstanceId, "slotHeartbeat");
-                        trackExistenceOfConnection(m_instanceId, signalFunction, slotInstanceId, slotFunction, connectionType);
+                        registerConnectionForTracking(m_instanceId, signalFunction, slotInstanceId, slotFunction, connectionType);
                     }
                 } else {
                     signalExists = false;
@@ -715,7 +713,7 @@ namespace karabo {
                     if (connectionType != NO_TRACK) {
                         // Equip own heartbeat with slot information
                         m_signalInstances["signalHeartbeat"]->registerSlot(signalInstanceId, "slotHeartbeat");
-                        trackExistenceOfConnection(signalInstanceId, signalFunction, m_instanceId, slotFunction, connectionType);
+                        registerConnectionForTracking(signalInstanceId, signalFunction, m_instanceId, slotFunction, connectionType);
                     }
                 } else {
                     slotExists = false;
@@ -741,7 +739,7 @@ namespace karabo {
             if (m_slotInstances.find(slotFunction) != m_slotInstances.end()) {
                 if (connectionType != NO_TRACK) {
                     m_signalInstances["signalHeartbeat"]->registerSlot(signalInstanceId, "slotHeartbeat");
-                    trackExistenceOfConnection(signalInstanceId, signalFunction, m_instanceId, slotFunction, connectionType);
+                    registerConnectionForTracking(signalInstanceId, signalFunction, m_instanceId, slotFunction, connectionType);
                 }
                 reply(true);
             } else {
@@ -787,7 +785,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::trackExistenceOfConnection(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType) {
+        void SignalSlotable::registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType) {
 
             // Signal or slot is remote
             if (signalInstanceId != m_instanceId || slotInstanceId != m_instanceId) {
@@ -807,22 +805,17 @@ namespace karabo {
                     // Signal is remote
                     if (signalInstanceId != m_instanceId) {
                         boost::mutex::scoped_lock lock(m_heartbeatMutex);
-                        if (!m_trackedComponents.has(signalInstanceId)) addTrackedComponent(signalInstanceId);
-                        m_trackedComponents.get<vector<Hash> >(signalInstanceId + ".connections").push_back(connection);
-                        // TODO Refresh time-to live here
-
-
-                        // Connect remote signalHeartbeat to local slotHeartbeat
-                        //connect(signalInstanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+                        if (m_trackedComponents.has(signalInstanceId)) {
+                            m_trackedComponents.get<vector<Hash> >(signalInstanceId + ".connections").push_back(connection);
+                        }
                     }
 
                     // Slot is on remote component
                     if (slotInstanceId != m_instanceId) {
                         boost::mutex::scoped_lock lock(m_heartbeatMutex);
-                        if (!m_trackedComponents.has(slotInstanceId)) addTrackedComponent(slotInstanceId);
-                        m_trackedComponents.get<vector<Hash> >(slotInstanceId + ".connections").push_back(connection);
-                        // Connect remote signalHeartbeat to local slotHeartbeat
-                        //connect(slotInstanceId, "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
+                        if (m_trackedComponents.has(slotInstanceId)) {
+                            m_trackedComponents.get<vector<Hash> >(slotInstanceId + ".connections").push_back(connection);
+                        }
                     }
                 }
             }
@@ -843,10 +836,12 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::addTrackedComponent(const std::string & instanceId) {
+        void SignalSlotable::addTrackedComponent(const std::string & instanceId, const karabo::util::Hash& instanceInfo) {
             Hash h;
             h.set("connections", vector<Hash > ());
-            h.set("countDown", m_timeToLive);
+            h.set("instanceInfo", instanceInfo);
+            // Initialize the countdown with the heartbeat interval of the remote signal
+            h.set("countdown", instanceInfo.get<int>("heartbeatInterval"));
             h.set("isExplicitlyTracked", false);
             m_trackedComponents.set(instanceId, h);
         }
@@ -978,17 +973,17 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countDown, const karabo::util::Hash & instanceInfo) {
+        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             if (m_trackedComponents.has(instanceId)) {
                 Hash& entry = m_trackedComponents.get<Hash > (instanceId);
                 entry.set("instanceInfo", instanceInfo);
-                int& oldCountDown = entry.get<int >("countDown");
+                int& oldCountDown = entry.get<int >("countdown");
                 if (oldCountDown <= 0) {
                     if (entry.get<bool>("isExplicitlyTracked") == true) {
                         m_heartbeatMutex.unlock();
                         // Polymorphic call DEPRECATE
-                        instanceAvailableAgain(instanceId);
+                        //instanceAvailableAgain(instanceId);
                         // Regular callback
                         if (m_instanceAvailableAgainHandler) m_instanceAvailableAgainHandler(instanceId, instanceInfo);
                         m_heartbeatMutex.lock();
@@ -1011,17 +1006,15 @@ namespace karabo {
                                     // TODO remove from connections
                                     //cout << "Re-appeared instance \"" << signalInstanceId << "\" does not carry signalFunction \"" << signalFunction << "\" anymore. Gave up on trying to re-connect." << endl;
                                 }
-
-                                //m_heartbeatMutex.lock();
                             }
                         }
                     }
                     if (!connections.empty()) connectionAvailableAgain(instanceId, connections);
                 }
-                //cout << "Assigning new countDown: old = " << oldCountDown << "new = " << countDown << endl;
-                oldCountDown = countDown;
+                //cout << "LOW-LEVEL-DEBUG: Countdown refresh for " << instanceId << ": old = " << oldCountDown << " new = " << countdown << endl;
+                oldCountDown = countdown;
             } else {
-                //cout << "LOW-LEVEL-DEBUG: Got refresh request for unregistered heartbeat of " << networkId << endl;
+                //cout << "LOW-LEVEL-DEBUG: Got refresh request for unregistered heartbeat of " << instanceId << endl;
             }
         }
 
@@ -1036,12 +1029,13 @@ namespace karabo {
 
                     for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
                         Hash& entry = it->getValue<Hash>();
-                        int& countDown = entry.get<int>("countDown");
 
-                        if (countDown > 0) countDown--; // Regular count down
+                        int& countdown = entry.get<int>("countdown");
 
-                        else if (countDown == 0) { // Connection lost
-                            countDown--;
+                        if (countdown > 0) countdown--; // Regular count down
+
+                        else if (countdown == 0) { // Connection lost
+                            countdown--;
                             if (entry.get<bool>("isExplicitlyTracked") == true) {
                                 Hash instanceInfo;
                                 if (entry.has("instanceInfo")) entry.get("instanceInfo", instanceInfo);
@@ -1061,9 +1055,9 @@ namespace karabo {
                             }
 
                         } else { // Negative count for tracked connections
-                            countDown--;
+                            countdown--;
                             // Here we can try to reconnect
-                            if (m_reconnectIntervals.find(countDown) != m_reconnectIntervals.end()) {
+                            if (m_reconnectIntervals.find(countdown) != m_reconnectIntervals.end()) {
                                 const vector<Hash >& connections = entry.get<vector<Hash> > ("connections");
                                 for (size_t i = 0; i < connections.size(); ++i) {
                                     const Hash& connection = connections[i];
@@ -1075,17 +1069,13 @@ namespace karabo {
                                         break;
                                     }
                                 }
-                                //                            if (entry.get<bool>("isExplicitlyTracked") == true) {
-                                //                                m_heartbeatMutex.unlock();
-                                //                                connect(it->getKey(), "signalHeartbeat", "", "slotHeartbeat", NO_TRACK, false);
-                                //                                m_heartbeatMutex.lock();
-                                //                            }
                             }
                         }
                     }
 
                     m_heartbeatMutex.unlock();
 
+                    // We are sleeping twice as long as the count-down ticks (which ticks in seconds)
                     boost::this_thread::sleep(boost::posix_time::seconds(2));
                 }
 
@@ -1114,7 +1104,7 @@ namespace karabo {
 
                     if (signalInstanceId == m_instanceId) {
                         // This connection did not make it, will be deleted and signals cleared from dead slots
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting: " << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")";
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting as result of silent death: " << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")";
                         tryToDisconnectFromSignal(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
                     }
 
@@ -1151,8 +1141,8 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_heartbeatMutex);
             for (Hash::iterator it = m_trackedComponents.begin(); it != m_trackedComponents.end(); ++it) {
                 Hash& entry = m_trackedComponents.get<Hash > (it->getKey());
-                const int& timeToLive = entry.get<int>("timeToLive");
-                if (timeToLive < 0) {
+                const int& countdown = entry.get<int>("countdown");
+                if (countdown < 0) {
                     const Hash& signals = entry.get<Hash > ("signals");
                     for (Hash::const_iterator jt = signals.begin(); jt != signals.end(); ++jt) {
                         const AssocType& slots = jt->getValue<AssocType>();
