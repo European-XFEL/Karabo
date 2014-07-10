@@ -36,7 +36,7 @@ namespace karabo {
         void SchemaBinarySerializer::save(const karabo::util::Schema& object, std::vector<char>& archive) try {
             ostringstream os;
             const string& rootName = object.getRootName();
-            const size_t size = rootName.size();
+            const unsigned char size = rootName.size();
             os.write((char*) &size, sizeof (size));
             os.write(rootName.c_str(), size);
 
@@ -54,7 +54,7 @@ namespace karabo {
             std::stringstream is;
             is.rdbuf()->pubsetbuf(const_cast<char*> (archive), nBytes);
 
-            size_t size;
+            unsigned char size;
             is.read((char*) &size, sizeof (size));
             char rootName[256];
             is.read(rootName, size);
