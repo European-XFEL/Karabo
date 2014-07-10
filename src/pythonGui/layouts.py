@@ -462,7 +462,7 @@ class ProxyWidget(QWidget):
         if status == "alive" and not error:
             self.marker.hide()
         else:
-            if error:
+            if status != "offline" and error:
                 icon = icons.device_error
             else:
                 icon = dict(requested=icons.device_requested,
