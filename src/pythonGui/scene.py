@@ -1051,7 +1051,9 @@ class Scene(QSvgWidget):
         if w is not None:
             while not isinstance(w, ProxyWidget):
                 w = w.parent()
-            w.edit()
+            if isinstance(w.widget, Label):
+                dialog = TextDialog(w.widget)
+                dialog.exec_()
             return
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
