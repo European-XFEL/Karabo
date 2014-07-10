@@ -551,7 +551,7 @@ def getClass(serverId, classId):
         path = "{}.{}".format(serverId, classId)
         c = manager.serverClassData[serverId, classId] = Configuration(path, 'class')
 
-    if c.descriptor is None or c.status != "requested":
+    if c.descriptor is None or c.status not in ("requested", "schema"):
         Network().onGetClassSchema(serverId, classId)
         c.status = "requested"
     return c
