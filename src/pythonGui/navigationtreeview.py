@@ -13,11 +13,11 @@
 __all__ = ["NavigationTreeView"]
 
 
-
 from enums import NavigationItemTypes
 import icons
 from manager import Manager
 import manager
+from treewidgetitems.popupwidget import PopupWidget
 
 from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QMenu, QTreeView)
@@ -48,6 +48,13 @@ class NavigationTreeView(QTreeView):
 
     def _setupContextMenu(self):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+        
+        text = "About"
+        self.acAbout = QAction("About", self)
+        self.acAbout.setStatusTip(text)
+        self.acAbout.setToolTip(text)
+        self.acAbout.triggered.connect(self.onAbout)
+        
         # Device server instance menu
         self.mServerItem = QMenu(self)
         
@@ -57,6 +64,9 @@ class NavigationTreeView(QTreeView):
         self.acKillServer.setToolTip(text)
         self.acKillServer.triggered.connect(self.onKillInstance)
         self.mServerItem.addAction(self.acKillServer)
+        
+        self.mServerItem.addSeparator()
+        self.mServerItem.addAction(self.acAbout)
         
         # Device class/instance menu
         self.mDeviceItem = QMenu(self)
@@ -99,6 +109,8 @@ class NavigationTreeView(QTreeView):
         self.mDeviceItem.addAction(self.acKillDevice)
 
         self.mDeviceItem.addSeparator()
+        
+        self.mDeviceItem.addAction(self.acAbout)
 
 
     def currentIndex(self):
@@ -145,6 +157,19 @@ class NavigationTreeView(QTreeView):
         self.model().selectIndex(index)
 
 
+    def onAbout(self):
+        index = self.currentIndex()
+        node = index.internalPointer()
+        popupWidget = PopupWidget(self)
+        popupWidget.setInfo(node.attributes)
+        
+        pos = QCursor.pos()
+        pos.setX(pos.x() + 10)
+        pos.setY(pos.y() + 10)
+        popupWidget.move(pos)
+        popupWidget.show()
+
+
     def onKillInstance(self):
         itemInfo = self.indexInfo()
         
@@ -165,9 +190,11 @@ class NavigationTreeView(QTreeView):
             self.mServerItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.CLASS:
             self.acKillDevice.setVisible(False)
+            self.acAbout.setVisible(False)
             self.mDeviceItem.exec_(QCursor.pos())
         elif type is NavigationItemTypes.DEVICE:
             self.acKillDevice.setVisible(True)
+            self.acAbout.setVisible(True)
             self.mDeviceItem.exec_(QCursor.pos())
 
 
