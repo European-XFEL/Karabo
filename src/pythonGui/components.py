@@ -477,9 +477,9 @@ class EditableApplyLaterComponent(BaseComponent):
             text = None
         elif self.hasConflict:
             self.acApply.setIcon(icons.applyConflict)
-            text = "Resolve conflict"
+            text = "Apply mine"
         else:
-            text = "Apply local changes"
+            text = "Apply"
             self.acApply.setIcon(icons.apply)
         self.acApply.setStatusTip(text)
         self.acApply.setToolTip(text)
