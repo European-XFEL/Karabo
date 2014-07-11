@@ -17,6 +17,7 @@
 #include "karabo/xip.hpp"
 #include "karabo/core.hpp"
 
+// Deprecated, use USING_KARABO_NAMESPACES
 #define KARABO_NAMESPACES \
 using namespace karabo::util; \
 using namespace karabo::io; \
@@ -26,5 +27,13 @@ using namespace karabo::xms; \
 using namespace karabo::core; \
 using namespace karabo::xip;
 
+#define USING_KARABO_NAMESPACES \
+using namespace karabo::util; \
+using namespace karabo::io; \
+using namespace karabo::net; \
+using namespace karabo::log; \
+using namespace karabo::xms; \
+using namespace karabo::core; \
+using namespace karabo::xip;
 
 #endif
