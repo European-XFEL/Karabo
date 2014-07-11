@@ -304,10 +304,11 @@ class MainWindow(QMainWindow):
     def onRemoveScene(self, scene):
         for i in xrange(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
-            if divWidget.dockableWidget.scene == scene:
-                scene.clean()
-                self.middleTab.removeDockableTab(divWidget.dockableWidget)
-                break
+            if hasattr(divWidget.dockableWidget, "scene"):
+                if divWidget.dockableWidget.scene == scene:
+                    scene.clean()
+                    self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                    break
         
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:

@@ -333,9 +333,7 @@ class ProjectModel(QStandardItemModel):
         self.removeProject(project)
         
         for scene in project.scenes:
-            if scene.isVisible():
-                # Only send signal, if scene is currently visible
-                self.signalRemoveScene.emit(scene)
+            self.signalRemoveScene.emit(scene)
 
 
     def projectNew(self, filename):
@@ -716,8 +714,7 @@ class ProjectModel(QStandardItemModel):
         project.remove(object)
         
         if isinstance(object, Scene):
-            if object.isVisible():
-                self.signalRemoveScene.emit(object)
+            self.signalRemoveScene.emit(object)
         
         self.updateData()
         
