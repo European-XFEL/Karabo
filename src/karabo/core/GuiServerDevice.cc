@@ -514,7 +514,7 @@ namespace karabo {
                     }
                 }
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in slotChanged(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in deviceChangedHandler(): " << e.userFriendlyMsg();
             }
         }
 
