@@ -82,7 +82,7 @@ namespace karabo {
             
             void slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId);
             
-            void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+            void schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema);
             
             void persistDataThread();
             

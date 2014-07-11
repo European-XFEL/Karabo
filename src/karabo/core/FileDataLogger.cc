@@ -60,7 +60,7 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
                     .commit();
-            
+
             OVERWRITE_ELEMENT(expected).key("deviceId")
                     .setNewDefaultValue("Karabo_FileDataLogger_0")
                     .commit();
@@ -94,6 +94,7 @@ namespace karabo {
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::FileDataLogger::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::FileDataLogger::instanceGoneHandler, this, _1, _2));
+            remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::FileDataLogger::schemaUpdatedHandler, this, _1, _2));
 
             // Prepare backend to persist data
             if (!boost::filesystem::exists("karaboHistory")) {
@@ -114,7 +115,7 @@ namespace karabo {
                     tagDeviceToBeDiscontinued(deviceId, false, 'l'); // 2nd arg means: device was not valid up to now, 3rd means logger
                     refreshDeviceInformation(deviceId);
                     connectT(deviceId, "signalChanged", "", "slotChanged");
-                    connectT(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
+                    
                 }
             }
 
@@ -124,7 +125,6 @@ namespace karabo {
 
             // Start slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
-            SLOT2(slotSchemaUpdated, Schema /*description*/, string /*deviceId*/)
             SLOT3(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*to (string) from (string) maxNumData (unsigned int)*/);
             SLOT2(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
@@ -155,8 +155,7 @@ namespace karabo {
 
                     // Finally start listening to the changes
                     connectT(deviceId, "signalChanged", "", "slotChanged");
-                    connectT(deviceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
-
+                    
                 }
 
             } catch (const Exception& e) {
@@ -181,14 +180,14 @@ namespace karabo {
         void FileDataLogger::refreshDeviceInformation(const std::string& deviceId) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "refreshDeviceInformation " << deviceId;
-                Schema schema = remote().getDeviceSchema(deviceId);
-                Hash hash = remote().get(deviceId);
+                Schema schema = remote().getDeviceSchemaNoWait(deviceId);
+                Hash hash = remote().getConfigurationNoWait(deviceId);
 
                 // call slotSchemaUpdated updated by hand
-                slotSchemaUpdated(schema, deviceId);
+                if (!schema.empty()) schemaUpdatedHandler(deviceId, schema);
 
                 // call slotChanged by hand
-                slotChanged(hash, deviceId);
+                if (!hash.empty()) slotChanged(hash, deviceId);
 
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + deviceId));
@@ -323,17 +322,21 @@ namespace karabo {
 
 
         void FileDataLogger::slotChanged(const karabo::util::Hash& changedConfig, const std::string& deviceId) {
-            
+
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
 
             string memoryPath("device." + deviceId + ".configuration");
             if (m_systemHistory.has(memoryPath)) {
                 // Get schema for this device
-                Schema schema = remote().getDeviceSchema(deviceId);
+                Schema schema = remote().getDeviceSchemaNoWait(deviceId);
+                if (schema.empty()) {
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema for " << deviceId << " still empty, async request triggered";
+                    return;
+                }
                 Hash& tmp = m_systemHistory.get<Hash>(memoryPath);
                 vector<string> paths;
                 changedConfig.getPaths(paths);
-                for (size_t i = 0; i < paths.size(); ++i) {                    
+                for (size_t i = 0; i < paths.size(); ++i) {
                     const string& path = paths[i];
                     const Hash::Node& leafNode = changedConfig.getNode(path);
                     // Skip those elements which should not be archived
@@ -349,7 +352,7 @@ namespace karabo {
         }
 
 
-        void FileDataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
+        void FileDataLogger::schemaUpdatedHandler(const std::string& deviceId, const karabo::util::Schema& schema) {
 
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
 
@@ -368,7 +371,7 @@ namespace karabo {
         void FileDataLogger::persistDataThread() {
 
             try {
-                
+
                 Hash systemHistoryCopy;
 
                 TimeProfiler profiler("Persist data");
@@ -378,7 +381,7 @@ namespace karabo {
                     profiler.open();
                     profiler.startPeriod();
                     KARABO_LOG_FRAMEWORK_DEBUG << "Start flushing memory to file";
-                    
+
                     copyAndClearSystemConfiguration(systemHistoryCopy);
 
                     Hash& devices = systemHistoryCopy.get<Hash>("device");
@@ -408,8 +411,8 @@ namespace karabo {
                 KARABO_LOG_ERROR << "Encountered unknown exception whilst persisting karabo device data to file";
             }
         }
-        
-        
+
+
         void FileDataLogger::copyAndClearSystemConfiguration(karabo::util::Hash& copy) {
             boost::mutex::scoped_lock lock(m_systemHistoryMutex);
             copy = m_systemHistory;
@@ -419,8 +422,8 @@ namespace karabo {
                 it->setValue(Hash("schema", vector<Hash>(), "configuration", Hash()));
             }
         }
-        
-        
+
+
         void FileDataLogger::slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const Hash& params) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotGetPropertyHistory()";
@@ -588,7 +591,7 @@ namespace karabo {
                 Epochstamp creationTime;
                 Hash file;
                 int idx = -1;
-                
+
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << tgt.getSeconds();
 
                 do {
