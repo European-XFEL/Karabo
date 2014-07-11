@@ -714,5 +714,10 @@ class ProjectModel(QStandardItemModel):
                 return
         
         project.remove(object)
+        
+        if isinstance(object, Scene):
+            if object.isVisible():
+                self.signalRemoveScene.emit(object)
+        
         self.updateData()
         
