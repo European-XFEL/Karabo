@@ -16,11 +16,12 @@ import time
 import getpass
 import socket
 import datetime
+import os.path
 from dateutil import parser
 import pytz
 import tzlocal
 from threading import Thread
-
+from sys import platform
 import numpy as np
 
 # Not yet supported on MacOSX
@@ -51,6 +52,34 @@ cpp_client = None
 
 # Create one instance (global singleton) of a qapplication
 if HAS_GUIDATA: qapplication = guidata.qapplication()
+
+def _getVersion():
+        if "win" in platform:        
+            # TODO: use current working path pythonGui/VERSION
+            filePath = os.path.join(os.environ['USERPROFILE'], "karabo", "karaboFramework")
+        else:
+            filePath = os.path.join(os.environ['HOME'], ".karabo", "karaboFramework")
+            
+        try:
+            with open(filePath, 'r') as file:
+                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
+        except IOError, e:
+            print e
+            return ""
+
+        try:
+            with open(karaboVersionPath, 'r') as file:
+                return file.readline()
+        except IOError:
+            return ""
+
+# Welcome
+print "\n# Karabo Device-Client", _getVersion()
+print "To start you need a DeviceClient object, e.g. type:\n"
+print "  d = DeviceClient()\n"
+print "On this object you can set/get properties, execute commands and much more."
+print "Hint, use the TAB key for auto-completion."
+
 
 # The global autocompleter
 def auto_complete_full(self, event):
@@ -251,7 +280,7 @@ class DeviceClient(object):
             pass
         
         self.values = dict()
-                      
+
     def login(self, username, passwordFile = None, provider = "LOCAL"):
         password = None
         if passwordFile is None:
@@ -266,7 +295,9 @@ class DeviceClient(object):
         return self.__client.logout()
         
         
-    def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash(), timeoutInSeconds = None):
+    def instantiate(self, deviceServerInstanceId, classId, deviceId, initialConfiguration = Hash(), timeoutInSeconds = None):
+        # This is hacked here and should be added to c++
+        initialConfiguration.set("deviceId", deviceId)
         if timeoutInSeconds is None:
             return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
         return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration, timeoutInSeconds)
@@ -292,7 +323,9 @@ class DeviceClient(object):
                 self.__client.instantiate(servers[0], device)
             
     
-    def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
+    def instantiateNoWait(self, deviceServerInstanceId, classId, deviceId, initialConfiguration = Hash()):
+        # This is hacked here and should be added to c++
+        initialConfiguration.set("deviceId", deviceId)
         self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
         
         
