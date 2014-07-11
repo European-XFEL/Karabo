@@ -333,7 +333,6 @@ class ProjectModel(QStandardItemModel):
         self.removeProject(project)
         
         for scene in project.scenes:
-            # Only send signal, if scene is currently visible
             self.signalRemoveScene.emit(scene)
 
 
