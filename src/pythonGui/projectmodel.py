@@ -587,12 +587,12 @@ class ProjectModel(QStandardItemModel):
                 conf = manager.getDevice(device.id)
             else:
                 conf = device
+                
+                # Check descriptor only with first selection
+                if device.descriptorRequested is False:
+                    self.checkDescriptor(device)
+                    device.descriptorRequested = True
             type = conf.type
-            
-            # Check descriptor only with first selection
-            if device.descriptorRequested is False:
-                self.checkDescriptor(device)
-                device.descriptorRequested = True
         else:
             conf = None
             type = "other"
