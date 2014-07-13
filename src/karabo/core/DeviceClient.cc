@@ -61,7 +61,7 @@ namespace karabo {
             m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
 
             // Uncomment this for debugging
-            karabo::log::Logger::configure(Hash("priority", "DEBUG"));
+            //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
         }
 
 
