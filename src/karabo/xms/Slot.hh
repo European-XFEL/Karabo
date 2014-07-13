@@ -54,8 +54,7 @@ namespace karabo {
                 m_channel->setFilter(filterCondition);
             }
 
-            virtual ~Slot() {
-            }
+         
 
             void handlePossibleReply(const karabo::util::Hash& header);
 

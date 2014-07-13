@@ -60,7 +60,7 @@ class ConfigurationPanel(QWidget):
         navSplitter = QSplitter(Qt.Vertical)
         # Navigation tree
         self.twNavigation = NavigationTreeView(self)
-        self.twNavigation.signalItemChanged.connect(self.onDeviceItemChanged)
+        self.twNavigation.model().signalItemChanged.connect(self.onDeviceItemChanged)
         self.twNavigation.hide()
         navSplitter.addWidget(self.twNavigation)
 
@@ -157,13 +157,13 @@ class ConfigurationPanel(QWidget):
         self.acApplyAll.triggered.connect(self.onApplyAll)
         self.pbApplyAll.clicked.connect(self.acApplyAll.triggered)
 
-        text = "Accept all local changes"
+        text = "Apply all my changes"
         self.acApplyLocalChanges = QAction(text, self)
         self.acApplyLocalChanges.setStatusTip(text)
         self.acApplyLocalChanges.setToolTip(text)
         self.acApplyLocalChanges.triggered.connect(self.onApplyAll)
 
-        text = "Accept all remote changes"
+        text = "Adjust to current values on device"
         self.acApplyRemoteChanges = QAction(text, self)
         self.acApplyRemoteChanges.setStatusTip(text)
         self.acApplyRemoteChanges.setToolTip(text)

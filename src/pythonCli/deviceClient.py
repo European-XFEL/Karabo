@@ -16,31 +16,13 @@ import time
 import getpass
 import socket
 import datetime
+import os.path
 from dateutil import parser
 import pytz
 import tzlocal
 from threading import Thread
-
+from sys import platform
 import numpy as np
-
-# Not yet supported on MacOSX
-HAS_GUIDATA=True
-try:
-
-    import guidata
-    import guidata.dataset.datatypes as dt
-    import guidata.dataset.dataitems as di
-    from guiqwt.plot import CurveDialog
-    from guiqwt.plot import ImageDialog
-    from guiqwt.builder import make
-    from PyQt4 import Qwt5
-    from PyQt4 import QtCore
-
-except ImportError:
-    print "Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)"
-    HAS_GUIDATA=False
-    
-
 
 #ip = IPython.core.ipapi.get()
 ip = IPython.get_ipython()
@@ -49,8 +31,34 @@ ip = IPython.get_ipython()
 # Create one instance (global singleton) of a DeviceClient
 cpp_client = None
 
-# Create one instance (global singleton) of a qapplication
-if HAS_GUIDATA: qapplication = guidata.qapplication()
+def _getVersion():
+        if "win" in platform:        
+            # TODO: use current working path pythonGui/VERSION
+            filePath = os.path.join(os.environ['USERPROFILE'], "karabo", "karaboFramework")
+        else:
+            filePath = os.path.join(os.environ['HOME'], ".karabo", "karaboFramework")
+            
+        try:
+            with open(filePath, 'r') as file:
+                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
+        except IOError, e:
+            print e
+            return ""
+
+        try:
+            with open(karaboVersionPath, 'r') as file:
+                return file.readline().rstrip('\n\r')
+        except IOError:
+            return ""
+
+# Welcome
+print "\n#### Karabo Device-Client (version:", _getVersion(),") ####"
+print "To start you need a DeviceClient object, e.g. type:\n"
+print "  d = DeviceClient()\n"
+print "Using this object you can remote control Karabo devices."
+print "You may query servers and devices and set/get properties or execute commands on them."
+print "Hint, use the TAB key for auto-completion."
+
 
 # The global autocompleter
 def auto_complete_full(self, event):
@@ -137,11 +145,11 @@ def auto_complete_execute(self, event):
         
 def auto_complete_instantiate(self, event):
     try:
-        # Third argument
-        if (re.match('.*\(.*\,.*\,\s*$', event.line)):
+        # Fourth argument
+        if (re.match('.*\(.*\,.*\,.*\,\s*$', event.line)):
             return [' Hash("']
 
-        if (re.match('.*\(.*\,.*\,\s*Hash\(\"$', event.line)):
+        if (re.match('.*\(.*\,.*\,.*\,\s*Hash\(\"$', event.line)):
             r = re.compile('\"(.*?)\"\,\s*\"(.*?)\"')
             m = r.search(event.line)
             if m:
@@ -188,29 +196,34 @@ if (ip is not None):
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
-class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
-        '''Class used to draw a datetime axis on a plot.
-        '''
-        def __init__( self, *args ):
-            Qwt5.Qwt.QwtScaleDraw.__init__( self, *args )
-
-
-        def label( self, value ):
-            '''Function used to create the text of each label
-            used to draw the axis.
-            '''
-            try:
-                dt = datetime.datetime.fromtimestamp( value )
-            except:
-                dt = datetime.datetime.fromtimestamp( 0 )
-            return Qwt5.Qwt.QwtText( dt.isoformat() )
-
 class DeviceClient(object):
-    def __init__(self, connectionType = "Jms", config = Hash()):
+    """
+    The DeviceClient allows to remotely control a Karabo installation.
+    A Karabo installation comprises all distributed end-points (servers, devices and clients),
+    which talk to the same central message-broker as defined by its host, port and topic.
+    The DeviceClient establishes a direct connection to the broker.
+    You may specify which broker and topic should be used via those environmental variables
+      KARABO_BROKER_HOST
+      KARABO_BROKER_PORT
+      KARABO_BROKER_TOPIC
+    or by giving them to the constructor (taking precedence) like:
+
+    >>> c = DeviceClient(Hash('hostname', 'exlf-broker', 'port', 7676, 'destinationName', 'myTopic'))
+
+    If you do not specify the broker connection, defaults will be used (IMPORTANT: default topic is your username).
+    
+    """
+    def __init__(self, config = Hash(), connectionType = "Jms"):
         global cpp_client
         if cpp_client is None:
             cpp_client = CppDeviceClient(connectionType, config)
         self.__client = cpp_client
+
+        # Flags whether we tried to run Qapp
+        self.triedStartQapp = False
+
+        # Flags whether we can use GuiData
+        self.hasGuiData = True
 
         # Dict of image dialogs
         self.__imageDialogs = dict()
@@ -251,8 +264,21 @@ class DeviceClient(object):
             pass
         
         self.values = dict()
-                      
+
     def login(self, username, passwordFile = None, provider = "LOCAL"):
+        """
+        Logs the the given user into the Karabo installation.
+
+        After successful login all user-specifc access rights are established and the
+        auto-completion (in interactive mode) adapts accordingly.
+
+        Args:
+
+            username: The username (currently you may use observer, operator, expert, admin)
+            passwordFile: Optionally provide a plain text file with containing the password
+            provider: Optionally choose the authorization provider (LOCAL or KERBEROS)
+
+        """
         password = None
         if passwordFile is None:
             password = getpass.getpass()
@@ -263,15 +289,55 @@ class DeviceClient(object):
     
     
     def logout(self):
+        """
+        Logs the current user out.
+        """
         return self.__client.logout()
         
         
-    def instantiate(self, deviceServerInstanceId, classId, initialConfiguration = Hash(), timeoutInSeconds = None):
-        if timeoutInSeconds is None:
-            return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration)
-        return self.__client.instantiate(deviceServerInstanceId, classId, initialConfiguration, timeoutInSeconds)
+    def instantiate(self, serverId, classId, deviceId, config = Hash(), timeout = None):
+        """
+        Instantiate (and configure) a device on a running server.
 
-    
+        NOTE: This call is synchronous (blocking)
+
+        Args:
+            serverId: The serverId of the server on which the device should be started.
+            classId:  The classId of the device (corresponding plugin must be loaded on the server)
+            deviceId: The future name of the device in the Karabo installation (will fail if not unique)
+            config:   The initial configuration of the device (optional if all parameters of the device are optional)
+            timeout : Timeout in seconds until this function will be forced to return
+
+        Returns:
+            Tuple with (True, <deviceId>) in case of success or tuple with (False, <errorMessage>) in case of failure
+
+        """
+        # This is hacked here and should be added to c++
+        config.set("deviceId", deviceId)
+        if timeout is None:
+            return self.__client.instantiate(serverId, classId, config)
+        return self.__client.instantiate(serverId, classId, config, timeout)
+
+
+    def instantiateNoWait(self, serverId, classId, deviceId, config = Hash()):
+        """
+        Instantiate (and configure) a device on a running server.
+
+        NOTE: This call is asynchronous (non-blocking)
+
+        Args:
+            serverId: The serverId of the server on which the device should be started.
+            classId:  The classId of the device (corresponding plugin must be loaded on the server)
+            deviceId: The future name of the device in the Karabo installation (will fail if not unique)
+            config:   The initial configuration of the device (optional if all parameters of the device are optional)
+
+        """
+
+        # This is hacked here and should be added to c++
+        config.set("deviceId", deviceId)
+        self.__client.instantiateNoWait(serverId, classId, config)
+
+
     def instantiateProject(self, projectFile):
         project = Hash()
         krb.loadFromFile(project, projectFile)
@@ -289,49 +355,108 @@ class DeviceClient(object):
                     print "Skipping instantiation, server not found"
             else:
                 print "Using default server to instantiate"
-                self.__client.instantiate(servers[0], device)
-            
-    
-    def instantiateNoWait(self, deviceServerInstanceId, classId, initialConfiguration = Hash()):
-        self.__client.instantiateNoWait(deviceServerInstanceId, classId, initialConfiguration)
+                self.__client.instantiate(servers[0], device)                   
         
         
-    def killDevice(self, deviceId, timeoutInSeconds = None):
-        if timeoutInSeconds is None:
+    def killDevice(self, deviceId, timeout = None):
+        """
+        Shuts down a device.
+
+        NOTE: This call is synchronous (blocking)
+
+        Args:
+            deviceId: The deviceId of the device to be destructed.
+            timeout : Timeout in seconds until this function will be forced to return
+
+        Returns:
+            Tuple with (True, <deviceId>) in case of success or tuple with (False, <errorMessage>) in case of failure
+
+        """
+        if timeout is None:
             return self.__client.killDevice(deviceId)
-        return self.__client.killDevice(deviceId, timeoutInSeconds)
+        return self.__client.killDevice(deviceId, timeout)
         
         
     def killDeviceNoWait(self, deviceId):
+        """
+        Shuts down a device.
+
+        NOTE: This call is asynchronous (non-blocking)
+
+        Args:
+            deviceId: The deviceId of the device to be destructed.
+
+        """
         self.__client.killDeviceNoWait(deviceId)
         
         
-    def killServer(self, serverId, timeoutInSeconds = None):
-        if timeoutInSeconds is None:
+    def killServer(self, serverId, timeout = None):
+        """
+        Shuts down a server.
+
+        NOTE: This call is synchronous (blocking)
+
+        Args:
+            serverId: The serverId of the server to be destructed.
+            timeout : Timeout in seconds until this function will be forced to return
+
+        Returns:
+            Tuple with (True, <serverId>) in case of success or tuple with (False, <errorMessage>) in case of failure
+
+        """
+        if timeout is None:
             return self.__client.killServer(serverId)
-        return self.__client.killServer(serverId, timeoutInSeconds)
+        return self.__client.killServer(serverId, timeout)
         
         
     def killServerNoWait(self, serverId):
+        """
+        Shuts down a server.
+
+        NOTE: This call is asynchronous (non-blocking)
+
+        Args:
+            serverId: The serverId of the server to be destructed.
+
+        """
         self.__client.killServerNoWait(serverId)
 
 
     def getServers(self):
+        """
+        Returns a list of currently running servers.
+        """
         return self.__client.getServers()
 
         
     def getDevices(self, serverId = None):
+        """
+        Returns a list of currently running devices.
+
+        Args:
+            serverId: Optionally only the running devices of a given server can be listed.
+
+        """
         if serverId is None:
             return self.__client.getDevices()
         return self.__client.getDevices(serverId)
 
 
     def getClasses(self, serverId):
+        """
+        Returns a list of available device classes (plugins) on a server
+
+        Args:
+             serverId: The server of whose plugins should be listed.
+
+        """
         return self.__client.getClasses(serverId)
 
 
     def help(self, instanceId, parameter = None):
-        """This function provides help on a full instance or a specific parameter of an instance"""
+        """
+        This function provides help on a full instance or a specific parameter of an instance.
+        """
         if parameter is None:
             self.__client.getDeviceSchema(instanceId).help()
         else:
@@ -358,14 +483,6 @@ class DeviceClient(object):
         return self.__client.getDeviceHistory(deviceId, utc_timepoint)
     
         
-    def enableAdvancedMode(self):
-        self.__client.enableAdvancedMode()
-        
-        
-    def disableAdvancedMode(self):
-        self.__client.disableAdvancedMode()
-    
-        
     def getSystemInformation(self):
         return self.__client.getSystemInformation()
     
@@ -383,7 +500,7 @@ class DeviceClient(object):
     
         
     def registerDeviceMonitor(self, instanceId, callbackFunction, userData = None):
-        '''
+        """
         This function can be used to register an asynchronous call-back on change of any device property.
         The call-back function must have the following signature: f(str, Hash)
         arg1: deviceId
@@ -396,8 +513,9 @@ class DeviceClient(object):
             print deviceId, ":", config
             
         c = DeviceClient();
-        c.registerDeviceMonitor("Test_MyDevice_0", onDeviceChange)                       
-        '''
+        c.registerDeviceMonitor("Test_MyDevice_0", onDeviceChange)
+
+        """
         if userData is None:
             return self.__client.registerDeviceMonitor(instanceId, callbackFunction)
         return self.__client.registerDeviceMonitor(instanceId, callbackFunction, userData)
@@ -408,7 +526,7 @@ class DeviceClient(object):
          
          
     def registerPropertyMonitor(self, instanceId, propertyName, callbackFunction, userData = None):
-        '''
+        """
         This function can be used to register an asynchronous call-back on change of the specified property.
         The call-back function must have the following signature: f(str, str, object, Timestamp)
         arg1: deviceId
@@ -418,12 +536,13 @@ class DeviceClient(object):
         
         Example:
             
-            def onPropertyChange(deviceId, key, value, timeStamp):
-                print deviceId, ":", key, "->", value, "(", timeStamp.toFormattedString(), ")"
+        def onPropertyChange(deviceId, key, value, timeStamp):
+            print deviceId, ":", key, "->", value, "(", timeStamp.toFormattedString(), ")"
         
         c = DeviceClient()
         c.registerPropertyMonitor("Test_MyDevice_0", "result", onPropertyChange)
-        '''
+
+        """
         if userData is None:
             return self.__client.registerPropertyMonitor(instanceId, propertyName, callbackFunction)
         else :
@@ -480,7 +599,45 @@ class DeviceClient(object):
         
 
     def show(self, deviceId, key, monitor = True, dialog = None, dialogName = "Karabo Embedded Visualisation", x = None, y = None, t0 = None, t1 = None, displayType = None):
-        if not HAS_GUIDATA: return
+        
+        try:
+            import guidata
+            import guidata.dataset.datatypes as dt
+            import guidata.dataset.dataitems as di
+            from guiqwt.plot import CurveDialog
+            from guiqwt.plot import ImageDialog
+            from guiqwt.builder import make
+            from PyQt4 import Qwt5
+            from PyQt4 import QtCore
+
+            # Create one instance of a qapplication
+            if not self.triedStartQapp:
+                self.qapplication = guidata.qapplication()
+                self.triedStartQapp = True
+
+            class DateTimeScaleDraw( Qwt5.Qwt.QwtScaleDraw ):
+                """
+                Class used to draw a datetime axis on a plot.
+                """
+                def __init__( self, *args ):
+                    Qwt5.Qwt.QwtScaleDraw.__init__( self, *args )
+
+
+                def label( self, value ):
+                    '''Function used to create the text of each label
+                    used to draw the axis.
+                    '''
+                    try:
+                        dt = datetime.datetime.fromtimestamp( value )
+                    except:
+                        dt = datetime.datetime.fromtimestamp( 0 )
+                    return Qwt5.Qwt.QwtText( dt.isoformat() )
+
+        except ImportError:
+            print "Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)"
+            self.hasGuiData=False
+
+        if not self.hasGuiData: return
         itemId = deviceId + ":" + key
         unit = str()
         
@@ -628,7 +785,7 @@ class DeviceClient(object):
     def _onTrendlineUpdate(self, deviceId, key, value, timestamp):
         itemId = deviceId + ":" + key
         if self.__trendlineItems.has_key(itemId):
-            self.__trendlineData[itemId].append((value, timestamp.getSeconds()))
+            self.__trendlineData[itemId].append((value, timestamp.toTimestamp()))
             trendlineItem = self.__trendlineItems[itemId]            
             trendlineItem.set_data( map( lambda x: x[ 1 ], self.__trendlineData[itemId] ), map( lambda x: x[ 0 ], self.__trendlineData[itemId]))
     

@@ -77,6 +77,12 @@ namespace karabo {
                     .assignmentOptional().defaultValue(false)
                     .commit();
 
+            BOOL_ELEMENT(expected).key("debugMode")
+                    .displayedName("Is Debug Mode?")
+                    .description("Decides whether this device-server runs in debug or production mode")
+                    .assignmentOptional().defaultValue(false)
+                    .commit();
+
             LIST_ELEMENT(expected).key("autoStart")
                     .displayedName("Auto start")
                     .description("Auto starts selected devices")
@@ -178,8 +184,6 @@ namespace karabo {
             OVERWRITE_ELEMENT(expected).key("Logger.karabo.appenders.RollingFile.filename")
                     .setNewDefaultValue("device-server.log")
                     .commit();
-
-
         }
 
 
@@ -221,6 +225,7 @@ namespace karabo {
             input.get("visibility", m_visibility);
 
             // Deprecate the isMaster in future
+            input.get("debugMode", m_debugMode);
             input.get("isMaster", m_isMaster);
             if (m_isMaster) {
 
@@ -246,6 +251,11 @@ namespace karabo {
         std::string DeviceServer::generateDefaultServerId() const {
             return string(boost::asio::ip::host_name() + "_Server_" + karabo::util::toString(getpid()));
         }
+
+
+        bool DeviceServer::isDebugMode() {
+            return m_debugMode;
+        };
 
 
         DeviceServer::~DeviceServer() {
@@ -307,6 +317,9 @@ namespace karabo {
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
+            KARABO_LOG_INFO << "ServerId: " << m_serverId;
+            KARABO_LOG_INFO << "Broker (host/port/topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << "/"
+                    << m_connectionConfiguration.get<unsigned int>("Jms.port") << "/" << m_connectionConfiguration.get<string>("Jms.destinationName");
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection);
@@ -333,9 +346,8 @@ namespace karabo {
             SLOT0(slotKillServer)
             SLOT1(slotDeviceGone, string /*deviceId*/)
             SLOT1(slotGetClassSchema, string /*classId*/)
-            
+
             // Connect to global slot(s))
-            connectN("", "signalClassSchema", "*", "slotClassSchema");
             connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
         }
 
@@ -469,6 +481,9 @@ namespace karabo {
                     config.set("_deviceId_", hash.get<string>("deviceId"));
                 }
 
+                // Inject connection
+                config.set("_connection_", m_connectionConfiguration);
+
                 BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
@@ -506,6 +521,10 @@ namespace karabo {
                 } else {
                     tmp.set("_deviceId_", tmp.get<string>("deviceId"));
                 }
+
+                // Inject connection
+                tmp.set("_connection_", m_connectionConfiguration);
+
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
@@ -596,9 +615,11 @@ namespace karabo {
         }
 
 
-        void DeviceServer::slotGetClassSchema(const std::string & classId) {
+        void DeviceServer::slotGetClassSchema(const std::string& classId) {
             Schema schema = BaseDevice::getSchema(classId);
-            emit("signalClassSchema", schema, classId, this->getInstanceId());
+            std::string senderId = getSenderInfo("slotGetClassSchema")->getInstanceIdOfSender();
+            // TODO One could ship also the to be called slot, to make things more generic
+            call(senderId, "slotClassSchema", schema, classId, this->getInstanceId());
             reply(schema);
         }
 

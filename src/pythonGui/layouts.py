@@ -5,7 +5,6 @@
 #############################################################################
 
 
-from dialogs.dialogs import TextDialog
 import icons
 import manager
 from registry import Loadable
@@ -462,7 +461,7 @@ class ProxyWidget(QWidget):
         if status == "alive" and not error:
             self.marker.hide()
         else:
-            if error:
+            if status != "offline" and error:
                 icon = icons.device_error
             else:
                 icon = dict(requested=icons.device_requested,
@@ -516,12 +515,6 @@ class ProxyWidget(QWidget):
 
     def set_geometry(self, rect):
         self.fixed_geometry = rect
-
-
-    def edit(self):
-        if isinstance(self.widget, QLabel):
-            dialog = TextDialog(self.widget)
-            dialog.exec_()
 
 
     def dropEvent(self, event):

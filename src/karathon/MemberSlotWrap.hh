@@ -54,7 +54,10 @@ namespace karathon {
     private: // function
 
         void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+
             ScopedGILAcquire gil;
+
+            extractSenderInformation(header);
 
             try {
 
@@ -79,8 +82,9 @@ namespace karathon {
 
             } catch (const karabo::util::Exception& e) {
                 std::cout << e.userFriendlyMsg();
+                invalidateSenderInformation();
             }
-
+            invalidateSenderInformation();
         }
 
         bool callFunction0(const karabo::util::Hash& body) {
