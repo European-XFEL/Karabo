@@ -765,12 +765,12 @@ namespace karabo {
         }
 
 
-        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
+        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
             return getPropertyHistory(deviceId, key, from, to, maxNumData);
         }
 
 
-        karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
+        karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
             vector<Hash> result;
             // TODO Make this a global slot later
