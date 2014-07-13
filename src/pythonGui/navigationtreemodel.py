@@ -16,6 +16,7 @@ from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
 from enums import AccessLevel
+import manager
 from treenode import TreeNode
 import icons
 
@@ -25,6 +26,7 @@ from PyQt4.QtGui import QItemSelection, QItemSelectionModel
 
 
 class NavigationTreeModel(QAbstractItemModel):
+    signalItemChanged = pyqtSignal(str, object) # type, configuration
 
 
     def __init__(self, parent=None):
@@ -34,7 +36,8 @@ class NavigationTreeModel(QAbstractItemModel):
         self.rootNode = TreeNode()
         
         self.setSupportedDragActions(Qt.CopyAction)
-        self.selectionModel = QItemSelectionModel(self)
+        self.selectionModel = QItemSelectionModel(self, self)
+        self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
 
 
     def _handleServerData(self, config):
@@ -505,3 +508,37 @@ class NavigationTreeModel(QAbstractItemModel):
             mimeData.setData("displayName", displayName)
 
         return mimeData
+
+
+    def onSelectionChanged(self, selected, deselected):
+        selectedIndexes = selected.indexes()
+        
+        if not selectedIndexes:
+            return
+        
+        index = selectedIndexes[0]
+
+        if not index.isValid():
+            level = 0
+        else:
+            level = self.getHierarchyLevel(index)
+
+        if level == 0:
+            conf = None
+            type = "other"
+        elif level == 1:
+            conf = None
+            type = "server"
+        if level == 2:
+            parentIndex = index.parent()
+            serverId = parentIndex.data()
+            classId = index.data()
+            conf = manager.getClass(serverId, classId)
+            type = conf.type
+        elif level == 3:
+            deviceId = index.data()
+            conf = manager.getDevice(deviceId)
+            type = conf.type
+
+        self.signalItemChanged.emit(type, conf)
+

@@ -27,14 +27,14 @@ namespace karabo {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 20, Hash()));
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 60, Hash()));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
 
             this->setupSlots();
             this->checkMaster();
-            this->cacheAvailableInstances();
+            this->cacheAvailableInstances();            
 
         }
 
@@ -59,6 +59,9 @@ namespace karabo {
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
             m_signalSlotable->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
             m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
+
+            // Uncomment this for debugging
+            //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
         }
 
 
@@ -183,16 +186,13 @@ namespace karabo {
             bool hasInstance = existsInRuntimeSystemDescription(path);
 
             if (hasInstance) {
-                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";
-                eraseFromRuntimeSystemDescription(path);
+                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";                
             } else {
                 KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
                 Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
                 mergeIntoRuntimeSystemDescription(entry);
                 if (m_instanceNewHandler) m_instanceNewHandler(entry);
-            }
-            //if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceNew", instanceId, instanceInfo);
-            //else if (m_masterMode == NO_MASTER) slotInstanceNew(instanceId, instanceInfo);           
+            }                  
         }
 
 
@@ -213,7 +213,7 @@ namespace karabo {
             if (m_instanceNewHandler) m_instanceNewHandler(entry);
 
             // Track the instance if we are running without master
-            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId);
+            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId, instanceInfo);
 
         }
 
@@ -765,12 +765,12 @@ namespace karabo {
         }
 
 
-        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
+        std::vector<karabo::util::Hash> DeviceClient::getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
             return getPropertyHistory(deviceId, key, from, to, maxNumData);
         }
 
 
-        karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, unsigned int maxNumData) {
+        karabo::util::vector<karabo::util::Hash> DeviceClient::getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to, int maxNumData) {
             if (to.empty()) to = karabo::util::Epochstamp().toIso8601();
             vector<Hash> result;
             // TODO Make this a global slot later
@@ -804,13 +804,13 @@ namespace karabo {
 
 
         void DeviceClient::registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction) {
-            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
             m_schemaUpdatedHandler = callBackFunction;
         }
 
 
         void DeviceClient::registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction) {
-            m_signalSlotable->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema", SignalSlotable::GLOBAL);
+            m_signalSlotable->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema");
             m_classSchemaHandler = callBackFunction;
         }
 

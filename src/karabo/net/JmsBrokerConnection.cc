@@ -10,6 +10,7 @@
  */
 
 #include "JmsBrokerConnection.hh"
+#include "karabo/log/Logger.hh"
 #include <karabo/util/SimpleElement.hh>
 
 using namespace std;
@@ -211,7 +212,8 @@ namespace karabo {
             MQString tmp = MQGetStatusString(status);
             std::string errorString(tmp);
             MQFreeString(tmp);
-            throw KARABO_MESSAGE_EXCEPTION(errorString);
+            KARABO_LOG_FRAMEWORK_ERROR << "Broker is in trouble: " << errorString;
+            //throw KARABO_MESSAGE_EXCEPTION(errorString);
         }
 
 
