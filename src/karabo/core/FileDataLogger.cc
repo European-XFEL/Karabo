@@ -437,7 +437,7 @@ namespace karabo {
                 if (params.has("to")) to = Epochstamp(params.get<string>("to"));
 
                 unsigned int maxNumData = 0;
-                if (params.has("maxNumData")) maxNumData = params.get<int>("maxNumData");
+                if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.getSeconds();
                 KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.getSeconds();
