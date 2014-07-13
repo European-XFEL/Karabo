@@ -188,6 +188,7 @@ namespace karabo {
             bool m_serverIsRunning;
 
             bool m_isMaster;
+            bool m_debugMode;
             std::vector<karabo::util::Hash> m_autoStart;
             bool m_scanPlugins;
                         
@@ -202,6 +203,8 @@ namespace karabo {
             karabo::util::Hash m_connectionConfiguration;
             std::string m_serverId;
 
+        public:
+            bool isDebugMode();
 
         };
     }

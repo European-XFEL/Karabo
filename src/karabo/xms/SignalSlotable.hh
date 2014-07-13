@@ -104,7 +104,7 @@ namespace karabo {
             SlotChannels m_slotChannels;
 
             karabo::util::Hash m_trackedComponents;
-            int m_timeToLive;
+            int m_heartbeatInterval;
             static std::set<int> m_reconnectIntervals;
 
             bool m_sendHeartbeats;
@@ -230,7 +230,7 @@ namespace karabo {
                 return Requestor(m_requestChannel, m_instanceId);
             }
 
-            void trackExistenceOfInstance(const std::string& instanceId);
+            void trackExistenceOfInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void stopTrackingExistenceOfInstance(const std::string& instanceId);
 
@@ -241,13 +241,13 @@ namespace karabo {
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
             // Deprecate
-            virtual void instanceNotAvailable(const std::string& instanceId);
+            KARABO_DEPRECATED virtual void instanceNotAvailable(const std::string& instanceId);
 
             // Deprecate
-            virtual void instanceAvailableAgain(const std::string& instanceId);
+            KARABO_DEPRECATED virtual void instanceAvailableAgain(const std::string& instanceId);
 
             // Deprecate
-            virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
+            KARABO_DEPRECATED virtual void connectionNotAvailable(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
 
             // Deprecate
             virtual void connectionAvailableAgain(const std::string& instanceId, const std::vector<karabo::util::Hash>& connections);
@@ -857,19 +857,19 @@ namespace karabo {
 
             void slotDisconnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
-            void slotHeartbeat(const std::string& networkId, const int& timeToLive, const karabo::util::Hash& instanceInfo);
+            void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
-            void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int timeToLive, const karabo::util::Hash& instanceInfo);
+            void refreshTimeToLiveForConnectedSlot(const std::string& networkId, int heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
             void letConnectionSlowlyDieWithoutHeartbeat();
 
-            void trackExistenceOfConnection(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
+            void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
             bool isConnectionTracked(const std::string& connectionId);
 
             void slotStopTrackingExistenceOfConnection(const std::string& connectionId);
 
-            void addTrackedComponent(const std::string& networkId);
+            void addTrackedComponent(const std::string& networkId, const karabo::util::Hash& instanceInfo);
 
             karabo::util::Hash prepareConnectionNotAvailableInformation(const karabo::util::Hash& signals) const;
 

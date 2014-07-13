@@ -56,8 +56,7 @@ class MainWindow(QMainWindow):
         self._setupPanels()
 
         self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
-        self.resize(1200,800)
-        self.show()
+        self.resize(1200, 800)
 
 
 ### initializations ###
@@ -203,7 +202,7 @@ class MainWindow(QMainWindow):
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         self.middleTab = DockTabWindow("Custom view", middleArea)
         self.placeholderPanel = None
-        self._showStartPage(True)
+        self._showStartUpPage(True)
         middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
@@ -240,20 +239,19 @@ class MainWindow(QMainWindow):
         self.signalQuitApplication.emit()
 
 
-    def _showStartPage(self, show, loadDefaultProject=True):
+    def _showStartUpPage(self, show, loadDefaultProject=True):
         if show:
             if self.placeholderPanel is not None:
                 return
             
             # Close all projects
-            # If this was successful, you can be sure that _showStartPage
+            # If this was successful, you can be sure that _showStartUpPage
             # was already called - no need to do it again ;)
             projectsToClose = self.projectPanel.closeAllProjects()
             # if no projects available to close, placeholderPanel was not yet set
             if not projectsToClose:
                 # Add startup page
-                self.placeholderPanel = PlaceholderPanel()
-                self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+                self._createPlaceholderPanel()
         else:
             # Remove startup page
             self.middleTab.removeDockableTab(self.placeholderPanel)
@@ -262,6 +260,11 @@ class MainWindow(QMainWindow):
                 # Setup default project
                 self.projectPanel.setupDefaultProject()
 
+
+    def _createPlaceholderPanel(self):
+        self.placeholderPanel = PlaceholderPanel()
+        self.middleTab.addDockableTab(self.placeholderPanel, "Start Page")
+        
 
 ### virtual functions ###
     def closeEvent(self, event):
@@ -290,7 +293,7 @@ class MainWindow(QMainWindow):
 
     def onAddScene(self, scene):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
-            self._showStartPage(False, False)
+            self._showStartUpPage(False, False)
         
         customView = self._createCustomMiddlePanel(scene)
         self.middleTab.addDockableTab(customView, scene.filename)
@@ -301,14 +304,15 @@ class MainWindow(QMainWindow):
     def onRemoveScene(self, scene):
         for i in xrange(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
-            if divWidget.dockableWidget.scene == scene:
-                scene.clean()
-                self.middleTab.removeDockableTab(divWidget.dockableWidget)
-                break
+            if hasattr(divWidget.dockableWidget, "scene"):
+                if divWidget.dockableWidget.scene == scene:
+                    scene.clean()
+                    self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                    break
         
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
-            self._showStartPage(True)
+            self._createPlaceholderPanel()
 
 
     def onChangeAccessLevel(self, action):
@@ -342,7 +346,7 @@ class MainWindow(QMainWindow):
         self.tbAccessLevel.setEnabled(isConnected)
 
         # Adapt middle panel
-        self._showStartPage(not isConnected)
+        self._showStartUpPage(not isConnected)
 
 
     def onUpdateAccessLevel(self):

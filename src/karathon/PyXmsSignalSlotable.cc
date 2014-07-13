@@ -12,6 +12,7 @@
 #include <karabo/xms/SignalSlotable.hh>
 #include "SignalSlotableWrap.hh"
 #include <karabo/xip/RawImageData.hh>
+#include <karabo/xms/Slot.hh>
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -35,6 +36,13 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .value("RECONNECT", SignalSlotable::RECONNECT)
             .export_values()
             ;
+
+    bp::class_<Slot, boost::shared_ptr<Slot> > ("Slot", bp::no_init)
+            .def("getInstanceIdOfSender"
+                 , (const std::string & (Slot::*)() const) &Slot::getInstanceIdOfSender
+                 , bp::return_value_policy<bp::copy_const_reference>())
+            ;
+
 
     bp::class_<SignalSlotable, boost::noncopyable > ("SignalSlotableIntern")
             .def(bp::init<const std::string&, const karabo::net::BrokerConnection::Pointer&>())
@@ -72,12 +80,16 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("stopEventLoop", &SignalSlotableWrap::stopEventLoop)
 
-            .def("setSenderInfo"
-                 , (void (SignalSlotable::*)(const karabo::util::Hash&))(&SignalSlotable::setSenderInfo)
-                 , (bp::arg("senderInfo")))
+//            .def("setSenderInfo"
+//                 , (void (SignalSlotable::*)(const karabo::util::Hash&))(&SignalSlotable::setSenderInfo)
+//                 , (bp::arg("senderInfo")))
+//            .def("getSenderInfo"
+//                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getSenderInfo)
+//                 , bp::return_value_policy<bp::copy_const_reference>())
+            
             .def("getSenderInfo"
-                 , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getSenderInfo)
-                 , bp::return_value_policy<bp::copy_const_reference>())
+                 , (const boost::shared_ptr<karabo::xms::Slot>& (SignalSlotable::*)(const std::string&)) (&SignalSlotable::getSenderInfo)
+                 , bp::arg("slotFunction"), bp::return_value_policy<bp::copy_const_reference>())
             .def("getInstanceId"
                  , (bp::object(SignalSlotableWrap::*)()) & SignalSlotableWrap::getInstanceId)
             .def("updateInstanceInfo"
@@ -87,11 +99,11 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
                  , bp::return_value_policy<bp::copy_const_reference>())
             .def("trackExistenceOfInstance"
-                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::trackExistenceOfInstance)
+                 , (void (SignalSlotable::*)(const std::string&, const karabo::util::Hash&))(&SignalSlotable::trackExistenceOfInstance)
                  , (bp::arg("instanceId")))
             .def("stopTrackingExistenceOfInstance"
                  , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::stopTrackingExistenceOfInstance)
-                 , (bp::arg("instanceId")))
+                 , (bp::arg("instanceId"), bp::arg("instanceInfo")))
 
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
@@ -203,7 +215,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , bp::arg("config") = Hash()
                  , bp::arg("onOutputPossible") = bp::object()))
 
-             .def("registerInputChannelRawImageData"
+            .def("registerInputChannelRawImageData"
                  , (boost::shared_ptr<Input<RawImageData> > (SignalSlotableWrap::*)(const std::string&, const std::string& type, const Hash&, const bp::object&, const bp::object&)) (&SignalSlotableWrap::registerInputChannel<RawImageData>)
                  , (bp::arg("name")
                  , bp::arg("type") = "Network"

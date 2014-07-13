@@ -50,6 +50,7 @@ def init(argv):
     Network().signalServerConnectionChanged.connect(
         window.onServerConnectionChanged)
     Network().signalUserChanged.connect(window.onUpdateAccessLevel)
+    window.show()
     return app
 
 

@@ -577,7 +577,7 @@ class Schema(Hash):
     @classmethod
     def read(cls, file):
         file.readFormat('I') # ignore length
-        size, = file.readFormat('Q')
+        size, = file.readFormat('B')
         name = unicode(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)

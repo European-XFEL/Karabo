@@ -449,9 +449,9 @@ class DeviceServer(object):
         config = Hash()
 
         if hash.has('classId'):
-            classid, config = self.parseNew(hash)
+            classid, deviceid, config = self.parseNew(hash)
         else:
-            classid, config = self.parseOld(hash)
+            classid, deviceid, config = self.parseOld(hash)
 
         
         # create temporary instance to check the configuration parameters are valid
@@ -495,7 +495,7 @@ class DeviceServer(object):
 
         # Add logger configuration from DeviceServer:
         config['Logger'] = copy.copy(self.loggerConfiguration)
-        return classid, config
+        return classid, config['_deviceId_'], config
 
 
     def parseOld(self, hash):
@@ -504,15 +504,17 @@ class DeviceServer(object):
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))        
         configuration = copy.copy(hash[classid])
-        configuration["serverId"] = self.serverid
+        configuration["_serverId_"] = self.serverid
+        deviceid = str()
         if "deviceId" in configuration:
             deviceid = configuration["deviceId"]
         else:
             deviceid = self._generateDefaultDeviceInstanceId(classid)
-            configuration["deviceId"] = deviceid
+            
+        configuration["_deviceId_"] = deviceid
         # Add logger configuration from DeviceServer:
         configuration["Logger"] = copy.copy(self.loggerConfiguration)
-        return classid, configuration
+        return classid, deviceid, configuration
 
         
     def notifyNewDeviceAction(self):
@@ -551,8 +553,10 @@ class DeviceServer(object):
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
     def slotGetClassSchema(self, classid):
+        slotInfo = self.ss.getSenderInfo("slotGetClassSchema")
+        senderId = slotInfo.getInstanceIdOfSender()
         schema = Configurator(PythonDevice).getSchema(classid)
-        self.ss.emit("signalClassSchema", schema, classid, self.serverid)
+        self.ss.call(senderId, "slotClassSchema", schema, classid, self.serverid)
         self.ss.reply(schema)
         
     def processEvent(self, event):

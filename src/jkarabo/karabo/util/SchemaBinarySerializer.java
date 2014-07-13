@@ -58,17 +58,18 @@ public class SchemaBinarySerializer extends BinarySerializerSchema {
     }
     
     private void writeString(OutputStream os, String value) throws IOException {
-        ByteBuffer bb = ByteBuffer.allocate(Long.SIZE/8);
-        bb.order(byteOrder);
-        bb.putLong(value.length());
-        //System.out.println("*** writeString: value.length=" + value.length() + " value=" + value);
+        ByteBuffer bb = ByteBuffer.allocate(Byte.SIZE/8);
+        //bb.order(byteOrder);
+        int len = value.length();
+        bb.put((byte)len);
+        //System.out.println("*** writeString: value.length=" + len + " value=" + value);
         os.write(bb.array());
         os.write(value.getBytes());
     }
 
     private String readString(ByteBuffer is) throws IOException {
         try {
-            int size = (int)is.getLong();
+            int size = (int)is.get();
             //System.out.println("*** readString: size = " + size);
             byte[] dst = new byte[size];
             is.get(dst);

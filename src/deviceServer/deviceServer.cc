@@ -23,20 +23,8 @@ int main(int argc, char** argv) {
         DeviceServer::Pointer deviceServer;
 
         #ifdef __linux__
-        //std::cout << "Main thread: " << pthread_self() << endl;
-        // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
-        // Every thread will be responsible for his own error of this types.
-        // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
-        sigset_t signal_mask;
-        sigfillset(&signal_mask);
-        sigdelset(&signal_mask, SIGSEGV);
-        sigdelset(&signal_mask, SIGFPE);
-        sigdelset(&signal_mask, SIGBUS);
-        sigdelset(&signal_mask, SIGHUP);
-        int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
-
         pthread_t sig_thr_id; // Signal handler thread ID
-        ret = pthread_create(&sig_thr_id, NULL, GlobalExceptionHandler::SignalThread, NULL);
+        int ret = pthread_create(&sig_thr_id, NULL, GlobalExceptionHandler::SignalThread, NULL);
 
         usleep(100000);
 
@@ -50,7 +38,7 @@ int main(int argc, char** argv) {
             sigprocmask(SIG_UNBLOCK, &signal_mask, NULL);
             // cout << "Trigger thread: " << pthread_self() << "\t\tsignum = " << signum << endl;
 
-            std::cout << "Thread: " << pthread_self() << " -> performs final cleaning after receiving '" 
+            std::cout << "Thread: " << pthread_self() << " -> performs final cleaning after receiving '"
                     << strsignal(signum) << " (" << signum << ")' signal ...\n\n";
 
             if (deviceServer) {
@@ -88,10 +76,43 @@ int main(int argc, char** argv) {
         #endif
 
         deviceServer = Runner<DeviceServer>::instantiate(argc, argv);
-        if (deviceServer) deviceServer->run();
+        if (deviceServer) {
+            
+            // Register signal handlers
+            static SignalHandler<SegmentationViolation> __SegmentationFaultHandler;
+            static SignalHandler<GenericException> __GenericExceptionHandler;
+            static SignalHandler<FloatingPointException> __FloatingPointExceptionHandler;
+            static SignalHandler<QuitSignal> __QuitSignalHandler;
+            static SignalHandler<TerminateSignal> __TerminateSignalHandler;
+            static SignalHandler<HangupSignal> __HangupSignalHandler;
+
+            // Global instance of ExceptionHandler
+            static GlobalExceptionHandler __GlobalExceptionHandler;
+
+            //std::cout << "Main thread: " << pthread_self() << endl;
+            // Mask all signals except SIGSEGV, SIGFPE, SIGBUS
+            // Every thread will be responsible for his own error of this types.
+            // Other async. signals will be blocked for all worker threads, and caught/handled by one SignalThread
+            sigset_t signal_mask;
+            sigfillset(&signal_mask);
+            sigdelset(&signal_mask, SIGSEGV);
+            sigdelset(&signal_mask, SIGFPE);
+            sigdelset(&signal_mask, SIGBUS);
+            
+            // In debug mode, SIGINT is also not blocked so that breakpoints can be set by debugger
+            if (deviceServer->isDebugMode()) {
+                sigdelset(&signal_mask, SIGINT);
+            } else {
+                static SignalHandler<InterruptSignal> __InterruptSignalHandler;
+            }
+
+            int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
+
+            deviceServer->run();
+        }
 
         return EXIT_SUCCESS;
-        
+
     } catch (const karabo::util::Exception& e) {
         std::cout << e;
     } catch (...) {
