@@ -508,7 +508,7 @@ class ChoiceOfNodes(Schema):
                     child.setHidden(True)
 
             if item.editableComponent is not None:
-                item.editableComponent.widgetFactory.addParameters(child)
+                item.editableComponent.widgetFactory.addItem(child)
 
         # Trigger change of combobox
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
