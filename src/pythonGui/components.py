@@ -22,9 +22,8 @@ from const import ns_karabo
 from messagebox import MessageBox
 from widget import EditableWidget, DisplayWidget, Widget
 
-from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer, Qt
-from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QLabel, QMenu, \
-                        QToolButton, QWidget
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QToolButton, QWidget)
 
 import numpy
 import numbers

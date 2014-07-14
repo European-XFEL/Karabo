@@ -19,8 +19,7 @@ from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
 import manager
 
-from PyQt4.QtCore import pyqtSignal, QDir, QFileInfo, QObject
-#from PyQt4.QtGui import QMessageBox
+from PyQt4.QtCore import QObject
 
 import hashlib
 import os.path

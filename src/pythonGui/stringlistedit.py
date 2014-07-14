@@ -12,8 +12,9 @@
 __all__ = ["StringListEdit"]
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import SIGNAL
+from PyQt4.QtGui import (QDialog, QHBoxLayout, QInputDialog, QListWidget, QMessageBox, 
+                         QPushButton, QVBoxLayout)
 
 class StringListEdit(QDialog):
 
