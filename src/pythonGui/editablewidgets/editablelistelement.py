@@ -63,13 +63,6 @@ class EditableListElement(EditableWidget, DisplayWidget):
         return self.__pushButton
 
 
-    def addParameters(self, itemToBeAdded=None, **params):
-        if itemToBeAdded is not None:
-            itemToBeAdded.needsUpdate = False
-            self.__choiceItemList.append(itemToBeAdded)
-            self.__choiceStringList.append(itemToBeAdded.text(0))
-
-
     @property
     def value(self):
         return self.__selectedStringList # TODO: Hash(value) compare with EditableChoiceElement

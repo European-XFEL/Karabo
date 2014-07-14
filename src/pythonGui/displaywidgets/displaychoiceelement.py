@@ -41,14 +41,6 @@ class DisplayChoiceElement(DisplayWidget):
         self.childItemList = []
 
 
-    def addParameters(self, item=None, **params):
-        if item is not None:
-            self.__comboBox.blockSignals(True)
-            self.__comboBox.addItem(item.text(0))
-            self.childItemList.append(item)
-            self.__comboBox.blockSignals(False)
-
-
     @property
     def value(self):
         return self.widget.currentText()
