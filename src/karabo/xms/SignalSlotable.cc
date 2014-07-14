@@ -465,6 +465,9 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_heartbeatMutex);
                 if (!m_trackedComponents.has(instanceId)) {
                     addTrackedComponent(instanceId, instanceInfo);
+                } else { // Can happen on quick restart (dirty)
+                    // Refresh countdown
+                    m_trackedComponents.set(instanceId + ".countdown", instanceInfo.get<int>("heartbeatInterval"));
                 }
                 m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             }
