@@ -170,10 +170,6 @@ class EditableWidget(Widget):
             EditableWidget.aliasConcreteClass[cls.alias] = cls
 
 
-    def addParameters(self, **params):
-        pass
-
-
     def setReadOnly(self, ro):
         assert not ro, "combined Editable and Display widgets: set setReadOnly!"
 
