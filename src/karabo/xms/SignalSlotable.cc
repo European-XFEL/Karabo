@@ -482,7 +482,7 @@ namespace karabo {
                     const string& slotInstanceId = connections[i].get<string>("slotInstanceId");
                     const string& slotFunction = connections[i].get<string>("slotFunction");
                     m_heartbeatMutex.unlock();
-                    cout << "LOW LEVEL DEBUG: Disconnecting: " << signalInstanceId << ":" << signalFunction << " <-> " << slotInstanceId << ":" << slotFunction << endl;
+                    //cout << "LOW LEVEL DEBUG: Disconnecting: " << signalInstanceId << ":" << signalFunction << " <-> " << slotInstanceId << ":" << slotFunction << endl;
                     disconnect(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
                     m_heartbeatMutex.lock();
                 }
