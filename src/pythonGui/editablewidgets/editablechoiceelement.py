@@ -24,6 +24,7 @@ __all__ = ["EditableChoiceElement"]
 from widget import EditableWidget
 from karabo.hash import Hash
 from schema import Schema
+from util import SignalBlocker
 
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QComboBox
@@ -36,46 +37,37 @@ class EditableChoiceElement(EditableWidget):
     def __init__(self, box, parent):
         super(EditableChoiceElement, self).__init__(box)
         
-        self.__comboBox = QComboBox(parent)
-        self.__comboBox.setFrame(False)
+        self.widget = QComboBox(parent)
+        self.widget.setFrame(False)
 
-        self.__comboBox.installEventFilter(self)
-        self.__comboBox.currentIndexChanged.connect(self.onEditingFinished)
+        self.widget.installEventFilter(self)
+        self.widget.currentIndexChanged.connect(self.onEditingFinished)
         
         self.childItemList = []
         
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
-        if event.type() == QEvent.Wheel and object == self.__comboBox:
+        if event.type() == QEvent.Wheel and object == self.widget:
             return True
         return False
 
 
-    @property
-    def widget(self):
-        return self.__comboBox
-
-
-    def addParameters(self, itemToBeAdded=None):
-        if itemToBeAdded is None: return
-
-        self.__comboBox.blockSignals(True)
-        self.__comboBox.addItem(itemToBeAdded.text(0))
-        self.childItemList.append(itemToBeAdded)
-        self.__comboBox.blockSignals(False)
+    def addItem(self, itemToBeAdded):
+        with SignalBlocker(self.widget):
+            self.widget.addItem(itemToBeAdded.text(0))
+            self.childItemList.append(itemToBeAdded)
 
 
     @property
     def value(self):
-        return self.__comboBox.currentText()
+        return self.widget.currentText()
 
 
     def _updateChoiceItems(self, index):
-        for i in range(len(self.childItemList)):
-            item = self.childItemList[i]
+        for item in self.childItemList:
             item.setHidden(True)
             item.updateNeeded = False
-        
+
         selectedItem = self.childItemList[index]
         selectedItem.setHidden(False)
         selectedItem.updateNeeded = True
@@ -85,10 +77,9 @@ class EditableChoiceElement(EditableWidget):
     def _r_updateChildItems(self, parentItem):
         for i in range(parentItem.childCount()):
             childItem = parentItem.child(i)
-            if parentItem.updateNeeded == True:
-                if parentItem.isChoiceElement == True:
-                    if parentItem.defaultValue is None or \
-                       parentItem.defaultValue == childItem.text(0):
+            if parentItem.updateNeeded:
+                if parentItem.isChoiceElement:
+                    if parentItem.defaultValue in (None, childItem.text(0)):
                         childItem.updateNeeded = True
                         childItem.setHidden(False)
                     else:
@@ -105,19 +96,17 @@ class EditableChoiceElement(EditableWidget):
         if not isinstance(value, basestring):
             value = box.current
 
-        index = self.__comboBox.findText(value)
+        index = self.widget.findText(value)
         if index < 0:
             return
-        
-        self.__comboBox.blockSignals(True)
-        self.__comboBox.setCurrentIndex(index)
-        self.__comboBox.blockSignals(False)
+
+        with SignalBlocker(self.widget):
+            self.widget.setCurrentIndex(index)
         self._updateChoiceItems(index)
 
 
-### slots ###
     def onEditingFinished(self, index):
-        if index > -1 and index < len(self.childItemList):
+        if 0 <= index < len(self.childItemList):
             self._updateChoiceItems(index)
         EditableWidget.onEditingFinished(self, self.value)
 
@@ -125,8 +114,8 @@ class EditableChoiceElement(EditableWidget):
     def copy(self, item):
         copyWidget = EditableChoiceElement(item=item)
 
-        if self.item.isChoiceElement == False :
-            for i in range(self.__comboBox.count()) :
-                copyWidget.comboBox.addItem(self.__comboBox.itemText(i))
+        if not self.item.isChoiceElement:
+            for i in range(self.widget.count()):
+                copyWidget.comboBox.addItem(self.widget.itemText(i))
 
         return copyWidget
