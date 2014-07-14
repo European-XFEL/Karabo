@@ -887,8 +887,10 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
                 m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
+                m_signalSlotable->connectT(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
             } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
                 m_signalSlotable->connectT(instanceId, "signalChanged", "", "slotChanged");
+                m_signalSlotable->connectT(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
             }
             m_instanceUsage[instanceId] = 0;
         }
@@ -897,6 +899,7 @@ namespace karabo {
         void DeviceClient::disconnect(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
+            m_signalSlotable->disconnect(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated", false);
             m_instanceUsage[instanceId] = CONNECTION_KEEP_ALIVE;
         }
 
@@ -1043,6 +1046,7 @@ if (nodeData) {\
                         if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
                             //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
                             m_signalSlotable->disconnect(it->first, "signalChanged", "", "slotChanged", false);
+                            m_signalSlotable->disconnect(it->first, "signalSchemaUpdated", "", "slotSchemaUpdated", false);
                             std::string path("device." + it->first + ".configuration");
                             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                             if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
