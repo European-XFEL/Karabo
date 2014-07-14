@@ -233,10 +233,6 @@ class EditableNoApplyComponent(BaseComponent):
         self.widget.setEnabled(enable)
 
 
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
-
-
     def addKeyValue(self, key, value):
         self.widgetFactory.addKeyValue(key, value)
 
@@ -366,10 +362,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
-
-
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
 
 
     @property
@@ -536,10 +528,6 @@ class ChoiceComponent(BaseComponent):
     def setEnabled(self, enable):
         # Is not processed due to self.widget should always stay disabled
         pass
-
-
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
 
 
     # Triggered by DataNotifier signalAddKey
