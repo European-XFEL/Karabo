@@ -26,8 +26,8 @@ from karabo.hash import Hash
 from manager import Manager
 from stringlistedit import StringListEdit
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import QPushButton
 
 
 class EditableListElement(EditableWidget, DisplayWidget):

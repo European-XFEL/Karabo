@@ -23,8 +23,8 @@ __all__ = ["MembranePumpWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class MembranePumpWidget(VacuumWidget):
