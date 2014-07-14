@@ -158,7 +158,7 @@ class ListEdit(QDialog):
         if ok:
             return currentValue
         else:
-            return ""
+            return None
 
 
     def retrieveChoice(self, caption, label):
@@ -203,6 +203,7 @@ class ListEdit(QDialog):
         if (value is None or not self.duplicatesOk and
             self.__listWidget.findItems(unicode(value), Qt.MatchCaseSensitive)):
             return
+        
         currentItem = self.__listWidget.currentItem()
         currentItem.editableValue = value
         currentItem.setText(unicode(value))
@@ -211,7 +212,7 @@ class ListEdit(QDialog):
 
     def onRemoveClicked(self):
         original = self.__listWidget.currentItem().text()
-        if len(original) < 1 or self.ask and QMessageBox.question(
+        if self.ask and QMessageBox.question(
                 self, "Remove", "Remove '{}'?".format(original),
                 QMessageBox.Yes | QMessageBox.Default,
                 QMessageBox.No | QMessageBox.Escape
