@@ -30,8 +30,8 @@ from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, qApp, QKeySequence,
-                         QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
+from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton)
 
 
 class MainWindow(QMainWindow):

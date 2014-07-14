@@ -21,7 +21,7 @@ from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QIODevice, QMutex,
                           QMutexLocker, Qt, QThread)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QHeaderView, QItemSelectionModel, QLabel,
+                         QHeaderView, QLabel,
                          QLineEdit, QPushButton, QTableView, QToolButton,
                          QVBoxLayout, QWidget)
 

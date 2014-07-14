@@ -23,8 +23,8 @@ __all__ = ["PressureGaugeWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class PressureGaugeWidget(VacuumWidget):

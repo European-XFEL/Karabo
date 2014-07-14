@@ -16,8 +16,7 @@ from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
-                         QWidget)
+from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class EditableFileOut(EditableWidget):

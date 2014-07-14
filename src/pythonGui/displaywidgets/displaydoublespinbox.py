@@ -24,8 +24,7 @@ __all__ = ["DisplayDoubleSpinBox"]
 
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QLineEdit
 
 
 class DisplayDoubleSpinBox(DisplayWidget):

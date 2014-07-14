@@ -5,7 +5,7 @@
 #############################################################################
 
 
-__all__ = ["EditableDoubleSpinBox"]
+__all__ = ["IntLineEdit", "DoubleLineEdit"]
 
 
 from util import SignalBlocker

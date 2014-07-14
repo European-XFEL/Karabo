@@ -12,8 +12,9 @@
 __all__ = ["MessageBox"]
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import QObject
+from PyQt4.QtGui import QMessageBox
+
 
 class MessageBox(QObject):
     

@@ -41,7 +41,7 @@ class DisplayLabel(DisplayWidget):
         super(DisplayLabel, self).__init__(box)
         
         self.value = None
-
+        
         self.widget = QLabel(parent)
         self.widget.setAutoFillBackground(True)
         self.widget.setAlignment(Qt.AlignCenter)

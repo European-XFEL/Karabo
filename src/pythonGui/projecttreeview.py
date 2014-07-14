@@ -21,9 +21,8 @@ from project import Category, Device, Project
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QIODevice, Qt)
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
-                         QFileDialog, QInputDialog, QLineEdit, QMenu, QTreeView)
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QMenu, QTreeView)
 import os.path
 
 
