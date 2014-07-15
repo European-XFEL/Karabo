@@ -13,7 +13,6 @@ __all__ = ["MainWindow"]
 
 import os.path
 from sys import platform
-import qrc_icons # hopefully this goes one day
 import icons
 
 from docktabwindow import DockTabWindow
@@ -31,8 +30,8 @@ from panels.projectpanel import ProjectPanel
 from panels.scriptingpanel import ScriptingPanel
 
 from PyQt4.QtCore import pyqtSignal, Qt
-from PyQt4.QtGui import (QAction, QActionGroup, qApp, QKeySequence,
-                         QMainWindow, QMenu, QMessageBox, QSplitter, QToolButton)
+from PyQt4.QtGui import (QAction, QActionGroup, qApp, QMainWindow, QMenu,
+                         QMessageBox, QSplitter, QToolButton)
 
 
 class MainWindow(QMainWindow):
@@ -227,14 +226,6 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(mainSplitter)
 
 
-    def _createCustomMiddlePanel(self, scene):
-        """
-        This function creates a new CustomMiddlePanel and returns it.
-        """
-        customViewPanel = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
-        return customViewPanel
-
-
     def _quit(self):
         self.signalQuitApplication.emit()
 
@@ -294,8 +285,8 @@ class MainWindow(QMainWindow):
     def onAddScene(self, scene):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
             self._showStartUpPage(False, False)
-        
-        customView = self._createCustomMiddlePanel(scene)
+            
+        customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()

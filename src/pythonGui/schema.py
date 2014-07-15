@@ -121,18 +121,21 @@ class Box(QObject):
 
 
     def __str__(self):
-        return "<Box {}>".format(self.key())
+        return "<{} {}>".format(type(self).__name__, self.key())
 
 
 class Descriptor(hashtypes.Descriptor):
     # Means that parent class is overwritten/updated
     __metaclass__ = Monkey
 
-    def setAssignment(self, item):
+    def completeItem(self, treeWidget, item, box, isClass):
         if self.assignment == 1: # Mandatory
             f = item.font(0)
             f.setBold(True)
             item.setFont(0, f)
+        item.requiredAccessLevel = self.requiredAccessLevel
+        item.displayText = self.displayedName
+        item.allowedStates = self.allowedStates
 
 
 class Type(hashtypes.Type):
@@ -156,11 +159,6 @@ class Type(hashtypes.Type):
 
     def item(self, treeWidget, parent, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parent)
-        try:
-            item.displayText = self.displayedName
-        except AttributeError:
-            item.displayText = box.path[-1]
-        item.allowedStates = self.allowedStates
 
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
@@ -179,7 +177,7 @@ class Type(hashtypes.Type):
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)
-        item.requiredAccessLevel = self.requiredAccessLevel
+        self.completeItem(treeWidget, item, box, isClass)
         return item
 
 
@@ -222,6 +220,7 @@ class String(hashtypes.String):
         else:
             self.icon = icons.path
         item = super(String, self).item(treeWidget, parent, box, isClass)
+        self.completeItem(treeWidget, item, box, isClass)
         return item
 
 
@@ -284,6 +283,8 @@ class Dummy(object):
 
 
 class Schema(hashtypes.Descriptor):
+    classAlias = "Value Field"
+
     def __init__(self, name='DUNNO'):
         self.dict = OrderedDict()
         self.cls = None
@@ -294,13 +295,12 @@ class Schema(hashtypes.Descriptor):
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
-        self = cls(key)
+        self = dict(Image=Image, Slot=Slot).get(attrs.get('displayType', None),
+                                                cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
             self.dict[k] = nodes[a['nodeType']](k, h, a, self)
-        self.classAlias = dict(Image="Image View", Slot="Command").get(
-            attrs.get('displayType', None), "Value Field")
         self.key = key
         return self
 
@@ -333,24 +333,15 @@ class Schema(hashtypes.Descriptor):
         return ret
 
 
-    def item(self, treeWidget, parent, configuration, isClass):
-        if self.displayType == "Image":
-            item = ImageTreeWidgetItem(configuration, treeWidget, parent)
-
-            item.enabled = not isClass
-        elif self.displayType == "Slot":
-            item = CommandTreeWidgetItem(self.key, configuration,
-                                         treeWidget, parent)
-
-            item.enabled = not isClass
-        else:
-            item = PropertyTreeWidgetItem(configuration, treeWidget, parent)
-        item.displayText = self.displayedName
-        item.allowedStates = self.allowedStates
-        item.requiredAccessLevel = self.requiredAccessLevel
-        
-        self._item(treeWidget, item, configuration, isClass)
+    def item(self, treeWidget, parent, box, isClass):
+        item = PropertyTreeWidgetItem(box, treeWidget, parent)
+        self.completeItem(treeWidget, item, box, isClass)
         return item
+
+
+    def completeItem(self, treeWidget, item, box, isClass):
+        self._item(treeWidget, item, box, isClass)
+        super(Schema, self).completeItem(treeWidget, item, box, isClass)
 
 
     def _item(self, treeWidget, parent, box, isClass):
@@ -362,7 +353,6 @@ class Schema(hashtypes.Descriptor):
                     print 'missing {} in {}'.format(k, box.value)
                 else:
                     item = v.item(treeWidget, parent, c, isClass)
-                    v.setAssignment(item)
 
 
     def fillWidget(self, treeWidget, configuration, isClass):
@@ -446,6 +436,29 @@ class Schema(hashtypes.Descriptor):
         box.descriptor = None
 
 
+class Image(Schema):
+    classAlias = "Image View"
+
+    def item(self, treeWidget, parent, box, isClass):
+        item = ImageTreeWidgetItem(box, treeWidget, parent)
+        item.enabled = not isClass
+        self.completeItem(treeWidget, item, box, isClass)
+
+
+class Slot(Schema):
+    classAlias = "Command"
+
+
+    def execute(self, box):
+        Network().onExecute(box)
+
+
+    def item(self, treeWidget, parent, box, isClass):
+        item = CommandTreeWidgetItem(self.key, box, treeWidget, parent)
+        item.enabled = not isClass
+        self.completeItem(treeWidget, item, box, isClass)
+
+
 class ChoiceOfNodes(Schema):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
@@ -459,13 +472,7 @@ class ChoiceOfNodes(Schema):
 
     def item(self, treeWidget, parent, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parent)
-        try:
-            item.displayText = self.displayedName
-        except AttributeError:
-            item.displayText = box.path[-1]
-        item.allowedStates = self.allowedStates
         item.defaultValue = self.defaultValue
-        item.requiredAccessLevel = self.requiredAccessLevel
 
         item.isChoiceElement = True
         item.classAlias = "Choice Element"
@@ -488,18 +495,20 @@ class ChoiceOfNodes(Schema):
             item.editableComponent.signalApplyChanged.connect(
                 self.treeWidget.onApplyChanged)
 
-        for count, (k, v) in enumerate(self.dict.iteritems()):
-            childItem = v.item(treeWidget, item, getattr(box.value, k), isClass)
-            
+        self.completeItem(treeWidget, item, box, isClass)
+
+        for i in range(item.childCount()):
+            child = item.child(i)
+
             if item.defaultValue is None:
-                if count > 0:
-                    childItem.setHidden(True)
+                if i > 0:
+                    child.setHidden(True)
             else:
-                if k != item.defaultValue:
-                    childItem.setHidden(True)
+                if child.text(0) != item.defaultValue:
+                    child.setHidden(True)
 
             if item.editableComponent is not None:
-                item.editableComponent.addParameters(itemToBeAdded=childItem)
+                item.editableComponent.widgetFactory.addItem(child)
 
         # Trigger change of combobox
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
@@ -559,10 +568,7 @@ class ListOfNodes(hashtypes.Descriptor):
 
     def item(self, treeWidget, parent, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parent)
-        try:
-            item.displayText = self.displayedName
-        except AttributeError:
-            item.displayText = box.path[-1]
+        item.displayText = box.path[-1]
         item.requiredAccessLevel = 100
 
 

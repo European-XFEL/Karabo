@@ -26,8 +26,8 @@ from karabo.hash import Hash
 from manager import Manager
 from stringlistedit import StringListEdit
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtGui import QPushButton
 
 
 class EditableListElement(EditableWidget, DisplayWidget):
@@ -61,13 +61,6 @@ class EditableListElement(EditableWidget, DisplayWidget):
     @property
     def widget(self):
         return self.__pushButton
-
-
-    def addParameters(self, itemToBeAdded=None, **params):
-        if itemToBeAdded is not None:
-            itemToBeAdded.needsUpdate = False
-            self.__choiceItemList.append(itemToBeAdded)
-            self.__choiceStringList.append(itemToBeAdded.text(0))
 
 
     @property

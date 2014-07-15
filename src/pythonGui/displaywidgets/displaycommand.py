@@ -24,40 +24,52 @@ __all__ = ["DisplayCommand"]
 from network import Network
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QToolButton, QAction
 
 
 class DisplayCommand(DisplayWidget):
     category = "Slot"
     alias = "Command"
-  
+
     def __init__(self, box, parent):
-        super(DisplayCommand, self).__init__(box)
-        
+        super(DisplayCommand, self).__init__(None)
+        self.widget = QToolButton(parent)
+        self.current = None
+        self.addBox(box)
+
+
+    def addBox(self, box):
+        action = QAction("NO TEXT", self.widget)
+        action.box = box
+        self.widget.addAction(action)
         box.configuration.value.state.signalUpdateComponent.connect(
-            self.onDeviceStateChanged)
-        self.widget = QPushButton(parent)
+            self.update)
+        self.update()
+        return True
+
+
+    @property
+    def boxes(self):
+        return [a.box for a in self.widget.actions()]
 
 
     def typeChanged(self, box):
-        self.widget.setText(box.descriptor.displayedName)
-        self.allowedStates = box.descriptor.allowedStates
-        self.widget.setEnabled(
-            box.configuration.value.state.value in self.allowedStates)
-        self.widget.clicked.connect(self.onCommandClicked)
+        for a in self.widget.actions():
+            if a.box is box and a.text() == "NO TEXT":
+                a.triggered.disconnect()
+                a.triggered.connect(box.execute)
+                if a.text() == "NO TEXT":
+                    a.setText(box.descriptor.displayedName)
 
 
-    value = None
-
-    def valueChanged(self, box, value, timestamp=None):
-        pass
-
-
-    def onDeviceStateChanged(self, box, value, timestamp):
-        self.widget.setEnabled(value in self.allowedStates)
-
-
-    def onCommandClicked(self):
-        for box in self.boxes:
-            Network().onExecute(box)
+    def update(self):
+        for a in self.widget.actions():
+            a.setEnabled(a.box.descriptor is not None and
+                         a.box.configuration.value.state.value in
+                         a.box.descriptor.allowedStates)
+        for a in self.widget.actions():
+            if a.isEnabled():
+                self.widget.setDefaultAction(a)
+                break
+        else:
+            self.widget.setDefaultAction(self.widget.actions()[0])

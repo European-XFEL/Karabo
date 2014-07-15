@@ -23,8 +23,8 @@ from scene import Scene
 import manager
 from project import Category, Device, Project
 
-from PyQt4.QtCore import pyqtSignal, QDir, QModelIndex, Qt
-from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
+from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtGui import (QDialog, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import is_zipfile
@@ -91,7 +91,7 @@ class ProjectModel(QStandardItemModel):
             font = item.font()
             font.setBold(True)
             item.setFont(font)
-            item.setIcon(QIcon(":folder"))
+            item.setIcon(icons.folder)
             item.setToolTip(project.filename)
             rootItem.appendRow(item)
             
@@ -99,7 +99,7 @@ class ProjectModel(QStandardItemModel):
             childItem = QStandardItem(Project.DEVICES_LABEL)
             childItem.setData(Category(Project.DEVICES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
+            childItem.setIcon(icons.folder)
             childItem.setToolTip(Project.DEVICES_LABEL)
             item.appendRow(childItem)
             for device in project.devices:
@@ -124,7 +124,7 @@ class ProjectModel(QStandardItemModel):
             childItem = QStandardItem(Project.SCENES_LABEL)
             childItem.setData(Category(Project.SCENES_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
+            childItem.setIcon(icons.folder)
             childItem.setToolTip(Project.SCENES_LABEL)
             item.appendRow(childItem)
             for scene in project.scenes:
@@ -139,7 +139,7 @@ class ProjectModel(QStandardItemModel):
             childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
             childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
-            childItem.setIcon(QIcon(":folder"))
+            childItem.setIcon(icons.folder)
             childItem.setToolTip(Project.CONFIGURATIONS_LABEL)
             item.appendRow(childItem)
             
@@ -159,42 +159,6 @@ class ProjectModel(QStandardItemModel):
                     subLeafItem.setToolTip(config.filename)
                     leafItem.appendRow(subLeafItem)
 
-            # Macros
-            #childItem = QStandardItem(Project.MACROS_LABEL)
-            #childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
-            #childItem.setEditable(False)
-            #childItem.setIcon(QIcon(":folder"))
-            #item.appendRow(childItem)
-            #for macro in project.macros:
-            #    leafItem = QStandardItem(macro)
-            #    leafItem.setData(macro, ProjectModel.ITEM_OBJECT)
-            #    leafItem.setEditable(False)
-            #    childItem.appendRow(leafItem)
-
-            # Monitors
-            #childItem = QStandardItem(Project.MONITORS_LABEL)
-            #childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
-            #childItem.setEditable(False)
-            #childItem.setIcon(QIcon(":folder"))
-            #item.appendRow(childItem)
-            #for monitor in project.monitors:
-            #    leafItem = QStandardItem(monitor)
-            #    leafItem.setData(monitor, ProjectModel.ITEM_OBJECT)
-            #    leafItem.setEditable(False)
-            #    childItem.appendRow(leafItem)
-
-            # Resources
-            #childItem = QStandardItem(Project.RESOURCES_LABEL)
-            #childItem.setData(Category(Project.RESOURCES_LABEL), ProjectModel.ITEM_OBJECT)
-            #childItem.setEditable(False)
-            #childItem.setIcon(QIcon(":folder"))
-            #item.appendRow(childItem)
-            #for resource in project.resources:
-            #    leafItem = QStandardItem(resource)
-            #    leafItem.setData(resource, ProjectModel.ITEM_OBJECT)
-            #    leafItem.setEditable(False)
-            #    childItem.appendRow(leafItem)
-        
         self.endResetModel()
         
         # Set last selected object

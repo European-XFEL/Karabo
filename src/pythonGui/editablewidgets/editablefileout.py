@@ -11,12 +11,12 @@
 
 __all__ = ["EditableFileOut"]
 
-
+import icons
+from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
-from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QIcon, QLineEdit, QToolButton,
-                         QWidget)
+from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class EditableFileOut(EditableWidget):
@@ -38,7 +38,7 @@ class EditableFileOut(EditableWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":fileout"))
+        self.__tbPath.setIcon(icons.fileout)
         self.__tbPath.setMaximumSize(25,25)
         self.__tbPath.clicked.connect(self.onFileOutClicked)
         hLayout.addWidget(self.__tbPath)
@@ -63,9 +63,9 @@ class EditableFileOut(EditableWidget):
 
 
     def onFileOutClicked(self):
-        fileOut = QFileDialog.getSaveFileName(None, "Select output file")
-        if len(fileOut) < 1:
+        filename = getSaveFileName("Select output file")
+        if not filename:
             return
 
-        self.__lePath.setText(fileOut)
+        self.__lePath.setText(filename)
 

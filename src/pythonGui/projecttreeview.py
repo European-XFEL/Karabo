@@ -19,10 +19,10 @@ from scene import Scene
 from manager import Manager
 from project import Category, Device, Project
 from projectmodel import ProjectModel
+from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, Qt)
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
-                         QFileDialog, QInputDialog, QLineEdit, QMenu, QTreeView)
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QMenu, QTreeView)
 import os.path
 
 
@@ -80,42 +80,18 @@ class ProjectTreeView(QTreeView):
     def closeAllProjects(self):
         return self.model().closeAllProjects()
 
-    
-    def getProjectDir(self):
-        fileDialog = QFileDialog(self, "Save project", globals.KARABO_PROJECT_FOLDER)
-        fileDialog.setFileMode(QFileDialog.Directory)
-        fileDialog.setDefaultSuffix("krb")
-
-        if fileDialog.exec_() == QDialog.Rejected:
-            return None
-        
-        directory = fileDialog.selectedFiles()
-        if len(directory) < 0:
-            return None
-        
-        return directory[0]
-
-
-    def getSaveFileName(self, title):
-        dialog = QFileDialog(None, title, globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)")
-        dialog.setDefaultSuffix("krb")
-        dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
-        dialog.exec_()
-        if len(dialog.selectedFiles()) == 1:
-            return dialog.selectedFiles()[0]
-
 
     def projectNew(self):
-        fn = self.getSaveFileName("New Project")
+        fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
+                             "Karabo Projects (*.krb)", "krb")
         if fn is not None:
             self.model().projectNew(fn)
 
 
     def projectOpen(self):
         filename = QFileDialog.getOpenFileName(
-            None, "Open project", globals.KARABO_PROJECT_FOLDER, "Karabo Projects (*.krb)")
+            None, "Open project", globals.KARABO_PROJECT_FOLDER,
+            "Karabo Projects (*.krb)")
 
         if len(filename) < 1:
             return
@@ -127,7 +103,8 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSaveAs(self):
-        fn = self.getSaveFileName("Save Project As")
+        fn = getSaveFileName("Save Project As", globals.KARABO_PROJECT_FOLDER,
+                             "Karabo Projects (*.krb)", "krb")
         if fn is not None:
             self.model().projectSaveAs(fn)
 

@@ -23,8 +23,8 @@ __all__ = ["RightAngleValveWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class RightAngleValveWidget(VacuumWidget):
@@ -32,12 +32,12 @@ class RightAngleValveWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
-            self._setPixmap(QPixmap(":rightanglevalve-orange"))
+            self._setPixmap("rightangle-valve-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":rightanglevalve-green"))
+            self._setPixmap("rightangle-valve-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":rightanglevalve-yellow"))
+            self._setPixmap("rightangle-valve-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":rightanglevalve-red"))
+            self._setPixmap("rightangle-valve-red")
         else:
-            self._setPixmap(QPixmap(":rightanglevalve"))
+            self._setPixmap("rightangle-valve")

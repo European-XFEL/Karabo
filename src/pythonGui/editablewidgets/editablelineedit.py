@@ -23,8 +23,7 @@ __all__ = ["EditableLineEdit"]
 
 from widget import EditableWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QLineEdit
 
 
 class EditableLineEdit(EditableWidget):
