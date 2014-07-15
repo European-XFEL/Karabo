@@ -32,12 +32,12 @@ class TurboPumpWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
-            self._setPixmap(QPixmap(":turbopump-orange"))
+            self._setPixmap("turbo-pump-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":turbopump-green"))
+            self._setPixmap("turbo-pump-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":turbopump-yellow"))
+            self._setPixmap("turbo-pump-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":turbopump-red"))
+            self._setPixmap("turbo-pump-red")
         else:
-            self._setPixmap(QPixmap(":turbopump"))
+            self._setPixmap("turbo-pump")

@@ -32,12 +32,12 @@ class ValveWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
-            self._setPixmap(QPixmap(":valve-orange"))
+            self._setPixmap("valve-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":valve-green"))
+            self._setPixmap("valve-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":valve-yellow"))
+            self._setPixmap("valve-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":valve-red"))
+            self._setPixmap("valve-red")
         else:
-            self._setPixmap(QPixmap(":valve"))
+            self._setPixmap("valve")
