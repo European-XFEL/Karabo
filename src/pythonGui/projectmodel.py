@@ -512,7 +512,13 @@ class ProjectModel(QStandardItemModel):
             deviceId = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
-            newDevice.futureConfig = device.toHash()
+            
+            if device.descriptor is not None:
+                config = device.toHash()
+            else:
+                config = device._futureConfig
+            
+            newDevice.futureConfig = config
 
 
     def checkDescriptor(self, device):
