@@ -8,13 +8,18 @@ class Icon(object):
     class assures that icons are only loaded when needed."""
     def __init__(self, name):
         self.name = name
-        self.icon = None
+        self._icon = None
+
+
+    @property
+    def icon(self):
+        if self._icon is None:
+            self._icon = QIcon(os.path.join(os.path.dirname(__file__),
+                                            self.name))
+        return self._icon
 
 
     def __get__(self, instance, owner):
-        if self.icon is None:
-            self.icon = QIcon(os.path.join(os.path.dirname(__file__),
-                                           self.name))
         return self.icon
 
 
@@ -23,7 +28,7 @@ def init():
     d = globals()
     for k, v in d.iteritems():
         if isinstance(v, Icon):
-            d[k] = v.__get__(None, None)
+            d[k] = v.icon
 
     global applyGrey
     applyGrey = QIcon(apply.pixmap(32, QIcon.Disabled, QIcon.On))
@@ -83,3 +88,23 @@ device_dead = Icon("device-dead.svg")
 device_requested = Icon("device-requested.svg")
 device_schema = Icon("device-schema.svg")
 device_error = Icon("device-error.svg")
+start = Icon("run.png")
+kill = Icon("delete-32x32.png")
+new = Icon("filenew-32x32.png")
+save = Icon("filesave-32x32.png")
+transform = Icon("transform-32x32.png")
+editClear = Icon("edit-clear-32x32.png")
+undock = Icon("up-32x32.png")
+dock = Icon("down-32x32.png")
+logDebug = Icon("log-debug-32x32.png")
+logInfo = Icon("log-info-32x32.png")
+logWarning = Icon("log-warning-32x32.png")
+logError = Icon("log-error-32x32.png")
+logAlarm = Icon("log-alarm-32x32.png")
+fileout = Icon("fileout-32x32.png")
+filein = Icon("filein-32x32.png")
+configure = Icon("configure-32x32.png")
+refresh = Icon("refresh-32x32.png")
+stop = Icon("stop.png")
+transformScaleUp = Icon("transform-scale-up-32x32.png")
+transformScaleDown = Icon("transform-scale-down-32x32.png")

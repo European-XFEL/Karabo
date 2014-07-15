@@ -12,10 +12,11 @@
 __all__ = ["ProjectPanel"]
 
 from projecttreeview import ProjectTreeView
+import icons
 import manager
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QAction, QIcon, QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
 
 
 class ProjectPanel(QWidget):
@@ -57,26 +58,26 @@ class ProjectPanel(QWidget):
 
     def setupActions(self):
         text = "New project"
-        self.acProjectNew = QAction(QIcon(":new"), "&New project", self)
+        self.acProjectNew = QAction(icons.new, "&New project", self)
         self.acProjectNew.setStatusTip(text)
         self.acProjectNew.setToolTip(text)
         self.acProjectNew.triggered.connect(self.onProjectNew)
 
         text = "Open project"
-        self.acProjectOpen = QAction(QIcon(":open"), "&Open project", self)
+        self.acProjectOpen = QAction(icons.open, "&Open project", self)
         self.acProjectOpen.setStatusTip(text)
         self.acProjectOpen.setToolTip(text)
         self.acProjectOpen.triggered.connect(self.onProjectOpen)
 
         text = "Save project"
-        self.acProjectSave = QAction(QIcon(":save"), "&Save project", self)
+        self.acProjectSave = QAction(icons.save, "&Save project", self)
         self.acProjectSave.setStatusTip(text)
         self.acProjectSave.setToolTip(text)
         self.acProjectSave.setEnabled(False)
         self.acProjectSave.triggered.connect(self.onProjectSave)
 
         text = "Save project as"
-        self.acProjectSaveAs = QAction(QIcon(":save-as"), "&Save project as", self)
+        self.acProjectSaveAs = QAction(icons.saveAs, "&Save project as", self)
         self.acProjectSaveAs.setStatusTip(text)
         self.acProjectSaveAs.setToolTip(text)
         self.acProjectSaveAs.setEnabled(False)

@@ -23,8 +23,8 @@ __all__ = ["MaxiGaugeWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class MaxiGaugeWidget(VacuumWidget):
@@ -32,12 +32,12 @@ class MaxiGaugeWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
-            self._setPixmap(QPixmap(":maxigauge-orange"))
+            self._setPixmap("maxi-gauge-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":maxigauge-green"))
+            self._setPixmap("maxi-gauge-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":maxigauge-yellow"))
+            self._setPixmap("maxi-gauge-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":maxigauge-red"))
+            self._setPixmap("maxi-gauge-red")
         else:
-            self._setPixmap(QPixmap(":maxigauge"))
+            self._setPixmap("maxi-gauge")

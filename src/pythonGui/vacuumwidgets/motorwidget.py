@@ -23,8 +23,8 @@ __all__ = ["MotorWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class MotorWidget(VacuumWidget):
@@ -32,12 +32,12 @@ class MotorWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("Moving" in value):
-            self._setPixmap(QPixmap(":motor-orange"))
+            self._setPixmap("motor-orange")
         elif ("On" in value) or ("on" in value) or ("Idle" in value):
-            self._setPixmap(QPixmap(":motor-green"))
+            self._setPixmap("motor-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":motor-yellow"))
+            self._setPixmap("motor-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":motor-red"))
+            self._setPixmap("motor-red")
         else:
-            self._setPixmap(QPixmap(":motor"))
+            self._setPixmap("motor")

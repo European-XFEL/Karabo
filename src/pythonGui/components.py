@@ -22,9 +22,8 @@ from const import ns_karabo
 from messagebox import MessageBox
 from widget import EditableWidget, DisplayWidget, Widget
 
-from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer, Qt
-from PyQt4.QtGui import QAction, QColor, QHBoxLayout, QLabel, QMenu, \
-                        QToolButton, QWidget
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QToolButton, QWidget)
 
 import numpy
 import numbers
@@ -233,10 +232,6 @@ class EditableNoApplyComponent(BaseComponent):
         self.widget.setEnabled(enable)
 
 
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
-
-
     def addKeyValue(self, key, value):
         self.widgetFactory.addKeyValue(key, value)
 
@@ -366,10 +361,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def setEnabled(self, enable):
         self.widget.setEnabled(enable)
-
-
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
 
 
     @property
@@ -536,10 +527,6 @@ class ChoiceComponent(BaseComponent):
     def setEnabled(self, enable):
         # Is not processed due to self.widget should always stay disabled
         pass
-
-
-    def addParameters(self, **params):
-        self.widgetFactory.addParameters(**params)
 
 
     # Triggered by DataNotifier signalAddKey

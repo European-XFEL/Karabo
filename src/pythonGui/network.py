@@ -419,10 +419,10 @@ class _Network(QObject):
         self._tcpWriteHash(loginInfo)
 
 
-    def _handleBrokerInformation(self, h):
-        self.brokerHost = h.get("host")
-        self.brokerPort = h.get("port")
-        self.brokerTopic = h.get("topic")
+    def _handleBrokerInformation(self, host, port, topic):
+        self.brokerHost = host
+        self.brokerPort = port
+        self.brokerTopic = topic
         self._login()
 
 

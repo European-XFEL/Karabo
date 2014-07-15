@@ -9,13 +9,16 @@
    and is created by the factory class DisplayWidget.
 """
 
+from __future__ import absolute_import
+
 __all__ = ["DisplayDirectory"]
 
 
 from util import SignalBlocker
+import icons
 from widget import DisplayWidget
 
-from PyQt4.QtGui import (QHBoxLayout, QIcon, QLineEdit, QToolButton, QWidget)
+from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class DisplayDirectory(DisplayWidget):
@@ -37,7 +40,7 @@ class DisplayDirectory(DisplayWidget):
         self.__tbPath = QToolButton()
         self.__tbPath.setStatusTip(text)
         self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":open"))
+        self.__tbPath.setIcon(icons.open)
         self.__tbPath.setEnabled(False)
         self.__tbPath.setMaximumSize(25,25)
         hLayout.addWidget(self.__tbPath)

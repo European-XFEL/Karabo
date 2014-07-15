@@ -28,8 +28,9 @@ from network import Network
 from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
+from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QFile, QFileInfo, QIODevice, QObject)
+from PyQt4.QtCore import (pyqtSignal, QDir, QIODevice, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 
@@ -109,30 +110,6 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(property, value)
 
 
-    def _handleSystemTopology(self, config):
-        if self.systemHash is None:
-            self.systemHash = config
-        else:
-            self.systemHash.merge(config, "merge")
-        # Update navigation and project treemodel
-        self.systemTopology.updateData(config)
-        for v in self.deviceData.itervalues():
-            v.updateStatus()
-
-        self.projectTopology.updateNeeded()
-
-    
-    def _updateServerClassDataWithTopology(self, config):
-        if config.has("server"):
-            # Request schema for already viewed classes, if a server is new
-            for k in self.serverClassData.keys():
-                getClass(k[0], k[1])
-
-
-    def _handleLogData(self, logMessage):
-        self.signalLogDataAvailable.emit(logMessage)
-
-
     def _clearServerClassParameterPage(self, serverClassIds):
         for serverClassId in serverClassIds:
             try:
@@ -181,7 +158,8 @@ class _Manager(QObject):
 
 
     def onReceivedData(self, hash):
-        getattr(self, "handle_" + hash["type"])(hash)
+        getattr(self, "handle_" + hash["type"])(
+            **{k: v for k, v in hash.iteritems() if k != "type"})
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -278,13 +256,9 @@ class _Manager(QObject):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
                                                globals.HIDDEN_KARABO_FOLDER,
                                                "XML (*.xml)")
-        if len(filename) < 1:
+        if not filename:
             return
-        
-        file = QFile(filename)
-        if file.open(QIODevice.ReadOnly | QIODevice.Text) == False:
-            return
-        
+
         conf, classId = self.currentConfigurationAndClassId()
         
         r = XMLParser()
@@ -313,16 +287,11 @@ class _Manager(QObject):
 
 
     def onSaveToFile(self):
-        filename = QFileDialog.getSaveFileName(None, "Save configuration as",
-                                               globals.HIDDEN_KARABO_FOLDER,
-                                               "XML (*.xml)")
+        filename = getSaveFileName(
+            "Save configuration as", globals.HIDDEN_KARABO_FOLDER,
+            "Configuration (*.xml)", "xml")
         if not filename:
             return
-
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".xml"
-
 
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
@@ -351,30 +320,33 @@ class _Manager(QObject):
         self.projectTopology.updateData()
 
 
-    def handle_log(self, instanceInfo):
-        self._handleLogData(instanceInfo["message"])
+    def handle_log(self, message):
+        self.signalLogDataAvailable.emit(message)
 
 
-    def handle_brokerInformation(self, instanceInfo):
-        Network()._handleBrokerInformation(instanceInfo)
+    def handle_brokerInformation(self, **kwargs):
+        Network()._handleBrokerInformation(**kwargs)
 
 
-    def handle_systemTopology(self, instanceInfo):
-        self._handleSystemTopology(instanceInfo.get("systemTopology"))
+    def handle_systemTopology(self, systemTopology):
+        if self.systemHash is None:
+            self.systemHash = systemTopology
+        else:
+            self.systemHash.merge(systemTopology, "merge")
+        # Update navigation and project treemodel
+        self.systemTopology.updateData(systemTopology)
+        for v in self.deviceData.itervalues():
+            v.updateStatus()
+        self.projectTopology.updateNeeded()
 
 
-    def handle_instanceNew(self, instanceInfo):
-        """
-        This function gets the configuration for a new instance.
-        Before the system topology is updated, it is checked whether this instance
-        already exists in the central hash.
-        If \True, the existing stuff is removed (from central hash, old parameter
-                  page..
-        If \False, nothing is removed.
-        """
-        config = instanceInfo.get("topologyEntry")
+    def handle_instanceNew(self, topologyEntry):
+        """ This function gets the configuration for a new instance.
+
+        If the instance already exists in the central hash, it is first
+        removed from there. """
         # Check for existing stuff and remove
-        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(config)
+        instanceIds, serverClassIds = self.systemTopology.detectExistingInstances(topologyEntry)
         for id in instanceIds:
             timestamp = datetime.now()
             # TODO: better format for timestamp and timestamp generation in karabo
@@ -383,18 +355,15 @@ class _Manager(QObject):
                          "Detected dirty shutdown for instance \"" + id + "\", which " \
                          "is coming up now.#"
             # A log message is triggered
-            self._handleLogData(logMessage)
+            self.handle_log(logMessage)
 
         self._clearServerClassParameterPage(serverClassIds)
 
         # Update system topology with new configuration
-        self._handleSystemTopology(config)
-
-        # Topology changed so send new class schema requests
-        self._updateServerClassDataWithTopology(config)
+        self.handle_instanceUpdated(topologyEntry)
 
         # If device was instantiated from GUI, it should be selected after coming up
-        deviceConfig = config.get("device")
+        deviceConfig = topologyEntry.get("device")
         if deviceConfig is not None:
             for deviceId in deviceConfig:
                 if self.__isInitDeviceCurrentlyProcessed:
@@ -402,19 +371,17 @@ class _Manager(QObject):
                     self.__isInitDeviceCurrentlyProcessed = False
 
 
-    def handle_instanceUpdated(self, instanceInfo):
-        config = instanceInfo.get("topologyEntry")
-        self._handleSystemTopology(config)
+    def handle_instanceUpdated(self, topologyEntry):
+        self.handle_systemTopology(topologyEntry)
         # Topology changed so send new class schema requests
-        self._updateServerClassDataWithTopology(config)
+        if "server" in topologyEntry:
+            # Request schema for already viewed classes, if a server is new
+            for k in self.serverClassData:
+                getClass(k[0], k[1])
 
 
-    def handle_instanceGone(self, hash):
-        """
-        Remove instanceId from central hash and update
-        """
-        instanceId = hash.get("instanceId")
-        instanceType = hash.get("instanceType")
+    def handle_instanceGone(self, instanceId, instanceType):
+        """ Remove instanceId from central hash and update """
         
         if instanceType == "device":
             device = self.deviceData.get(instanceId)
@@ -452,15 +419,10 @@ class _Manager(QObject):
         self.projectTopology.updateNeeded()
 
 
-    def handle_classSchema(self, classInfo):
-        serverId = classInfo.get('serverId')
-        classId = classInfo.get('classId')
+    def handle_classSchema(self, serverId, classId, schema):
         if (serverId, classId) not in self.serverClassData:
             print 'not requested schema for classId {} arrived'.format(classId)
             return
-        
-        schema = classInfo.get('schema')
-
         conf = self.serverClassData[serverId, classId]
         if conf.descriptor is not None:
             return
@@ -474,15 +436,14 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_deviceSchema(self, hash):
-        deviceId = hash['deviceId']
+    def handle_deviceSchema(self, deviceId, schema, configuration=None):
+        # \configuration might set in the GuiServerDevice
+        # but is currently not used here
         if deviceId not in self.deviceData:
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
         # Add configuration with schema to device data
-        schema = hash['schema']
-
         conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
@@ -491,8 +452,7 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_schemaUpdated(self, hash):
-        deviceId = hash.get("deviceId")
+    def handle_schemaUpdated(self, deviceId, schema):
         if deviceId in self.deviceData:
             conf = self.deviceData[deviceId]
             # Schema already existent -> schema injected
@@ -500,38 +460,31 @@ class _Manager(QObject):
                 Network().onRefreshInstance(self.deviceData[deviceId])
             conf.schema = None
 
-        self.handle_deviceSchema(hash)
+        self.handle_deviceSchema(deviceId, schema)
         #Network().onRefreshInstance(self.deviceData[deviceId])
 
 
-    def handle_configurationChanged(self, instanceInfo):        
-        deviceId = instanceInfo.get("deviceId")
+    def handle_configurationChanged(self, deviceId, configuration):
         device = self.deviceData.get(deviceId)
         if device is None or device.descriptor is None:
             return
 
-        config = instanceInfo.get("configuration")
-        device.fromHash(config)
+        device.fromHash(configuration)
         if device.status == "schema":
             device.status = "alive"
 
 
-    def handle_propertyHistory(self, hash):
-        box = self.deviceData[hash["deviceId"]].getBox(
-            hash["property"].split("."))
-        box.signalHistoricData.emit(box, hash["data"])
+    def handle_propertyHistory(self, deviceId, property, data):
+        box = self.deviceData[deviceId].getBox(property.split("."))
+        box.signalHistoricData.emit(box, data)
 
 
-    def handle_notification(self, instanceInfo):
-        deviceId = instanceInfo.get("deviceId")
+    def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
         timestamp = datetime.now()
         # TODO: better format for timestamp and timestamp generation in karabo
         timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        messageType = instanceInfo.get("messageType")
-        shortMsg = instanceInfo.get("shortMsg")
-        detailedMsg = instanceInfo.get("detailedMsg")
-        
-        self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg, detailedMsg, deviceId)
+        self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg,
+                                              detailedMsg, deviceId)
 
 
 def getDevice(deviceId):
