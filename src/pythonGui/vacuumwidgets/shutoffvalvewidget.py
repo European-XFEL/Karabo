@@ -32,12 +32,12 @@ class ShutOffValveWidget(VacuumWidget):
     
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
-            self._setPixmap(QPixmap(":shutoffvalve-orange"))
+            self._setPixmap("shutoff-valve-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":shutoffvalve-green"))
+            self._setPixmap("shutoff-valve-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":shutoffvalve-yellow"))
+            self._setPixmap("shutoff-valve-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":shutoffvalve-red"))
+            self._setPixmap("shutoff-valve-red")
         else:
-            self._setPixmap(QPixmap(":shutoffvalve"))
+            self._setPixmap("shutoff-valve")

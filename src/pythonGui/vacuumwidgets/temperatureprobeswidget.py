@@ -32,12 +32,12 @@ class TemperatureProbeWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
-            self._setPixmap(QPixmap(":thermometer-orange"))
+            self._setPixmap("thermometer-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":thermometer-green"))
+            self._setPixmap("thermometer-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":thermometer-yellow"))
+            self._setPixmap("thermometer-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":thermometer-red"))
+            self._setPixmap("thermometer-red")
         else:
-            self._setPixmap(QPixmap(":thermometer"))
+            self._setPixmap("thermometer")

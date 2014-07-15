@@ -32,12 +32,12 @@ class CryoCoolerWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
-            self._setPixmap(QPixmap(":cryocooler-orange"))
+            self._setPixmap("cryo-cooler-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":cryocooler-green"))
+            self._setPixmap("cryo-cooler-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":cryocooler-yellow"))
+            self._setPixmap("cryo-cooler-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":cryocooler-red"))
+            self._setPixmap("cryo-cooler-red")
         else:
-            self._setPixmap(QPixmap(":cryocooler"))
+            self._setPixmap("cryo-cooler")
