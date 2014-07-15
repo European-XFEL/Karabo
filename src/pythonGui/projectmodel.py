@@ -516,7 +516,7 @@ class ProjectModel(QStandardItemModel):
             if device.descriptor is not None:
                 config = device.toHash()
             else:
-                config = device._futureConfig
+                config = device.futureConfig
             
             newDevice.futureConfig = config
 
