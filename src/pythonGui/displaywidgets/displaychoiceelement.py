@@ -23,8 +23,7 @@ __all__ = ["DisplayChoiceElement"]
 
 from widget import DisplayWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtGui import QComboBox
 
 
 class DisplayChoiceElement(DisplayWidget):
@@ -39,14 +38,6 @@ class DisplayChoiceElement(DisplayWidget):
         self.widget.currentIndexChanged.connect(self.onEditingFinished)
         
         self.childItemList = []
-
-
-    def addParameters(self, item=None, **params):
-        if item is not None:
-            self.__comboBox.blockSignals(True)
-            self.__comboBox.addItem(item.text(0))
-            self.childItemList.append(item)
-            self.__comboBox.blockSignals(False)
 
 
     @property

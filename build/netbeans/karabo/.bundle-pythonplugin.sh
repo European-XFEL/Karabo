@@ -16,11 +16,15 @@ safeRunCommand() {
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
-tmp=$(svn info . | grep URL)
-VERSION=${tmp##*/}
-if [ "$VERSION" = "trunk" ]; then
-    tmp=$(svn info . | grep Revision)
-    VERSION=r${tmp##*: }
+if tmp=$(svn info ../../../ | grep URL)
+then
+    VERSION=${tmp##*/}
+    if [ "$VERSION" = "trunk" ]; then
+        tmp=$(svn info ../../../ | grep Revision)
+        VERSION=r${tmp##*: }
+    fi
+else
+    VERSION=$(git rev-parse --short HEAD)
 fi
 
 if [ -z $KARABO ]; then

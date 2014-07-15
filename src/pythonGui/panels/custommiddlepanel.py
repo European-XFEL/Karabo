@@ -12,12 +12,12 @@
 __all__ = ["CustomMiddlePanel"]
 
 
+import icons
 from network import Network
 from toolbar import ToolBar
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QIcon, QPalette, QSizePolicy, QScrollArea,
-                         QWidget)
+from PyQt4.QtGui import (QAction, QPalette, QSizePolicy, QScrollArea, QWidget)
 
 
 class CustomMiddlePanel(QScrollArea):
@@ -62,7 +62,7 @@ class CustomMiddlePanel(QScrollArea):
 
     def setupActions(self, isConnectedToServer):
         text = "Change to control mode"
-        self.__acDesignMode = QAction(QIcon(":transform"), text, self)
+        self.__acDesignMode = QAction(icons.transform, text, self)
         self.__acDesignMode.setToolTip(text)
         self.__acDesignMode.setStatusTip(text)
         self.__acDesignMode.setCheckable(True)

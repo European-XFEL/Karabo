@@ -13,8 +13,9 @@ __all__ = ["DisplayWidget"]
 
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
-from PyQt4.QtGui import QLabel
+from PyQt4.QtGui import QLabel, QPixmap
 from registry import Loadable, Registry
+import os.path
 
 
 class Widget(Registry, QObject):
@@ -125,36 +126,30 @@ class VacuumWidget(DisplayWidget):
     displayCTA = categoryToAliases = { }
     displayACC = aliasConcreteClass = { }
 
-    def __init__(self, box=None):
-        DisplayWidget.__init__(box)
+    def __init__(self, box, parent):
+        DisplayWidget.__init__(self, box)
 
-        self.label = QLabel()
+        self.widget = QLabel(parent)
         self.setErrorState(False)
-        if value is not None:
-            self.valueChanged(self.keys[0], value)
-            self.value = value
-
-
-    @property
-    def widget(self):
-        return self.label
 
 
     value = None
 
 
-    def _setPixmap(self, pixmap):
-        self.label.setPixmap(pixmap)
-        self.label.setMaximumWidth(pixmap.width())
-        self.label.setMaximumHeight(pixmap.height())
+    def _setPixmap(self, name):
+        p = QPixmap(os.path.join(os.path.dirname(__file__),
+                    "icons", "vacuum", name))
+        self.widget.setPixmap(p)
+        self.widget.setMaximumWidth(p.width())
+        self.widget.setMaximumHeight(p.height())
 
 
     def setErrorState(self, isError):
-        if isError is True:
-            self.label.setStyleSheet( # light red
+        if isError:
+            self.widget.setStyleSheet( # light red
                 "QLabel { background-color : rgba(255,155,155,128); }")
         else:
-            self.label.setStyleSheet( # light green
+            self.widget.setStyleSheet( # light green
                 "QLabel { background-color : rgba(225,242,225,128); }")
 
 
@@ -173,10 +168,6 @@ class EditableWidget(Widget):
             EditableWidget.categoryToAliases.setdefault(cls.category,
                                                         [ ]).append(cls.alias)
             EditableWidget.aliasConcreteClass[cls.alias] = cls
-
-
-    def addParameters(self, **params):
-        pass
 
 
     def setReadOnly(self, ro):

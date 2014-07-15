@@ -25,8 +25,8 @@ import copy
 
 from karabo import hashtypes
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 import numpy as np
 
 class DisplayImageElement(DisplayWidget):

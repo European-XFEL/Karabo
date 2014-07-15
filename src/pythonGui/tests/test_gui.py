@@ -96,7 +96,7 @@ class Tests(TestCase):
         d["incompatible", "serverId"] = "testserver"
         d["incompatible", "classId"] = "testclass"
         h = Hash("device", d, "server", s)
-        Manager().handle_systemTopology(dict(systemTopology=h))
+        Manager().handle_systemTopology(h)
         self.assertTrue(Manager().systemTopology.has("testserver"))
         self.assertTrue(Manager().systemTopology.has("testdevice"))
         self.assertTrue(Manager().systemTopology.has("incompatible"))
@@ -112,10 +112,8 @@ class Tests(TestCase):
 
 
     def schema(self):
-        h = Hash("serverId", "testserver", "classId", "testclass")
-        h["schema"] = self.testschema
         cls = manager.getClass("testserver", "testclass")
-        Manager().handle_classSchema(h)
+        Manager().handle_classSchema("testserver", "testclass", self.testschema)
 
         self.assertEqual(cls.type, "class")
         self.assertEqual(cls.value.int32.value, 1234)
@@ -195,17 +193,13 @@ class Tests(TestCase):
 
 
     def stop(self):
-        Manager().handle_instanceGone(dict(instanceId="testdevice",
-                                           instanceType="device"))
+        Manager().handle_instanceGone("testdevice", "device")
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertIcon(devices.child(0).icon(), icons.deviceOffline)
-        Manager().handle_instanceGone(dict(instanceId="testdevice",
-                                           instanceType="device"))
-        Manager().handle_instanceGone(dict(instanceId="incompatible",
-                                           instanceType="device"))
-        Manager().handle_instanceGone(dict(instanceId="testserver",
-                                           instanceType="server"))
+        Manager().handle_instanceGone("testdevice", "device")
+        Manager().handle_instanceGone("incompatible", "device")
+        Manager().handle_instanceGone("testserver", "server")
         root = Manager().projectTopology.invisibleRootItem()
         devices = root.child(0).child(0)
         self.assertFalse(Manager().systemTopology.has("testserver"))
@@ -223,11 +217,10 @@ class Tests(TestCase):
 
     def scene(self):
         scene = Manager().projectTopology.projects[0].scenes[0]
-        Manager().handle_deviceSchema(dict(deviceId="testdevice",
-                                           schema=self.testschema))
+        Manager().handle_deviceSchema("testdevice", self.testschema)
         testdevice = Manager().deviceData["testdevice"]
-        Manager().handle_configurationChanged(dict(
-            deviceId="testdevice", configuration=self.testconfiguration))
+        Manager().handle_configurationChanged("testdevice",
+                                              self.testconfiguration)
         self.assertEqual(testdevice.value.targetSpeed.value, 0.5)
         Manager().signalSelectNewNavigationItem.emit("testdevice")
 
@@ -253,9 +246,8 @@ class Tests(TestCase):
         TestWidget.instance.onEditingFinished(2.5)
         self.assertIcon(component.acApply.icon(), icons.apply)
         self.assertTrue(panel.pbApplyAll.isEnabled())
-        Manager().handle_configurationChanged(dict(
-            deviceId="testdevice",
-            configuration=Hash("targetSpeed", 1.5)))
+        Manager().handle_configurationChanged("testdevice",
+                                              Hash("targetSpeed", 1.5))
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed.value, 1.5)

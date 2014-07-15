@@ -12,10 +12,11 @@
 __all__ = ["DockTabWindow"]
 
 
+import icons
 from toolbar import ToolBar
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout, QIcon,
+from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout,
                          QTabWidget, QVBoxLayout)
 
 class DockTabWindow(QTabWidget):
@@ -170,13 +171,13 @@ class DivWidget(QFrame):
 
     def setupActions(self):
         text = "Unpin as individual window"
-        self.acUndock = QAction(QIcon(":undock"), "&Undock", self)
+        self.acUndock = QAction(icons.undock, "&Undock", self)
         self.acUndock.setToolTip(text)
         self.acUndock.setStatusTip(text)
         self.acUndock.triggered.connect(self.onUndock)
 
         text = "Pin this window to main program"
-        self.acDock = QAction(QIcon(":dock"), "&Dock", self)
+        self.acDock = QAction(icons.dock, "&Dock", self)
         self.acDock.setToolTip(text)
         self.acDock.setStatusTip(text)
         self.acDock.triggered.connect(self.onDock)

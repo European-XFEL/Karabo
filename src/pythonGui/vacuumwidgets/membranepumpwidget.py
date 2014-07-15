@@ -23,8 +23,8 @@ __all__ = ["MembranePumpWidget"]
 
 from widget import VacuumWidget
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+#from PyQt4.QtCore import *
+from PyQt4.QtGui import QPixmap
 
 
 class MembranePumpWidget(VacuumWidget):
@@ -32,12 +32,12 @@ class MembranePumpWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing..." or ("TurningOnOrOpening" in value) or ("TurningOffOrClosing" in value):
-            self._setPixmap(QPixmap(":membranepump-orange"))
+            self._setPixmap("membrane-pump-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":membranepump-green"))
+            self._setPixmap("membrane-pump-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":membranepump-yellow"))
+            self._setPixmap("membrane-pump-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":membranepump-red"))
+            self._setPixmap("membrane-pump-red")
         else:
-            self._setPixmap(QPixmap(":membranepump"))
+            self._setPixmap("membrane-pump")
