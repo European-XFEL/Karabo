@@ -229,7 +229,7 @@ namespace karabo {
                 string deviceId = hash.get<string > ("deviceId");
                 string command = hash.get<string > ("command");
                 // TODO Supply user specific context
-                call(deviceId, command, Hash());
+                call(deviceId, command);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onExecute(): " << e.userFriendlyMsg();
             }
