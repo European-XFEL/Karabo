@@ -32,12 +32,12 @@ class HydraulicValveWidget(VacuumWidget):
 
     def valueChanged(self, box, value, timestamp=None):
         if value == "Changing...":
-            self._setPixmap(QPixmap(":hydraulicvalve-orange"))
+            self._setPixmap("hydraulic-valve-orange")
         elif ("On" in value) or ("on" in value):
-            self._setPixmap(QPixmap(":hydraulicvalve-green"))
+            self._setPixmap("hydraulic-valve-green")
         elif ("Off" in value) or ("off" in value):
-            self._setPixmap(QPixmap(":hydraulicvalve-yellow"))
+            self._setPixmap("hydraulic-valve-yellow")
         elif ("Error" in value) or ("error" in value):
-            self._setPixmap(QPixmap(":hydraulicvalve-red"))
+            self._setPixmap("hydraulic-valve-red")
         else:
-            self._setPixmap(QPixmap(":hydraulicvalve"))
+            self._setPixmap("hydraulic-valve")
