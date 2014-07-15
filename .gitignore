@@ -1,0 +1,17 @@
+/extern/resources/*/*libs.txt
+/extern/resources/*/*/*
+build/netbeans/pythonGui/nbproject/*
+build/netbeans/*/nbproject/Makefile-*.mk
+build/netbeans/*/nbproject/private
+build/python/build/
+dist/
+/private/*
+GNU-Linux-x86
+*.pyc
+.*
+*~
+*.orig
+package/
+src/karabo/tests/io/resources/*
+build/netbeans/*/*.log
+!.gitignore
