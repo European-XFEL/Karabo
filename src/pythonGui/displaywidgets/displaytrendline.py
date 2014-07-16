@@ -51,8 +51,8 @@ class Curve(QObject):
     spare = 200 # Buffer until historic data is requested
     maxHistory = 400 # Limits amount of data from past
 
-    def __init__(self, box, curve):
-        QObject.__init__(self)
+    def __init__(self, box, curve, parent):
+        QObject.__init__(self, parent)
         self.curve = curve
         self.box = box
         self.data = numpy.empty((self.ini, 2), dtype=float) # Data container 
@@ -174,7 +174,7 @@ class DisplayTrendline(DisplayWidget):
 
     def addBox(self, box):
         curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
-        self.curves[box] = Curve(box, curve)
+        self.curves[box] = Curve(box, curve, self.dialog)
         self.plot.add_item(curve)
         return True
 
