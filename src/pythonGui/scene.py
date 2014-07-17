@@ -893,13 +893,14 @@ class Scene(QSvgWidget):
 
 
     def closeEvent(self, event):
-        if len(self.ilayout) == 0 and len(self.ilayout.shapes) == 0:
+        if len(self.ilayout) == 0 and not self.ilayout.shapes:
             return
 
         messageBox = QMessageBox(self)
         messageBox.setWindowTitle("Save scene before closing")
         messageBox.setText("Do you want to save your scene before closing?")
-        messageBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+        messageBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                      QMessageBox.Cancel)
         messageBox.setDefaultButton(QMessageBox.Save)
 
         reply = messageBox.exec_()
@@ -908,7 +909,8 @@ class Scene(QSvgWidget):
             return
 
         if reply == QMessageBox.Save:
-            self.saveSceneLayoutToFile()
+            self.project.zip()
+        
         event.accept()
 
 
@@ -928,7 +930,7 @@ class Scene(QSvgWidget):
 
 
     def reset(self):
-        if len(self.ilayout) == 0 and len(self.ilayout.shapes) == 0:
+        if len(self.ilayout) == 0 and not self.ilayout.shapes:
             return
 
         reply = QMessageBox.question(
@@ -937,7 +939,7 @@ class Scene(QSvgWidget):
             QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
 
         if reply == QMessageBox.Save:
-            self.saveSceneLayoutToFile()
+            self.project.zip()
 
         self.clean()
         self.inner.setLayout(FixedLayout())
