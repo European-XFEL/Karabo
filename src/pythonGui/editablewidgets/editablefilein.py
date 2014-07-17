@@ -26,40 +26,50 @@ class EditableFileIn(EditableWidget):
     def __init__(self, box, parent):
         super(EditableFileIn, self).__init__(box)
         
-        self.__compositeWidget = QWidget(parent)
-        hLayout = QHBoxLayout(self.__compositeWidget)
+        self.compositeWidget = QWidget(parent)
+        hLayout = QHBoxLayout(self.compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
 
-        self.__lePath = QLineEdit()
-        self.__lePath.textChanged.connect(self.onEditingFinished)
-        hLayout.addWidget(self.__lePath)
+        self.lePath = QLineEdit()
+        self.lePath.textChanged.connect(self.onEditingFinished)
+        hLayout.addWidget(self.lePath)
         
         text = "Select input file"
-        self.__tbPath = QToolButton()
-        self.__tbPath.setStatusTip(text)
-        self.__tbPath.setToolTip(text)
-        self.__tbPath.setIcon(QIcon(":filein"))
-        self.__tbPath.setMaximumSize(25,25)
-        self.__tbPath.clicked.connect(self.onFileInClicked)
-        hLayout.addWidget(self.__tbPath)
+        self.tbPath = QToolButton()
+        self.tbPath.setStatusTip(text)
+        self.tbPath.setToolTip(text)
+        self.tbPath.setIcon(QIcon(":filein"))
+        self.tbPath.setMaximumSize(25,25)
+        self.tbPath.clicked.connect(self.onFileInClicked)
+        hLayout.addWidget(self.tbPath)
+
+        # Needed for updates during input, otherwise cursor jumps to end of input
+        self.lastCursorPos = 0
 
 
     @property
     def widget(self):
-        return self.__compositeWidget
+        return self.compositeWidget
 
 
     @property
     def value(self):
-        return self.__lePath.text()
+        return self.lePath.text()
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = ""
 
-        with SignalBlocker(self.__lePath):
-            self.__lePath.setText(value)
+        with SignalBlocker(self.lePath):
+            self.lePath.setText(value)
+        
+        self.lePath.setCursorPosition(self.lastCursorPos)
+
+
+    def onEditingFinished(self, value):
+        self.lastCursorPos = self.lePath.cursorPosition()
+        EditableWidget.onEditingFinished(self, value)
 
 
     def onFileInClicked(self):
@@ -67,5 +77,5 @@ class EditableFileIn(EditableWidget):
         if len(fileIn) < 1:
             return
 
-        self.__lePath.setText(fileIn)
+        self.lePath.setText(fileIn)
 
