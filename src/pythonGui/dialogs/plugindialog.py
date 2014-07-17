@@ -77,7 +77,7 @@ class PluginDialog(QDialog):
         If the \config is set this configuration is set in the dialog.
         """
         serverKey = "server"
-        if not systemTopology.has(serverKey):
+        if systemTopology is None or not systemTopology.has(serverKey):
             return
         
         serverTopology = systemTopology.get(serverKey)
