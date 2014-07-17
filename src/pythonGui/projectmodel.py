@@ -23,7 +23,7 @@ from scene import Scene
 import manager
 from project import Category, Device, Project
 
-from PyQt4.QtCore import pyqtSignal, QDir, QModelIndex, Qt
+from PyQt4.QtCore import pyqtSignal, QDir, QFileInfo, QModelIndex, Qt
 from PyQt4.QtGui import (QDialog, QIcon, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
