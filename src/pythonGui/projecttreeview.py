@@ -232,6 +232,13 @@ class ProjectTreeView(QTreeView):
             elif isinstance(object, Scene):
                 acDuplicate.triggered.connect(self.model().onDuplicateScene)
 
+                text = "Save as..."
+                acSaveAs = QAction(text, self)
+                acSaveAs.setStatusTip(text)
+                acSaveAs.setToolTip(text)
+                acSaveAs.triggered.connect(self.model().onSaveAsScene)
+
+
             text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
@@ -249,14 +256,18 @@ class ProjectTreeView(QTreeView):
             acKillDevice.setStatusTip(text)
             acKillDevice.setToolTip(text)
             acKillDevice.triggered.connect(self.onKillDevice)
-            
+
+
             menu = QMenu()
             menu.addAction(acEdit)
             menu.addAction(acDuplicate)
             menu.addAction(acRemove)
-            menu.addSeparator()
-            menu.addAction(acInitDevice)
-            menu.addAction(acKillDevice)
+            if isinstance(object, Scene):
+                menu.addAction(acSaveAs)
+            else:
+                menu.addSeparator()
+                menu.addAction(acInitDevice)
+                menu.addAction(acKillDevice)
         
         if menu is None: return
         
