@@ -209,8 +209,15 @@ class ProjectTreeView(QTreeView):
             acAddScene.setToolTip(text)
             acAddScene.triggered.connect(self.model().onEditScene)
 
+            text = "Open scene"
+            acOpenScene = QAction(text, self)
+            acOpenScene.setStatusTip(text)
+            acOpenScene.setToolTip(text)
+            acOpenScene.triggered.connect(self.model().onOpenScene)
+
             menu = QMenu()
             menu.addAction(acAddScene)
+            menu.addAction(acOpenScene)
         elif isinstance(object, (Device, Scene)):
             text = "Edit"
             acEdit = QAction(text, self)
