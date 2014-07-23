@@ -40,14 +40,17 @@ class EditableList(EditableWidget, DisplayWidget):
     def __init__(self, box, parent):
         super(EditableList, self).__init__(box)
         
-        self.__compositeWidget = QWidget(parent)
-        self.hLayout = QHBoxLayout(self.__compositeWidget)
+        self.compositeWidget = QWidget(parent)
+        self.hLayout = QHBoxLayout(self.compositeWidget)
         self.hLayout.setContentsMargins(0,0,0,0)
 
         self.leList = QLineEdit()
         self.hLayout.addWidget(self.leList)
 
         self.valueList = []
+        
+        # Needed for updates during input, otherwise cursor jumps to end of input
+        self.lastCursorPos = 0
 
 
     def setReadOnly(self, ro):
@@ -69,7 +72,7 @@ class EditableList(EditableWidget, DisplayWidget):
 
     @property
     def widget(self):
-        return self.__compositeWidget
+        return self.compositeWidget
 
 
     @property
@@ -85,9 +88,12 @@ class EditableList(EditableWidget, DisplayWidget):
 
         with SignalBlocker(self.leList):
             self.leList.setText(box.descriptor.toString(value))
+        
+        self.leList.setCursorPosition(self.lastCursorPos)
 
 
     def onEditingFinished(self, text):
+        self.lastCursorPos = self.leList.cursorPosition()
         self.valueList = text.split(',')
         EditableWidget.onEditingFinished(self, self.valueList)
 
@@ -99,6 +105,7 @@ class EditableList(EditableWidget, DisplayWidget):
         if listEdit.exec_() == QDialog.Accepted:
             values = [listEdit.getListElementAt(i)
                       for i in xrange(listEdit.getListCount())]
-            self.valueList = values
-            EditableWidget.onEditingFinished(self, self.valueList)
+
+            self.leList.setText(self.boxes[0].descriptor.toString(values))
+            
 

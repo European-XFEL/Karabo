@@ -16,7 +16,7 @@ import icons
 from network import Network
 from toolbar import ToolBar
 
-from PyQt4.QtCore import Qt
+from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QPalette, QSizePolicy, QScrollArea, QWidget)
 
 
@@ -34,6 +34,7 @@ class CustomMiddlePanel(QScrollArea):
     #def onDock(self):
     #    pass
     ##########################################
+    signalClosed = pyqtSignal()
 
 
     def __init__(self, scene, isConnectedToServer):
@@ -58,6 +59,8 @@ class CustomMiddlePanel(QScrollArea):
             event.accept()
         else:
             event.ignore()
+        # Send signal to mainwindow
+        self.signalClosed.emit()
 
 
     def setupActions(self, isConnectedToServer):

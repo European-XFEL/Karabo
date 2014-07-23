@@ -37,8 +37,12 @@ class DisplayComboBox(DisplayWidget):
         self.widget = QComboBox(parent)
         self.widget.setFrame(False)
         self.widget.setEnabled(False)
-        
-        self.addItems(box.descriptor.options)
+
+
+    def typeChanged(self, box):
+        with SignalBlocker(self.widget):
+            self.widget.clear()
+            self.widget.addItems(box.descriptor.options)
 
 
     @property

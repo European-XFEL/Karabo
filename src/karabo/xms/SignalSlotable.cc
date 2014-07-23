@@ -465,6 +465,9 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_heartbeatMutex);
                 if (!m_trackedComponents.has(instanceId)) {
                     addTrackedComponent(instanceId, instanceInfo);
+                } else { // Can happen on quick restart (dirty)
+                    // Refresh countdown
+                    m_trackedComponents.set(instanceId + ".countdown", instanceInfo.get<int>("heartbeatInterval"));
                 }
                 m_trackedComponents.set(instanceId + ".isExplicitlyTracked", true);
             }
@@ -482,7 +485,7 @@ namespace karabo {
                     const string& slotInstanceId = connections[i].get<string>("slotInstanceId");
                     const string& slotFunction = connections[i].get<string>("slotFunction");
                     m_heartbeatMutex.unlock();
-                    cout << "LOW LEVEL DEBUG: Disconnecting: " << signalInstanceId << ":" << signalFunction << " <-> " << slotInstanceId << ":" << slotFunction << endl;
+                    //cout << "LOW LEVEL DEBUG: Disconnecting: " << signalInstanceId << ":" << signalFunction << " <-> " << slotInstanceId << ":" << slotFunction << endl;
                     disconnect(signalInstanceId, signalFunction, slotInstanceId, slotFunction, false);
                     m_heartbeatMutex.lock();
                 }

@@ -247,7 +247,7 @@ class _Manager(QObject):
                 return None
         elif self.projectTopology.currentIndex().isValid():
             indexInfo = self.projectTopology.indexInfo(self.projectTopology.currentIndex())
-            return self.projectTopology.currentDevice(), indexInfo.get("classId")
+            return indexInfo.get("conf"), indexInfo.get("classId")
         else:
             return None
 
