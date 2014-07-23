@@ -353,7 +353,10 @@ class ProjectConfiguration(object):
         # Reference to the project this scene belongs to
         self.project = project
 
-        self.filename = "{}.xml".format(name)
+        if name.endswith(".xml"):
+            self.filename = name
+        else:
+            self.filename = "{}.xml".format(name)
         
         self.hash = hash
 

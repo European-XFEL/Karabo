@@ -288,6 +288,7 @@ class MainWindow(QMainWindow):
             
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename)
+        customView.signalClosed.connect(self.onCustomViewRemoved)
         if self.middleTab.count()-1 > 0:
             self.middleTab.updateTabsClosable()
 
@@ -301,6 +302,10 @@ class MainWindow(QMainWindow):
                     self.middleTab.removeDockableTab(divWidget.dockableWidget)
                     break
         
+        self.onCustomViewRemoved()
+
+
+    def onCustomViewRemoved(self):
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
             self._createPlaceholderPanel()

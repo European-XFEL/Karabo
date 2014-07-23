@@ -21,6 +21,7 @@
 __all__ = ["EditableLineEdit"]
 
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtGui import QLineEdit
@@ -33,32 +34,31 @@ class EditableLineEdit(EditableWidget):
     def __init__(self, box, parent):
         super(EditableLineEdit, self).__init__(box)
         
-        self.__lineEdit = QLineEdit(parent)
-        self.__lineEdit.textChanged.connect(self.onEditingFinished)
+        self.lineEdit = QLineEdit(parent)
+        self.lineEdit.textChanged.connect(self.onEditingFinished)
 
         # Needed for updates during input, otherwise cursor jumps to end of input
-        self.__lastCursorPos = 0
+        self.lastCursorPos = 0
 
 
     @property
     def widget(self):
-        return self.__lineEdit
+        return self.lineEdit
 
 
     @property
     def value(self):
-        return self.__lineEdit.text()
+        return self.lineEdit.text()
 
 
     def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
         if value is None:
             value = ""
         
-        self.__lineEdit.blockSignals(True)
-        self.__lineEdit.setText(value)
-        self.__lineEdit.blockSignals(False)
+        with SignalBlocker(self.lineEdit):
+            self.lineEdit.setText(value)
         
-        self.__lineEdit.setCursorPosition(self.__lastCursorPos)
+        self.lineEdit.setCursorPosition(self.lastCursorPos)
         
         if forceRefresh:
             # Needs to be called to update possible apply buttons
@@ -66,5 +66,5 @@ class EditableLineEdit(EditableWidget):
 
 
     def onEditingFinished(self, value):
-        self.__lastCursorPos = self.__lineEdit.cursorPosition()
+        self.lastCursorPos = self.lineEdit.cursorPosition()
         EditableWidget.onEditingFinished(self, value)

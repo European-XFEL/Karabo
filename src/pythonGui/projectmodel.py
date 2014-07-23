@@ -23,7 +23,7 @@ from scene import Scene
 import manager
 from project import Category, Device, Project
 
-from PyQt4.QtCore import pyqtSignal, Qt
+from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
@@ -60,13 +60,21 @@ class ProjectModel(QStandardItemModel):
 
         object = index.data(ProjectModel.ITEM_OBJECT)
         
-        if isinstance(object, Device):
-            return dict(serverId=object.serverId,
-                        classId=object.classId,
-                        deviceId=object.id,
-                        config=object.toHash())
+        if not isinstance(object, Device):
+            return { }
         
-        return { }
+        if object.isOnline():
+            conf = manager.getDevice(object.id)
+            config = conf.toHash()
+        else:
+            conf = object
+            config = object.toHash()
+
+        return dict(conf=conf,
+                    serverId=object.serverId,
+                    classId=object.classId,
+                    deviceId=object.id,
+                    config=config)
 
 
     def updateData(self):
@@ -468,13 +476,19 @@ class ProjectModel(QStandardItemModel):
             deviceId = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
-            newDevice.futureConfig = device.toHash()
+            
+            if device.descriptor is not None:
+                config = device.toHash()
+            else:
+                config = device.futureConfig
+            
+            newDevice.futureConfig = config
 
 
     def checkDescriptor(self, device):
         # Get class configuration
         conf = manager.getClass(device.serverId, device.classId)
-        
+
         conf.signalNewDescriptor.connect(device.onNewDescriptor)
         if conf.descriptor is not None:
             device.onNewDescriptor(conf)
