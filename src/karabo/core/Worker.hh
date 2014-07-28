@@ -134,6 +134,10 @@ namespace karabo {
             }
 
             virtual bool cond(const T& t) = 0;
+            
+            int getRepetitionCounter() const {
+                return m_count;
+            }
 
         private:
 
@@ -142,10 +146,10 @@ namespace karabo {
              * <b>m_timeout</b> and <b>m_repetition</b>. In case of successful receiving the <b>m_callback</b> function will be called.
              */
             void receive() {
-                int repetition = m_repetition;
+                m_count = m_repetition;
                 while (!m_abort) {
                     T t;
-                    if (!repetition)
+                    if (!m_count)
                         break;
                     {
                         boost::mutex::scoped_lock lock(m_mutexRequest);
@@ -170,8 +174,8 @@ namespace karabo {
                     if (m_running || !cond(t)) {
                         m_callback();
                     }
-                    if (repetition > 0)
-                        repetition--;
+                    if (m_count > 0)
+                        m_count--;
                 }
                 if (m_running) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
@@ -190,6 +194,7 @@ namespace karabo {
             boost::mutex m_mutexRequest; // mutex of request queue
             boost::condition_variable m_condRequest; // condition variable of the request queue
             boost::mutex m_mutexPrint; // mutex guarding the cout stream
+            int m_count;
         };
 
         struct FsmWorker : public Worker<bool> {
