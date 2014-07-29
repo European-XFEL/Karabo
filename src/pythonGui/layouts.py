@@ -499,6 +499,8 @@ class ProxyWidget(QWidget):
     def element(self):
         g = self.geometry()
         d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
+        if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
+            raise RuntimeError("lost geometry data")
         ret = ElementTree.Element(ns_svg + "rect",
                                   {k: unicode(v) for k, v in d.iteritems()})
         if self.component is not None:
