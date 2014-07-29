@@ -342,8 +342,8 @@ namespace karabo {
                     
                       KARABO_LOG_ERROR << "Caught unknown exception while updating channels";
                 }
-                
-                m_workIsFinished.set_value(true);
+                 
+               m_workIsFinished.set_value(true);
                
             }
         } catch (const karabo::util::Exception& e) {
