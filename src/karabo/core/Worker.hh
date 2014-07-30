@@ -33,7 +33,7 @@ namespace karabo {
             , m_running(false)
             , m_abort(false)
             , m_request()
-            , m_thread()
+            , m_thread(0)
             , m_mutexRequest()
             , m_condRequest()
             , m_mutexPrint() {
@@ -52,7 +52,7 @@ namespace karabo {
             , m_running(false)
             , m_abort(false)
             , m_request()
-            , m_thread()
+            , m_thread(0)
             , m_mutexRequest()
             , m_condRequest()
             , m_mutexPrint() {
@@ -81,7 +81,7 @@ namespace karabo {
             Worker& start() {
                 m_running = true;
                 m_abort = false;
-                m_thread = boost::thread(&Worker::receive, this);
+                m_thread = new boost::thread(&Worker::receive, this);
                 return *this;
             }
 
@@ -118,7 +118,11 @@ namespace karabo {
              * It will block until the auxiliary thread is joined.
              */
             void join() {
-                m_thread.join();
+                if (m_thread) {
+                    if (m_thread->joinable()) m_thread->join();
+                    delete m_thread;
+                    m_thread = 0;
+                }
             }
 
             /**
@@ -135,8 +139,8 @@ namespace karabo {
 
             virtual bool cond(const T& t) = 0;
             
-            int getRepetitionCounter() const {
-                return m_count;
+            bool isRepetitionCounterExpired() const {
+                return m_count == 1;
             }
 
         private:
@@ -190,7 +194,7 @@ namespace karabo {
             bool m_running; // "running" flag
             bool m_abort; // "abort" flag
             std::queue<T> m_request; // request queue
-            boost::thread m_thread; // auxiliary thread
+            boost::thread* m_thread; // auxiliary thread
             boost::mutex m_mutexRequest; // mutex of request queue
             boost::condition_variable m_condRequest; // condition variable of the request queue
             boost::mutex m_mutexPrint; // mutex guarding the cout stream
