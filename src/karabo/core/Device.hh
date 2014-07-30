@@ -649,6 +649,9 @@ namespace karabo {
 
             virtual void preDestruction() {
             }
+            
+            virtual void stopWorkers() {
+            }
 
         private: // Functions
 
@@ -813,10 +816,8 @@ namespace karabo {
                     KARABO_LOG_INFO << "Device is going down as instructed by \"" << senderId << "\"";
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
-                preDestruction(); // Give devices a chance to react
-                if (this->getWorker().is_running()) {
-                    this->getWorker().abort().join();
-                }
+                this->preDestruction(); // Give devices a chance to react
+                this->stopWorkers();
                 stopEventLoop();
             }
 
