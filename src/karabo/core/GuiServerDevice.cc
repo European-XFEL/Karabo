@@ -548,7 +548,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema, should not happen...";
                 }
 
-                Hash h("type", "schemaUpdated", "deviceId", deviceId,
+                Hash h("type", "deviceSchema", "deviceId", deviceId,
                        "schema", schema);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);

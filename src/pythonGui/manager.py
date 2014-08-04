@@ -480,28 +480,19 @@ class _Manager(QObject):
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
+        conf = self.deviceData[deviceId]
+        # Schema already existent -> schema injected
+        if conf.status == "alive":
+            Network().onRefreshInstance(self.deviceData[deviceId])
+        
         # Add configuration with schema to device data
         schema = hash['schema']
 
-        conf = self.deviceData[deviceId]
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)        
         
         self.onShowConfiguration(conf)
-
-
-    def handle_schemaUpdated(self, hash):
-        deviceId = hash.get("deviceId")
-        if deviceId in self.deviceData:
-            conf = self.deviceData[deviceId]
-            # Schema already existent -> schema injected
-            if conf.status == "alive":
-                Network().onRefreshInstance(self.deviceData[deviceId])
-            conf.schema = None
-
-        self.handle_deviceSchema(hash)
-        #Network().onRefreshInstance(self.deviceData[deviceId])
 
 
     def handle_configurationChanged(self, instanceInfo):        
