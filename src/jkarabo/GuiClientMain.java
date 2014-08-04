@@ -95,7 +95,7 @@ public class GuiClientMain {
                         try {
                             getDeviceSchema(deviceId);
 //                            refreshInstance(deviceId);
-                            registerMonitor(deviceId);
+                            startMonitoringDevice(deviceId);
                         } catch (IOException ex) {
                             LOG.error(ex);
                         } catch (InterruptedException ex) {
@@ -123,8 +123,8 @@ public class GuiClientMain {
         }
 
         @Override
-        protected void onHistoricData(String deviceId, String property, String t0, String t1, VectorHash data) {
-            System.out.println("**** onHistoricData: deviceId=" + deviceId + ", t0=" + t0 + ", t1=" + t1 + "   VectorHash historic data");
+        protected void onPropertyHistory(String deviceId, String property, VectorHash data) {
+            System.out.println("**** onPropertyHistory: deviceId=" + deviceId + ", property=" + property + "   VectorHash historic data");
         }
 
         @Override
@@ -140,7 +140,7 @@ public class GuiClientMain {
                 Thread.sleep(50);      // Give some time for device startup
                 getDeviceSchema(deviceId);
                 // register device monitor to get data updates automatically
-                registerMonitor(deviceId);
+                startMonitoringDevice(deviceId);
             } catch (IOException ex) {
                 LOG.error(ex);
             } catch (InterruptedException ex) {
@@ -161,7 +161,7 @@ public class GuiClientMain {
             try {
                 Thread.sleep(50);      // Give some time for device startup
                 getDeviceSchema(deviceId);
-                registerMonitor(deviceId);
+                startMonitoringDevice(deviceId);
             } catch (IOException ex) {
                 LOG.error(ex);
             } catch (InterruptedException ex) {
@@ -171,9 +171,9 @@ public class GuiClientMain {
         }
 
         @Override
-        protected void onInstanceGone(String instanceId) {
+        protected void onInstanceGone(String instanceId, String instanceType) {
             try {
-                clearMonitor(instanceId);
+                stopMonitoringDevice(instanceId);
             } catch (IOException ex) {
                 LOG.error(ex);
             } catch (InterruptedException ex) {
@@ -215,9 +215,9 @@ public class GuiClientMain {
                 while (!client.isConnected()) {
                     Thread.sleep(500);
                 }
-                System.out.println("GUI client successfully connected.\nSend login information: \"operator\", \"karabo\", \"LOCAL\", \"\"");
+                System.out.println("GUI client successfully connected.\nSend login information: \"operator\", \"\", \"LOCAL\"");
                 // Provide login info (for the time being, default one)
-                client.login("operator", "karabo", "LOCAL", "");
+                client.login("operator", "", "LOCAL");
                 // All other communications will happen in thread
                 // main thread just wait for joining
                 client.join();
