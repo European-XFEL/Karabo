@@ -481,7 +481,7 @@ class LogWidget(QWidget):
         filename = QFileDialog.getSaveFileName(self, "Save file as",
                                                globals.HIDDEN_KARABO_FOLDER,
                                                "LOG (*.log)")
-        if len(filename) < 1:
+        if not filename:
             return
 
         fi = QFileInfo(filename)
