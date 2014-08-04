@@ -97,7 +97,7 @@ public abstract class GuiClient implements Runnable {
     private void cleanVisible(String deviceId) {
         try {
             while (isVisible(deviceId)) {
-                clearMonitor(deviceId);
+                stopMonitoringDevice(deviceId);
             }
         } catch (IOException | InterruptedException ex) {
             synchronized (visible) {
@@ -415,8 +415,7 @@ public abstract class GuiClient implements Runnable {
                 onDeviceSchema((String) hash.get("deviceId"), (Schema) hash.get("schema"));
                 break;
             case "historicData":
-                onHistoricData((String) hash.get("deviceId"), (String) hash.get("property"),
-                        (String) hash.get("t0"), (String) hash.get("t1"), (VectorHash) hash.get("data"));
+                onPropertyHistory((String) hash.get("deviceId"), (String) hash.get("property"), (VectorHash) hash.get("data"));
                 break;
             case "instanceNew":
                 onInstanceNew((Hash) hash.get("topologyEntry"));
@@ -425,7 +424,7 @@ public abstract class GuiClient implements Runnable {
                 onInstanceUpdated((Hash) hash.get("topologyEntry"));
                 break;
             case "instanceGone":
-                onInstanceGone((String) hash.get("instanceId"));
+                onInstanceGone((String) hash.get("instanceId"), (String) hash.get("instanceType"));
                 break;
             case "schemaUpdated":
                 onSchemaUpdated((String) hash.get("deviceId"), (Schema) hash.get("schema"));
@@ -508,7 +507,7 @@ public abstract class GuiClient implements Runnable {
      * @param t1 timestamp denoting end of time period of interest
      * @param data data organized as vector of Hashes
      */
-    protected abstract void onHistoricData(String deviceId, String property, String t0, String t1, VectorHash data);
+    protected abstract void onPropertyHistory(String deviceId, String property, VectorHash data);
 
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends topology entry related to the
@@ -531,8 +530,9 @@ public abstract class GuiClient implements Runnable {
      * given instance ID was destroyed
      *
      * @param instanceId device instance ID
+     * @param instanceType device instance type
      */
-    protected abstract void onInstanceGone(String instanceId);
+    protected abstract void onInstanceGone(String instanceId, String instanceType);
 
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends updates for schema describing
@@ -565,14 +565,13 @@ public abstract class GuiClient implements Runnable {
      * Send login information to get an access to the GuiServer
      *
      * @param username user name in the system
-     * @param password user password
-     * @param provider provider type (at the moment, "LOCAL" or "KERBEROS")
      * @param sessionToken received session token
+     * @param provider provider type (at the moment, "LOCAL" or "KERBEROS")
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void login(String username, String password, String provider, String sessionToken) throws IOException, InterruptedException {
-        send(new Hash("type", "login", "username", username, "password", password, "provider", provider, "sessionToken", sessionToken));
+    public void login(String username, String sessionToken, String provider) throws IOException, InterruptedException {
+        send(new Hash("type", "login", "username", username, "sessionToken", sessionToken, "provider", provider));
     }
 
     /**
@@ -600,18 +599,6 @@ public abstract class GuiClient implements Runnable {
     }
 
     /**
-     * Send a request to device server (serverId) to instantiate a device with provided configuration via GuiServer
-     *
-     * @param serverId device server ID
-     * @param configuration device initial configuration
-     * @throws IOException reported in case of IO problems
-     * @throws InterruptedException reported if interrupted by user
-     */
-    public void initDevice(String serverId, Hash configuration) throws IOException, InterruptedException {
-        send(new Hash("type", "initDevice", "serverId", serverId, "configuration", configuration));
-    }
-
-    /**
      * Send a request to refresh the information about device instance. It will be sent back and caught via
      * "onConfigurationChanged" callback.
      *
@@ -619,8 +606,45 @@ public abstract class GuiClient implements Runnable {
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void refreshInstance(String deviceId) throws IOException, InterruptedException {
-        send(new Hash("type", "refreshInstance", "deviceId", deviceId));
+    public void getDeviceConfiguration(String deviceId) throws IOException, InterruptedException {
+        send(new Hash("type", "getDeviceConfiguration", "deviceId", deviceId));
+    }
+
+    /**
+     * Request the GuiServer to ask the device <b>deviceId</b> to send back the current full device schema.
+     *
+     * @param deviceId device ID
+     * @throws IOException reported in case of IO problems
+     * @throws InterruptedException reported if interrupted by user
+     */
+    public void getDeviceSchema(String deviceId) throws IOException, InterruptedException {
+        send(new Hash("type", "getDeviceSchema", "deviceId", deviceId));
+    }
+
+    /**
+     * Request the GuiServer to ask the device server <b>serverId</b> to send back the schema for class <b>classId</b>
+     *
+     * @param serverId device server ID.
+     * @param classId device class ID.
+     * @throws IOException reported in case of IO problems
+     * @throws InterruptedException reported if interrupted by user
+     */
+    public void getClassSchema(String serverId, String classId) throws IOException, InterruptedException {
+        send(new Hash("type", "getClassSchema", "serverId", serverId, "classId", classId));
+    }
+
+    /**
+     * Send a request to device server (serverId) to instantiate a device with provided configuration via GuiServer
+     *
+     * @param serverId device server ID
+     * @param classId  class ID
+     * @param deviceId device ID
+     * @param configuration device initial configuration
+     * @throws IOException reported in case of IO problems
+     * @throws InterruptedException reported if interrupted by user
+     */
+    public void initDevice(String serverId, String classId, String deviceId, Hash configuration) throws IOException, InterruptedException {
+        send(new Hash("type", "initDevice", "serverId", serverId, "classId", classId, "deviceId", deviceId, "configuration", configuration));
     }
 
     /**
@@ -653,10 +677,10 @@ public abstract class GuiClient implements Runnable {
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void registerMonitor(String deviceId) throws IOException, InterruptedException {
+    public void startMonitoringDevice(String deviceId) throws IOException, InterruptedException {
         if (!isVisible(deviceId)) {
-            send(new Hash("type", "newVisibleDevice", "deviceId", deviceId));
-            //System.out.println("********** newVisibleDevice ==> " + deviceId);
+            send(new Hash("type", "startMonitoringDevice", "deviceId", deviceId));
+            //System.out.println("********** startMonitoringDevice ==> " + deviceId);
         }
         addVisible(deviceId);
         //System.out.println("********** increase visibility counter for " + deviceId);
@@ -670,48 +694,38 @@ public abstract class GuiClient implements Runnable {
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void clearMonitor(String deviceId) throws IOException, InterruptedException {
+    public void stopMonitoringDevice(String deviceId) throws IOException, InterruptedException {
         removeVisible(deviceId);
         //System.out.println("********** descrease visibility counter for " + deviceId);
         if (!isVisible(deviceId)) {
-            send(new Hash("type", "removeVisibleDevice", "deviceId", deviceId));
-            //System.out.println("********** removeVisibleDevice ==> " + deviceId);
+            send(new Hash("type", "stopMonitoringDevice", "deviceId", deviceId));
+            //System.out.println("********** stopMonitoringDevice ==> " + deviceId);
         }
-    }
-
-    /**
-     * Request the GuiServer to ask the device server <b>serverId</b> to send back the schema for class <b>classId</b>
-     *
-     * @param serverId device server ID.
-     * @param classId device class ID.
-     * @throws IOException reported in case of IO problems
-     * @throws InterruptedException reported if interrupted by user
-     */
-    public void getClassSchema(String serverId, String classId) throws IOException, InterruptedException {
-        send(new Hash("type", "getClassSchema", "serverId", serverId, "classId", classId));
-    }
-
-    /**
-     * Request the GuiServer to ask the device <b>deviceId</b> to send back the current full device schema.
-     *
-     * @param deviceId device ID
-     * @throws IOException reported in case of IO problems
-     * @throws InterruptedException reported if interrupted by user
-     */
-    public void getDeviceSchema(String deviceId) throws IOException, InterruptedException {
-        send(new Hash("type", "getDeviceSchema", "deviceId", deviceId));
     }
 
     /**
      * Request the GuiServer to ask the device <b>deviceId</b> to send back the historic data for the time period [t0, t1].
      *
      * @param deviceId device ID
+     * @param property property to be interested
      * @param t0 start timestamp of requested time period.
      * @param t1 end timestamp for the requested time period.
+     * @param maxNumData maximum data numbers
      * @throws IOException reported in case of IO problems
      * @throws InterruptedException reported if interrupted by user
      */
-    public void getFromPast(String deviceId, String t0, String t1) throws IOException, InterruptedException {
-        send(new Hash("type", "getFromPast", "deviceId", deviceId, "t0", t0, "t1", t1));
+    public void getPropertyHistory(String deviceId, String property, String t0, String t1, int maxNumData) throws IOException, InterruptedException {
+        send(new Hash("type", "getPropertyHistory", "deviceId", deviceId, "property", property, "t0", t0, "t1", t1, "maxNumData", maxNumData));
+    }
+    
+    /**
+     * Inform GuiServer about error traceback
+     * 
+     * @param traceback
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void error(String traceback) throws IOException, InterruptedException {
+        send(new Hash("type", "error", "traceback", traceback));
     }
 }
