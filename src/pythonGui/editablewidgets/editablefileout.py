@@ -74,7 +74,7 @@ class EditableFileOut(EditableWidget):
 
     def onFileOutClicked(self):
         fileOut = QFileDialog.getSaveFileName(None, "Select output file")
-        if len(fileOut) < 1:
+        if not fileOut:
             return
 
         self.lePath.setText(fileOut)
