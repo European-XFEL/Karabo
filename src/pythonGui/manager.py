@@ -278,7 +278,7 @@ class _Manager(QObject):
         filename = QFileDialog.getOpenFileName(None, "Open configuration", \
                                                globals.HIDDEN_KARABO_FOLDER,
                                                "XML (*.xml)")
-        if len(filename) < 1:
+        if not filename:
             return
         
         file = QFile(filename)
@@ -322,7 +322,6 @@ class _Manager(QObject):
         fi = QFileInfo(filename)
         if len(fi.suffix()) < 1:
             filename += ".xml"
-
 
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
