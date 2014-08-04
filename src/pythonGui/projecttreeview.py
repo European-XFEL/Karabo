@@ -102,9 +102,14 @@ class ProjectTreeView(QTreeView):
         dialog.setDefaultSuffix("krb")
         dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setAcceptMode(QFileDialog.AcceptSave)
-        dialog.exec_()
+        
+        if dialog.exec_() == QDialog.Rejected:
+            return None
+        
         if len(dialog.selectedFiles()) == 1:
             return dialog.selectedFiles()[0]
+        
+        return None
 
 
     def projectNew(self):
