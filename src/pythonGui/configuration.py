@@ -50,7 +50,7 @@ class Configuration(Box):
         self.descriptor = Schema.parse(schema.name, schema.hash, {})
         if self.status == "requested":
             if self.visible > 0:
-                Network().onNewVisibleDevice(self.id)
+                Network().onStartMonitoringDevice(self.id)
             self.status = "schema"
 
 
@@ -124,14 +124,14 @@ class Configuration(Box):
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
-            Network().onNewVisibleDevice(self.id)
+            Network().onStartMonitoringDevice(self.id)
 
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status != "offline":
-            Network().onRemoveVisibleDevice(self.id)
+            Network().onStopMonitoringDevice(self.id)
 
 
     def refresh(self):
-        Network().onRefreshInstance(self)
+        Network().onGetDeviceConfiguration(self)
