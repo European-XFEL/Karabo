@@ -129,45 +129,66 @@ public class GuiClientMain {
 
         @Override
         protected void onInstanceNew(Hash topologyEntry) {
-            Hash deviceHash = topologyEntry.<Hash>get("device");
-            Node node = deviceHash.entrySet().iterator().next().getValue();
-            String deviceId = node.getKey();
-            String serverId = node.getAttribute("serverId");
-            String classId = node.getAttribute("classId");
-            String status = node.getAttribute("status");
-            System.out.println("**** onInstanceNew: deviceId=" + deviceId + ", serverId=" + serverId + ", classId=" + classId + ", status=" + status);
-            try {
-                Thread.sleep(50);      // Give some time for device startup
-                getDeviceSchema(deviceId);
-                // register device monitor to get data updates automatically
-                startMonitoringDevice(deviceId);
-            } catch (IOException ex) {
-                LOG.error(ex);
-            } catch (InterruptedException ex) {
-                LOG.warn(ex);
+            System.out.println("**** onInstanceNew: topologyEntry is ...\n" + topologyEntry);
+            if (topologyEntry.has("device")) {
+                Hash deviceHash = topologyEntry.<Hash>get("device");
+                Node node = deviceHash.entrySet().iterator().next().getValue();
+                String deviceId = node.getKey();
+                String type = node.getAttribute("type");
+                String serverId = node.getAttribute("serverId");
+                String classId = node.getAttribute("classId");
+                String status = node.getAttribute("status");
+                System.out.println("**** onInstanceNew: type=\"" + type + "\", deviceId=" + deviceId + ", serverId=" + serverId + ", classId=" + classId + ", status=" + status);
+                try {
+                    Thread.sleep(50);      // Give some time for device startup
+                    getDeviceSchema(deviceId);
+                    // register device monitor to get data updates automatically
+                    startMonitoringDevice(deviceId);
+                } catch (IOException ex) {
+                    LOG.error(ex);
+                } catch (InterruptedException ex) {
+                    LOG.warn(ex);
+                }
+            } else if (topologyEntry.has("server")) {
+                Hash serverHash = topologyEntry.<Hash>get("server");
+                Node node = serverHash.entrySet().iterator().next().getValue();
+                String serverId = node.getKey();
+                String type = node.getAttribute("type");
+                String host = node.getAttribute("host");
+                String version = node.getAttribute("version");
+                System.out.println("**** onInstanceNew: type=\"" + type + "\", serverId=" + serverId + ", host=" + host + ", version=" + version);
             }
-            System.out.println("**** onInstanceNew: topologyEntry...\n" + topologyEntry);
         }
 
         @Override
         protected void onInstanceUpdated(Hash topologyEntry) {
-            Hash deviceHash = topologyEntry.<Hash>get("device");
-            Node node = deviceHash.entrySet().iterator().next().getValue();
-            String deviceId = node.getKey();
-            String serverId = node.getAttribute("serverId");
-            String classId = node.getAttribute("classId");
-            String status = node.getAttribute("status");
-            System.out.println("**** onInstanceUpdated: deviceId=" + deviceId + ", serverId=" + serverId + ", classId=" + classId + ", status=" + status);
-            try {
-                Thread.sleep(50);      // Give some time for device startup
-                getDeviceSchema(deviceId);
-                startMonitoringDevice(deviceId);
-            } catch (IOException ex) {
-                LOG.error(ex);
-            } catch (InterruptedException ex) {
-                LOG.warn(ex);
+            System.out.println("**** onInstanceUpdated: topologyEntry...\n" + topologyEntry);
+            if (topologyEntry.has("device")) {
+                Hash deviceHash = topologyEntry.<Hash>get("device");
+                Node node = deviceHash.entrySet().iterator().next().getValue();
+                String deviceId = node.getKey();
+                String serverId = node.getAttribute("serverId");
+                String classId = node.getAttribute("classId");
+                String status = node.getAttribute("status");
+                System.out.println("**** onInstanceUpdated: deviceId=" + deviceId + ", serverId=" + serverId + ", classId=" + classId + ", status=" + status);
+                try {
+                    Thread.sleep(50);      // Give some time for device startup
+                    getDeviceSchema(deviceId);
+                    startMonitoringDevice(deviceId);
+                } catch (IOException ex) {
+                    LOG.error(ex);
+                } catch (InterruptedException ex) {
+                    LOG.warn(ex);
+                }
+            } else if (topologyEntry.has("server")) {
+                Hash serverHash = topologyEntry.<Hash>get("server");
+                Node node = serverHash.entrySet().iterator().next().getValue();
+                String serverId = node.getKey();
+                String type = node.getAttribute("type");
+                String host = node.getAttribute("host");
+                String version = node.getAttribute("version");
+                System.out.println("**** onInstanceUpdate: type=\"" + type + "\", serverId=" + serverId + ", host=" + host + ", version=" + version);
             }
-            System.out.println("onInstanceUpdated: topologyEntry...\n" + topologyEntry);
         }
 
         @Override
