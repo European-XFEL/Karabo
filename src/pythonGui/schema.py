@@ -116,8 +116,8 @@ class Box(QObject):
                     self.descriptor.allowedStates)
 
 
-    def getFromPast(self, t0, t1, maxNumData):
-        Network().onGetFromPast(self, t0, t1, maxNumData)
+    def getPropertyHistory(self, t0, t1, maxNumData):
+        Network().onGetPropertyHistory(self, t0, t1, maxNumData)
 
 
     def __str__(self):
