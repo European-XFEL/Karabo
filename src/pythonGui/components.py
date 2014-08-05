@@ -263,7 +263,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         # Refresh new widget...
         for key in self.widgetFactory.keys:
-            Network().onRefreshInstance(key)
+            Network().onGetDeviceConfiguration(key)
 
 
     def onEditingFinished(self, box, value):
