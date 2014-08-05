@@ -405,16 +405,16 @@ public abstract class GuiClient implements Runnable {
             case "systemTopology":
                 onSystemTopology((Hash) hash.get("systemTopology"));
                 break;
-            case "configurationChanged":
-                onConfigurationChanged((String) hash.get("deviceId"), (Hash) hash.get("configuration"));
-                break;
-            case "classSchema":
-                onClassSchema((String) hash.get("serverId"), (String) hash.get("classId"), (Schema) hash.get("schema"));
+            case "deviceConfiguration":
+                onDeviceConfiguration((String) hash.get("deviceId"), (Hash) hash.get("configuration"));
                 break;
             case "deviceSchema":
                 onDeviceSchema((String) hash.get("deviceId"), (Schema) hash.get("schema"));
                 break;
-            case "historicData":
+            case "classSchema":
+                onClassSchema((String) hash.get("serverId"), (String) hash.get("classId"), (Schema) hash.get("schema"));
+                break;
+            case "propertyHistory":
                 onPropertyHistory((String) hash.get("deviceId"), (String) hash.get("property"), (VectorHash) hash.get("data"));
                 break;
             case "instanceNew":
@@ -425,9 +425,6 @@ public abstract class GuiClient implements Runnable {
                 break;
             case "instanceGone":
                 onInstanceGone((String) hash.get("instanceId"), (String) hash.get("instanceType"));
-                break;
-            case "schemaUpdated":
-                onSchemaUpdated((String) hash.get("deviceId"), (Schema) hash.get("schema"));
                 break;
             case "notification":
                 onNotification((String) hash.get("deviceId"), (String) hash.get("messageType"),
@@ -475,7 +472,7 @@ public abstract class GuiClient implements Runnable {
      * @param deviceId identifying the device
      * @param configuration changes in configuration of the device.
      */
-    protected abstract void onConfigurationChanged(String deviceId, Hash configuration);
+    protected abstract void onDeviceConfiguration(String deviceId, Hash configuration);
 
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends class schema before device
@@ -533,15 +530,6 @@ public abstract class GuiClient implements Runnable {
      * @param instanceType device instance type
      */
     protected abstract void onInstanceGone(String instanceId, String instanceType);
-
-    /**
-     * This callback should be implemented by user. It will be called if GuiServer sends updates for schema describing
-     * device parameters.
-     *
-     * @param deviceId device ID
-     * @param schema updated schema object
-     */
-    protected abstract void onSchemaUpdated(String deviceId, Schema schema);
 
     /**
      * This callback should be implemented by user. It will be called if GuiServer sends some notification about device.
