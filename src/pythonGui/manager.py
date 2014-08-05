@@ -83,13 +83,6 @@ class _Manager(QObject):
         # Map stores { deviceId, Configuration }
         self.deviceData = dict()
         
-        # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
-        if hasattr(self, "visibleDeviceIdCount"):
-            for deviceId in self.visibleDeviceIdCount.keys():
-                if self.visibleDeviceIdCount[deviceId] > 0:
-                    Network().onRemoveVisibleDevice(deviceId)
-        self.visibleDeviceIdCount = dict()
-        
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
 
@@ -482,7 +475,7 @@ class _Manager(QObject):
         conf = self.deviceData[deviceId]
         # Schema already existent -> schema injected
         if conf.status == "alive":
-            Network().onRefreshInstance(self.deviceData[deviceId])
+            Network().onGetDeviceConfiguration(self.deviceData[deviceId])
         
         # Add configuration with schema to device data
         schema = hash['schema']
@@ -494,7 +487,7 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_configurationChanged(self, instanceInfo):        
+    def handle_deviceConfiguration(self, instanceInfo):
         deviceId = instanceInfo.get("deviceId")
         device = self.deviceData.get(deviceId)
         if device is None or device.descriptor is None:
