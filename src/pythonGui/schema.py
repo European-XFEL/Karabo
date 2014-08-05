@@ -317,7 +317,7 @@ class Schema(hashtypes.Descriptor):
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
         self.accessMode = attrs.get('accessMode', 0)
-        self.metricPrefixSymbol = attrs.get('metrixPrefixSymbol', '')
+        self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
