@@ -73,21 +73,21 @@ namespace karabo {
 
             void onInitDevice(const karabo::util::Hash& info);
 
-            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onKillServer(const karabo::util::Hash& info);
 
             void onKillDevice(const karabo::util::Hash& info);
 
-            void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onStartMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onStopMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
             void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
