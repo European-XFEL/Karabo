@@ -108,8 +108,8 @@ public class GuiClientMain {
         }
 
         @Override
-        protected void onConfigurationChanged(String deviceId, Hash configuration) {
-            System.out.println("**** onConfigurationChanged: deviceId=" + deviceId + "... " + "CONFIGURATION content");
+        protected void onDeviceConfiguration(String deviceId, Hash configuration) {
+            System.out.println("**** onDeviceConfiguration: deviceId=" + deviceId + "... " + "CONFIGURATION content");
         }
 
         @Override
@@ -180,11 +180,6 @@ public class GuiClientMain {
                 LOG.warn(ex);
             }
             System.out.println("onInstanceGone: instanceId=" + instanceId);
-        }
-
-        @Override
-        protected void onSchemaUpdated(String deviceId, Schema schema) {
-            System.out.println("onSchemaUpdated: deviceId=" + deviceId + " ...\n" + schema);
         }
 
         @Override
