@@ -723,8 +723,7 @@ namespace karabo {
                 using namespace std;
 
                 SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-                connectN("", "signalChanged", "*", "slotChanged");
-
+                
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 
