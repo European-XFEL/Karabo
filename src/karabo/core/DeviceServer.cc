@@ -586,11 +586,12 @@ namespace karabo {
                 call(it->first, "slotKillDevice");
             }
 
-            // Join all device threads
-            m_deviceThreads.join_all();
+            for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                it->second->join();
+                m_deviceThreads.remove_thread(it->second);
+            }
 
-            // Signal about future death
-            call("*", "slotDeviceServerInstanceGone", m_serverId);
+            m_deviceInstanceMap.clear();
 
             // Reply the same
             reply(m_serverId);

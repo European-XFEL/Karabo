@@ -52,6 +52,8 @@ namespace karabo {
 
             void run();
 
+            void slotKillServer();
+
 
 
             /**************************************************************/
@@ -161,9 +163,7 @@ namespace karabo {
 
             void scanPlugins();
 
-            void sayHello();
-
-            void slotKillServer();
+            void sayHello();            
 
             void slotDeviceGone(const std::string& instanceId);
             
