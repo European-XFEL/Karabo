@@ -575,7 +575,7 @@ namespace karabo {
 
             void stayConnected(const std::string& instanceId);
 
-            void disconnect(const std::string& instanceId);
+            void eraseFromInstanceUsage(const std::string& instanceId);
 
             virtual void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId);
 

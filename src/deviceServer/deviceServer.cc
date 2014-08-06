@@ -43,10 +43,8 @@ int main(int argc, char** argv) {
 
             if (deviceServer) {
                 // Warning: if the deviceServer instance is not in stable state, this may trigger segmentation violation!!!!
-                std::cout << "Shutting down the device server\"" << deviceServer->getInstanceId() << "\" ...\n\n";
-                deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
-
-                usleep(2000000);
+                std::cout << "Shutting down the device server \"" << deviceServer->getInstanceId() << "\" ...\n\n";
+                deviceServer->slotKillServer();
             }
 
             // Log the error in a temporary file
