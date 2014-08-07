@@ -305,8 +305,8 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
-    def onRefreshInstance(self, configuration):
-        h = Hash("type", "refreshInstance")
+    def onGetDeviceConfiguration(self, configuration):
+        h = Hash("type", "getDeviceConfiguration")
         h.set("deviceId", configuration.id)
         self._tcpWriteHash(h)
 
@@ -352,14 +352,14 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
-    def onNewVisibleDevice(self, deviceId):
-        h = Hash("type", "newVisibleDevice")
+    def onStartMonitoringDevice(self, deviceId):
+        h = Hash("type", "startMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
 
 
-    def onRemoveVisibleDevice(self, deviceId):
-        h = Hash("type", "removeVisibleDevice")
+    def onStopMonitoringDevice(self, deviceId):
+        h = Hash("type", "stopMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
 
@@ -377,8 +377,8 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
-    def onGetFromPast(self, box, t0, t1, maxNumData):
-        h = Hash("type", "getFromPast")
+    def onGetPropertyHistory(self, box, t0, t1, maxNumData):
+        h = Hash("type", "getPropertyHistory")
         h.set("deviceId", box.configuration.id)
         h.set("property", ".".join(box.path))
         h.set("t0", t0)

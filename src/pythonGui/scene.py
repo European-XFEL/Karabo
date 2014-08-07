@@ -967,6 +967,8 @@ class Scene(QSvgWidget):
         self.clean()
         FixedLayout.load(root, widget=self.inner)
         self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
+        self.layout().setGeometry(self.geometry())
+        self.ilayout.setGeometry(self.inner.geometry())
         self.designMode = True
         
         ar = QByteArray()

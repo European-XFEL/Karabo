@@ -81,6 +81,32 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
+        if fileDialog.exec_() == QDialog.Rejected:
+            return None
+        
+        directory = fileDialog.selectedFiles()
+        if len(directory) < 0:
+            return None
+        
+        return directory[0]
+
+
+    def getSaveFileName(self, title):
+        dialog = QFileDialog(None, title, globals.KARABO_PROJECT_FOLDER,
+                             "Karabo Projects (*.krb)")
+        dialog.setDefaultSuffix("krb")
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        
+        if dialog.exec_() == QDialog.Rejected:
+            return None
+        
+        if len(dialog.selectedFiles()) == 1:
+            return dialog.selectedFiles()[0]
+        
+        return None
+
+
     def projectNew(self):
         fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
                              "Karabo Projects (*.krb)", "krb")
@@ -186,8 +212,15 @@ class ProjectTreeView(QTreeView):
             acAddScene.setToolTip(text)
             acAddScene.triggered.connect(self.model().onEditScene)
 
+            text = "Open scene"
+            acOpenScene = QAction(text, self)
+            acOpenScene.setStatusTip(text)
+            acOpenScene.setToolTip(text)
+            acOpenScene.triggered.connect(self.model().onOpenScene)
+
             menu = QMenu()
             menu.addAction(acAddScene)
+            menu.addAction(acOpenScene)
         elif isinstance(object, (Device, Scene)):
             text = "Edit"
             acEdit = QAction(text, self)
@@ -209,6 +242,13 @@ class ProjectTreeView(QTreeView):
             elif isinstance(object, Scene):
                 acDuplicate.triggered.connect(self.model().onDuplicateScene)
 
+                text = "Save as..."
+                acSaveAs = QAction(text, self)
+                acSaveAs.setStatusTip(text)
+                acSaveAs.setToolTip(text)
+                acSaveAs.triggered.connect(self.model().onSaveAsScene)
+
+
             text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
@@ -226,14 +266,18 @@ class ProjectTreeView(QTreeView):
             acKillDevice.setStatusTip(text)
             acKillDevice.setToolTip(text)
             acKillDevice.triggered.connect(self.onKillDevice)
-            
+
+
             menu = QMenu()
             menu.addAction(acEdit)
             menu.addAction(acDuplicate)
             menu.addAction(acRemove)
-            menu.addSeparator()
-            menu.addAction(acInitDevice)
-            menu.addAction(acKillDevice)
+            if isinstance(object, Scene):
+                menu.addAction(acSaveAs)
+            else:
+                menu.addSeparator()
+                menu.addAction(acInitDevice)
+                menu.addAction(acKillDevice)
         
         if menu is None: return
         

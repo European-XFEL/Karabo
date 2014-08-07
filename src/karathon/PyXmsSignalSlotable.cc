@@ -99,7 +99,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (const karabo::util::Hash & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceInfo)
                  , bp::return_value_policy<bp::copy_const_reference>())
             .def("trackExistenceOfInstance"
-                 , (void (SignalSlotable::*)(const std::string&, const karabo::util::Hash&))(&SignalSlotable::trackExistenceOfInstance)
+                 , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::trackExistenceOfInstance)
                  , (bp::arg("instanceId")))
             .def("stopTrackingExistenceOfInstance"
                  , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::stopTrackingExistenceOfInstance)

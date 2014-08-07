@@ -116,8 +116,8 @@ class Box(QObject):
                     self.descriptor.allowedStates)
 
 
-    def getFromPast(self, t0, t1, maxNumData):
-        Network().onGetFromPast(self, t0, t1, maxNumData)
+    def getPropertyHistory(self, t0, t1, maxNumData):
+        Network().onGetPropertyHistory(self, t0, t1, maxNumData)
 
 
     def __str__(self):
@@ -317,7 +317,7 @@ class Schema(hashtypes.Descriptor):
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
         self.accessMode = attrs.get('accessMode', 0)
-        self.metricPrefixSymbol = attrs.get('metrixPrefixSymbol', '')
+        self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
         ral = 0 if parent is None else parent.requiredAccessLevel
         self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)

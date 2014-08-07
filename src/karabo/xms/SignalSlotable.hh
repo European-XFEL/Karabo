@@ -109,8 +109,8 @@ namespace karabo {
 
             bool m_sendHeartbeats;
 
-            boost::mutex m_connectMutex;
-            boost::mutex m_heartbeatMutex;
+            mutable boost::mutex m_connectMutex;
+            mutable boost::mutex m_heartbeatMutex;
 
             boost::thread m_trackingThread;
             bool m_doTracking;
@@ -230,7 +230,7 @@ namespace karabo {
                 return Requestor(m_requestChannel, m_instanceId);
             }
 
-            void trackExistenceOfInstance(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+            void trackExistenceOfInstance(const std::string& instanceId);
 
             void stopTrackingExistenceOfInstance(const std::string& instanceId);
 
@@ -360,7 +360,7 @@ namespace karabo {
 
 
 
-            bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
+            bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose = false);
 
 
 
@@ -371,7 +371,7 @@ namespace karabo {
              * @param config Hash object as obtained by the configure method
              * @param signalRegularExpression A perl-regular expression for the signal key
              */
-            void autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression = "^signal.*");
+            KARABO_DEPRECATED void autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression = "^signal.*");
 
             /**
              * This function finds all slot keys within a Hash object (non-recursive) by a regular expression.
@@ -380,7 +380,7 @@ namespace karabo {
              * @param config Hash object as obtained by the configure method
              * @param slotRegularExpression A perl-regular expression for the signal key
              */
-            void autoConnectAllSlots(const karabo::util::Hash& config, const std::string slotRegularExpression = "^slot.*");
+            KARABO_DEPRECATED void autoConnectAllSlots(const karabo::util::Hash& config, const std::string slotRegularExpression = "^slot.*");
 
             /**
              * Emits a void signal.
@@ -810,17 +810,16 @@ namespace karabo {
                 boost::mutex::scoped_lock lock(m_replyMutex);
                 m_replies[boost::this_thread::get_id()] = reply;
             }
-
-        protected: // Member variables
-
-
+        
         private: // Functions
-
-
 
             void sanifyInstanceId(std::string& instanceId) const;
 
             std::pair<bool, std::string> isValidInstanceId(const std::string& instanceId);
+
+            void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
+
+            void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
             void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance);
 
@@ -840,22 +839,26 @@ namespace karabo {
 
             bool tryToConnectToSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
 
-            bool tryToFindSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
+            void slotConnectToSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
-            void slotConnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
+            bool tryToConnectToSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType, const bool isVerbose);
 
-            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo, bool connect);
-
-            void slotHasSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
+            void slotConnectToSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction, const int& connectionType);
 
             bool tryToDisconnectFromSignal(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
+
+            void slotDisconnectFromSignal(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
+
+            bool tryToDisconnectFromSlot(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose);
+            
+            void slotDisconnectFromSlot(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotFunction);
 
             static std::string prepareFunctionSignature(const std::string& funcName) {
                 std::string f(boost::trim_copy(funcName));
                 return f.substr(0, f.find_first_of('-')) + "|";
             }
 
-            void slotDisconnect(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
+            bool slotConnectToOutputChannel(const std::string& inputName, const karabo::util::Hash& outputChannelInfo, bool connect);
 
             void slotHeartbeat(const std::string& networkId, const int& heartbeatInterval, const karabo::util::Hash& instanceInfo);
 
@@ -865,25 +868,35 @@ namespace karabo {
 
             void registerConnectionForTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction, const int& connectionType);
 
+            void unregisterConnectionFromTracking(const std::string& signalInstanceId, const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
+
             bool isConnectionTracked(const std::string& connectionId);
+           
+            void addTrackedComponent(const std::string& instanceId, const bool isExplicitlyTracked = false);
 
-            void slotStopTrackingExistenceOfConnection(const std::string& connectionId);
+            void updateTrackedComponentInstanceInfo(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void addTrackedComponent(const std::string& networkId, const karabo::util::Hash& instanceInfo);
+            void addTrackedComponentConnection(const std::string& instanceId, const karabo::util::Hash& connection);
 
             karabo::util::Hash prepareConnectionNotAvailableInformation(const karabo::util::Hash& signals) const;
 
-            void slotTryReconnectNow();
-
             void slotGetAvailableFunctions(const std::string& type);
 
-            void connectionLost(const std::string& instanceId, std::vector<karabo::util::Hash>& connections);
+            void cleanSignalsAndStopTracking(const std::string& instanceId);
 
             // IO channel related
-
             karabo::util::Hash slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId);
 
             static int godEncode(const std::string& password);
+
+            // Thread-safe, locks m_connectMutex
+            bool hasSlot(const std::string& slotFunction) const;
+
+            // Thread-safe, locks m_connectMutex
+            bool hasSignal(const std::string& signalFunction) const;
+
+            // Thread-safe, locks m_connectMutex
+            bool tryToUnregisterSlot(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
 
         };
     } // namespace xms

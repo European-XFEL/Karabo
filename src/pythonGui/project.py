@@ -155,6 +155,7 @@ class Project(QObject):
         This method saves this project as a zip file.
         """
         projectConfig = Hash()
+        exception = None
 
         if filename is None:
             filename = self.filename
@@ -176,8 +177,15 @@ class Project(QObject):
                                             for device in self.devices]
 
             for scene in self.scenes:
-                zf.writestr("{}/{}".format(self.SCENES_KEY, scene.filename),
-                            scene.toXml())
+                name = "{}/{}".format(self.SCENES_KEY, scene.filename)
+                try:
+                    zf.writestr(name, scene.toXml())
+                except Exception as e:
+                    if file is not self.filename:
+                        with ZipFile(self.filename, 'r') as zin:
+                            zf.writestr(name, zin.read(name))
+                    if exception is None:
+                        exception = e
             projectConfig[self.SCENES_KEY] = [Hash("filename", scene.filename)
                                               for scene in self.scenes]
 
@@ -210,6 +218,9 @@ class Project(QObject):
             file.close()
             os.remove(filename)
             os.rename(file.name, filename)
+
+        if exception is not None:
+            raise exception
 
 
     def addResource(self, category, data):
