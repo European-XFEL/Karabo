@@ -189,14 +189,6 @@ class Type(Descriptor, Registry):
         return unicode(data)
 
 
-    def toHash(self, box):
-        return box.value
-
-
-    def fromHash(self, box, data, timestamp=None):
-        box._set(data, timestamp)
-
-
 class Bool(Type):
     number = 0
 
