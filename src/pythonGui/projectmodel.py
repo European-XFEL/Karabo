@@ -15,6 +15,7 @@ __all__ = ["ProjectModel"]
 
 
 from configuration import Configuration
+import globals
 import icons
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.plugindialog import PluginDialog
@@ -27,7 +28,7 @@ from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QItemSelectionModel, QMessageBox,
                          QStandardItem, QStandardItemModel)
 import os.path
-from zipfile import is_zipfile
+from zipfile import ZipFile
 
 
 class ProjectModel(QStandardItemModel):
@@ -540,6 +541,7 @@ class ProjectModel(QStandardItemModel):
             self.addScene(self.currentProject(), filename)
 
 
+
     def openScene(self, scene):
         self.signalAddScene.emit(scene)
         
@@ -649,6 +651,34 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateScene(self):
         self.duplicateScene(self.currentScene())
+
+
+    def onSaveAsScene(self):
+        project = self.currentProject()
+        scene = self.currentScene()
+        fn = QFileDialog.getSaveFileName(None, "Save scene to file",
+                                         globals.HIDDEN_KARABO_FOLDER,
+                                         "SVG (*.svg)")
+        if not fn:
+            return
+        with ZipFile(project.filename, "r") as zf:
+            s = zf.read("{}/{}".format(project.SCENES_KEY, scene.filename))
+        with open(fn, "w") as fout:
+            fout.write(s)
+
+
+    def onOpenScene(self):
+        project = self.currentProject()
+        fn = QFileDialog.getOpenFileName(None, "Open scene",
+                                         globals.HIDDEN_KARABO_FOLDER,
+                                         "SVG (*.svg)")
+        if not fn:
+            return
+        scene = Scene(project, os.path.basename(fn))
+        with open(fn, "r") as fin:
+            scene.fromXml(fin.read())
+        project.addScene(scene)
+        self.updateData()
 
 
     def onRemove(self):

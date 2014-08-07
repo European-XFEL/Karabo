@@ -21,7 +21,7 @@ using namespace karabo::log;
 int main(int argc, char** argv) {
     try {
         DeviceServer::Pointer deviceServer;
-
+        
         #ifdef __linux__
         pthread_t sig_thr_id; // Signal handler thread ID
         int ret = pthread_create(&sig_thr_id, NULL, GlobalExceptionHandler::SignalThread, NULL);
@@ -43,10 +43,20 @@ int main(int argc, char** argv) {
 
             if (deviceServer) {
                 // Warning: if the deviceServer instance is not in stable state, this may trigger segmentation violation!!!!
-                std::cout << "Shutting down the device server\"" << deviceServer->getInstanceId() << "\" ...\n\n";
+                std::cout << "Shutting down the device server \"" << deviceServer->getInstanceId() << "\" ...\n\n";
                 deviceServer->call(deviceServer->getInstanceId(), "slotKillServer");
 
-                usleep(2000000);
+                
+                int maxWait = 0;
+                while (deviceServer->isRunning() && maxWait < 10) {
+                    std::cout << "Waiting for device server to die..." << std::endl;
+                    maxWait++;
+                    usleep(1000000);
+                }
+                if (deviceServer->isRunning()) {
+                    std::cout << "\n\n" << "Device server could not be shut down in time, still exiting now." << std::endl;
+                    usleep(1000000);
+                }
             }
 
             // Log the error in a temporary file

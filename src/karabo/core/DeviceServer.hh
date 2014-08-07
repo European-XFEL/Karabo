@@ -52,6 +52,8 @@ namespace karabo {
 
             void run();
 
+            bool isRunning() const;
+
 
 
             /**************************************************************/
@@ -151,6 +153,8 @@ namespace karabo {
 
             void loadPluginLoader(const karabo::util::Hash& input);
 
+            void slotKillServer();
+
             void stopDeviceServer();
 
             log4cpp::Category& log();
@@ -161,9 +165,7 @@ namespace karabo {
 
             void scanPlugins();
 
-            void sayHello();
-
-            void slotKillServer();
+            void sayHello();            
 
             void slotDeviceGone(const std::string& instanceId);
             
@@ -185,6 +187,7 @@ namespace karabo {
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
             boost::thread m_pluginThread;
+            bool m_doScanPlugins;
             bool m_serverIsRunning;
 
             bool m_isMaster;

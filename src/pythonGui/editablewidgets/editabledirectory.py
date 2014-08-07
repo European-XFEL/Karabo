@@ -75,7 +75,7 @@ class EditableDirectory(EditableWidget):
 
     def onDirectoryClicked(self):
         directory = QFileDialog.getExistingDirectory(None, "Select directory")
-        if len(directory) < 1:
+        if not directory:
             return
 
         self.lePath.setText(directory)

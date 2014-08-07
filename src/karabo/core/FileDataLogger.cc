@@ -491,7 +491,11 @@ namespace karabo {
                 }
 
                 reply(result);
-                emit("signalPropertyHistory", deviceId, property, result);
+
+                std::string senderId = getSenderInfo("slotGetPropertyHistory")->getInstanceIdOfSender();
+                call(senderId, "slotPropertyHistory", deviceId, property, result);
+
+                //emit("signalPropertyHistory", deviceId, property, result);
 
             } catch (...) {
 

@@ -91,7 +91,7 @@ namespace karabo {
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
                 // Connect the history slot
-                connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
+                //connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
 
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 // Use one thread currently (you may start this multiple time for having more threads doing the work)
@@ -150,24 +150,24 @@ namespace karabo {
                         onReconfigure(info);
                     } else if (type == "execute") {
                         onExecute(info);
+                    } else if (type == "getDeviceConfiguration") {
+                        onGetDeviceConfiguration(channel, info);
+                    } else if (type == "getDeviceSchema") {
+                        onGetDeviceSchema(channel, info);
+                    } else if (type == "getClassSchema") {
+                        onGetClassSchema(channel, info);
                     } else if (type == "initDevice") {
                         onInitDevice(info);
-                    } else if (type == "refreshInstance") {
-                        onRefreshInstance(channel, info);
                     } else if (type == "killServer") {
                         onKillServer(info);
                     } else if (type == "killDevice") {
                         onKillDevice(info);
-                    } else if (type == "newVisibleDevice") {
-                        onNewVisibleDevice(channel, info);
-                    } else if (type == "removeVisibleDevice") {
-                        onRemoveVisibleDevice(channel, info);
-                    } else if (type == "getClassSchema") {
-                        onGetClassSchema(channel, info);
-                    } else if (type == "getDeviceSchema") {
-                        onGetDeviceSchema(channel, info);
-                    } else if (type == "getFromPast") {
-                        onGetFromPast(channel, info);
+                    } else if (type == "startMonitoringDevice") {
+                        onStartMonitoringDevice(channel, info);
+                    } else if (type == "stopMonitoringDevice") {
+                        onStopMonitoringDevice(channel, info);
+                    } else if (type == "getPropertyHistory") {
+                        onGetPropertyHistory(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
                     }
@@ -246,20 +246,21 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash) {
+        void GuiServerDevice::onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRefreshInstance";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetDeviceConfiguration";
                 string deviceId = hash.get<string > ("deviceId");
 
                 Hash config = remote().getConfigurationNoWait(deviceId);
 
                 if (!config.empty()) {
-                    Hash h("type", "configurationChanged", "deviceId", deviceId, "configuration", remote().get(deviceId));
+                    Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", remote().get(deviceId));
+                    boost::mutex::scoped_lock lock(m_channelMutex);
                     channel->write(h);
                 }
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onRefreshInstance(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onGetDeviceConfiguration(): " << e.userFriendlyMsg();
             }
         }
 
@@ -287,52 +288,63 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onStartMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 string deviceId = info.get<string > ("deviceId");
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-                if (it != m_channels.end()) {
-                    it->second.insert(deviceId);
+
+                {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                    if (it != m_channels.end()) {
+                        it->second.insert(deviceId);
+                    }
                 }
 
-                // Increase count of device in visible devices map
-                m_visibleDevices[deviceId]++;
-                KARABO_LOG_FRAMEWORK_DEBUG << "onNewVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
+                {
+                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                    // Increase count of device in visible devices map
+                    m_monitoredDevices[deviceId]++;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStartMonitoringDevice " << deviceId << " " << m_monitoredDevices[deviceId];
+                }
 
-                if (m_visibleDevices[deviceId] == 1) { // Fresh device on the shelf
+                if (m_monitoredDevices[deviceId] == 1) { // Fresh device on the shelf
                     remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                 }
 
                 // Send back fresh information about device
                 // TODO This could check a dirty-flag whether the device changed since last time seen
-                onRefreshInstance(channel, info);
+                onGetDeviceConfiguration(channel, info);
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onNewVisibleDevice(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onStartMonitoringDevice(): " << e.userFriendlyMsg();
             }
         }
 
 
-        void GuiServerDevice::onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onStopMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 string deviceId = info.get<string > ("deviceId");
 
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
-                if (it != m_channels.end()) it->second.erase(deviceId);
+                {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                    if (it != m_channels.end()) it->second.erase(deviceId);
+                }
 
-                m_visibleDevices[deviceId]--;
-                KARABO_LOG_FRAMEWORK_DEBUG << "onRemoveVisibleDevice " << deviceId << " " << m_visibleDevices[deviceId];
+                {
+                    boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                    m_monitoredDevices[deviceId]--;
+                    KARABO_LOG_FRAMEWORK_DEBUG << "onStopMonitoringDevice " << deviceId << " " << m_monitoredDevices[deviceId];
+                }
 
-                if (m_visibleDevices[deviceId] == 0) {
+                if (m_monitoredDevices[deviceId] == 0) {
                     // Disconnect signal/slot from broker
                     remote().unregisterDeviceMonitor(deviceId);
                 }
 
 
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onRemoveVisibleDevice(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onStopMonitoringDevice(): " << e.userFriendlyMsg();
             }
         }
 
@@ -344,10 +356,10 @@ namespace karabo {
                 string classId = info.get<string> ("classId");
                 Schema schema = remote().getClassSchemaNoWait(serverId, classId);
                 if (!schema.empty()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
-                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";                    
                     Hash h("type", "classSchema", "serverId", serverId,
                                    "classId", classId, "schema", schema);
+                    boost::mutex::scoped_lock lock(m_channelMutex);
                     channel->write(h);
                 }
             } catch (const Exception& e) {
@@ -366,13 +378,13 @@ namespace karabo {
 
                 if (!schema.empty()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Schema available, direct answer";
-                    boost::mutex::scoped_lock lock(m_channelMutex);
                     Hash h("type", "deviceSchema", "deviceId", deviceId,
                            "schema", schema);
                     if (!config.empty()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Adding configuration, too";
                         h.set("configuration", config);
                     }
+                    boost::mutex::scoped_lock lock(m_channelMutex);
                     channel->write(h);
                 }
             } catch (const Exception& e) {
@@ -381,9 +393,9 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onGetFromPast";
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetPropertyHistory";
                 string deviceId = info.get<string > ("deviceId");
                 string property = info.get<string > ("property");
                 string t0 = info.get<string > ("t0");
@@ -394,7 +406,7 @@ namespace karabo {
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
                 call("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, property, args);
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onGetFromPast(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
             }
         }
 
@@ -409,9 +421,7 @@ namespace karabo {
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs (which is shit here, but the current solution...)
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     if (it->second.find(deviceId) != it->second.end()) {
                         it->first->write(h);
                     }
@@ -427,6 +437,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "sendSystemTopology";
                 KARABO_LOG_FRAMEWORK_DEBUG << remote().getSystemTopology();
                 Hash systemTopology("type", "systemTopology", "systemTopology", remote().getSystemTopology());
+                boost::mutex::scoped_lock lock(m_channelMutex);
                 channel->write(systemTopology);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in sendSystemTopology(): " << e.userFriendlyMsg();
@@ -438,17 +449,18 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting availability of new instance";
                 Hash instanceInfo("type", "instanceNew", "topologyEntry", topologyEntry);
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                {
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    // Broadcast to all GUIs
+                    for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                        it->first->write(instanceInfo);
+                    }
                 }
                 // TODO let device client return also deviceId as first argument
                 if (topologyEntry.has("device")) {
                     string deviceId = topologyEntry.get<Hash>("device").begin()->getKey();
                     // Check whether someone already noted interest in this deviceId
-                    if (m_visibleDevices.find(deviceId) != m_visibleDevices.end()) {
+                    if (m_monitoredDevices.find(deviceId) != m_monitoredDevices.end()) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to device " << deviceId << " which is going to be visible in a GUI client";
                         remote().registerDeviceMonitor(deviceId, boost::bind(&karabo::core::GuiServerDevice::deviceChangedHandler, this, _1, _2));
                     }
@@ -465,8 +477,7 @@ namespace karabo {
                 Hash instanceInfo("type", "instanceUpdated", "topologyEntry", topologyEntry);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(instanceInfo);
                 }
             } catch (const Exception& e) {
@@ -482,14 +493,18 @@ namespace karabo {
                 if (instanceInfo.has("type")) instanceInfo.get("type", type);
                 Hash h("type", "instanceGone", "instanceId", instanceId, "instanceType", type);
                 boost::mutex::scoped_lock lock(m_channelMutex);
+
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(h);
-                    // Set all visibilities to 0
-                    std::map<std::string, int>::iterator jt = m_visibleDevices.find(instanceId);
-                    if (jt != m_visibleDevices.end()) {
-                        m_visibleDevices.erase(jt);
+
+                    {
+                        // Erase instance from the monitored list
+                        boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                        std::map<std::string, int>::iterator jt = m_monitoredDevices.find(instanceId);
+                        if (jt != m_monitoredDevices.end()) {
+                            m_monitoredDevices.erase(jt);
+                        }
                     }
                     // and remove the instance from channel
                     it->second.erase(instanceId);
@@ -502,12 +517,11 @@ namespace karabo {
 
         void GuiServerDevice::deviceChangedHandler(const std::string& deviceId, const karabo::util::Hash& what) {
             try {
-                Hash h("type", "configurationChanged", "deviceId", deviceId, "configuration", what);
+                Hash h("type", "deviceConfiguration", "deviceId", deviceId, "configuration", what);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // Optimization: broadcast only to visible DeviceInstances
                     if (it->second.find(deviceId) != it->second.end()) {
                         it->first->write(h);
@@ -529,9 +543,10 @@ namespace karabo {
 
                 Hash h("type", "classSchema", "serverId", serverId,
                        "classId", classId, "schema", classSchema);
+
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(h);
                 }
             } catch (const Exception& e) {
@@ -548,13 +563,12 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_WARN << "Going to send an empty schema, should not happen...";
                 }
 
-                Hash h("type", "schemaUpdated", "deviceId", deviceId,
+                Hash h("type", "deviceSchema", "deviceId", deviceId,
                        "schema", schema);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     // TODO This could be optimized by selecting the proper clients
                     it->first->write(h);
                 }
@@ -573,8 +587,7 @@ namespace karabo {
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(notificationInfo);
                 }
             } catch (const Exception& e) {
@@ -588,8 +601,7 @@ namespace karabo {
                 Hash instanceInfo("type", "log", "message", logMessage);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
-                typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator channelIterator;
-                for (channelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
                     it->first->write(instanceInfo);
                 }
             } catch (const Exception& e) {
@@ -609,9 +621,12 @@ namespace karabo {
                 const std::set<std::string>& deviceIds = it->second;
                 for (std::set<std::string>::const_iterator jt = deviceIds.begin(); jt != deviceIds.end(); jt++) {
                     const std::string& deviceId = *jt;
-                    m_visibleDevices[deviceId]--;
-                    KARABO_LOG_FRAMEWORK_DEBUG << "removeVisibleDevice (GUI gone) " << deviceId << " " << m_visibleDevices[deviceId];
-                    if (m_visibleDevices[deviceId] == 0) {
+                    {
+                        boost::mutex::scoped_lock lock(m_monitoredDevicesMutex);
+                        m_monitoredDevices[deviceId]--;
+                    }
+                    KARABO_LOG_FRAMEWORK_DEBUG << "stopMonitoringDevice (GUI gone) " << deviceId << " " << m_monitoredDevices[deviceId];
+                    if (m_monitoredDevices[deviceId] == 0) {
                         // Disconnect signal/slot from broker
                         remote().unregisterDeviceMonitor(deviceId);
                     }

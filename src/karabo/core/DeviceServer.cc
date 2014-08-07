@@ -313,6 +313,8 @@ namespace karabo {
 
         void DeviceServer::run() {
 
+            m_serverIsRunning = true;
+
             // Initialize category
             m_log = &(karabo::log::Logger::getLogger(m_serverId));
 
@@ -335,6 +337,15 @@ namespace karabo {
             boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 20, instanceInfo));
             this->startFsm();
             t.join();
+
+            // TODO That should be the right solution, but we never get here
+            m_serverIsRunning = false;
+        }
+
+
+        bool DeviceServer::isRunning() const {
+
+            return m_serverIsRunning;
 
         }
 
@@ -400,8 +411,8 @@ namespace karabo {
         void DeviceServer::scanPlugins() {
             try {
                 bool inError = false;
-                m_serverIsRunning = true;
-                while (m_serverIsRunning) {
+                m_doScanPlugins = true;
+                while (m_doScanPlugins) {
                     try {
                         bool hasNewPlugins = m_pluginLoader->update();
                         if (hasNewPlugins) {
@@ -431,9 +442,11 @@ namespace karabo {
 
 
         void DeviceServer::stopDeviceServer() {
-            m_serverIsRunning = false;
+            m_doScanPlugins = false;
             if (m_pluginThread.joinable()) m_pluginThread.join();
             stopEventLoop();
+            // TODO Remove from here and use the one from run() method
+            m_serverIsRunning = false;
         }
 
 
@@ -586,11 +599,12 @@ namespace karabo {
                 call(it->first, "slotKillDevice");
             }
 
-            // Join all device threads
-            m_deviceThreads.join_all();
+            for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                it->second->join();
+                m_deviceThreads.remove_thread(it->second);
+            }
 
-            // Signal about future death
-            call("*", "slotDeviceServerInstanceGone", m_serverId);
+            m_deviceInstanceMap.clear();
 
             // Reply the same
             reply(m_serverId);

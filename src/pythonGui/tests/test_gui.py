@@ -255,8 +255,8 @@ class Tests(TestCase):
         net.called = [ ]
         scene.clean()
         self.assertEqual(len(net.called), 2)
-        self.assertEqual(net.called[0][0], "onRemoveVisibleDevice")
-        self.assertEqual(net.called[1][0], "onRemoveVisibleDevice")
+        self.assertEqual(net.called[0][0], "onStopMonitoringDevice")
+        self.assertEqual(net.called[1][0], "onStopMonitoringDevice")
         self.assertEqual(testdevice.visible, 0)
         self.assertEqual(Manager().deviceData["incompatible"].visible, 0)
 

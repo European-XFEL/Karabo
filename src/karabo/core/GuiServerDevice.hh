@@ -30,17 +30,20 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
-            boost::mutex m_channelMutex;
+            mutable boost::mutex m_channelMutex;
+            mutable boost::mutex m_monitoredDevicesMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
             karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
-            std::map<std::string, int> m_visibleDevices;
+            std::map<std::string, int> m_monitoredDevices;
 
 
             karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
             karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
 
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
 
         public:
 
@@ -73,21 +76,21 @@ namespace karabo {
 
             void onInitDevice(const karabo::util::Hash& info);
 
-            void onRefreshInstance(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onKillServer(const karabo::util::Hash& info);
 
             void onKillDevice(const karabo::util::Hash& info);
 
-            void onNewVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onStartMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onRemoveVisibleDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onStopMonitoringDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
             void onGetClassSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onGetFromPast(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 

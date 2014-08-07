@@ -34,7 +34,7 @@ namespace karabo {
 
             this->setupSlots();
             this->checkMaster();
-            this->cacheAvailableInstances();            
+            this->cacheAvailableInstances();
 
         }
 
@@ -59,9 +59,6 @@ namespace karabo {
             m_signalSlotable->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
             m_signalSlotable->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
             m_signalSlotable->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
-
-            // Uncomment this for debugging
-            //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
         }
 
 
@@ -98,9 +95,6 @@ namespace karabo {
                 const string& instanceId = instances[i].first;
                 const Hash& instanceInfo = instances[i].second;
 
-                // Skip all Karabo-intern instances
-                //if (instanceId.substr(0, 6) == "Karabo") continue;
-
                 mergeIntoRuntimeSystemDescription(prepareTopologyEntry(instanceId, instanceInfo));
 
             }
@@ -127,27 +121,80 @@ namespace karabo {
         }
 
 
-        bool DeviceClient::login(const std::string& username, const std::string& password, const std::string& provider) {
-            return m_signalSlotable->login(username, password, provider);
+        void DeviceClient::mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry) {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            m_runtimeSystemDescription.merge(entry);
         }
 
 
-        bool DeviceClient::logout() {
-            return m_signalSlotable->logout();
+        bool DeviceClient::existsInRuntimeSystemDescription(const std::string& path) const {
+            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+            return m_runtimeSystemDescription.has(path);
         }
 
 
-        std::string DeviceClient::getInstanceType(const karabo::util::Hash& instanceInfo) const {
-            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
-            string type("unknown");
-            if (node) type = node->getValue<string>();
-            return type;
+        void DeviceClient::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called";
+
+            string path(prepareTopologyPath(instanceId, instanceInfo));
+
+            // If this is true, the instance silently died and was restarted so quickly we couldn't recognize
+            if (existsInRuntimeSystemDescription(path)) {
+
+                KARABO_LOG_FRAMEWORK_INFO << "Detected unrecognized dirty shutdown of instance \"" << instanceId
+                        << "\", which got quickly restarted and is now available again";
+
+                eraseFromRuntimeSystemDescription(path);
+                eraseFromInstanceUsage(instanceId);
+
+            }
+
+            Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+            mergeIntoRuntimeSystemDescription(entry);
+
+            // Track the instance if we are running without master
+            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId);
+
+            if (m_instanceNewHandler) m_instanceNewHandler(entry);
+        }
+
+
+        void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId, const Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
+
+            try {
+                string path = prepareTopologyPath(instanceId, instanceInfo);
+                bool hasInstance = existsInRuntimeSystemDescription(path);
+
+                if (hasInstance) {
+                    // Should never happen
+                    KARABO_LOG_FRAMEWORK_ERROR << "Instance \"" << instanceId << "\" silently appeared, which never died before.";
+                } else {
+                    KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
+                    Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+                    mergeIntoRuntimeSystemDescription(entry);
+                    if (m_instanceNewHandler) m_instanceNewHandler(entry);
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceAvailableAgain(): " << e;
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceAvailableAgain()";
+            }
+        }
+
+
+        void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
+            try {
+                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                m_runtimeSystemDescription.erase(path);
+            } catch (...) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Could not erase path \"" << path << " from device-client cache";
+            }
         }
 
 
         void DeviceClient::removeFromSystemTopology(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            disconnect(instanceId);
             for (Hash::iterator it = m_runtimeSystemDescription.begin(); it != m_runtimeSystemDescription.end(); ++it) {
                 Hash& tmp = it->getValue<Hash>();
                 boost::optional<Hash::Node&> node = tmp.find(instanceId);
@@ -156,65 +203,6 @@ namespace karabo {
                     break;
                 }
             }
-        }
-
-
-        void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
-            m_runtimeSystemDescriptionMutex.lock();
-            // TODO Optimize speed
-            if (m_runtimeSystemDescription.has("device." + instanceId + ".configuration")) {
-                Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
-                tmp.merge(hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                // NOTE: This will block us here, i.e. we are deaf for other changes...
-                // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            } else {
-                m_runtimeSystemDescription.set("device." + instanceId + ".configuration", hash);
-                m_runtimeSystemDescriptionMutex.unlock();
-                notifyDeviceChangedMonitors(hash, instanceId);
-                notifyPropertyChangedMonitors(hash, instanceId);
-            }
-        }
-
-
-        void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId, const Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
-
-            string path = prepareTopologyPath(instanceId, instanceInfo);
-            bool hasInstance = existsInRuntimeSystemDescription(path);
-
-            if (hasInstance) {
-                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for (again available) instance \"" << instanceId << "\", adapting...";                
-            } else {
-                KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
-                Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
-                mergeIntoRuntimeSystemDescription(entry);
-                if (m_instanceNewHandler) m_instanceNewHandler(entry);
-            }                  
-        }
-
-
-        void DeviceClient::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called";
-
-            // Remove any existing shit
-            string path(prepareTopologyPath(instanceId, instanceInfo));
-            if (existsInRuntimeSystemDescription(path)) {
-                KARABO_LOG_FRAMEWORK_WARN << "Detected dirty shutdown for instance \"" << instanceId << "\" which is coming up now";
-                eraseFromRuntimeSystemDescription(path);
-            }
-
-            Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
-            mergeIntoRuntimeSystemDescription(entry);
-
-            // We should not lock here, the user may use a thread-safe function of us again and we are dead
-            if (m_instanceNewHandler) m_instanceNewHandler(entry);
-
-            // Track the instance if we are running without master
-            if (m_masterMode != HAS_MASTER) m_signalSlotable->trackExistenceOfInstance(instanceId, instanceInfo);
-
         }
 
 
@@ -234,18 +222,15 @@ namespace karabo {
                 // TODO We have now instanceInfo information, could send it on
                 KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared " << instanceInfo;
 
-                if (instanceInfo.empty()) {
-                    KARABO_LOG_FRAMEWORK_WARN << instanceId << " disappeared without proper instanceInfo.";
-                    removeFromSystemTopology(instanceId); // Compatibility   
-                } else {
-                    string path = prepareTopologyPath(instanceId, instanceInfo);
-                    eraseFromRuntimeSystemDescription(path);
-                    disconnect(instanceId);
-                }
-                if (m_masterMode == IS_MASTER) m_signalSlotable->call("*", "slotInstanceGone", instanceId);
+                string path = prepareTopologyPath(instanceId, instanceInfo);
+                eraseFromRuntimeSystemDescription(path);
+                eraseFromInstanceUsage(instanceId);
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
+
+            } catch (const Exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceNotAvailable(): " << e;
             } catch (...) {
-                KARABO_RETHROW;
+                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceNotAvailable()";
             }
         }
 
@@ -261,7 +246,7 @@ namespace karabo {
             }
             string path = prepareTopologyPath(instanceId, instanceInfo);
             eraseFromRuntimeSystemDescription(path);
-            disconnect(instanceId);
+            eraseFromInstanceUsage(instanceId);
             if (m_masterMode != HAS_MASTER) m_signalSlotable->stopTrackingExistenceOfInstance(instanceId);
             if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
         }
@@ -454,7 +439,7 @@ namespace karabo {
                 m_runtimeSystemDescription.set(path, schema);
 
                 path = "device." + deviceId + ".activeSchema";
-                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);                
+                if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
             }
             if (m_schemaUpdatedHandler) m_schemaUpdatedHandler(deviceId, schema);
         }
@@ -896,26 +881,50 @@ namespace karabo {
         }
 
 
-        void DeviceClient::disconnect(const std::string& instanceId) {
+        void DeviceClient::eraseFromInstanceUsage(const std::string& instanceId) {
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
-            m_signalSlotable->disconnect(instanceId, "signalChanged", "", "slotChanged", false);
-            m_signalSlotable->disconnect(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated", false);
-            m_instanceUsage[instanceId] = CONNECTION_KEEP_ALIVE;
+            m_instanceUsage.erase(instanceId);
+        }
+
+
+        void DeviceClient::slotChanged(const karabo::util::Hash& hash, const std::string & instanceId) {
+            m_runtimeSystemDescriptionMutex.lock();
+            // TODO Optimize speed
+            if (m_runtimeSystemDescription.has("device." + instanceId + ".configuration")) {
+                Hash& tmp = m_runtimeSystemDescription.get<Hash>("device." + instanceId + ".configuration");
+                tmp.merge(hash);
+                m_runtimeSystemDescriptionMutex.unlock();
+                // NOTE: This will block us here, i.e. we are deaf for other changes...
+                // NOTE: Monitors could be implemented as additional slots or in separate threads, too.
+                notifyDeviceChangedMonitors(hash, instanceId);
+                notifyPropertyChangedMonitors(hash, instanceId);
+            } else {
+                m_runtimeSystemDescription.set("device." + instanceId + ".configuration", hash);
+                m_runtimeSystemDescriptionMutex.unlock();
+                notifyDeviceChangedMonitors(hash, instanceId);
+                notifyPropertyChangedMonitors(hash, instanceId);
+            }
         }
 
 
         void DeviceClient::notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
-            boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            boost::optional<Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
-            if (node) {
-                const Hash& entry = node->getValue<Hash >();
-                boost::optional<const Hash::Node&> nodeFunc = entry.find("_function");
-                boost::optional<const Hash::Node&> nodeData = entry.find("_userData");
+
+            Hash entry;
+
+            {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                boost::optional<Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
+                if (node) {
+                    entry = node->getValue<Hash >();
+                }
+            }
+
+            if (!entry.empty()) {
+                boost::optional<Hash::Node&> nodeFunc = entry.find("_function");
+                boost::optional<Hash::Node&> nodeData = entry.find("_userData");
                 if (nodeData) {
-                    m_deviceChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
                     boost::any_cast < boost::function<void (const std::string&, const karabo::util::Hash&, const boost::any&)> >(nodeFunc->getValueAsAny())(instanceId, hash, nodeData->getValueAsAny());
                 } else {
-                    m_deviceChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
                     boost::any_cast < boost::function<void (const std::string&, const karabo::util::Hash&)> >(nodeFunc->getValueAsAny())(instanceId, hash);
                 }
             }
@@ -923,10 +932,18 @@ namespace karabo {
 
 
         void DeviceClient::notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string & instanceId) {
-            boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-            if (m_propertyChangedHandlers.has(instanceId)) {
-                m_propertyChangedHandlersMutex.unlock(); // Never call-back with mutex locked (may lead to dead-locks)
-                castAndCall(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
+
+            Hash registered;
+
+            {
+                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                if (m_propertyChangedHandlers.has(instanceId)) {
+                    registered = m_propertyChangedHandlers.get<Hash > (instanceId);
+                }
+            }
+
+            if (!registered.empty()) {
+                castAndCall(instanceId, registered, hash);
             }
         }
 
@@ -1080,25 +1097,24 @@ if (nodeData) {\
         }
 
 
-        void DeviceClient::mergeIntoRuntimeSystemDescription(const karabo::util::Hash& entry) {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            m_runtimeSystemDescription.merge(entry);
+        bool DeviceClient::login(const std::string& username, const std::string& password, const std::string& provider) {
+            return m_signalSlotable->login(username, password, provider);
         }
 
 
-        bool DeviceClient::existsInRuntimeSystemDescription(const std::string& path) const {
-            boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-            return m_runtimeSystemDescription.has(path);
+        bool DeviceClient::logout() {
+            return m_signalSlotable->logout();
         }
 
 
-        void DeviceClient::eraseFromRuntimeSystemDescription(const std::string& path) {
-            try {
-                boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
-                m_runtimeSystemDescription.erase(path);
-            } catch (...) {
-                KARABO_RETHROW;
-            }
+        std::string DeviceClient::getInstanceType(const karabo::util::Hash& instanceInfo) const {
+            boost::optional<const Hash::Node&> node = instanceInfo.find("type");
+            string type("unknown");
+            if (node) type = node->getValue<string>();
+            return type;
         }
+
+
+
     }
 }

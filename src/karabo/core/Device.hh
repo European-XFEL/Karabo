@@ -257,7 +257,7 @@ namespace karabo {
             void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
                 using namespace karabo::util;
 
-                Dims dims(image.dimX(), image.dimY());
+                Dims dims(image.dimX(), image.dimY(), image.dimZ());
                 karabo::xip::RawImageData raw(image.pixelPointer(), image.size(), true, dims);
 
                 Hash hash(key, raw.hash());
@@ -724,8 +724,7 @@ namespace karabo {
                 using namespace std;
 
                 SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-                connectN("", "signalChanged", "*", "slotChanged");
-
+                
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 
