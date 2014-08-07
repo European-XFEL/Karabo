@@ -500,8 +500,6 @@ public abstract class GuiClient implements Runnable {
      *
      * @param deviceId device ID
      * @param property name of property
-     * @param t0 timestamp denoting start of time period of interest
-     * @param t1 timestamp denoting end of time period of interest
      * @param data data organized as vector of Hashes
      */
     protected abstract void onPropertyHistory(String deviceId, String property, VectorHash data);
@@ -709,9 +707,9 @@ public abstract class GuiClient implements Runnable {
     /**
      * Inform GuiServer about error traceback
      * 
-     * @param traceback
-     * @throws IOException
-     * @throws InterruptedException
+     * @param traceback string representing error traceback
+     * @throws IOException reported in case of IO problems
+     * @throws InterruptedException reported if interrupted by user
      */
     public void error(String traceback) throws IOException, InterruptedException {
         send(new Hash("type", "error", "traceback", traceback));
