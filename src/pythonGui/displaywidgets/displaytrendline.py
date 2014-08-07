@@ -69,23 +69,23 @@ class Curve(QObject):
             self.fill -= self.spare
         # Spare is touched, ask for historic data
         elif self.fill == self.data.shape[0] - self.spare:
-            self.getFromPast(self.data[0, 1],
+            self.getPropertyHistory(self.data[0, 1],
                 self.data[(self.past + self.data.shape[0]) // 2, 1])
         self.data[self.fill, :] = value, timestamp
         self.fill += 1
         self.update()
 
 
-    def getFromPast(self, t0, t1):
+    def getPropertyHistory(self, t0, t1):
         t0 = datetime.datetime.utcfromtimestamp(t0).isoformat().decode('ascii')
         t1 = datetime.datetime.utcfromtimestamp(t1).isoformat().decode('ascii')
-        self.box.getFromPast(t0, t1, self.maxHistory)
+        self.box.getPropertyHistory(t0, t1, self.maxHistory)
 
 
     def changeInterval(self, t0, t1):
         # t0 represent the oldest value displayed in the widget 
         if t0 < self.data[0, 1] or t1 < self.data[self.past, 1]:
-            self.getFromPast(t0, min(t1, self.data[self.past, 1]))
+            self.getPropertyHistory(t0, min(t1, self.data[self.past, 1]))
 
 
     def update(self):

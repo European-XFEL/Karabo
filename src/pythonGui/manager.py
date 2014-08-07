@@ -84,13 +84,6 @@ class _Manager(QObject):
         # Map stores { deviceId, Configuration }
         self.deviceData = dict()
         
-        # Dictionary to store instanceId of visible DEVICE_INSTANCEs with counter
-        if hasattr(self, "visibleDeviceIdCount"):
-            for deviceId in self.visibleDeviceIdCount.keys():
-                if self.visibleDeviceIdCount[deviceId] > 0:
-                    Network().onRemoveVisibleDevice(deviceId)
-        self.visibleDeviceIdCount = dict()
-        
         # State, if initiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
 
@@ -293,6 +286,10 @@ class _Manager(QObject):
         if not filename:
             return
 
+        fi = QFileInfo(filename)
+        if len(fi.suffix()) < 1:
+            filename += ".xml"
+
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
             MessageBox.showError("Configuration save failed")
@@ -443,8 +440,12 @@ class _Manager(QObject):
             print 'not requested schema for device {} arrived'.format(deviceId)
             return
         
-        # Add configuration with schema to device data
         conf = self.deviceData[deviceId]
+        # Schema already existent -> schema injected
+        if conf.status == "alive":
+            Network().onGetDeviceConfiguration(self.deviceData[deviceId])
+        
+        # Add configuration with schema to device data
         conf.setSchema(schema)
         conf.value.state.signalUpdateComponent.connect(
             self._triggerStateChange)        
@@ -452,19 +453,8 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_schemaUpdated(self, deviceId, schema):
-        if deviceId in self.deviceData:
-            conf = self.deviceData[deviceId]
-            # Schema already existent -> schema injected
-            if conf.status == "alive":
-                Network().onRefreshInstance(self.deviceData[deviceId])
-            conf.schema = None
-
-        self.handle_deviceSchema(deviceId, schema)
-        #Network().onRefreshInstance(self.deviceData[deviceId])
-
-
-    def handle_configurationChanged(self, deviceId, configuration):
+    def handle_deviceConfiguration(self, instanceInfo):
+        deviceId = instanceInfo.get("deviceId")
         device = self.deviceData.get(deviceId)
         if device is None or device.descriptor is None:
             return

@@ -75,7 +75,7 @@ class EditableFileIn(EditableWidget):
 
     def onFileInClicked(self):
         fileIn = QFileDialog.getOpenFileName(None, "Select input file")
-        if len(fileIn) < 1:
+        if not fileIn:
             return
 
         self.lePath.setText(fileIn)

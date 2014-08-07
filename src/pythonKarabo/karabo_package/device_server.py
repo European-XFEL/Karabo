@@ -540,7 +540,6 @@ class DeviceServer(object):
         for t  in threads:
             if t: t.join()
         self.deviceInstanceMap = {}
-        self.ss.call("*", "slotDeviceServerInstanceGone", self.serverid)
         self.stopDeviceServer()
         
     def slotDeviceGone(self, id):
