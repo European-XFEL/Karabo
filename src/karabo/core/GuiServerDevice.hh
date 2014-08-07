@@ -30,17 +30,20 @@ namespace karabo {
 
             karabo::io::BinarySerializer<karabo::util::Hash>::Pointer m_serializer;
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
-            boost::mutex m_channelMutex;
+            mutable boost::mutex m_channelMutex;
+            mutable boost::mutex m_monitoredDevicesMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
             karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
-            std::map<std::string, int> m_visibleDevices;
+            std::map<std::string, int> m_monitoredDevices;
 
 
             karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
             karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
 
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
+            typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
 
         public:
 
