@@ -216,6 +216,14 @@ class Type(hashtypes.Type):
         return item
 
 
+    def toHash(self, box):
+        return box.value
+
+
+    def fromHash(self, box, data, timestamp=None):
+        box._set(data, timestamp)
+
+
     def redummy(self, box):
         """ remove all values from box """
         box._value = Dummy()
