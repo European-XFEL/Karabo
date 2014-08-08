@@ -2,6 +2,8 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 16:17:33 PM$"
 
 import copy
+import Queue
+import threading
 
 #======================================= Fsm Macros
 NOOP = lambda: None
@@ -18,6 +20,7 @@ _interrupts_ = {}
 _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
 _machines_ = {'none':None}
+_state_periodic_actions_ = {'none':(-1, -1, NOOP)}
 # events
 def KARABO_FSM_EVENT0(self, event_name, method_name):
     def inner(self):
@@ -61,20 +64,35 @@ def KARABO_FSM_EVENT4(self, event_name, method_name):
 
     
 # states
-def KARABO_FSM_STATE(name):                       _states_[name] = (NOOP, NOOP)
-def KARABO_FSM_STATE_E(name, on_entry):           _states_[name] = (on_entry, NOOP)
-def KARABO_FSM_STATE_EE(name, on_entry, on_exit): _states_[name] = (on_entry, on_exit)
+def KARABO_FSM_STATE(name):                                       _states_[name] = (NOOP, NOOP, '')
+def KARABO_FSM_STATE_A(name, target_action):                      _states_[name] = (NOOP, NOOP, target_action)
+def KARABO_FSM_STATE_E(name, on_entry):                           _states_[name] = (on_entry, NOOP, '')
+def KARABO_FSM_STATE_AE(name, target_action, on_entry):           _states_[name] = (on_entry, NOOP, target_action)
+def KARABO_FSM_STATE_EE(name, on_entry, on_exit):                 _states_[name] = (on_entry, on_exit, '')
+def KARABO_FSM_STATE_AEE(name, target_action, on_entry, on_exit): _states_[name] = (on_entry, on_exit, target_action)
 
 def KARABO_FSM_INTERRUPT_STATE(name, event):
-    _states_[name] = (NOOP, NOOP)
+    _states_[name] = (NOOP, NOOP, '')
+    _interrupts_[name] = event
+    
+def KARABO_FSM_INTERRUPT_STATE_A(name, event, target_action):
+    _states_[name] = (NOOP, NOOP, target_action)
     _interrupts_[name] = event
     
 def KARABO_FSM_INTERRUPT_STATE_E(name, event, on_entry):
-    _states_[name] = (on_entry, NOOP)
+    _states_[name] = (on_entry, NOOP, '')
+    _interrupts_[name] = event
+
+def KARABO_FSM_INTERRUPT_STATE_AE(name, event, target_action, on_entry):
+    _states_[name] = (on_entry, NOOP, target_action)
     _interrupts_[name] = event
 
 def KARABO_FSM_INTERRUPT_STATE_EE(name, event, on_entry, on_exit):
-    _states_[name] = (on_entry, on_exit)
+    _states_[name] = (on_entry, on_exit, '')
+    _interrupts_[name] = event
+    
+def KARABO_FSM_INTERRUPT_STATE_AEE(name, event, target_action, on_entry, on_exit):
+    _states_[name] = (on_entry, on_exit, target_action)
     _interrupts_[name] = event
     
 # actions
@@ -96,31 +114,155 @@ def KARABO_FSM_GUARD2(name, f, a1, a2):         _guards_[name] = (f, (a1, a2))
 def KARABO_FSM_GUARD3(name, f, a1, a2, a3):     _guards_[name] = (f, (a1, a2, a3))
 def KARABO_FSM_GUARD4(name, f, a1, a2, a3, a4): _guards_[name] = (f, (a1, a2, a3, a4))
 
+# in state periodic actions
+
+def KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, f): _state_periodic_actions_[name] = (timeout, repetition, f)
+
 # machines
 
 def KARABO_FSM_STATE_MACHINE(name, stt, initial):
-    _machines_[name] = (stt, initial, NOOP, NOOP)
+    _machines_[name] = (stt, initial, NOOP, NOOP, '')
+
+def KARABO_FSM_STATE_MACHINE_A(name, stt, initial, target_action):
+    _machines_[name] = (stt, initial, NOOP, NOOP, target_action)
 
 def KARABO_FSM_STATE_MACHINE_E(name, stt, initial, on_entry):
-    _machines_[name] = (stt, initial, on_entry, NOOP)
+    _machines_[name] = (stt, initial, on_entry, NOOP, '')
+
+def KARABO_FSM_STATE_MACHINE_AE(name, stt, initial, target_action, on_entry):
+    _machines_[name] = (stt, initial, on_entry, NOOP, target_action)
 
 def KARABO_FSM_STATE_MACHINE_EE(name, stt, initial, on_entry, on_exit):
-    _machines_[name] = (stt, initial, on_entry, on_exit)
+    _machines_[name] = (stt, initial, on_entry, on_exit, '')
+       
+def KARABO_FSM_STATE_MACHINE_AEE(name, stt, initial, target_action, on_entry, on_exit):
+    _machines_[name] = (stt, initial, on_entry, on_exit, target_action)
        
 def KARABO_FSM_CREATE_MACHINE(name):
-    (_stt, _initial, _on_entry, _on_exit) = _machines_[name]
+    (_stt, _initial, _on_entry, _on_exit, _in_state) = _machines_[name]
     cls = type(name, (StateMachine,), {})
-    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit)
+    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit, in_state = _in_state)
+
+#======================================== Worker
+class Worker(threading.Thread):
+    
+    def __init__(self, callback = None, timeout = -1, repetition = -1):
+        threading.Thread.__init__(self)
+        self.callback = callback
+        self.timeout  = timeout
+        self.repetition = repetition
+        self.running = False
+        self.aborted = False
+        self.queue = Queue.Queue()
+        self.counter = -1
+    
+    def set(self, callback, timeout = -1, repetition = -1):
+        self.callback = callback
+        self.timeout  = timeout
+        self.repetition = repetition
+
+    def cond(self, s):
+        if type(s) is bool:
+            return s
+        if s is None:
+            return False
+        return True
+
+    def is_running(self):
+        return self.running
+    
+    def push(self, o):
+        if self.running:
+            self.queue.put(o)
+            
+    def isRepetitionCounterExpired(self):
+        return self.counter == 1
+    
+    def run(self):
+        self.running = True
+        self.aborted = False
+        self.counter = self.repetition
+        while not self.aborted:
+            if self.counter == 0:
+                break
+            if not self.running and self.queue.empty():
+                break
+            try:
+                if self.timeout < 0:
+                    t = self.queue.get(True)
+                elif self.timeout > 0:
+                    t = self.queue.get(True, float(self.timeout) / 1000)   # self.timeout in milliseconds
+                else:
+                    t = self.queue.get(False)
+                self.queue.task_done()
+            except Queue.Empty, e:
+                t = None
+            if self.running or not self.cond(t):
+                self.callback()
+            if self.counter > 0:
+                self.counter -= 1
+        if self.running:
+            self.running = False
+            
+    def start(self):
+        super(Worker, self).start()
+        return self
+    
+    def stop(self):
+        if self.running:
+            self.running = False
+        return self
+    
+    def abort(self):
+        self.aborted = True
+        self.running = False
+        while not self.queue.empty():
+            t = self.queue.get(False)
+            self.queue.task_done()
+        return self
+    
+
 #======================================== Base classes...    
 class State(dict):
     ismachine = False
     interrupt = None
     
-    def __init__(self, fsm, on_entry=NOOP, on_exit=NOOP):
+    def __init__(self, fsm, on_entry=NOOP, on_exit=NOOP, in_state=''):
         dict.__init__(self)
         self.fsm = fsm
-        self.entry_action = on_entry
-        self.exit_action = on_exit
+        self.on_entry = on_entry
+        self.on_exit = on_exit
+        self.target_action = in_state
+        self.worker = None
+        self.timeout, self.repetition, self.hook = (-1,-1,None,)
+    
+    def _get_top_fsm(self):
+        topfsm = self.fsm
+        if topfsm is None:
+            return self
+        return topfsm._get_top_fsm()
+    
+    def entry_action(self):
+        if self.target_action != '':
+            self.timeout, self.repetition, self.hook = _state_periodic_actions_[self.target_action]
+        topfsm = self._get_top_fsm()
+        topfsm.currentStateObject = self
+        if self.on_entry != NOOP:
+            self.on_entry()
+        if self.target_action != '':
+            self.worker = Worker(self.hook, self.timeout, self.repetition)
+            self.worker.start()
+        
+    def exit_action(self):
+        if self.worker is not None:
+            if self.worker.is_running():
+                self.worker.stop()
+            self.worker.join()
+            self.worker = None
+        self.on_exit()
+        
+    def getWorker(self):
+        return self.worker
     
     def __contains__(self, o):
         if o:
@@ -181,8 +323,9 @@ class State(dict):
 class StateMachine(State):
     ismachine = True
     
-    def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP):
-        super(StateMachine, self).__init__(fsm, on_entry=on_entry, on_exit=on_exit)
+    def __init__(self, fsm, stt, initial, on_entry=NOOP, on_exit=NOOP, in_state=''):
+        super(StateMachine, self).__init__(fsm, on_entry=on_entry, on_exit=on_exit, in_state=in_state)
+        self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
         if type(initial) is tuple:
@@ -234,13 +377,13 @@ class StateMachine(State):
     
     def _setup(self, sname):
         if sname in _states_:
-            (_entry, _exit) = _states_[sname]
-            self.stt[sname] = type(sname, (State,), {})(self, on_entry=_entry, on_exit=_exit)
+            (_entry, _exit, _ta) = _states_[sname]
+            self.stt[sname] = type(sname, (State,), {})(self, on_entry=_entry, on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
                 self.stt[sname].interrupt = _interrupts_[sname]
         elif sname in _machines_:
-            (_stt, _initial, _entry, _exit) = _machines_[sname]
-            self.stt[sname] = type(sname, (StateMachine,), {})(self, _stt, _initial, _entry, _exit)
+            (_stt, _initial, _entry, _exit, _ta) = _machines_[sname]
+            self.stt[sname] = type(sname, (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
         else:
             raise NameError,'Undefined name of initial state in State machine declaration: %r' % sname
         
@@ -302,4 +445,7 @@ class StateMachine(State):
             else:
                 ret += ':' + x
         ret += ']'
-        return ret        
+        return ret
+    
+    def get_state_object(self):
+        return self.currentStateObject
