@@ -43,7 +43,7 @@ namespace karathon {
                 return;
             }
             // Check if input handler is a python function at least
-            if (!Wrapper::hasattr(handler, "func_name")) {
+            if (!Wrapper::hasattr(handler, "__name__")) {
                 throw KARABO_PYTHON_EXCEPTION("This python object is not a function.");
             }
             m_ioEventHandler = handler;
@@ -55,7 +55,7 @@ namespace karathon {
                 m_endOfStreamEventHandler = bp::object();
                 return;
             }
-            if (!Wrapper::hasattr(handler, "func_name")) {
+            if (!Wrapper::hasattr(handler, "__name__")) {
                 throw KARABO_PYTHON_EXCEPTION("This python object is not a function.");
             }
             m_endOfStreamEventHandler = handler;
