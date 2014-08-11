@@ -197,10 +197,10 @@ class Worker(threading.Thread):
                 self.queue.task_done()
             except Queue.Empty, e:
                 t = None
-            if self.running or not self.cond(t):
-                self.callback()
             if self.counter > 0:
                 self.counter -= 1
+            if self.running or not self.cond(t):
+                self.callback(self.counter == 0)      # self.callback(self.counter == 0)
         if self.running:
             self.running = False
             
