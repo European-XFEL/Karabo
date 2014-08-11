@@ -93,7 +93,7 @@ namespace karathon {
         }
 
         void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = SPECIFIC) {
-            std::string functionName = bp::extract<std::string>((slotFunction.attr("func_name")));
+            std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
             if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
             karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
             std::string instanceId = prepareInstanceId(slotType);
