@@ -11,7 +11,6 @@ from registry import Monkey
 from network import Network
 import icons
 from timestamp import Timestamp
-from util import Weak
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
@@ -59,9 +58,6 @@ class Box(QObject):
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
-
-
-    configuration = Weak()
 
 
     @property
