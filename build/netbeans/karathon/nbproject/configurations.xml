@@ -118,8 +118,8 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
-            <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
+            <pElem>${KARABO}/extern/include/python3.4m</pElem>
+            <pElem>${KARABO}/extern/lib/python3.4m/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>

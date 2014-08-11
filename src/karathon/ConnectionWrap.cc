@@ -49,7 +49,7 @@ namespace karathon {
 
         ScopedGILAcquire gil;
         bp::object onconnect = hash.get<bp::object>("_connection");
-        if (!PyObject_HasAttrString(onconnect.ptr(), "func_name"))
+        if (!PyFunction_Check(onconnect.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         onconnect(bp::object(channel));
     }
@@ -90,7 +90,7 @@ namespace karathon {
 
         ScopedGILAcquire gil;
         bp::object onerror = hash.get<bp::object>("_error");
-        if (!PyObject_HasAttrString(onerror.ptr(), "func_name"))
+        if (!PyFunction_Check(onerror.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         onerror(bp::object(channel), bp::object(code));
     }
