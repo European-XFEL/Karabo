@@ -453,8 +453,7 @@ class _Manager(QObject):
         self.onShowConfiguration(conf)
 
 
-    def handle_deviceConfiguration(self, instanceInfo):
-        deviceId = instanceInfo.get("deviceId")
+    def handle_deviceConfiguration(self, deviceId, configuration):
         device = self.deviceData.get(deviceId)
         if device is None or device.descriptor is None:
             return
