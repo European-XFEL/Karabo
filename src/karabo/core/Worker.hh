@@ -32,6 +32,7 @@ namespace karabo {
             , m_repetition(-1)
             , m_running(false)
             , m_abort(false)
+            , m_suspended(false)
             , m_request()
             , m_thread(0)
             , m_mutexRequest()
@@ -45,12 +46,13 @@ namespace karabo {
              * @param timeout time in milliseconds auxiliary thread is waiting on the <b>request</b> queue; 0 means <i>nowait</i> mode; <0 means <i>waiting forever</i>
              * @param repetition <0 means <i>cycling forever</i>; 0 makes no sense; >0 means number of cycles.
              */
-            Worker(const boost::function<void()>& callback, int timeout = -1, int repetition = -1)
+            Worker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
             : m_callback(callback)
             , m_timeout(timeout)
             , m_repetition(repetition)
             , m_running(false)
             , m_abort(false)
+            , m_suspended(false)
             , m_request()
             , m_thread(0)
             , m_mutexRequest()
@@ -63,11 +65,11 @@ namespace karabo {
 
             /**
              * Set parameters defining the behavior of the worker
-             * @param callback    function to be called
+             * @param callback    function to be called will boolean parameter signaling repetition counter expiration
              * @param timeout     timeout for receiving from queue
              * @param repetition  repetition counter
              */
-            Worker& set(const boost::function<void()>& callback, int timeout = -1, int repetition = -1) {
+            Worker& set(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1) {
                 m_callback = callback;
                 m_timeout = timeout;
                 m_repetition = repetition;
@@ -81,7 +83,7 @@ namespace karabo {
             Worker& start() {
                 m_running = true;
                 m_abort = false;
-                m_thread = new boost::thread(&Worker::receive, this);
+                m_thread = new boost::thread(&Worker::run, this);
                 return *this;
             }
 
@@ -105,6 +107,24 @@ namespace karabo {
                 if (!m_abort) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_abort = true;
+                    m_condRequest.notify_all();
+                }
+                return *this;
+            }
+
+            Worker& pause() {
+                if (!m_suspended) {
+                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    m_suspended = true;
+                    m_condRequest.notify_all();
+                }
+                return *this;
+            }
+
+            Worker& resume() {
+                if (m_suspended) {
+                    boost::mutex::scoped_lock lock(m_mutexRequest);
+                    m_suspended = false;
                     m_condRequest.notify_all();
                 }
                 return *this;
@@ -138,9 +158,9 @@ namespace karabo {
             }
 
             virtual bool cond(const T& t) = 0;
-            
+
             bool isRepetitionCounterExpired() const {
-                return m_count == 1;
+                return m_count == 0;
             }
 
         private:
@@ -149,7 +169,7 @@ namespace karabo {
              * Receive data block of type T from <b>request</b> queue.  The behavior is defined by two parameters:
              * <b>m_timeout</b> and <b>m_repetition</b>. In case of successful receiving the <b>m_callback</b> function will be called.
              */
-            void receive() {
+            void run() {
                 m_count = m_repetition;
                 while (!m_abort) {
                     T t;
@@ -170,16 +190,20 @@ namespace karabo {
                                     break;
                             }
                         }
-                        if (!m_request.empty()) {
+                        // get next request from queue if not suspended and queue is not empty
+                        if (!m_suspended && !m_request.empty()) {
                             t = m_request.front();
                             m_request.pop();
                         }
                     }
-                    if (m_running || !cond(t)) {
-                        m_callback();
+                    // decrement counter and call callback if not suspended
+                    if (!m_suspended) {
+                        if (m_count > 0)
+                            m_count--;
+                        if (m_running || !cond(t)) {
+                            m_callback(m_count == 0);
+                        }
                     }
-                    if (m_count > 0)
-                        m_count--;
                 }
                 if (m_running) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
@@ -188,17 +212,18 @@ namespace karabo {
             }
 
         private:
-            boost::function<void() > m_callback; // this callback defined once in constructor
-            int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
-            int m_repetition; // number of periodic cycles, <0 = no limit
-            bool m_running; // "running" flag
-            bool m_abort; // "abort" flag
-            std::queue<T> m_request; // request queue
-            boost::thread* m_thread; // auxiliary thread
-            boost::mutex m_mutexRequest; // mutex of request queue
-            boost::condition_variable m_condRequest; // condition variable of the request queue
-            boost::mutex m_mutexPrint; // mutex guarding the cout stream
-            int m_count;
+            boost::function<void (bool) > m_callback;    // this callback defined once in constructor
+            int m_timeout;                              // timeout (milliseconds), 0 = nowait, -1 = wait forever
+            int m_repetition;                           // number of periodic cycles, <0 = no limit
+            bool m_running;                             // "running" flag (default: true)
+            bool m_abort;                               // "abort" flag   (default: false)
+            bool m_suspended;                           // "suspended" flag (default: false))
+            std::queue<T> m_request;                    // request queue
+            boost::thread* m_thread;                    // auxiliary thread
+            boost::mutex m_mutexRequest;                // mutex of request queue
+            boost::condition_variable m_condRequest;    // condition variable of the request queue
+            boost::mutex m_mutexPrint;                  // mutex guarding the cout stream
+            int m_count;                                // current repetition counter
         };
 
         struct FsmWorker : public Worker<bool> {
@@ -206,7 +231,7 @@ namespace karabo {
             FsmWorker() : Worker<bool>() {
             }
 
-            FsmWorker(const boost::function<void()>& callback, int timeout = -1, int repetition = -1)
+            FsmWorker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
             : Worker<bool>(callback, timeout, repetition) {
             }
 
