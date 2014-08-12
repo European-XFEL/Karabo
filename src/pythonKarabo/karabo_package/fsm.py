@@ -153,6 +153,7 @@ class Worker(threading.Thread):
         self.repetition = repetition
         self.running = False
         self.aborted = False
+        self.suspended = False
         self.queue = Queue.Queue()
         self.counter = -1
     
@@ -181,6 +182,7 @@ class Worker(threading.Thread):
     def run(self):
         self.running = True
         self.aborted = False
+        self.suspended = False
         self.counter = self.repetition
         while not self.aborted:
             if self.counter == 0:
@@ -188,6 +190,13 @@ class Worker(threading.Thread):
             if not self.running and self.queue.empty():
                 break
             try:
+                if self.suspended:
+                    if self.timeout <= 0:
+                        timeout = 1000
+                    else:
+                        timeout = self.timeout
+                    time.sleep(float(self.timeout) / 1000)
+                    continue
                 if self.timeout < 0:
                     t = self.queue.get(True)
                 elif self.timeout > 0:
@@ -221,7 +230,15 @@ class Worker(threading.Thread):
             self.queue.task_done()
         return self
     
-
+    def pause(self):
+        if not self.suspended:
+            self.suspended = True
+            
+    def resume(self):
+        if self.suspended:
+            self.suspended = False
+            
+            
 #======================================== Base classes...    
 class State(dict):
     ismachine = False
