@@ -152,6 +152,9 @@ BOOST_PYTHON_MODULE(karathon) {
     //exportPyXipImage<float>();
     exportPyXipStatistics();
     exportPyXipCpuImage<int>();
+    exportPyXipCpuImage<unsigned int>();
+    exportPyXipCpuImage<long long>();
+    exportPyXipCpuImage<unsigned long long>();
     exportPyXipCpuImage<double>();
     exportPyXipCpuImage<char>();
     exportPyXipCpuImage<unsigned char>();
