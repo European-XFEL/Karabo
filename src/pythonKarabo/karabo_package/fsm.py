@@ -156,6 +156,7 @@ class Worker(threading.Thread):
         self.suspended = False
         self.queue = Queue.Queue()
         self.counter = -1
+        self.cv = threading.Condition()  # cv = condition variable
     
     def set(self, callback, timeout = -1, repetition = -1):
         self.callback = callback
@@ -190,13 +191,9 @@ class Worker(threading.Thread):
             if not self.running and self.queue.empty():
                 break
             try:
-                if self.suspended:
-                    if self.timeout <= 0:
-                        timeout = 1000
-                    else:
-                        timeout = self.timeout
-                    time.sleep(float(self.timeout) / 1000)
-                    continue
+                with self.cv:
+                    while self.suspended:
+                        self.cv.wait()
                 if self.timeout < 0:
                     t = self.queue.get(True)
                 elif self.timeout > 0:
@@ -214,7 +211,13 @@ class Worker(threading.Thread):
             self.running = False
             
     def start(self):
-        super(Worker, self).start()
+        if not self.running:
+            self.suspended = False
+            super(Worker, self).start()
+        if self.suspended:
+            with self.cv:
+                self.suspended = False
+                self.cv.notify()
         return self
     
     def stop(self):
@@ -225,6 +228,10 @@ class Worker(threading.Thread):
     def abort(self):
         self.aborted = True
         self.running = False
+        if self.suspended:
+            with self.cv:
+                self.suspended = False
+                self.cv.notify()        
         while not self.queue.empty():
             t = self.queue.get(False)
             self.queue.task_done()
@@ -232,11 +239,8 @@ class Worker(threading.Thread):
     
     def pause(self):
         if not self.suspended:
-            self.suspended = True
-            
-    def resume(self):
-        if self.suspended:
-            self.suspended = False
+            with self.cv:
+                self.suspended = True
             
             
 #======================================== Base classes...    
