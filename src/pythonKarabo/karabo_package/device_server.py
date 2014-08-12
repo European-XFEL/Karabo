@@ -1,4 +1,3 @@
-import os.path
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -6,6 +5,7 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
 import os
+import os.path
 import sys
 import signal
 import copy
@@ -479,9 +479,6 @@ class DeviceServer(object):
                 self.seqnum += 1
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
             saveToFile(config, filename, Hash("format.Xml.indentation", 2))
-            #cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
-            #out = OutputHash.create("TextFile", cfg)
-            #out.write(config)
             params = [script, modname, classid, filename]
             
             launcher = Launcher(device, script, params)
@@ -602,13 +599,10 @@ class DeviceServer(object):
 
         
 class Launcher(threading.Thread):
-    lock = threading.Lock()
-    
     def __init__(self, device, script, params):
         threading.Thread.__init__(self)
         # hide complaints from 'threading' module
         threading._DummyThread._Thread__stop = lambda x: 42
-        Launcher.lock.acquire()
         self.device = device
         self.script = script
         self.args = params
@@ -621,7 +615,6 @@ class Launcher(threading.Thread):
             os.chmod(script, 0755)
             os.execvp(script, params)
         else:
-            Launcher.lock.release()
             id, status = os.waitpid(self.pid, 0)
             print "Finally %r died" % (self.device)
 
