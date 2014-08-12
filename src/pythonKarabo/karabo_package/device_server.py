@@ -1,3 +1,4 @@
+import os.path
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -293,6 +294,8 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create("PythonPluginLoader", Hash("pluginDirectory", input['pluginDirectory']))
         self.loadLogger(input)
+        self.pid = os.getpid()
+        self.seqnum = 0
     
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -465,7 +468,23 @@ class DeviceServer(object):
             self.log.DEBUG("Trying to validate  the configuration on device server")
             validated = validator.validate(schema, config)
             self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
-            launcher = Launcher(pluginDir, modname, classid, config)
+            
+            if "_deviceId_" in config:
+                device = config["_deviceId_"]
+            else:
+                raise RuntimeError, "Access to " + classid + "._deviceId_ failed"
+            script = os.path.realpath(pluginDir + "/" + modname + ".py")
+            filename = "/tmp/{}.().configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
+            while os.path.isfile(filename):
+                self.seqnum += 1
+                filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
+            saveToFile(config, filename, Hash("format.Xml.indentation", 2))
+            #cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
+            #out = OutputHash.create("TextFile", cfg)
+            #out.write(config)
+            params = [script, modname, classid, filename]
+            
+            launcher = Launcher(device, script, params)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
             del validated
@@ -583,35 +602,26 @@ class DeviceServer(object):
 
         
 class Launcher(threading.Thread):
-
-    def __init__(self, pluginDir, modname, classid, config):
+    lock = threading.Lock()
+    
+    def __init__(self, device, script, params):
         threading.Thread.__init__(self)
-        
         # hide complaints from 'threading' module
         threading._DummyThread._Thread__stop = lambda x: 42
-        
-        if "_deviceId_" in config:
-            self.device = config["_deviceId_"]
-        else:
-            raise RuntimeError, "Access to " + classid + "._deviceId_ failed"
-        
-        try:
-            self.script = os.path.realpath(pluginDir + "/" + modname + ".py")
-            filename = "/tmp/" + modname + "." + classid + ".configuration.xml"
-            # TODO Use higher level API here (i.e. writeToFile)
-            cfg = Hash("filename", filename, "format.Xml.indentation", 2) 
-            out = OutputHash.create("TextFile", cfg)
-            out.write(config)
-            self.args = [self.script, modname, classid, filename]
-        except Exception as e:
-            raise RuntimeError,"Exception happened while writing 'config' object: " + str(e) 
+        Launcher.lock.acquire()
+        self.device = device
+        self.script = script
+        self.args = params
 
     def run(self):
+        script = self.script
+        params = self.args
         self.pid = os.fork()
         if self.pid == 0:
-            os.chmod(self.script, 0755)
-            os.execvp(self.script, self.args)
+            os.chmod(script, 0755)
+            os.execvp(script, params)
         else:
+            Launcher.lock.release()
             id, status = os.waitpid(self.pid, 0)
             print "Finally %r died" % (self.device)
 
