@@ -81,9 +81,16 @@ namespace karabo {
              * Default settings are "waiting forever" and "repeat forever"
              */
             Worker& start() {
-                m_running = true;
-                m_abort = false;
-                m_thread = new boost::thread(&Worker::run, this);
+                if (m_thread == 0) {
+                    m_running = true;
+                    m_abort = false;
+                    m_suspended = false;
+                    m_thread = new boost::thread(&Worker::run, this);
+                }
+                if (m_suspended) {
+                    m_suspended = false;
+                    m_condRequest.notify_all();
+                }
                 return *this;
             }
 
@@ -95,6 +102,7 @@ namespace karabo {
                 if (m_running) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_running = false;
+                    m_suspended = false;
                 }
                 m_condRequest.notify_all();
                 return *this;
@@ -107,6 +115,7 @@ namespace karabo {
                 if (!m_abort) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_abort = true;
+                    m_suspended = false;
                     m_condRequest.notify_all();
                 }
                 return *this;
@@ -116,15 +125,6 @@ namespace karabo {
                 if (!m_suspended) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_suspended = true;
-                    m_condRequest.notify_all();
-                }
-                return *this;
-            }
-
-            Worker& resume() {
-                if (m_suspended) {
-                    boost::mutex::scoped_lock lock(m_mutexRequest);
-                    m_suspended = false;
                     m_condRequest.notify_all();
                 }
                 return *this;
@@ -177,32 +177,35 @@ namespace karabo {
                         break;
                     {
                         boost::mutex::scoped_lock lock(m_mutexRequest);
+                        while (m_suspended) {
+                            m_condRequest.wait(lock); // use the same condition variable for "suspended" case
+                        }
                         if (!m_running && m_request.empty())
                             break;
                         if (m_timeout < 0) {
-                            while (m_request.empty() && !m_abort && m_running) {
+                            while (m_request.empty() && !m_abort && m_running && !m_suspended) {
                                 m_condRequest.wait(lock);
                             }
                         } else if (m_timeout > 0) {
                             boost::system_time const expired = boost::get_system_time() + boost::posix_time::milliseconds(m_timeout);
-                            while (m_request.empty() && !m_abort && m_running) {
+                            while (m_request.empty() && !m_abort && m_running && !m_suspended) {
                                 if (!m_condRequest.timed_wait(lock, expired))
                                     break;
                             }
                         }
+                        if (m_suspended)
+                            continue;
                         // get next request from queue if not suspended and queue is not empty
-                        if (!m_suspended && !m_request.empty()) {
+                        if (!m_request.empty()) {
                             t = m_request.front();
                             m_request.pop();
                         }
                     }
                     // decrement counter and call callback if not suspended
-                    if (!m_suspended) {
-                        if (m_count > 0)
-                            m_count--;
-                        if (m_running || !cond(t)) {
-                            m_callback(m_count == 0);
-                        }
+                    if (m_count > 0)
+                        m_count--;
+                    if (m_running || !cond(t)) {
+                        m_callback(m_count == 0);
                     }
                 }
                 if (m_running) {
@@ -212,18 +215,18 @@ namespace karabo {
             }
 
         private:
-            boost::function<void (bool) > m_callback;    // this callback defined once in constructor
-            int m_timeout;                              // timeout (milliseconds), 0 = nowait, -1 = wait forever
-            int m_repetition;                           // number of periodic cycles, <0 = no limit
-            bool m_running;                             // "running" flag (default: true)
-            bool m_abort;                               // "abort" flag   (default: false)
-            bool m_suspended;                           // "suspended" flag (default: false))
-            std::queue<T> m_request;                    // request queue
-            boost::thread* m_thread;                    // auxiliary thread
-            boost::mutex m_mutexRequest;                // mutex of request queue
-            boost::condition_variable m_condRequest;    // condition variable of the request queue
-            boost::mutex m_mutexPrint;                  // mutex guarding the cout stream
-            int m_count;                                // current repetition counter
+            boost::function<void (bool) > m_callback; // this callback defined once in constructor
+            int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
+            int m_repetition; // number of periodic cycles, <0 = no limit
+            bool m_running; // "running" flag (default: true)
+            bool m_abort; // "abort" flag   (default: false)
+            bool m_suspended; // "suspended" flag (default: false))
+            std::queue<T> m_request; // request queue
+            boost::thread* m_thread; // auxiliary thread
+            boost::mutex m_mutexRequest; // mutex of request queue
+            boost::condition_variable m_condRequest; // condition variable of the request queue
+            boost::mutex m_mutexPrint; // mutex guarding the cout stream
+            int m_count; // current repetition counter
         };
 
         struct FsmWorker : public Worker<bool> {
