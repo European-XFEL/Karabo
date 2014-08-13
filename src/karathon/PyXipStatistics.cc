@@ -35,5 +35,5 @@ void exportPyXipStatistics() {
     st.def("getYmax", &Statistics::getYmax);
     st.def("getZmax", &Statistics::getZmax);
     
-    st.def("print", &Statistics::print);
+    st.def("printStatistics", &Statistics::print);
 }
