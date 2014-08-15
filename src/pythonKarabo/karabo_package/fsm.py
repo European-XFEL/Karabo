@@ -163,13 +163,6 @@ class Worker(threading.Thread):
         self.timeout  = timeout
         self.repetition = repetition
 
-    def cond(self, s):
-        if type(s) is bool:
-            return s
-        if s is None:
-            return False
-        return True
-
     def is_running(self):
         return self.running
     
