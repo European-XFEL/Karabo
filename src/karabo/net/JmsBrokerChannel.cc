@@ -73,7 +73,7 @@ namespace karabo {
 
         void JmsBrokerChannel::preRegisterSynchronousRead() {
             
-            boost::mutex::scoped_lock lock(m_syncConsumerMutex);
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
             
             MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_syncConsumerHandle));
             m_hasSyncConsumer = true;
@@ -90,7 +90,7 @@ namespace karabo {
 
         void JmsBrokerChannel::read(std::string& body, karabo::util::Hash& header) {
             
-            boost::mutex::scoped_lock lock(m_syncConsumerMutex);
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
             
             try {
                             
@@ -145,7 +145,7 @@ namespace karabo {
 
         void JmsBrokerChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
             
-            boost::mutex::scoped_lock lock(m_syncConsumerMutex);
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
             
             try {
 
@@ -467,8 +467,10 @@ namespace karabo {
 
 
         void JmsBrokerChannel::write(const std::string& messageBody, const Hash& header) {
-
+            
             try {
+                
+                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
@@ -509,6 +511,8 @@ namespace karabo {
         void JmsBrokerChannel::write(const char* messageBody, const size_t& size, const Hash& header) {
 
             try {
+                
+                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);        
 
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;

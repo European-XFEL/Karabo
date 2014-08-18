@@ -13,11 +13,16 @@
 
 #include <boost/python.hpp>
 #include <karabo/xms/Requestor.hh>
-#include <karabo/net/BrokerChannel.hh>
 #include "HashWrap.hh"
 #include "ScopedGILRelease.hh"
 
 namespace bp = boost::python;
+
+//namespace karabo {
+//    namespace xms {
+//        class SignalSlotable;
+//    }
+//}
 
 namespace karathon {
 
@@ -25,57 +30,39 @@ namespace karathon {
 
     public:
 
-        RequestorWrap(const karabo::net::BrokerChannel::Pointer& channel, const std::string& requestInstanceId) :
-        karabo::xms::Requestor(channel, requestInstanceId) {
+        explicit RequestorWrap(karabo::xms::SignalSlotable* signalSlotable) :
+        karabo::xms::Requestor(signalSlotable) {
         }
 
         RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction) {
-            prepareHeaderAndFilter(slotInstanceId, slotFunction);
-            registerRequest();
-            m_body.clear();
+            {
+                ScopedGILRelease nogil;
+                sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash());
+            }
             return *this;
         }
 
-        template <class A1>
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) {
-            prepareHeaderAndFilter(slotInstanceId, slotFunction);
-            registerRequest();
-            m_body.clear();
-            karathon::HashWrap::set(m_body, "a1", a1);
+        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const bp::object& a1) {            
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1));
+            //registerRequest();
             return *this;
-
         }
 
         template <class A1, class A2>
         RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
-            prepareHeaderAndFilter(slotInstanceId, slotFunction);
-            registerRequest();
-            m_body.clear();
-            karathon::HashWrap::set(m_body, "a1", a1);
-            karathon::HashWrap::set(m_body, "a2", a2);
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));            
             return *this;
         }
 
         template <class A1, class A2, class A3>
         RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
-            prepareHeaderAndFilter(slotInstanceId, slotFunction);
-            registerRequest();
-            m_body.clear();
-            karathon::HashWrap::set(m_body, "a1", a1);
-            karathon::HashWrap::set(m_body, "a2", a2);
-            karathon::HashWrap::set(m_body, "a3", a3);
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             return *this;
         }
 
         template <class A1, class A2, class A3, class A4>
         RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-            prepareHeaderAndFilter(slotInstanceId, slotFunction);
-            registerRequest();
-            m_body.clear();
-            karathon::HashWrap::set(m_body, "a1", a1);
-            karathon::HashWrap::set(m_body, "a2", a2);
-            karathon::HashWrap::set(m_body, "a3", a3);
-            karathon::HashWrap::set(m_body, "a4", a4);
+            sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));          
             return *this;
         }
 
@@ -85,9 +72,8 @@ namespace karathon {
                 karabo::util::Hash body, header;
 
                 {
-                    ScopedGILRelease nogil;
-                    sendRequest();
-                    receiveResponse(body, header);
+                    ScopedGILRelease nogil;                    
+                    receiveResponse(header, body);
                 }
 
                 size_t arity = body.size();

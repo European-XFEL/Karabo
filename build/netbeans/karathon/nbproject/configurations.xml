@@ -73,7 +73,6 @@
       <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
-      <itemPath>../../../src/karathon/MemberSlotWrap.hh</itemPath>
       <itemPath>../../../src/karathon/PyXmsRequestor.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
       <itemPath>../../../src/karathon/RequestorWrap.hh</itemPath>
@@ -208,11 +207,6 @@
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/IOServiceWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/MemberSlotWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -608,11 +602,6 @@
       <item path="../../../src/karathon/HashWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karathon/IOServiceWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/MemberSlotWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">

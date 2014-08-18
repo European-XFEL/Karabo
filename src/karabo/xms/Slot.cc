@@ -38,15 +38,15 @@ namespace karabo {
         }
 
 
-        void Slot::handlePossibleReply(const karabo::util::Hash& header) {
-            std::pair<bool, karabo::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
-            if (possibleReply.first) {
-                if (header.has("replyTo")) {
-                    karabo::util::Hash replyHeader("replyFrom", header.get<std::string > ("replyTo"));
-                    m_channel->write(possibleReply.second, replyHeader);
-                }
-            }
-        }
+//        void Slot::handlePossibleReply(const karabo::util::Hash& header) {
+//            std::pair<bool, karabo::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
+//            if (possibleReply.first) {
+//                if (header.has("replyTo")) {
+//                    karabo::util::Hash replyHeader("replyFrom", header.get<std::string > ("replyTo"));
+//                    m_channel->write(possibleReply.second, replyHeader);
+//                }
+//            }
+//        }
 
 
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
