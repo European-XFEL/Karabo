@@ -93,8 +93,11 @@ class ProjectModel(QStandardItemModel):
         rootItem = self.invisibleRootItem()
         
         for project in self.projects:
+            text = project.name
+            if project.changeStatus:
+                text += "*"
             # Project names - toplevel items
-            item = QStandardItem(project.name)
+            item = QStandardItem(text)
             item.setData(project, ProjectModel.ITEM_OBJECT)
             item.setEditable(False)
             font = item.font()
@@ -357,6 +360,7 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
         
         project.zip()
+        self.updateData()
 
 
     def projectSaveAs(self, filename, project=None):
@@ -725,4 +729,5 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(object)
         
         self.updateData()
+        self.selectItem(project)
         
