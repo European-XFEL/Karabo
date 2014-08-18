@@ -1018,6 +1018,7 @@ class Scene(QSvgWidget):
             return
         if event.button() == Qt.LeftButton:
             self.current_action.mousePressEvent(self, event)
+            self.project.setChangeStatus(True)
         else:
             child = self.inner.childAt(event.pos())
             if child is not None:
@@ -1154,6 +1155,7 @@ class Scene(QSvgWidget):
             print "NavigationTreeView"
             return
 
+        self.project.setChangeStatus(True)
         event.accept()
         QWidget.dropEvent(self, event)
 
