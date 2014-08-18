@@ -58,7 +58,7 @@ namespace karabo {
 
             ImageFileWriter(const karabo::util::Hash& config) : karabo::io::Output< CpuImage<TPix> >(config) {
                 m_input = config;
-                config.get("filename", m_filename);
+                m_filename = config.get<std::string>("filename");
                 m_number = -1;
                 if (this->m_appendModeEnabled) {
                     m_number = 0;
