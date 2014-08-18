@@ -64,6 +64,9 @@ class Project(QObject):
         self.macros = []
         self.resources = { }
         self.monitors = []
+        
+        # States whether the project was changed or not
+        self.changeStatus = False
 
 
     @property
@@ -77,14 +80,17 @@ class Project(QObject):
 
     def addDevice(self, device):
         self.devices.append(device)
+        self.changeStatus = True
 
 
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
+        self.changeStatus = True
 
 
     def addScene(self, scene):
         self.scenes.append(scene)
+        self.changeStatus = True
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -92,6 +98,7 @@ class Project(QObject):
             self.configurations[deviceId].append(configuration)
         else:
             self.configurations[deviceId] = [configuration]
+        self.changeStatus = True
 
 
     def remove(self, object):
@@ -103,10 +110,12 @@ class Project(QObject):
         if isinstance(object, Configuration):
             index = self.devices.index(object)
             self.devices.pop(index)
+            self.changeStatus = True
             return index
         elif isinstance(object, Scene):
             index = self.scenes.index(object)
             self.scenes.pop(index)
+            self.changeStatus = True
             return index
 
 
@@ -148,6 +157,8 @@ class Project(QObject):
                     self.addConfiguration(deviceId, configuration)
             self.resources = {k: v for k, v in
                               projectConfig["resources"].iteritems()}
+        
+        self.changeStatus = False
 
 
     def zip(self, filename=None):
@@ -221,6 +232,8 @@ class Project(QObject):
 
         if exception is not None:
             raise exception
+        
+        self.changeStatus = False
 
 
     def addResource(self, category, data):
@@ -231,6 +244,7 @@ class Project(QObject):
             digest = hashlib.sha1(data).hexdigest()
             zf.writestr("resources/{}/{}".format(category, digest), data)
         self.resources.setdefault(category, StringList()).append(digest)
+        self.changeStatus = True
         return "project:resources/{}/{}".format(category, digest)
 
 
