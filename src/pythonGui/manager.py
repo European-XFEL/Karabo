@@ -314,7 +314,6 @@ class _Manager(QObject):
         project.addConfiguration(conf.id, ProjectConfiguration(project,
                                                 dialog.configurationName(),
                                                 Hash(classId, conf.toHash())))
-        self.projectTopology.updateData()
 
 
     def handle_log(self, message):
@@ -429,6 +428,7 @@ class _Manager(QObject):
             conf.setSchema(schema)
             # Set default values for configuration
             conf.setDefault()
+
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
@@ -447,8 +447,7 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.value.state.signalUpdateComponent.connect(
-            self._triggerStateChange)        
+        conf.value.state.signalUpdateComponent.connect(self._triggerStateChange)
         
         self.onShowConfiguration(conf)
 
