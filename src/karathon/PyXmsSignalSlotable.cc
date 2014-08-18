@@ -25,7 +25,7 @@ namespace bp = boost::python;
 
 void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable 
     bp::enum_< SignalSlotable::SlotType > ("SlotType")
-            .value("SPECIFIC", SignalSlotable::SPECIFIC)
+            .value("LOCAL", SignalSlotable::LOCAL)
             .value("GLOBAL", SignalSlotable::GLOBAL)
             .export_values()
             ;
@@ -37,7 +37,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .export_values()
             ;
 
-    bp::class_<Slot, boost::shared_ptr<Slot> > ("Slot", bp::no_init)
+    bp::class_<Slot, boost::shared_ptr<Slot>, boost::noncopyable> ("Slot", bp::no_init)
             .def("getInstanceIdOfSender"
                  , (const std::string & (Slot::*)() const) &Slot::getInstanceIdOfSender
                  , bp::return_value_policy<bp::copy_const_reference>())
@@ -138,7 +138,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (string const & (SignalSlotable::*)() const) (&SignalSlotable::getInstanceId)
                  , bp::return_value_policy< bp::copy_const_reference > ())
 
-            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
+            .def("registerSlot", (&SignalSlotableWrap::registerSlotPy), (bp::arg("slotFunction"), bp::arg("slotType") = SignalSlotable::LOCAL))
 
             //.def("registerSlot", (&SignalSlotableWrap::registerMemberSlotPy), (bp::arg("slotFunction"), bp::arg("selfObject"), bp::arg("slotType") = SignalSlotable::SPECIFIC))
 

@@ -30,33 +30,32 @@ namespace karabo {
 namespace karathon {
 
     class SlotWrap : public karabo::xms::Slot {
-
-        typedef PyObject* SlotFunction;
+        
+        bp::object m_slotFunction;
 
     public:
 
-        SlotWrap(karabo::xms::SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-        : karabo::xms::Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-            m_channel->readAsyncHashHash(boost::bind(&SlotWrap::callRegisteredSlotFunctions, this, _1, _2, _3));
+        SlotWrap(karabo::xms::SignalSlotable* signalSlotable, const std::string& slotFunction)
+        : karabo::xms::Slot(signalSlotable, slotFunction) {           
         }
 
         virtual ~SlotWrap() {
         }
 
-        void registerSlotFunction(const SlotFunction& slotHandler) {
+        void registerSlotFunction(const bp::object& slotHandler) {
             m_slotFunction = slotHandler;
         }
 
     private: // function
 
-        void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
-
-            ScopedGILAcquire gil;
+        void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
 
             extractSenderInformation(header);
-
+            
             try {
 
+                ScopedGILAcquire gil;
+                
                 size_t arity = body.size();
                 switch (arity) {
                     case 4:
@@ -74,9 +73,6 @@ namespace karathon {
                         throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
                 }
 
-                handlePossibleReply(header);
-               
-
             } catch (const karabo::util::Exception& e) {
                 std::cout << e.userFriendlyMsg();
                 invalidateSenderInformation();
@@ -86,7 +82,7 @@ namespace karathon {
 
         bool callFunction0(const karabo::util::Hash& body) {
             try {
-                bp::call<void>(m_slotFunction);
+                m_slotFunction();
             } catch (const bp::error_already_set&) {
                 PyErr_Print();
                 return false;
@@ -97,7 +93,7 @@ namespace karathon {
         bool callFunction1(const karabo::util::Hash& body) {
             bp::object a1 = HashWrap::get(body, "a1");
             try {
-                bp::call<void>(m_slotFunction, a1);
+                m_slotFunction(a1);
             } catch (const bp::error_already_set&) {
                 tryToPrint();
                 return false;
@@ -109,7 +105,7 @@ namespace karathon {
             bp::object a1 = HashWrap::get(body, "a1");
             bp::object a2 = HashWrap::get(body, "a2");
             try {
-                bp::call<void>(m_slotFunction, a1, a2);
+                m_slotFunction(a1, a2);
             } catch (const bp::error_already_set&) {
                 tryToPrint();
                 return false;
@@ -122,7 +118,7 @@ namespace karathon {
             bp::object a2 = HashWrap::get(body, "a2");
             bp::object a3 = HashWrap::get(body, "a3");
             try {
-                bp::call<void>(m_slotFunction, a1, a2, a3);
+                m_slotFunction(a1, a2, a3);
             } catch (const bp::error_already_set&) {
                 tryToPrint();
                 return false;
@@ -136,7 +132,7 @@ namespace karathon {
             bp::object a3 = HashWrap::get(body, "a3");
             bp::object a4 = HashWrap::get(body, "a4");
             try {
-                bp::call<void>(m_slotFunction, a1, a2, a3, a4);
+                m_slotFunction(a1, a2, a3, a4);
             } catch (const bp::error_already_set&) {
                 tryToPrint();
                 return false;
@@ -160,14 +156,9 @@ namespace karathon {
                 PyErr_Print();
             else
                 PyErr_Clear();
-        }
-
-    private: // member
-
-        SlotFunction m_slotFunction;
+        }       
     };
-
 }
 
-#endif	/* KARATHON_SLOTWRAP_HH */
+#endif
 

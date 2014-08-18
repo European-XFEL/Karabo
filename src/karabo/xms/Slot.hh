@@ -28,8 +28,12 @@ namespace karabo {
         // Forward SignalSlotable
         class SignalSlotable;
 
-        class Slot {
+        
 
+        class Slot {
+            
+            friend class SignalSlotable;
+            
             std::string m_instanceIdOfSender;
             std::string m_userIdOfSender;
             std::string m_accessLevelOfSender;
@@ -47,39 +51,31 @@ namespace karabo {
 
         protected:
 
-            Slot(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : m_signalSlotable(signalSlotable), m_channel(channel), m_slotInstanceId("|" + slotInstanceId + "|"), m_slotFunction("|" + slotFunction + "|") {
-                std::string filterCondition;
-                filterCondition = "slotInstanceId LIKE '%" + m_slotInstanceId + "%' AND slotFunction LIKE '%" + m_slotFunction + "%'";
-                m_channel->setFilter(filterCondition);
+            SignalSlotable* m_signalSlotable;
+            std::string m_slotFunction;
+
+            Slot(SignalSlotable* signalSlotable, const std::string& slotFunction)
+            : m_signalSlotable(signalSlotable), m_slotFunction(slotFunction) {
             }
 
-         
-
-            void handlePossibleReply(const karabo::util::Hash& header);
+            //void handlePossibleReply(const karabo::util::Hash& header);
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
-            void invalidateSenderInformation();       
+            void invalidateSenderInformation();
 
-            SignalSlotable* m_signalSlotable;
-            karabo::net::BrokerChannel::Pointer m_channel;
-            std::string m_slotInstanceId;
-            std::string m_slotFunction;
-
+            virtual void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) = 0;
         };
 
         class Slot0 : public Slot {
-
             typedef boost::function<void () > SlotHandler;
 
         public:
 
             KARABO_CLASSINFO(Slot0, "Slot0", "1.0")
 
-            Slot0(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-                m_channel->readAsyncHashHash(boost::bind(&Slot0::callRegisteredSlotFunctions, this, _1, _2, _3));
+            Slot0(SignalSlotable* signalSlotable, const std::string& slotFunction)
+            : Slot(signalSlotable, slotFunction) {
             }
 
             virtual ~Slot0() {
@@ -91,11 +87,10 @@ namespace karabo {
 
         private:
 
-            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 extractSenderInformation(header);
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
-                    handlePossibleReply(header);
                 }
                 invalidateSenderInformation();
             }
@@ -105,16 +100,13 @@ namespace karabo {
 
         template <class A1>
         class Slot1 : public Slot {
-
             typedef boost::function<void (const A1&) > SlotHandler;
 
         public:
 
             KARABO_CLASSINFO(Slot1, "Slot1", "1.0")
 
-            Slot1(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-                m_channel->readAsyncHashHash(boost::bind(&Slot1::callRegisteredSlotFunctions, this, _1, _2, _3));
+            Slot1(SignalSlotable* signalSlotable, const std::string& slotFunction) : Slot(signalSlotable, slotFunction) {
             }
 
             virtual ~Slot1() {
@@ -126,13 +118,12 @@ namespace karabo {
 
         private:
 
-            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1);
-                        handlePossibleReply(header); // TODO This is a bug for multiple handlers -> move of for and test!
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
@@ -142,7 +133,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
                 }
             }
 
@@ -151,16 +142,14 @@ namespace karabo {
 
         template <class A1, class A2>
         class Slot2 : public Slot {
-
             typedef boost::function<void (const A1&, const A2&) > SlotHandler;
 
         public:
 
             KARABO_CLASSINFO(Slot2, "Slot2", "1.0")
 
-            Slot2(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-                m_channel->readAsyncHashHash(boost::bind(&Slot2::callRegisteredSlotFunctions, this, _1, _2, _3));
+            Slot2(SignalSlotable* signalSlotable, const std::string& slotFunction)
+            : Slot(signalSlotable, slotFunction) {               
             }
 
             virtual ~Slot2() {
@@ -172,14 +161,13 @@ namespace karabo {
 
         private:
 
-            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
                     const A2& a2 = body.get<A2>("a2");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2);
-                        handlePossibleReply(header);
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
@@ -189,7 +177,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
                 }
             }
 
@@ -198,16 +186,14 @@ namespace karabo {
 
         template <class A1, class A2, class A3>
         class Slot3 : public Slot {
-
             typedef boost::function<void (const A1&, const A2&, const A3&) > SlotHandler;
 
         public:
 
             KARABO_CLASSINFO(Slot3, "Slot3", "1.0")
 
-            Slot3(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-                m_channel->readAsyncHashHash(boost::bind(&Slot3::callRegisteredSlotFunctions, this, _1, _2, _3));
+            Slot3(SignalSlotable* signalSlotable, const std::string& slotFunction)
+            : Slot(signalSlotable, slotFunction) {               
             }
 
             virtual ~Slot3() {
@@ -219,7 +205,7 @@ namespace karabo {
 
         private:
 
-            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");
@@ -227,7 +213,6 @@ namespace karabo {
                     const A3& a3 = body.get<A3 > ("a3");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2, a3);
-                        handlePossibleReply(header);
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
@@ -237,7 +222,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
                 }
             }
 
@@ -246,16 +231,14 @@ namespace karabo {
 
         template <class A1, class A2, class A3, class A4>
         class Slot4 : public Slot {
-
             typedef boost::function<void (const A1&, const A2&, const A3&, const A4&) > SlotHandler;
 
         public:
 
             KARABO_CLASSINFO(Slot4, "Slot4", "1.0")
 
-            Slot4(SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& slotInstanceId, const std::string& slotFunction)
-            : Slot(signalSlotable, channel, slotInstanceId, slotFunction) {
-                m_channel->readAsyncHashHash(boost::bind(&Slot4::callRegisteredSlotFunctions, this, _1, _2, _3));
+            Slot4(SignalSlotable* signalSlotable, const std::string& slotFunction)
+            : Slot(signalSlotable, slotFunction) {                
             }
 
             virtual ~Slot4() {
@@ -267,7 +250,7 @@ namespace karabo {
 
         private:
 
-            void callRegisteredSlotFunctions(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header) {
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");
@@ -276,7 +259,6 @@ namespace karabo {
                     const A4& a4 = body.get<A4 > ("a4");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2, a3, a4);
-                        handlePossibleReply(header);
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
@@ -286,7 +268,7 @@ namespace karabo {
                 } catch (const karabo::util::Exception& e) {
                     KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" <<  m_slotFunction << "\"";
+                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
                 }
             }
             std::vector<SlotHandler> m_slotHandlers;
