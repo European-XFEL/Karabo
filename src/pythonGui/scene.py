@@ -909,7 +909,6 @@ class Scene(QSvgWidget):
         """
         This scene was modified and this needs to be broadcasted to the project.
         """
-        print "setModified"
         self.project.setModified(True)
 
 
