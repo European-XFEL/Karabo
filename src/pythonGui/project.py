@@ -19,7 +19,7 @@ from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
 import manager
 
-from PyQt4.QtCore import QObject
+from PyQt4.QtCore import pyqtSignal, QObject
 
 import hashlib
 import os.path
@@ -48,6 +48,7 @@ class Project(QObject):
     
     PROJECT_SUFFIX = "krb"
 
+    signalProjectModified = pyqtSignal()
 
     def __init__(self, filename):
         super(Project, self).__init__()
@@ -64,6 +65,9 @@ class Project(QObject):
         self.macros = []
         self.resources = { }
         self.monitors = []
+        
+        # States whether the project was changed or not
+        self.isModified = False
 
 
     @property
@@ -74,17 +78,34 @@ class Project(QObject):
         else:
             return r
 
+    
+    def setModified(self, isModified):
+        if self.isModified == isModified:
+            return
+        
+        self.isModified = isModified
+        self.signalProjectModified.emit()
+
+
+    def setupDeviceToProject(self, device):
+        self.setModified(True)
+        # Connect device to project to get configuration changes
+        device.signalProjectModified.connect(self.setModified)
+
 
     def addDevice(self, device):
         self.devices.append(device)
+        self.setupDeviceToProject(device)
 
 
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
+        self.setupDeviceToProject(device)
 
 
     def addScene(self, scene):
         self.scenes.append(scene)
+        self.setModified(True)
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -92,6 +113,7 @@ class Project(QObject):
             self.configurations[deviceId].append(configuration)
         else:
             self.configurations[deviceId] = [configuration]
+        self.setModified(True)
 
 
     def remove(self, object):
@@ -103,10 +125,12 @@ class Project(QObject):
         if isinstance(object, Configuration):
             index = self.devices.index(object)
             self.devices.pop(index)
+            self.setModified(True)
             return index
         elif isinstance(object, Scene):
             index = self.scenes.index(object)
             self.scenes.pop(index)
+            self.setModified(True)
             return index
 
 
@@ -148,6 +172,8 @@ class Project(QObject):
                     self.addConfiguration(deviceId, configuration)
             self.resources = {k: v for k, v in
                               projectConfig["resources"].iteritems()}
+        
+        self.setModified(False)
 
 
     def zip(self, filename=None):
@@ -221,6 +247,8 @@ class Project(QObject):
 
         if exception is not None:
             raise exception
+        
+        self.setModified(False)
 
 
     def addResource(self, category, data):
@@ -231,6 +259,7 @@ class Project(QObject):
             digest = hashlib.sha1(data).hexdigest()
             zf.writestr("resources/{}/{}".format(category, digest), data)
         self.resources.setdefault(category, StringList()).append(digest)
+        self.setModified(True)
         return "project:resources/{}/{}".format(category, digest)
 
 
@@ -249,6 +278,7 @@ class Project(QObject):
 
 
 class Device(Configuration):
+    signalProjectModified = pyqtSignal(bool)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
         super(Device, self).__init__(deviceId, "projectClass", descriptor)
