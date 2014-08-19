@@ -436,6 +436,7 @@ class ProjectModel(QStandardItemModel):
                                     self.pluginDialog.deviceId,
                                     self.pluginDialog.startupBehaviour)
         
+        self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
