@@ -36,6 +36,7 @@ class ProjectPanel(QWidget):
 
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
+    signalRenameScene = pyqtSignal(object) # scene
     
 
     def __init__(self):
@@ -47,6 +48,7 @@ class ProjectPanel(QWidget):
         self.twProject = ProjectTreeView(self)
         self.twProject.model().signalAddScene.connect(self.signalAddScene)
         self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
+        self.twProject.model().signalRenameScene.connect(self.signalRenameScene)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         
         mainLayout = QVBoxLayout(self)

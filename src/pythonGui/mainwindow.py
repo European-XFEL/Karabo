@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         self.projectPanel = ProjectPanel()
         self.projectPanel.signalAddScene.connect(self.onAddScene)
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
+        self.projectPanel.signalRenameScene.connect(self.onRenameScene)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
         leftArea.setStretchFactor(1,1)
@@ -284,8 +285,18 @@ class MainWindow(QMainWindow):
 
     def onAddScene(self, scene):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
+            # Remove start up page
             self._showStartUpPage(False, False)
-            
+        
+        # Check whether scene is already open
+        for i in xrange(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "scene"):
+                if divWidget.dockableWidget.scene == scene:
+                    # Scene already open
+                    self.middleTab.setCurrentIndex(i)
+                    return
+
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename)
         customView.signalClosed.connect(self.onCustomViewRemoved)
@@ -303,6 +314,20 @@ class MainWindow(QMainWindow):
                     break
         
         self.onCustomViewRemoved()
+
+
+    def onRenameScene(self, scene):
+        """
+        Adapt tab text of corresponding scene.
+        
+        The filename of the scene was already changed in the project panel and
+        needs to be updated.
+        """
+        for i in xrange(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "scene"):
+                if divWidget.dockableWidget.scene == scene:
+                    self.middleTab.setTabText(i, scene.filename)
 
 
     def onCustomViewRemoved(self):

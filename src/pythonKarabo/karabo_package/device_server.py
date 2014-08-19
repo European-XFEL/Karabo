@@ -599,6 +599,7 @@ class DeviceServer(object):
 
         
 class Launcher(threading.Thread):
+    
     def __init__(self, device, script, params):
         threading.Thread.__init__(self)
         # hide complaints from 'threading' module

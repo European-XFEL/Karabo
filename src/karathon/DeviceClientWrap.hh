@@ -135,19 +135,31 @@ namespace karathon {
         }
 
         bool registerPropertyMonitor(const std::string& instanceId, const std::string& key, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
-            karabo::util::Schema schema = this->getDeviceSchema(instanceId);
+            karabo::util::Schema schema;
+            {
+                ScopedGILRelease nogil;
+                schema = this->getDeviceSchema(instanceId);
+            }
             if (schema.has(key)) {
-                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-                this->cacheAndGetConfiguration(instanceId);
-                if (Wrapper::hasattr(callbackFunction, "__self__")) {
-                    const bp::object & selfObject(callbackFunction.attr("__self__"));
-                    std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", funcName);
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._selfObject", selfObject.ptr());
-                } else {
-                    m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction.ptr());
+                
+                {
+                    ScopedGILRelease nogil;
+                    this->cacheAndGetConfiguration(instanceId);
                 }
-                if (!userData.is_none()) m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                
+                {
+                    boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                    if (Wrapper::hasattr(callbackFunction, "__self__")) {
+                        const bp::object & selfObject(callbackFunction.attr("__self__"));
+                        std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", funcName);
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._selfObject", selfObject.ptr());
+                    } else {
+                        m_propertyChangedHandlers.set(instanceId + "." + key + "._function", callbackFunction.ptr());
+                    }
+                    if (!userData.is_none()) m_propertyChangedHandlers.set(instanceId + "." + key + "._userData", userData);
+                }
+                
                 immortalize(instanceId);
                 return true;
             } else {
@@ -284,26 +296,37 @@ namespace karathon {
     private:
 
         void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
-            boost::optional<karabo::util::Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
-            if (node) {
-                const karabo::util::Hash& entry = node->getValue<karabo::util::Hash>();
-                boost::optional<const karabo::util::Hash::Node&> nodeFunc = entry.find("_function");
-                boost::optional<const karabo::util::Hash::Node&> nodeSelfObject = entry.find("_selfObject");
-                boost::optional<const karabo::util::Hash::Node&> nodeData = entry.find("_userData");
-
-                ScopedGILAcquire gil;
+            
+            karabo::util::Hash registeredMonitors;
+            {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                boost::optional<karabo::util::Hash::Node&> node = m_deviceChangedHandlers.find(instanceId);
+                
+                if (node) {
+                    registeredMonitors = node->getValue<karabo::util::Hash>();
+                }
+            }
+            
+            if (!registeredMonitors.empty()) {
+                boost::optional<karabo::util::Hash::Node&> nodeFunc = registeredMonitors.find("_function");
+                boost::optional<karabo::util::Hash::Node&> nodeSelfObject = registeredMonitors.find("_selfObject");
+                boost::optional<karabo::util::Hash::Node&> nodeData = registeredMonitors.find("_userData");
+                
                 try {
                     if (nodeSelfObject) {
                         if (nodeData) {
+                            ScopedGILAcquire gil;
                             bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, hash, nodeData->getValue<bp::object >());
                         } else {
+                            ScopedGILAcquire gil;
                             bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, hash);
                         }
                     } else {
                         if (nodeData) {
+                            ScopedGILAcquire gil;
                             bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, hash, nodeData->getValue<bp::object >());
                         } else {
+                            ScopedGILAcquire gil;
                             bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, hash);
                         }
                     }
@@ -314,9 +337,15 @@ namespace karathon {
         }
 
         void notifyPropertyChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
-            boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
-            if (m_propertyChangedHandlers.has(instanceId)) {
-                this->callMonitor(instanceId, m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId), hash);
+            karabo::util::Hash registeredMonitors;
+            {
+                boost::mutex::scoped_lock lock(m_propertyChangedHandlersMutex);
+                if (m_propertyChangedHandlers.has(instanceId)) {
+                    registeredMonitors = m_propertyChangedHandlers.get<karabo::util::Hash > (instanceId);
+                }
+            }
+            if (!registeredMonitors.empty()) {
+                this->callMonitor(instanceId, registeredMonitors, hash);
             }
         }
 
@@ -336,18 +365,22 @@ namespace karathon {
                     boost::optional<const karabo::util::Hash::Node&> nodeSelfObject = entry.find("_selfObject");
                     boost::optional<const karabo::util::Hash::Node&> nodeData = entry.find("_userData");
                     {
-                        ScopedGILAcquire gil;
+                        
                         try {
                             if (nodeSelfObject) {
                                 if (nodeData) {
+                                    ScopedGILAcquire gil;
                                     bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, currentPath, Wrapper::toObject(it->getValueAsAny()), t, nodeData->getValue<bp::object >());
                                 } else {
+                                    ScopedGILAcquire gil;
                                     bp::call_method<void>(nodeSelfObject->getValue<PyObject*>(), nodeFunc->getValue<std::string>().c_str(), instanceId, currentPath, Wrapper::toObject(it->getValueAsAny()), t);
                                 }
                             } else {
                                 if (nodeData) {
+                                    ScopedGILAcquire gil;
                                     bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, currentPath, Wrapper::toObject(it->getValueAsAny()), t, nodeData->getValue<bp::object >());
                                 } else {
+                                    ScopedGILAcquire gil;
                                     bp::call<void>(nodeFunc->getValue<PyObject*>(), instanceId, currentPath, Wrapper::toObject(it->getValueAsAny()), t);
                                 }
                             }
