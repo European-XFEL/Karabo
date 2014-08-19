@@ -27,6 +27,7 @@ from karabo import hashtypes
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
+
 import numpy as np
 
 class DisplayImageElement(DisplayWidget):
@@ -62,37 +63,40 @@ class DisplayImageElement(DisplayWidget):
 
 
     def valueChanged(self, box, value, timestamp=None):
-        if self.value is None or value is not self.value:
-            if len(value.dims.value) != 2:
-                return
+        if self.value is not None or value is self.value:
+            return
+        
+        if len(value.dims.value) < 2:
+            return
 
-            # Data type information
-            type = value.type.value
-            type = hashtypes.Type.fromname[type].numpy
+        # Data type information
+        type = value.type.value
+        type = hashtypes.Type.fromname[type].numpy
 
-            # Data itself
-            data = value.data.value
-            npy = np.frombuffer(data, type)
+        # Data itself
+        data = value.data.value
+        npy = np.frombuffer(data, type)
 
-            # Normalize
-            npy = npy - npy.min()
-            npy *= (255.0 / npy.max())
+        # Normalize
+        npy = npy - npy.min()
+        npy *= (255.0 / npy.max())
 
-            # Cast
-            npy = npy.astype(np.uint8)
+        # Cast
+        npy = npy.astype(np.uint8)
 
-            # Shape
-            dimX, dimY = value.dims.value
+        # Shape
+        dimX = value.dims.value[0]
+        dimY = value.dims.value[1]
 
-            # Safety
-            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
+        # Safety
+        if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
 
-            image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
-            image.setColorTable(self.colorTable)
-            pixmap = QPixmap.fromImage(image)
-            
-            # Scale pixmap
-            if pixmap.height() > 125:
-                pixmap = pixmap.scaledToHeight(125)
-                
-            self.__image.setPixmap(pixmap)
+        image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
+        image.setColorTable(self.colorTable)
+        pixmap = QPixmap.fromImage(image)
+
+        # Scale pixmap
+        if pixmap.height() > 125:
+            pixmap = pixmap.scaledToHeight(125)
+
+        self.__image.setPixmap(pixmap)

@@ -230,6 +230,12 @@ class NavigationTreeModel(QAbstractItemModel):
                 
                 serverClassIds.extend(self.eraseServer(serverId))
                 existingIds.append(serverId)
+                
+                # Check for running devices on that server
+                #childNodes = index.internalPointer().childNodes
+                #for childNode in childNodes:
+                #    for deviceNode in childNode.childNodes:
+                #        existingIds.append(deviceNode.displayName)
         
         deviceKey = "device"
         if config.has(deviceKey):

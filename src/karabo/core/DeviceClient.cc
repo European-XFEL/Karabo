@@ -218,11 +218,42 @@ namespace karabo {
 
 
         void DeviceClient::onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            try {
-                // TODO We have now instanceInfo information, could send it on
-                KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" silently disappeared " << instanceInfo;
+            slotInstanceGone(instanceId, instanceInfo);
+        }
 
-                string path = prepareTopologyPath(instanceId, instanceInfo);
+
+        void DeviceClient::slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            try {
+
+                string path(prepareTopologyPath(instanceId, instanceInfo));
+                if (!existsInRuntimeSystemDescription(path)) return;
+
+                string instanceType = getInstanceType(instanceInfo);
+
+                Hash deviceSection;
+                if (instanceType == "server") {
+                    boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
+                    if (m_runtimeSystemDescription.has("device")) {
+                        deviceSection = m_runtimeSystemDescription.get<Hash>("device");
+                    }
+                }
+
+                if (!deviceSection.empty()) {
+                    for (Hash::const_iterator it = deviceSection.begin(); it != deviceSection.end(); ++it) {
+                        const Hash::Attributes& attributes = it->getAttributes();
+                        if (attributes.get<string>("serverId") == instanceId) {
+                            string deviceId = it->getKey();
+                            Hash deviceInstanceInfo;
+                            for (Hash::Attributes::const_iterator jt = attributes.begin(); jt != attributes.end(); ++jt) {
+                                deviceInstanceInfo.set(jt->getKey(), jt->getValueAsAny());
+                            }
+                            if (m_instanceGoneHandler) m_instanceGoneHandler(deviceId, deviceInstanceInfo);
+                            eraseFromRuntimeSystemDescription("device." + deviceId);
+                            eraseFromInstanceUsage(deviceId);
+                        }
+                    }
+                }
+
                 eraseFromRuntimeSystemDescription(path);
                 eraseFromInstanceUsage(instanceId);
                 if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
@@ -232,23 +263,6 @@ namespace karabo {
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceNotAvailable()";
             }
-        }
-
-
-        void DeviceClient::slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceGone was called";
-            // Ignore the signal if it comes from master
-            if (m_masterMode == IS_MASTER) {
-                if (m_signalSlotable->getSenderInfo("slotInstanceGone")->getInstanceIdOfSender() == m_signalSlotable->getInstanceId()) {
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring information from myself to remove silently disappeared: " << instanceId;
-                    return;
-                }
-            }
-            string path = prepareTopologyPath(instanceId, instanceInfo);
-            eraseFromRuntimeSystemDescription(path);
-            eraseFromInstanceUsage(instanceId);
-            if (m_masterMode != HAS_MASTER) m_signalSlotable->stopTrackingExistenceOfInstance(instanceId);
-            if (m_instanceGoneHandler) m_instanceGoneHandler(instanceId, instanceInfo);
         }
 
 
