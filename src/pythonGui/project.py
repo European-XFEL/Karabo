@@ -80,7 +80,6 @@ class Project(QObject):
 
     
     def setModified(self, isModified):
-        print "setModified", isModified
         if self.isModified == isModified:
             return
         
