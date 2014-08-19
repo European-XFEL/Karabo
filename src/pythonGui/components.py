@@ -264,6 +264,10 @@ class EditableNoApplyComponent(BaseComponent):
     def onEditingFinished(self, box, value):
         box.set(value, None)
 
+        # Configuration changed - so project needs to be informed to show it
+        if box.configuration.type == 'projectClass':
+            box.configuration.signalProjectModified.emit(True)
+
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals

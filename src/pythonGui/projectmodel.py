@@ -25,8 +25,8 @@ import manager
 from project import Category, Device, Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QDialog, QItemSelectionModel, QMessageBox,
-                         QStandardItem, QStandardItemModel)
+from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
+                         QMessageBox, QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import ZipFile
 
@@ -96,6 +96,14 @@ class ProjectModel(QStandardItemModel):
         for project in self.projects:
             # Project names - toplevel items
             item = QStandardItem(project.name)
+            
+            if project.isModified:
+                # Change color to blue
+                brush = item.foreground()
+                brush.setColor(Qt.blue)
+                item.setForeground(brush)
+                item.setText("*{}".format(project.name))
+
             item.setData(project, ProjectModel.ITEM_OBJECT)
             item.setEditable(False)
             font = item.font()
@@ -274,7 +282,6 @@ class ProjectModel(QStandardItemModel):
         for p in self.projects:
             if p.filename == filename:
                 self.projectClose(p)
-                #self.updateData()
                 break
 
 
@@ -310,15 +317,26 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(scene)
 
 
+    def appendProject(self, project):
+        """
+        Bind project to model.
+        
+        This includes a connection, if project changes and the view update after
+        appending project to list.
+        """
+        project.signalProjectModified.connect(self.updateData)
+        self.projects.append(project)
+        self.updateData()
+        self.selectItem(project)
+
+
     def projectNew(self, filename):
         """ Create and return a new project and add it to the model """
         self.closeExistentProject(filename)
         
         project = Project(filename)
         project.zip()
-        self.projects.append(project)
-        self.updateData()
-        self.selectItem(project)
+        self.appendProject(project)
         return project
 
 
@@ -337,9 +355,7 @@ class ProjectModel(QStandardItemModel):
                         "occurred."
             raise
 
-        self.projects.append(project)
-        self.updateData()
-        self.selectItem(project)
+        self.appendProject(project)
 
         # Open new loaded project scenes
         for scene in project.scenes:
@@ -371,7 +387,6 @@ class ProjectModel(QStandardItemModel):
 
         project.zip(filename)
         project.filename = filename
-        self.updateData()
 
 
     def editDevice(self, device=None):
@@ -466,7 +481,6 @@ class ProjectModel(QStandardItemModel):
         """
         device = Device(serverId, classId, deviceId, ifexists)
         project.insertDevice(index, device)
-        self.updateData()
         
         return device
 
@@ -516,7 +530,7 @@ class ProjectModel(QStandardItemModel):
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
             self.updateData()
-            # TODO: send signal to view to update the name as well
+            # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
 
 
@@ -532,7 +546,6 @@ class ProjectModel(QStandardItemModel):
         Create new Scene object for given \project.
         """
         scene = self._createScene(project, sceneName)
-        self.updateData()
         self.openScene(scene)
 
         self.selectItem(scene)
@@ -691,7 +704,7 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             scene.fromXml(fin.read())
         project.addScene(scene)
-        self.updateData()
+        self.selectItem(scene)
 
 
     def onRemove(self):
@@ -738,4 +751,5 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(object)
         
         self.updateData()
+        self.selectItem(project)
         
