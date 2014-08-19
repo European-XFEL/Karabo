@@ -96,8 +96,7 @@ class ProjectModel(QStandardItemModel):
         
         for project in self.projects:
             text = project.name
-            print "changeStatus", project.changeStatus
-            if project.changeStatus:
+            if project.isModified:
                 text = "*{}".format(text)
             # Project names - toplevel items
             item = QStandardItem(text)
@@ -279,7 +278,6 @@ class ProjectModel(QStandardItemModel):
         for p in self.projects:
             if p.filename == filename:
                 self.projectClose(p)
-                #self.updateData()
                 break
 
 
@@ -300,7 +298,7 @@ class ProjectModel(QStandardItemModel):
         
         for project in self.projects:
             self.projectClose(project)
-        #self.updateData()
+        self.updateData()
         return True
 
 
@@ -322,7 +320,7 @@ class ProjectModel(QStandardItemModel):
         This includes a connection, if project changes and the view update after
         appending project to list.
         """
-        project.signalProjectChanged.connect(self.updateData)
+        project.signalProjectModified.connect(self.updateData)
         self.projects.append(project)
         self.updateData()
         self.selectItem(project)
@@ -372,7 +370,6 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
         
         project.zip()
-        #self.updateData()
 
 
     def projectSaveAs(self, filename, project=None):
@@ -386,7 +383,6 @@ class ProjectModel(QStandardItemModel):
 
         project.zip(filename)
         project.filename = filename
-        #self.updateData()
 
 
     def editDevice(self, device=None):
@@ -440,7 +436,6 @@ class ProjectModel(QStandardItemModel):
                                     self.pluginDialog.deviceId,
                                     self.pluginDialog.startupBehaviour)
         
-        #self.updateData()
         self.selectItem(device)
         self.pluginDialog = None
 
@@ -468,7 +463,6 @@ class ProjectModel(QStandardItemModel):
         
         device = Device(serverId, classId, deviceId, ifexists)
         project.addDevice(device)
-        #self.updateData()
         
         return device
 
@@ -479,7 +473,6 @@ class ProjectModel(QStandardItemModel):
         """
         device = Device(serverId, classId, deviceId, ifexists)
         project.insertDevice(index, device)
-        #self.updateData()
         
         return device
 
@@ -539,7 +532,6 @@ class ProjectModel(QStandardItemModel):
         Create new Scene object for given \project.
         """
         scene = self._createScene(project, sceneName)
-        #self.updateData()
         self.openScene(scene)
 
         self.selectItem(scene)
@@ -610,7 +602,7 @@ class ProjectModel(QStandardItemModel):
         
         object = index.data(ProjectModel.ITEM_OBJECT)
         self.projectClose(object)
-        #self.updateData()
+        self.updateData()
 
 
     def onEditDevice(self):
@@ -694,7 +686,6 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             scene.fromXml(fin.read())
         project.addScene(scene)
-        #self.updateData()
 
 
     def onRemove(self):
@@ -740,6 +731,6 @@ class ProjectModel(QStandardItemModel):
         if isinstance(object, Scene):
             self.signalRemoveScene.emit(object)
         
-        #self.updateData()
+        self.updateData()
         self.selectItem(project)
         
