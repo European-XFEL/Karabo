@@ -530,7 +530,7 @@ class ProjectModel(QStandardItemModel):
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
             self.updateData()
-            # TODO: send signal to view to update the name as well
+            # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
 
 
@@ -704,6 +704,7 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             scene.fromXml(fin.read())
         project.addScene(scene)
+        self.selectItem(scene)
 
 
     def onRemove(self):

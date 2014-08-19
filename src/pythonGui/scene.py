@@ -430,7 +430,7 @@ class LabelAction(Action):
 
 class Line(Shape):
     xmltag = ns_svg + "line"
-    text = "Add Line"
+    text = "Add line"
     icon = icons.line
 
 
@@ -484,10 +484,10 @@ class Line(Shape):
         return ret
 
 
-    def edit(self):
+    def edit(self, parent):
         pendialog = PenDialog(self.pen)
         pendialog.exec_()
-        #self.setModified()
+        parent.setModified()
 
 
 class Rectangle(Shape):
@@ -495,14 +495,17 @@ class Rectangle(Shape):
     text = "Add rectangle"
     icon = icons.rect
 
+
     def set_points(self, start, end):
         self.rect = QRect(start, end).normalized()
+
 
     def draw(self, painter):
         painter.setPen(self.pen)
         painter.setBrush(self.brush)
         painter.drawRect(self.rect)
         Shape.draw(self, painter)
+
 
     def element(self):
         ret = ElementTree.Element(
@@ -541,10 +544,11 @@ class Rectangle(Shape):
         layout.shapes.append(ret)
         return ret
 
-    def edit(self):
+
+    def edit(self, parent):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
-        self.parent.setModified()
+        parent.setModified()
 
 
 class Path(Shape):
@@ -582,10 +586,10 @@ class Path(Shape):
         Shape.draw(self, painter)
 
 
-    def edit(self):
+    def edit(self, parent):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
-        self.parent.setModified()
+        parent.setModified()
 
 
     def element(self):
@@ -814,7 +818,8 @@ class Delete(SimpleAction):
 
     def run(self):
         selected = [c for c in self.parent.ilayout if c.selected]
-        if not selected:
+        selectedShapes = [s for s in self.parent.ilayout.shapes if s.selected]
+        if not selected and not selectedShapes:
             return
         
         if QMessageBox.question(self.parent, "Really delete?",
@@ -1096,7 +1101,7 @@ class Scene(QSvgWidget):
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
             return
-        item.edit()
+        item.edit(self)
 
 
     def dragEnterEvent(self, event):
