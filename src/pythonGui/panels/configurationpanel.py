@@ -488,7 +488,7 @@ class ConfigurationPanel(QWidget):
             else:
                 index = configuration.index
             # Show waiting page
-            self._setParameterEditorIndex(index)#configuration.index)
+            self._setParameterEditorIndex(index)
         
         if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
@@ -526,6 +526,8 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
+        self.prevConfiguration = None
+        
         # Do not remove the first two widgets (empty page and waiting page)
         while self.__swParameterEditor.count() > 2:
             self._removeParameterEditorPage(self.__swParameterEditor
@@ -549,7 +551,8 @@ class ConfigurationPanel(QWidget):
         else:
             configuration.index = self._createNewParameterPage(configuration)
 
-        if self.__swParameterEditor.currentIndex() == 1:
+        currentIndex = self.__swParameterEditor.currentIndex()
+        if (currentIndex == 1) and (self.prevConfiguration is configuration):
             # Waiting page is shown
             self._setParameterEditorIndex(configuration.index)
         

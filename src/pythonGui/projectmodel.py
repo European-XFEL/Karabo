@@ -37,6 +37,7 @@ class ProjectModel(QStandardItemModel):
     signalSelectionChanged = pyqtSignal(list)
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
+    signalRenameScene = pyqtSignal(object) # scene
 
     ITEM_OBJECT = Qt.UserRole
 
@@ -257,7 +258,7 @@ class ProjectModel(QStandardItemModel):
             return None
 
         object = index.data(ProjectModel.ITEM_OBJECT)
-        while (object is not None) and not isinstance(object, Project):
+        while not isinstance(object, Project):
             index = index.parent()
             object = index.data(ProjectModel.ITEM_OBJECT)
 
@@ -429,7 +430,7 @@ class ProjectModel(QStandardItemModel):
         self.pluginDialog = None
 
 
-    def addDevice(self, project, serverId, classId, deviceId, ifexists):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists, updateNeeded=True):
         """
         Add a device for the given \project with the given data.
         """
@@ -452,7 +453,9 @@ class ProjectModel(QStandardItemModel):
         
         device = Device(serverId, classId, deviceId, ifexists)
         project.addDevice(device)
-        self.updateData()
+        
+        if updateNeeded:
+            self.updateData()
         
         return device
 
@@ -474,9 +477,10 @@ class ProjectModel(QStandardItemModel):
             return
 
         for i in xrange(dialog.count):
-            deviceId = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
+            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
-                                       device.classId, deviceId, device.ifexists)
+                                       device.classId, deviceId, device.ifexists,
+                                       False)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -484,6 +488,10 @@ class ProjectModel(QStandardItemModel):
                 config = device.futureConfig
             
             newDevice.futureConfig = config
+        
+        # Remove device which basis for duplication
+        self.removeObject(self.currentProject(), device, False)
+        self.selectItem(newDevice)
 
 
     def checkDescriptor(self, device):
@@ -508,7 +516,8 @@ class ProjectModel(QStandardItemModel):
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
             self.updateData()
-        # TODO: send signal to view to update the name as well
+            # TODO: send signal to view to update the name as well
+            self.signalRenameScene.emit(scene)
 
 
     def _createScene(self, project, sceneName):
@@ -537,9 +546,13 @@ class ProjectModel(QStandardItemModel):
             return
 
         for i in xrange(dialog.count):
-            filename = "{}{}".format(dialog.displayPrefix, i+dialog.startIndex)
-            self.addScene(self.currentProject(), filename)
-
+            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, i+dialog.startIndex)
+            newScene = self.addScene(self.currentProject(), filename)
+            # TODO: Copy scene content to new scene
+            #scene.duplicate()
+        
+        self.removeObject(self.currentProject(), scene, False)
+        self.selectItem(newScene)
 
 
     def openScene(self, scene):

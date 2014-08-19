@@ -32,9 +32,9 @@ class DuplicateDialog(QDialog):
         fLayout = QFormLayout()
         fLayout.setContentsMargins(5,5,5,5)
         
-        self.leDisplayPrefix = QLineEdit(name)
+        self.leDisplayPrefix = QLineEdit()
         self.leDisplayPrefix.textChanged.connect(self.onChanged)
-        fLayout.addRow("Prefix:", self.leDisplayPrefix)
+        fLayout.addRow("Prefix:&nbsp;&nbsp;&nbsp;<i>{}</i>".format(name), self.leDisplayPrefix)
         
         self.sbStartIndex = QSpinBox()
         self.sbStartIndex.setRange(0, globals.MAX_INT32)
@@ -73,7 +73,6 @@ class DuplicateDialog(QDialog):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        enabled = len(self.leDisplayPrefix.text()) > 0 \
-                  and self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
+        enabled = self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
 

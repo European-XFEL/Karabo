@@ -65,8 +65,6 @@ class _Manager(QObject):
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
 
-        self.systemHash = None
-
         Network().signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         Network().signalServerConnectionChanged.connect(
@@ -79,6 +77,8 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
+        self.systemHash = None
+        
         # Map stores { (serverId, class), Configuration }
         self.serverClassData = dict()
         # Map stores { deviceId, Configuration }
@@ -103,18 +103,30 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(property, value)
 
 
-    def _clearServerClassParameterPage(self, serverClassIds):
+    def _clearDeviceParameterPage(self, deviceId):
+        conf = self.deviceData.get(deviceId)
+        if conf is None:
+            return
+        # Clear corresponding parameter page
+        if conf.parameterEditor is not None:
+            conf.parameterEditor.clear()
+
+        if conf.descriptor is not None:
+            conf.redummy()
+
+
+    def _clearServerClassParameterPages(self, serverClassIds):
         for serverClassId in serverClassIds:
-            try:
-                conf = self.serverClassData[serverClassId]
-                # Clear corresponding parameter page
-                if conf.parameterEditor is not None:
-                    conf.parameterEditor.clear()
-                
-                if conf.descriptor is not None:
-                    conf.redummy()
-            except KeyError:
-                pass
+            conf = self.serverClassData.get(serverClassId)
+            if conf is None:
+                return
+
+            # Clear corresponding parameter page
+            if conf.parameterEditor is not None:
+                conf.parameterEditor.clear()
+
+            if conf.descriptor is not None:
+                conf.redummy()
 
 
     def initDevice(self, serverId, classId, deviceId, config=None):
@@ -161,8 +173,6 @@ class _Manager(QObject):
         """
         if isConnected:
             return
-
-        self.systemHash = None
 
         # Reset manager settings
         self.reset()
@@ -353,8 +363,11 @@ class _Manager(QObject):
                          "is coming up now.#"
             # A log message is triggered
             self.handle_log(logMessage)
+            
+            # Clear deviceId parameter page, if existent
+            self._clearDeviceParameterPage(id)
 
-        self._clearServerClassParameterPage(serverClassIds)
+        self._clearServerClassParameterPages(serverClassIds)
 
         # Update system topology with new configuration
         self.handle_instanceUpdated(topologyEntry)
@@ -400,7 +413,7 @@ class _Manager(QObject):
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
-            self._clearServerClassParameterPage(serverClassIds)
+            self._clearServerClassParameterPages(serverClassIds)
             
             # Remove server from systemHash
             path = "server." + instanceId
