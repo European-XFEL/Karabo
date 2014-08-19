@@ -25,8 +25,8 @@ import manager
 from project import Category, Device, Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QDialog, QItemSelectionModel, QMessageBox,
-                         QStandardItem, QStandardItemModel)
+from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
+                         QMessageBox, QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import ZipFile
 
@@ -79,8 +79,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateData(self):
-        print ""
-        print "=== updateData", self.sender()
         # Get last selected object
         selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
@@ -92,14 +90,19 @@ class ProjectModel(QStandardItemModel):
         if self.hasChildren():
             self.removeRows(0, self.rowCount())
 
-        rootItem = self.invisibleRootItem()
+        rootItem = self.invisibleRootItem() 
         
         for project in self.projects:
-            text = project.name
-            if project.isModified:
-                text = "*{}".format(text)
             # Project names - toplevel items
-            item = QStandardItem(text)
+            item = QStandardItem(project.name)
+            
+            if project.isModified:
+                # Change color to blue
+                brush = item.foreground()
+                brush.setColor(Qt.blue)
+                item.setForeground(brush)
+                item.setText("*{}".format(project.name))
+
             item.setData(project, ProjectModel.ITEM_OBJECT)
             item.setEditable(False)
             font = item.font()
