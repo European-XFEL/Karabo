@@ -483,7 +483,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
     def onEditingFinished(self, box, value):
-        print "ApplyLater onEditingFinished", box, value
         if self.__currentDisplayValue is None:
             return
         self.updateButtons()
