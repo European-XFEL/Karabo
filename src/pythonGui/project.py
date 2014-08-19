@@ -48,7 +48,7 @@ class Project(QObject):
     
     PROJECT_SUFFIX = "krb"
 
-    signalProjectChanged = pyqtSignal()
+    signalProjectModified = pyqtSignal()
 
     def __init__(self, filename):
         super(Project, self).__init__()
@@ -67,7 +67,7 @@ class Project(QObject):
         self.monitors = []
         
         # States whether the project was changed or not
-        self.changeStatus = False
+        self.isModified = False
 
 
     @property
@@ -79,27 +79,34 @@ class Project(QObject):
             return r
 
     
-    def setChangeStatus(self, status):
-        if self.changeStatus == status:
+    def setModified(self, isModified):
+        print "setModified", isModified
+        if self.isModified == isModified:
             return
         
-        self.changeStatus = status
-        self.signalProjectChanged.emit()
+        self.isModified = isModified
+        self.signalProjectModified.emit()
+
+
+    def setupDeviceToProject(self, device):
+        self.setModified(True)
+        # Connect device to project to get configuration changes
+        device.signalProjectModified.connect(self.setModified)
 
 
     def addDevice(self, device):
         self.devices.append(device)
-        self.setChangeStatus(True)
+        self.setupDeviceToProject(device)
 
 
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
-        self.setChangeStatus(True)
+        self.setupDeviceToProject(device)
 
 
     def addScene(self, scene):
         self.scenes.append(scene)
-        self.setChangeStatus(True)
+        self.setModified(True)
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -107,7 +114,7 @@ class Project(QObject):
             self.configurations[deviceId].append(configuration)
         else:
             self.configurations[deviceId] = [configuration]
-        self.setChangeStatus(True)
+        self.setModified(True)
 
 
     def remove(self, object):
@@ -119,12 +126,12 @@ class Project(QObject):
         if isinstance(object, Configuration):
             index = self.devices.index(object)
             self.devices.pop(index)
-            self.setChangeStatus(True)
+            self.setModified(True)
             return index
         elif isinstance(object, Scene):
             index = self.scenes.index(object)
             self.scenes.pop(index)
-            self.setChangeStatus(True)
+            self.setModified(True)
             return index
 
 
@@ -167,7 +174,7 @@ class Project(QObject):
             self.resources = {k: v for k, v in
                               projectConfig["resources"].iteritems()}
         
-        self.setChangeStatus(False)
+        self.setModified(False)
 
 
     def zip(self, filename=None):
@@ -242,7 +249,7 @@ class Project(QObject):
         if exception is not None:
             raise exception
         
-        self.setChangeStatus(False)
+        self.setModified(False)
 
 
     def addResource(self, category, data):
@@ -253,7 +260,7 @@ class Project(QObject):
             digest = hashlib.sha1(data).hexdigest()
             zf.writestr("resources/{}/{}".format(category, digest), data)
         self.resources.setdefault(category, StringList()).append(digest)
-        self.setChangeStatus(True)
+        self.setModified(True)
         return "project:resources/{}/{}".format(category, digest)
 
 
@@ -272,6 +279,7 @@ class Project(QObject):
 
 
 class Device(Configuration):
+    signalProjectModified = pyqtSignal(bool)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
         super(Device, self).__init__(deviceId, "projectClass", descriptor)

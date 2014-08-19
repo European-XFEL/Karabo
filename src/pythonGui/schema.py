@@ -101,9 +101,6 @@ class Box(QObject):
         self.initialized = True
         self.timestamp = timestamp
         self.signalUpdateComponent.emit(self, self._value, timestamp)
-        
-        #if self.configuration.type == 'projectClass':
-        #    self.configuration.changeStatus = True
 
 
     def hasValue(self):

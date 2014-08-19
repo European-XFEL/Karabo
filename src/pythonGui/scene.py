@@ -143,7 +143,7 @@ class ShapeAction(Action):
         if hasattr(self, 'shape'):
             parent.set_current_action(None)
             parent.ilayout.shapes.append(self.shape)
-            parent.triggerChange()
+            parent.setModified()
 
 
     def draw(self, painter):
@@ -306,7 +306,7 @@ class Select(Action):
                         c.translate(event.pos() - self.moving_pos)
                 self.moving_pos = event.pos()
                 event.accept()
-                parent.triggerChange()
+                parent.setModified()
             elif self.selection_start is not None:
                 self.selection_stop = event.pos()
                 event.accept()
@@ -330,7 +330,7 @@ class Select(Action):
                     return
                 self.resize_item.set_geometry(g)
                 parent.ilayout.update()
-                parent.triggerChange()
+                parent.setModified()
             parent.update()
             
 
@@ -417,7 +417,7 @@ class LabelAction(Action):
         p.fixed_geometry = QRect(event.pos(), p.sizeHint())
         parent.ilayout.add_item(p)
         parent.set_current_action(None)
-        parent.triggerChange()
+        parent.setModified()
 
 
     def mouseReleaseEvent(self, *args):
@@ -487,7 +487,7 @@ class Line(Shape):
     def edit(self):
         pendialog = PenDialog(self.pen)
         pendialog.exec_()
-        #self.triggerChange()
+        #self.setModified()
 
 
 class Rectangle(Shape):
@@ -544,7 +544,7 @@ class Rectangle(Shape):
     def edit(self):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
 class Path(Shape):
@@ -585,7 +585,7 @@ class Path(Shape):
     def edit(self):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
     def element(self):
@@ -772,7 +772,7 @@ class Cut(SimpleAction):
         QApplication.clipboard().setMimeData(self.parent.mimeData())
         self.parent.ilayout.delete_selected()
         self.parent.update()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
 class Copy(SimpleAction):
@@ -803,7 +803,7 @@ class Paste(SimpleAction):
         buf.close()
         self.parent.load(ar)
         self.parent.update()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
 class Delete(SimpleAction):
@@ -823,7 +823,7 @@ class Delete(SimpleAction):
                                ) == QMessageBox.Yes:
             self.parent.ilayout.delete_selected()
             self.parent.update()
-            self.parent.triggerChange()
+            self.parent.setModified()
 
 Separator()
 
@@ -846,7 +846,7 @@ class Raise(SimpleAction):
         for w in self.parent.ilayout.iterWidgets(selected=True):
             w.raise_()
         self.parent.update()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
 class Lower(SimpleAction):
@@ -867,7 +867,7 @@ class Lower(SimpleAction):
         for w in self.parent.ilayout.iterWidgets(selected=True):
             w.lower()
         self.parent.update()
-        self.parent.triggerChange()
+        self.parent.setModified()
 
 
 class Scene(QSvgWidget):
@@ -900,12 +900,12 @@ class Scene(QSvgWidget):
         self.resize(1024, 768)
 
 
-    def triggerChange(self):
+    def setModified(self):
         """
-        This scene was changed and this needs to be broadcasted to the project.
+        This scene was modified and this needs to be broadcasted to the project.
         """
-        print "triggerChange"
-        self.project.setChangeStatus(True)
+        print "setModified"
+        self.project.setModified(True)
 
 
     def add_actions(self, source):
@@ -1091,7 +1091,7 @@ class Scene(QSvgWidget):
             if isinstance(w.widget, Label):
                 dialog = TextDialog(w.widget)
                 dialog.exec_()
-                self.triggerChange()
+                self.setModified()
             return
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
@@ -1188,7 +1188,7 @@ class Scene(QSvgWidget):
             print "NavigationTreeView"
             return
 
-        self.project.setChangeStatus(True)
+        self.project.setModified(True)
         event.accept()
         QWidget.dropEvent(self, event)
 
