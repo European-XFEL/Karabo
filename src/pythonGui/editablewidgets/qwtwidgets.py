@@ -1,3 +1,10 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on April 8, 2013
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
 from widget import EditableWidget
 
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
@@ -10,7 +17,6 @@ class QwtWidget(EditableWidget):
         super(QwtWidget, self).__init__(box)
         self.widget = self.Cls(parent)
 
-        self.valueChanged(self.boxes[0], self.boxes[0].value)
         self.widget.valueChanged.connect(self.onEditingFinished)
 
 
@@ -35,7 +41,7 @@ class QwtWidget(EditableWidget):
 
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value)
+        EditableWidget.onEditingFinished(self, value)
 
 
 class Slider(QwtWidget):
