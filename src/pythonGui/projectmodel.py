@@ -301,6 +301,13 @@ class ProjectModel(QStandardItemModel):
             return False
         
         for project in self.projects:
+            if project.isModified:
+                reply = QMessageBox.question(None, "Save changes before closing",
+                    "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
+                    .format(project.filename),
+                    QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
+                if reply == QMessageBox.Save:
+                    project.zip()
             self.projectClose(project)
         self.updateData()
         return True
@@ -610,16 +617,32 @@ class ProjectModel(QStandardItemModel):
         """
         index = self.selectionModel.currentIndex()
         
-        reply = QMessageBox.question(None, 'Close project',
-            "Do you really want to close the project \"<b>{}</b>\"?"
-            .format(index.data()),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        project = index.data(ProjectModel.ITEM_OBJECT)
+        if project.isModified:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Save changes before closing")
+            msgBox.setText("Do you want to save your project before closing?")
+            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                      QMessageBox.Cancel)
+            msgBox.setDefaultButton(QMessageBox.Save)
 
-        if reply == QMessageBox.No:
-            return
+            reply = msgBox.exec_()
+            if reply == QMessageBox.Cancel:
+                return
+            
+            if reply == QMessageBox.Save:
+                project.zip()
+        else:
+            index = self.selectionModel.currentIndex()
+            reply = QMessageBox.question(None, 'Close project',
+                "Do you really want to close the project \"<b>{}</b>\"?"
+                .format(index.data()),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
         
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        self.projectClose(object)
+        self.projectClose(project)
         self.updateData()
 
 
