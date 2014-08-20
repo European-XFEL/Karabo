@@ -50,7 +50,7 @@ class ProjectPanel(QWidget):
         self.twProject.model().signalRemoveScene.connect(self.signalRemoveScene)
         self.twProject.model().signalRenameScene.connect(self.signalRenameScene)
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
-        
+
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.twProject)
