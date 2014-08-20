@@ -219,8 +219,7 @@ class Tests(TestCase):
         scene = Manager().projectTopology.projects[0].scenes[0]
         Manager().handle_deviceSchema("testdevice", self.testschema)
         testdevice = Manager().deviceData["testdevice"]
-        Manager().handle_configurationChanged("testdevice",
-                                              self.testconfiguration)
+        Manager().handle_deviceConfiguration("testdevice", self.testconfiguration)
         self.assertEqual(testdevice.value.targetSpeed.value, 0.5)
         Manager().signalSelectNewNavigationItem.emit("testdevice")
 
@@ -246,8 +245,7 @@ class Tests(TestCase):
         TestWidget.instance.onEditingFinished(2.5)
         self.assertIcon(component.acApply.icon(), icons.apply)
         self.assertTrue(panel.pbApplyAll.isEnabled())
-        Manager().handle_configurationChanged("testdevice",
-                                              Hash("targetSpeed", 1.5))
+        Manager().handle_deviceConfiguration("testdevice", Hash("targetSpeed", 1.5))
         self.assertIcon(component.acApply.icon(), icons.applyConflict)
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed.value, 1.5)
