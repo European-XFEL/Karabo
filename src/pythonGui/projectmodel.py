@@ -303,7 +303,7 @@ class ProjectModel(QStandardItemModel):
         for project in self.projects:
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
-                    "Do you want to save your project <b>\"{}\"</b>\nbefore closing?"
+                    "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
                     .format(project.filename),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
