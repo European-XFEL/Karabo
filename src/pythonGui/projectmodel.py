@@ -300,13 +300,14 @@ class ProjectModel(QStandardItemModel):
             # no need to go on
             return False
         
-        reply = QMessageBox.question(None, "Save open projects before closing",
-            "Do you want to save your projects before closing?",
-            QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
-        
         for project in self.projects:
-            if reply == QMessageBox.Save and project.isModified:
-                project.zip()
+            if project.isModified:
+                reply = QMessageBox.question(None, "Save changes before closing",
+                    "Do you want to save your project <b>\"{}\"</b>\nbefore closing?"
+                    .format(project.filename),
+                    QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
+                if reply == QMessageBox.Save:
+                    project.zip()
             self.projectClose(project)
         self.updateData()
         return True
@@ -619,7 +620,7 @@ class ProjectModel(QStandardItemModel):
         project = index.data(ProjectModel.ITEM_OBJECT)
         if project.isModified:
             msgBox = QMessageBox()
-            msgBox.setWindowTitle("Save project before closing")
+            msgBox.setWindowTitle("Save changes before closing")
             msgBox.setText("Do you want to save your project before closing?")
             msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
                                       QMessageBox.Cancel)
@@ -633,7 +634,6 @@ class ProjectModel(QStandardItemModel):
                 project.zip()
         else:
             index = self.selectionModel.currentIndex()
-
             reply = QMessageBox.question(None, 'Close project',
                 "Do you really want to close the project \"<b>{}</b>\"?"
                 .format(index.data()),
