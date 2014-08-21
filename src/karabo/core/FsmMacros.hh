@@ -26,6 +26,7 @@
 #include <boost/preprocessor/arithmetic/sub.hpp>
 
 #include <karabo/log/Logger.hh>
+#include "Worker.hh"
 
 // Allow boost msm names appear globally in karabo namespace
 namespace karabo {
@@ -43,21 +44,26 @@ namespace karabo {
         struct StateVisitor {
 
             template <class T>
-            void visitState(T* state) {
-                std::string stateName(state->getStateName());
-                std::string fsmName(state->getFsmName());
-                //std::cout << "visiting state:" << typeid (*state).name() << std::endl;
-                // Technical correction: 
-                // if state-machine and state are the same name, the state is subcomposed into the former machine
-                if (stateName == fsmName) fsmName = m_currentFsm;
-
-                if (m_stateName.empty()) {
-                    m_stateName = stateName;
-                    m_currentFsm = fsmName;
+            void visitState(T* state, bool stopWorker=false) {
+                if (stopWorker) {
+                    FsmWorker* worker = state->getWorker();
+                    if (worker && worker->is_running()) worker->abort().join();
                 } else {
-                    std::string sep(".");
-                    m_stateName += sep + stateName;
-                    m_currentFsm = fsmName;
+                    std::string stateName(state->getStateName());
+                    std::string fsmName(state->getFsmName());
+                    //std::cout << "visiting state:" << typeid (*state).name() << std::endl;
+                    // Technical correction: 
+                    // if state-machine and state are the same name, the state is subcomposed into the former machine
+                    if (stateName == fsmName) fsmName = m_currentFsm;
+
+                    if (m_stateName.empty()) {
+                        m_stateName = stateName;
+                        m_currentFsm = fsmName;
+                    } else {
+                        std::string sep(".");
+                        m_stateName += sep + stateName;
+                        m_currentFsm = fsmName;
+                    }
                 }
             }
 
@@ -97,7 +103,7 @@ namespace karabo {
             }
 
             // Signature of the accept function
-            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor> > accept_sig;
+            typedef boost::msm::back::args<void, boost::shared_ptr<StateVisitor>, bool > accept_sig;
 
             // This makes states polymorphic
 
@@ -106,26 +112,30 @@ namespace karabo {
 
             // Default implementation for states who need to be visited
 
-            void accept(boost::shared_ptr<StateVisitor> visitor) const {
-                visitor->visitState(this);
+            void accept(boost::shared_ptr<StateVisitor> visitor, bool stopWorker) const {
+                visitor->visitState(this, stopWorker);
             }
 
             void setTimeout(int timeout) {
                 m_timeout = timeout;
             }
-            
+
             int getTimeout() const {
                 return m_timeout;
             }
-            
+
             void setRepetition(int cycles) {
                 m_repetition = cycles;
             }
-            
+
             int getRepetition() const {
                 return m_repetition;
             }
-            
+
+            virtual FsmWorker* getWorker() const {
+                return NULL;
+            }
+
         private:
             std::string m_stateName;
             std::string m_fsmName;
@@ -165,7 +175,9 @@ namespace karabo {
 
 // Getting State pointer to the state in deeply nested state machines...
 // It is possible to use in code KARABO_FSM_GET(3,A,B,C)->setContext(this);
-#define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; }
+#define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; } \
+    virtual void stopWorkers() { boost::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
+    
 #define KARABO_FSM_GET0() getFsm() 
 #define KARABO_FSM_GET1(A)            KARABO_FSM_GET0()->get_state<A*>()
 #define KARABO_FSM_GET2(A,B)          KARABO_FSM_GET1(A)->get_state<B*>()
@@ -193,7 +205,7 @@ static void _updateCurrentState(Fsm& fsm, bool isGoingToChange = false) { \
     if (isGoingToChange) fsm.getContext()->stateChangeFunction("Changing..."); \
     else { \
         boost::shared_ptr<StateVisitor> v(new StateVisitor); \
-        fsm.visit_current_states(v); \
+        fsm.visit_current_states(v, false); \
         fsm.getContext()->stateChangeFunction(v->getState()); \
     } \
 }
@@ -577,15 +589,15 @@ template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
 #define KARABO_FSM_STATE_A(name, TargetAction) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    FsmWorker _worker; \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    boost::shared_ptr<FsmWorker> _worker; \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             this->setContained(f.is_contained()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -596,14 +608,14 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 
 #define _KARABO_FSM_STATE_IMPL_E(name, entryFunc) \
@@ -635,8 +647,8 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_STATE_IMPL_AE(name, TargetAction, entryFunc) \
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     TargetAction _ta; \
-    FsmWorker _worker; \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    boost::shared_ptr<FsmWorker> _worker; \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const& e, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
@@ -644,7 +656,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -655,14 +667,14 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 #define KARABO_FSM_STATE_V_AE(name, TargetAction, entryFunc) \
 _KARABO_FSM_STATE_IMPL_AE(name, TargetAction, entryFunc) \
@@ -823,16 +835,16 @@ virtual void exitFunc()  = 0;
 struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
 private: \
     TargetAction _ta; \
-    FsmWorker _worker; \
+    boost::shared_ptr<FsmWorker> _worker; \
 public: \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -841,7 +853,7 @@ public: \
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
             f.getContext()->exitFunc(); \
@@ -851,7 +863,7 @@ public: \
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 #define KARABO_FSM_STATE_V_AEE(name, targetFunc, entryFunc, exitFunc) \
 _KARABO_FSM_STATE_IMPL_AEE(name, targetFunc, entryFunc, exitFunc) \
@@ -967,14 +979,14 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
 #define KARABO_FSM_INTERRUPT_STATE_A(name, event, TargetAction) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    FsmWorker _worker; \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    boost::shared_ptr<FsmWorker> _worker; \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -985,14 +997,14 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 
 
@@ -1025,15 +1037,15 @@ virtual void entryFunc() = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AE(name, event, TargetAction, entryFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    FsmWorker _worker; \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    boost::shared_ptr<FsmWorker> _worker; \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -1044,14 +1056,14 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 #define KARABO_FSM_INTERRUPT_STATE_V_AE(name, event, TargetAction, entryFunc) \
 _KARABO_FSM_INTERRUPT_STATE_IMPL_AE(name, event, TargetAction, entryFunc) \
@@ -1107,15 +1119,15 @@ virtual void exitFunc()  = 0;
 #define _KARABO_FSM_INTERRUPT_STATE_IMPL_AEE(name, event, TargetAction, entryFunc, exitFunc) \
 struct name : public boost::msm::front::interrupt_state<event, karabo::core::FsmBaseState > { \
     TargetAction _ta; \
-    FsmWorker _worker; \
-    name() : _ta(), _worker() {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+    boost::shared_ptr<FsmWorker> _worker; \
+    name() : _ta(), _worker(new FsmWorker) {this->setStateName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
             _ta.setContext(f.getContext()); \
-            _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+            _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
         } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
@@ -1124,7 +1136,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-            _worker.stop().join(); \
+            _worker->stop().join(); \
             this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
             f.getContext()->exitFunc(); \
@@ -1134,7 +1146,7 @@ struct name : public boost::msm::front::interrupt_state<event, karabo::core::Fsm
             _onError<Fsm>(f); \
         }\
     } \
-    FsmWorker& getWorker() {return _worker;} \
+    FsmWorker* getWorker() const  {return _worker.get();} \
 };
 #define KARABO_FSM_INTERRUPT_STATE_V_AEE(name, event, TargetAction, entryFunc, exitFunc) \
 _KARABO_FSM_INTERRUPT_STATE_IMPL_AEE(name, event, TargetAction, entryFunc, exitFunc) \
@@ -1268,7 +1280,7 @@ virtual void exitFunc()  = 0;
                 try { \
                 KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                 _ta.setContext(f.getContext()); \
-                _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+                _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1277,7 +1289,7 @@ virtual void exitFunc()  = 0;
             } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
-                    _worker.stop().join(); \
+                    _worker->stop().join(); \
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1290,11 +1302,11 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
-            FsmWorker& getWorker() {return _worker;} \
+            name ## _() : _ta(), _worker(new FsmWorker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            FsmWorker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            FsmWorker _worker; \
+            boost::shared_ptr<FsmWorker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;
@@ -1343,7 +1355,7 @@ virtual void entryFunc() = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
-                    _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+                    _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1352,7 +1364,7 @@ virtual void entryFunc() = 0;
             } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
-                    _worker.stop().join(); \
+                    _worker->stop().join(); \
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
@@ -1365,11 +1377,11 @@ virtual void entryFunc() = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
-            FsmWorker& getWorker() {return _worker;} \
+            name ## _() : _ta(), _worker(new FsmWorker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            FsmWorker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            FsmWorker _worker; \
+            boost::shared_ptr<FsmWorker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;
@@ -1440,7 +1452,7 @@ virtual void exitFunc()  = 0;
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
                     f.getContext()->entryFunc(); \
                     _ta.setContext(f.getContext()); \
-                    _worker.set(_ta, this->getTimeout(), this->getRepetition()).start(); \
+                    _worker->set(_ta, this->getTimeout(), this->getRepetition()).start(); \
                 } catch(karabo::util::Exception const& e) { \
                 _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
                 } catch(...) { \
@@ -1449,7 +1461,7 @@ virtual void exitFunc()  = 0;
                 } \
             template <class Event, class Fsm> void on_exit (Event const& e, Fsm& f) { \
                 try { \
-                    _worker.stop().join(); \
+                    _worker->stop().join(); \
                     KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
                     f.getContext()->exitFunc(); \
                 } catch(karabo::util::Exception const& e) { \
@@ -1463,11 +1475,11 @@ virtual void exitFunc()  = 0;
             typedef istate initial_state; \
             void setContext(CTX* const ctx) { m_context = ctx; } \
             CTX * const getContext() const { return m_context; } \
-            name ## _() : _ta(), _worker(), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
-            FsmWorker& getWorker() {return _worker;} \
+            name ## _() : _ta(), _worker(new FsmWorker), m_context(0) {this->setStateName(#name); this->setFsmName(#name); this->setTimeout(_ta.getTimeout()); this->setRepetition(_ta.getRepetition());} \
+            FsmWorker* getWorker() const  {return _worker.get();} \
         private: \
             TargetAction _ta; \
-            FsmWorker _worker; \
+            boost::shared_ptr<FsmWorker> _worker; \
             CTX* m_context; \
         }; \
         typedef boost::msm::back::state_machine<name ## _<> > name;
