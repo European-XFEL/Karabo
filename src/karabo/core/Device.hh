@@ -650,9 +650,6 @@ namespace karabo {
             virtual void preDestruction() {
             }
             
-            virtual void stopWorkers() {
-            }
-
         private: // Functions
 
             /**
