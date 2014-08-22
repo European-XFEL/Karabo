@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include <log4cpp/Category.hh>
+#include <krb_log4cpp/Category.hh>
 #include <karabo/util/Configurator.hh>
 #include <karabo/util/Hash.hh>
 #include <karabo/io/Output.hh>

@@ -5,11 +5,11 @@
  * Created on September 21, 2011, 4:39 PM
  */
 
-#include <log4cpp/LoggingEvent.hh>
+#include <krb_log4cpp/LoggingEvent.hh>
 #include <karabo/util/Hash.hh>
 #include "NetworkAppender.hh"
 
-using namespace log4cpp;
+using namespace krb_log4cpp;
 using namespace karabo::util;
 
 namespace karabo {

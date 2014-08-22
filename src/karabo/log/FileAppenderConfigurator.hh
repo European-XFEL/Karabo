@@ -20,7 +20,7 @@
 #include <string>
 
 
-namespace log4cpp {
+namespace krb_log4cpp {
     class Appender;
 }
 /**
@@ -63,7 +63,7 @@ namespace karabo {
 
         protected:
 
-            virtual log4cpp::Appender* create();
+            virtual krb_log4cpp::Appender* create();
 
             void configureFilename(const karabo::util::Hash& input);
 
