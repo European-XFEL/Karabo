@@ -69,8 +69,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             
     def test_cpuimage_save(self):
         try:
-            img = CpuImageUINT8()
-            img.read(self.resourcesdir+"european-xfel-logo-greyscales.tif")
+            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
             Image.fromarray(img.getData()).save("/tmp/logo_savedFile.tif")
         except Exception as e:
             self.fail("test_cpuimage_save exception: " + str(e))                 
@@ -125,19 +124,19 @@ class  CpuImage_TestCase(unittest.TestCase):
           
     def test_cpuimage_getData(self):
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo.png")
+            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
             pix = img.getData()
             self.assertEqual(str(pix.dtype), 'uint8')
             self.assertEqual(pix.ndim, 2)
-            self.assertEqual(pix.shape[0], 4158)
-            self.assertEqual(pix.shape[1], 4158)
-            self.assertEqual(pix.size, 17288964)        
+            self.assertEqual(pix.shape[0], 331)
+            self.assertEqual(pix.shape[1], 331)
+            self.assertEqual(pix.size, 109561)        
         except Exception as e:
             self.fail("test_cpuimage_getData exception: " + str(e))
             
     def test_cpuimage_assign_ndarray(self):
         try:
-            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo.png")
+            img = CpuImageUINT8(self.resourcesdir+"european-xfel-logo-greyscales.tif")
             pix = img.getData()
             
             img2 = CpuImageUINT8()
@@ -148,16 +147,17 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.dimY(), img2.dimY())
             self.assertEqual(img.dimZ(), img2.dimZ())
             self.assertEqual(img.pixelType(), img2.pixelType())
+            self.assertEqual(img.byteSize(), img2.byteSize())
             
             self.assertEqual(img2.dimensionality(), 2)
-            self.assertEqual(img2.dimX(), 4158)
-            self.assertEqual(img2.dimY(), 4158)
+            self.assertEqual(img2.dimX(), 331)
+            self.assertEqual(img2.dimY(), 331)
             self.assertEqual(img2.dimZ(), 1)
             self.assertEqual(img2.pixelType(), "UINT8")
-            self.assertEqual(img2.byteSize(), 17288964)
-            self.assertEqual(img2.getStatistics().getMin(), 38.0)
+            self.assertEqual(img2.byteSize(), 109561)
+            self.assertEqual(img2.getStatistics().getMin(), 37.0)
             self.assertEqual(img2.getStatistics().getMax(), 255.0)
-            
+        
         except Exception as e:
             self.fail("test_cpuimage_assign_ndarray exception: " + str(e))         
         
