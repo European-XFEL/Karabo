@@ -11,7 +11,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include <log4cpp/Category.hh>
+#include <krb_log4cpp/Category.hh>
 
 #include <exfel/util/Factory.hh>
 #include <exfel/util/Test.hh>
@@ -30,7 +30,7 @@ namespace exfel {
             StateMachineTest() : m_log(getLog<StateMachineTest>()), m_log2(std::cout) {
             }
 
-            log4cpp::Category& log() {
+            krb_log4cpp::Category& log() {
                 return m_log;
             }
             
@@ -44,7 +44,7 @@ namespace exfel {
             /*                 Special Functions                          */
             /**************************************************************/
            
-            EXFEL_FSM_LOGGER(log, log4cpp::CategoryStream, log4cpp::Priority::DEBUG)
+            EXFEL_FSM_LOGGER(log, krb_log4cpp::CategoryStream, krb_log4cpp::Priority::DEBUG)
                     
             //EXFEL_FSM_LOGGER(log2, std::ostream&, "\nFSM " ) // Another alternative
                     
@@ -147,8 +147,8 @@ namespace exfel {
             }
 
             template <class T>
-            static log4cpp::Category& getLog() {
-                return log4cpp::Category::getInstance(T::classInfo().getLogCategory());
+            static krb_log4cpp::Category& getLog() {
+                return krb_log4cpp::Category::getInstance(T::classInfo().getLogCategory());
             }
 
 
@@ -156,7 +156,7 @@ namespace exfel {
 
             EXFEL_FSM_DECLARE_MACHINE(TestDeviceMachine, m_fsm)
 
-            log4cpp::Category& m_log;
+            krb_log4cpp::Category& m_log;
             
             std::ostream& m_log2;
         };

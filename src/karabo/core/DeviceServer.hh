@@ -157,7 +157,7 @@ namespace karabo {
 
             void stopDeviceServer();
 
-            log4cpp::Category& log();
+            krb_log4cpp::Category& log();
 
             void registerAndConnectSignalsAndSlots();
 
@@ -181,7 +181,7 @@ namespace karabo {
 
         private: // Member variables
 
-            log4cpp::Category* m_log;
+            krb_log4cpp::Category* m_log;
 
             KARABO_FSM_DECLARE_MACHINE(DeviceServerMachine, m_fsm);
 

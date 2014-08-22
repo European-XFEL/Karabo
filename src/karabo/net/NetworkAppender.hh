@@ -9,13 +9,13 @@
 #define	KARABO_LOGCONFIG_NETWORKAPPENDER_HH
 
 #include <karabo/net/BrokerChannel.hh>
-#include <log4cpp/LayoutAppender.hh>
-#include <log4cpp/Portability.hh>
+#include <krb_log4cpp/LayoutAppender.hh>
+#include <krb_log4cpp/Portability.hh>
 
 namespace karabo {
     namespace net {
 
-        class NetworkAppender : public log4cpp::LayoutAppender {
+        class NetworkAppender : public krb_log4cpp::LayoutAppender {
 
         public:
 
@@ -26,7 +26,7 @@ namespace karabo {
             virtual void close();
 
         protected: // functions
-            virtual void _append(const log4cpp::LoggingEvent& event);
+            virtual void _append(const krb_log4cpp::LoggingEvent& event);
 
         protected: // members
             
