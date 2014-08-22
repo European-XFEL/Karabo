@@ -8,14 +8,14 @@
  */
 
 
-#include <log4cpp/Category.hh>
+#include <krb_log4cpp/Category.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/ListElement.hh>
 #include "CategoryConfigurator.hh"
 
 
 using namespace std;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 using namespace karabo::util;
 
 namespace karabo {
@@ -92,9 +92,9 @@ namespace karabo {
         void CategoryConfigurator::configurePriority(const Hash& input) {
             if (input.has("priority")) {
                 string level = input.get<string > ("priority");
-                m_level = log4cpp::Priority::getPriorityValue(level);
+                m_level = krb_log4cpp::Priority::getPriorityValue(level);
             } else {
-                m_level = log4cpp::Priority::NOTSET;
+                m_level = krb_log4cpp::Priority::NOTSET;
             }
         }
 

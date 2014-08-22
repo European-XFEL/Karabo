@@ -15,8 +15,8 @@
 #include <vector>
 #include <string>
 #include <karabo/util/Configurator.hh>
-#include <log4cpp/Priority.hh>
-#include <log4cpp/Category.hh>
+#include <krb_log4cpp/Priority.hh>
+#include <krb_log4cpp/Category.hh>
 #include <boost/shared_ptr.hpp>
 
 #include "AppenderConfigurator.hh"
@@ -38,11 +38,11 @@ namespace karabo {
          */
         class Logger {
 
-            typedef std::map<std::string, log4cpp::Category*> LogStreamRegistry;
+            typedef std::map<std::string, krb_log4cpp::Category*> LogStreamRegistry;
 
             std::vector<AppenderConfigurator::Pointer> m_rootAppenderConfigs;
 
-            log4cpp::Priority::Value m_rootPriority;
+            krb_log4cpp::Priority::Value m_rootPriority;
 
             std::vector<CategoryConfigurator::Pointer> m_categories;
 
@@ -78,17 +78,17 @@ namespace karabo {
              * CAVEAT: This function only works for classes that declare the KARABO_CLASSINFO macro!
              */
             template <class Class>
-            static log4cpp::Category& getLogger() {
+            static krb_log4cpp::Category& getLogger() {
                 return getLogger(Class::classInfo().getLogCategory());
             }
 
-            static log4cpp::Category& getLogger(const std::string& logCategory) {
+            static krb_log4cpp::Category& getLogger(const std::string& logCategory) {
                 LogStreamRegistry::const_iterator it = m_logStreams.find(logCategory);
                 if (it != m_logStreams.end()) {
                     return *(it->second);
                 } else {
                     boost::mutex::scoped_lock lock(m_logMutex);
-                    log4cpp::Category* tmp = &(log4cpp::Category::getInstance(logCategory));
+                    krb_log4cpp::Category* tmp = &(krb_log4cpp::Category::getInstance(logCategory));
                     m_logStreams[logCategory] = tmp;
                     return *tmp;
                 }
@@ -120,15 +120,15 @@ namespace karabo {
         #define KARABO_LOG_FRAMEWORK_TRACE_CF if(1); else std::cerr
         #endif
         
-        #define KARABO_LOG_FRAMEWORK_DEBUG karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::DEBUG 
-        #define KARABO_LOG_FRAMEWORK_INFO  karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::INFO 
-        #define KARABO_LOG_FRAMEWORK_WARN  karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::WARN 
-        #define KARABO_LOG_FRAMEWORK_ERROR karabo::log::Logger::getLogger<Self>() << log4cpp::Priority::ERROR
+        #define KARABO_LOG_FRAMEWORK_DEBUG karabo::log::Logger::getLogger<Self>() << krb_log4cpp::Priority::DEBUG 
+        #define KARABO_LOG_FRAMEWORK_INFO  karabo::log::Logger::getLogger<Self>() << krb_log4cpp::Priority::INFO 
+        #define KARABO_LOG_FRAMEWORK_WARN  karabo::log::Logger::getLogger<Self>() << krb_log4cpp::Priority::WARN 
+        #define KARABO_LOG_FRAMEWORK_ERROR karabo::log::Logger::getLogger<Self>() << krb_log4cpp::Priority::ERROR
 
-        #define KARABO_LOG_FRAMEWORK_DEBUG_C(category) karabo::log::Logger::getLogger(category) << log4cpp::Priority::DEBUG 
-        #define KARABO_LOG_FRAMEWORK_INFO_C(category)  karabo::log::Logger::getLogger(category) << log4cpp::Priority::INFO 
-        #define KARABO_LOG_FRAMEWORK_WARN_C(category)  karabo::log::Logger::getLogger(category) << log4cpp::Priority::WARN 
-        #define KARABO_LOG_FRAMEWORK_ERROR_C(category) karabo::log::Logger::getLogger(category) << log4cpp::Priority::ERROR 
+        #define KARABO_LOG_FRAMEWORK_DEBUG_C(category) karabo::log::Logger::getLogger(category) << krb_log4cpp::Priority::DEBUG 
+        #define KARABO_LOG_FRAMEWORK_INFO_C(category)  karabo::log::Logger::getLogger(category) << krb_log4cpp::Priority::INFO 
+        #define KARABO_LOG_FRAMEWORK_WARN_C(category)  karabo::log::Logger::getLogger(category) << krb_log4cpp::Priority::WARN 
+        #define KARABO_LOG_FRAMEWORK_ERROR_C(category) karabo::log::Logger::getLogger(category) << krb_log4cpp::Priority::ERROR 
 
     }
 }

@@ -15,7 +15,7 @@
 
 #include "AppenderConfigurator.hh"
 #include <karabo/util/Configurator.hh>
-#include <log4cpp/Appender.hh>
+#include <krb_log4cpp/Appender.hh>
 #include <string>
 /**
  * The main European XFEL namespace
@@ -42,7 +42,7 @@ namespace karabo {
             virtual ~OstreamAppenderConfigurator() {
             };
 
-            log4cpp::Appender* create();
+            krb_log4cpp::Appender* create();
 
         };
 

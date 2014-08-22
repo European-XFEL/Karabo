@@ -16,7 +16,7 @@
 namespace exfel {
     namespace core {
 
-        using namespace log4cpp;
+        using namespace krb_log4cpp;
 
         using namespace std;
         using namespace exfel::util;

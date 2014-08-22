@@ -33,10 +33,10 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-#define KARABO_LOG_DEBUG this->log() << log4cpp::Priority::DEBUG 
-#define KARABO_LOG_INFO  this->log() << log4cpp::Priority::INFO 
-#define KARABO_LOG_WARN  this->log() << log4cpp::Priority::WARN 
-#define KARABO_LOG_ERROR this->log() << log4cpp::Priority::ERROR 
+#define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
+#define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
+#define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
+#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR 
 
 #define KARABO_NO_SERVER "__none__"
 
@@ -77,7 +77,7 @@ namespace karabo {
             int m_progressMin;
             int m_progressMax;
 
-            log4cpp::Category* m_log;
+            krb_log4cpp::Category* m_log;
 
             karabo::util::Hash m_parameters;
             karabo::util::Schema m_staticSchema;
@@ -365,7 +365,7 @@ namespace karabo {
              * @endcode
              * @return Logging object
              */
-            log4cpp::Category& log() const {
+            krb_log4cpp::Category& log() const {
                 return (*m_log);
             }
 

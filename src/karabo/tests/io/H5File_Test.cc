@@ -31,7 +31,7 @@
 using namespace karabo::util;
 using namespace karabo::io::h5;
 using namespace karabo::io;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 
 CPPUNIT_TEST_SUITE_REGISTRATION(H5File_Test);
 

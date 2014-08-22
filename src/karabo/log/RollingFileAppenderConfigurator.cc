@@ -8,7 +8,7 @@
  */
 
 #include "RollingFileAppenderConfigurator.hh"
-#include <log4cpp/RollingFileAppender.hh>
+#include <krb_log4cpp/RollingFileAppender.hh>
 #include <karabo/util/SimpleElement.hh>
 
 using namespace std;
@@ -79,9 +79,9 @@ namespace karabo {
         }
 
 
-        log4cpp::Appender* RollingFileAppenderConfigurator::create() {
+        krb_log4cpp::Appender* RollingFileAppenderConfigurator::create() {
 
-            return new log4cpp::RollingFileAppender(getName(), getFilename().string(),
+            return new krb_log4cpp::RollingFileAppender(getName(), getFilename().string(),
                                                     m_maxFileSize, m_maxBackupIndex,
                                                     isAppendMode(), getAccessMode());
         }

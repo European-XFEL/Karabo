@@ -9,9 +9,9 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include <log4cpp/BasicLayout.hh>
-#include <log4cpp/SimpleLayout.hh>
-#include <log4cpp/PatternLayout.hh>
+#include <krb_log4cpp/BasicLayout.hh>
+#include <krb_log4cpp/SimpleLayout.hh>
+#include <krb_log4cpp/PatternLayout.hh>
 #include <karabo/util/SimpleElement.hh>
 #include <karabo/util/ChoiceElement.hh>
 #include <karabo/util/NodeElement.hh>
@@ -20,7 +20,7 @@
 
 using namespace std;
 using namespace karabo::util;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 
 namespace karabo {
     namespace log {
@@ -95,11 +95,11 @@ namespace karabo {
 
         void AppenderConfigurator::configureLayout(const Hash& input) {
             if (input.has("layout.Basic")) {
-                m_layout = new log4cpp::BasicLayout();
+                m_layout = new krb_log4cpp::BasicLayout();
             } else if (input.has("layout.Simple")) {
-                m_layout = new log4cpp::SimpleLayout();
+                m_layout = new krb_log4cpp::SimpleLayout();
             } else if (input.has("layout.Pattern")) {
-                PatternLayout* layout = new log4cpp::PatternLayout();
+                PatternLayout* layout = new krb_log4cpp::PatternLayout();
                 layout->setConversionPattern(input.get<string>("layout.Pattern.format"));
                 m_layout = layout;
             }
@@ -110,7 +110,7 @@ namespace karabo {
             Appender* appender = create();
             assert(appender != 0);
             appender->setLayout(m_layout);
-            if (m_threshold != log4cpp::Priority::NOTSET) {
+            if (m_threshold != krb_log4cpp::Priority::NOTSET) {
                 appender->setThreshold(m_threshold);
             }
             return appender;

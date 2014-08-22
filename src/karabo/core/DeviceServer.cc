@@ -40,7 +40,7 @@ namespace karabo {
         using namespace karabo::log;
         using namespace karabo::net;
         using namespace karabo::xms;
-        using namespace log4cpp;
+        using namespace krb_log4cpp;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
@@ -363,7 +363,7 @@ namespace karabo {
         }
 
 
-        log4cpp::Category & DeviceServer::log() {
+        krb_log4cpp::Category & DeviceServer::log() {
             return (*m_log);
         }
 

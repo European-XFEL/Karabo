@@ -22,7 +22,7 @@ namespace karabo {
         }
 
 
-        log4cpp::Appender* NetworkAppenderConfigurator::create() {
+        krb_log4cpp::Appender* NetworkAppenderConfigurator::create() {
             return new NetworkAppender(getName(), m_connection->createChannel());
         }
 

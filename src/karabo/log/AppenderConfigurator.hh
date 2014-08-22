@@ -16,9 +16,9 @@
 
 #include <string>
 #include <karabo/util/Configurator.hh>
-#include <log4cpp/Appender.hh>
-#include <log4cpp/Priority.hh>
-#include <log4cpp/Layout.hh>
+#include <krb_log4cpp/Appender.hh>
+#include <krb_log4cpp/Priority.hh>
+#include <krb_log4cpp/Layout.hh>
 
 namespace karabo {
     namespace log {
@@ -32,8 +32,8 @@ namespace karabo {
         private:
 
             std::string m_appenderName;
-            log4cpp::Priority::Value m_threshold;
-            log4cpp::Layout* m_layout;
+            krb_log4cpp::Priority::Value m_threshold;
+            krb_log4cpp::Layout* m_layout;
 
         protected:
 
@@ -41,22 +41,22 @@ namespace karabo {
                 return m_appenderName;
             }
 
-            virtual log4cpp::Appender* create() = 0;
+            virtual krb_log4cpp::Appender* create() = 0;
 
         public:
 
-            AppenderConfigurator(const std::string& appenderName, log4cpp::Priority::Value threshold, log4cpp::Layout* layout) :
+            AppenderConfigurator(const std::string& appenderName, krb_log4cpp::Priority::Value threshold, krb_log4cpp::Layout* layout) :
             m_appenderName(appenderName), m_threshold(threshold), m_layout(layout) {
             }
 
             AppenderConfigurator() :
-            m_appenderName("noname"), m_threshold(log4cpp::Priority::NOTSET) {
+            m_appenderName("noname"), m_threshold(krb_log4cpp::Priority::NOTSET) {
             }
 
             virtual ~AppenderConfigurator() {
             }
 
-            virtual log4cpp::Appender* getConfigured();
+            virtual krb_log4cpp::Appender* getConfigured();
 
             static void expectedParameters(karabo::util::Schema& expected);
             AppenderConfigurator(const karabo::util::Hash& input);
