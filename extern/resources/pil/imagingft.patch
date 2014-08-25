@@ -1,0 +1,16 @@
+--- Imaging-1.1.7/_imagingft.c	2009-11-01 01:44:12.000000000 +0100
++++ Imaging-1.1.7/_imagingft.c_new	2014-08-25 10:32:22.648804534 +0200
+@@ -70,7 +70,13 @@ struct {
+     const char* message;
+ } ft_errors[] =
+ 
++#if defined(USE_FREETYPE_2_1)
++/* freetype 2.1 and newer */
++#include <fterrors.h>
++#else
++/* freetype 2.0 */
+ #include <freetype/fterrors.h>
++#endif
+ 
+ /* -------------------------------------------------------------------- */
+ /* font objects */
