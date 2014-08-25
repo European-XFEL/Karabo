@@ -726,16 +726,30 @@ class LogThread(QThread):
                 continue
 
             logMsgList = logMsg.split(' | ')
-            if len(logMsgList) < 1:
-                continue
-
-            dateTime = logMsgList[0]
-            logLevel = logMsgList[1]
-            instanceId = logMsgList[2]
-            description = logMsgList[3]
-            if len(logMsgList) > 4:
+            # Get time stamp
+            try:
+                dateTime = logMsgList[0]
+            except IndexError:
+                dateTime = ""
+            # Get log level
+            try:
+                logLevel = logMsgList[1]
+            except IndexError:
+                logLevel = ""
+            # Get instance ID
+            try:
+                instanceId = logMsgList[2]
+            except IndexError:
+                instanceId = ""
+            # Get description
+            try:
+                description = logMsgList[3]
+            except IndexError:
+                description = ""
+            # Get additional description
+            try:
                 additionalDescription = logMsgList[4]
-            else:
+            except IndexError:
                 additionalDescription = ""
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
