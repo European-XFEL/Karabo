@@ -132,7 +132,9 @@ class _Manager(QObject):
     def initDevice(self, serverId, classId, deviceId, config=None):
         if config is None:
             # Use standard configuration for server/classId
-            config = self.serverClassData[serverId, classId].toHash()
+            conf = self.serverClassData.get((serverId, classId))
+            if conf is not None:
+                config = conf.toHash()
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config)
