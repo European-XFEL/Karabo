@@ -19,7 +19,7 @@ def KARABO_CLASSINFO(classid, version):
     '''
     def realDecorator(theClass):
         if isinstance(theClass, type):
-            theClass.__classid__ = classid
+            theClass.__classid__ = str(classid)
             theClass.__version__ = version
             if hasattr(theClass, "__base_classid__"):
                 Configurator(theClass.__base_classid__).registerClass(theClass)
