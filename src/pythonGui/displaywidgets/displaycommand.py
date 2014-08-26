@@ -42,7 +42,7 @@ class DisplayCommand(DisplayWidget):
         action = QAction("NO TEXT", self.widget)
         action.box = box
         self.widget.addAction(action)
-        box.configuration.value.state.signalUpdateComponent.connect(
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.update)
         self.update()
         return True
@@ -65,7 +65,7 @@ class DisplayCommand(DisplayWidget):
     def update(self):
         for a in self.widget.actions():
             a.setEnabled(a.box.descriptor is not None and
-                         a.box.configuration.value.state.value in
+                         a.box.configuration.value.state in
                          a.box.descriptor.allowedStates)
         for a in self.widget.actions():
             if a.isEnabled():

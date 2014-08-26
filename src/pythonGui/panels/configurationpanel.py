@@ -482,7 +482,7 @@ class ConfigurationPanel(QWidget):
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
-            if not hasattr(configuration, 'index'):
+            if configuration.index is None:
                 configuration.index = self._createNewParameterPage(configuration)
                 index = 1
             else:

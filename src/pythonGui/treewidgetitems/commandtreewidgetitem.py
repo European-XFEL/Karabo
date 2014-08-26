@@ -39,7 +39,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.box.configuration.value.state. \
+        self.box.configuration.boxvalue.state. \
             signalUpdateComponent.connect(self.onStateChanged)
 
 
