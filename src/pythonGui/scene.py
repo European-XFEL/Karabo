@@ -35,7 +35,8 @@ from karabo import xmlparser
 from functools import partial
 import os.path
 from itertools import chain
-from cStringIO import StringIO
+from io import BytesIO
+import copy
 
 
 __all__ = ["Scene"]
@@ -999,7 +1000,7 @@ class Scene(QSvgWidget):
         """
         Parses the given xmlString which represents the SVG.
         """
-        self.tree = xmlparser.parse(StringIO(xmlString))
+        self.tree = xmlparser.parse(BytesIO(xmlString))
         root = self.tree.getroot()
         self.clean()
         FixedLayout.load(root, widget=self.inner)
@@ -1020,7 +1021,7 @@ class Scene(QSvgWidget):
         """
         Returns the scene as XML string.
         """
-        root = self.tree.getroot().copy()
+        root = copy.copy(self.tree.getroot())
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)

@@ -2,6 +2,7 @@ __author__="luis.maia@xfel.eu"
 __date__ ="April 2, 2014"
 
 from suds.client import Client
+import suds.transport.options # this fixes import of suds. why? Dunno.
 
 class Authenticator(object):
     url = 'https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication?WSDL'

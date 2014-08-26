@@ -10,7 +10,7 @@ from karabo import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
-from cStringIO import StringIO
+from io import BytesIO
 import numbers
 import numpy
 
@@ -386,7 +386,7 @@ class XMLParser(object):
 class Writer(object):
     def write(self, data):
         """Return the written data as a string"""
-        self.file = StringIO()
+        self.file = BytesIO()
         try:
             self.writeToFile(data, self.file)
             return self.file.getvalue()
@@ -418,7 +418,7 @@ class BinaryParser(object):
     def readKey(self):
         size, = self.readFormat('B')
         self.pos += size
-        return self.data[self.pos - size:self.pos]
+        return self.data[self.pos - size:self.pos].decode("ascii")
 
 
     def read(self, data):
