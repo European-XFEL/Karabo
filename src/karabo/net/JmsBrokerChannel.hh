@@ -224,7 +224,7 @@ namespace karabo {
 
             std::string prepareSelector() const;
 
-            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header);
+            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
 
         };
     }

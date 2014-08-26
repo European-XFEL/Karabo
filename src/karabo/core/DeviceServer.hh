@@ -205,6 +205,9 @@ namespace karabo {
 
             karabo::util::Hash m_connectionConfiguration;
             std::string m_serverId;
+            
+            int m_heartbeatIntervall;            
+            int m_nThreads;
 
         public:
             bool isDebugMode();

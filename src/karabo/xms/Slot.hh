@@ -38,7 +38,7 @@ namespace karabo {
             std::string m_userIdOfSender;
             std::string m_accessLevelOfSender;
             std::string m_sessionTokenOfSender;
-
+            
         public:
 
             const std::string& getInstanceIdOfSender() const;
@@ -51,14 +51,15 @@ namespace karabo {
 
         protected:
 
+            // TODO remove if not needed
             SignalSlotable* m_signalSlotable;
             std::string m_slotFunction;
+            
+            mutable boost::mutex m_callRegisteredSlotFunctionsMutex;
 
             Slot(SignalSlotable* signalSlotable, const std::string& slotFunction)
             : m_signalSlotable(signalSlotable), m_slotFunction(slotFunction) {
             }
-
-            //void handlePossibleReply(const karabo::util::Hash& header);
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
@@ -88,6 +89,8 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+                // This mutex protects against concurrent runs of the same slot function
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex); 
                 extractSenderInformation(header);
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
@@ -119,6 +122,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+                
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
@@ -162,6 +168,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+                
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
@@ -206,6 +215,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+                
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");
@@ -251,6 +263,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+                
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");

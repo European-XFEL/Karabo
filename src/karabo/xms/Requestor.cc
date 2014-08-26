@@ -74,7 +74,6 @@ namespace karabo {
                 throw KARABO_TIMEOUT_EXCEPTION("Reply timed out");
             }
             
-            cout << "Received reply: " << header;
             m_signalSlotable->popReceivedReply(m_replyId, header, body);
             
             m_isReceived = true;
