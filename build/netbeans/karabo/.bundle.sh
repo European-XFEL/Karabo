@@ -122,8 +122,8 @@ if [ "$OS" = "Darwin" ]; then
 else
     # Use karabo embedded python interpretor
     PATH=$PACKAGEDIR/extern/bin:$PATH
-    PYTHON_INTERPRETOR=`python -c "import os,sys;print os.path.realpath(sys.argv[1])" $PACKAGEDIR/extern/bin/python` 
-    PYKARABO=`python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/karabo 
+    PYTHON_INTERPRETOR=`python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" $PACKAGEDIR/extern/bin/python3`
+    PYKARABO=`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())"`/karabo
     [ -e $PYKARABO ] && [ ! -d $PYKARABO ] && echo "Cannot create $PYKARABO directory"
     [ -d $PYKARABO ] && rm -rf $PYKARABO/* # <-- clean 
     [ ! -d $PYKARABO ] && mkdir $PYKARABO  # <-- create PYKARABO if needed
@@ -131,7 +131,7 @@ else
     # Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
     # <-- replace 1st line by proper interp path
     [ -f $PACKAGEDIR/extern/bin/ipython ]           && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/ipython  
-    [ -f $PACKAGEDIR/extern/bin/ipython2.7-config ] && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/ipython2.7-config
+    [ -f $PACKAGEDIR/extern/bin/ipython3.4-config ] && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/ipython3.4-config
     [ -f $PACKAGEDIR/extern/bin/2to3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/2to3
     [ -f $PACKAGEDIR/extern/bin/cygdb ]             && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/cygdb
     [ -f $PACKAGEDIR/extern/bin/cython ]            && sed -i '1 s%^.*$%#!/usr/bin/env python%g' $PACKAGEDIR/extern/bin/cython
