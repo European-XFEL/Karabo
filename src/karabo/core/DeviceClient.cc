@@ -27,7 +27,14 @@ namespace karabo {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_signalSlotable = boost::shared_ptr<SignalSlotable > (new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 60, Hash()));
+            
+            
+            karabo::util::Hash instanceInfo;
+            instanceInfo.set("type", "client");
+            instanceInfo.set("compatibility", DeviceClient::classInfo().getVersion());
+            instanceInfo.set("host", boost::asio::ip::host_name());
+                        
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_signalSlotable, 60, instanceInfo, 2));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));

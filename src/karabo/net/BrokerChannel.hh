@@ -29,17 +29,17 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(BrokerChannel, "BrokerChannel", "1.0")
-
+            KARABO_CLASSINFO(BrokerChannel, "BrokerChannel", "1.0")                    
+                    
             typedef boost::function<void (BrokerChannel::Pointer, const char*, const size_t&) > ReadRawHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > ReadStringHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash&) > ReadHashHandler;
 
-            typedef boost::function<void (BrokerChannel::Pointer, const char*, const size_t&, const karabo::util::Hash&) > ReadRawHashHandler;
-            typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>&, const karabo::util::Hash&) > ReadVectorHashHandler;
-            typedef boost::function<void (BrokerChannel::Pointer, const std::string&, const karabo::util::Hash&) > ReadStringHashHandler;
-            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash&, const karabo::util::Hash&) > ReadHashHashHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const char* /*body*/, const size_t& /*body size*/, const karabo::util::Hash::Pointer& /*header*/) > ReadRawHashHandler;            
+            typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadVectorHashHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const std::string& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadStringHashHandler;                        
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadHashHashHandler;
 
             typedef boost::function<void (BrokerChannel::Pointer) > WriteCompleteHandler;
             typedef boost::function<void (BrokerChannel::Pointer) > WaitHandler;
@@ -238,14 +238,14 @@ namespace karabo {
                 m_readStringHandler(channel, s);
             }
          
-            void rawHash2VectorHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
+            void rawHash2VectorHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
                 std::vector<char> v;
                 v.resize(size);
                 memcpy(&v[0], data, size);
                 m_readVectorHashHandler(channel, v, header);
             }
 
-            void rawHash2StringHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
+            void rawHash2StringHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
                 std::string s(data, size);
                 m_readStringHashHandler(channel, s, header);
             }

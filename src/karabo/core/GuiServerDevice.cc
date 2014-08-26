@@ -596,13 +596,13 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash & header) {
+        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash::Pointer& header) {
             try {
-                Hash instanceInfo("type", "log", "message", logMessage);
+                Hash h("type", "log", "message", logMessage);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                    it->first->write(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();

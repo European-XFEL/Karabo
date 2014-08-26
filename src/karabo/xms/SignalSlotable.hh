@@ -102,16 +102,21 @@ namespace karabo {
 
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
-
-            std::queue< std::pair<karabo::util::Hash, karabo::util::Hash> > m_eventQueue;
+            
+            typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
+            std::queue< Event > m_eventQueue;
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
+            boost::thread_group m_eventLoopThreads;
+            
+            bool m_isPingable;
 
             // Reply/Request related
             Replies m_replies;
             boost::mutex m_replyMutex;
             
-            typedef std::map<std::string, std::pair<karabo::util::Hash, karabo::util::Hash> > ReceivedReplies;
+            
+            typedef std::map<std::string, Event > ReceivedReplies;
             ReceivedReplies m_receivedReplies;
             mutable boost::mutex m_receivedRepliesMutex;
 
@@ -232,7 +237,7 @@ namespace karabo {
             /**
              * This function will block the main-thread.
              */
-            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
+            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash(), int nThreads = 2);
 
             /**
              * This function will stop all consumers and un-block the runEventLoop() function
@@ -664,7 +669,8 @@ namespace karabo {
                     (boost::static_pointer_cast<karabo::xms::Slot1<A1> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (this, funcName));
-                     (*slotInstances)[funcName] = s;
+                    s->registerSlotFunction(slot);
+                    (*slotInstances)[funcName] = s;
 
                 }
             }
@@ -677,6 +683,7 @@ namespace karabo {
                     (boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(it->second))->registerSlotFunction(slot);
                 } else {                   
                     boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (this, funcName));
+                    s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;                   
                 }
             }
@@ -689,6 +696,7 @@ namespace karabo {
                     (boost::static_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (this, funcName));
+                    s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;   
 
                 }
@@ -702,6 +710,7 @@ namespace karabo {
                     (boost::static_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(it->second))->registerSlotFunction(slot);
                 } else {
                     boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (this, funcName));
+                    s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;   
                 }
             }
@@ -802,9 +811,11 @@ namespace karabo {
 
             void stopBrokerMessageConsumption();
 
-            void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash& body, const karabo::util::Hash& header);
+            void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const boost::shared_ptr<karabo::util::Hash>& body, const boost::shared_ptr<karabo::util::Hash>& header);
 
             bool eventQueueIsEmpty();
+            
+            bool tryToPopEvent(Event& event);
 
             void processEvents();
 
@@ -844,6 +855,8 @@ namespace karabo {
             }
 
         private: // Functions
+            
+            void _runEventLoop();
 
             void sanifyInstanceId(std::string& instanceId) const;
 

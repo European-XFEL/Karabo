@@ -133,7 +133,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.0");
+            KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.2");
 
             /**
              * Constructor which establishes an own connection to the communication system (default JMS - OpenMQ)

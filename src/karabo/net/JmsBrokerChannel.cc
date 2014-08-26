@@ -325,12 +325,12 @@ namespace karabo {
                     if (messageType == MQ_TEXT_MESSAGE) {
                         ConstMQString msgBody;
                         MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                        Hash header;
+                        Hash::Pointer header(new Hash());
                         MQPropertiesHandle propertiesHandle, headerHandle;
                         MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                         MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(header, propertiesHandle);
-                        getProperties(header, headerHandle);
+                        getProperties(*header, propertiesHandle);
+                        getProperties(*header, headerHandle);
                         MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                         MQ_SAFE_CALL(MQFreeProperties(headerHandle))
                         MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
@@ -414,12 +414,12 @@ namespace karabo {
                         const MQInt8* bytes;
                         MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
                         // Header
-                        Hash header;
+                        Hash::Pointer header(new Hash());
                         MQPropertiesHandle propertiesHandle, headerHandle;
                         MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                         MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(header, propertiesHandle);
-                        getProperties(header, headerHandle);
+                        getProperties(*header, propertiesHandle);
+                        getProperties(*header, headerHandle);
                         MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                         MQ_SAFE_CALL(MQFreeProperties(headerHandle))
                         // Thank you, broker!
@@ -435,12 +435,12 @@ namespace karabo {
                     } else if (messageType == MQ_TEXT_MESSAGE) {
                         ConstMQString msgBody;
                         MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                        Hash header;
+                        Hash::Pointer header(new Hash());
                         MQPropertiesHandle propertiesHandle, headerHandle;
                         MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
                         MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(header, propertiesHandle);
-                        getProperties(header, headerHandle);
+                        getProperties(*header, propertiesHandle);
+                        getProperties(*header, headerHandle);
                         MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                         MQ_SAFE_CALL(MQFreeProperties(headerHandle))
                         MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
@@ -640,19 +640,19 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header) {
-            Hash h;
-            if (header.has("__format")) {
-                std::string format = header.get<string>("__format");
+        void JmsBrokerChannel::rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
+            Hash::Pointer body(new Hash());
+            if (header->has("__format")) {
+                std::string format = header->get<string>("__format");
                 if (format == "Xml") {
                     try {
-                        m_textSerializer->load(h, data);
+                        m_textSerializer->load(*body, data);
                     } catch (const Exception& e) {
                         throw KARABO_MESSAGE_EXCEPTION("Could not de-serialize text message into Hash");
                     }
                 } else if (format == "Bin") {
                     try {
-                        m_binarySerializer->load(h, data, size);
+                        m_binarySerializer->load(*body, data, size);
                     } catch (const Exception& e) {
                         throw KARABO_MESSAGE_EXCEPTION("Could not de-serialize binary message into Hash");
                     }
@@ -662,7 +662,7 @@ namespace karabo {
             } else {
                 throw KARABO_MESSAGE_EXCEPTION("De-serialization of message without __format tag is not possible");
             }
-            m_readHashHashHandler(channel, h, header);
+            m_readHashHashHandler(channel, body, header);
         }
     }
 }
