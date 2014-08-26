@@ -135,7 +135,7 @@ class ProjectModel(QStandardItemModel):
                                           incompatible=icons.deviceIncompatible,
                                          ).get(
                                 device.status, icons.deviceInstance))
-                leafItem.setToolTip(device.id)
+                leafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
                 childItem.appendRow(leafItem)
 
             # Scenes
