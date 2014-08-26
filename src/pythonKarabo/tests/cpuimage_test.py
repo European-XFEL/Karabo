@@ -6,7 +6,7 @@ import unittest
 from karabo.karathon import *
 from karabo.decorators import *
 from configuration_test_classes import SomeClass
-import Image
+from PIL import Image
 
 class  CpuImage_TestCase(unittest.TestCase):
     def setUp(self):
