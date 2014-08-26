@@ -42,6 +42,7 @@ class Configuration(Box):
         #if type == "device":
         self.serverId = None
         self.classId = None
+        self.index = None
 
 
     def setSchema(self, schema):

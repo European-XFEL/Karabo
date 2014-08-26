@@ -28,7 +28,6 @@ from manager import Manager
 from widget import DisplayWidget
 
 from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
-from PyQt4.QtGui import QColor
 
 import numpy
 
@@ -77,8 +76,8 @@ class Curve(QObject):
 
 
     def getPropertyHistory(self, t0, t1):
-        t0 = datetime.datetime.utcfromtimestamp(t0).isoformat().decode('ascii')
-        t1 = datetime.datetime.utcfromtimestamp(t1).isoformat().decode('ascii')
+        t0 = unicode(datetime.datetime.utcfromtimestamp(t0).isoformat())
+        t1 = unicode(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, self.maxHistory)
 
 
@@ -173,7 +172,7 @@ class DisplayTrendline(DisplayWidget):
 
 
     def addBox(self, box):
-        curve = make.curve([ ], [ ], 'Random values', QColor(255, 0, 0))
+        curve = make.curve([ ], [ ], 'Random values', "r")
         self.curves[box] = Curve(box, curve, self.dialog)
         self.plot.add_item(curve)
         return True
