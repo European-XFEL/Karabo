@@ -343,7 +343,7 @@ class EditableApplyLaterComponent(BaseComponent):
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
         if box.hasValue():
             self.onDisplayValueChanged(box, box.value)
-        box.configuration.value.state.signalUpdateComponent.connect(
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateButtons)
 
 

@@ -44,8 +44,9 @@ class Configurator(object):
         '''
         if isinstance(classid, type):
             classid = classid.__classid__
-        if not isinstance(classid, str):
-            raise TypeError, "The argument type '" + type(classid) + "' is not allowed. Must be a class or a str."
+        if not isinstance(classid, basestring):
+            raise TypeError("The argument type '{}' is not allowed. "
+                            "Must be a class or a str.".format(type(classid)))
         if classid not in Configurator.registry:
             raise AttributeError,"Argument is not a class or classid of registered base class"
         self.baseRegistry = Configurator.registry[classid]
@@ -54,7 +55,7 @@ class Configurator(object):
         
     def __new__(cls, *args, **kwargs):
         if not cls._instance:
-            cls._instance = super(Configurator, cls).__new__(cls, *args, **kwargs)
+            cls._instance = super(Configurator, cls).__new__(cls)
         return cls._instance
     
     def registerClass(self, derived):
@@ -135,7 +136,7 @@ class Configurator(object):
             raise TypeError,"Wrong number of arguments and/or their types"
         if isinstance(classid, type):
             classid = classid.__classid__
-        if not isinstance(classid, str):
+        if not isinstance(classid, basestring):
             raise TypeError,"First argument 'classid' must be a python string type"
         if classid not in self.baseRegistry:
             raise AttributeError,"Unknown classid '" + classid + "' in base registry"
