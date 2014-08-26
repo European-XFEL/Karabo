@@ -104,7 +104,7 @@ class _Network(QObject):
         self.tcpSocket = QTcpSocket(self)
         self.tcpSocket.connected.connect(self.onConnected)
         self.runner = self.processInput()
-        self.bytesNeeded = self.runner.next()
+        self.bytesNeeded = next(self.runner)
         self.tcpSocket.disconnected.connect(self.onDisconnected)
         self.tcpSocket.readyRead.connect(self.onReadServerData)
         self.tcpSocket.error.connect(self.onSocketError)
@@ -208,7 +208,7 @@ class _Network(QObject):
                     self.bytesNeeded))
             except Exception as e:
                 self.runner = self.processInput()
-                self.bytesNeeded = self.runner.next()
+                self.bytesNeeded = next(self.runner)
                 if not isinstance(e, StopIteration):
                     raise
 

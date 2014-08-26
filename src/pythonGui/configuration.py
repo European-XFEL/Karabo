@@ -42,6 +42,7 @@ class Configuration(Box):
         #if type == "device":
         self.serverId = None
         self.classId = None
+        self.index = None
 
 
     def setSchema(self, schema):
@@ -110,7 +111,7 @@ class Configuration(Box):
     def getBox(self, path):
         box = self
         for p in path:
-            box = getattr(box.value, p)
+            box = getattr(box.boxvalue, p)
         return box
 
 
