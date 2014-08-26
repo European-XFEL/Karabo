@@ -94,7 +94,10 @@ class EditableList(EditableWidget, DisplayWidget):
 
     def onEditingFinished(self, text):
         self.lastCursorPos = self.leList.cursorPosition()
-        self.valueList = text.split(',')
+        if text:
+            self.valueList = text.split(',')
+        else:
+            self.valueList = []
         EditableWidget.onEditingFinished(self, self.valueList)
 
 
