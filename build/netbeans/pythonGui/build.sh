@@ -29,6 +29,7 @@ End-of-file
 chmod u+x karabo-gui
 cd ../lib
 cp -rf ../../../../../../src/pythonGui .
+2to3 -j4 -wn -x next --no-diffs .
 rm -f `find . -type f -name *.pyc`
 rm -rf `find . -type d -name .svn`
 cd $CWD
