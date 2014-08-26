@@ -80,7 +80,23 @@ namespace karabo {
             BOOL_ELEMENT(expected).key("debugMode")
                     .displayedName("Is Debug Mode?")
                     .description("Decides whether this device-server runs in debug or production mode")
+                    .adminAccess()
                     .assignmentOptional().defaultValue(false)
+                    .commit();
+            
+            INT32_ELEMENT(expected).key("heartbeatInterval")
+                    .displayedName("Heartbeat interval")
+                    .description("The heartbeat interval")
+                    .assignmentOptional().defaultValue(20)
+                    .adminAccess()
+                    .commit();
+            
+            INT32_ELEMENT(expected).key("nThreads")
+                    .displayedName("Number of threads")
+                    .description("Defines the number of threads that can be used to work on incoming events")
+                    .assignmentOptional().defaultValue(2)
+                    .minInc(1)
+                    .adminAccess()
                     .commit();
 
             LIST_ELEMENT(expected).key("autoStart")
@@ -187,7 +203,7 @@ namespace karabo {
         }
 
 
-        DeviceServer::DeviceServer(const karabo::util::Hash& input) : m_log(0) {
+        DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0) {
 
             string serverIdFileName("serverId.xml");
 
@@ -195,8 +211,8 @@ namespace karabo {
             if (boost::filesystem::exists(serverIdFileName)) {
                 Hash hash;
                 karabo::io::loadFromFile(hash, serverIdFileName);
-                if (input.has("serverId")) {
-                    input.get("serverId", m_serverId);
+                if (config.has("serverId")) {
+                    config.get("serverId", m_serverId);
                     // Update file for next startup
                     karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
                 } else if (hash.has("DeviceServer.serverId")) hash.get("DeviceServer.serverId", m_serverId);
@@ -206,8 +222,8 @@ namespace karabo {
                     karabo::io::saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName);
                 }
             } else { // No file
-                if (input.has("serverId")) {
-                    input.get("serverId", m_serverId);
+                if (config.has("serverId")) {
+                    config.get("serverId", m_serverId);
                 } else {
                     m_serverId = generateDefaultServerId();
                 }
@@ -216,17 +232,17 @@ namespace karabo {
             }
 
             // Device configurations for those to automatically start
-            if (input.has("autoStart")) input.get("autoStart", m_autoStart);
+            if (config.has("autoStart")) config.get("autoStart", m_autoStart);
 
             // Whether to scan for additional plug-ins at runtime
-            input.get("scanPlugins", m_scanPlugins);
+            config.get("scanPlugins", m_scanPlugins);
 
             // What visibility this server should have
-            input.get("visibility", m_visibility);
+            config.get("visibility", m_visibility);
 
             // Deprecate the isMaster in future
-            input.get("debugMode", m_debugMode);
-            input.get("isMaster", m_isMaster);
+            config.get("debugMode", m_debugMode);
+            config.get("isMaster", m_isMaster);
             if (m_isMaster) {
 
                 //                cerr << "\n#### WARNING ####\nThe \"isMaster\" option will be deprecated!\n"
@@ -241,10 +257,13 @@ namespace karabo {
                 m_autoStart[1] = Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0");
             }
 
-            m_connectionConfiguration = input.get<Hash>("connection");
-            m_connection = BrokerConnection::createChoice("connection", input);
-            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", input.get<string>("pluginDirectory")));
-            loadLogger(input);
+            m_connectionConfiguration = config.get<Hash>("connection");
+            m_connection = BrokerConnection::createChoice("connection", config);
+            m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
+            loadLogger(config);
+            
+            m_heartbeatIntervall = config.get<int>("heartbeatInterval");
+            m_nThreads = config.get<int>("nThreads");
         }
 
 
@@ -334,7 +353,7 @@ namespace karabo {
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", boost::asio::ip::host_name());
             instanceInfo.set("visibility", m_visibility);
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, 20, instanceInfo));
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo, m_nThreads));
             this->startFsm();
             t.join();
 
