@@ -59,7 +59,7 @@ def excepthook(type, value, traceback):
     mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),
                      getattr(value, "title", type.__name__),
                      "{}\n{}\n".format(getattr(value, "message",
-                                               "Unknown error occured"),
+                                  "{}: {}".format(type.__name__, value)),
                                        " " * 300 + "\n"))
     text = "".join(format_exception(type, value, traceback))
     mb.setDetailedText(text)
