@@ -1,0 +1,63 @@
+--- Imaging-1.1.7/setup.py	2009-11-15 17:06:10.000000000 +0100
++++ Imaging-1.1.7/setup_openSUSE.py	2014-08-25 10:29:13.820401425 +0200
+@@ -33,12 +33,12 @@ def libinclude(root):
+ #
+ # TIFF_ROOT = libinclude("/opt/tiff")
+ 
+-TCL_ROOT = None
+-JPEG_ROOT = None
+-ZLIB_ROOT = None
+-TIFF_ROOT = None
+-FREETYPE_ROOT = None
+-LCMS_ROOT = None
++TCL_ROOT = "/usr/lib64", "/usr/include"
++JPEG_ROOT = "/usr/lib64", "/usr/include"
++ZLIB_ROOT = "/usr/lib64", "/usr/include"
++TIFF_ROOT = "/usr/lib64", "/usr/include"
++FREETYPE_ROOT = "/usr/lib64", "/usr/include"
++LCMS_ROOT = "/usr/lib64", "/usr/include"
+ 
+ # FIXME: add mechanism to explicitly *disable* the use of a library
+ 
+@@ -303,7 +303,7 @@ class pil_build_ext(build_ext):
+             defs.append(("WORDS_BIGENDIAN", None))
+ 
+         exts = [(Extension(
+-            "_imaging", files, libraries=libs, define_macros=defs
++            "_imaging", files, libraries=libs, define_macros=defs, runtime_library_dirs=["$ORIGIN/../../.."]
+             ))]
+ 
+         #
+@@ -315,12 +315,12 @@ class pil_build_ext(build_ext):
+                 defs.append(("USE_FREETYPE_2_0", None))
+             exts.append(Extension(
+                 "_imagingft", ["_imagingft.c"], libraries=["freetype"],
+-                define_macros=defs
++                define_macros=defs, runtime_library_dirs=["$ORIGIN/../../.."]
+                 ))
+ 
+         if os.path.isfile("_imagingtiff.c") and feature.tiff:
+             exts.append(Extension(
+-                "_imagingtiff", ["_imagingtiff.c"], libraries=["tiff"]
++                "_imagingtiff", ["_imagingtiff.c"], libraries=["tiff"], runtime_library_dirs=["$ORIGIN/../../.."]
+                 ))
+ 
+         if os.path.isfile("_imagingcms.c") and feature.lcms:
+@@ -328,7 +328,7 @@ class pil_build_ext(build_ext):
+             if sys.platform == "win32":
+                 extra.extend(["user32", "gdi32"])
+             exts.append(Extension(
+-                "_imagingcms", ["_imagingcms.c"], libraries=["lcms"] + extra
++                "_imagingcms", ["_imagingcms.c"], libraries=["lcms"] + extra, runtime_library_dirs=["$ORIGIN/../../.."]
+                 ))
+ 
+         if sys.platform == "darwin":
+@@ -357,7 +357,7 @@ class pil_build_ext(build_ext):
+         elif feature.tcl and feature.tk:
+             exts.append(Extension(
+                 "_imagingtk", ["_imagingtk.c", "Tk/tkImaging.c"],
+-                libraries=[feature.tcl, feature.tk]
++                libraries=[feature.tcl, feature.tk], runtime_library_dirs=["$ORIGIN/../../.."]
+                 ))
+ 
+         if os.path.isfile("_imagingmath.c"):
