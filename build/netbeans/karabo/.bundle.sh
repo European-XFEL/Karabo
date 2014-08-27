@@ -39,6 +39,13 @@ then
         tmp=$(svn info ../../../ | grep Revision)
         VERSION=r${tmp##*: }
     fi
+elif tmp=$(jsvn info ../../../ | grep URL)
+then
+    VERSION=${tmp##*/}
+    if [ "$VERSION" = "trunk" ]; then
+        tmp=$(jsvn info ../../../ | grep Revision)
+        VERSION=r${tmp##*: }
+    fi
 else
     VERSION=$(git rev-parse --short HEAD)
 fi
