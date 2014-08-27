@@ -1,9 +1,10 @@
-#!python
 """Windows-specific part of the installation"""
 from __future__ import print_function
 import os, sys
 #import karaboGui
 from distutils.sysconfig import get_python_lib
+
+fn = open(r"C:\test.txt",'w')
 
 def create_shortcut_safe(target, description, link_file, args, workdir):
     create_shortcut(target, description, link_file, args, workdir)
@@ -12,7 +13,6 @@ def create_shortcut_safe(target, description, link_file, args, workdir):
 def install():
     prefix = sys.prefix
     python = prefix + r'\pythonw.exe'
-    fn = open(r"C:\test.txt",'w')
     print('Creating Shortcut', file=fn)
     print(python, file=fn)
 
@@ -42,13 +42,14 @@ def install():
 def remove():
     pass
 
-# main()
 if len(sys.argv) > 1:
     if sys.argv[1] == '-install':
-        install()
         print('running install', file=fn)
+        install()
+        print('finished install', file=fn)
     elif sys.argv[1] == '-remove':
         remove()
     else:
-       # print "Script was called with option %s" % sys.argv[1]
-        print("Script was called with option ", file=f)
+      # print "Script was called with option %s" % sys.argv[1]"
+        print("Script was called with option ", file=fn)
+
