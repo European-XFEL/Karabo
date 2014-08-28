@@ -137,7 +137,31 @@ namespace karabo {
          inline std::string toString(const std::vector<char>& value) {
             return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(&value[0]), value.size());
         }
-         
+
+        template <typename T>
+        inline std::string toString(const std::pair<const T*, size_t>& value) {            
+            if (value.second == 0 ) return "";            
+            const T* ptr = value.first;
+            std::ostringstream s;
+            s << toString(ptr[0]);            
+            for( size_t i=1; i< value.second; i++){
+                s << "," << toString(ptr[i]);                
+            }
+            return s.str();
+        }
+        
+        inline std::string toString(const std::pair<const unsigned char*, size_t>& value) {            
+            if (value.second == 0 ) return "";            
+            return karabo::util::base64Encode(value.first, value.second);
+        }
+
+        inline std::string toString(const std::pair<const char*, size_t>& value) {            
+            if (value.second == 0 ) return "";            
+            return karabo::util::base64Encode(reinterpret_cast<const unsigned char*>(value.first), value.second);
+        }
+        
+        
+        
         template <typename T>
         inline std::string toString(const std::set<T>& value) {
             if (value.empty()) return "";
