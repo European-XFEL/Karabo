@@ -367,6 +367,19 @@ void Hash_Test::testGetAs() {
         Hash h("a", std::complex<double>(1.2, 0.5));
         CPPUNIT_ASSERT(h.getAs<string > ("a") == "(1.200000000000000,0.500000000000000)");
     }
+    {
+        try {
+            const int arr[6] = {0, 1, 2, 3, 4, 5};
+            const int* ptr = &arr[0];
+            Hash h("a", std::pair<const int*, size_t>(ptr, 6));
+            CPPUNIT_ASSERT(h.getAs<string > ("a") == "0,1,2,3,4,5");
+            ostringstream oss;
+            oss << h;            
+        } catch (Exception& e) {
+            cerr << e;
+            KARABO_RETHROW(e);
+        }
+    }
 }
 
 
@@ -619,6 +632,7 @@ void Hash_Test::testMerge() {
     CPPUNIT_ASSERT(similar(h1, h3));
 }
 
+
 void Hash_Test::testSubtract() {
     Hash h1("a", 1,
             "b", 2,
@@ -644,14 +658,14 @@ void Hash_Test::testSubtract() {
     CPPUNIT_ASSERT(h1.get<int>("c.c[0].d") == 4);
     CPPUNIT_ASSERT(h1.get<int>("c.c[1].a.b.c") == 6);
     CPPUNIT_ASSERT(h1.get<int>("d.e") == 7);
-    
+
     Hash h3("a.b.c", 1,
             "a.b.d", 2,
             "a.c.d", 22,
             "b.c.d", 33,
             "c.d.e", 44,
             "c.e.f", 55
-           );
+            );
     Hash h4("a.b", Hash(),
             "c", Hash());
     h3 -= h4;
@@ -1132,17 +1146,17 @@ void Hash_Test::testHelper() {
         // std::clog << "SerializeH: \n" << h1 << std::endl;
         // std::clog << "Serialize2: \n" << serializer2.getResult().str() << std::endl;
 
-//        std::clog << "Hash : " << h1 << std::endl;
-//        std::clog << "FlatV: " << flatten.getResult() << std::endl;
+        //        std::clog << "Hash : " << h1 << std::endl;
+        //        std::clog << "FlatV: " << flatten.getResult() << std::endl;
 
         Hash flat;
         Hash::flatten(h1, flat, "", '/');
-//        std::clog << "FlatH: " << flat << std::endl;
+        //        std::clog << "FlatH: " << flat << std::endl;
 
-//        std::clog << "Paths : " << std::endl;
-//        for (int i = 0; i < paths.getResult().size(); ++i) {
-//            std::clog << "\t" << paths.getResult()[i] << std::endl;
-//        }
+        //        std::clog << "Paths : " << std::endl;
+        //        for (int i = 0; i < paths.getResult().size(); ++i) {
+        //            std::clog << "\t" << paths.getResult()[i] << std::endl;
+        //        }
 
         //helper::Visitor<Hash, Counter> count;
         //std::clog << "Count 2 : " << count(h1).getResult() << std::endl;
