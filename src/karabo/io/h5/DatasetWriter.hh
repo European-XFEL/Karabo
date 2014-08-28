@@ -317,7 +317,79 @@ namespace karabo {
 
             };
 
+          template< typename T >
+            class DatasetArrayWriter : public DatasetWriter<T> {
 
+            public:
+
+                KARABO_CLASSINFO(DatasetArrayWriter,
+                                 "DatasetWriter_" +
+                                 karabo::util::ToType<karabo::util::ToLiteral>::to
+                                 (karabo::util::FromType<karabo::util::FromTypeInfo>::from(typeid (std::pair<const T*, size_t>))), "1.0")
+
+                DatasetArrayWriter(const karabo::util::Hash& input) : DatasetWriter<T>(input) {
+                }
+
+                void write(const karabo::util::Hash::Node& node, hid_t dataSet, hid_t fileDataSpace) {
+                    writeHashElement(node, dataSet, fileDataSpace);
+                }
+
+                void write(const karabo::util::Hash::Node& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    writeHashElement(node, len, dataSet, fileDataSpace);
+                }
+
+                void write(const karabo::util::Element<std::string>& node, hid_t dataSet, hid_t fileDataSpace) {
+                    writeHashElement(node, dataSet, fileDataSpace);
+                }
+
+                void write(const karabo::util::Element<std::string>& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    writeHashElement(node, len, dataSet, fileDataSpace);
+                }
+
+            private:
+
+                template<class HASH_ELEMENT>
+                void writeHashElement(const HASH_ELEMENT& node, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(array)";
+                    const T* ptr = node.template getValue<std::pair<const T*, size_t> >().first;
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    herr_t status = H5Dwrite(dataSet, tid, this->m_memoryDataSpace, fileDataSpace, H5P_DEFAULT, ptr);
+                    KARABO_CHECK_HDF5_STATUS(status);
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                }
+
+                template<class HASH_ELEMENT>
+                void writeHashElement(const HASH_ELEMENT& node, hsize_t len, hid_t dataSet, hid_t fileDataSpace) {
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "entered write(array, buffer)";
+                    const T* ptr = node.template getValue<std::pair<const T*,size_t> >().first;
+
+                    hid_t tid = ScalarTypes::getHdf5NativeType<T > ();
+                    
+                    std::vector<hsize_t> vdims = this->m_dimsBuffer.toVector();
+                    vdims[0] = len;
+                    karabo::util::Dims memoryDims(vdims);
+                    hid_t mds = Dataset::dataSpace(memoryDims);
+                    
+                    #ifdef KARABO_ENABLE_TRACE_LOG
+                    std::ostringstream oss;
+                    Dataset::getDataSpaceInfo(mds, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "memory space: " << oss.str();
+                    oss.str("");
+                    Dataset::getDataSpaceInfo(fileDataSpace, oss);
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "  file space: " << oss.str();
+
+                    KARABO_LOG_FRAMEWORK_TRACE_C(_LOGGER_CATEGORY) << "ptr[2]=" << ptr[2];
+                    #endif
+
+                    herr_t status = H5Dwrite(dataSet, tid, mds, fileDataSpace, H5P_DEFAULT, ptr);
+                    KARABO_CHECK_HDF5_STATUS(status)
+                    KARABO_CHECK_HDF5_STATUS(H5Tclose(tid));
+                    KARABO_CHECK_HDF5_STATUS(H5Sclose(mds));
+                }
+
+
+
+            };
 
 
 

@@ -116,6 +116,18 @@ namespace karabo {
                     std::vector<unsigned long long> dims = el.getAttributeAs<unsigned long long, std::vector >("dims");
                     h.set("dims", dims);
                 }
+                
+                template< class T>
+                static void discoverArraySize(karabo::util::Hash& h, const karabo::util::Hash::Node& el) {
+                    std::vector<unsigned long long> dims;
+                    if (el.hasAttribute("dims")) {
+                        dims = el.getAttributeAs<unsigned long long, std::vector >("dims");
+                    } else {
+                        unsigned long long size = el.getValue< std::pair<const T*, size_t> >().second;
+                        dims.push_back(size);
+                    }
+                    h.set("dims", dims);
+                }
 
                 const std::vector<Element::Pointer>& getElements() const {
                     return m_elements;
