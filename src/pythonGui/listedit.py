@@ -16,15 +16,15 @@ from karabo import hashtypes
 import numpy
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
-    QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout, QFontMetrics,
-    QLineEdit)
+                         QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
+                         QFontMetrics)
 
 class ListEdit(QDialog):
 
-    def __init__(self, valueType, duplicatesOk=True, list=[], parent=None):
+    def __init__(self, descriptor, duplicatesOk=True, list=[], parent=None):
         super(ListEdit, self).__init__(parent)
 
-        self.__valueType = valueType
+        self.descriptor = descriptor
 
         self.ask = False
         self.duplicatesOk = duplicatesOk
@@ -142,10 +142,10 @@ class ListEdit(QDialog):
 
 
         dialog = QInputDialog.getText
-        if isinstance(self.__valueType, hashtypes.Simple):
-            if issubclass(self.__valueType.numpy, numpy.inexact):
+        if isinstance(self.descriptor, hashtypes.Simple):
+            if issubclass(self.descriptor.numpy, numpy.inexact):
                 dialog = QInputDialog.getDouble
-            elif issubclass(self.__valueType.numpy, numpy.integer):
+            elif issubclass(self.descriptor.numpy, numpy.integer):
                 dialog = QInputDialog.getInt
 
         if currentValue is None:
