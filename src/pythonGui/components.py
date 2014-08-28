@@ -458,11 +458,11 @@ class EditableApplyLaterComponent(BaseComponent):
             if len(value) != len(self.widgetFactory.value):
                 isEqualEditable = False
             else:
+                isEqualEditable = True
                 for i in xrange(len(value)):
                     if value[i] != self.widgetFactory.value[i]:
                         isEqualEditable = False
                         break
-                isEqualEditable = True
         else:
             isEqualEditable = (str(value) == str(self.widgetFactory.value))
 
