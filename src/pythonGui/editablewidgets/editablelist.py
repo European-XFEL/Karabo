@@ -102,7 +102,7 @@ class EditableList(EditableWidget, DisplayWidget):
 
 
     def onEditClicked(self):
-        listEdit = ListEdit(self.valueType, True, self.valueList)
+        listEdit = ListEdit(self.boxes[0].descriptor, True, self.valueList)
         listEdit.setTexts("Add", "&Value", "Edit")
 
         if listEdit.exec_() == QDialog.Accepted:
