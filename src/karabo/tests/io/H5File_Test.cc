@@ -421,8 +421,10 @@ void H5File_Test::testRead() {
         CPPUNIT_ASSERT(data.get<unsigned int>("bla") == 1006);
         vector<double>& vec = data.get< vector<double> >("db");
         for (size_t i = 0; i < dims.size(); ++i) {
-            CPPUNIT_ASSERT(vec[i] == i * 1.0 + 0.1234);
-            CPPUNIT_ASSERT(vecd[i] == i * 1.0 + 0.1234);
+            CPPUNIT_ASSERT(vec[i] - (i * 1.0 + 0.1234)  < 10e-16); 
+            CPPUNIT_ASSERT((i * 1.0 + 0.1234) - vec[i]  < 10e-16);
+            CPPUNIT_ASSERT(vecd[i] - (i * 1.0 + 0.1234) < 10e-16);
+            CPPUNIT_ASSERT((i * 1.0 + 0.1234) - vecd[i] < 10e-16);
         }
 
         CPPUNIT_ASSERT(data.get<bool>("d") == true);
@@ -712,11 +714,17 @@ void H5File_Test::testBufferWrite() {
 
 
         bool exists = file.hasTable("/planets");
-        //        clog << "/planets " << exists << endl;
+        //cerr << "/planets " << exists << endl;
+        CPPUNIT_ASSERT(exists == true);
+                        
         exists = file.hasTable("/planet");
-        //        clog << "/planet " << exists << endl;
+        //cerr << "/planet " << exists << endl;
+        CPPUNIT_ASSERT(exists == false);
+                       
         exists = file.hasTable("planets");
-        //        clog << "planets " << exists << endl;
+        //cerr << "planets " << exists << endl;
+        CPPUNIT_ASSERT(exists == false);
+                
 
         p.stopPeriod("create");
         p.startPeriod("write0");
@@ -2314,7 +2322,7 @@ void H5File_Test::testArray() {
             vector<int>& rarr = rdata.get<vector<int> >("array");
             CPPUNIT_ASSERT(rarr.size() == 12);
             for (size_t i = 0; i < rarr.size(); ++i) {
-                CPPUNIT_ASSERT(rarr[i] == i);
+                CPPUNIT_ASSERT(static_cast<size_t>(rarr[i]) == i);
             }
         }
 
