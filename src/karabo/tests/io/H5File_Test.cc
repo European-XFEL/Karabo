@@ -551,7 +551,7 @@ void H5File_Test::testBufferWrite() {
         Hash data;
 
         TimeProfiler p("VectorBufferWrite");
-        p.open(); 
+        p.open();
         p.startPeriod("format");
         Format::Pointer format = Format::createEmptyFormat();
 
@@ -709,15 +709,15 @@ void H5File_Test::testBufferWrite() {
 
         Table::Pointer t = file.createTable("/planets", format);
 
-        
-        
+
+
         bool exists = file.hasTable("/planets");
-//        clog << "/planets " << exists << endl;
+        //        clog << "/planets " << exists << endl;
         exists = file.hasTable("/planet");
-//        clog << "/planet " << exists << endl;
+        //        clog << "/planet " << exists << endl;
         exists = file.hasTable("planets");
-//        clog << "planets " << exists << endl;
-        
+        //        clog << "planets " << exists << endl;
+
         p.stopPeriod("create");
         p.startPeriod("write0");
 
@@ -850,7 +850,7 @@ void H5File_Test::testBufferWrite() {
         TimeDuration createTime = p.getPeriod("create").getDuration();
         TimeDuration writeTime = p.getPeriod("write").getDuration();
         TimeDuration closeTime = p.getPeriod("close").getDuration();
-        
+
         if (m_reportTime) {
             clog << endl;
             clog << "file: " << filename << endl;
@@ -1257,7 +1257,7 @@ void H5File_Test::testManyTables() {
         TimeDuration createTime = p.getPeriod("create").getDuration();
         TimeDuration writeTime = p.getPeriod("write").getDuration();
         TimeDuration closeTime = p.getPeriod("close").getDuration();
-        
+
 
         if (false) {
             clog << endl;
@@ -1888,7 +1888,7 @@ void H5File_Test::testTrainFormat() {
         p.close();
         //clog << "writeData: " << p.getPeriod("writeData").getDuration() << endl;
         file.close();
-        
+
     } catch (Exception& ex) {
         clog << ex << endl;
         CPPUNIT_FAIL("Error");
@@ -2199,8 +2199,7 @@ void H5File_Test::testClose() {
 
     try {
         string filename = "/dev/shm/close.h5";
-        string filename1 = "/dev/shm/close1.h5";
-        //filename = resourcePath("close.h5");
+        filename = resourcePath("close.h5");
 
         //filename = "/tmp/close.h5";
         Hash data("x", 123, "y", "abc", "z", vector<signed char>(100, 48));
@@ -2269,6 +2268,68 @@ void H5File_Test::testClose() {
 }
 
 
+void H5File_Test::testArray() {
+    try {
+        string filename = "/dev/shm/array.h5";
+
+        filename = resourcePath("array.h5");
+        const int arr[12] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        const int* ptr = &arr[0];
+        std::pair<const int*, size_t> array(ptr, 12);
+        Hash data("array", array);
+        data.setAttribute("array", "dims", Dims(3, 4).toVector());
+
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "data " << data;
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "discover format";
+
+
+        Format::Pointer dataFormat = Format::discover(data);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename;
+
+
+
+        File file(filename);
+        file.open(File::TRUNCATE);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " is open";
+        Table::Pointer t = file.createTable("/a/b/c/d", dataFormat);
+        t->writeAttributes(data);
+        t->write(data, 0);
+        t->write(data, 1);
+        t->write(data, 2);
+        t->write(data, 3);
+        file.close();
+
+
+        file.open(File::READONLY);
+        KARABO_LOG_FRAMEWORK_TRACE_CF << "File " << filename << " is open for reading";
+
+        Table::Pointer t1 = file.getTable("/a/b/c/d");
+        CPPUNIT_ASSERT(t1->size() == 4);
+
+        Hash rdata;
+        t1->bind(rdata);
+        for (size_t j = 0; j < 4; ++j) {
+            t1->read(j);
+            KARABO_LOG_FRAMEWORK_TRACE_CF << "record " << j << " rdata: " << rdata;
+            vector<int>& rarr = rdata.get<vector<int> >("array");
+            CPPUNIT_ASSERT(rarr.size() == 12);
+            for (size_t i = 0; i < rarr.size(); ++i) {
+                CPPUNIT_ASSERT(rarr[i] == i);
+            }
+        }
+
+        file.close();
+
+
+
+
+    } catch (Exception& ex) {
+        clog << ex << endl;
+        CPPUNIT_FAIL("Error in testArray");
+    }
+}
+
+
 void H5File_Test::testExternalHdf5() {
     try {
 
@@ -2298,7 +2359,7 @@ void H5File_Test::testExternalHdf5() {
 
         clog << "image:" << endl << rdata << endl;
 
-        file1.close(); 
+        file1.close();
 
     } catch (Exception& ex) {
         clog << ex << endl;
