@@ -8,13 +8,13 @@
 
 
 #include "DatasetWriter.hh"
-using namespace karabo::io; 
+using namespace karabo::io;
 
-namespace karabo { 
+namespace karabo {
     namespace io {
-        namespace h5 {    
- 
- 
+        namespace h5 {
+
+
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetVectorWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetVectorWriter<signed char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetVectorWriter<short>)
@@ -50,6 +50,19 @@ namespace karabo {
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter< std::complex<double> >, DatasetPointerWriter< std::complex<double> >)
 
 
+
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetArrayWriter<char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetArrayWriter<signed char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<short>, DatasetArrayWriter<short>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<int>, DatasetArrayWriter<int>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<long long>, DatasetArrayWriter<long long>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned char>, DatasetArrayWriter<unsigned char>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned short>, DatasetArrayWriter<unsigned short>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned int>, DatasetArrayWriter<unsigned int>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<unsigned long long>, DatasetArrayWriter<unsigned long long>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<double>, DatasetArrayWriter<double>)
+            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<float>, DatasetArrayWriter<float>)
+//            KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<bool>, DatasetArrayWriter<bool>)
 
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<char>, DatasetScalarWriter<char>)
             KARABO_REGISTER_FOR_CONFIGURATION(DatasetWriter<signed char>, DatasetScalarWriter<signed char>)
