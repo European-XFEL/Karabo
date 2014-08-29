@@ -22,7 +22,7 @@ from projectmodel import ProjectModel
 from util import getSaveFileName
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QCursor, QFileDialog, QMenu, QTreeView)
+from PyQt4.QtGui import (QAction, QDialog, QCursor, QFileDialog, QMenu, QTreeView)
 import os.path
 
 

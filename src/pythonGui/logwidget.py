@@ -17,11 +17,11 @@ import icons
 from manager import Manager
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QIODevice, QMutex,
-                          QMutexLocker, Qt, QThread)
+from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QMutex, QMutexLocker,
+                          Qt, QThread)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QHeaderView, QItemSelectionModel, QLabel,
+                         QItemSelectionModel, QLabel,
                          QLineEdit, QPushButton, QTableView, QToolButton,
                          QVBoxLayout, QWidget)
 
@@ -54,7 +54,7 @@ class LogWidget(QWidget):
 
         # Add button to collapse/expand filter options
         text = "Show filter options"
-        self.pbFilterOptions = QPushButton("+ " + text)
+        self.pbFilterOptions = QPushButton("+ {}".format(text))
         self.pbFilterOptions.setStatusTip(text)
         self.pbFilterOptions.setToolTip(text)
         self.pbFilterOptions.setCheckable(True)
@@ -538,7 +538,6 @@ class LogTableView(QTableView):
         self.setWordWrap(True)
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setStretchLastSection(True)
-        #self.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
         self.verticalHeader().setVisible(False)
 
         # Selection
