@@ -26,11 +26,7 @@ from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget, DisplayWidget
 
-from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QDialog, QFrame, QHBoxLayout, QLineEdit, QToolButton, QWidget
-
-import numbers
-import numpy
+from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 
 class EditableList(EditableWidget, DisplayWidget):

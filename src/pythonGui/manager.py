@@ -30,7 +30,7 @@ from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QFileInfo, QIODevice, QObject)
+from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 

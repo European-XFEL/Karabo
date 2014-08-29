@@ -8,8 +8,7 @@
 
 from __future__ import unicode_literals
 
-from components import (DisplayComponent, EditableApplyLaterComponent,
-                        EditableNoApplyComponent)
+from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from dialogs.dialogs import PenDialog, TextDialog
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -20,20 +19,19 @@ import pathparser
 import icons
 import manager
 
-from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
+from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFileDialog, QFont, QFrame, QLabel,
-                         QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
-                         QPainter, QPen, QStackedLayout,
+                         QFrame, QLabel, QLayout, QKeySequence, QMenu,
+                         QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
                          QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
 from karabo import xmlparser
 from functools import partial
-import os.path
+
 from itertools import chain
 from io import BytesIO
 import copy
