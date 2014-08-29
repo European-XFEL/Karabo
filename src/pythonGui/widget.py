@@ -14,7 +14,7 @@ __all__ = ["DisplayWidget"]
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
-from registry import Loadable, Registry
+from registry import Registry
 import os.path
 
 

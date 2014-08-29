@@ -20,7 +20,7 @@ from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 
-from PyQt4.QtCore import pyqtSignal, Qt, QTimer
+from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
@@ -326,8 +326,7 @@ class ConfigurationPanel(QWidget):
 
 
     def updateResetAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(
-            configuration.index)
+        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbResetAll.isEnabled() is True) and (nbSelected > 0):
@@ -544,7 +543,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onShowConfiguration(self, configuration):
-        if hasattr(configuration, 'index'):
+        if configuration.index is not None:
             twParameterEditor = self.__swParameterEditor.widget(configuration.index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
@@ -604,13 +603,13 @@ class ConfigurationPanel(QWidget):
         else:
             timer.stop()
 
-            if hasattr(conf, 'index'):
+            if conf.index is not None:
                 parameterEditor = self.__swParameterEditor.widget(conf.index)
                 parameterEditor.setReadOnly(False)
 
  
     def onErrorState(self, conf, inErrorState):
-        if hasattr(conf, 'index'):
+        if conf.index is not None:
             parameterEditor = self.__swParameterEditor.widget(conf.index)
             parameterEditor.setErrorState(inErrorState)
 
