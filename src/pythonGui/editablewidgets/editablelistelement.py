@@ -23,7 +23,6 @@ __all__ = ["EditableListElement"]
 
 from widget import DisplayWidget, EditableWidget
 from karabo.hash import Hash
-from manager import Manager
 from stringlistedit import StringListEdit
 
 from PyQt4.QtCore import pyqtSignal
@@ -48,14 +47,7 @@ class EditableListElement(EditableWidget, DisplayWidget):
         
         self.__isInit = False
         
-        #if isDevIns:
-        #    self.signalValueChanged.connect(Manager().onDeviceInstanceValueChanged)
-        #else:
-        #    self.signalValueChanged.connect(Manager().onDeviceClassValueChanged)
-        
         self.__pushButton.clicked.connect(self.onClicked)
-        
-        #self.valueChanged(self.keys[0], value)
 
 
     @property
