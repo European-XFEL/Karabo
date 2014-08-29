@@ -27,7 +27,7 @@ from manager import Manager
 from stringlistedit import StringListEdit
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QPushButton
+from PyQt4.QtGui import QDialog, QPushButton
 
 
 class EditableListElement(EditableWidget, DisplayWidget):

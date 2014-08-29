@@ -12,9 +12,9 @@
 __all__ = ["StringListEdit"]
 
 
-from PyQt4.QtCore import SIGNAL
 from PyQt4.QtGui import (QDialog, QHBoxLayout, QInputDialog, QListWidget, QMessageBox, 
                          QPushButton, QVBoxLayout)
+
 
 class StringListEdit(QDialog):
 
@@ -36,7 +36,7 @@ class StringListEdit(QDialog):
 
         hbox = QHBoxLayout(self)
         self.listWidget = QListWidget(self)
-        self.connect(self.listWidget, SIGNAL('currentItemChanged(QListWidgetItem*, QListWidgetItem*)'), self.onUpdateButtons)
+        self.listWidget.currentItemChanged.connect(self.onUpdateButtons)
         hbox.addWidget(self.listWidget)
 
         vbox = QVBoxLayout()
