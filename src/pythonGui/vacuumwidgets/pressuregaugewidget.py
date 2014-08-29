@@ -7,24 +7,12 @@
 
 """This module contains a class which represents a widget plugin for attributes
    and is created by the factory class VacuumWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
 """
 
 __all__ = ["PressureGaugeWidget"]
 
 
 from widget import VacuumWidget
-
-#from PyQt4.QtCore import *
-from PyQt4.QtGui import QPixmap
 
 
 class PressureGaugeWidget(VacuumWidget):
