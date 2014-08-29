@@ -39,42 +39,46 @@ class DisplayImageElement(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayImageElement, self).__init__(box)
 
-        self.__image = QLabel(parent)
-        self.__image.setAutoFillBackground(True)
-        self.__image.setAlignment(Qt.AlignCenter)
-        self.__image.setMinimumHeight(125)
-        self.__image.setMaximumHeight(125)
-        self.__image.setMinimumWidth(125)
-        self.__image.setWordWrap(True)
+        self.image = QLabel(parent)
+        self.image.setAutoFillBackground(True)
+        self.image.setAlignment(Qt.AlignCenter)
+        self.image.setMinimumHeight(125)
+        self.image.setMaximumHeight(125)
+        self.image.setMinimumWidth(125)
+        self.image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
 
 
     @property
     def widget(self):
-        return self.__image
+        return self.image
 
 
     def setErrorState(self, isError):
         if isError is True:
-            self.__image.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
+            self.image.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
         else:
-            self.__image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
+            self.image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
 
 
     def valueChanged(self, box, value, timestamp=None):
         if self.value is not None or value is self.value:
             return
         
-        if len(value.dims) != 2:
+        if len(value.dims) < 2:
             return
 
         # Data type information
-        type = value.type.value
-        type = hashtypes.Type.fromname[type].numpy
+        type = value.type
+        try:
+            type = hashtypes.Type.fromname[type].numpy
+        except KeyError as e:
+            e.message = 'Image element has improper type "{}"'.format(type)
+            raise
 
         # Data itself
-        data = value.data.value
+        data = value.data
         npy = np.frombuffer(data, type)
 
         # Normalize
@@ -85,11 +89,19 @@ class DisplayImageElement(DisplayWidget):
         npy = npy.astype(np.uint8)
 
         # Shape
-        dimX = value.dims.value[0]
-        dimY = value.dims.value[1]
+        dimX = value.dims[0]
+        dimY = value.dims[1]
+
+        try:
+            npy.shape = dimY, dimX
+        except ValueError as e:
+            e.message = 'Image has improper shape ({}, {}) for size {}'. \
+                format(dimX, dimY, len(npy))
+            raise
 
         # Safety
-        if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
+        if dimX < 1 or dimY < 1:
+            raise RuntimeError('Image has less than two dimensions')
 
         image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
         image.setColorTable(self.colorTable)
@@ -99,4 +111,4 @@ class DisplayImageElement(DisplayWidget):
         if pixmap.height() > 125:
             pixmap = pixmap.scaledToHeight(125)
 
-        self.__image.setPixmap(pixmap)
+        self.image.setPixmap(pixmap)
