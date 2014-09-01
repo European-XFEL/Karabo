@@ -542,12 +542,12 @@ class ConfigurationPanel(QWidget):
 
 
     def onShowConfiguration(self, configuration):
-        if configuration.index is not None:
+        if configuration.index is None:
+            configuration.index = self._createNewParameterPage(configuration)
+        else:
             twParameterEditor = self.__swParameterEditor.widget(configuration.index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
-        else:
-            configuration.index = self._createNewParameterPage(configuration)
 
         currentIndex = self.__swParameterEditor.currentIndex()
         if (currentIndex == 1) and (self.prevConfiguration is configuration):
