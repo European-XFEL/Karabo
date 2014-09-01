@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests>
+    <FailedTest id="15">
+      <Name>Epochstamp_Test::testToFormattedString</Name>
+      <FailureType>Assertion</FailureType>
+      <Location>
+        <File>../../../src/karabo/tests/util/Epochstamp_Test.cc</File>
+        <Line>335</Line>
+      </Location>
+      <Message>assertion failed
+- Expression: returnFormatedString == expectedStringOutput
+</Message>
+    </FailedTest>
+  </FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>Base64_Test::testEncode</Name>
+    </Test>
+    <Test id="2">
+      <Name>Base64_Test::testDecode</Name>
+    </Test>
+    <Test id="3">
+      <Name>ByteSwap_Test::test16</Name>
+    </Test>
+    <Test id="4">
+      <Name>ByteSwap_Test::test32</Name>
+    </Test>
+    <Test id="5">
+      <Name>ByteSwap_Test::test64</Name>
+    </Test>
+    <Test id="6">
+      <Name>DateTimeString_Test::testConstructors</Name>
+    </Test>
+    <Test id="7">
+      <Name>DateTimeString_Test::isStringValidIso8601</Name>
+    </Test>
+    <Test id="8">
+      <Name>DateTimeString_Test::isStringKaraboValidIso8601</Name>
+    </Test>
+    <Test id="9">
+      <Name>DateTimeString_Test::isStringKaraboValidIso8601TimeZone</Name>
+    </Test>
+    <Test id="10">
+      <Name>DateTimeString_Test::validateFractionalSecondToString</Name>
+    </Test>
+    <Test id="11">
+      <Name>Dims_Test::testDims</Name>
+    </Test>
+    <Test id="12">
+      <Name>Dims_Test::testArrayTools</Name>
+    </Test>
+    <Test id="13">
+      <Name>Epochstamp_Test::testConstructors</Name>
+    </Test>
+    <Test id="14">
+      <Name>Epochstamp_Test::testToIso8601String</Name>
+    </Test>
+    <Test id="16">
+      <Name>Factory_Test::testObjectCreation</Name>
+    </Test>
+    <Test id="17">
+      <Name>Factory_Test::testClassInfo</Name>
+    </Test>
+    <Test id="18">
+      <Name>HashFilter_Test::testFilterByTag</Name>
+    </Test>
+    <Test id="19">
+      <Name>Hash_Test::testConstructors</Name>
+    </Test>
+    <Test id="20">
+      <Name>Hash_Test::testGetSet</Name>
+    </Test>
+    <Test id="21">
+      <Name>Hash_Test::testGetAs</Name>
+    </Test>
+    <Test id="22">
+      <Name>Hash_Test::testFind</Name>
+    </Test>
+    <Test id="23">
+      <Name>Hash_Test::testIteration</Name>
+    </Test>
+    <Test id="24">
+      <Name>Hash_Test::testAttributes</Name>
+    </Test>
+    <Test id="25">
+      <Name>Hash_Test::testGetPaths</Name>
+    </Test>
+    <Test id="26">
+      <Name>Hash_Test::testMerge</Name>
+    </Test>
+    <Test id="27">
+      <Name>Hash_Test::testSubtract</Name>
+    </Test>
+    <Test id="28">
+      <Name>Hash_Test::testHelper</Name>
+    </Test>
+    <Test id="29">
+      <Name>Schema_Test::testBuildUp</Name>
+    </Test>
+    <Test id="30">
+      <Name>Schema_Test::testGetRootName</Name>
+    </Test>
+    <Test id="31">
+      <Name>Schema_Test::testGetTags</Name>
+    </Test>
+    <Test id="32">
+      <Name>Schema_Test::testGetNodeType</Name>
+    </Test>
+    <Test id="33">
+      <Name>Schema_Test::testGetValueType</Name>
+    </Test>
+    <Test id="34">
+      <Name>Schema_Test::testKeyHasAlias</Name>
+    </Test>
+    <Test id="35">
+      <Name>Schema_Test::testAliasHasKey</Name>
+    </Test>
+    <Test id="36">
+      <Name>Schema_Test::testGetAliasFromKey</Name>
+    </Test>
+    <Test id="37">
+      <Name>Schema_Test::testGetKeyFromAlias</Name>
+    </Test>
+    <Test id="38">
+      <Name>Schema_Test::testGetAliasAsString</Name>
+    </Test>
+    <Test id="39">
+      <Name>Schema_Test::testGetAccessMode</Name>
+    </Test>
+    <Test id="40">
+      <Name>Schema_Test::testGetAssignment</Name>
+    </Test>
+    <Test id="41">
+      <Name>Schema_Test::testGetOptions</Name>
+    </Test>
+    <Test id="42">
+      <Name>Schema_Test::testGetDefaultValue</Name>
+    </Test>
+    <Test id="43">
+      <Name>Schema_Test::testGetAllowedStates</Name>
+    </Test>
+    <Test id="44">
+      <Name>Schema_Test::testGetUnit</Name>
+    </Test>
+    <Test id="45">
+      <Name>Schema_Test::testGetMetricPrefix</Name>
+    </Test>
+    <Test id="46">
+      <Name>Schema_Test::testGetMinIncMaxInc</Name>
+    </Test>
+    <Test id="47">
+      <Name>Schema_Test::testGetMinExcMaxExc</Name>
+    </Test>
+    <Test id="48">
+      <Name>Schema_Test::testPerKeyFunctionality</Name>
+    </Test>
+    <Test id="49">
+      <Name>Schema_Test::testHelpFunction</Name>
+    </Test>
+    <Test id="50">
+      <Name>Schema_Test::testPaths</Name>
+    </Test>
+    <Test id="51">
+      <Name>Schema_Test::testGetRequiredAccessLevel</Name>
+    </Test>
+    <Test id="52">
+      <Name>Schema_Test::testSetRequiredAccessLevel</Name>
+    </Test>
+    <Test id="53">
+      <Name>Schema_Test::testGetAlarmLowAlarmHigh</Name>
+    </Test>
+    <Test id="54">
+      <Name>Schema_Test::testGetWarnLowWarnHigh</Name>
+    </Test>
+    <Test id="55">
+      <Name>Schema_Test::testHasAlarmWarn</Name>
+    </Test>
+    <Test id="56">
+      <Name>Schema_Test::testSlotElement</Name>
+    </Test>
+    <Test id="57">
+      <Name>Schema_Test::testVectorElements</Name>
+    </Test>
+    <Test id="58">
+      <Name>Schema_Test::testPathElement</Name>
+    </Test>
+    <Test id="59">
+      <Name>Schema_Test::testImageElement</Name>
+    </Test>
+    <Test id="60">
+      <Name>Schema_Test::testArchivePolicy</Name>
+    </Test>
+    <Test id="61">
+      <Name>Schema_Test::testOverwriteElement</Name>
+    </Test>
+    <Test id="62">
+      <Name>TimeClasses_Test::testEpochstamp</Name>
+    </Test>
+    <Test id="63">
+      <Name>TimeClasses_Test::testTimePeriod</Name>
+    </Test>
+    <Test id="64">
+      <Name>TimeClasses_Test::testTimeDuration</Name>
+    </Test>
+    <Test id="65">
+      <Name>TimeClasses_Test::testTimeProfiler</Name>
+    </Test>
+    <Test id="66">
+      <Name>Types_Test::testIsPointer</Name>
+    </Test>
+    <Test id="67">
+      <Name>Types_Test::testIsVector</Name>
+    </Test>
+    <Test id="68">
+      <Name>Types_Test::testIsSimple</Name>
+    </Test>
+    <Test id="69">
+      <Name>Types_Test::testCategory</Name>
+    </Test>
+    <Test id="70">
+      <Name>Types_Test::testFrom</Name>
+    </Test>
+    <Test id="71">
+      <Name>Types_Test::testTo</Name>
+    </Test>
+    <Test id="72">
+      <Name>Types_Test::testConvert</Name>
+    </Test>
+  </SuccessfulTests>
+  <Statistics>
+    <Tests>72</Tests>
+    <FailuresTotal>1</FailuresTotal>
+    <Errors>0</Errors>
+    <Failures>1</Failures>
+  </Statistics>
+</TestRun>

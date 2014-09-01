@@ -445,6 +445,10 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
+      <itemPath>karaboDependencies-GNU-Linux-x86.pc</itemPath>
+      <itemPath>karaboDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
+      <itemPath>karaboPackageDependencies-GNU-Linux-x86.pc</itemPath>
+      <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
