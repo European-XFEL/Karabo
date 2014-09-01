@@ -105,7 +105,7 @@ if [ "$SKIP" = "n" ]; then
 
 
     if [ "$DISTRO_ID" == "Ubuntu" ]; then
-        safeRunCommand "sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev libncurses5-dev"
+        safeRunCommand "sudo apt-get install subversion build-essential doxygen libqt4-dev libnss3-dev libnspr4-dev libreadline-dev libsqlite3-dev libqt4-sql-sqlite libX11-dev zlib1g-dev gfortran liblapack-dev m4 libssl-dev"
         if [ "$DISTRO_RELEASE" = "10.04" ]; then
             safeRunCommand "sudo apt-get install libxext-dev"
         fi
