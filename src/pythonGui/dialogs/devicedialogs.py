@@ -5,27 +5,128 @@
 #############################################################################
 
 
-"""This module contains a class which represents a dialog to select a plugin.
+"""
+This module contains classes of dialogs and widgets for devices.
 """
 
-__all__ = ["PluginDialog"]
+__all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
 import globals
 
-from PyQt4.QtCore import Qt
+from duplicatedialog import DuplicateWidget
+
+from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-                         QGroupBox, QLineEdit, QMessageBox, QVBoxLayout)
+                         QFrame, QGroupBox, QLineEdit, QVBoxLayout, QWidget)
 
 
-class PluginDialog(QDialog):
-
+class DeviceDialog(QDialog):
+    """
+    A dialog to add and edit a device.
+    """
+    
     def __init__(self):
-        super(PluginDialog, self).__init__()
+        super(DeviceDialog, self).__init__()
 
         self.setWindowTitle("Add device")
 
+        self.deviceWidget = DeviceDefinitionWidget()
+        self.deviceWidget.signalValidInput.connect(self.onValidInput)
+        
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
+        vLayout.addWidget(self.deviceWidget)
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+
+    def updateServerTopology(self, systemTopology, device=None):
+        """
+        This function broadcasts the parameters to the device widget.
+        """
+        return self.deviceWidget.updateServerTopology(systemTopology, device)
+
+
+    @property
+    def deviceId(self):
+        return self.deviceWidget.deviceId
+
+
+    @property
+    def classId(self):
+        return self.deviceWidget.classId
+
+
+    @property
+    def serverId(self):
+        return self.deviceWidget.serverId
+
+
+    @property
+    def startupBehaviour(self):
+        return self.deviceWidget.startupBehaviour
+
+
+    def onValidInput(self, isValid):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
+
+
+
+
+class DeviceGroupDialog(QDialog):
+    """
+    A dialog to setup groups of devices.
+    """
+
+    def __init__(self, serverId=None, classId=None):
+        super(DeviceGroupDialog, self).__init__()
+
+        self.setWindowTitle("Add device group")
+
+        self.deviceWidget = DeviceDefinitionWidget()
+        self.deviceWidget.signalValidInput.connect(self.onValidInput)
+        
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(5,5,5,5)
+        vLayout.addWidget(self.deviceWidget)
+        
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        vLayout.addWidget(line)
+        
+        self.duplicateWidget = DuplicateWidget()
+        self.duplicateWidget.signalValidInput.connect(self.onValidInput)
+        vLayout.addWidget(self.duplicateWidget)
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+
+    def onValidInput(self, isValid):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
+
+
+
+
+class DeviceDefinitionWidget(QWidget):
+    """
+    A widget which includes all parameters to define a device.
+    """
+    
+    signalValidInput = pyqtSignal(bool)
+    
+    def __init__(self):
+        super(DeviceDefinitionWidget, self).__init__()
+
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(0,0,0,0)
 
         self.gbSelectDeviceId = QGroupBox("Select device ID", self)
         fLayout = QFormLayout(self.gbSelectDeviceId)
@@ -52,7 +153,6 @@ class PluginDialog(QDialog):
         fLayout.setContentsMargins(5,5,5,5)
         self.cbPlugin = QComboBox()
         self.cbPlugin.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        #self.cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
         # Lineedit to add a user-defined not yet available server
         self.lePlugin = QLineEdit()
         self.cbPlugin.setLineEdit(self.lePlugin)
@@ -68,19 +168,15 @@ class PluginDialog(QDialog):
         fLayout.addRow("If already online:", self.cbStartUp)
         vLayout.addWidget(self.gbStartUp)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        vLayout.addWidget(self.buttonBox)
-
 
     def updateServerTopology(self, systemTopology, device=None):
         """
-        This function updates the comboboxes for the servers and the plugins on
-        the servers which are given by the \systemTopology.
+        This function updates the widget with all available servers and plugins
+        of the current \systemTopology.
         
-        If the \config is set this configuration is set in the dialog.
+        If a \device is given the configuration of it is shown in the widget.
+        
+        \returns False, if no servers are available.
         """
         serverKey = "server"
         if systemTopology is None or not systemTopology.has(serverKey):
@@ -112,22 +208,7 @@ class PluginDialog(QDialog):
                 if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
                     visibleClasses.append(classId)
 
-
-            #self.cbServer.blockSignals(True)
             self.cbServer.addItem(serverId, visibleClasses)
-            #self.cbServer.blockSignals(False)
-
-            #for plugin in deviceClasses:
-            #    index = self.cbPlugin.findText(plugin)
-            #    if index > -1:
-            #        data = self.cbPlugin.itemData(index)
-            #        data.append(serverId)
-            #        self.cbPlugin.setItemData(index, data)
-            #        continue
-
-            #    self.cbPlugin.blockSignals(True)
-            #    self.cbPlugin.addItem(plugin, [serverId])
-            #    self.cbPlugin.blockSignals(False)
 
         # No servers and therefore no plugins available?
         if self.cbServer.count() < 1:
@@ -176,7 +257,7 @@ class PluginDialog(QDialog):
 
 ### Slots ###
     def onDeviceIdChanged(self, text):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
+        self.signalValidInput.emit(len(text) > 0)
 
 
     def onServerChanged(self, index):
@@ -189,11 +270,4 @@ class PluginDialog(QDialog):
             self.cbPlugin.blockSignals(True)
             self.cbPlugin.addItem(d)
             self.cbPlugin.blockSignals(False)
-
-
-    def onPluginChanged(self, index):
-        # Get servers where plugin exists
-        pass
-        #data = self.cbPlugin.itemData(index)
-        #print "onPluginChanged", data
 
