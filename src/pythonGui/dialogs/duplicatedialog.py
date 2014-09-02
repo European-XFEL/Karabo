@@ -9,15 +9,14 @@
 This module contains a class which represents the dialog to duplicate devices.
 """
 
-__all__ = ["DuplicateDialog"]
+__all__ = ["DuplicateDialog", "DuplicateWidget"]
 
 
 import globals
-from util import SignalBlocker
 
-from PyQt4.QtCore import pyqtSlot
+from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, 
-                         QSpinBox, QVBoxLayout)
+                         QSpinBox, QVBoxLayout, QWidget)
 
 
 class DuplicateDialog(QDialog):
@@ -26,6 +25,51 @@ class DuplicateDialog(QDialog):
         super(DuplicateDialog, self).__init__()
 
         self.setWindowTitle("Duplicate")
+        
+        self.duplicateWidget = DuplicateWidget(name)
+        self.duplicateWidget.signalValidInput.connect(self.onValidInput)
+        
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(5,5,5,5)
+        vLayout.addWidget(self.duplicateWidget)
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+
+    @property
+    def displayPrefix(self):
+        return self.duplicateWidget.displayPrefix
+
+
+    @property
+    def startIndex(self):
+        return self.duplicateWidget.startIndex
+
+
+    @property
+    def count(self):
+        return self.duplicateWidget.count
+
+
+    def onValidInput(self, isValid):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
+
+
+
+
+class DuplicateWidget(QWidget):
+    """
+    A widget which includes all parameters to duplicate an object.
+    """
+
+    signalValidInput = pyqtSignal(bool)
+    
+    def __init__(self, name=""):
+        super(DuplicateWidget, self).__init__()
         
         vLayout = QVBoxLayout(self)
         
@@ -46,12 +90,6 @@ class DuplicateDialog(QDialog):
         self.sbCount.valueChanged.connect(self.onChanged)
         fLayout.addRow("Count:", self.sbCount)
         vLayout.addLayout(fLayout)
-        
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        vLayout.addWidget(self.buttonBox)
 
 
     @property
@@ -73,6 +111,8 @@ class DuplicateDialog(QDialog):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        enabled = self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enabled)
+        isValid = self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
+        self.signalValidInput.emit(isValid)
+
+
 

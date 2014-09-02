@@ -18,7 +18,7 @@ from configuration import Configuration
 import globals
 import icons
 from dialogs.duplicatedialog import DuplicateDialog
-from dialogs.plugindialog import PluginDialog
+from dialogs.devicedialogs import DeviceDialog
 from dialogs.scenedialog import SceneDialog
 from scene import Scene
 import manager
@@ -407,7 +407,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         
         # Show dialog to select plugin
-        self.pluginDialog = PluginDialog()
+        self.pluginDialog = DeviceDialog()
         if not self.pluginDialog.updateServerTopology(manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
