@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from dialogs.dialogs import PenDialog, TextDialog
+from dialogs.devicedialogs import DeviceGroupDialog
 from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
@@ -24,7 +25,7 @@ from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFrame, QLabel, QLayout, QKeySequence, QMenu,
+                         QDialog, QFrame, QLabel, QLayout, QKeySequence, QMenu,
                          QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
                          QWidget)
 from PyQt4.QtSvg import QSvgWidget
@@ -1196,9 +1197,10 @@ class Scene(QSvgWidget):
         elif sourceType == "NavigationTreeView":
             serverId = mimeData.data("serverId")
             classId = mimeData.data("classId")
-            print "NavigationTreeView", serverId, classId
-            return
-
+            # Open dialog to set up new device
+            dialog = DeviceGroupDialog(serverId, classId)
+            dialog.exec_()
+        
         self.project.setModified(True)
         event.accept()
         QWidget.dropEvent(self, event)
