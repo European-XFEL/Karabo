@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from dialogs.dialogs import PenDialog, TextDialog
+from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
 
 from registry import Loadable, Registry
@@ -1107,8 +1108,13 @@ class Scene(QSvgWidget):
         
         if sourceType == "ParameterTreeWidget":
             source = event.source()
-            if (source is not None) and (source is not self) and self.designMode \
+            if (source is not None) and self.designMode \
                and not (source.conf.type == "class"):
+                event.accept()
+        elif sourceType == "NavigationTreeView":
+            source = event.source()
+            if (source is not None) and self.designMode \
+               and source.indexInfo().get("type") == NavigationItemTypes.CLASS:
                 event.accept()
         QWidget.dragEnterEvent(self, event)
 
@@ -1188,7 +1194,9 @@ class Scene(QSvgWidget):
                 self.ilayout.add_item(layout)
                 layout.selected = True
         elif sourceType == "NavigationTreeView":
-            print "NavigationTreeView"
+            serverId = mimeData.data("serverId")
+            classId = mimeData.data("classId")
+            print "NavigationTreeView", serverId, classId
             return
 
         self.project.setModified(True)
