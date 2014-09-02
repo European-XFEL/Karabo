@@ -877,6 +877,8 @@ class Lower(SimpleAction):
 
 
 class Scene(QSvgWidget):
+
+    
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
@@ -1194,14 +1196,16 @@ class Scene(QSvgWidget):
                 layout.fixed_geometry = QRect(event.pos(), layout.sizeHint())
                 self.ilayout.add_item(layout)
                 layout.selected = True
+            self.project.setModified(True)
         elif sourceType == "NavigationTreeView":
             serverId = mimeData.data("serverId")
             classId = mimeData.data("classId")
+            # Restore cursor for dialog input
+            QApplication.restoreOverrideCursor()
             # Open dialog to set up new device
             dialog = DeviceGroupDialog(serverId, classId)
-            dialog.exec_()
-        
-        self.project.setModified(True)
+            if dialog.exec_() == QDialog.Accepted:
+                self.project.setModified(True)
         event.accept()
         QWidget.dropEvent(self, event)
 

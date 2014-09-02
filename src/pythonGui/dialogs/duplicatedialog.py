@@ -15,8 +15,8 @@ __all__ = ["DuplicateDialog", "DuplicateWidget"]
 import globals
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit, 
-                         QSpinBox, QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
+                         QLineEdit, QSpinBox, QVBoxLayout, QWidget)
 
 
 class DuplicateDialog(QDialog):
@@ -72,24 +72,33 @@ class DuplicateWidget(QWidget):
         super(DuplicateWidget, self).__init__()
         
         vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(0,0,0,0)
         
-        fLayout = QFormLayout()
+        self.gbSelectPrefix = QGroupBox("Select prefix", self)
+        fLayout = QFormLayout(self.gbSelectPrefix)
         fLayout.setContentsMargins(5,5,5,5)
-        
         self.leDisplayPrefix = QLineEdit()
         self.leDisplayPrefix.textChanged.connect(self.onChanged)
         fLayout.addRow("Prefix:&nbsp;&nbsp;&nbsp;<i>{}</i>".format(name), self.leDisplayPrefix)
+        vLayout.addWidget(self.gbSelectPrefix)
         
+        self.gbSelectStartIndex = QGroupBox("Select start", self)
+        fLayout = QFormLayout(self.gbSelectStartIndex)
+        fLayout.setContentsMargins(5,5,5,5)
         self.sbStartIndex = QSpinBox()
         self.sbStartIndex.setRange(0, globals.MAX_INT32)
         self.sbStartIndex.valueChanged.connect(self.onChanged)
-        fLayout.addRow("Start:", self.sbStartIndex)
+        fLayout.addRow("Start index:", self.sbStartIndex)
+        vLayout.addWidget(self.gbSelectStartIndex)
         
+        self.gbSelectCount = QGroupBox("Select count", self)
+        fLayout = QFormLayout(self.gbSelectCount)
+        fLayout.setContentsMargins(5,5,5,5)
         self.sbCount = QSpinBox()
         self.sbCount.setRange(0, globals.MAX_INT32)
         self.sbCount.valueChanged.connect(self.onChanged)
-        fLayout.addRow("Count:", self.sbCount)
-        vLayout.addLayout(fLayout)
+        fLayout.addRow("Count:        ", self.sbCount)
+        vLayout.addWidget(self.gbSelectCount)
 
 
     @property
