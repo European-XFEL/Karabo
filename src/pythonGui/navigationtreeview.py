@@ -195,8 +195,9 @@ class NavigationTreeView(QTreeView):
 
 
     def mimeData(self, items):
-        mimeData = QMimeData()
+        #mimeData = QMimeData()
         # Source type
-        mimeData.setData("sourceType", "NavigationTreeView")
-        return mimeData
+        #mimeData.setData("sourceType", "NavigationTreeView")
+        #return mimeData
+        return self.model().mimeData(items)
 
