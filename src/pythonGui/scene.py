@@ -1198,12 +1198,12 @@ class Scene(QSvgWidget):
                 layout.selected = True
             self.project.setModified(True)
         elif sourceType == "NavigationTreeView":
-            serverId = mimeData.data("serverId")
-            classId = mimeData.data("classId")
+            serverId = unicode(mimeData.data("serverId"))
+            classId = unicode(mimeData.data("classId"))
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
             # Open dialog to set up new device
-            dialog = DeviceGroupDialog(serverId, classId)
+            dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
                 self.project.setModified(True)
         event.accept()

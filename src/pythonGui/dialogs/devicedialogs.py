@@ -82,10 +82,10 @@ class DeviceGroupDialog(QDialog):
     A dialog to setup groups of devices.
     """
 
-    def __init__(self, serverId=None, classId=None):
+    def __init__(self, systemHash, serverId=None, classId=None):
         super(DeviceGroupDialog, self).__init__()
 
-        self.setWindowTitle("Add device group")
+        self.setWindowTitle("Add device")
 
         self.deviceWidget = DeviceDefinitionWidget()
         self.deviceWidget.signalValidInput.connect(self.onValidInput)
@@ -107,9 +107,22 @@ class DeviceGroupDialog(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         vLayout.addWidget(self.buttonBox)
+        
+        self.updateServerTopology(systemHash)
+        # Select server and plugin
+        self.deviceWidget.serverId = serverId
+        self.deviceWidget.classId = classId
+
+
+    def updateServerTopology(self, systemTopology, device=None):
+        """
+        This function broadcasts the parameters to the device widget.
+        """
+        return self.deviceWidget.updateServerTopology(systemTopology, device)
 
 
     def onValidInput(self, isValid):
+        # TODO: inputs from both widgets needed
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
 
 
@@ -219,16 +232,8 @@ class DeviceDefinitionWidget(QWidget):
 
         if device is not None:
             self.leDeviceId.setText(device.id)
-            index = self.cbServer.findText(device.serverId)
-            if index < 0:
-                self.leServer.setText(device.serverId)
-            else:
-                self.cbServer.setCurrentIndex(index)
-            index = self.cbPlugin.findText(device.classId)
-            if index < 0:
-                self.lePlugin.setText(device.classId)
-            else:
-                self.cbPlugin.setCurrentIndex(index)
+            self.serverId = device.serverId
+            self.classId = device.classId
             index = self.cbStartUp.findText(device.ifexists)
             self.cbStartUp.setCurrentIndex(index)
         
@@ -245,9 +250,27 @@ class DeviceDefinitionWidget(QWidget):
         return self.cbPlugin.currentText()
 
 
+    @classId.setter
+    def classId(self, value):
+        index = self.cbPlugin.findText(value)
+        if index < 0:
+            self.lePlugin.setText(value)
+        else:
+            self.cbPlugin.setCurrentIndex(index)
+
+
     @property
     def serverId(self):
         return self.cbServer.currentText()
+
+
+    @serverId.setter
+    def serverId(self, value):
+        index = self.cbServer.findText(value)
+        if index < 0:
+            self.leServer.setText(value)
+        else:
+            self.cbServer.setCurrentIndex(index)
 
 
     @property
