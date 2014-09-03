@@ -300,7 +300,9 @@ class ProjectModel(QStandardItemModel):
             # no need to go on
             return False
         
-        for project in self.projects:
+        while self.projects:
+            project = self.projects[-1]
+            
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
                     "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
@@ -308,7 +310,10 @@ class ProjectModel(QStandardItemModel):
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
                     project.zip()
+            
             self.projectClose(project)
+        
+        self.selectionModel.clear()
         self.updateData()
         return True
 
@@ -318,10 +323,10 @@ class ProjectModel(QStandardItemModel):
         This function closes the project related scenes and removes it from the
         project list.
         """
-        self.removeProject(project)
-        
         for scene in project.scenes:
             self.signalRemoveScene.emit(scene)
+        
+        self.removeProject(project)
 
 
     def appendProject(self, project):
@@ -751,7 +756,7 @@ class ProjectModel(QStandardItemModel):
             return
         
         project = self.currentProject()
-        while len(project.devices) > 0:
+        while project.devices:
             object = project.devices[-1]
             self.removeObject(project, object, False)
 

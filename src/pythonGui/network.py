@@ -117,7 +117,6 @@ class _Network(QObject):
         End connection to server and database.
         """
         self._logout()
-        self.signalServerConnectionChanged.emit(False)
         self.requestQueue = []
 
         if self.tcpSocket is None:
