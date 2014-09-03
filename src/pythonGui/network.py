@@ -156,7 +156,7 @@ class _Network(QObject):
                     self.username, self.password, self.provider, ipAddress,
                     self.brokerHost, self.brokerPort, self.brokerTopic)
             except Exception, e:
-                raise RuntimeError("Authentication exception " + str(e))
+                print "Authenticator not available.", str(e)
 
             # Execute Login
             ok = False
