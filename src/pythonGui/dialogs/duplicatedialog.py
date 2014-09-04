@@ -16,7 +16,8 @@ import globals
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QGroupBox,
-                         QLineEdit, QSpinBox, QVBoxLayout, QWidget)
+                         QHBoxLayout, QLabel, QLineEdit, QSpinBox, QVBoxLayout,
+                         QWidget)
 
 
 class DuplicateDialog(QDialog):
@@ -77,9 +78,14 @@ class DuplicateWidget(QWidget):
         self.gbSelectPrefix = QGroupBox("Select prefix", self)
         fLayout = QFormLayout(self.gbSelectPrefix)
         fLayout.setContentsMargins(5,5,5,5)
+        self.laDisplayPrefix = QLabel(name)
+        
         self.leDisplayPrefix = QLineEdit()
         self.leDisplayPrefix.textChanged.connect(self.onChanged)
-        fLayout.addRow("Prefix:&nbsp;&nbsp;&nbsp;<i>{}</i>".format(name), self.leDisplayPrefix)
+        prefixLayout = QHBoxLayout()
+        prefixLayout.addWidget(self.laDisplayPrefix)
+        prefixLayout.addWidget(self.leDisplayPrefix)
+        fLayout.addRow("Prefix:", prefixLayout)
         vLayout.addWidget(self.gbSelectPrefix)
         
         self.gbSelectStartIndex = QGroupBox("Select start", self)
@@ -102,6 +108,16 @@ class DuplicateWidget(QWidget):
 
 
     @property
+    def deviceId(self):
+        return self.laDisplayPrefix.text()
+
+
+    @deviceId.setter
+    def deviceId(self, value):
+        self.laDisplayPrefix.setText(value)
+
+
+    @property
     def displayPrefix(self):
         return self.leDisplayPrefix.text()
 
@@ -120,7 +136,7 @@ class DuplicateWidget(QWidget):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        isValid = self.sbStartIndex.value() >=0 and self.sbCount.value() > 0
+        isValid = self.sbCount.value() > 0
         self.signalValidInput.emit(isValid)
 
 
