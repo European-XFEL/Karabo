@@ -1205,7 +1205,17 @@ class Scene(QSvgWidget):
             # Open dialog to set up new device
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
-                # Create device configuration and add to project
+                if not dialog.newDeviceGroup():
+                    # Add only one device configuration and add to project
+                    device = self.project.newDevice(dialog.serverId,
+                                                    dialog.classId,
+                                                    dialog.deviceId,
+                                                    dialog.startupBehaviour)
+                    # Create scene item associated with device
+                    
+                else:
+                    # Add device group and add to project
+                    pass
                 
                 self.project.setModified(True)
         event.accept()
