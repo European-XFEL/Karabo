@@ -5,6 +5,10 @@
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
         <itemPath>../../../src/karabo/core/ComputeDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/ComputeDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogger.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.cc</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.hh</itemPath>
@@ -514,6 +518,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2259,6 +2283,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
