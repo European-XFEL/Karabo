@@ -135,6 +135,8 @@ class _Manager(QObject):
             conf = self.serverClassData.get((serverId, classId))
             if conf is not None:
                 config = conf.toHash()
+            else:
+                config = Hash()
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config)
