@@ -106,6 +106,16 @@ class Project(QObject):
         self.setupDeviceToProject(device)
 
 
+    def newDevice(self, serverId, classId, deviceId, ifexists):
+        """
+        A new device with the given parameters is created, added to the
+        project and returned.
+        """
+        device = Device(serverId, classId, deviceId, ifexists)
+        self.addDevice(device)
+        return device
+
+
     def addScene(self, scene):
         self.scenes.append(scene)
         self.setModified(True)
@@ -154,10 +164,10 @@ class Project(QObject):
                 filename = filename[:-4]
 
                 for classId, config in XMLParser().read(data).iteritems():
-                    device = Device(serverId, classId, filename, d.get("ifexists"))
+                    device = self.newDevice(serverId, classId, filename,
+                                            d.get("ifexists"))
                     device.futureConfig = config
                     break # there better be only one!
-                self.addDevice(device)
             for s in projectConfig[self.SCENES_KEY]:
                 scene = Scene(self, s["filename"])
                 data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))

@@ -130,6 +130,30 @@ class DeviceGroupDialog(QDialog):
         return self.deviceWidget.updateServerTopology(systemTopology, device)
 
 
+    def newDeviceGroup(self):
+        return self.cbDeviceGroup.isChecked()
+
+
+    @property
+    def deviceId(self):
+        return self.deviceWidget.deviceId
+
+
+    @property
+    def classId(self):
+        return self.deviceWidget.classId
+
+
+    @property
+    def serverId(self):
+        return self.deviceWidget.serverId
+
+
+    @property
+    def startupBehaviour(self):
+        return self.deviceWidget.startupBehaviour
+
+
     def onValidDeviceId(self, deviceId):
         if self.cbDeviceGroup.isChecked():
             newIsValid = self.duplicateWidget.count > 0 and len(deviceId) > 0
