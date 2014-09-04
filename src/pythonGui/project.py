@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["Project", "ProjectConfiguration", "Category"]
+__all__ = ["Project", "Device", "DeviceGroup", "ProjectConfiguration", "Category"]
 
 
 from configuration import Configuration
@@ -30,6 +30,9 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class Project(QObject):
+    """
+    This class represents a project including devices, scenes, macros ...
+    """
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
@@ -278,6 +281,10 @@ class Project(QObject):
 
 
 class Device(Configuration):
+    """
+    This class represents a device configuration associated with a project.
+    """
+    
     signalProjectModified = pyqtSignal(bool)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
@@ -386,7 +393,21 @@ class Device(Configuration):
             "offline", "noplugin", "noserver", "incompatible")
 
 
+class DeviceGroup(list):
+    """
+    This class represents a group of devices.
+    """
+
+    def __init__(self):
+        super(DeviceGroup, self).__init__()
+
+
+
 class ProjectConfiguration(object):
+    """
+    This class represents a configuration saved as a hash object associated with
+    a project.
+    """
 
     def __init__(self, project, name, hash=None):
         super(ProjectConfiguration, self).__init__()

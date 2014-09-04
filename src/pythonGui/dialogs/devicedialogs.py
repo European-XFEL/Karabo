@@ -16,8 +16,9 @@ import globals
 from duplicatedialog import DuplicateWidget
 
 from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import (QComboBox, QDialog, QDialogButtonBox, QFormLayout,
-                         QFrame, QGroupBox, QLineEdit, QVBoxLayout, QWidget)
+from PyQt4.QtGui import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+                         QFormLayout, QFrame, QGroupBox, QLineEdit, QVBoxLayout,
+                         QWidget)
 
 
 class DeviceDialog(QDialog):
@@ -31,7 +32,7 @@ class DeviceDialog(QDialog):
         self.setWindowTitle("Add device")
 
         self.deviceWidget = DeviceDefinitionWidget()
-        self.deviceWidget.signalValidInput.connect(self.onValidInput)
+        self.deviceWidget.signalValidDeviceId.connect(self.onValidDeviceId)
         
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
@@ -71,8 +72,8 @@ class DeviceDialog(QDialog):
         return self.deviceWidget.startupBehaviour
 
 
-    def onValidInput(self, isValid):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
+    def onValidDeviceId(self, deviceId):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(deviceId) > 0)
 
 
 
@@ -88,7 +89,7 @@ class DeviceGroupDialog(QDialog):
         self.setWindowTitle("Add device")
 
         self.deviceWidget = DeviceDefinitionWidget()
-        self.deviceWidget.signalValidInput.connect(self.onValidInput)
+        self.deviceWidget.signalValidDeviceId.connect(self.onValidDeviceId)
         
         vLayout = QVBoxLayout(self)
         vLayout.setContentsMargins(5,5,5,5)
@@ -98,9 +99,14 @@ class DeviceGroupDialog(QDialog):
         line.setFrameShape(QFrame.HLine)
         vLayout.addWidget(line)
         
+        self.cbDeviceGroup = QCheckBox("Add device group", self)
+        self.cbDeviceGroup.toggled.connect(self.onShowDuplicateWidget)
+        vLayout.addWidget(self.cbDeviceGroup)
+        
         self.duplicateWidget = DuplicateWidget()
-        self.duplicateWidget.signalValidInput.connect(self.onValidInput)
+        self.duplicateWidget.signalValidInput.connect(self.onValidDuplicateWidgetInput)
         vLayout.addWidget(self.duplicateWidget)
+        self.duplicateWidget.setVisible(False)
         
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -112,6 +118,9 @@ class DeviceGroupDialog(QDialog):
         # Select server and plugin
         self.deviceWidget.serverId = serverId
         self.deviceWidget.classId = classId
+        
+        self.w = 0
+        self.h = 0
 
 
     def updateServerTopology(self, systemTopology, device=None):
@@ -121,11 +130,33 @@ class DeviceGroupDialog(QDialog):
         return self.deviceWidget.updateServerTopology(systemTopology, device)
 
 
-    def onValidInput(self, isValid):
-        # TODO: inputs from both widgets needed
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(isValid)
+    def onValidDeviceId(self, deviceId):
+        if self.cbDeviceGroup.isChecked():
+            newIsValid = self.duplicateWidget.count > 0 and len(deviceId) > 0
+        else:
+            newIsValid = len(deviceId) > 0
+        
+        self.duplicateWidget.deviceId = deviceId
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(newIsValid)
 
 
+    def onValidDuplicateWidgetInput(self, isValid):
+        newIsValid = len(self.deviceWidget.deviceId) > 0 and isValid
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(newIsValid)
+
+
+    def onShowDuplicateWidget(self, on):
+        if on:
+            self.w = self.width()
+            self.h = self.height()
+        
+        self.duplicateWidget.setVisible(on)
+        
+        if not on:
+            self.setMaximumSize(self.w, self.h)
+        
+        # Update ok-button
+        self.onValidDeviceId(self.deviceWidget.deviceId)
 
 
 class DeviceDefinitionWidget(QWidget):
@@ -133,7 +164,7 @@ class DeviceDefinitionWidget(QWidget):
     A widget which includes all parameters to define a device.
     """
     
-    signalValidInput = pyqtSignal(bool)
+    signalValidDeviceId = pyqtSignal(str)
     
     def __init__(self):
         super(DeviceDefinitionWidget, self).__init__()
@@ -280,7 +311,7 @@ class DeviceDefinitionWidget(QWidget):
 
 ### Slots ###
     def onDeviceIdChanged(self, text):
-        self.signalValidInput.emit(len(text) > 0)
+        self.signalValidDeviceId.emit(text)
 
 
     def onServerChanged(self, index):
