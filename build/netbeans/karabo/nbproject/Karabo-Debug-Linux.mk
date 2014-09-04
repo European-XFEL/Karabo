@@ -36,6 +36,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/163556830/ComputeDevice.o \
+	${OBJECTDIR}/_ext/163556830/DataLogger.o \
+	${OBJECTDIR}/_ext/163556830/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/FileDataLogger.o \
@@ -187,6 +189,16 @@ ${OBJECTDIR}/_ext/163556830/ComputeDevice.o: ../../../src/karabo/core/ComputeDev
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc
+
+${OBJECTDIR}/_ext/163556830/DataLogger.o: ../../../src/karabo/core/DataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLogger.o ../../../src/karabo/core/DataLogger.cc
+
+${OBJECTDIR}/_ext/163556830/DataLoggerManager.o: ../../../src/karabo/core/DataLoggerManager.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLoggerManager.o ../../../src/karabo/core/DataLoggerManager.cc
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient.o: ../../../src/karabo/core/DeviceClient.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -976,6 +988,32 @@ ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o ../../../src/karabo/core/ComputeDevice.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/DataLogger_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLogger.o ../../../src/karabo/core/DataLogger.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLogger.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLogger_nomain.o ../../../src/karabo/core/DataLogger.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/DataLogger.o ${OBJECTDIR}/_ext/163556830/DataLogger_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/DataLoggerManager_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLoggerManager.o ../../../src/karabo/core/DataLoggerManager.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLoggerManager.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python2.7 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLoggerManager_nomain.o ../../../src/karabo/core/DataLoggerManager.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/DataLoggerManager.o ${OBJECTDIR}/_ext/163556830/DataLoggerManager_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/163556830/DeviceClient_nomain.o: ${OBJECTDIR}/_ext/163556830/DeviceClient.o ../../../src/karabo/core/DeviceClient.cc 
