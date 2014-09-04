@@ -1198,8 +1198,10 @@ class Scene(QSvgWidget):
                 layout.selected = True
             self.project.setModified(True)
         elif sourceType == "NavigationTreeView":
-            serverId = unicode(mimeData.data("serverId"))
-            classId = unicode(mimeData.data("classId"))
+            itemInfo = source.indexInfo(source.currentIndex())
+            serverId  = itemInfo.get("serverId")
+            classId = itemInfo.get("classId")
+            
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
             # Open dialog to set up new device

@@ -493,22 +493,9 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def mimeData(self, nodes):
-        itemInfo = self.indexInfo(nodes[0])
-
         mimeData = QMimeData()
+        # Source type
         mimeData.setData("sourceType", "NavigationTreeView")
-
-        type = itemInfo.get("type")
-        if type is not None:
-            mimeData.setData("type", QByteArray.number(type))
-
-        serverId  = itemInfo.get("serverId")
-        if serverId is not None:
-            mimeData.setData("serverId", serverId)
-        
-        if type == NavigationItemTypes.CLASS:
-            mimeData.setData("classId", itemInfo.get("classId"))
-
         return mimeData
 
 
