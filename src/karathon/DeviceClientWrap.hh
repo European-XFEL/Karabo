@@ -23,7 +23,6 @@ namespace bp = boost::python;
 namespace karathon {
 
     class DeviceClientWrap : public karabo::core::DeviceClient {
-
     public:
 
         DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash()) :
@@ -112,25 +111,49 @@ namespace karathon {
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             try {
                 ScopedGILRelease nogil;
-                return HashWrap::get(this->cacheAndGetConfiguration(instanceId), key, keySep);
+                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
             } catch (const karabo::util::Exception& e) {
                 throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
             }
         }
 
+        karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getDeviceSchema(instanceId);
+        }
+
+        karabo::util::Schema getActiveSchema(const std::string& instanceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getActiveSchema(instanceId);
+        }
+
+        karabo::util::Schema getClassSchema(const std::string& serverId, const std::string& classId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::getClassSchema(serverId, classId);
+        }
+
+        karabo::util::Hash cacheAndGetConfiguration(const std::string& deviceId) {
+            ScopedGILRelease nogil;
+            return this->DeviceClient::cacheAndGetConfiguration(deviceId);
+        }
+
         void registerDeviceMonitor(const std::string& instanceId, const bp::object& callbackFunction, const bp::object& userData = bp::object()) {
             std::cout << "DeviceClientWrap::registerDeviceMonitor on instanceId : \"" << instanceId << "\"" << std::endl;
-            boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
             this->cacheAndGetConfiguration(instanceId);
             if (Wrapper::hasattr(callbackFunction, "__self__")) {
                 const bp::object & selfObject(callbackFunction.attr("__self__"));
                 std::string funcName(bp::extract<std::string > (callbackFunction.attr("__name__")));
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(instanceId + "._function", funcName);
                 m_deviceChangedHandlers.set(instanceId + "._selfObject", selfObject.ptr());
             } else {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
                 m_deviceChangedHandlers.set(instanceId + "._function", callbackFunction.ptr());
             }
-            if (!userData.is_none()) m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+            if (!userData.is_none()) {
+                boost::mutex::scoped_lock lock(m_deviceChangedHandlersMutex);
+                m_deviceChangedHandlers.set(instanceId + "._userData", userData);
+            }
             immortalize(instanceId);
         }
 
@@ -280,19 +303,19 @@ namespace karathon {
             }
             return bp::make_tuple(true, result[0]);
         }
-        
+
         bp::object getFromPastPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0) {
             return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
         }
-        
+
         bp::object getPropertyHistoryPy(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", unsigned int maxNumData = 0) {
             return Wrapper::fromStdVectorToPyHashList(this->getFromPast(deviceId, key, from, to, maxNumData));
         }
-        
+
         bp::object getConfigurationFromPastPy(const std::string& deviceId, const std::string& timePoint) {
             return Wrapper::fromStdPairToPyTuple<karabo::util::Hash, karabo::util::Schema>(this->getConfigurationFromPast(deviceId, timePoint));
         }
-        
+
     private:
 
         void notifyDeviceChangedMonitors(const karabo::util::Hash& hash, const std::string& instanceId) {
