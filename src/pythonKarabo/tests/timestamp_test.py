@@ -17,6 +17,7 @@ class  Timestamp_TestCase(unittest.TestCase):
 
     def test_timestamp_constructors(self):
         
+        functionName = "test_timestamp_constructors"
         sleepDelay = 1
         
         try:
@@ -49,8 +50,11 @@ class  Timestamp_TestCase(unittest.TestCase):
         
     def test_timestamp_to_iso8601_string(self):
         
+        functionName = "test_timestamp_to_iso8601_string"
         # ISO8601 compact version
         pTimeStr01 = "20121225T132536.789333123456789123";
+        localeNameUS = "en_US.UTF-8";
+        
         try:
             es01 = Epochstamp(1356441936, 789333123456789123) #(pTimeStr01)
         except Exception as e:
@@ -59,20 +63,34 @@ class  Timestamp_TestCase(unittest.TestCase):
         try:
             ts01 = Timestamp(es01, Trainstamp())
             
+            #####
+            # Function toFormattedStringLocale and toFormattedString only differ in the used locale, since internally 
+            # both use the same function: toFormattedStringInternal
+            #
+            # toFormattedStringLocale - requires that the locale name
+            # toFormattedString - uses the System locale
+            #
+            # In this test only the toFormattedStringLocale, since this way it's possible to run successfully this test 
+            # in Systems with a different locale
+            #####
+            
             # Validate that "UNIVERSAL" format is corrected generated
-            pTimeConvertedStr01 = ts01.toFormattedString("%Y%m%dT%H%M%S.%f");
+            pTimeConvertedStr01 = ts01.toFormattedStringLocale(localeNameUS, "%Y%m%dT%H%M%S.%f");
             self.assertEqual(pTimeConvertedStr01, "20121225T132536.789333", "These strings must be equal");
             
             # Validate that default "user-friendly" format is corrected generated
-            pTimeConvertedStr02 = ts01.toFormattedString();
+            pTimeConvertedStr02 = ts01.toFormattedStringLocale(localeNameUS);
             self.assertEqual(pTimeConvertedStr02, "2012-Dec-25 13:25:36", "These strings must be equal");
             
             # Validate that INPUT "user-friendly" format is corrected generated
-            pTimeConvertedStr03 = ts01.toFormattedString("%Y/%m/%d %H:%M:%S");
+            pTimeConvertedStr03 = ts01.toFormattedStringLocale
+            
+            
+            (localeNameUS, "%Y/%m/%d %H:%M:%S");
             self.assertEqual(pTimeConvertedStr03, "2012/12/25 13:25:36", "These strings must be equal");
             
         except Exception as e:
-            self.fail(functionName + " creating Timestamp01 using the String constructor: " + str(e))
+            self.fail(" creating Timestamp01 using the String constructor: " + str(e))
         
         # Validate time was correctly converted/stored with the correct information
         self.assertEqual(ts01.getSeconds(), 1356441936, "1st timestamp number of seconds must be 1356441936");

@@ -14,7 +14,6 @@ namespace bp = boost::python;
 using namespace karabo::util;
 using namespace std;
 
-
 void exportPyUtilEpochstamp() {
 
     bp::enum_< karabo::util::TIME_UNITS>("TIME_UNITS")
@@ -47,59 +46,63 @@ void exportPyUtilEpochstamp() {
     bp::implicitly_convertible< string const &, Epochstamp >();
 
     e.def("getSeconds"
-          , (unsigned long long const & (Epochstamp::*)() const) (&Epochstamp::getSeconds)
-          , bp::return_value_policy< bp::copy_const_reference >());
+            , (unsigned long long const & (Epochstamp::*)() const) (&Epochstamp::getSeconds)
+            , bp::return_value_policy< bp::copy_const_reference >());
 
     e.def("getFractionalSeconds"
-          , (unsigned long long const & (Epochstamp::*)() const) (&Epochstamp::getFractionalSeconds)
-          , bp::return_value_policy< bp::copy_const_reference >());
+            , (unsigned long long const & (Epochstamp::*)() const) (&Epochstamp::getFractionalSeconds)
+            , bp::return_value_policy< bp::copy_const_reference >());
 
     e.def("getTime"
-          , (time_t(Epochstamp::*)() const) (&Epochstamp::getTime));
+            , (time_t(Epochstamp::*)() const) (&Epochstamp::getTime));
 
     e.def("getTimeOfDay"
-          , (timeval(Epochstamp::*)() const) (&Epochstamp::getTimeOfDay));
+            , (timeval(Epochstamp::*)() const) (&Epochstamp::getTimeOfDay));
 
     e.def("getClockTime"
-          , (timespec(Epochstamp::*)() const) (&Epochstamp::getClockTime));
+            , (timespec(Epochstamp::*)() const) (&Epochstamp::getClockTime));
 
     typedef void ( ::karabo::util::Epochstamp::*now_function_type)();
 
     e.def("now"
-          , (void (Epochstamp::*)())(&Epochstamp::now));
+            , (void (Epochstamp::*)())(&Epochstamp::now));
 
     e.def("elapsed"
-          , (TimeDuration(Epochstamp::*)(Epochstamp const &) const) (&Epochstamp::elapsed)
-          , (bp::arg("other") = karabo::util::Epochstamp()));
+            , (TimeDuration(Epochstamp::*)(Epochstamp const &) const) (&Epochstamp::elapsed)
+            , (bp::arg("other") = karabo::util::Epochstamp()));
 
     e.def("fromHashAttributes"
-          , &Epochstamp::fromHashAttributes
-          , bp::arg("attributes"));
+            , &Epochstamp::fromHashAttributes
+            , bp::arg("attributes"));
     e.staticmethod("fromHashAttributes");
 
     e.def("toHashAttributes"
-          , &Epochstamp::toHashAttributes
-          , bp::arg("attributes"));
+            , &Epochstamp::toHashAttributes
+            , bp::arg("attributes"));
 
     e.def("hashAttributesContainTimeInformation"
-          , &Epochstamp::hashAttributesContainTimeInformation
-          , bp::arg("attributes"));
+            , &Epochstamp::hashAttributesContainTimeInformation
+            , bp::arg("attributes"));
     e.staticmethod("hashAttributesContainTimeInformation");
 
     e.def("toIso8601"
-          , (string(Epochstamp::*)(karabo::util::TIME_UNITS, bool) const) (&Epochstamp::toIso8601)
-          , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));
+            , (string(Epochstamp::*)(karabo::util::TIME_UNITS, bool) const) (&Epochstamp::toIso8601)
+            , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));
 
     e.def("toIso8601Ext"
-          , (string(Epochstamp::*)(karabo::util::TIME_UNITS, bool) const) (&Epochstamp::toIso8601Ext)
-          , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));
+            , (string(Epochstamp::*)(karabo::util::TIME_UNITS, bool) const) (&Epochstamp::toIso8601Ext)
+            , (bp::arg("precision") = karabo::util::MICROSEC, bp::arg("extended") = (bool)(false)));
 
     e.def("toTimestamp"
-          , (double (Epochstamp::*)() const) (&Epochstamp::toTimestamp));
+            , (double (Epochstamp::*)() const) (&Epochstamp::toTimestamp));
 
     e.def("toFormattedString"
-          , (string(Epochstamp::*)(const string &, const string &) const) (&Epochstamp::toFormattedString)
-          , (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
+            , (string(Epochstamp::*)(const string &, const string &) const) (&Epochstamp::toFormattedString)
+            , (bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
+
+    e.def("toFormattedStringLocale"
+            , (string(Epochstamp::*)(const string &, const string &, const string &) const) (&Epochstamp::toFormattedStringLocale)
+            , (bp::arg("localeName") = "", bp::arg("format") = "%Y-%b-%d %H:%M:%S", bp::arg("localTimeZone") = "Z"));
 
     e.def(bp::self != bp::self);
     e.def(bp::self + bp::other< karabo::util::TimeDuration >());
@@ -112,23 +115,23 @@ void exportPyUtilEpochstamp() {
 
     //karabo::util::Epochstamp::operator=       
     e.def("assign"
-          , (Epochstamp & (Epochstamp::*)(time_t const &))(&Epochstamp::operator=)
-          , (bp::arg("tm"))
-          , bp::return_self< >());
+            , (Epochstamp & (Epochstamp::*)(time_t const &))(&Epochstamp::operator=)
+            , (bp::arg("tm"))
+            , bp::return_self< >());
 
 
     //karabo::util::Epochstamp::operator=    
     e.def("assign"
-          , (Epochstamp & (Epochstamp::*)(timeval const &)) (&Epochstamp::operator=)
-          , (bp::arg("tv"))
-          , bp::return_self< >());
+            , (Epochstamp & (Epochstamp::*)(timeval const &)) (&Epochstamp::operator=)
+            , (bp::arg("tv"))
+            , bp::return_self< >());
 
 
     //::karabo::util::Epochstamp::operator=        
     e.def("assign"
-          , (Epochstamp & (Epochstamp::*)(timespec const &))(&Epochstamp::operator=)
-          , (bp::arg("ts"))
-          , bp::return_self< >());
+            , (Epochstamp & (Epochstamp::*)(timespec const &))(&Epochstamp::operator=)
+            , (bp::arg("ts"))
+            , bp::return_self< >());
 
     e.def(bp::self == bp::self);
     e.def(bp::self > bp::self);
