@@ -83,10 +83,7 @@ class  Timestamp_TestCase(unittest.TestCase):
             self.assertEqual(pTimeConvertedStr02, "2012-Dec-25 13:25:36", "These strings must be equal");
             
             # Validate that INPUT "user-friendly" format is corrected generated
-            pTimeConvertedStr03 = ts01.toFormattedStringLocale
-            
-            
-            (localeNameUS, "%Y/%m/%d %H:%M:%S");
+            pTimeConvertedStr03 = ts01.toFormattedStringLocale(localeNameUS, "%Y/%m/%d %H:%M:%S");
             self.assertEqual(pTimeConvertedStr03, "2012/12/25 13:25:36", "These strings must be equal");
             
         except Exception as e:
