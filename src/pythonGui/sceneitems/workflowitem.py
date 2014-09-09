@@ -9,17 +9,18 @@ __all__ = ["WorkflowItem"]
 
 from registry import Loadable
 
-from PyQt4.QtCore import QPoint, Qt
-from PyQt4.QtGui import QColor, QFont, QFontMetrics, QPainter, QWidget
+from PyQt4.QtCore import QPoint, QRectF, Qt
+from PyQt4.QtGui import QColor, QFont, QFontMetrics, QFontMetricsF, QPainter, QWidget
 
 
 class WorkflowItem(QWidget, Loadable):
 
-    def __init__(self, text, parent):
+    def __init__(self, device, parent):
         super(WorkflowItem, self).__init__(parent)
         
         self.font = QFont()
-        self.displayText = text
+        self.device = device
+        self.displayText = device.id
 
 
     def paintEvent(self, event):
@@ -30,11 +31,14 @@ class WorkflowItem(QWidget, Loadable):
         fm = QFontMetrics(painter.font())
         textWidth = fm.width(self.displayText)
         
-        h = self.height()
         w = self.width()
+        h = self.height()
 
         painter.translate(QPoint(w/2, h/2))
-        painter.drawText(-textWidth/2, 0, self.displayText)
+        rect = self.outlineRect()
+        painter.setBrush(QColor(224,240,255)) # light blue
+        painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
+        painter.drawText(rect, Qt.AlignCenter, self.displayText)
         
         #pen = painter.pen()
         #if self.isSelected():
@@ -45,17 +49,18 @@ class WorkflowItem(QWidget, Loadable):
         #painter.setPen(pen)
         #painter.setBrush(QColor(224,240,255)) # light blue
         #rect = self._outlineRect()
+        #print "rect", rect
         #painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
-        #painter.setPen(self.__textColor)
+        #painter.setPen(self.textColor)
         #painter.drawText(rect, Qt.AlignCenter, self.displayText)
         painter.end()
 
 
-    def _outlineRect(self):
-        padding = 4
-        metrics = QFontMetricsF(self.font) #qApp.fontMetrics())
+    def outlineRect(self):
+        padding = 5
+        metrics = QFontMetricsF(self.font)
         rect = metrics.boundingRect(self.displayText)
-        rect.adjust(-padding, -padding, +padding, +padding)
+        rect.adjust(-padding, -padding, padding, padding)
         rect.translate(-rect.center())
         return rect
 

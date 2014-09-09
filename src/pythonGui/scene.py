@@ -1209,7 +1209,7 @@ class Scene(QSvgWidget):
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.newDeviceGroup():
-                    # Add only one device configuration and add to project
+                    # Create only one device configuration and add to project
                     device = self.project.newDevice(dialog.serverId,
                                                     dialog.classId,
                                                     dialog.deviceId,
@@ -1217,17 +1217,16 @@ class Scene(QSvgWidget):
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
-                    #workflowItem = Label(dialog.deviceId, proxy)
-                    workflowItem = WorkflowItem(dialog.deviceId, proxy)
+                    workflowItem = WorkflowItem(device, proxy)
+                    rect = workflowItem.outlineRect()
                     proxy.setWidget(workflowItem)
-                    print "workfloItem", workflowItem.sizeHint()
-                    proxy.fixed_geometry = QRect(event.pos(), QSize(100, 50))#workflowItem.sizeHint())
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+5, rect.height()+5))
                     proxy.show()
                     
                     self.ilayout.add_item(proxy)
                     proxy.selected = True
                 else:
-                    # Add device group and add to project
+                    # Create device group and add to project
                     pass
                 
                 self.project.setModified(True)
