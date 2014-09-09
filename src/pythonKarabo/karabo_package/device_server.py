@@ -243,7 +243,8 @@ class DeviceServer(object):
     def __init__(self, input):
         '''Constructor'''
         if input is None:
-            raise ValueError,"Input configuration for constructor should be Hash, not None"
+            raise ValueError(
+                "Input configuration for constructor should be Hash, not None")
         super(DeviceServer, self).__init__()
         # describe FSM
         self.processEventLock = threading.RLock()
@@ -472,7 +473,8 @@ class DeviceServer(object):
             if "_deviceId_" in config:
                 device = config["_deviceId_"]
             else:
-                raise RuntimeError, "Access to " + classid + "._deviceId_ failed"
+                raise RuntimeError("Access to {}._deviceId_ failed".
+                                   format(classid))
             script = os.path.realpath(pluginDir + "/" + modname + ".py")
             filename = "/tmp/{}.().configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
             while os.path.isfile(filename):
