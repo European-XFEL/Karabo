@@ -117,6 +117,13 @@ namespace karabo {
                 return *this;
             }
             
+            /**
+             * The <b>bin</b> tells the GUI to interpret the numeric value as a bit string.
+             * @param meaning A string which describes the meaning of each bit, the format is
+             * 0:isError,1:isMoving,31:isOff
+             * NOTE: bits can be described randomly (no need mentioning them all)
+             * @return reference to the SimpleElement to use chaining
+             */
             SimpleElement& bin(const std::string& meaning) {
                 this->m_node->setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "bin|" + meaning);
                 return *this;
