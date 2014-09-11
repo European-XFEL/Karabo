@@ -5,8 +5,7 @@
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
-
-
+#include <map>
 #include <karabo/io/Input.hh>
 #include "DataLoggerManager.hh"
 #include "karabo/io/FileTools.hh"
@@ -79,9 +78,14 @@ namespace karabo {
         DataLoggerManager::~DataLoggerManager() {
         }
 
-
+        std::string DataLoggerManager::generateNewDataLoggerInstanceId(const std::string& managerId) {
+            static unsigned long long seq = 0;
+            stringstream ss;
+            ss << managerId << "-DataLogger_" << ++seq;
+            return ss.str();
+        }
+        
         void DataLoggerManager::okStateOnEntry() {
-
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::DataLoggerManager::instanceGoneHandler, this, _1, _2));
@@ -97,12 +101,29 @@ namespace karabo {
             if (node) {
                 const Hash& devices = node->getValue<Hash>();
                 for (Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) { // Loop all devices
+                    // TODO: May be to archive ONLY those that HAVE "archive" attribute and it IS true
                     if (it->hasAttribute("archive") && (it->getAttribute<bool>("archive") == false)) continue;
                     const std::string& deviceId = it->getKey();
                     if (deviceId == m_instanceId) continue; // Skip myself
                     
                     // Check whether according logger devices exists and if not instantiate
+                    // The key is device to be logged, the value is corresponding logger device
                     
+                    // Check if deviceId registered
+                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
+                    map<string,string>::iterator devit = m_loggedDevices.find(deviceId);
+                    if (devit == m_loggedDevices.end()) {
+                        // instantiate the logger associated with "deviceId"
+                        string loggerId = generateNewDataLoggerInstanceId(m_instanceId);
+                        Hash config;
+                        config.set("DataLogger.deviceId", loggerId);
+                        config.set("DataLogger.deviceToBeLogged", deviceId);
+                        config.set("DataLogger.directory", "karaboHistory");
+                        config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                        remote().instantiateNoWait(getServerId(), config);
+                        m_loggedDevices[deviceId] = loggerId;
+                        m_dataLoggers[loggerId] = deviceId;
+                    }
                 }
             }
         }
@@ -122,7 +143,19 @@ namespace karabo {
                     if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == false)) return;
 
                     // Check whether according logger device exists (it should not) and instantiate
-                    
+                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
+                    map<string,string>::iterator devit = m_loggedDevices.find(deviceId);
+                    if (devit == m_loggedDevices.end()) {
+                        string loggerId = generateNewDataLoggerInstanceId(m_instanceId);
+                        Hash config;
+                        config.set("DataLogger.deviceId", loggerId);
+                        config.set("DataLogger.deviceToBeLogged", deviceId);
+                        config.set("DataLogger.directory", "karaboHistory");
+                        config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                        remote().instantiateNoWait(m_instanceId, config);
+                        m_loggedDevices[deviceId] = loggerId;
+                        m_dataLoggers[loggerId] = deviceId;
+                    }
                 }
 
             } catch (const Exception& e) {
@@ -133,7 +166,19 @@ namespace karabo {
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             
             // Call slotTagDeviceToBeDiscontinued and than kill the logger device
-            
+            try {
+                map<string,string>::iterator devit = m_loggedDevices.find(instanceId);
+                if (devit != m_loggedDevices.end()) {
+                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
+                    string loggerId = devit->second;
+                    remote().execute<bool, char>(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
+                    remote().killDeviceNoWait(loggerId);
+                    m_loggedDevices.erase(devit);
+                    m_dataLoggers.erase(loggerId);
+                }    
+            } catch(const Exception& e) {
+                KARABO_LOG_ERROR << e;
+            }
         }        
     }
 }

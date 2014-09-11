@@ -10,10 +10,12 @@
 #ifndef KARABO_CORE_DATALOGGER_HH
 #define	KARABO_CORE_DATALOGGER_HH
 
+#include <fstream>
 #include <boost/filesystem.hpp>
 
 #include "Device.hh"
 #include "OkErrorFsm.hh"
+#include "Worker.hh"
 
 /**
  * The main karabo namespace
@@ -26,10 +28,12 @@ namespace karabo {
     namespace core {
 
         class DataLogger : public Device<OkErrorFsm> {
-          
+
             std::string m_deviceToBeLogged;
             
             karabo::util::Schema m_currentSchema;
+            
+            std::ofstream m_configStream;
             
         public:
 
@@ -45,11 +49,11 @@ namespace karabo {
         private: // Functions
 
             void okStateOnEntry();
-            
+
             void slotChanged(const karabo::util::Hash& configuration, const std::string& deviceId);
-            
+
             void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
-            
+
             /**
              * This tags a device to be discontinued, three cases have to be distinguished
              * 
@@ -61,7 +65,7 @@ namespace karabo {
              * 
              */
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
-            
+
             void refreshDeviceInformation();
             
         };
