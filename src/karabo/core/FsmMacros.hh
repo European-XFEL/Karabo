@@ -543,8 +543,8 @@ virtual bool func(const t1&, const t2&, const t3&);
 struct name { \
     name() : m_timeout(timeout), m_repetition(repetition) {} \
     void setContext(Self* const ctx) { m_context = ctx; } \
-    void operator()(bool expired) { \
-            m_context->func(expired); \
+    void operator()(const bool& expired, const bool& stopPeriodicProcessing) { \
+            m_context->func(expired, stopPeriodicProcessing); \
     } \
     int getTimeout() const { return m_timeout; } \
     int getRepetition() const { return m_repetition; } \
@@ -555,16 +555,16 @@ private: \
 };
 #define KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-void func(bool);
+void func(const bool&, const bool&);
 #define KARABO_FSM_V_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(bool);
+virtual void func(const bool&, const bool&);
 #define KARABO_FSM_VE_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(bool) {}
+virtual void func(const bool&, const bool&) {}
 #define KARABO_FSM_PV_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(bool) = 0;
+virtual void func(const bool&, const bool&) = 0;
 
 
 /**************************************************************/

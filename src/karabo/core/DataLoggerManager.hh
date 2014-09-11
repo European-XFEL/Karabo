@@ -11,7 +11,7 @@
 #define	KARABO_CORE_DATALOGGERMANAGER_HH
 
 #include <boost/filesystem.hpp>
-
+#include <map>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 
@@ -46,7 +46,15 @@ namespace karabo {
             void instanceNewHandler(const karabo::util::Hash& topologyEntry);
             
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
-                        
+            
+            static std::string generateNewDataLoggerInstanceId(const std::string& managerId);
+                     
+        private: // Data
+            
+            std::map<std::string,std::string> m_loggedDevices;
+            std::map<std::string,std::string> m_dataLoggers;
+            mutable boost::mutex m_loggedDevicesMutex;
+            
         };
     }
 }
