@@ -1,6 +1,8 @@
 #!/bin/bash
 CWD=$(pwd)
 DIST=dist/$(uname -s)
+# clean previous dist folder - in case of file/folders deletion/creation in oryginal source folder
+rm -rf dist
 mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
