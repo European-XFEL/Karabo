@@ -842,3 +842,19 @@ class DeviceClient(object):
     
     def reloadMonitorFile(self, filename = "monitor.xml"):
         self.monitor = krb.loadFromFile(filename).get("monitor")
+
+
+    def loadProject(self, filename):
+        """
+        This function loads a project via \filename and returns a project object.
+        """
+        project = DeviceClientProject(filename, self)
+        try:
+            project.unzip()
+        except Exception as e:
+            e.message = "While reading the project a <b>critical error</b> " \
+                        "occurred."
+            raise
+
+        return project
+
