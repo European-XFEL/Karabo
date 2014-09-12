@@ -4,12 +4,18 @@ EXTS="cpp hh h"
 OLD="log4cpp"
 NEW="krb_log4cpp"
 
-# to uppercase
+# To uppercase...
 OLD_UP=`echo $OLD | tr '[:lower:]' '[:upper:]'`
 NEW_UP=`echo $NEW | tr '[:lower:]' '[:upper:]'`
 
-# Rename header file subdir
 if [ -d include/${OLD} ]; then
+
+    if [ -d include/${NEW} ]; then
+        # Remove header file subdir (left from previous script call)
+	rm -r include/${NEW}
+    fi
+
+    # Rename header file subdir
     mv include/${OLD} include/${NEW}
 fi
 
