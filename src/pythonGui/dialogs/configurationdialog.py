@@ -11,7 +11,7 @@ configurations."""
 __all__ = ["SelectProjectDialog", "SelectProjectConfigurationDialog"]
 
 
-from project import ProjectConfiguration
+from karabo.project import ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,

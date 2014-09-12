@@ -54,7 +54,7 @@ class NavigationTreeView(QTreeView):
         # Device server instance menu
         self.mServerItem = QMenu(self)
         
-        text = "Kill instance"
+        text = "Shutdown instance"
         self.acKillServer = QAction(icons.delete, text, self)
         self.acKillServer.setStatusTip(text)
         self.acKillServer.setToolTip(text)
@@ -97,7 +97,7 @@ class NavigationTreeView(QTreeView):
         self.acSaveToProject.triggered.connect(Manager().onSaveToProject)
         self.mDeviceItem.addAction(self.acSaveToProject)
 
-        text = "Kill instance"
+        text = "Shutdown instance"
         self.acKillDevice = QAction(icons.delete, text, self)
         self.acKillDevice.setStatusTip(text)
         self.acKillDevice.setToolTip(text)
@@ -173,10 +173,10 @@ class NavigationTreeView(QTreeView):
         
         if type is NavigationItemTypes.DEVICE:
             deviceId = itemInfo.get('deviceId')
-            Manager().killDevice(deviceId)
+            Manager().shutdownDevice(deviceId)
         elif type is NavigationItemTypes.SERVER:
             serverId = itemInfo.get('serverId')
-            Manager().killServer(serverId)
+            Manager().shutdownServer(serverId)
 
 
     def onCustomContextMenuRequested(self, pos):

@@ -20,9 +20,11 @@ import icons
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
+from guiproject import Category, Device, GuiProject
 from scene import Scene
 import manager
-from project import Category, Device, Project
+
+from karabo.project import Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
 from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
@@ -346,7 +348,7 @@ class ProjectModel(QStandardItemModel):
         """ Create and return a new project and add it to the model """
         self.closeExistentProject(filename)
         
-        project = Project(filename)
+        project = GuiProject(filename)
         project.zip()
         self.appendProject(project)
         return project
@@ -359,7 +361,7 @@ class ProjectModel(QStandardItemModel):
         """
         self.closeExistentProject(filename)
         
-        project = Project(filename)
+        project = GuiProject(filename)
         try:
             project.unzip()
         except Exception as e:
@@ -660,43 +662,18 @@ class ProjectModel(QStandardItemModel):
 
 
     def onInitDevices(self):
-        project = self.currentProject()
-        for device in project.devices:
-            self.initDevice(device)
-
-
-    def initDevice(self, device):
-        if device.isOnline():
-            if device.ifexists == "ignore":
-                return
-            elif device.ifexists == "restart":
-                self.killDevice(device)
-        
-        if device.descriptor is None:
-            config = device.futureConfig
-        else:
-            config = device.toHash()
-        
-        manager.Manager().initDevice(device.serverId, device.classId, device.id,
-                                     config)
+        self.currentProject().instantiateAll()
 
 
     def onKillDevices(self):
-        reply = QMessageBox.question(None, 'Kill devices',
-            "Do you really want to kill all devices?",
+        reply = QMessageBox.question(None, 'Shutdown devices',
+            "Do you really want to shutdown all devices?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
             return
         
-        project = self.currentProject()
-        for device in project.devices:
-            self.killDevice(device, False)
-
-
-    def killDevice(self, device, showConfirm=True):
-        if device.isOnline():
-            manager.Manager().killDevice(device.id, showConfirm)
+        self.currentProject().shutdownAll()
 
 
     def onEditScene(self):

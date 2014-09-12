@@ -17,9 +17,11 @@ import globals
 
 from scene import Scene
 from manager import Manager
-from project import Category, Device, Project
+from guiproject import Category, Device
 from projectmodel import ProjectModel
 from util import getSaveFileName
+
+from karabo.project import Project
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAction, QDialog, QCursor, QFileDialog, QMenu, QTreeView)
@@ -79,32 +81,6 @@ class ProjectTreeView(QTreeView):
 
     def closeAllProjects(self):
         return self.model().closeAllProjects()
-
-
-        if fileDialog.exec_() == QDialog.Rejected:
-            return None
-        
-        directory = fileDialog.selectedFiles()
-        if len(directory) < 0:
-            return None
-        
-        return directory[0]
-
-
-    def getSaveFileName(self, title):
-        dialog = QFileDialog(None, title, globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)")
-        dialog.setDefaultSuffix("krb")
-        dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setAcceptMode(QFileDialog.AcceptSave)
-        
-        if dialog.exec_() == QDialog.Rejected:
-            return None
-        
-        if len(dialog.selectedFiles()) == 1:
-            return dialog.selectedFiles()[0]
-        
-        return None
 
 
     def projectNew(self):
@@ -179,13 +155,13 @@ class ProjectTreeView(QTreeView):
             acImportPlugin.setToolTip(text)
             acImportPlugin.triggered.connect(self.model().onEditDevice)
 
-            text = "Initiate all"
+            text = "Instantiate all"
             acInitDevices = QAction(text, self)
             acInitDevices.setStatusTip(text)
             acInitDevices.setToolTip(text)
             acInitDevices.triggered.connect(self.model().onInitDevices)
 
-            text = "Kill all"
+            text = "Shutdown all"
             acKillDevices = QAction(text, self)
             acKillDevices.setStatusTip(text)
             acKillDevices.setToolTip(text)
@@ -248,20 +224,19 @@ class ProjectTreeView(QTreeView):
                 acSaveAs.setToolTip(text)
                 acSaveAs.triggered.connect(self.model().onSaveAsScene)
 
-
             text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
             
-            text = "Initiate"
+            text = "Instantiate"
             acInitDevice = QAction(text, self)
             acInitDevice.setStatusTip(text)
             acInitDevice.setToolTip(text)
             acInitDevice.triggered.connect(self.onInitDevice)
             
-            text = "Kill"
+            text = "Shutdown"
             acKillDevice = QAction(text, self)
             acKillDevice.setStatusTip(text)
             acKillDevice.setToolTip(text)
@@ -288,12 +263,12 @@ class ProjectTreeView(QTreeView):
         device = self.currentDevice()
         if device is None: return
 
-        self.model().initDevice(device)
+        self.model().currentProject().instantiate(device)
 
 
     def onKillDevice(self):
         device = self.currentDevice()
         if device is None: return
         
-        self.model().killDevice(device)
+        self.model().currentProject().shutdown(device)
 
