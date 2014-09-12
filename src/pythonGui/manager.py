@@ -21,11 +21,11 @@ from configuration import Configuration
 from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
+from karabo.project import ProjectConfiguration
 import globals
 from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from network import Network
-from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 from util import getSaveFileName
@@ -84,7 +84,7 @@ class _Manager(QObject):
         # Map stores { deviceId, Configuration }
         self.deviceData = dict()
         
-        # State, if initiate device is currently processed
+        # State, if instantiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
 
 
@@ -143,10 +143,10 @@ class _Manager(QObject):
         self.__isInitDeviceCurrentlyProcessed = True
 
 
-    def killDevice(self, deviceId, showConfirm=True):
+    def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            reply = QMessageBox.question(None, 'Kill device',
-                "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            reply = QMessageBox.question(None, 'Shutdown device',
+                "Do you really want to shutdown the device \"<b>{}</b>\"?".format(deviceId),
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
@@ -155,9 +155,9 @@ class _Manager(QObject):
         Network().onKillDevice(deviceId)
 
 
-    def killServer(self, serverId):
-        reply = QMessageBox.question(None, 'Kill device server',
-            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+    def shutdownServer(self, serverId):
+        reply = QMessageBox.question(None, 'Shutdown device server',
+            "Do you really want to shutdown the device server \"<b>{}</b>\"?".format(serverId),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:

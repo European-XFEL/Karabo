@@ -5,10 +5,10 @@
 
 from karabo.karathon import DeviceClient as CppDeviceClient
 from karabo.karathon import Hash
-from karabo.karathon import Schema
-from karabo.karathon import Authenticator
-from karabo.karathon import Timestamp
+from karabo.karathon import TextSerializerHash
 import karabo.karathon as krb
+
+from deviceclientproject import DeviceClientProject
 
 import IPython
 import re
@@ -184,7 +184,7 @@ if (ip is not None):
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerPropertyMonitor')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
-    ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*shutdownDevice')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*show')
 
 
@@ -192,7 +192,7 @@ if (ip is not None):
     ip.set_hook('complete_command', auto_complete_execute, re_key = '.*execute')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*instantiate')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClassSchema')
-    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServer')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*shutdownServer')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
@@ -319,6 +319,12 @@ class DeviceClient(object):
         return self.__client.instantiate(serverId, classId, config, timeout)
 
 
+    def _instantiate(self, serverId, classId, deviceId, data, timeout = None):
+        #serializer = BinarySerializerHash.create("Bin") # this does not work
+        serializer = TextSerializerHash.create("Xml")
+        self.instantiateNoWait(serverId, classId, deviceId, serializer.load(data))
+
+
     def instantiateNoWait(self, serverId, classId, deviceId, config = Hash()):
         """
         Instantiate (and configure) a device on a running server.
@@ -336,29 +342,9 @@ class DeviceClient(object):
         # This is hacked here and should be added to c++
         config.set("deviceId", deviceId)
         self.__client.instantiateNoWait(serverId, classId, config)
-
-
-    def instantiateProject(self, projectFile):
-        project = Hash()
-        krb.loadFromFile(project, projectFile)
-        devices = project.get("project.devices")
-        servers = self.getServers()
-        if len(servers) == 0:
-            print "No servers available to start any devices on..."
-            return
-        for device in devices:
-            if device.__iter__().next().getValue().has("serverId"):
-                server = device.__iter__().next().getValue().get("serverId")
-                if server in servers:
-                    self.__client.instantiate(server, device)
-                else:
-                    print "Skipping instantiation, server not found"
-            else:
-                print "Using default server to instantiate"
-                self.__client.instantiate(servers[0], device)                   
         
         
-    def killDevice(self, deviceId, timeout = None):
+    def shutdownDevice(self, deviceId, timeout = None):
         """
         Shuts down a device.
 
@@ -377,7 +363,7 @@ class DeviceClient(object):
         return self.__client.killDevice(deviceId, timeout)
         
         
-    def killDeviceNoWait(self, deviceId):
+    def shutdownDeviceNoWait(self, deviceId):
         """
         Shuts down a device.
 
@@ -390,7 +376,7 @@ class DeviceClient(object):
         self.__client.killDeviceNoWait(deviceId)
         
         
-    def killServer(self, serverId, timeout = None):
+    def shutdownServer(self, serverId, timeout = None):
         """
         Shuts down a server.
 
@@ -409,7 +395,7 @@ class DeviceClient(object):
         return self.__client.killServer(serverId, timeout)
         
         
-    def killServerNoWait(self, serverId):
+    def shutdownServerNoWait(self, serverId):
         """
         Shuts down a server.
 
@@ -856,3 +842,19 @@ class DeviceClient(object):
     
     def reloadMonitorFile(self, filename = "monitor.xml"):
         self.monitor = krb.loadFromFile(filename).get("monitor")
+
+
+    def loadProject(self, filename):
+        """
+        This function loads a project via \filename and returns a project object.
+        """
+        project = DeviceClientProject(filename, self)
+        try:
+            project.unzip()
+        except Exception as e:
+            e.message = "While reading the project a <b>critical error</b> " \
+                        "occurred."
+            raise
+
+        return project
+

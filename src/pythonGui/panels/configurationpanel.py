@@ -26,7 +26,6 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
-
 class ConfigurationPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
@@ -119,7 +118,7 @@ class ConfigurationPanel(QWidget):
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
         
-        text = "Initiate device"
+        text = "Instantiate device"
         self.pbInitDevice = QPushButton(icons.start, text)
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
@@ -128,7 +127,7 @@ class ConfigurationPanel(QWidget):
         self.pbInitDevice.clicked.connect(self.onInitDevice)
         hLayout.addWidget(self.pbInitDevice)
 
-        text = "Kill instance"
+        text = "Shutdown instance"
         self.pbKillInstance = QPushButton(icons.kill, text)
         self.pbKillInstance.setStatusTip(text)
         self.pbKillInstance.setToolTip(text)
