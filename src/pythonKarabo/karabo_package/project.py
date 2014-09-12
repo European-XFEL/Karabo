@@ -19,7 +19,7 @@ import hashlib
 import os.path
 import urllib2
 import urlparse
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class Project(object):
