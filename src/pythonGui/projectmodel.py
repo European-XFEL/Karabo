@@ -446,6 +446,8 @@ class ProjectModel(QStandardItemModel):
             # Set config, if set
             if config is not None:
                 device.futureConfig = config
+            
+            self.updateData()
         else:
             # Add new device
             device = self.addDevice(project,
@@ -454,7 +456,6 @@ class ProjectModel(QStandardItemModel):
                                     self.deviceDialog.deviceId,
                                     self.deviceDialog.startupBehaviour)
         
-        self.updateData()
         self.selectItem(device)
         self.deviceDialog = None
 
@@ -480,11 +481,7 @@ class ProjectModel(QStandardItemModel):
                                            classId, deviceId, ifexists)
                 return device
         
-        device = project.newDevice(serverId, classId, deviceId, ifexists)
-        
-        if updateNeeded:
-            self.updateData()
-        
+        device = project.newDevice(serverId, classId, deviceId, ifexists, updateNeeded)
         return device
 
 
