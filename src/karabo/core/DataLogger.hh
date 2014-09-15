@@ -33,7 +33,17 @@ namespace karabo {
             
             karabo::util::Schema m_currentSchema;
             
-            std::ofstream m_configStream;
+            std::fstream m_configStream;
+            
+            unsigned int m_lastIndex;
+            
+            unsigned long long m_fileTimestampSecondsStart;
+            unsigned long long m_fileTimestampFractionStart;
+            unsigned long long m_fileTrainIdStart;
+            unsigned long long m_fileTimestampSecondsEnd;
+            unsigned long long m_fileTimestampFractionEnd;
+            unsigned long long m_fileTrainIdEnd;
+            
             
         public:
 
@@ -68,6 +78,9 @@ namespace karabo {
 
             void refreshDeviceInformation();
             
+            int determineLastIndex(const std::string& deviceId);
+            
+            int incrementLastIndex(const std::string& deviceId);
         };
     }
 }
