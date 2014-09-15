@@ -51,7 +51,7 @@ class GuiProject(Project, QObject):
     def setupDeviceToProject(self, device):
         self.setModified(True)
         # Connect device to project to get configuration changes
-        device.signalProjectModified.connect(self.setModified)
+        device.signalDeviceModified.connect(self.setModified)
 
 
     def addDevice(self, device):
@@ -64,13 +64,15 @@ class GuiProject(Project, QObject):
         self.setupDeviceToProject(device)
 
 
-    def newDevice(self, serverId, classId, deviceId, ifexists):
+    def newDevice(self, serverId, classId, deviceId, ifexists, updateNeeded=False):
         """
         A new device with the given parameters is created, added to the
         project and returned.
         """
         device = Device(serverId, classId, deviceId, ifexists)
         self.addDevice(device)
+        if updateNeeded:
+            self.signalProjectModified.emit()
         return device
 
 
@@ -125,7 +127,7 @@ class GuiProject(Project, QObject):
 
                 for classId, config in XMLParser().read(data).iteritems():
                     device = self.newDevice(serverId, classId, filename,
-                                            d.get("ifexists"))
+                                            d.get("ifexists"), False)
                     device.futureConfig = config
                     break # there better be only one!
             for s in projectConfig[self.SCENES_KEY]:
@@ -276,7 +278,7 @@ class Device(Configuration):
     This class represents a device configuration associated with a project.
     """
     
-    signalProjectModified = pyqtSignal(bool)
+    signalDeviceModified = pyqtSignal(bool)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
         super(Device, self).__init__(deviceId, "projectClass", descriptor)

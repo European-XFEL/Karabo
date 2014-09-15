@@ -1208,12 +1208,13 @@ class Scene(QSvgWidget):
             # Open dialog to set up new device
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
-                if not dialog.newDeviceGroup():
+                if not dialog.isDeviceGroup:
                     # Create only one device configuration and add to project
                     device = self.project.newDevice(dialog.serverId,
                                                     dialog.classId,
                                                     dialog.deviceId,
-                                                    dialog.startupBehaviour)
+                                                    dialog.startupBehaviour,
+                                                    True)
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
