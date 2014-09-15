@@ -130,10 +130,6 @@ class DeviceGroupDialog(QDialog):
         return self.deviceWidget.updateServerTopology(systemTopology, device)
 
 
-    def newDeviceGroup(self):
-        return self.cbDeviceGroup.isChecked()
-
-
     @property
     def deviceId(self):
         return self.deviceWidget.deviceId
@@ -152,6 +148,11 @@ class DeviceGroupDialog(QDialog):
     @property
     def startupBehaviour(self):
         return self.deviceWidget.startupBehaviour
+
+
+    @property
+    def isDeviceGroup(self):
+        return self.cbDeviceGroup.isChecked()
 
 
     def onValidDeviceId(self, deviceId):
