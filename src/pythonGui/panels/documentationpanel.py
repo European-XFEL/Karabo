@@ -12,10 +12,9 @@
 __all__ = ["DocumentationPanel"]
 
 
-from PyQt4.QtCore import QByteArray, QUrl
+from PyQt4.QtCore import QUrl
 from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
 from PyQt4.QtWebKit import QWebPage, QWebView
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 
 class DocumentationPanel(QWidget):
@@ -36,61 +35,26 @@ class DocumentationPanel(QWidget):
 
     def __init__(self):
         super(DocumentationPanel, self).__init__()
-        
-        self.__loadedUrl = ""
-        
-        postParams = QUrl()
-        postParams.addQueryItem('username', unicode('wiki'))
-        postParams.addQueryItem('password', unicode('karabo'))
-        
-        request = QNetworkRequest(QUrl("https://docs.xfel.eu/share/page/dologin"))
-        request.setRawHeader('Content-Type', QByteArray('application/x-www-form-urlencoded'))
-        
-        self.__wikiView = QWebView(self)
-        self.__wikiView.loadFinished.connect(self.onLoadFinishedWiki)
-        self.__wikiView.load(request, QNetworkAccessManager.PostOperation, postParams.encodedQuery())
-        self.__wikiView.show()
 
-        self.__reportView = QWebView()
-        self.__reportView.load(QUrl("https://in.xfel.eu/redmine"))
+        self.reportView = QWebView()
+        self.reportView.load(QUrl("https://in.xfel.eu/redmine"))
         
-        self.__tabWidget = QTabWidget(self)
-        
-        text = "Wiki"
-        index = self.__tabWidget.addTab(self.__wikiView, text)
-        self.__tabWidget.setTabToolTip(index, text)
+        self.tabWidget = QTabWidget(self)
         
         text = "Report problem"
-        index = self.__tabWidget.addTab(self.__reportView, text)
-        self.__tabWidget.setTabToolTip(index, text)
-        self.__tabWidget.currentChanged.connect(self.onCurrentTabChanged)
+        index = self.tabWidget.addTab(self.reportView, text)
+        self.tabWidget.setTabToolTip(index, text)
         
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
-        mainLayout.addWidget(self.__tabWidget)
-        
-
-    def _setWikiActionsVisible(self, visible):
-        self.__acBackWiki.setVisible(visible)
-        self.__acForwardWiki.setVisible(visible)
-        self.__acReloadWiki.setVisible(visible)
-        self.__acStopWiki.setVisible(visible)
+        mainLayout.addWidget(self.tabWidget)
 
 
     def _setReportActionsVisible(self, visible):
-        self.__acBackReport.setVisible(visible)
-        self.__acForwardReport.setVisible(visible)
-        self.__acReloadReport.setVisible(visible)
-        self.__acStopReport.setVisible(visible)
-
-
-    def _loadWikiUrl(self, url):
-        if self.__loadedUrl == url:
-            return
-        
-        self.__loadedUrl = url
-        self.__wikiView.load(QUrl(self.__loadedUrl))
-        self.__wikiView.show()
+        self.acBackReport.setVisible(visible)
+        self.acForwardReport.setVisible(visible)
+        self.acReloadReport.setVisible(visible)
+        self.acStopReport.setVisible(visible)
 
 
     def setupActions(self):
@@ -98,61 +62,20 @@ class DocumentationPanel(QWidget):
 
 
     def setupToolBars(self, toolBar, parent):
-        self.__acBackWiki = self.__wikiView.pageAction(QWebPage.Back)
-        self.__acForwardWiki = self.__wikiView.pageAction(QWebPage.Forward)
-        self.__acReloadWiki = self.__wikiView.pageAction(QWebPage.Reload)
-        self.__acStopWiki = self.__wikiView.pageAction(QWebPage.Stop)
+        self.acBackReport = self.reportView.pageAction(QWebPage.Back)
+        self.acForwardReport = self.reportView.pageAction(QWebPage.Forward)
+        self.acReloadReport = self.reportView.pageAction(QWebPage.Reload)
+        self.acStopReport = self.reportView.pageAction(QWebPage.Stop)
         
-        toolBar.addAction(self.__acBackWiki)
-        toolBar.addAction(self.__acForwardWiki)
-        toolBar.addAction(self.__acReloadWiki)
-        toolBar.addAction(self.__acStopWiki)
+        toolBar.addAction(self.acBackReport)
+        toolBar.addAction(self.acForwardReport)
+        toolBar.addAction(self.acReloadReport)
+        toolBar.addAction(self.acStopReport)
         
-        self.__acBackReport = self.__reportView.pageAction(QWebPage.Back)
-        self.__acForwardReport = self.__reportView.pageAction(QWebPage.Forward)
-        self.__acReloadReport = self.__reportView.pageAction(QWebPage.Reload)
-        self.__acStopReport = self.__reportView.pageAction(QWebPage.Stop)
-        
-        toolBar.addAction(self.__acBackReport)
-        toolBar.addAction(self.__acForwardReport)
-        toolBar.addAction(self.__acReloadReport)
-        toolBar.addAction(self.__acStopReport)
-        
-        self._setWikiActionsVisible(True)
-        self._setReportActionsVisible(False)
+        self._setReportActionsVisible(True)
 
 
 ### slots ###
-    def onCurrentTabChanged(self, index):
-        if index == 0:
-            self._setWikiActionsVisible(True)
-            self._setReportActionsVisible(False)
-        elif index == 1:
-            self._setWikiActionsVisible(False)
-            self._setReportActionsVisible(True)
-
-
-    def onNavigationItemChanged(self, itemInfo):
-        classId = itemInfo.get('classId')
-        if classId is None:
-            self._loadWikiUrl("https://docs.xfel.eu/share/")
-            return
-        
-        postParams = QUrl()
-        postParams.addQueryItem('title', unicode(classId))
-        
-        request = QNetworkRequest(QUrl("https://docs.xfel.eu/share/page/site/karabo/device-page"))
-        request.setRawHeader('Content-Type', QByteArray('application/x-www-form-urlencoded'))
-        
-        self.__wikiView.load(request, QNetworkAccessManager.PostOperation, postParams.encodedQuery())
-        self.__wikiView.show()
-
-
-    def onLoadFinishedWiki(self, state):
-        #print "onLoadFinishedWiki", state
-        pass
-
-
     # virtual function
     def onUndock(self):
         pass
