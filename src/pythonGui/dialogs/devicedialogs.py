@@ -155,9 +155,24 @@ class DeviceGroupDialog(QDialog):
         return self.cbDeviceGroup.isChecked()
 
 
+    @property
+    def displayPrefix(self):
+        return self.duplicateWidget.displayPrefix
+
+
+    @property
+    def startIndex(self):
+        return self.duplicateWidget.startIndex
+
+
+    @property
+    def endIndex(self):
+        return self.duplicateWidget.endIndex
+
+
     def onValidDeviceId(self, deviceId):
         if self.cbDeviceGroup.isChecked():
-            newIsValid = self.duplicateWidget.count > 0 and len(deviceId) > 0
+            newIsValid = self.duplicateWidget.endIndex > 0 and len(deviceId) > 0
         else:
             newIsValid = len(deviceId) > 0
         

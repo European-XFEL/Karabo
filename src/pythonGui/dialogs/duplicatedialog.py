@@ -52,8 +52,8 @@ class DuplicateDialog(QDialog):
 
 
     @property
-    def count(self):
-        return self.duplicateWidget.count
+    def endIndex(self):
+        return self.duplicateWidget.endIndex
 
 
     def onValidInput(self, isValid):
@@ -97,14 +97,14 @@ class DuplicateWidget(QWidget):
         fLayout.addRow("Start index:", self.sbStartIndex)
         vLayout.addWidget(self.gbSelectStartIndex)
         
-        self.gbSelectCount = QGroupBox("Select count", self)
-        fLayout = QFormLayout(self.gbSelectCount)
+        self.gbSelectEndIndex = QGroupBox("Select end", self)
+        fLayout = QFormLayout(self.gbSelectEndIndex)
         fLayout.setContentsMargins(5,5,5,5)
-        self.sbCount = QSpinBox()
-        self.sbCount.setRange(0, globals.MAX_INT32)
-        self.sbCount.valueChanged.connect(self.onChanged)
-        fLayout.addRow("Count:        ", self.sbCount)
-        vLayout.addWidget(self.gbSelectCount)
+        self.sbEndIndex = QSpinBox()
+        self.sbEndIndex.setRange(0, globals.MAX_INT32)
+        self.sbEndIndex.valueChanged.connect(self.onChanged)
+        fLayout.addRow("End index:  ", self.sbEndIndex)
+        vLayout.addWidget(self.gbSelectEndIndex)
 
 
     @property
@@ -128,15 +128,15 @@ class DuplicateWidget(QWidget):
 
 
     @property
-    def count(self):
-        return self.sbCount.value()
+    def endIndex(self):
+        return self.sbEndIndex.value()
 
 
     def onChanged(self):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        isValid = self.sbCount.value() > 0
+        isValid = self.sbEndIndex.value() > 0
         self.signalValidInput.emit(isValid)
 
 

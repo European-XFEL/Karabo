@@ -5,7 +5,7 @@
 #############################################################################
 
 
-__all__ = ["WorkflowItem"]
+__all__ = ["WorkflowItem", "WorkflowGroupItem"]
 
 from registry import Loadable
 
@@ -13,14 +13,13 @@ from PyQt4.QtCore import QPoint, QRectF, Qt
 from PyQt4.QtGui import QColor, QFont, QFontMetrics, QFontMetricsF, QPainter, QWidget
 
 
-class WorkflowItem(QWidget, Loadable):
+class Item(QWidget, Loadable):
 
-    def __init__(self, device, parent):
-        super(WorkflowItem, self).__init__(parent)
+    def __init__(self, parent):
+        super(Item, self).__init__(parent)
         
         self.font = QFont()
-        self.device = device
-        self.displayText = device.id
+        self.displayText = ""
 
 
     def paintEvent(self, event):
@@ -102,3 +101,30 @@ class WorkflowItem(QWidget, Loadable):
     #        ss.append("border: {}px;".format(fw))
     #    label.setStyleSheet("".join(ss))
     #    return proxy"""
+
+
+class WorkflowItem(Item):
+
+    def __init__(self, device, parent):
+        super(WorkflowItem, self).__init__(parent)
+        
+        self.device = device
+        self.displayText = device.id
+
+
+    def paintEvent(self, event):
+        Item.paintEvent(self, event)
+
+
+class WorkflowGroupItem(Item):
+
+    def __init__(self, deviceGroup, parent):
+        super(WorkflowGroupItem, self).__init__(parent)
+        
+        self.device = deviceGroup
+        self.displayText = deviceGroup.displayText
+
+
+    def paintEvent(self, event):
+        Item.paintEvent(self, event)
+

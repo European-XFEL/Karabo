@@ -14,7 +14,7 @@ from dialogs.dialogs import PenDialog, TextDialog
 from dialogs.devicedialogs import DeviceGroupDialog
 from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
-from sceneitems.workflowitem import WorkflowItem
+from sceneitems.workflowitems import WorkflowItem, WorkflowGroupItem
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
@@ -1228,7 +1228,24 @@ class Scene(QSvgWidget):
                     proxy.selected = True
                 else:
                     # Create device group and add to project
-                    pass
+                    deviceGroup = self.project.newDeviceGroup(dialog.serverId,
+                                                        dialog.classId,
+                                                        dialog.deviceId,
+                                                        dialog.startupBehaviour,
+                                                        dialog.displayPrefix,
+                                                        dialog.startIndex,
+                                                        dialog.endIndex)
+                    
+                    # Create scene item associated with device
+                    proxy = ProxyWidget(self.inner)
+                    workflowGroupItem = WorkflowGroupItem(deviceGroup, proxy)
+                    rect = workflowGroupItem.outlineRect()
+                    proxy.setWidget(workflowGroupItem)
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+5, rect.height()+5))
+                    proxy.show()
+                    
+                    self.ilayout.add_item(proxy)
+                    proxy.selected = True
                 
                 self.project.setModified(True)
         event.accept()
