@@ -33,6 +33,9 @@ class GuiProject(Project, QObject):
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
 
+        # List of device groups - TODO: move to project class in pythonKarabo package
+        self.deviceGroups = []
+
         # List of Scene
         self.scenes = []
         
@@ -74,6 +77,18 @@ class GuiProject(Project, QObject):
         if updateNeeded:
             self.signalProjectModified.emit()
         return device
+
+
+    def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
+        deviceGroup = DeviceGroup()
+        for index in xrange(start, end):
+            id = "{}{}{}".format(deviceId, prefix, index)
+            device = Device(serverId, classId, id, ifexists)
+            deviceGroup.append(device)
+        self.deviceGroups.append(deviceGroup)
+        #Project.addDeviceGroup(deviceGroup)
+        
+        return deviceGroup
 
 
     def addScene(self, scene):
@@ -388,11 +403,13 @@ class Device(Configuration):
 
 class DeviceGroup(list):
     """
-    This class represents a group of devices.
+    This class represents a list of devices.
     """
 
     def __init__(self):
         super(DeviceGroup, self).__init__()
+        
+        self.displayText = "MyGroup"
 
 
 
