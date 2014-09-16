@@ -27,7 +27,7 @@ import manager
 from karabo.project import Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
+from PyQt4.QtGui import (QDialog, QFileDialog, QItemSelectionModel,
                          QMessageBox, QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import ZipFile
@@ -135,10 +135,35 @@ class ProjectModel(QStandardItemModel):
                                           noplugin=icons.deviceOfflineNoPlugin,
                                           offline=icons.deviceOffline,
                                           incompatible=icons.deviceIncompatible,
-                                         ).get(
-                                device.status, icons.deviceInstance))
+                                         ).get(device.status, icons.deviceInstance))
                 leafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
                 childItem.appendRow(leafItem)
+
+            # Device groups
+            for deviceGroup in project.deviceGroups:
+                leafItem = QStandardItem(deviceGroup.displayText)
+                leafItem.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
+                leafItem.setEditable(False)
+                leafItem.setIcon(icons.folder)
+                leafItem.setToolTip("{}".format(deviceGroup.displayText))
+                childItem.appendRow(leafItem)
+
+                for device in deviceGroup:
+                    subLeafItem = QStandardItem(device.id)
+                    subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
+                    subLeafItem.setEditable(False)
+
+                    if device.status != "offline" and device.error:
+                        subLeafItem.setIcon(icons.deviceInstanceError)
+                    else:
+                        subLeafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                              noserver=icons.deviceOfflineNoServer,
+                                              noplugin=icons.deviceOfflineNoPlugin,
+                                              offline=icons.deviceOffline,
+                                              incompatible=icons.deviceIncompatible,
+                                             ).get(device.status, icons.deviceInstance))
+                    subLeafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
+                    leafItem.appendRow(subLeafItem)
 
             # Scenes
             childItem = QStandardItem(Project.SCENES_LABEL)
@@ -500,8 +525,8 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for i in xrange(dialog.count):
-            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
+        for index in xrange(dialog.startIndex, dialog.endIndex):
+            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, index)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists,
                                        False)
@@ -568,8 +593,8 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for i in xrange(dialog.count):
-            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, i+dialog.startIndex)
+        for index in xrange(dialog.startIndex, dialog.endIndex):
+            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, index)
             newScene = self.addScene(self.currentProject(), filename)
             # TODO: Copy scene content to new scene
             #scene.duplicate()
