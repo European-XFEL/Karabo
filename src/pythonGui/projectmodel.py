@@ -193,7 +193,7 @@ class ProjectModel(QStandardItemModel):
                     if device.parameterEditor is not None:
                         # Put current configuration to future config so that it
                         # does not get lost
-                        device.futureConfig = device.toHash()
+                        device.initConfig = device.toHash()
                         device.parameterEditor.clear()
         
 
@@ -428,7 +428,7 @@ class ProjectModel(QStandardItemModel):
             # Get configuration of device, if classId is the same
             if device.classId == self.pluginDialog.classId:
                 if device.descriptor is None:
-                    config = device.futureConfig
+                    config = device.initConfig
                 else:
                     config = device.toHash()
             else:
@@ -445,7 +445,7 @@ class ProjectModel(QStandardItemModel):
             
             # Set config, if set
             if config is not None:
-                device.futureConfig = config
+                device.initConfig = config
         else:
             # Add new device
             device = self.addDevice(project,
@@ -513,9 +513,9 @@ class ProjectModel(QStandardItemModel):
             if device.descriptor is not None:
                 config = device.toHash()
             else:
-                config = device.futureConfig
+                config = device.initConfig
             
-            newDevice.futureConfig = config
+            newDevice.initConfig = config
         
         # Remove device which basis for duplication
         self.removeObject(self.currentProject(), device, False)

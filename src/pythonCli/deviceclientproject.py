@@ -13,14 +13,35 @@ __all__ = ["DeviceClientProject", "ProjectDevice"]
 
 
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, ProjectConfiguration
+from karabo.project import Project, ProjectConfiguration, BaseDevice
 
 import os.path
-from tempfile import NamedTemporaryFile
-from zipfile import ZipFile, ZIP_DEFLATED
+
+
+class ProjectDevice(BaseDevice):
+
+    def __init__(self, serverId, classId, deviceId, ifexists):
+        BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
+        self.deviceId = deviceId
+        self.initConfig = None
+
+
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self._initConfig = XMLParser().read(xmlString)
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        return XMLWriter().write(Hash(self.classId, self._initConfig))
 
 
 class DeviceClientProject(Project):
+    Device = ProjectDevice
 
     def __init__(self, filename, deviceClient):
         super(DeviceClientProject, self).__init__(filename)
@@ -38,101 +59,6 @@ class DeviceClientProject(Project):
             index = self.devices.index(object)
             self.devices.pop(index)
             return index
-
-
-    def unzip(self):
-        with ZipFile(self.filename, "r") as zf:
-            data = zf.read("{}.xml".format(self.PROJECT_KEY))
-            projectConfig = XMLParser().read(data)
-
-            self.version = projectConfig[self.PROJECT_KEY, "version"]
-
-            projectConfig = projectConfig[self.PROJECT_KEY]
-            for d in projectConfig[self.DEVICES_KEY]:
-                serverId = d.get("serverId")
-                
-                filename = d.get("filename")
-                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                assert filename.endswith(".xml")
-                filename = filename[:-4]
-
-                for classId, config in XMLParser().read(data).iteritems():
-                    device = ProjectDevice(serverId, classId, filename, d.get("ifexists"))
-                    device.initConfig = config
-                    break # there better be only one!
-                self.addDevice(device)
-            for deviceId, configList in projectConfig[
-                                self.CONFIGURATIONS_KEY].iteritems():
-                # Vector of hashes
-                for c in configList:
-                    filename = c.get("filename")
-                    configuration = ProjectConfiguration(self, filename)
-                    data = zf.read("{}/{}".format(self.CONFIGURATIONS_KEY,
-                                                  filename))
-                    configuration.fromXml(data)
-                    self.addConfiguration(deviceId, configuration)
-            self.resources = {k: v for k, v in
-                              projectConfig["resources"].iteritems()}
-
-
-    def zip(self, filename=None):
-        """
-        This method saves this project as a zip file.
-        """
-        projectConfig = Hash()
-        exception = None
-
-        if filename is None:
-            filename = self.filename
-
-        if os.path.exists(filename):
-            file = NamedTemporaryFile(dir=os.path.dirname(filename),
-                                      delete=False)
-        else:
-            file = filename
-
-        with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
-            for device in self.devices:
-                zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
-                            device.toXml())
-            projectConfig[self.DEVICES_KEY] = [Hash("serverId", device.serverId,
-                                                    "classId", device.classId,
-                                                    "filename", device.filename,
-                                                    "ifexists", device.ifexists)
-                                            for device in self.devices]
-
-            configs = Hash()
-            for deviceId, configList in self.configurations.iteritems():
-                configs[deviceId] = [Hash("filename", c.filename)
-                                     for c in configList]
-                for c in configList:
-                    zf.writestr("{}/{}".format(self.CONFIGURATIONS_KEY,
-                                               c.filename), c.toXml())
-            projectConfig[self.CONFIGURATIONS_KEY] = configs
-
-            resources = Hash()
-            if file is not self.filename:
-                with ZipFile(self.filename, "r") as zin:
-                    for k, v in self.resources.iteritems():
-                        for fn in v:
-                            f = "resources/{}/{}".format(k, fn)
-                            zf.writestr(f, zin.read(f))
-                        resources[k] = v
-            projectConfig["resources"] = resources
-
-            # Create folder structure and save content
-            projectConfig = Hash(self.PROJECT_KEY, projectConfig)
-            projectConfig[self.PROJECT_KEY, "version"] = self.version
-            zf.writestr("{}.xml".format(Project.PROJECT_KEY),
-                        XMLWriter().write(projectConfig))
-
-        if file is not filename:
-            file.close()
-            os.remove(filename)
-            os.rename(file.name, filename)
-
-        if exception is not None:
-            raise exception
 
 
     def instantiate(self, deviceIds):
@@ -194,44 +120,3 @@ class DeviceClientProject(Project):
         """
         for d in self.devices:
             self.deviceClient.shutdownDevice(d.deviceId)
-
-
-class ProjectDevice(object):
-
-    def __init__(self, serverId, classId, deviceId, ifexists):
-        super(ProjectDevice, self).__init__()
-
-        self.serverId = serverId
-        self.classId = classId
-        self.deviceId = deviceId
-        
-        self.filename = "{}.xml".format(deviceId)
-        self.ifexists = ifexists # restart, ignore
-        
-        # Needed in case the descriptor is not set yet
-        self._initConfig = None
-
-
-    @property
-    def initConfig(self):
-        return self._initConfig
-
-
-    @initConfig.setter
-    def initConfig(self, config):
-        self._initConfig = config
-
-
-    def fromXml(self, xmlString):
-        """
-        This function loads the corresponding XML file of this configuration.
-        """
-        self._initConfig = XMLParser().read(xmlString)
-
-
-    def toXml(self):
-        """
-        This function returns the configurations' XML file as a string.
-        """
-        return XMLWriter().write(Hash(self.classId, self._initConfig))
-
