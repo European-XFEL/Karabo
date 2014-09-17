@@ -122,48 +122,49 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(icons.folder)
             childItem.setToolTip(Project.DEVICES_LABEL)
             item.appendRow(childItem)
-            for device in project.devices:
-                leafItem = QStandardItem(device.id)
-                leafItem.setData(device, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
+            for deviceObj in project.devices:
+                if isinstance(deviceObj, Device):
+                    leafItem = QStandardItem(deviceObj.id)
+                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
+                    leafItem.setEditable(False)
 
-                if device.status != "offline" and device.error:
-                    leafItem.setIcon(icons.deviceInstanceError)
-                else:
-                    leafItem.setIcon(dict(error=icons.deviceInstanceError,
-                                          noserver=icons.deviceOfflineNoServer,
-                                          noplugin=icons.deviceOfflineNoPlugin,
-                                          offline=icons.deviceOffline,
-                                          incompatible=icons.deviceIncompatible,
-                                         ).get(device.status, icons.deviceInstance))
-                leafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
-                childItem.appendRow(leafItem)
-
-            # Device groups
-            for deviceGroup in project.deviceGroups:
-                leafItem = QStandardItem(deviceGroup.displayText)
-                leafItem.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                leafItem.setIcon(icons.folder)
-                leafItem.setToolTip("{}".format(deviceGroup.displayText))
-                childItem.appendRow(leafItem)
-
-                for device in deviceGroup:
-                    subLeafItem = QStandardItem(device.id)
-                    subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
-                    subLeafItem.setEditable(False)
-
-                    if device.status != "offline" and device.error:
-                        subLeafItem.setIcon(icons.deviceInstanceError)
+                    if deviceObj.status != "offline" and deviceObj.error:
+                        leafItem.setIcon(icons.deviceInstanceError)
                     else:
-                        subLeafItem.setIcon(dict(error=icons.deviceInstanceError,
+                        leafItem.setIcon(dict(error=icons.deviceInstanceError,
                                               noserver=icons.deviceOfflineNoServer,
                                               noplugin=icons.deviceOfflineNoPlugin,
                                               offline=icons.deviceOffline,
                                               incompatible=icons.deviceIncompatible,
-                                             ).get(device.status, icons.deviceInstance))
-                    subLeafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
-                    leafItem.appendRow(subLeafItem)
+                                             ).get(deviceObj.status, icons.deviceInstance))
+                    leafItem.setToolTip("{} <{}>".format(deviceObj.id, deviceObj.serverId))
+                    childItem.appendRow(leafItem)
+                else:
+                    # Device groups
+                    leafItem = QStandardItem(deviceObj.name)
+                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
+                    leafItem.setEditable(False)
+                    leafItem.setIcon(icons.device_group)
+                    leafItem.setToolTip("{}".format(deviceObj.name))
+                    childItem.appendRow(leafItem)
+                    
+                    # Iterate through device of group
+                    for device in deviceObj:
+                        subLeafItem = QStandardItem(device.id)
+                        subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
+                        subLeafItem.setEditable(False)
+
+                        if device.status != "offline" and device.error:
+                            subLeafItem.setIcon(icons.deviceInstanceError)
+                        else:
+                            subLeafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                                  noserver=icons.deviceOfflineNoServer,
+                                                  noplugin=icons.deviceOfflineNoPlugin,
+                                                  offline=icons.deviceOffline,
+                                                  incompatible=icons.deviceIncompatible,
+                                                 ).get(device.status, icons.deviceInstance))
+                        subLeafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
+                        leafItem.appendRow(subLeafItem)
 
             # Scenes
             childItem = QStandardItem(Project.SCENES_LABEL)
@@ -491,6 +492,9 @@ class ProjectModel(QStandardItemModel):
         """
         
         for d in project.devices:
+            if isinstance(d, DeviceGroup):
+                continue
+
             if deviceId == d.id:
                 reply = QMessageBox.question(None, 'Device already exists',
                     "Another device with the same device ID \"<b>{}</b>\" <br> "
