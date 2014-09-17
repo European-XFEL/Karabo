@@ -128,14 +128,43 @@ class Project(object):
 
 
     def unzip(self):
-        raise NotImplementedError, "Project.unzip"
+        """read the zip file zf. The file must already be open for reading."""
+        with ZipFile(self.filename, "r") as zf:
+            data = zf.read("{}.xml".format(self.PROJECT_KEY))
+            projectConfig = XMLParser().read(data)
+
+            self.version = projectConfig[self.PROJECT_KEY, "version"]
+
+            self.parse(projectConfig[self.PROJECT_KEY], zf)
 
 
-    def zip(self, filename=None):
-        """
-        This method saves this project as a zip file.
-        """
-        raise NotImplementedError, "Project.zip"
+    def parse(self, projectConfig, zf):
+        for d in projectConfig[self.DEVICES_KEY]:
+            serverId = d.get("serverId")
+
+            filename = d.get("filename")
+            data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+            assert filename.endswith(".xml")
+            filename = filename[:-4]
+
+            for classId, config in XMLParser().read(data).iteritems():
+                device = self.Device(serverId, classId, filename,
+                                     d.get("ifexists"))
+                device.initConfig = config
+                break # there better be only one!
+            self.addDevice(device)
+        for deviceId, configList in projectConfig[
+                            self.CONFIGURATIONS_KEY].iteritems():
+            # Vector of hashes
+            for c in configList:
+                filename = c.get("filename")
+                configuration = ProjectConfiguration(self, filename)
+                data = zf.read("{}/{}".format(self.CONFIGURATIONS_KEY,
+                                              filename))
+                configuration.fromXml(data)
+                self.addConfiguration(deviceId, configuration)
+        self.resources = {k: v for k, v in
+                          projectConfig["resources"].iteritems()}
 
 
     def instantiate(self, deviceIds):
@@ -195,3 +224,11 @@ class ProjectConfiguration(object):
         """
         return XMLWriter().write(self.hash)
 
+
+class BaseDevice(object):
+    def __init__(self, serverId, classId, deviceId, ifexists):
+        self.serverId = serverId
+        self.classId = classId
+
+        self.filename = "{}.xml".format(deviceId)
+        self.ifexists = ifexists

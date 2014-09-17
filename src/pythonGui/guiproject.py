@@ -16,7 +16,7 @@ __all__ = ["GuiProject", "Category"]
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, ProjectConfiguration
+from karabo.project import Project, ProjectConfiguration, BaseDevice
 import manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -26,7 +26,110 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
+class Device(BaseDevice, Configuration):
+    signalProjectModified = pyqtSignal(bool)
+
+    def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
+        Configuration.__init__(self, deviceId, "projectClass", descriptor)
+        BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
+
+        actual = manager.getDevice(deviceId)
+        actual.statusChanged.connect(self.onStatusChanged)
+        self.onStatusChanged(actual, actual.status, actual.error)
+
+        # This flag states whether the descriptor was checked already
+        # This should only happen once when the device was selected the first
+        # time in the project view
+        self.descriptorRequested = False
+        self._initConfig = None
+
+
+    @property
+    def initConfig(self):
+        return self._initConfig
+
+
+    @initConfig.setter
+    def initConfig(self, config):
+        self._initConfig = config
+        # Merge initConfig, if descriptor is not None
+        self.mergeFutureConfig()
+
+
+    def mergeFutureConfig(self):
+        """
+        This function merges the \self.initConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.descriptor is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        if self._initConfig is not None:
+            self.fromHash(self._initConfig)
+
+
+    def onNewDescriptor(self, conf):
+        if self.descriptor is not None:
+            self.redummy()
+        self.descriptor = conf.descriptor
+        self.mergeFutureConfig()
+        manager.Manager().onShowConfiguration(self)
+
+
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.fromHash(XMLParser().read(xmlString))
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        if self.descriptor is not None:
+            config = self.toHash()
+        else:
+            config = self._initConfig
+        return XMLWriter().write(Hash(self.classId, config))
+
+
+    def onStatusChanged(self, conf, status, error):
+        """ this method gets the status of the corresponding real device,
+        and finds out the gory details for this project device """
+        self.error = error
+
+        if manager.Manager().systemHash is None:
+            self.status = "offline"
+            return
+
+        if status == "offline":
+            try:
+                attrs = manager.Manager().systemHash[
+                    "server.{}".format(self.serverId), ...]
+            except KeyError:
+                self.status = "noserver"
+            else:
+                if self.classId not in attrs.get("deviceClasses", []):
+                    self.status = "noplugin"
+                else:
+                    self.status = "offline"
+        else:
+            if (conf.classId == self.classId and
+                    conf.serverId == self.serverId):
+                self.status = status
+            else:
+                self.status = "incompatible"
+
+
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
+
+
 class GuiProject(Project, QObject):
+    Device = Device
 
     signalProjectModified = pyqtSignal()
 
@@ -97,45 +200,13 @@ class GuiProject(Project, QObject):
             return index
 
 
-    def unzip(self):
-        with ZipFile(self.filename, "r") as zf:
-            data = zf.read("{}.xml".format(self.PROJECT_KEY))
-            projectConfig = XMLParser().read(data)
-
-            self.version = projectConfig[self.PROJECT_KEY, "version"]
-
-            projectConfig = projectConfig[self.PROJECT_KEY]
-            for d in projectConfig[self.DEVICES_KEY]:
-                serverId = d.get("serverId")
-                
-                filename = d.get("filename")
-                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                assert filename.endswith(".xml")
-                filename = filename[:-4]
-
-                for classId, config in XMLParser().read(data).iteritems():
-                    device = Device(serverId, classId, filename, d.get("ifexists"))
-                    device.futureConfig = config
-                    break # there better be only one!
-                self.addDevice(device)
-            for s in projectConfig[self.SCENES_KEY]:
-                scene = Scene(self, s["filename"])
-                data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
-                scene.fromXml(data)
-                self.addScene(scene)
-            for deviceId, configList in projectConfig[
-                                self.CONFIGURATIONS_KEY].iteritems():
-                # Vector of hashes
-                for c in configList:
-                    filename = c.get("filename")
-                    configuration = ProjectConfiguration(self, filename)
-                    data = zf.read("{}/{}".format(self.CONFIGURATIONS_KEY,
-                                                  filename))
-                    configuration.fromXml(data)
-                    self.addConfiguration(deviceId, configuration)
-            self.resources = {k: v for k, v in
-                              projectConfig["resources"].iteritems()}
-        
+    def parse(self, projectConfig, zf):
+        super(GuiProject, self).parse(projectConfig, zf)
+        for s in projectConfig[self.SCENES_KEY]:
+            scene = Scene(self, s["filename"])
+            data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
+            scene.fromXml(data)
+            self.addScene(scene)
         self.setModified(False)
 
 
@@ -223,7 +294,7 @@ class GuiProject(Project, QObject):
                 manager.Manager().shutdownDevice(device.id, False)
 
         if device.descriptor is None:
-            config = device.futureConfig
+            config = device.initConfig
         else:
             config = device.toHash()
 
@@ -259,115 +330,6 @@ class GuiProject(Project, QObject):
         """
         for d in self.devices:
             manager.Manager().shutdownDevice(d.id, False)
-
-
-class Device(Configuration):
-    signalProjectModified = pyqtSignal(bool)
-
-    def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
-        super(Device, self).__init__(deviceId, "projectClass", descriptor)
-
-        self.serverId = serverId
-        self.classId = classId
-        
-        self.filename = "{}.xml".format(deviceId)
-        self.ifexists = ifexists # restart, ignore
-        
-        # Needed in case the descriptor is not set yet
-        self._futureConfig = None
-        
-        actual = manager.getDevice(deviceId)
-        actual.statusChanged.connect(self.onStatusChanged)
-        self.onStatusChanged(actual, actual.status, actual.error)
-        
-        # This flag states whether the descriptor was checked already
-        # This should only happen once when the device was selected the first
-        # time in the project view
-        self.descriptorRequested = False
-
-
-    @property
-    def futureConfig(self):
-        return self._futureConfig
-
-
-    @futureConfig.setter
-    def futureConfig(self, config):
-        self._futureConfig = config
-        # Merge futureConfig, if descriptor is not None
-        self.mergeFutureConfig()
-
-
-    def mergeFutureConfig(self):
-        """
-        This function merges the \self.futureConfig into the Configuration.
-        This is only possible, if the descriptor has been set before.
-        """
-        if self.descriptor is None: return
-        
-        # Set default values for configuration
-        self.setDefault()
-        if self._futureConfig is not None:
-            self.fromHash(self._futureConfig)
-
-
-    def onNewDescriptor(self, conf):
-        if self.descriptor is not None:
-            self.redummy()
-        self.descriptor = conf.descriptor
-        self.mergeFutureConfig()
-        manager.Manager().onShowConfiguration(self)
-
-
-    def fromXml(self, xmlString):
-        """
-        This function loads the corresponding XML file of this configuration.
-        """
-        self.fromHash(XMLParser().read(xmlString))
-
-
-    def toXml(self):
-        """
-        This function returns the configurations' XML file as a string.
-        """
-        if self.descriptor is not None:
-            config = self.toHash()
-        else:
-            config = self._futureConfig
-        return XMLWriter().write(Hash(self.classId, config))
-
-
-    def onStatusChanged(self, conf, status, error):
-        """ this method gets the status of the corresponding real device,
-        and finds out the gory details for this project device """
-        self.error = error
-
-        if manager.Manager().systemHash is None:
-            self.status = "offline"
-            return
-
-        if status == "offline":
-            try:
-                attrs = manager.Manager().systemHash[
-                    "server.{}".format(self.serverId), ...]
-            except KeyError:
-                self.status = "noserver"
-            else:
-                if self.classId not in attrs.get("deviceClasses", []):
-                    self.status = "noplugin"
-                else:
-                    self.status = "offline"
-        else:
-            if (conf.classId == self.classId and
-                    conf.serverId == self.serverId):
-                self.status = status
-            else:
-                self.status = "incompatible"
-
-
-    def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
 
 
 class Category(object):
