@@ -59,14 +59,6 @@ namespace karabo {
         DataLoggerManager::~DataLoggerManager() {
         }
 
-        std::string DataLoggerManager::generateNewDataLoggerInstanceId(const std::string& managerId, const std::string& deviceId) {
-            //static unsigned long long seq = 0;
-            //stringstream ss;
-            //ss << managerId << "-DataLogger_" << ++seq;
-            //return ss.str();
-            return "DataLogger-" + deviceId;
-        }
-
         void DataLoggerManager::okStateOnEntry() {
             // Register handlers
             remote().registerInstanceNewMonitor(boost::bind(&karabo::core::DataLoggerManager::instanceNewHandler, this, _1));
@@ -102,6 +94,9 @@ namespace karabo {
                     }
                 }
             }
+
+            SLOT3(slotGetPropertyHistory, string /*deviceId*/, string /*key*/, Hash /*params*/);
+            SLOT2(slotGetConfigurationFromPast, string /*deviceId*/, string /*timepoint*/)
         }
 
         void DataLoggerManager::instanceNewHandler(const karabo::util::Hash& topologyEntry) {
@@ -298,6 +293,7 @@ namespace karabo {
                     stamp.toHashAttributes(attrs);
                     data.push_back(hash);
                 }
+                infile.close();
             }
             return data;
         }
@@ -311,6 +307,143 @@ namespace karabo {
                 filePath = boost::filesystem::path("karaboHistory/" + deviceId + "_configuration_" + karabo::util::toString(idx) + ".txt");
             }
             return filePath;
+        }
+
+        boost::filesystem::path DataLoggerManager::getSchemaFile(const std::string& deviceId) {
+            return boost::filesystem::path("karaboHistory/" + deviceId + "_schema.txt");
+        }
+
+        void DataLoggerManager::slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
+            try {
+
+                Hash hash;
+                Epochstamp tgt(timepoint);
+                Epochstamp creationTime;
+                Hash file;
+                int idx = -1;
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << tgt.getSeconds();
+
+                // Retrieve proper Schema
+                Schema schema;
+                boost::filesystem::path schemaPath = getSchemaFile(deviceId);
+                if (boost::filesystem::exists(schemaPath)) {
+                    std::ifstream schemastream(schemaPath.string().c_str());
+                    unsigned long long seconds;
+                    unsigned long long fraction;
+                    unsigned long long trainId;
+                    string archived;
+                    while (schemastream >> seconds >> fraction >> trainId) {
+                        Epochstamp current(seconds, fraction);
+                        if (current <= tgt) {
+                            archived.clear();
+                            if (!getline(schemastream, archived))
+                                break;
+                        } else
+                            break;
+                    }
+                    schemastream.close();
+                    if (archived.empty()) {
+                        reply(Hash(), Schema()); // Requested time is before any logger data
+                        KARABO_LOG_WARN << "Requested time point for device configuration is earlier than anything logged";
+                        return;
+                    }
+                    TextSerializer<Schema>::Pointer serializer = TextSerializer<Schema>::create("Xml");
+                    serializer->load(schema, archived);
+                }
+                vector<string> paths = schema.getPaths();
+
+                BOOST_FOREACH(string path, paths) {
+                    vector<Hash> archive = getPropertyData(deviceId, path, -1);
+                    for (vector<Hash>::const_reverse_iterator rjt = archive.rbegin(); rjt != archive.rend(); ++rjt) {
+                        try {
+                            Epochstamp current(Epochstamp::fromHashAttributes(rjt->getAttributes("v")));
+
+                            if (current <= tgt) {
+                                const Hash::Node& tmpNode = rjt->getNode("v");
+                                hash.set(path, tmpNode.getValueAsAny());
+                                hash.setAttributes(path, tmpNode.getAttributes());
+                                break; // Current is smaller or equal to tgt, stop!  
+                            }
+
+                        } catch (Exception& e) {
+                            cout << "!!! SHOULD NOT HAPPEN !!!" << endl;
+                            cout << e << endl;
+                            continue;
+                        }
+                    }
+
+                }
+                reply(hash, schema);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void DataLoggerManager::slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string & to) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotGetFromPast()";
+            vector<Hash> result;
+            try {
+                Epochstamp t0(from);
+                Epochstamp t1(to);
+                KARABO_LOG_FRAMEWORK_DEBUG << "From: " << from << " <-> " << t0.toFormattedString();
+                KARABO_LOG_FRAMEWORK_DEBUG << "To:   " << to << " <-> " << t1.toFormattedString();
+
+                vector<Hash> tmp = getPropertyData(deviceId, key);
+                bool collect = false;
+                bool done = false;
+                //bool isLastFlagIsUp = false; // TODO continue here
+                for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
+                    //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
+                    try {
+                        Epochstamp current(Epochstamp::fromHashAttributes(rit->getAttributes("v")));
+
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toIso8601();
+                        if (t1 > current) collect = true; // Time until is bigger then current timestamp, so collect
+                        if (collect) result.push_back(*rit);
+                        if (t0 >= current) { // Time from is now bigger than current flag -> we are done
+                            done = true;
+                            break;
+                        }
+                    } catch (Exception& e) {
+                        // TODO Clean this
+                        continue;
+                    }
+                }
+                if (!done) { // Puuh! Go further back!
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Fetching from historical files...";
+                    // Find the latest used file index
+                    int i = 0;
+                    while (boost::filesystem::exists(boost::filesystem::path("karaboHistory/" + deviceId + "_" + karabo::util::toString(i) + ".txt"))) i++;
+                    for (int j = i - 1; j >= 0 && !done; j--) {
+
+                        vector<Hash> tmp = getPropertyData(deviceId, key, j);
+                        bool collect = false;
+                        //bool done = false;
+                        for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
+                            //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
+                            Epochstamp current;
+                            try {
+                                current = Epochstamp::fromHashAttributes(rit->getAttributes("v"));
+                            } catch (Exception& e) {
+                                // TODO Clean this
+                                continue;
+                            }
+                            KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toFormattedString();
+                            if (t1 > current) collect = true;
+                            if (collect) result.push_back(*rit);
+                            if (t0 > current) {
+                                done = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                reply(result);
+            } catch (Exception& e) {
+                KARABO_LOG_ERROR << e.userFriendlyMsg();
+            }
+            //return vector<Hash>();
         }
     }
 }
