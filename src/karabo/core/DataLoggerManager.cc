@@ -30,13 +30,6 @@ namespace karabo {
                     .reconfigurable()
                     .commit();
 
-            STRING_ELEMENT(expected).key("fileFormat")
-                    .displayedName("File format")
-                    .description("The file format to use for logging")
-                    .options("xml, bin, hdf5")
-                    .assignmentOptional().defaultValue("bin")
-                    .commit();
-
             INT32_ELEMENT(expected).key("maximumFileSize")
                     .displayedName("Maximum file size")
                     .description("After any archived file has reached this size it will be time-stamped and not appended anymore")
@@ -44,15 +37,6 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MEGA)
                     .reconfigurable()
                     .assignmentOptional().defaultValue(100)
-                    .commit();
-
-            FLOAT_ELEMENT(expected).key("lastFlushDuration")
-                    .displayedName("Last flush duration")
-                    .description("Time needed for the last flush")
-                    .unit(Unit::SECOND)
-                    .readOnly()
-                    .warnHigh(20)
-                    .alarmHigh(40)
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("visibility")
@@ -75,11 +59,12 @@ namespace karabo {
         DataLoggerManager::~DataLoggerManager() {
         }
 
-        std::string DataLoggerManager::generateNewDataLoggerInstanceId(const std::string& managerId) {
-            static unsigned long long seq = 0;
-            stringstream ss;
-            ss << managerId << "-DataLogger_" << ++seq;
-            return ss.str();
+        std::string DataLoggerManager::generateNewDataLoggerInstanceId(const std::string& managerId, const std::string& deviceId) {
+            //static unsigned long long seq = 0;
+            //stringstream ss;
+            //ss << managerId << "-DataLogger_" << ++seq;
+            //return ss.str();
+            return "DataLogger-" + deviceId;
         }
 
         void DataLoggerManager::okStateOnEntry() {
@@ -97,29 +82,23 @@ namespace karabo {
             boost::optional<const Hash::Node&> node = systemTopology.find("device");
             if (node) {
                 const Hash& devices = node->getValue<Hash>();
-                for (Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) { // Loop all devices
-                    // TODO: May be to archive ONLY those that HAVE "archive" attribute and it IS true
-                    if (it->hasAttribute("archive") && (it->getAttribute<bool>("archive") == false)) continue;
-                    const std::string& deviceId = it->getKey();
-                    if (deviceId == m_instanceId) continue; // Skip myself
+                for (Hash::const_iterator it = devices.begin(); it != devices.end(); ++it) { // Loop all devices ...
+                    // ... but consider only those to be archived
+                    if (it->hasAttribute("archive") && (it->getAttribute<bool>("archive") == true)) {
+                        const std::string& deviceId = it->getKey();
+                        if (deviceId == m_instanceId) continue; // Skip myself
 
-                    // Check whether according logger devices exists and if not instantiate
-                    // The key is device to be logged, the value is corresponding logger device
-
-                    // Check if deviceId registered
-                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
-                    map<string, string>::iterator devit = m_loggedDevices.find(deviceId);
-                    if (devit == m_loggedDevices.end()) {
-                        // instantiate the logger associated with "deviceId"
-                        string loggerId = generateNewDataLoggerInstanceId(m_instanceId);
-                        Hash config;
-                        config.set("DataLogger.deviceId", loggerId);
-                        config.set("DataLogger.deviceToBeLogged", deviceId);
-                        config.set("DataLogger.directory", "karaboHistory");
-                        config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                        remote().instantiateNoWait(getServerId(), config);
-                        m_loggedDevices[deviceId] = loggerId;
-                        m_dataLoggers[loggerId] = deviceId;
+                        // Check if deviceId is known in the world
+                        string loggerId = "DataLogger-" + deviceId;
+                        if (!remote().exists(loggerId).first) {
+                            Hash config;
+                            config.set("DataLogger.deviceId", loggerId);
+                            config.set("DataLogger.deviceToBeLogged", deviceId);
+                            config.set("DataLogger.directory", "karaboHistory");
+                            config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                            config.set("DataLogger.flushInterval", get<int>("flushInterval"));
+                            remote().instantiateNoWait(getServerId(), config);
+                        }
                     }
                 }
             }
@@ -135,25 +114,19 @@ namespace karabo {
                     const Hash& entry = topologyEntry.begin()->getValue<Hash>();
                     const string& deviceId = entry.begin()->getKey();
 
-                    // Skip devices that are marked to globally prevent archiving
-                    if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == false)) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "instanceNewHandler --> deviceId = " << deviceId << " NOT archived";
-                        return;
-                    }
-
-                    // Check whether according logger device exists (it should not) and instantiate
-                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
-                    map<string, string>::iterator devit = m_loggedDevices.find(deviceId);
-                    if (devit == m_loggedDevices.end()) {
-                        string loggerId = generateNewDataLoggerInstanceId(m_instanceId);
-                        Hash config;
-                        config.set("DataLogger.deviceId", loggerId);
-                        config.set("DataLogger.deviceToBeLogged", deviceId);
-                        config.set("DataLogger.directory", "karaboHistory");
-                        config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
-                        remote().instantiateNoWait(getServerId(), config);
-                        m_loggedDevices[deviceId] = loggerId;
-                        m_dataLoggers[loggerId] = deviceId;
+                    // Consider the devices that should be archived 
+                    if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == true)) {
+                        // Check whether according logger device exists (it should not) and instantiate
+                        string loggerId = "DataLogger-" + deviceId;
+                        if (!remote().exists(loggerId).first) {
+                            Hash config;
+                            config.set("DataLogger.deviceId", loggerId);
+                            config.set("DataLogger.deviceToBeLogged", deviceId);
+                            config.set("DataLogger.directory", "karaboHistory");
+                            config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
+                            config.set("DataLogger.flushInterval", get<int>("flushInterval"));
+                            remote().instantiateNoWait(getServerId(), config);
+                        }
                     }
                 }
 
@@ -163,18 +136,10 @@ namespace karabo {
         }
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-
-            // Call slotTagDeviceToBeDiscontinued and than kill the logger device
             try {
-                map<string, string>::iterator devit = m_loggedDevices.find(instanceId);
-                if (devit != m_loggedDevices.end()) {
-                    boost::mutex::scoped_lock lock(m_loggedDevicesMutex);
-                    string loggerId = devit->second;
-                    remote().execute<bool, char>(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
-                    remote().killDeviceNoWait(loggerId);
-                    m_loggedDevices.erase(devit);
-                    m_dataLoggers.erase(loggerId);
-                }
+                string loggerId = "DataLogger-" + instanceId;
+                this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
+                remote().killDeviceNoWait(loggerId);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
@@ -224,7 +189,6 @@ namespace karabo {
             }
             return oldest;
         }
-
 
         void DataLoggerManager::slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const Hash& params) {
             try {
