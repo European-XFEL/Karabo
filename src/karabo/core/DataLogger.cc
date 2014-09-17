@@ -74,6 +74,7 @@ namespace karabo {
         }
 
         DataLogger::~DataLogger() {
+            slotTagDeviceToBeDiscontinued(true, 'L');
         }
 
         void DataLogger::okStateOnEntry() {
