@@ -45,6 +45,14 @@ namespace karabo {
                     .assignmentMandatory()
                     .commit();
 
+            INT32_ELEMENT(expected).key("flushInterval")
+                    .displayedName("Flush interval")
+                    .description("The interval after which the memory accumulated data is made persistent")
+                    .unit(Unit::SECOND)
+                    .assignmentOptional().defaultValue(40)
+                    .reconfigurable()
+                    .commit();
+
             // Do not archive the archivers (would lead to infinite recursion)
             OVERWRITE_ELEMENT(expected).key("archive")
                     .setNewDefaultValue(false)
@@ -57,7 +65,7 @@ namespace karabo {
 
             // Slow beats
             OVERWRITE_ELEMENT(expected).key("heartbeatInterval")
-                    .setNewDefaultValue(120)
+                    .setNewDefaultValue(60)
                     .commit();
         }
 
@@ -66,14 +74,16 @@ namespace karabo {
         }
 
         DataLogger::~DataLogger() {
-            if (m_configStream.is_open())
-                m_configStream.close();
         }
 
         void DataLogger::okStateOnEntry() {
+            // stop "age" thread to avoid disconnection
+            remote().setAgeing(false);     
+
             // Register slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
             SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
+            SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
             connectT(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
             connectT(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
@@ -100,7 +110,7 @@ namespace karabo {
 
                 // call slotChanged by hand
                 if (!hash.empty()) slotChanged(hash, m_deviceToBeLogged);
-
+                
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
             }
@@ -113,7 +123,7 @@ namespace karabo {
                     if (m_configStream.is_open()) {
                         Timestamp t;
                         m_configStream << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " . . . . " << reason << "\n";
-                        m_configStream.flush();
+                        m_configStream.close();
                     }
                     return;
                 }
@@ -140,6 +150,7 @@ namespace karabo {
                 m_fileTimestampFractionEnd = t.getFractionalSeconds();
                 m_fileTrainIdEnd = t.getTrainId();
                 m_configStream << m_fileTimestampSecondsEnd << " " << m_fileTimestampFractionEnd << " " << m_fileTrainIdEnd << " . . . . " << reason << "\n";
+                m_flushTime = m_fileTimestampSecondsEnd + get<int>("flushInterval");
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
             }
@@ -151,7 +162,7 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Schema for " << deviceId << " still empty";
                 return;
             }
-
+            
             // open "deviceId"_configuration.txt file for append mode
             string filename = get<string>("directory") + "/" + deviceId + "_configuration.txt";
             if (!m_configStream.is_open()) {
@@ -195,14 +206,17 @@ namespace karabo {
                 m_configStream << m_fileTimestampSecondsEnd << " " << m_fileTimestampFractionEnd
                         << " " << m_fileTrainIdEnd << " " << path << " " << type << " " << value << " " << user << " V\n";
             }
-            long maxFilesize = get<int>("maximumFileSize") * 1000000;
+            long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             if (maxFilesize <= m_configStream.tellp()) {
                 m_configStream.close();
                 m_lastIndex = incrementLastIndex(deviceId);
                 string newname = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
                 boost::filesystem::rename(filename, newname);
             } else {
-                m_configStream.flush();
+                if (m_flushTime <= m_fileTimestampSecondsEnd) {
+                    m_configStream.flush();
+                    m_flushTime = m_fileTimestampSecondsEnd + get<int>("flushInterval");
+                }
             }
         }
 
