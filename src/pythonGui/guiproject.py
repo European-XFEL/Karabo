@@ -10,13 +10,13 @@ from __future__ import unicode_literals
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["GuiProject", "DeviceGroup", "Category"]
+__all__ = ["GuiProject", "Category"]
 
 
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, ProjectConfiguration
+from karabo.project import DeviceGroup, Project, ProjectConfiguration
 import manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -32,9 +32,6 @@ class GuiProject(Project, QObject):
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
-
-        # List of device groups - TODO: move to project class in pythonKarabo package
-        self.deviceGroups = []
 
         # List of Scene
         self.scenes = []
@@ -85,8 +82,8 @@ class GuiProject(Project, QObject):
             id = "{}{}{}".format(deviceId, prefix, index)
             device = Device(serverId, classId, id, ifexists)
             deviceGroup.append(device)
-        self.deviceGroups.append(deviceGroup)
-        #Project.addDeviceGroup(deviceGroup)
+        Project.addDeviceGroup(self, deviceGroup)
+        self.signalProjectModified.emit()
         
         return deviceGroup
 
@@ -133,18 +130,36 @@ class GuiProject(Project, QObject):
 
             projectConfig = projectConfig[self.PROJECT_KEY]
             for d in projectConfig[self.DEVICES_KEY]:
-                serverId = d.get("serverId")
-                
-                filename = d.get("filename")
-                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-                assert filename.endswith(".xml")
-                filename = filename[:-4]
+                group = d.get("group")
+                if group is not None:
+                    deviceGroup = DeviceGroup(d.getAttribute("group", "name"))
+                    for item in group:
+                        serverId = item.get("serverId")
+                        filename = item.get("filename")
+                        data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                        assert filename.endswith(".xml")
+                        filename = filename[:-4]
 
-                for classId, config in XMLParser().read(data).iteritems():
-                    device = self.newDevice(serverId, classId, filename,
-                                            d.get("ifexists"), False)
-                    device.futureConfig = config
-                    break # there better be only one!
+                        for classId, config in XMLParser().read(data).iteritems():
+                            device = Device(serverId, classId, filename,
+                                            item.get("ifexists"))
+
+                            device.futureConfig = config
+                            deviceGroup.append(device)
+                            break # there better be only one!
+                    self.addDeviceGroup(deviceGroup)
+                else:
+                    serverId = d.get("serverId")
+                    filename = d.get("filename")
+                    data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                    assert filename.endswith(".xml")
+                    filename = filename[:-4]
+
+                    for classId, config in XMLParser().read(data).iteritems():
+                        device = self.newDevice(serverId, classId, filename,
+                                                d.get("ifexists"), False)
+                        device.futureConfig = config
+                        break # there better be only one!
             for s in projectConfig[self.SCENES_KEY]:
                 scene = Scene(self, s["filename"])
                 data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
@@ -183,14 +198,29 @@ class GuiProject(Project, QObject):
             file = filename
 
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
-            for device in self.devices:
-                zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
-                            device.toXml())
-            projectConfig[self.DEVICES_KEY] = [Hash("serverId", device.serverId,
-                                                    "classId", device.classId,
-                                                    "filename", device.filename,
-                                                    "ifexists", device.ifexists)
-                                            for device in self.devices]
+            deviceHash = []
+            for deviceObj in self.devices:
+                if isinstance(deviceObj, Configuration):
+                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
+                                deviceObj.toXml())
+                    
+                    deviceHash.append(Hash("serverId", deviceObj.serverId,
+                                           "classId", deviceObj.classId,
+                                           "filename", deviceObj.filename,
+                                           "ifexists", deviceObj.ifexists))
+                else:
+                    group = []
+                    for device in deviceObj:
+                        zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
+                                    device.toXml())
+                        group.append(Hash("serverId", device.serverId,
+                                          "classId", device.classId,
+                                          "filename", device.filename,
+                                          "ifexists", device.ifexists))
+                    deviceGroupHash = Hash("group", group)
+                    deviceGroupHash.setAttribute("group", "name", deviceObj.name)
+                    deviceHash.append(deviceGroupHash)
+            projectConfig[self.DEVICES_KEY] = deviceHash
 
             for scene in self.scenes:
                 name = "{}/{}".format(self.SCENES_KEY, scene.filename)
@@ -399,18 +429,6 @@ class Device(Configuration):
     def isOnline(self):
         return self.status not in (
             "offline", "noplugin", "noserver", "incompatible")
-
-
-class DeviceGroup(list):
-    """
-    This class represents a list of devices.
-    """
-
-    def __init__(self):
-        super(DeviceGroup, self).__init__()
-        
-        self.displayText = "MyGroup"
-
 
 
 class Category(object):

@@ -7,6 +7,9 @@
 
 __all__ = ["WorkflowItem", "WorkflowGroupItem"]
 
+from const import ns_karabo
+from layouts import ProxyWidget
+import manager
 from registry import Loadable
 
 from PyQt4.QtCore import QPoint, QRectF, Qt
@@ -69,40 +72,6 @@ class Item(QWidget, Loadable):
         return 100 * diameter / int(size)
 
 
-    #def save(self, ele):
-    #    ele.set(ns_karabo + "class", "Label")
-    #    ele.set(ns_karabo + "text", self.text())
-    #    ele.set(ns_karabo + "font", self.font().toString())
-    #    ele.set(ns_karabo + "foreground",
-    #            self.palette().color(QPalette.Foreground).name())
-    #    if self.hasBackground:
-    #        ele.set(ns_karabo + "background",
-    #                self.palette().color(QPalette.Background).name())
-    #    if self.frameShape() == QFrame.Box:
-    #        ele.set(ns_karabo + 'frameWidth', "{}".format(self.lineWidth()))
-
-
-    #@staticmethod
-    #def load(elem, layout):
-    #    proxy = ProxyWidget(layout.parentWidget())
-    #    label = Label(elem.get(ns_karabo + "text"), proxy)
-    #    proxy.setWidget(label)
-    #    layout.loadPosition(elem, proxy)
-    #    ss = [ ]
-    #    ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
-    #    ss.append("color: {};".format(
-    #                elem.get(ns_karabo + "foreground", "black")))
-    #    bg = elem.get(ns_karabo + 'background')
-    #    if bg is not None:
-    #        ss.append("background-color: {};".format(bg))
-    #        label.hasBackground = True
-    #    fw = elem.get(ns_karabo + "frameWidth")
-    #    if fw is not None:
-    #        ss.append("border: {}px;".format(fw))
-    #    label.setStyleSheet("".join(ss))
-    #    return proxy"""
-
-
 class WorkflowItem(Item):
 
     def __init__(self, device, parent):
@@ -116,15 +85,57 @@ class WorkflowItem(Item):
         Item.paintEvent(self, event)
 
 
+    def save(self, ele):
+        ele.set(ns_karabo + "class", "WorkflowItem")
+        ele.set(ns_karabo + "text", self.displayText)
+        ele.set(ns_karabo + "font", self.font.toString())
+
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        deviceId = elem.get(ns_karabo + "text")
+        item = WorkflowItem(manager.getDevice(deviceId), proxy)
+        proxy.setWidget(item)
+        layout.loadPosition(elem, proxy)
+        ss = [ ]
+        ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
+        item.setStyleSheet("".join(ss))
+        
+        return proxy
+
+
 class WorkflowGroupItem(Item):
 
     def __init__(self, deviceGroup, parent):
         super(WorkflowGroupItem, self).__init__(parent)
         
         self.device = deviceGroup
-        self.displayText = deviceGroup.displayText
+        self.displayText = deviceGroup.name
 
 
     def paintEvent(self, event):
         Item.paintEvent(self, event)
+
+
+    def save(self, ele):
+        ele.set(ns_karabo + "class", "WorkflowItem")
+        ele.set(ns_karabo + "text", self.displayText)
+        ele.set(ns_karabo + "font", self.font.toString())
+
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        displayText = elem.get(ns_karabo + "text")
+        deviceGroup = DeviceGroup()
+        deviceGroup.displayText = displayText
+        item = WorkflowGroupItem(deviceGroup, proxy)
+        proxy.setWidget(item)
+        layout.loadPosition(elem, proxy)
+        ss = [ ]
+        ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
+        item.setStyleSheet("".join(ss))
+        
+        return proxy
 
