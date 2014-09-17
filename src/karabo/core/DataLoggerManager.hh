@@ -45,7 +45,7 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            static std::string generateNewDataLoggerInstanceId(const std::string& managerId);
+            static std::string generateNewDataLoggerInstanceId(const std::string& managerId, const std::string& deviceId);
             
             karabo::util::Epochstamp extractRange(const std::vector<karabo::util::Hash>& archive, const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to, std::vector<karabo::util::Hash>& result);
             

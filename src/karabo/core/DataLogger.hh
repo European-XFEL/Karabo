@@ -44,7 +44,8 @@ namespace karabo {
             unsigned long long m_fileTimestampFractionEnd;
             unsigned long long m_fileTrainIdEnd;
             
-            
+            unsigned long long m_flushTime;
+                       
         public:
 
             KARABO_CLASSINFO(DataLogger, "DataLogger", "1.0")
