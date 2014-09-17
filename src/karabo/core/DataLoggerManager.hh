@@ -45,8 +45,6 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            static std::string generateNewDataLoggerInstanceId(const std::string& managerId, const std::string& deviceId);
-            
             karabo::util::Epochstamp extractRange(const std::vector<karabo::util::Hash>& archive, const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to, std::vector<karabo::util::Hash>& result);
             
             void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
@@ -54,7 +52,13 @@ namespace karabo {
             std::vector<karabo::util::Hash> getPropertyData(const std::string& deviceId, const std::string& key, const int i = -1);
 
             boost::filesystem::path getArchiveFile(const std::string& deviceId, const int idx);
-
+            
+            boost::filesystem::path getSchemaFile(const std::string& deviceId);
+            
+            void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
+            
+            void slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string & to);
+        
         private: // Data
 
             std::map<std::string, std::string> m_loggedDevices;
