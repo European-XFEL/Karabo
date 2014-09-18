@@ -193,7 +193,8 @@ class ProjectModel(QStandardItemModel):
                     if device.parameterEditor is not None:
                         # Put current configuration to future config so that it
                         # does not get lost
-                        device.initConfig = device.toHash()
+                        if device.descriptor is not None:
+                            device.initConfig = device.toHash()
                         device.parameterEditor.clear()
         
 
