@@ -13,12 +13,119 @@
 namespace karabo {
     namespace core {
 
+        struct DataLoggerIndexEntry {
+            karabo::util::Epochstamp startEpoch;
+            karabo::util::Trainstamp startTrain;
+            long startPos;
+            karabo::util::Epochstamp endEpoch;
+            karabo::util::Trainstamp endTrain;
+            long endPos;
+            char reason;
+            boost::filesystem::path configFile;
+
+            DataLoggerIndexEntry()
+            : startEpoch()
+            , startTrain()
+            , startPos(0)
+            , endEpoch()
+            , endTrain()
+            , endPos(0)
+            , reason('X')
+            , configFile() {
+            }
+
+            DataLoggerIndexEntry(const karabo::util::Epochstamp& se, const karabo::util::Trainstamp& ts, const long& sp,
+                    const karabo::util::Epochstamp& ee, const karabo::util::Trainstamp& es, const long& ep,
+                    const char ch, const boost::filesystem::path& path)
+            : startEpoch(se)
+            , startTrain(ts)
+            , startPos(sp)
+            , endEpoch(ee)
+            , endTrain(es)
+            , endPos(ep)
+            , reason(ch)
+            , configFile(path) {
+            }
+        };
+
         using namespace krb_log4cpp;
         using namespace std;
         using namespace karabo::util;
         using namespace karabo::io;
 
         KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, DataLoggerManager)
+
+        static DataLoggerIndexEntry findDataLoggerIndexEntry(const std::string& deviceId, const std::string& timepoint) {
+            unsigned long long startSeconds, startFraction, startTrainId;
+            unsigned long long endSeconds, endFraction, endTrainId;
+            long startPos, endPos;
+            char reason;
+            DataLoggerIndexEntry entry;
+
+            Epochstamp target(timepoint);
+
+            bool stopSearching = false;
+            for (int i = 1; !stopSearching; ++i) {
+                boost::filesystem::path indexpath = DataLoggerManager::getIndexFile(deviceId, i);
+                if (!boost::filesystem::exists(indexpath))
+                    break;
+                boost::filesystem::path confile = DataLoggerManager::getArchiveFile(deviceId, i);
+                ifstream ifs(indexpath.string().c_str());
+                while (ifs >> startSeconds >> startFraction >> startTrainId >> startPos >> endSeconds >> endFraction >> endTrainId >> endPos >> reason) {
+                    Epochstamp sstamp(startSeconds, startFraction);
+                    Trainstamp strain(startTrainId);
+                    Epochstamp estamp(endSeconds, endFraction);
+                    Trainstamp etrain(endTrainId);
+                    if (target >= sstamp) {
+                        if (target > estamp)
+                            continue;
+                        entry.startEpoch = sstamp;
+                        entry.startTrain = strain;
+                        entry.startPos = startPos;
+                        entry.endEpoch = estamp;
+                        entry.endTrain = etrain;
+                        entry.endPos = endPos;
+                        entry.reason = reason;
+                        entry.configFile = confile;
+                        ifs.close();
+                        return entry;
+                    } else {
+                        stopSearching = true;
+                        break;
+                    }
+                }
+                ifs.close();
+            }
+            if (stopSearching)
+                return entry;
+            boost::filesystem::path indexpath = DataLoggerManager::getIndexFile(deviceId, -1);
+            if (!boost::filesystem::exists(indexpath))
+                return entry;
+            boost::filesystem::path confile = DataLoggerManager::getArchiveFile(deviceId, -1);
+            ifstream indexstream(indexpath.string().c_str());
+            while (indexstream >> startSeconds >> startFraction >> startTrainId >> startPos >> endSeconds >> endFraction >> endTrainId >> endPos >> reason) {
+                Epochstamp sstamp(startSeconds, startFraction);
+                Trainstamp strain(startTrainId);
+                Epochstamp estamp(endSeconds, endFraction);
+                Trainstamp etrain(endTrainId);
+                if (target >= sstamp) {
+                    if (target > estamp)
+                        continue;
+                    entry.startEpoch = sstamp;
+                    entry.startTrain = strain;
+                    entry.startPos = startPos;
+                    entry.endEpoch = estamp;
+                    entry.endTrain = etrain;
+                    entry.endPos = endPos;
+                    entry.reason = reason;
+                    entry.configFile = confile;
+                    break;
+                } else
+                    break;
+            }
+            indexstream.close();
+            return entry;
+        }
 
         void DataLoggerManager::expectedParameters(Schema& expected) {
 
@@ -313,19 +420,27 @@ namespace karabo {
             return boost::filesystem::path("karaboHistory/" + deviceId + "_schema.txt");
         }
 
+        boost::filesystem::path DataLoggerManager::getIndexFile(const std::string& deviceId, const int idx) {
+            boost::filesystem::path filePath;
+            if (idx == -1) { // Most recent file (currently written to)
+                filePath = boost::filesystem::path("karaboHistory/" + deviceId + "_index.txt");
+            } else { // File got already log-rotated
+
+                filePath = boost::filesystem::path("karaboHistory/" + deviceId + "_index_" + karabo::util::toString(idx) + ".txt");
+            }
+            return filePath;
+        }
+
         void DataLoggerManager::slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint) {
             try {
 
                 Hash hash;
+                Schema schema;
                 Epochstamp tgt(timepoint);
-                Epochstamp creationTime;
-                Hash file;
-                int idx = -1;
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "Requested time point: " << tgt.getSeconds();
 
                 // Retrieve proper Schema
-                Schema schema;
                 boost::filesystem::path schemaPath = getSchemaFile(deviceId);
                 if (boost::filesystem::exists(schemaPath)) {
                     std::ifstream schemastream(schemaPath.string().c_str());
@@ -353,97 +468,61 @@ namespace karabo {
                 }
                 vector<string> paths = schema.getPaths();
 
-                BOOST_FOREACH(string path, paths) {
-                    vector<Hash> archive = getPropertyData(deviceId, path, -1);
-                    for (vector<Hash>::const_reverse_iterator rjt = archive.rbegin(); rjt != archive.rend(); ++rjt) {
-                        try {
-                            Epochstamp current(Epochstamp::fromHashAttributes(rjt->getAttributes("v")));
+                DataLoggerIndexEntry index = findDataLoggerIndexEntry(deviceId, timepoint);
 
-                            if (current <= tgt) {
-                                const Hash::Node& tmpNode = rjt->getNode("v");
-                                hash.set(path, tmpNode.getValueAsAny());
-                                hash.setAttributes(path, tmpNode.getAttributes());
-                                break; // Current is smaller or equal to tgt, stop!  
-                            }
-
-                        } catch (Exception& e) {
-                            cout << "!!! SHOULD NOT HAPPEN !!!" << endl;
-                            cout << e << endl;
-                            continue;
-                        }
-                    }
-
+                if (index.reason == 'X') {
+                    reply(Hash(), Schema()); // Requested time is out of any logger data
+                    KARABO_LOG_WARN << "Requested time point for device configuration is out of any valid logged data";
+                    return;
                 }
+
+                {
+                    unsigned long long secs, frac, train;
+                    string path, type, val, user, flag;
+                    ifstream file(index.configFile.string().c_str());
+                    file.seekg(index.startPos);
+                    while (file >> secs >> frac >> train >> path >> type >> val >> user >> flag) {
+                        Epochstamp current(secs, frac);
+                        if (current > tgt)
+                            break;
+                        Trainstamp trainstamp(train);
+                        Timestamp timestamp(current, trainstamp);
+                        Hash::Node& node = hash.set<string>(path, val);
+                        node.setType(Types::from<FromLiteral>(type));
+                        Hash::Attributes& attrs = node.getAttributes();
+                        timestamp.toHashAttributes(attrs);
+                        if (index.endPos <= file.tellg())
+                            break;
+                    }
+                    file.close();
+                }
+
+//                BOOST_FOREACH(string path, paths) {
+//                    vector<Hash> archive = getPropertyData(deviceId, path, -1);
+//                    for (vector<Hash>::const_reverse_iterator rjt = archive.rbegin(); rjt != archive.rend(); ++rjt) {
+//                        try {
+//                            Epochstamp current(Epochstamp::fromHashAttributes(rjt->getAttributes("v")));
+//
+//                            if (current <= tgt) {
+//                                const Hash::Node& tmpNode = rjt->getNode("v");
+//                                hash.set(path, tmpNode.getValueAsAny());
+//                                hash.setAttributes(path, tmpNode.getAttributes());
+//                                break; // Current is smaller or equal to tgt, stop!  
+//                            }
+//
+//                        } catch (Exception& e) {
+//                            cout << "!!! SHOULD NOT HAPPEN !!!" << endl;
+//                            cout << e << endl;
+//                            continue;
+//                        }
+//                    }
+//
+//                }
                 reply(hash, schema);
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
-        void DataLoggerManager::slotGetFromPast(const std::string& deviceId, const std::string& key, const std::string& from, const std::string & to) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotGetFromPast()";
-            vector<Hash> result;
-            try {
-                Epochstamp t0(from);
-                Epochstamp t1(to);
-                KARABO_LOG_FRAMEWORK_DEBUG << "From: " << from << " <-> " << t0.toFormattedString();
-                KARABO_LOG_FRAMEWORK_DEBUG << "To:   " << to << " <-> " << t1.toFormattedString();
-
-                vector<Hash> tmp = getPropertyData(deviceId, key);
-                bool collect = false;
-                bool done = false;
-                //bool isLastFlagIsUp = false; // TODO continue here
-                for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
-                    //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
-                    try {
-                        Epochstamp current(Epochstamp::fromHashAttributes(rit->getAttributes("v")));
-
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toIso8601();
-                        if (t1 > current) collect = true; // Time until is bigger then current timestamp, so collect
-                        if (collect) result.push_back(*rit);
-                        if (t0 >= current) { // Time from is now bigger than current flag -> we are done
-                            done = true;
-                            break;
-                        }
-                    } catch (Exception& e) {
-                        // TODO Clean this
-                        continue;
-                    }
-                }
-                if (!done) { // Puuh! Go further back!
-                    KARABO_LOG_FRAMEWORK_DEBUG << "Fetching from historical files...";
-                    // Find the latest used file index
-                    int i = 0;
-                    while (boost::filesystem::exists(boost::filesystem::path("karaboHistory/" + deviceId + "_" + karabo::util::toString(i) + ".txt"))) i++;
-                    for (int j = i - 1; j >= 0 && !done; j--) {
-
-                        vector<Hash> tmp = getPropertyData(deviceId, key, j);
-                        bool collect = false;
-                        //bool done = false;
-                        for (vector<Hash>::reverse_iterator rit = tmp.rbegin(); rit != tmp.rend(); ++rit) {
-                            //KARABO_LOG_FRAMEWORK_DEBUG << *rit;
-                            Epochstamp current;
-                            try {
-                                current = Epochstamp::fromHashAttributes(rit->getAttributes("v"));
-                            } catch (Exception& e) {
-                                // TODO Clean this
-                                continue;
-                            }
-                            KARABO_LOG_FRAMEWORK_DEBUG << "Current:   " << current.toFormattedString();
-                            if (t1 > current) collect = true;
-                            if (collect) result.push_back(*rit);
-                            if (t0 > current) {
-                                done = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                reply(result);
-            } catch (Exception& e) {
-                KARABO_LOG_ERROR << e.userFriendlyMsg();
-            }
-            //return vector<Hash>();
-        }
     }
 }
