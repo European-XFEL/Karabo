@@ -22,7 +22,7 @@ except:
 
 import os.path
 from sys import platform
-if "win" in platform:
+if platform.startswith("win"):
     from PyQt4.QtGui import QApplication
     from distutils.sysconfig import get_python_lib
     QApplication.addLibraryPath(os.path.join(get_python_lib(), "PyQt4", "plugins"))
