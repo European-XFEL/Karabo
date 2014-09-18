@@ -16,7 +16,7 @@ __all__ = ["GuiProject", "Category"]
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, ProjectConfiguration, BaseDevice
+from karabo.project import Project, BaseDevice
 import manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -53,10 +53,10 @@ class Device(BaseDevice, Configuration):
     def initConfig(self, config):
         self._initConfig = config
         # Merge initConfig, if descriptor is not None
-        self.mergeFutureConfig()
+        self.mergeInitConfig()
 
 
-    def mergeFutureConfig(self):
+    def mergeInitConfig(self):
         """
         This function merges the \self.initConfig into the Configuration.
         This is only possible, if the descriptor has been set before.
@@ -73,7 +73,7 @@ class Device(BaseDevice, Configuration):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = conf.descriptor
-        self.mergeFutureConfig()
+        self.mergeInitConfig()
         manager.Manager().onShowConfiguration(self)
 
 

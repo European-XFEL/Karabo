@@ -13,7 +13,7 @@ __all__ = ["DeviceClientProject", "ProjectDevice"]
 
 
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, ProjectConfiguration, BaseDevice
+from karabo.project import Project, BaseDevice
 
 import os.path
 
