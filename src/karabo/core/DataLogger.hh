@@ -84,6 +84,8 @@ namespace karabo {
             int determineLastIndex(const std::string& deviceId);
             
             int incrementLastIndex(const std::string& deviceId);
+            
+            void preDestruction();
         };
     }
 }

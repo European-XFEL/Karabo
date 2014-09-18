@@ -77,6 +77,10 @@ namespace karabo {
             slotTagDeviceToBeDiscontinued(true, 'L');
         }
 
+        void DataLogger::preDestruction() {
+            slotTagDeviceToBeDiscontinued(true, 'L');
+        }
+        
         void DataLogger::okStateOnEntry() {
             // stop "age" thread to avoid disconnection
             remote().setAgeing(false);
