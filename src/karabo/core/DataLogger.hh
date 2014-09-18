@@ -45,6 +45,8 @@ namespace karabo {
             unsigned long long m_fileTrainIdEnd;
             
             unsigned long long m_flushTime;
+            
+            long m_startPosition;
                        
         public:
 
