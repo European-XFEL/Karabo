@@ -79,7 +79,7 @@ namespace karabo {
 
         void DataLogger::okStateOnEntry() {
             // stop "age" thread to avoid disconnection
-            remote().setAgeing(false);     
+            remote().setAgeing(false);
 
             // Register slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
@@ -111,7 +111,7 @@ namespace karabo {
 
                 // call slotChanged by hand
                 if (!hash.empty()) slotChanged(hash, m_deviceToBeLogged);
-                
+
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
             }
@@ -123,30 +123,35 @@ namespace karabo {
                 if (wasValidUpToNow) {
                     if (m_configStream.is_open()) {
                         Timestamp t;
+                        long position = m_configStream.tellp();
                         m_configStream << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " . . . . " << reason << "\n";
                         m_configStream.close();
+                        string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
+                        ofstream indexstream(indexname.c_str(), ios::app);
+                        indexstream << m_fileTimestampSecondsStart << " "
+                                << m_fileTimestampFractionStart << " "
+                                << m_fileTrainIdStart << " "
+                                << m_startPosition << " "
+                                << t.getSeconds() << " "
+                                << t.getFractionalSeconds() << " "
+                                << t.getTrainId() << " " << position << " " << reason << "\n";
+                        indexstream.close();
                     }
                     return;
                 }
                 string filename = get<string>("directory") + "/" + m_deviceToBeLogged + "_configuration.txt";
+                Timestamp t;
                 if (!m_configStream.is_open()) {
                     m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                     if (!m_configStream.is_open()) {
                         KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
                     }
                     m_configStream.seekg(0, ios::end); // position to EOF
-                    long filesize = m_configStream.tellg(); // get file size
-                    m_configStream.seekg(0); // position to 0
-                    if (filesize == 0) {
-                        Timestamp t;
-                        m_fileTimestampSecondsStart = t.getSeconds();
-                        m_fileTimestampFractionStart = t.getFractionalSeconds();
-                        m_fileTrainIdStart = t.getTrainId();
-                    } else {
-                        m_configStream >> m_fileTimestampSecondsStart >> m_fileTimestampFractionStart >> m_fileTrainIdStart;
-                    }
+                    m_startPosition = m_configStream.tellg(); // get file size
+                    m_fileTimestampSecondsStart = t.getSeconds();
+                    m_fileTimestampFractionStart = t.getFractionalSeconds();
+                    m_fileTrainIdStart = t.getTrainId();
                 }
-                Timestamp t;
                 m_fileTimestampSecondsEnd = t.getSeconds();
                 m_fileTimestampFractionEnd = t.getFractionalSeconds();
                 m_fileTrainIdEnd = t.getTrainId();
@@ -163,25 +168,21 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Schema for " << deviceId << " still empty";
                 return;
             }
-            
+
             // open "deviceId"_configuration.txt file for append mode
             string filename = get<string>("directory") + "/" + deviceId + "_configuration.txt";
+            string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
             if (!m_configStream.is_open()) {
                 m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                 if (!m_configStream.is_open()) {
                     KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
                 }
                 m_configStream.seekg(0, ios::end); // position to EOF
-                long filesize = m_configStream.tellg(); // get file size
-                m_configStream.seekg(0); // position to 0
-                if (filesize == 0) {
-                    Timestamp t;
-                    m_fileTimestampSecondsStart = t.getSeconds();
-                    m_fileTimestampFractionStart = t.getFractionalSeconds();
-                    m_fileTrainIdStart = t.getTrainId();
-                } else {
-                    m_configStream >> m_fileTimestampSecondsStart >> m_fileTimestampFractionStart >> m_fileTrainIdStart;
-                }
+                m_startPosition = m_configStream.tellg(); // get file size
+                Timestamp t;
+                m_fileTimestampSecondsStart = t.getSeconds();
+                m_fileTimestampFractionStart = t.getFractionalSeconds();
+                m_fileTrainIdStart = t.getTrainId();
             }
             const string user = getSenderInfo("slotChanged")->getUserIdOfSender();
             vector<string> paths;
@@ -208,11 +209,26 @@ namespace karabo {
                         << " " << m_fileTrainIdEnd << " " << path << " " << type << " " << value << " " << user << " V\n";
             }
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
-            if (maxFilesize <= m_configStream.tellp()) {
+            long position = m_configStream.tellp();
+            if (maxFilesize <= position) {
                 m_configStream.close();
+                // record index file
+                ofstream indexstream(indexname.c_str(), ios::app);
+                indexstream << m_fileTimestampSecondsStart << " "
+                        << m_fileTimestampFractionStart << " "
+                        << m_fileTrainIdStart << " "
+                        << m_startPosition << " "
+                        << m_fileTimestampSecondsEnd << " "
+                        << m_fileTimestampFractionEnd << " "
+                        << m_fileTrainIdEnd << " " << position << " V\n";
+                indexstream.close();
+                // increment index number for configuration file
                 m_lastIndex = incrementLastIndex(deviceId);
+                // rename files 
                 string newname = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
                 boost::filesystem::rename(filename, newname);
+                string newindex = get<string>("directory") + "/" + deviceId + "_index_" + toString(m_lastIndex) + ".txt";
+                boost::filesystem::rename(indexname, newindex);
             } else {
                 if (m_flushTime <= m_fileTimestampSecondsEnd) {
                     m_configStream.flush();
