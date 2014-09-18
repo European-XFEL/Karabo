@@ -1,0 +1,6 @@
+To create source distribution run
+
+  ./build.sh
+
+
+(README file is included into source distribution)
