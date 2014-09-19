@@ -316,6 +316,7 @@ class ProjectModel(QStandardItemModel):
             
             self.projectClose(project)
         
+        # Clear selection
         self.selectionModel.clear()
         self.updateData()
         return True
@@ -590,16 +591,19 @@ class ProjectModel(QStandardItemModel):
 ### slots ###
 
     def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
+        selectedIndexes = self.selectionModel.selectedIndexes()
         # Send signal to projectPanel to update toolbar actions
         self.signalSelectionChanged.emit(selectedIndexes)
 
         if not selectedIndexes:
             return
         
-        index = selectedIndexes[0]
-
-        device = index.data(ProjectModel.ITEM_OBJECT)
+        if len(selectedIndexes) > 1:
+            device = None
+        else:
+            index = selectedIndexes[0]
+            device = index.data(ProjectModel.ITEM_OBJECT)
+        
         if device is not None and isinstance(device, Configuration):
             # Check whether device is already online
             if device.isOnline():
@@ -717,12 +721,24 @@ class ProjectModel(QStandardItemModel):
         """
         This slot removes the currently selected index from the model.
         """
-        index = self.selectionModel.currentIndex()
-        if not index.isValid():
-            return
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        nbSelected = len(selectedIndexes)
+        if nbSelected > 1:
+            reply = QMessageBox.question(None, 'Remove items',
+                "Do you really want to remove selected items?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
         
-        # Remove data from project
-        self.removeObject(self.currentProject(), index.data(ProjectModel.ITEM_OBJECT))
+        project = self.currentProject()
+        for index in selectedIndexes:
+            # Remove data from project
+            self.removeObject(project, index.data(ProjectModel.ITEM_OBJECT),
+                              nbSelected == 1)
+        
+        if nbSelected > 1:
+            self.updateData()
 
 
     def onRemoveDevices(self):
@@ -756,6 +772,7 @@ class ProjectModel(QStandardItemModel):
         if isinstance(object, Scene):
             self.signalRemoveScene.emit(object)
         
-        self.updateData()
-        self.selectItem(project)
+        if showConfirm:
+            self.updateData()
+            self.selectItem(project)
         
