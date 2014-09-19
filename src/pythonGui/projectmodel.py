@@ -506,11 +506,12 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        project = device.project
+
         for i in xrange(dialog.count):
             deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
-            newDevice = self.addDevice(self.currentProject(), device.serverId,
-                                       device.classId, deviceId, device.ifexists,
-                                       False)
+            newDevice = self.addDevice(project, device.serverId, device.classId,
+                                       deviceId, device.ifexists, False)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -519,8 +520,7 @@ class ProjectModel(QStandardItemModel):
             
             newDevice.initConfig = config
         
-        # Remove device which basis for duplication
-        self.removeObject(self.currentProject(), device, False)
+        self.updateData()
         self.selectItem(newDevice)
 
 
@@ -580,7 +580,7 @@ class ProjectModel(QStandardItemModel):
             # TODO: Copy scene content to new scene
             #scene.duplicate()
         
-        self.removeObject(self.currentProject(), scene, False)
+        self.updateData()
         self.selectItem(newScene)
 
 
@@ -731,11 +731,10 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        project = self.currentProject()
         for index in selectedIndexes:
+            object = index.data(ProjectModel.ITEM_OBJECT)
             # Remove data from project
-            self.removeObject(project, index.data(ProjectModel.ITEM_OBJECT),
-                              nbSelected == 1)
+            self.removeObject(object.project, object, nbSelected == 1)
         
         if nbSelected > 1:
             self.updateData()
