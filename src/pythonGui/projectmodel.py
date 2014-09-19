@@ -628,19 +628,33 @@ class ProjectModel(QStandardItemModel):
         This slot closes the currently selected projects and updates the model.
         """
         selectedIndexes = self.selectionModel.selectedIndexes()
-        projects = " ".join("{}".format(p.data()) for p in selectedIndexes)
-        
-        reply = QMessageBox.question(None, 'Close project(s)',
-            "Do you really want to close the project(s) \"<b>{}</b>\"?"
-            .format(projects),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.No:
-            return
-        
         for index in selectedIndexes:
-            object = index.data(ProjectModel.ITEM_OBJECT)
-            self.projectClose(object)
+            project = index.data(ProjectModel.ITEM_OBJECT)
+            if project.isModified:
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("Save changes before closing")
+                msgBox.setText("Do you want to save your project \"<b>{}</b>\" "
+                               "before closing?".format(project.name))
+                msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                          QMessageBox.Cancel)
+                msgBox.setDefaultButton(QMessageBox.Save)
+
+                reply = msgBox.exec_()
+                if reply == QMessageBox.Cancel:
+                    continue
+
+                if reply == QMessageBox.Save:
+                    project.zip()
+            else:
+                reply = QMessageBox.question(None, 'Close project',
+                    "Do you really want to close the project \"<b>{}</b>\"?"
+                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                continue
+        
+            self.projectClose(project)
+        
         self.updateData()
 
 
