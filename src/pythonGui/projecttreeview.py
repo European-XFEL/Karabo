@@ -24,7 +24,8 @@ from util import getSaveFileName
 from karabo.project import Project
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QDialog, QCursor, QFileDialog, QMenu, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QDialog, QCursor,
+                         QFileDialog, QMenu, QMessageBox, QTreeView)
 import os.path
 
 
