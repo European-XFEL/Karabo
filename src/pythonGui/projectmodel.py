@@ -627,34 +627,20 @@ class ProjectModel(QStandardItemModel):
         """
         This slot closes the currently selected projects and updates the model.
         """
-        index = self.selectionModel.currentIndex()
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        projects = " ".join("{}".format(p.data()) for p in selectedIndexes)
         
-        project = index.data(ProjectModel.ITEM_OBJECT)
-        if project.isModified:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("Save changes before closing")
-            msgBox.setText("Do you want to save your project before closing?")
-            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
-                                      QMessageBox.Cancel)
-            msgBox.setDefaultButton(QMessageBox.Save)
+        reply = QMessageBox.question(None, 'Close project(s)',
+            "Do you really want to close the project(s) \"<b>{}</b>\"?"
+            .format(projects),
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-            reply = msgBox.exec_()
-            if reply == QMessageBox.Cancel:
-                return
-            
-            if reply == QMessageBox.Save:
-                project.zip()
-        else:
-            index = self.selectionModel.currentIndex()
-            reply = QMessageBox.question(None, 'Close project',
-                "Do you really want to close the project \"<b>{}</b>\"?"
-                .format(index.data()),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-            if reply == QMessageBox.No:
-                return
+        if reply == QMessageBox.No:
+            return
         
-        self.projectClose(project)
+        for index in selectedIndexes:
+            object = index.data(ProjectModel.ITEM_OBJECT)
+            self.projectClose(object)
         self.updateData()
 
 
