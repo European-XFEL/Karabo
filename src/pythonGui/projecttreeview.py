@@ -152,7 +152,10 @@ class ProjectTreeView(QTreeView):
         menu = QMenu()
         if selectedType is GuiProject:
             # Project menu
-            text = "Close project"
+            if nbSelected > 1:
+                text = "Close selected projects"
+            else:
+                text = "Close project"
             acCloseProject = QAction(text, self)
             acCloseProject.setStatusTip(text)
             acCloseProject.setToolTip(text)
