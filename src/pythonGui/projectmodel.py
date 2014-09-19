@@ -309,7 +309,7 @@ class ProjectModel(QStandardItemModel):
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
                     "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
-                    .format(project.filename),
+                    .format(project.name),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
                     project.zip()
@@ -461,7 +461,7 @@ class ProjectModel(QStandardItemModel):
         self.pluginDialog = None
 
 
-    def addDevice(self, project, serverId, classId, deviceId, ifexists, updateNeeded=True):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists):
         """
         Add a device for the given \project with the given data.
         """
@@ -484,9 +484,6 @@ class ProjectModel(QStandardItemModel):
         
         device = Device(serverId, classId, deviceId, ifexists)
         project.addDevice(device)
-        
-        if updateNeeded:
-            self.updateData()
         
         return device
 
@@ -511,7 +508,7 @@ class ProjectModel(QStandardItemModel):
         for i in xrange(dialog.count):
             deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
             newDevice = self.addDevice(project, device.serverId, device.classId,
-                                       deviceId, device.ifexists, False)
+                                       deviceId, device.ifexists)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -731,10 +728,12 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
         
-        for index in selectedIndexes:
-            object = index.data(ProjectModel.ITEM_OBJECT)
+        # Get object before QModelIndexes are gone due to update of view
+        objects = [index.data(ProjectModel.ITEM_OBJECT) for index in selectedIndexes]
+        
+        for obj in objects:
             # Remove data from project
-            self.removeObject(object.project, object, nbSelected == 1)
+            self.removeObject(obj.project, obj, nbSelected == 1)
         
         if nbSelected > 1:
             self.updateData()
