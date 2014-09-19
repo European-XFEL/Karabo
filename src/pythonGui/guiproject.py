@@ -317,11 +317,11 @@ class GuiProject(Project, QObject):
             self._instantiateDevice(d)
 
 
-    def shutdown(self, device):
+    def shutdown(self, device, showConfirm=True):
         """
         This function shuts down \device.
         """
-        manager.Manager().shutdownDevice(device.id, True)
+        manager.Manager().shutdownDevice(device.id, showConfirm)
 
 
     def shutdownAll(self):

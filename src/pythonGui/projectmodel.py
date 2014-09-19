@@ -309,13 +309,14 @@ class ProjectModel(QStandardItemModel):
             if project.isModified:
                 reply = QMessageBox.question(None, "Save changes before closing",
                     "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
-                    .format(project.filename),
+                    .format(project.name),
                     QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
                 if reply == QMessageBox.Save:
                     project.zip()
             
             self.projectClose(project)
         
+        # Clear selection
         self.selectionModel.clear()
         self.updateData()
         return True
@@ -460,7 +461,7 @@ class ProjectModel(QStandardItemModel):
         self.pluginDialog = None
 
 
-    def addDevice(self, project, serverId, classId, deviceId, ifexists, updateNeeded=True):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists):
         """
         Add a device for the given \project with the given data.
         """
@@ -484,9 +485,6 @@ class ProjectModel(QStandardItemModel):
         device = Device(serverId, classId, deviceId, ifexists)
         project.addDevice(device)
         
-        if updateNeeded:
-            self.updateData()
-        
         return device
 
 
@@ -505,11 +503,12 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        project = device.project
+
         for i in xrange(dialog.count):
             deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
-            newDevice = self.addDevice(self.currentProject(), device.serverId,
-                                       device.classId, deviceId, device.ifexists,
-                                       False)
+            newDevice = self.addDevice(project, device.serverId, device.classId,
+                                       deviceId, device.ifexists)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -518,8 +517,7 @@ class ProjectModel(QStandardItemModel):
             
             newDevice.initConfig = config
         
-        # Remove device which basis for duplication
-        self.removeObject(self.currentProject(), device, False)
+        self.updateData()
         self.selectItem(newDevice)
 
 
@@ -544,9 +542,9 @@ class ProjectModel(QStandardItemModel):
             fi = QFileInfo(scene.filename)
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
-            self.updateData()
             # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
+            scene.project.setModified(True)
 
 
     def _createScene(self, project, sceneName):
@@ -563,6 +561,7 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.openScene(scene)
 
+        self.updateData()
         self.selectItem(scene)
         
         return scene
@@ -579,7 +578,7 @@ class ProjectModel(QStandardItemModel):
             # TODO: Copy scene content to new scene
             #scene.duplicate()
         
-        self.removeObject(self.currentProject(), scene, False)
+        self.updateData()
         self.selectItem(newScene)
 
 
@@ -590,16 +589,19 @@ class ProjectModel(QStandardItemModel):
 ### slots ###
 
     def onSelectionChanged(self, selected, deselected):
-        selectedIndexes = selected.indexes()
+        selectedIndexes = self.selectionModel.selectedIndexes()
         # Send signal to projectPanel to update toolbar actions
         self.signalSelectionChanged.emit(selectedIndexes)
 
         if not selectedIndexes:
             return
         
-        index = selectedIndexes[0]
-
-        device = index.data(ProjectModel.ITEM_OBJECT)
+        if len(selectedIndexes) > 1:
+            device = None
+        else:
+            index = selectedIndexes[0]
+            device = index.data(ProjectModel.ITEM_OBJECT)
+        
         if device is not None and isinstance(device, Configuration):
             # Check whether device is already online
             if device.isOnline():
@@ -623,34 +625,34 @@ class ProjectModel(QStandardItemModel):
         """
         This slot closes the currently selected projects and updates the model.
         """
-        index = self.selectionModel.currentIndex()
-        
-        project = index.data(ProjectModel.ITEM_OBJECT)
-        if project.isModified:
-            msgBox = QMessageBox()
-            msgBox.setWindowTitle("Save changes before closing")
-            msgBox.setText("Do you want to save your project before closing?")
-            msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
-                                      QMessageBox.Cancel)
-            msgBox.setDefaultButton(QMessageBox.Save)
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        for index in selectedIndexes:
+            project = index.data(ProjectModel.ITEM_OBJECT)
+            if project.isModified:
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("Save changes before closing")
+                msgBox.setText("Do you want to save your project \"<b>{}</b>\" "
+                               "before closing?".format(project.name))
+                msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
+                                          QMessageBox.Cancel)
+                msgBox.setDefaultButton(QMessageBox.Save)
 
-            reply = msgBox.exec_()
-            if reply == QMessageBox.Cancel:
-                return
-            
-            if reply == QMessageBox.Save:
-                project.zip()
-        else:
-            index = self.selectionModel.currentIndex()
-            reply = QMessageBox.question(None, 'Close project',
-                "Do you really want to close the project \"<b>{}</b>\"?"
-                .format(index.data()),
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                reply = msgBox.exec_()
+                if reply == QMessageBox.Cancel:
+                    continue
+
+                if reply == QMessageBox.Save:
+                    project.zip()
+            else:
+                reply = QMessageBox.question(None, 'Close project',
+                    "Do you really want to close the project \"<b>{}</b>\"?"
+                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
-                return
+                continue
         
-        self.projectClose(project)
+            self.projectClose(project)
+        
         self.updateData()
 
 
@@ -717,12 +719,25 @@ class ProjectModel(QStandardItemModel):
         """
         This slot removes the currently selected index from the model.
         """
-        index = self.selectionModel.currentIndex()
-        if not index.isValid():
-            return
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        nbSelected = len(selectedIndexes)
+        if nbSelected > 1:
+            reply = QMessageBox.question(None, 'Remove items',
+                "Do you really want to remove selected items?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
         
-        # Remove data from project
-        self.removeObject(self.currentProject(), index.data(ProjectModel.ITEM_OBJECT))
+        # Get object before QModelIndexes are gone due to update of view
+        objects = [index.data(ProjectModel.ITEM_OBJECT) for index in selectedIndexes]
+        
+        for obj in objects:
+            # Remove data from project
+            self.removeObject(obj.project, obj, nbSelected == 1)
+        
+        if nbSelected > 1:
+            self.updateData()
 
 
     def onRemoveDevices(self):
@@ -756,6 +771,7 @@ class ProjectModel(QStandardItemModel):
         if isinstance(object, Scene):
             self.signalRemoveScene.emit(object)
         
-        self.updateData()
-        self.selectItem(project)
+        if showConfirm:
+            self.updateData()
+            self.selectItem(project)
         
