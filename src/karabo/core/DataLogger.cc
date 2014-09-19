@@ -74,7 +74,6 @@ namespace karabo {
         }
 
         DataLogger::~DataLogger() {
-            slotTagDeviceToBeDiscontinued(true, 'L');
         }
 
         void DataLogger::preDestruction() {
@@ -188,7 +187,8 @@ namespace karabo {
                 m_fileTimestampFractionStart = t.getFractionalSeconds();
                 m_fileTrainIdStart = t.getTrainId();
             }
-            const string user = getSenderInfo("slotChanged")->getUserIdOfSender();
+            string user = getSenderInfo("slotChanged")->getUserIdOfSender();
+            if (user.size() == 0) user = "operator";
             vector<string> paths;
             configuration.getPaths(paths);
             for (size_t i = 0; i < paths.size(); ++i) {

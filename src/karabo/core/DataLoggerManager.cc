@@ -312,8 +312,8 @@ namespace karabo {
 
                 // Reads all data from latest file into vector<Hash>
                 vector<Hash> tmp = getPropertyData(deviceId, property);
-
-                // tmp.front() reflects the oldest entry
+                
+                        // tmp.front() reflects the oldest entry
                 // tmp.back() reflects the newest entry
                 Epochstamp oldest = extractRange(tmp, from, to, result);
 
@@ -374,7 +374,7 @@ namespace karabo {
         vector<Hash> DataLoggerManager::getPropertyData(const std::string& deviceId, const std::string& key, const int idx) {
             typedef unsigned long long uint64_t;
             vector<Hash> data;
-
+            
             boost::filesystem::path filePath = getArchiveFile(deviceId, idx);
 
             if (boost::filesystem::exists(filePath)) {
@@ -384,20 +384,26 @@ namespace karabo {
                 unsigned long long seconds, fraction, trainId;
                 string path, type, value, user, flag;
                 while (infile >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag) {
+                    Epochstamp epochstamp(seconds, fraction);
+                    //KARABO_LOG_FRAMEWORK_DEBUG << epochstamp.toIso8601() << " " << trainId << " " << path << " " << type << " " << value << " " << user << " " << flag;
                     if (path != "." && path != key)
                         continue;
-
-                    if (flag == "D" || flag == "L") {
+                    if (flag == "L")
+                        continue;
+                    if (flag == "D") {
                         // ignore path, type, value, user and use timestamp, trainId and flag
                         hash.setAttribute("v", "isLast", flag.at(0));
-                    } else if (path == key) {
+                        data.push_back(hash);
+                        continue;
+                    } 
+                    if (path == key) {
                         hash.clear();
                         Hash::Node& node = hash.set<string>("v", value);
                         node.setType(Types::from<FromLiteral>(type));
                     }
-                    Timestamp stamp(Epochstamp(seconds, fraction), Trainstamp(trainId));
+                    Timestamp timestamp(epochstamp, Trainstamp(trainId));
                     Hash::Attributes& attrs = hash.getAttributes("v");
-                    stamp.toHashAttributes(attrs);
+                    timestamp.toHashAttributes(attrs);
                     data.push_back(hash);
                 }
                 infile.close();
