@@ -69,10 +69,12 @@ class Project(object):
 
     def addDevice(self, device):
         self.devices.append(device)
+        device.project = self
 
 
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
+        device.project = self
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -227,9 +229,14 @@ class ProjectConfiguration(object):
 
 
 class BaseDevice(object):
+
+
     def __init__(self, serverId, classId, deviceId, ifexists):
         self.serverId = serverId
         self.classId = classId
 
         self.filename = "{}.xml".format(deviceId)
         self.ifexists = ifexists
+        
+        self.project = None
+
