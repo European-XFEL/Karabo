@@ -17,14 +17,15 @@ import globals
 
 from scene import Scene
 from manager import Manager
-from guiproject import Category, Device
+from guiproject import Category, Device, GuiProject
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
 from karabo.project import Project
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAction, QDialog, QCursor, QFileDialog, QMenu, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QDialog, QCursor,
+                         QFileDialog, QMenu, QMessageBox, QTreeView)
 import os.path
 
 
@@ -39,6 +40,7 @@ class ProjectTreeView(QTreeView):
         self.expandAll()
         self.model().modelReset.connect(self.expandAll)
         self.setSelectionModel(self.model().selectionModel)
+        self.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -132,143 +134,176 @@ class ProjectTreeView(QTreeView):
 
 ### slots ###
     def onCustomContextMenuRequested(self, pos):
-        index = self.currentIndex()
-        if not index.isValid(): return
-
-        object = index.data(ProjectModel.ITEM_OBJECT)
+        selectedIndexes = self.selectionModel().selectedIndexes()
+        if not selectedIndexes:
+            return
         
-        menu = None
-        if isinstance(object, Project):
-            text = "Close project"
+        nbSelected = len(selectedIndexes)
+        
+        firstIndex = selectedIndexes[0]
+        firstObj = firstIndex.data(ProjectModel.ITEM_OBJECT)
+        # Make sure that selected indexes are of same type
+        selectedType = type(firstObj)
+        for index in selectedIndexes:
+            object = index.data(ProjectModel.ITEM_OBJECT)
+            if not isinstance(object, selectedType):
+                return
+        
+        menu = QMenu()
+        if selectedType is GuiProject:
+            # Project menu
+            if nbSelected > 1:
+                text = "Close selected projects"
+            else:
+                text = "Close project"
             acCloseProject = QAction(text, self)
             acCloseProject.setStatusTip(text)
             acCloseProject.setToolTip(text)
             acCloseProject.triggered.connect(self.model().onCloseProject)
 
-            menu = QMenu()
             menu.addAction(acCloseProject)
-        elif isinstance(object, Category) and (object.displayName == Project.DEVICES_LABEL):
-            # Devices menu
-            text = "Add device"
-            acImportPlugin = QAction(text, self)
-            acImportPlugin.setStatusTip(text)
-            acImportPlugin.setToolTip(text)
-            acImportPlugin.triggered.connect(self.model().onEditDevice)
-
-            text = "Instantiate all"
-            acInitDevices = QAction(text, self)
-            acInitDevices.setStatusTip(text)
-            acInitDevices.setToolTip(text)
-            acInitDevices.triggered.connect(self.model().onInitDevices)
-
-            text = "Shutdown all"
-            acKillDevices = QAction(text, self)
-            acKillDevices.setStatusTip(text)
-            acKillDevices.setToolTip(text)
-            acKillDevices.triggered.connect(self.model().onKillDevices)
-
-            text = "Remove all"
-            acRemoveDevices = QAction(text, self)
-            acRemoveDevices.setStatusTip(text)
-            acRemoveDevices.setToolTip(text)
-            acRemoveDevices.triggered.connect(self.model().onRemoveDevices)
-
-            menu = QMenu()
-            menu.addAction(acImportPlugin)
-            menu.addSeparator()
-            menu.addAction(acInitDevices)
-            menu.addAction(acKillDevices)
-            menu.addSeparator()
-            menu.addAction(acRemoveDevices)
-        elif isinstance(object, Category) and (object.displayName == Project.SCENES_LABEL):
-            # Scenes menu
-            text = "Add scene"
-            acAddScene = QAction(text, self)
-            acAddScene.setStatusTip(text)
-            acAddScene.setToolTip(text)
-            acAddScene.triggered.connect(self.model().onEditScene)
-
-            text = "Open scene"
-            acOpenScene = QAction(text, self)
-            acOpenScene.setStatusTip(text)
-            acOpenScene.setToolTip(text)
-            acOpenScene.triggered.connect(self.model().onOpenScene)
-
-            menu = QMenu()
-            menu.addAction(acAddScene)
-            menu.addAction(acOpenScene)
-        elif isinstance(object, (Device, Scene)):
-            text = "Edit"
-            acEdit = QAction(text, self)
-            acEdit.setStatusTip(text)
-            acEdit.setToolTip(text)
+        elif selectedType is Category:
+            if nbSelected > 1:
+                return
             
-            if isinstance(object, Device):
-                acEdit.triggered.connect(self.model().onEditDevice)
-            elif isinstance(object, Scene):
-                acEdit.triggered.connect(self.model().onEditScene)
+            if firstObj.displayName == Project.DEVICES_LABEL:
+                # Devices menu
+                text = "Add device"
+                acImportPlugin = QAction(text, self)
+                acImportPlugin.setStatusTip(text)
+                acImportPlugin.setToolTip(text)
+                acImportPlugin.triggered.connect(self.model().onEditDevice)
 
-            text = "Duplicate"
-            acDuplicate = QAction(text, self)
-            acDuplicate.setStatusTip(text)
-            acDuplicate.setToolTip(text)
+                text = "Instantiate all"
+                acInitDevices = QAction(text, self)
+                acInitDevices.setStatusTip(text)
+                acInitDevices.setToolTip(text)
+                acInitDevices.triggered.connect(self.model().onInitDevices)
+
+                text = "Shutdown all"
+                acKillDevices = QAction(text, self)
+                acKillDevices.setStatusTip(text)
+                acKillDevices.setToolTip(text)
+                acKillDevices.triggered.connect(self.model().onKillDevices)
+
+                text = "Remove all"
+                acRemoveDevices = QAction(text, self)
+                acRemoveDevices.setStatusTip(text)
+                acRemoveDevices.setToolTip(text)
+                acRemoveDevices.triggered.connect(self.model().onRemoveDevices)
+                
+                menu.addAction(acImportPlugin)
+                menu.addSeparator()
+                menu.addAction(acInitDevices)
+                menu.addAction(acKillDevices)
+                menu.addSeparator()
+                menu.addAction(acRemoveDevices)
+            elif firstObj.displayName == Project.SCENES_LABEL:
+                # Scenes menu
+                text = "Add scene"
+                acAddScene = QAction(text, self)
+                acAddScene.setStatusTip(text)
+                acAddScene.setToolTip(text)
+                acAddScene.triggered.connect(self.model().onEditScene)
+
+                text = "Open scene"
+                acOpenScene = QAction(text, self)
+                acOpenScene.setStatusTip(text)
+                acOpenScene.setToolTip(text)
+                acOpenScene.triggered.connect(self.model().onOpenScene)
+
+                menu.addAction(acAddScene)
+                menu.addAction(acOpenScene)
+                
+        elif (selectedType is Device) or (selectedType is Scene):
+            # Device or Scene menu
+            if nbSelected > 1:
+                text = "Remove selected"
+            else:
+                text = "Edit"
+                acEdit = QAction(text, self)
+                acEdit.setStatusTip(text)
+                acEdit.setToolTip(text)
+
+                text = "Duplicate"
+                acDuplicate = QAction(text, self)
+                acDuplicate.setStatusTip(text)
+                acDuplicate.setToolTip(text)
+                
+                menu.addAction(acEdit)
+                menu.addAction(acDuplicate)
+                
+                text = "Remove"
             
-            if isinstance(object, Device):
-                acDuplicate.triggered.connect(self.model().onDuplicateDevice)
-            elif isinstance(object, Scene):
-                acDuplicate.triggered.connect(self.model().onDuplicateScene)
-
-                text = "Save as..."
-                acSaveAs = QAction(text, self)
-                acSaveAs.setStatusTip(text)
-                acSaveAs.setToolTip(text)
-                acSaveAs.triggered.connect(self.model().onSaveAsScene)
-
-            text = "Remove"
             acRemove = QAction(text, self)
             acRemove.setStatusTip(text)
             acRemove.setToolTip(text)
             acRemove.triggered.connect(self.model().onRemove)
             
-            text = "Instantiate"
-            acInitDevice = QAction(text, self)
-            acInitDevice.setStatusTip(text)
-            acInitDevice.setToolTip(text)
-            acInitDevice.triggered.connect(self.onInitDevice)
-            
-            text = "Shutdown"
-            acKillDevice = QAction(text, self)
-            acKillDevice.setStatusTip(text)
-            acKillDevice.setToolTip(text)
-            acKillDevice.triggered.connect(self.onKillDevice)
-
-
-            menu = QMenu()
-            menu.addAction(acEdit)
-            menu.addAction(acDuplicate)
             menu.addAction(acRemove)
-            if isinstance(object, Scene):
-                menu.addAction(acSaveAs)
-            else:
+            
+            if selectedType is Device:
+                if nbSelected > 1:
+                    text = "Instantiate selected"
+                else:
+                    acEdit.triggered.connect(self.model().onEditDevice)
+                    acDuplicate.triggered.connect(self.model().onDuplicateDevice)
+                
+                    text = "Instantiate"
+                
+                acInitDevice = QAction(text, self)
+                acInitDevice.setStatusTip(text)
+                acInitDevice.setToolTip(text)
+                acInitDevice.triggered.connect(self.onInitDevice)
+
+                if nbSelected > 1:
+                    text = "Shutdown selected"
+                else:
+                    text = "Shutdown"
+                acKillDevice = QAction(text, self)
+                acKillDevice.setStatusTip(text)
+                acKillDevice.setToolTip(text)
+                acKillDevice.triggered.connect(self.onKillDevice)
+                
                 menu.addSeparator()
                 menu.addAction(acInitDevice)
                 menu.addAction(acKillDevice)
-        
-        if menu is None: return
+            elif selectedType is Scene:
+                if nbSelected == 1:
+                    acEdit.triggered.connect(self.model().onEditScene)
+                    acDuplicate.triggered.connect(self.model().onDuplicateScene)
+
+                    text = "Save as..."
+                    acSaveAs = QAction(text, self)
+                    acSaveAs.setStatusTip(text)
+                    acSaveAs.setToolTip(text)
+                    acSaveAs.triggered.connect(self.model().onSaveAsScene)
+                
+                    menu.addSeparator()
+                    menu.addAction(acSaveAs)
         
         menu.exec_(QCursor.pos())
 
 
     def onInitDevice(self):
-        device = self.currentDevice()
-        if device is None: return
-
-        self.model().currentProject().instantiate(device)
+        selectedIndexes = self.selectionModel().selectedIndexes()
+        for index in selectedIndexes:
+            device = index.data(ProjectModel.ITEM_OBJECT)
+            device.project.instantiate(device)
 
 
     def onKillDevice(self):
-        device = self.currentDevice()
-        if device is None: return
+        selectedIndexes = self.selectionModel().selectedIndexes()
+        nbSelected = len(selectedIndexes)
+        if nbSelected > 1:
+            reply = QMessageBox.question(self, 'Shutdown selected devices',
+                "Do you really want to shutdown all selected devices?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
         
-        self.model().currentProject().shutdown(device)
+        for index in selectedIndexes:
+            device = index.data(ProjectModel.ITEM_OBJECT)
+            device.project.shutdown(device, nbSelected == 1)
 
