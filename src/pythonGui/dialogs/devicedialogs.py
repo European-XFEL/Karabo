@@ -103,6 +103,14 @@ class DeviceGroupDialog(QDialog):
         self.cbDeviceGroup.toggled.connect(self.onShowDuplicateWidget)
         vLayout.addWidget(self.cbDeviceGroup)
         
+        self.gbSelecteGroupName = QGroupBox("Select group name", self)
+        fLayout = QFormLayout(self.gbSelecteGroupName)
+        fLayout.setContentsMargins(5,5,5,5)
+        self.leGroupName = QLineEdit("")
+        fLayout.addRow("Group name:", self.leGroupName)
+        self.gbSelecteGroupName.setVisible(False)
+        vLayout.addWidget(self.gbSelecteGroupName)
+        
         self.duplicateWidget = DuplicateWidget()
         self.duplicateWidget.signalValidInput.connect(self.onValidDuplicateWidgetInput)
         vLayout.addWidget(self.duplicateWidget)
@@ -156,6 +164,11 @@ class DeviceGroupDialog(QDialog):
 
 
     @property
+    def deviceGroupName(self):
+        return self.leGroupName.text()
+
+
+    @property
     def displayPrefix(self):
         return self.duplicateWidget.displayPrefix
 
@@ -190,6 +203,7 @@ class DeviceGroupDialog(QDialog):
             self.w = self.width()
             self.h = self.height()
         
+        self.gbSelecteGroupName.setVisible(on)
         self.duplicateWidget.setVisible(on)
         
         if not on:
