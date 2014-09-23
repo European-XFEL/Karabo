@@ -209,7 +209,7 @@ class ProjectModel(QStandardItemModel):
         
         # Set last selected object
         if lastSelectionObj is not None:
-            self.selectItem(lastSelectionObj)
+            self.selectObject(lastSelectionObj)
 
 
     def clearParameterPages(self, serverClassIds=[]):
@@ -251,7 +251,7 @@ class ProjectModel(QStandardItemModel):
         return self.selectionModel.currentIndex()
 
 
-    def selectItem(self, object):
+    def selectObject(self, object):
         """
         This function gets an object which can be of type Configuration or Scene
         and selects the corresponding item.
@@ -364,10 +364,12 @@ class ProjectModel(QStandardItemModel):
         This includes a connection, if project changes and the view update after
         appending project to list.
         """
+        # Whenever the project is modified - view must be updated
         project.signalProjectModified.connect(self.updateData)
+        project.signalSelectObject.connect(self.selectObject)
         self.projects.append(project)
         self.updateData()
-        self.selectItem(project)
+        self.selectObject(project)
 
 
     def projectNew(self, filename):
@@ -482,7 +484,7 @@ class ProjectModel(QStandardItemModel):
                                     self.deviceDialog.deviceId,
                                     self.deviceDialog.startupBehaviour)
         
-        self.selectItem(device)
+        self.selectObject(device)
         self.deviceDialog = None
 
 
@@ -544,7 +546,7 @@ class ProjectModel(QStandardItemModel):
         
         # Remove device which basis for duplication
         self.removeObject(self.currentProject(), device, False)
-        self.selectItem(newDevice)
+        self.selectObject(newDevice)
 
 
     def checkDescriptor(self, device):
@@ -587,7 +589,7 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.openScene(scene)
 
-        self.selectItem(scene)
+        self.selectObject(scene)
         
         return scene
 
@@ -604,7 +606,7 @@ class ProjectModel(QStandardItemModel):
             #scene.duplicate()
         
         self.removeObject(self.currentProject(), scene, False)
-        self.selectItem(newScene)
+        self.selectObject(newScene)
 
 
     def openScene(self, scene):
@@ -734,7 +736,7 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             scene.fromXml(fin.read())
         project.addScene(scene)
-        self.selectItem(scene)
+        self.selectObject(scene)
 
 
     def onRemove(self):
@@ -781,5 +783,5 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(object)
         
         self.updateData()
-        self.selectItem(project)
+        self.selectObject(project)
         

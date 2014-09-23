@@ -1226,6 +1226,7 @@ class Scene(QSvgWidget):
                     
                     self.ilayout.add_item(proxy)
                     proxy.selected = True
+                    self.project.signalSelectObject.emit(device)
                 else:
                     # Create device group and add to project
                     deviceGroup = self.project.newDeviceGroup(dialog.serverId,
@@ -1248,6 +1249,7 @@ class Scene(QSvgWidget):
                     
                     self.ilayout.add_item(proxy)
                     proxy.selected = True
+                    self.project.signalSelectObject.emit(deviceGroup)
                 
                 self.project.setModified(True)
         event.accept()

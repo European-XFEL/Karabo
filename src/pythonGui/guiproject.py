@@ -29,6 +29,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 class GuiProject(Project, QObject):
 
     signalProjectModified = pyqtSignal()
+    signalSelectObject = pyqtSignal(object)
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)

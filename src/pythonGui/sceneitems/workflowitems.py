@@ -79,10 +79,49 @@ class WorkflowItem(Item):
         
         self.device = device
         self.displayText = device.id
+        
+        self.descriptor = None
+        
+        self.inputChannels = []
+        self.outputChannels = []
 
 
     def paintEvent(self, event):
+        print ""
+        descr = self.device.descriptor
+        if descr is not None and self.descriptor is None:
+            self.descriptor = descr
+            
+            # Check for all in/output channels
+            for k in descr.dict.keys():
+                box = getattr(self.device.boxvalue, k, None)
+                if box is None:
+                    continue
+                
+                displayType = box.descriptor.displayType
+                if displayType is None:
+                    continue
+                
+                print "+++ displayType", displayType
+                if displayType == "Input":
+                    self.inputChannels.append(box)
+                elif displayType == "Output":
+                    self.outputChannels.append(box)
+        
+        self.paintInputChannels(event)
+        self.paintOutputChannels(event)
+            
         Item.paintEvent(self, event)
+
+
+    def paintInputChannels(self, event):
+        for input in self.inputChannels:
+            print "input", input.current
+
+
+    def paintOutputChannels(self, event):
+        for output in self.outputChannels:
+            print "output", output.current
 
 
     def save(self, ele):
@@ -119,7 +158,7 @@ class WorkflowGroupItem(Item):
 
 
     def save(self, ele):
-        ele.set(ns_karabo + "class", "WorkflowItem")
+        ele.set(ns_karabo + "class", "WorkflowGroupItem")
         ele.set(ns_karabo + "text", self.displayText)
         ele.set(ns_karabo + "font", self.font.toString())
 
@@ -128,8 +167,8 @@ class WorkflowGroupItem(Item):
     def load(elem, layout):
         proxy = ProxyWidget(layout.parentWidget())
         displayText = elem.get(ns_karabo + "text")
-        deviceGroup = DeviceGroup()
-        deviceGroup.displayText = displayText
+        # TODO: get existing device group via unique id
+        deviceGroup = DeviceGroup(displayText)
         item = WorkflowGroupItem(deviceGroup, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
