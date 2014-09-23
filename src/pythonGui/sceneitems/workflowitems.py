@@ -12,8 +12,9 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 
-from PyQt4.QtCore import QPoint, QRectF, Qt
-from PyQt4.QtGui import QColor, QFont, QFontMetrics, QFontMetricsF, QPainter, QWidget
+from PyQt4.QtCore import QPoint, QPointF, QRectF, Qt
+from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
+                         QPainter, QWidget)
 
 
 class Item(QWidget, Loadable):
@@ -66,17 +67,39 @@ class Item(QWidget, Loadable):
 
     def paintInputChannels(self, painter):
         for input in self.inputChannels:
-            print "input", input.current
         
-        #painter.setBrush(QBrush(Qt.white))
-        #painter.drawLine(self.inputPos, QPointF(40, 0))
-        #if self.__connectionType == "NetworkInput-Hash":
-        #    painter.drawEllipse(self.inputPos, 5, 5)
+            # This only works for one inputChannel - height needs to be adjusted
+            rect = self.outlineRect()
+            startPoint = QPoint(-rect.width()/2, 0)
+            endPoint = QPoint(startPoint.x()-40, 0)
+
+            painter.setBrush(QBrush(Qt.white))
+            painter.drawLine(startPoint, endPoint)
+            #if input.current == "NetworkInput-Hash":
+            print "input", input.current
+            painter.drawEllipse(endPoint, 5, 5)
 
 
     def paintOutputChannels(self, painter):
         for output in self.outputChannels:
-            print "output", output.current
+
+            # This only works for one inputChannel - height needs to be adjusted
+            rect = self.outlineRect()
+            startPoint = QPoint(rect.width()/2, 0)
+            endPoint = QPoint(startPoint.x()+40, 0)
+
+            painter.setBrush(QBrush(Qt.white))
+            painter.drawLine(startPoint, endPoint)
+            if output.current == "BinaryFile":
+                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+            elif output.current == "Hdf5File":
+                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+            elif output.current == "Network":
+                painter.drawEllipse(endPoint, 5, 5)
+            elif output.current == "TextFile":
+                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+            else:
+                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
 
 
     def outlineRect(self):

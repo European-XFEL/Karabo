@@ -1221,7 +1221,7 @@ class Scene(QSvgWidget):
                     workflowItem = WorkflowItem(device, proxy)
                     rect = workflowItem.outlineRect()
                     proxy.setWidget(workflowItem)
-                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+50, rect.height()+50))
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+100, rect.height()+100))
                     proxy.show()
                     
                     self.ilayout.add_item(proxy)
