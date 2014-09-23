@@ -23,6 +23,9 @@ class Item(QWidget, Loadable):
         
         self.font = QFont()
         self.displayText = ""
+        
+        self.inputChannels = []
+        self.outputChannels = []
 
 
     def paintEvent(self, event):
@@ -42,6 +45,9 @@ class Item(QWidget, Loadable):
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         painter.drawText(rect, Qt.AlignCenter, self.displayText)
         
+        self.paintInputChannels(painter)
+        self.paintOutputChannels(painter)
+        
         #pen = painter.pen()
         #if self.isSelected():
         #    pen.setStyle(Qt.DotLine)
@@ -56,6 +62,21 @@ class Item(QWidget, Loadable):
         #painter.setPen(self.textColor)
         #painter.drawText(rect, Qt.AlignCenter, self.displayText)
         painter.end()
+
+
+    def paintInputChannels(self, painter):
+        for input in self.inputChannels:
+            print "input", input.current
+        
+        #painter.setBrush(QBrush(Qt.white))
+        #painter.drawLine(self.inputPos, QPointF(40, 0))
+        #if self.__connectionType == "NetworkInput-Hash":
+        #    painter.drawEllipse(self.inputPos, 5, 5)
+
+
+    def paintOutputChannels(self, painter):
+        for output in self.outputChannels:
+            print "output", output.current
 
 
     def outlineRect(self):
@@ -81,13 +102,9 @@ class WorkflowItem(Item):
         self.displayText = device.id
         
         self.descriptor = None
-        
-        self.inputChannels = []
-        self.outputChannels = []
 
 
     def paintEvent(self, event):
-        print ""
         descr = self.device.descriptor
         if descr is not None and self.descriptor is None:
             self.descriptor = descr
@@ -102,26 +119,12 @@ class WorkflowItem(Item):
                 if displayType is None:
                     continue
                 
-                print "+++ displayType", displayType
                 if displayType == "Input":
                     self.inputChannels.append(box)
                 elif displayType == "Output":
                     self.outputChannels.append(box)
         
-        self.paintInputChannels(event)
-        self.paintOutputChannels(event)
-            
         Item.paintEvent(self, event)
-
-
-    def paintInputChannels(self, event):
-        for input in self.inputChannels:
-            print "input", input.current
-
-
-    def paintOutputChannels(self, event):
-        for output in self.outputChannels:
-            print "output", output.current
 
 
     def save(self, ele):
