@@ -1193,7 +1193,7 @@ class Scene(QSvgWidget):
                     proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
-
+                
                 layout.fixed_geometry = QRect(event.pos(), layout.sizeHint())
                 self.ilayout.add_item(layout)
                 layout.selected = True
@@ -1221,7 +1221,7 @@ class Scene(QSvgWidget):
                     workflowItem = WorkflowItem(device, proxy)
                     rect = workflowItem.outlineRect()
                     proxy.setWidget(workflowItem)
-                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+5, rect.height()+5))
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+50, rect.height()+50))
                     proxy.show()
                     
                     self.ilayout.add_item(proxy)
