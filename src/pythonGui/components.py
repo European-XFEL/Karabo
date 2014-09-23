@@ -488,6 +488,11 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
 
+    def addBox(self, box):
+        """we cannot add several boxes onto one editable thing yet"""
+        pass
+
+
 class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         W = Widget.widgets.get(classAlias)

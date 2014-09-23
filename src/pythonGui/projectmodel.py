@@ -572,11 +572,11 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
+        xml = scene.toXml()
         for i in xrange(dialog.count):
             filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, i+dialog.startIndex)
             newScene = self.addScene(self.currentProject(), filename)
-            # TODO: Copy scene content to new scene
-            #scene.duplicate()
+            newScene.fromXml(xml)
         
         self.updateData()
         self.selectItem(newScene)
