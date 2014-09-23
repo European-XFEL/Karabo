@@ -99,7 +99,7 @@ class Icons(DisplayWidget):
         name = QFileDialog.getOpenFileName(self.dialog, "Open Icon")
         if name:
             url = "file://" + urllib.pathname2url(name)
-            self.dialog.image.setURL(url)
+            self.setURL(url)
 
 
     def on_dialog_finished(self, result):
