@@ -36,14 +36,9 @@ namespace karabo {
             std::fstream m_configStream;
             
             unsigned int m_lastIndex;
-            
-            unsigned long long m_fileTimestampSecondsStart;
-            unsigned long long m_fileTimestampFractionStart;
-            unsigned long long m_fileTrainIdStart;
-            unsigned long long m_fileTimestampSecondsEnd;
-            unsigned long long m_fileTimestampFractionEnd;
-            unsigned long long m_fileTrainIdEnd;
-            
+            std::string m_user;
+            karabo::util::Timestamp m_lastDataTimestamp;
+            bool m_pendingLogin;
             unsigned long long m_flushTime;
             
             long m_startPosition;
