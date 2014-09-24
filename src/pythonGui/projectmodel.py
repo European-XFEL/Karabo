@@ -24,10 +24,10 @@ from guiproject import Category, Device, GuiProject
 from scene import Scene
 import manager
 
-from karabo.project import Project
+from karabo.project import DeviceGroup, Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
+from PyQt4.QtGui import (QDialog, QFileDialog, QItemSelectionModel,
                          QMessageBox, QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import ZipFile
@@ -630,24 +630,23 @@ class ProjectModel(QStandardItemModel):
         else:
             index = selectedIndexes[0]
             device = index.data(ProjectModel.ITEM_OBJECT)
-        
-		    if device is not None and isinstance(device, Configuration):
-		        # Check whether device is already online
-		        if device.isOnline():
-		            conf = manager.getDevice(device.id)
-		        else:
-		            conf = device
-		            
-		            # Check descriptor only with first selection
-		            if device.descriptorRequested is False:
-		                self.checkDescriptor(device)
-		                device.descriptorRequested = True
-		        type = conf.type
-		    else:
-		        conf = None
-		        type = "other"
+            if device is not None and isinstance(device, Configuration):
+                # Check whether device is already online
+                if device.isOnline():
+                    conf = manager.getDevice(device.id)
+                else:
+                    conf = device
 
-		    self.signalItemChanged.emit(type, conf)
+                    # Check descriptor only with first selection
+                    if device.descriptorRequested is False:
+                        self.checkDescriptor(device)
+                        device.descriptorRequested = True
+                type = conf.type
+            else:
+                conf = None
+                type = "other"
+
+            self.signalItemChanged.emit(type, conf)
 
 
     def onCloseProject(self):
