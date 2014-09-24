@@ -130,7 +130,7 @@ namespace karabo {
                 string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                 if (wasValidUpToNow) {
                     if (m_configStream.is_open()) {
-                        m_configStream << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                        m_configStream << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
                                 << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
                                 << " " << m_lastDataTimestamp.getTrainId() << " . . . " << m_user << " LOGOUT\n";
                         m_configStream.flush();
@@ -138,7 +138,7 @@ namespace karabo {
                         m_configStream.close();
                         ofstream indexstream(indexname.c_str(), ios::app);
                         indexstream.seekp(0, ios_base::end);
-                        indexstream << "-LOG " << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                        indexstream << "-LOG " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
                                 << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
                                 << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                         indexstream.close();
@@ -190,15 +190,15 @@ namespace karabo {
                     m_configStream.flush();
                     m_configStream.seekg(0, ios::end); // position to EOF
                     long position = m_configStream.tellg(); // get file size
-                    m_configStream << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds() << " "
+                    m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds() << " "
                             << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " LOGIN\n";
                     m_flushTime = t.getSeconds() + get<int>("flushInterval");
                     ofstream indexstream(indexname.c_str(), ios::app);
-                    indexstream << "+LOG " << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
+                    indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
                             << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                     indexstream.close();
                 } else {
-                    m_configStream << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds()
+                    m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds()
                             << " " << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " VALID\n";
                 }
             }
@@ -215,7 +215,7 @@ namespace karabo {
                 }
                 // record changing the file into index file
                 ofstream indexstream(indexname.c_str(), ios::app);
-                indexstream << "=NEW " << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
+                indexstream << "=NEW " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
                         << m_lastDataTimestamp.getFractionalSeconds() << " " << m_lastDataTimestamp.getTrainId() << " 0 " << m_user << " " << m_lastIndex << "\n";
                 indexstream.close();
             } else {
