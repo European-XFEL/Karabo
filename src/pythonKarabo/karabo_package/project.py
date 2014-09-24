@@ -10,8 +10,9 @@ from __future__ import unicode_literals
 This module contains a class which represents project related datastructures.
 """
 
-__all__ = ["Project", "ProjectConfiguration"]
+from __future__ import unicode_literals
 
+__all__ = ["Project", "DeviceGroup", "ProjectConfiguration"]
 
 from karabo.hash import XMLParser, XMLWriter
 from karabo.hashtypes import StringList
@@ -75,6 +76,10 @@ class Project(object):
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
         device.project = self
+
+
+    def addDeviceGroup(self, deviceGroup):
+        self.devices.append(deviceGroup)
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -196,6 +201,17 @@ class Project(object):
         This function shuts down all project devices.
         """
         raise NotImplementedError, "Project.shutdownAll"
+
+
+class DeviceGroup(list):
+    """
+    This class represents a list of devices.
+    """
+
+    def __init__(self, name=""):
+        super(DeviceGroup, self).__init__()
+        
+        self.name = name
 
 
 class ProjectConfiguration(object):
