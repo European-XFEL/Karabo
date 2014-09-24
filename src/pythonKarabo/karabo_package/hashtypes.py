@@ -233,7 +233,7 @@ class Char(Simple, Type):
 
     @classmethod
     def toString(cls, data):
-        return base64.b64encode(data)
+        return base64.b64encode(data).decode("ascii")
 
 
     @classmethod
