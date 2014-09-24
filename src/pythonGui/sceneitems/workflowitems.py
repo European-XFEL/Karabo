@@ -193,8 +193,9 @@ class WorkflowGroupItem(Item):
     def load(elem, layout):
         proxy = ProxyWidget(layout.parentWidget())
         displayText = elem.get(ns_karabo + "text")
+        return proxy
         # TODO: get existing device group via unique id
-        deviceGroup = DeviceGroup(displayText)
+        deviceGroup = manager.getDeviceGroup(id) #DeviceGroup(displayText)
         item = WorkflowGroupItem(deviceGroup, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)

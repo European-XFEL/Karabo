@@ -16,7 +16,7 @@ __all__ = ["GuiProject", "Category"]
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, BaseDevice
+from karabo.project import Project, BaseDevice, DeviceGroup
 import manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -27,7 +27,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class Device(BaseDevice, Configuration):
-    signalProjectModified = pyqtSignal(bool)
+    signalDeviceModified = pyqtSignal(bool)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
         Configuration.__init__(self, deviceId, "projectClass", descriptor)
@@ -252,15 +252,30 @@ class GuiProject(Project, QObject):
             file = filename
 
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
-            for device in self.devices:
-                zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
-                            device.toXml())
-            projectConfig[self.DEVICES_KEY] = [Hash("serverId", device.serverId,
-                                                    "classId", device.classId,
-                                                    "filename", device.filename,
-                                                    "ifexists", device.ifexists)
-                                            for device in self.devices]
-
+            deviceHash = []
+            for deviceObj in self.devices:
+                if isinstance(deviceObj, Configuration):
+                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
+                                deviceObj.toXml())
+                    
+                    deviceHash.append(Hash("serverId", deviceObj.serverId,
+                                           "classId", deviceObj.classId,
+                                           "filename", deviceObj.filename,
+                                           "ifexists", deviceObj.ifexists))
+                else:
+                    group = []
+                    for device in deviceObj:
+                        zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
+                                    device.toXml())
+                        group.append(Hash("serverId", device.serverId,
+                                          "classId", device.classId,
+                                          "filename", device.filename,
+                                          "ifexists", device.ifexists))
+                    deviceGroupHash = Hash("group", group)
+                    deviceGroupHash.setAttribute("group", "name", deviceObj.name)
+                    deviceHash.append(deviceGroupHash)
+            projectConfig[self.DEVICES_KEY] = deviceHash
+            
             for scene in self.scenes:
                 name = "{}/{}".format(self.SCENES_KEY, scene.filename)
                 try:
