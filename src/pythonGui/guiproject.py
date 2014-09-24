@@ -132,6 +132,7 @@ class GuiProject(Project, QObject):
     Device = Device
 
     signalProjectModified = pyqtSignal()
+    signalSelectObject = pyqtSignal(object)
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
@@ -154,7 +155,7 @@ class GuiProject(Project, QObject):
     def setupDeviceToProject(self, device):
         self.setModified(True)
         # Connect device to project to get configuration changes
-        device.signalProjectModified.connect(self.setModified)
+        device.signalDeviceModified.connect(self.setModified)
 
 
     def addDevice(self, device):
@@ -165,6 +166,30 @@ class GuiProject(Project, QObject):
     def insertDevice(self, index, device):
         Project.insertDevice(self, index, device)
         self.setupDeviceToProject(device)
+
+
+    def newDevice(self, serverId, classId, deviceId, ifexists, updateNeeded=False):
+        """
+        A new device with the given parameters is created, added to the
+        project and returned.
+        """
+        device = Device(serverId, classId, deviceId, ifexists)
+        self.addDevice(device)
+        if updateNeeded:
+            self.signalProjectModified.emit()
+        return device
+
+
+    def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
+        deviceGroup = DeviceGroup()
+        for index in xrange(start, end):
+            id = "{}{}{}".format(deviceId, prefix, index)
+            device = Device(serverId, classId, id, ifexists)
+            deviceGroup.append(device)
+        Project.addDeviceGroup(self, deviceGroup)
+        self.signalProjectModified.emit()
+        
+        return deviceGroup
 
 
     def addScene(self, scene):

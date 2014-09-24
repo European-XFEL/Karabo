@@ -6,13 +6,12 @@
 
 
 import icons
-import manager
 from registry import Loadable
 from const import ns_svg, ns_karabo
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
-from PyQt4.QtGui import (QAction, QBoxLayout, QFrame, QGridLayout, QLabel,
-                         QLayout, QPalette, QMenu, QStackedLayout, QWidget)
+from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,
+                         QLayout, QMenu, QStackedLayout, QWidget)
 
 from bisect import bisect
 from functools import partial
