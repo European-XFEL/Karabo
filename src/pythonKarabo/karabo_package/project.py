@@ -148,19 +148,36 @@ class Project(object):
 
     def parse(self, projectConfig, zf):
         for d in projectConfig[self.DEVICES_KEY]:
-            serverId = d.get("serverId")
+            group = d.get("group")
+            if group is not None:
+                deviceGroup = DeviceGroup(d.getAttribute("group", "name"))
+                for item in group:
+                    serverId = item.get("serverId")
+                    filename = item.get("filename")
+                    data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                    assert filename.endswith(".xml")
+                    filename = filename[:-4]
 
-            filename = d.get("filename")
-            data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-            assert filename.endswith(".xml")
-            filename = filename[:-4]
+                    for classId, config in XMLParser().read(data).iteritems():
+                        device = self.Device(serverId, classId, filename,
+                                             item.get("ifexists"))
 
-            for classId, config in XMLParser().read(data).iteritems():
-                device = self.Device(serverId, classId, filename,
-                                     d.get("ifexists"))
-                device.initConfig = config
-                break # there better be only one!
-            self.addDevice(device)
+                        device.initConfig = config
+                        deviceGroup.append(device)
+                        break # there better be only one!
+                self.addDeviceGroup(deviceGroup)
+            else:
+                serverId = d.get("serverId")
+                filename = d.get("filename")
+                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                assert filename.endswith(".xml")
+                filename = filename[:-4]
+
+                for classId, config in XMLParser().read(data).iteritems():
+                    device = self.newDevice(serverId, classId, filename,
+                                            d.get("ifexists"), False)
+                    device.initConfig = config
+                    break # there better be only one!
         for deviceId, configList in projectConfig[
                             self.CONFIGURATIONS_KEY].iteritems():
             # Vector of hashes
