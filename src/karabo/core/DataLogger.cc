@@ -79,10 +79,13 @@ namespace karabo {
         void DataLogger::preDestruction() {
             slotTagDeviceToBeDiscontinued(true, 'L');
         }
-        
+
         void DataLogger::okStateOnEntry() {
             // stop "age" thread to avoid disconnection
             remote().setAgeing(false);
+
+            m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
+            m_pendingLogin = false;
 
             // Register slots
             SLOT2(slotChanged, Hash /*changedConfig*/, string /*deviceId*/);
@@ -123,43 +126,33 @@ namespace karabo {
         void DataLogger::slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotTagDeviceToBeDiscontinued " << wasValidUpToNow << " '" << reason << "'";
             try {
+                string filename = get<string>("directory") + "/" + m_deviceToBeLogged + "_configuration_" + toString(m_lastIndex) + ".txt";
+                string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                 if (wasValidUpToNow) {
                     if (m_configStream.is_open()) {
-                        Timestamp t;
+                        m_configStream << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                                << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
+                                << " " << m_lastDataTimestamp.getTrainId() << " . . . " << m_user << " LOGOUT\n";
+                        m_configStream.flush();
                         long position = m_configStream.tellp();
-                        m_configStream << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " . . . . " << reason << "\n";
                         m_configStream.close();
-                        string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                         ofstream indexstream(indexname.c_str(), ios::app);
-                        indexstream << m_fileTimestampSecondsStart << " "
-                                << m_fileTimestampFractionStart << " "
-                                << m_fileTrainIdStart << " "
-                                << m_startPosition << " "
-                                << t.getSeconds() << " "
-                                << t.getFractionalSeconds() << " "
-                                << t.getTrainId() << " " << position << " " << reason << "\n";
+                        indexstream.seekp(0, ios_base::end);
+                        indexstream << "-LOG " << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp()
+                                << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
+                                << " " << m_lastDataTimestamp.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                         indexstream.close();
                     }
                     return;
                 }
-                string filename = get<string>("directory") + "/" + m_deviceToBeLogged + "_configuration.txt";
-                Timestamp t;
+
                 if (!m_configStream.is_open()) {
                     m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                     if (!m_configStream.is_open()) {
                         KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
                     }
-                    m_configStream.seekg(0, ios::end); // position to EOF
-                    m_startPosition = m_configStream.tellg(); // get file size
-                    m_fileTimestampSecondsStart = t.getSeconds();
-                    m_fileTimestampFractionStart = t.getFractionalSeconds();
-                    m_fileTrainIdStart = t.getTrainId();
                 }
-                m_fileTimestampSecondsEnd = t.getSeconds();
-                m_fileTimestampFractionEnd = t.getFractionalSeconds();
-                m_fileTrainIdEnd = t.getTrainId();
-                m_configStream << m_fileTimestampSecondsEnd << " " << m_fileTimestampFractionEnd << " " << m_fileTrainIdEnd << " . . . . " << reason << "\n";
-                m_flushTime = m_fileTimestampSecondsEnd + get<int>("flushInterval");
+                m_pendingLogin = true;
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
             }
@@ -176,19 +169,10 @@ namespace karabo {
             string filename = get<string>("directory") + "/" + deviceId + "_configuration.txt";
             string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
             if (!m_configStream.is_open()) {
-                m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
-                if (!m_configStream.is_open()) {
-                    KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
-                }
-                m_configStream.seekg(0, ios::end); // position to EOF
-                m_startPosition = m_configStream.tellg(); // get file size
-                Timestamp t;
-                m_fileTimestampSecondsStart = t.getSeconds();
-                m_fileTimestampFractionStart = t.getFractionalSeconds();
-                m_fileTrainIdStart = t.getTrainId();
+                return;
             }
-            string user = getSenderInfo("slotChanged")->getUserIdOfSender();
-            if (user.size() == 0) user = "operator";
+            m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
+            if (m_user.size() == 0) m_user = ".";
             vector<string> paths;
             configuration.getPaths(paths);
             for (size_t i = 0; i < paths.size(); ++i) {
@@ -200,43 +184,44 @@ namespace karabo {
                 string value = leafNode.getValueAs<string>();
                 string type = Types::to<ToLiteral>(leafNode.getType());
                 Timestamp t = Timestamp::fromHashAttributes(leafNode.getAttributes());
-                m_fileTimestampSecondsEnd = t.getSeconds();
-                m_fileTimestampFractionEnd = t.getFractionalSeconds();
-                m_fileTrainIdEnd = t.getTrainId();
-                if (m_fileTimestampSecondsEnd < m_fileTimestampSecondsStart
-                        || (m_fileTimestampSecondsEnd == m_fileTimestampSecondsStart && m_fileTimestampFractionEnd < m_fileTimestampFractionStart)) {
-                    m_fileTimestampSecondsStart = m_fileTimestampSecondsEnd;
-                    m_fileTimestampFractionStart = m_fileTimestampFractionEnd;
-                    m_fileTrainIdStart = m_fileTrainIdEnd;
+                m_lastDataTimestamp = t;
+                if (m_pendingLogin) {
+                    m_pendingLogin = false;
+                    m_configStream.flush();
+                    m_configStream.seekg(0, ios::end); // position to EOF
+                    long position = m_configStream.tellg(); // get file size
+                    m_configStream << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds() << " "
+                            << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " LOGIN\n";
+                    m_flushTime = t.getSeconds() + get<int>("flushInterval");
+                    ofstream indexstream(indexname.c_str(), ios::app);
+                    indexstream << "+LOG " << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
+                            << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
+                    indexstream.close();
+                } else {
+                    m_configStream << t.toIso8601() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds()
+                            << " " << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " VALID\n";
                 }
-                m_configStream << m_fileTimestampSecondsEnd << " " << m_fileTimestampFractionEnd
-                        << " " << m_fileTrainIdEnd << " " << path << " " << type << " " << value << " " << user << " V\n";
             }
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
             long position = m_configStream.tellp();
             if (maxFilesize <= position) {
                 m_configStream.close();
-                // record index file
-                ofstream indexstream(indexname.c_str(), ios::app);
-                indexstream << m_fileTimestampSecondsStart << " "
-                        << m_fileTimestampFractionStart << " "
-                        << m_fileTrainIdStart << " "
-                        << m_startPosition << " "
-                        << m_fileTimestampSecondsEnd << " "
-                        << m_fileTimestampFractionEnd << " "
-                        << m_fileTrainIdEnd << " " << position << " V\n";
-                indexstream.close();
                 // increment index number for configuration file
                 m_lastIndex = incrementLastIndex(deviceId);
-                // rename files 
-                string newname = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
-                boost::filesystem::rename(filename, newname);
-                string newindex = get<string>("directory") + "/" + deviceId + "_index_" + toString(m_lastIndex) + ".txt";
-                boost::filesystem::rename(indexname, newindex);
+                filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
+                m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
+                if (!m_configStream.is_open()) {
+                    KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+                }
+                // record changing the file into index file
+                ofstream indexstream(indexname.c_str(), ios::app);
+                indexstream << "=NEW " << m_lastDataTimestamp.toIso8601() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
+                        << m_lastDataTimestamp.getFractionalSeconds() << " " << m_lastDataTimestamp.getTrainId() << " 0 " << m_user << " " << m_lastIndex << "\n";
+                indexstream.close();
             } else {
-                if (m_flushTime <= m_fileTimestampSecondsEnd) {
+                if (m_flushTime <= m_lastDataTimestamp.getSeconds()) {
                     m_configStream.flush();
-                    m_flushTime = m_fileTimestampSecondsEnd + get<int>("flushInterval");
+                    m_flushTime = m_lastDataTimestamp.getSeconds() + get<int>("flushInterval");
                 }
             }
         }
@@ -262,10 +247,10 @@ namespace karabo {
             int idx;
             fstream fs;
             if (!boost::filesystem::exists(lastIndexFilename)) {
-                for (size_t i = 1;; i++) {
+                for (size_t i = 0;; i++) {
                     string filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(i) + ".txt";
                     if (!boost::filesystem::exists(filename)) {
-                        idx = i - 1;
+                        idx = i;
                         break;
                     }
                 }

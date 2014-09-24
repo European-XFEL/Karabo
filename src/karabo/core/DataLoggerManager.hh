@@ -25,6 +25,24 @@ namespace karabo {
      */
     namespace core {
 
+        struct DataLoggerIndex {
+            std::string m_event;
+            karabo::util::Epochstamp m_epoch;
+            unsigned long long m_train;
+            long m_position;
+            std::string m_user;
+            int m_fileindex;
+
+            DataLoggerIndex()
+            : m_event()
+            , m_epoch(0, 0)
+            , m_train(0)
+            , m_position(-1)
+            , m_user(".")
+            , m_fileindex(-1) {
+            }
+        };
+
         class DataLoggerManager : public Device<OkErrorFsm> {
 
 
@@ -38,13 +56,6 @@ namespace karabo {
 
             virtual ~DataLoggerManager();
 
-            static boost::filesystem::path getArchiveFile(const std::string& deviceId, const int idx);
-
-            static boost::filesystem::path getSchemaFile(const std::string& deviceId);
-
-            static boost::filesystem::path getIndexFile(const std::string& deviceId, const int idx);
-
-
         private: // Functions
 
             void okStateOnEntry();
@@ -53,14 +64,16 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            karabo::util::Epochstamp extractRange(const std::vector<karabo::util::Hash>& archive, const karabo::util::Epochstamp& from, const karabo::util::Epochstamp& to, std::vector<karabo::util::Hash>& result);
-
             void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
-
-            std::vector<karabo::util::Hash> getPropertyData(const std::string& deviceId, const std::string& key, const int i = -1);
 
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
+            DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
+            
+            DataLoggerIndex findNearestLeftLoggerIndex(const std::string& deviceId, const std::string& timepoint);
+            
+            int getFileIndex(const std::string& deviceId);
+            
         private: // Data
 
         };
