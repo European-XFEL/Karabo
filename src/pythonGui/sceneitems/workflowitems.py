@@ -14,10 +14,14 @@ from registry import Loadable
 
 from PyQt4.QtCore import QPoint, QPointF, QRectF, Qt
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
-                         QPainter, QWidget)
+                         QPainter, QPolygon, QWidget)
 
 
 class Item(QWidget, Loadable):
+
+    WIDTH = 5
+    CHANNEL_LENGTH = 45
+    
 
     def __init__(self, parent):
         super(Item, self).__init__(parent)
@@ -67,39 +71,81 @@ class Item(QWidget, Loadable):
 
     def paintInputChannels(self, painter):
         for input in self.inputChannels:
-        
             # This only works for one inputChannel - height needs to be adjusted
             rect = self.outlineRect()
             startPoint = QPoint(-rect.width()/2, 0)
-            endPoint = QPoint(startPoint.x()-40, 0)
+            endPoint = QPoint(startPoint.x() - Item.CHANNEL_LENGTH, 0)
 
             painter.setBrush(QBrush(Qt.white))
             painter.drawLine(startPoint, endPoint)
-            #if input.current == "NetworkInput-Hash":
-            print "input", input.current
-            painter.drawEllipse(endPoint, 5, 5)
+            
+            if input.current == "BinaryFile":
+                self._drawInputShape(painter, endPoint)
+            elif input.current == "Hdf5File":
+                self._drawRectShape(painter, QPoint(endPoint.x() - Item.WIDTH, endPoint.y()))
+            elif input.current == "Network":
+                self._drawCircleShape(painter, endPoint)
+            elif input.current == "TextFile":
+                self._drawDiamondShape(painter, QPoint(endPoint.x() + Item.WIDTH, endPoint.y()))
+            else:
+                self._drawCircleShape(painter, endPoint)
 
 
     def paintOutputChannels(self, painter):
         for output in self.outputChannels:
-
             # This only works for one inputChannel - height needs to be adjusted
             rect = self.outlineRect()
             startPoint = QPoint(rect.width()/2, 0)
-            endPoint = QPoint(startPoint.x()+40, 0)
+            endPoint = QPoint(startPoint.x() + Item.CHANNEL_LENGTH, 0)
 
             painter.setBrush(QBrush(Qt.white))
             painter.drawLine(startPoint, endPoint)
+            
             if output.current == "BinaryFile":
-                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+                self._drawOutputShape(painter, endPoint)
             elif output.current == "Hdf5File":
-                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+                self._drawRectShape(painter, QPoint(endPoint.x() - Item.WIDTH, endPoint.y()))
             elif output.current == "Network":
-                painter.drawEllipse(endPoint, 5, 5)
+                self._drawCircleShape(painter, endPoint)
             elif output.current == "TextFile":
-                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+                self._drawDiamondShape(painter, QPoint(endPoint.x() + Item.WIDTH, endPoint.y()))
             else:
-                painter.drawRect(endPoint.x(), endPoint.y()-5, 10, 10)
+                self._drawCircleShape(painter, endPoint)
+
+
+    def _drawCircleShape(self, painter, point):
+        painter.drawEllipse(point, Item.WIDTH, Item.WIDTH)
+
+
+    def _drawRectShape(self, painter, point):
+        painter.drawRect(point.x(), point.y() - Item.WIDTH, 2 * Item.WIDTH, 2 * Item.WIDTH)
+
+
+    def _drawDiamondShape(self, painter, point):
+        points = [point,
+                  QPoint(point.x() - Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y()),
+                  QPoint(point.x() - Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
+
+
+    def _drawOutputShape(self, painter, point):
+        point = QPoint(point.x() - Item.WIDTH, point.y())
+        points = [point,
+                  QPoint(point.x() + 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() + 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
+
+
+    def _drawInputShape(self, painter, point):
+        point = QPoint(point.x() + Item.WIDTH, point.y())
+        points = [point,
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
 
 
     def outlineRect(self):
