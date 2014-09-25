@@ -1219,9 +1219,9 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(device, proxy)
-                    rect = workflowItem.outlineRect()
+                    rect = workflowItem.boundingRect()
                     proxy.setWidget(workflowItem)
-                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+100, rect.height()+100))
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
                     proxy.show()
                     
                     self.ilayout.add_item(proxy)
@@ -1242,9 +1242,9 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowGroupItem = WorkflowGroupItem(deviceGroup, proxy)
-                    rect = workflowGroupItem.outlineRect()
+                    rect = workflowGroupItem.boundingRect()
                     proxy.setWidget(workflowGroupItem)
-                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width()+5, rect.height()+5))
+                    proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
                     proxy.show()
                     
                     self.ilayout.add_item(proxy)
