@@ -189,6 +189,10 @@ class GuiProject(Project, QObject):
         Project.addDeviceGroup(self, deviceGroup)
         self.signalProjectModified.emit()
         
+        # Trigger select item to get descriptors
+        for device in deviceGroup:
+            self.signalSelectObject.emit(device)
+        
         return deviceGroup
 
 

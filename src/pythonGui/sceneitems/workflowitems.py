@@ -12,7 +12,7 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 
-from PyQt4.QtCore import QPoint, QPointF, QRectF, Qt
+from PyQt4.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
                          QPainter, QPolygon, QWidget)
 
@@ -31,6 +31,8 @@ class Item(QWidget, Loadable):
         
         self.inputChannels = []
         self.outputChannels = []
+        
+        self.descriptor = None
 
 
     def paintEvent(self, event):
@@ -149,7 +151,7 @@ class Item(QWidget, Loadable):
 
 
     def outlineRect(self):
-        padding = 5
+        padding = 2 * Item.WIDTH
         metrics = QFontMetricsF(self.font)
         rect = metrics.boundingRect(self.displayText)
         rect.adjust(-padding, -padding, padding, padding)
@@ -162,25 +164,35 @@ class Item(QWidget, Loadable):
         return 100 * diameter / int(size)
 
 
-class WorkflowItem(Item):
-
-    def __init__(self, device, parent):
-        super(WorkflowItem, self).__init__(parent)
+    def boundingRect(self):
+        """
+        Calculate bounding rectangle for this item. 
+        """
+        rect = self.outlineRect()
         
-        self.device = device
-        self.displayText = device.id
+        addWidth = 0
+        if self.inputChannels:
+            addWidth += 2*Item.WIDTH + 2*Item.CHANNEL_LENGTH
+        elif self.outputChannels:
+            addWidth += 2*Item.WIDTH + 2*Item.CHANNEL_LENGTH
         
-        self.descriptor = None
+        rect.setWidth(rect.width() + addWidth)
+        rect.setHeight(rect.height() + 2*Item.WIDTH)
+        
+        self.setMinimumWidth(rect.width())
+        self.setMinimumHeight(rect.height())
+        
+        return rect
 
 
-    def paintEvent(self, event):
-        descr = self.device.descriptor
+    def checkChannels(self, device):
+        descr = device.descriptor
         if descr is not None and self.descriptor is None:
             self.descriptor = descr
             
             # Check for all in/output channels
             for k in descr.dict.keys():
-                box = getattr(self.device.boxvalue, k, None)
+                box = getattr(device.boxvalue, k, None)
                 if box is None:
                     continue
                 
@@ -192,7 +204,23 @@ class WorkflowItem(Item):
                     self.inputChannels.append(box)
                 elif displayType == "Output":
                     self.outputChannels.append(box)
+            
+            rect = self.boundingRect()
+            pos = self.parent().fixed_geometry.topLeft()
+            self.parent().fixed_geometry = QRect(pos, QSize(rect.width(), rect.height()))
+
+
+class WorkflowItem(Item):
+
+    def __init__(self, device, parent):
+        super(WorkflowItem, self).__init__(parent)
         
+        self.device = device
+        self.displayText = device.id
+
+
+    def paintEvent(self, event):
+        self.checkChannels(self.device)
         Item.paintEvent(self, event)
 
 
@@ -226,6 +254,7 @@ class WorkflowGroupItem(Item):
 
 
     def paintEvent(self, event):
+        self.checkChannels(self.device[0])
         Item.paintEvent(self, event)
 
 
