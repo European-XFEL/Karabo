@@ -33,8 +33,6 @@ namespace karathon {
                            const bool autostartEventLoop = true,
                            int heartbeatInterval = 10) : SignalSlotable() {
 
-            if (!PyEval_ThreadsInitialized()) PyEval_InitThreads();
-
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             this->init(instanceId, connection);
 
