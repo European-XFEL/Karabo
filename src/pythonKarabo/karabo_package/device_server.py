@@ -11,6 +11,7 @@ import signal
 import copy
 import socket
 import platform
+from subprocess import Popen
 import threading
 import time
 import inspect
@@ -21,14 +22,6 @@ from karabo.plugin_loader import PluginLoader
 from karabo.configurator import Configurator
 from karabo.device import PythonDevice
 from karabo.runner import Runner
-
-
-# Forward declaration of python class
-class Launcher(threading.Thread):
-    def __init__(self, input):
-        pass
-    def run(self):
-        pass
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -86,6 +79,14 @@ class DeviceServer(object):
                     .displayedName("Plugin Directory")
                     .description("Directory to search for plugins")
                     .assignmentOptional().defaultValue("plugins")
+                    .isDirectory()
+                    .expertAccess()
+                    .commit()
+                    ,
+            PATH_ELEMENT(expected).key("plugin3Directory")
+                    .displayedName("Python 3 Plugin Directory")
+                    .description("Directory to search and put python 3 plugins")
+                    .assignmentOptional().defaultValue("plugins3")
                     .isDirectory()
                     .expertAccess()
                     .commit()
@@ -293,7 +294,10 @@ class DeviceServer(object):
         
         self.connectionType = next(iter(input['connection'])).getKey()
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
-        self.pluginLoader = PluginLoader.create("PythonPluginLoader", Hash("pluginDirectory", input['pluginDirectory']))
+        self.pluginLoader = PluginLoader.create(
+            "PythonPluginLoader",
+            Hash("pluginDirectory", input['pluginDirectory'],
+                 "plugin3Directory", input['plugin3Directory']))
         self.loadLogger(input)
         self.pid = os.getpid()
         self.seqnum = 0
@@ -385,15 +389,12 @@ class DeviceServer(object):
         self.availableModules = dict()
         while self.scanning:
             modules = self.pluginLoader.update()   # just list of modules in plugins dir
-            for name, path in modules:
+            for name in modules:
                 if name in self.blacklist:
                     continue
                 if name in self.availableModules:
                     continue
                 try:
-                    dname = os.path.dirname( os.path.realpath(path) )
-                    if dname not in sys.path:
-                        sys.path.append(dname)
                     module = __import__(name)
                 except ImportError as e:
                     self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
@@ -600,26 +601,13 @@ class DeviceServer(object):
      
 
         
-class Launcher(threading.Thread):
-    
+class Launcher(object):
     def __init__(self, device, script, params):
-        threading.Thread.__init__(self)
-        # hide complaints from 'threading' module
-        threading._DummyThread._Thread__stop = lambda x: 42
-        self.device = device
         self.script = script
         self.args = params
 
-    def run(self):
-        script = self.script
-        params = self.args
-        self.pid = os.fork()
-        if self.pid == 0:
-            os.chmod(script, 0755)
-            os.execvp(script, params)
-        else:
-            id, status = os.waitpid(self.pid, 0)
-            print "Finally %r died" % (self.device)
+    def start(self):
+        Popen([sys.executable] + self.args)
 
     
 def main(args):
