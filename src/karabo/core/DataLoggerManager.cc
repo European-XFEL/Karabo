@@ -6,6 +6,7 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 #include <map>
+#include <boost/algorithm/string.hpp>
 #include <karabo/io/Input.hh>
 #include "DataLoggerManager.hh"
 #include "karabo/io/FileTools.hh"
@@ -177,11 +178,6 @@ namespace karabo {
                 long position = idx.m_position;
                 
                 for (int i = idx.m_fileindex; i <= lastFileIndex && epochstamp <= to; i++, position = 0) {
-                    string timestampAsIso8601;
-                    double timestampAsDouble;
-                    unsigned long long seconds, fraction, trainId;
-                    string path, type, value, user, flag;
-
                     string filename = "karaboHistory/" + deviceId + "_configuration_" + karabo::util::toString(i) + ".txt";
                     if (!boost::filesystem::exists(boost::filesystem::path(filename))) {
                         KARABO_LOG_WARN << "Configuration history file \"" << filename << "\" does not exist. Skip ...";
@@ -190,18 +186,38 @@ namespace karabo {
 
                     ifstream ifs(filename.c_str());
                     ifs.seekg(position);
-                    while (ifs >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag) {
+                    
+                    string line;
+                    while (getline(ifs, line)) {
+                        vector<string> tokens;
+                        boost::split(tokens, line, boost::is_any_of(":"));
+                        if (tokens.size() != 10)
+                            continue;                  // This record is corrupted -- skip it
+                        
+                        //ifs >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
+
+                        const string& flag = tokens[9]; 
                         if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                             result[result.size() - 1].setAttribute("v", "isLast", 'L');
                         }
+                        
+                        const string& path = tokens[5];
                         if (path != property)
                             continue;
+                        
+                        unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
+                        unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
                         epochstamp = Epochstamp(seconds, fraction);
                         if (epochstamp > to)
                             break;
+                        
                         Hash hash;
-                        Hash::Node& node = hash.set<string>("v", value.substr(1));
+                        const string& type = tokens[6];
+                        const string& value = tokens[7];
+                        Hash::Node& node = hash.set<string>("v", value);
                         node.setType(Types::from<FromLiteral>(type));
+                        
+                        unsigned long long trainId = fromString<unsigned long long>(tokens[4]);
                         Timestamp timestamp(epochstamp, Trainstamp(trainId));
                         Hash::Attributes& attrs = hash.getAttributes("v");
                         timestamp.toHashAttributes(attrs);
@@ -293,22 +309,39 @@ namespace karabo {
                 }
                 
                 {
-                    string timestampAsIso8601;
-                    double timestampAsDouble;
-                    unsigned long long seconds, fraction, train;
-                    string iso8601, path, type, val, user, flag;
                     Epochstamp current(0,0);
                     long position = index.m_position;
                     for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++, position = 0) {
                         string filename = "karaboHistory/" + deviceId + "_configuration_" + karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
-                        while (file >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> train >> path >> type >> val >> user >> flag) {
+                        
+                        string line;
+                        while (getline(file, line)) {
+                            // file >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> train >> path >> type >> val >> user >> flag;
+                            vector<string> tokens;
+                            boost::split(tokens, line, boost::is_any_of(":"));
+                            
+                            if (tokens.size() != 10)
+                                continue;                // skip corrupted line
+                            
+                            const string& flag = tokens[9];
+                            if (flag == "LOGOUT")
+                                break;
+                            
+                            const string& path = tokens[5];
+                            if (!schema.has(path)) continue;
+                            
+                            unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
+                            unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
+                            unsigned long long train = fromString<unsigned long long>(tokens[4]);
                             current = Epochstamp(seconds, fraction);
                             if (current > target)
                                 break;
                             Timestamp timestamp(current, Trainstamp(train));
-                            Hash::Node& node = hash.set<string>(path, val.substr(1));
+                            const string& type = tokens[6];
+                            const string& val = tokens[7];
+                            Hash::Node& node = hash.set<string>(path, val);
                             node.setType(Types::from<FromLiteral>(type));
                             Hash::Attributes& attrs = node.getAttributes();
                             timestamp.toHashAttributes(attrs);

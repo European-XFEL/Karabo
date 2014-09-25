@@ -130,11 +130,12 @@ namespace karabo {
                 string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                 if (wasValidUpToNow) {
                     if (m_configStream.is_open()) {
-                        m_configStream << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
-                                << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
-                                << " " << m_lastDataTimestamp.getTrainId() << " . . = " << m_user << " LOGOUT\n";
+                        m_configStream << m_lastDataTimestamp.toIso8601Ext() << ":" << fixed << m_lastDataTimestamp.toTimestamp()
+                                << ":" << m_lastDataTimestamp.getSeconds() << ":" << m_lastDataTimestamp.getFractionalSeconds()
+                                << ":" << m_lastDataTimestamp.getTrainId() << ":.:::" << m_user << ":LOGOUT\n";
                         m_configStream.flush();
-                        long position = m_configStream.tellp();
+                        m_configStream.seekg(0, ios::end);
+                        long position = m_configStream.tellg();
                         m_configStream.close();
                         ofstream indexstream(indexname.c_str(), ios::app);
                         indexstream.seekp(0, ios_base::end);
@@ -149,7 +150,21 @@ namespace karabo {
                 if (!m_configStream.is_open()) {
                     m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                     if (!m_configStream.is_open()) {
-                        KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+                        throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+                    }
+                    // Make sure that the file contains '\n' (newline) at the end
+                    m_configStream.seekg(0, ios::end);
+                    long pos = m_configStream.tellg();
+                    if (pos > 0) {   // ... file is not empty!
+                        string nl;
+                        m_configStream.seekg(pos-1, ios::beg);
+                        m_configStream >> nl;     // if newline exists the status will "fail" or "eof" because "nl" string is empty
+                        if (m_configStream.fail()) m_configStream.clear();   // clear the status otherwise stream will not work
+                        m_configStream.seekg(0);    // without this statement the writing doesn't work
+                        if (!nl.empty()) {
+                            m_configStream << "\n";
+                            m_configStream.flush();
+                        }
                     }
                 }
                 m_pendingLogin = true;
@@ -166,7 +181,7 @@ namespace karabo {
             }
 
             // open "deviceId"_configuration.txt file for append mode
-            string filename = get<string>("directory") + "/" + deviceId + "_configuration.txt";
+            string filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
             string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
             if (!m_configStream.is_open()) {
                 return;
@@ -188,18 +203,22 @@ namespace karabo {
                 if (m_pendingLogin) {
                     m_pendingLogin = false;
                     m_configStream.flush();
+                    if (m_configStream.fail()) m_configStream.clear();
                     m_configStream.seekg(0, ios::end); // position to EOF
                     long position = m_configStream.tellg(); // get file size
-                    m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds() << " "
-                            << t.getTrainId() << " " << path << " " << type << " =" << value << " " << m_user << " LOGIN\n";
+                    if (position == -1) {
+                        throw KARABO_IO_EXCEPTION("Failed to position in file \"" + filename + "\"");
+                    }
+                    m_configStream << t.toIso8601Ext() << ":" << fixed << t.toTimestamp() << ":" << t.getSeconds() << ":" << t.getFractionalSeconds() << ":"
+                            << t.getTrainId() << ":" << path << ":" << type << ":" << value << ":" << m_user << ":LOGIN\n";
                     m_flushTime = t.getSeconds() + get<int>("flushInterval");
                     ofstream indexstream(indexname.c_str(), ios::app);
                     indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
                             << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                     indexstream.close();
                 } else {
-                    m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds()
-                            << " " << t.getTrainId() << " " << path << " " << type << " =" << value << " " << m_user << " VALID\n";
+                    m_configStream << t.toIso8601Ext() << ":" << fixed << t.toTimestamp() << ":" << t.getSeconds() << ":" << t.getFractionalSeconds()
+                            << ":" << t.getTrainId() << ":" << path << ":" << type << ":" << value << ":" << m_user << ":VALID\n";
                 }
             }
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
@@ -211,7 +230,7 @@ namespace karabo {
                 filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
                 m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                 if (!m_configStream.is_open()) {
-                    KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+                    throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
                 }
                 // record changing the file into index file
                 ofstream indexstream(indexname.c_str(), ios::app);
@@ -239,7 +258,7 @@ namespace karabo {
                 fileout << t.getSeconds() << " " << t.getFractionalSeconds() << " " << t.getTrainId() << " " << archive << "\n";
                 fileout.close();
             } else
-                KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
+                throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
         }
 
         int DataLogger::determineLastIndex(const std::string& deviceId) {
