@@ -436,7 +436,8 @@ class PythonDevice(BaseFsm):
 
     def exceptionFound(self, shortMessage, detailedMessage):
         self.log.ERROR(shortMessage)
-        self._ss.emit("signalNotification", "EXCEPTION", shortMessage, detailedMessage)
+        self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
+                      detailedMessage, self.deviceid)
 
     def noStateTransition(self):
         self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
