@@ -193,7 +193,6 @@ namespace karabo {
                     while (ifs >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag) {
                         if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                             result[result.size() - 1].setAttribute("v", "isLast", 'L');
-                            if (path == ".") continue;
                         }
                         if (path != property)
                             continue;
@@ -201,7 +200,7 @@ namespace karabo {
                         if (epochstamp > to)
                             break;
                         Hash hash;
-                        Hash::Node& node = hash.set<string>("v", value);
+                        Hash::Node& node = hash.set<string>("v", value.substr(1));
                         node.setType(Types::from<FromLiteral>(type));
                         Timestamp timestamp(epochstamp, Trainstamp(trainId));
                         Hash::Attributes& attrs = hash.getAttributes("v");
@@ -309,7 +308,7 @@ namespace karabo {
                             if (current > target)
                                 break;
                             Timestamp timestamp(current, Trainstamp(train));
-                            Hash::Node& node = hash.set<string>(path, val);
+                            Hash::Node& node = hash.set<string>(path, val.substr(1));
                             node.setType(Types::from<FromLiteral>(type));
                             Hash::Attributes& attrs = node.getAttributes();
                             timestamp.toHashAttributes(attrs);
