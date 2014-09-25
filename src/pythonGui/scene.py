@@ -1236,7 +1236,7 @@ class Scene(QSvgWidget):
                                                         dialog.displayPrefix,
                                                         dialog.startIndex,
                                                         dialog.endIndex)
-                    
+
                     deviceGroup.name = dialog.deviceGroupName
                     
                     # Create scene item associated with device

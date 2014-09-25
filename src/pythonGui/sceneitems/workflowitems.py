@@ -172,9 +172,9 @@ class Item(QWidget, Loadable):
         
         addWidth = 0
         if self.inputChannels:
-            addWidth += 2*Item.WIDTH + 2*Item.CHANNEL_LENGTH
+            addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
         elif self.outputChannels:
-            addWidth += 2*Item.WIDTH + 2*Item.CHANNEL_LENGTH
+            addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
         
         rect.setWidth(rect.width() + addWidth)
         rect.setHeight(rect.height() + 2*Item.WIDTH)
