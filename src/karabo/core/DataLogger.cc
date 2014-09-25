@@ -132,7 +132,7 @@ namespace karabo {
                     if (m_configStream.is_open()) {
                         m_configStream << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp()
                                 << " " << m_lastDataTimestamp.getSeconds() << " " << m_lastDataTimestamp.getFractionalSeconds()
-                                << " " << m_lastDataTimestamp.getTrainId() << " . . . " << m_user << " LOGOUT\n";
+                                << " " << m_lastDataTimestamp.getTrainId() << " . . = " << m_user << " LOGOUT\n";
                         m_configStream.flush();
                         long position = m_configStream.tellp();
                         m_configStream.close();
@@ -172,7 +172,7 @@ namespace karabo {
                 return;
             }
             m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
-            if (m_user.size() == 0) m_user = ".";
+            if (m_user.size() == 0) m_user = "operator";
             vector<string> paths;
             configuration.getPaths(paths);
             for (size_t i = 0; i < paths.size(); ++i) {
@@ -191,7 +191,7 @@ namespace karabo {
                     m_configStream.seekg(0, ios::end); // position to EOF
                     long position = m_configStream.tellg(); // get file size
                     m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds() << " "
-                            << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " LOGIN\n";
+                            << t.getTrainId() << " " << path << " " << type << " =" << value << " " << m_user << " LOGIN\n";
                     m_flushTime = t.getSeconds() + get<int>("flushInterval");
                     ofstream indexstream(indexname.c_str(), ios::app);
                     indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
@@ -199,7 +199,7 @@ namespace karabo {
                     indexstream.close();
                 } else {
                     m_configStream << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " " << t.getFractionalSeconds()
-                            << " " << t.getTrainId() << " " << path << " " << type << " " << value << " " << m_user << " VALID\n";
+                            << " " << t.getTrainId() << " " << path << " " << type << " =" << value << " " << m_user << " VALID\n";
                 }
             }
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
