@@ -29,7 +29,7 @@ def _gettype(data):
         elif isinstance(data, bool):
             return hashtypes.Bool
         elif isinstance(data, numbers.Integral):
-            return hashtypes.Int64
+            return hashtypes.Int32
         elif isinstance(data, numbers.Real):
             return hashtypes.Double
         elif isinstance(data, numbers.Complex):
@@ -289,7 +289,7 @@ class Hash(OrderedDict):
             yield k, self[k], self[k, ...]
 
 
-    def merge(self, other, attribute_policy):
+    def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
 
         If the attribute_policy is 'merge', the attributes from the other

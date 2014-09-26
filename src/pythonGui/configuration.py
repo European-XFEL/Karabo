@@ -125,6 +125,9 @@ class Configuration(Box):
     def addVisible(self):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
+            if self.status == "online":
+                Network().onGetDeviceSchema(self.id)
+                self.status = "requested"
             Network().onStartMonitoringDevice(self.id)
 
 
