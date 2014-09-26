@@ -20,11 +20,11 @@ import icons
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.devicedialogs import DeviceDialog
 from dialogs.scenedialog import SceneDialog
-from guiproject import Category, Device, GuiProject
+from guiproject import Category, Device, DeviceGroup, GuiProject
 from scene import Scene
 import manager
 
-from karabo.project import DeviceGroup, Project
+from karabo.project import Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog, QItemSelectionModel,
@@ -149,7 +149,7 @@ class ProjectModel(QStandardItemModel):
                     childItem.appendRow(leafItem)
                     
                     # Iterate through device of group
-                    for device in deviceObj:
+                    for device in deviceObj.devices:
                         subLeafItem = QStandardItem(device.id)
                         subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
                         subLeafItem.setEditable(False)
@@ -631,16 +631,19 @@ class ProjectModel(QStandardItemModel):
             index = selectedIndexes[0]
             device = index.data(ProjectModel.ITEM_OBJECT)
             if device is not None and isinstance(device, Configuration):
-                # Check whether device is already online
-                if device.isOnline():
-                    conf = manager.getDevice(device.id)
-                else:
+                if device.type == "deviceGroup":
                     conf = device
+                else:
+                    # Check whether device is already online
+                    if device.isOnline():
+                        conf = manager.getDevice(device.id)
+                    else:
+                        conf = device
 
-                    # Check descriptor only with first selection
-                    if device.descriptorRequested is False:
-                        self.checkDescriptor(device)
-                        device.descriptorRequested = True
+                        # Check descriptor only with first selection
+                        if device.descriptorRequested is False:
+                            self.checkDescriptor(device)
+                            device.descriptorRequested = True
                 type = conf.type
             else:
                 conf = None

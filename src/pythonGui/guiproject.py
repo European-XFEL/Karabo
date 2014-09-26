@@ -16,7 +16,7 @@ __all__ = ["GuiProject", "Category"]
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, BaseDevice, DeviceGroup
+from karabo.project import Project, BaseDevice, BaseDeviceGroup
 import manager
 
 from PyQt4.QtCore import pyqtSignal, QObject
@@ -128,6 +128,14 @@ class Device(BaseDevice, Configuration):
             "offline", "noplugin", "noserver", "incompatible")
 
 
+class DeviceGroup(BaseDeviceGroup, Configuration):
+
+
+    def __init__(self, name=""):
+        Configuration.__init__(self, name, "deviceGroup")
+        BaseDeviceGroup.__init__(self, name)
+
+
 class GuiProject(Project, QObject):
     Device = Device
 
@@ -184,13 +192,12 @@ class GuiProject(Project, QObject):
         deviceGroup = DeviceGroup()
         for index in xrange(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
-            device = Device(serverId, classId, id, ifexists)
-            deviceGroup.append(device)
+            deviceGroup.addDevice(Device(serverId, classId, id, ifexists))
         Project.addDeviceGroup(self, deviceGroup)
         self.signalProjectModified.emit()
         
         # Trigger select item to get descriptors
-        for device in deviceGroup:
+        for device in deviceGroup.devices:
             self.signalSelectObject.emit(device)
         
         return deviceGroup
