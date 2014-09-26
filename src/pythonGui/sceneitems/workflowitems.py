@@ -249,12 +249,12 @@ class WorkflowGroupItem(Item):
     def __init__(self, deviceGroup, parent):
         super(WorkflowGroupItem, self).__init__(parent)
         
-        self.device = deviceGroup
+        self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.name
 
 
     def paintEvent(self, event):
-        self.checkChannels(self.device[0])
+        self.checkChannels(self.deviceGroup.devices[0])
         Item.paintEvent(self, event)
 
 

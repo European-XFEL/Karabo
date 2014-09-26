@@ -31,7 +31,7 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
-        assert type in ('class', 'projectClass', 'device')
+        assert type in ('class', 'projectClass', 'device', 'deviceGroup')
         self.type = type
         self.id = id
         self.visible = 0
