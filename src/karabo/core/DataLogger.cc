@@ -130,9 +130,9 @@ namespace karabo {
                 string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                 if (wasValidUpToNow) {
                     if (m_configStream.is_open()) {
-                        m_configStream << m_lastDataTimestamp.toIso8601Ext() << ":" << fixed << m_lastDataTimestamp.toTimestamp()
-                                << ":" << m_lastDataTimestamp.getSeconds() << ":" << m_lastDataTimestamp.getFractionalSeconds()
-                                << ":" << m_lastDataTimestamp.getTrainId() << ":.:::" << m_user << ":LOGOUT\n";
+                        m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
+                                << "|" << m_lastDataTimestamp.getSeconds() << "|" << m_lastDataTimestamp.getFractionalSeconds()
+                                << "|" << m_lastDataTimestamp.getTrainId() << "|.|||" << m_user << "|LOGOUT\n";
                         m_configStream.flush();
                         m_configStream.seekg(0, ios::end);
                         long position = m_configStream.tellg();
@@ -209,16 +209,16 @@ namespace karabo {
                     if (position == -1) {
                         throw KARABO_IO_EXCEPTION("Failed to position in file \"" + filename + "\"");
                     }
-                    m_configStream << t.toIso8601Ext() << ":" << fixed << t.toTimestamp() << ":" << t.getSeconds() << ":" << t.getFractionalSeconds() << ":"
-                            << t.getTrainId() << ":" << path << ":" << type << ":" << value << ":" << m_user << ":LOGIN\n";
+                    m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|" << t.getFractionalSeconds() << "|"
+                            << t.getTrainId() << "|" << path << "|" << type << "|" << value << "|" << m_user << "|LOGIN\n";
                     m_flushTime = t.getSeconds() + get<int>("flushInterval");
                     ofstream indexstream(indexname.c_str(), ios::app);
                     indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
                             << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
                     indexstream.close();
                 } else {
-                    m_configStream << t.toIso8601Ext() << ":" << fixed << t.toTimestamp() << ":" << t.getSeconds() << ":" << t.getFractionalSeconds()
-                            << ":" << t.getTrainId() << ":" << path << ":" << type << ":" << value << ":" << m_user << ":VALID\n";
+                    m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|" << t.getFractionalSeconds()
+                            << "|" << t.getTrainId() << "|" << path << "|" << type << "|" << value << "|" << m_user << "|VALID\n";
                 }
             }
             long maxFilesize = get<int>("maximumFileSize") * 1000000; // times to 1000000 because maximumFilesSize in MBytes
@@ -274,7 +274,7 @@ namespace karabo {
                     }
                 }
                 fs.open(lastIndexFilename.c_str(), ios::out | ios::app);
-                fs << idx;
+                fs << idx << "\n";
             } else {
                 fs.open(lastIndexFilename.c_str(), ios::in);
                 fs >> idx;
@@ -293,7 +293,7 @@ namespace karabo {
             file >> idx;
             if (file.fail()) file.clear();
             ++idx;
-            file.seekp(0);
+            file.seekg(0);
             file << idx << "\n";
             file.close();
             return idx;

@@ -190,7 +190,7 @@ namespace karabo {
                     string line;
                     while (getline(ifs, line)) {
                         vector<string> tokens;
-                        boost::split(tokens, line, boost::is_any_of(":"));
+                        boost::split(tokens, line, boost::is_any_of("|"));
                         if (tokens.size() != 10)
                             continue;                  // This record is corrupted -- skip it
                         
@@ -320,7 +320,7 @@ namespace karabo {
                         while (getline(file, line)) {
                             // file >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> train >> path >> type >> val >> user >> flag;
                             vector<string> tokens;
-                            boost::split(tokens, line, boost::is_any_of(":"));
+                            boost::split(tokens, line, boost::is_any_of("|"));
                             
                             if (tokens.size() != 10)
                                 continue;                // skip corrupted line
