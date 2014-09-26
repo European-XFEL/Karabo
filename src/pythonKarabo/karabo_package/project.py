@@ -12,7 +12,7 @@ This module contains a class which represents project related datastructures.
 
 from __future__ import unicode_literals
 
-__all__ = ["Project", "DeviceGroup", "ProjectConfiguration"]
+__all__ = ["Project", "ProjectConfiguration", "BaseDevice", "BaseDeviceGroup"]
 
 from karabo.hash import XMLParser, XMLWriter
 from karabo.hashtypes import StringList
@@ -220,17 +220,6 @@ class Project(object):
         raise NotImplementedError, "Project.shutdownAll"
 
 
-class DeviceGroup(list):
-    """
-    This class represents a list of devices.
-    """
-
-    def __init__(self, name=""):
-        super(DeviceGroup, self).__init__()
-        
-        self.name = name
-
-
 class ProjectConfiguration(object):
 
     def __init__(self, project, name, hash=None):
@@ -272,4 +261,18 @@ class BaseDevice(object):
         self.ifexists = ifexists
         
         self.project = None
+
+
+class BaseDeviceGroup(object):
+    """
+    This class represents a list of devices.
+    """
+
+    def __init__(self, name=""):
+        self.name = name
+        self.devices = []
+
+
+    def addDevice(self, device):
+        self.devices.append(device)
 
