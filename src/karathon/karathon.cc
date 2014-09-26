@@ -20,6 +20,8 @@
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #include <numpy/arrayobject.h>
 
+#include "ScopedGILRelease.hh"
+
 namespace bp = boost::python;
 // util
 void exportPyUtilHash();
@@ -93,8 +95,12 @@ void construct_string(PyObject *obj, boost::python::converter::rvalue_from_pytho
 }
 
 
+PyThreadState *karathon::ScopedGILRelease::m_threadState;
+int karathon::ScopedGILRelease::m_counter = 0;
+
+
 BOOST_PYTHON_MODULE(karathon) {
-    
+    PyEval_InitThreads();
     // init Array C-API
     import_array();
 

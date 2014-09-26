@@ -291,7 +291,7 @@ class DeviceServer(object):
         # What visibility this server should have
         self.visibility = input.get("visibility")
         
-        self.connectionType = iter(input['connection']).next().getKey()
+        self.connectionType = next(iter(input['connection'])).getKey()
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create("PythonPluginLoader", Hash("pluginDirectory", input['pluginDirectory']))
         self.loadLogger(input)
@@ -518,7 +518,7 @@ class DeviceServer(object):
 
     def parseOld(self, hash):
          # Input 'config' parameter comes from GUI or DeviceClient
-        classid = iter(hash).next().getKey()
+        classid = next(iter(hash)).getKey()
         self.log.INFO("Trying to start {}...".format(classid))
         self.log.DEBUG("with the following configuration:\n{}".format(hash))        
         configuration = copy.copy(hash[classid])
