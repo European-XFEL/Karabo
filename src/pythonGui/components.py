@@ -440,6 +440,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
 
+    @pyqtSlot()
     def updateButtons(self):
         """ update the buttons to reflect the current state of affairs """
         allowed = self.boxes[0].isAllowed()
