@@ -158,7 +158,7 @@ class Type(Descriptor, Registry):
     types defined in karabo.util.ReferenceType. The order of the
     sub-classes matters. Do not subclass this class unless the underlying
     C++ has been changed as well!"""
-    types = [ ]
+    types = [None] * 51
     fromname = { }
     strs = { }
 
@@ -178,8 +178,7 @@ class Type(Descriptor, Registry):
     @classmethod
     def register(cls, name, dict):
         super(Type, cls).register(name, dict)
-        cls.number = len(cls.types)
-        cls.types.append(cls)
+        cls.types[cls.number] = cls
         cls.fromname[cls.hashname()] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
@@ -190,15 +189,9 @@ class Type(Descriptor, Registry):
         return unicode(data)
 
 
-    def toHash(self, box):
-        return box.value
-
-
-    def fromHash(self, box, data, timestamp=None):
-        box._set(data, timestamp)
-
-
 class Bool(Type):
+    number = 0
+
     @classmethod
     def read(cls, file):
         return bool(Int8.read(file) != 0)
@@ -224,10 +217,12 @@ class Bool(Type):
 
 
 class VectorBool(NumpyVector, Bool):
+    number = 1
     numpy = numpy.bool_
 
 
 class Char(Simple, Type):
+    number = 2
     numpy = numpy.uint8 # actually not used, for convenience only
 
     @staticmethod
@@ -272,6 +267,8 @@ class VectorChar(Vector, Char):
     python data type is bytes. Make sure you don't use str for strings,
     as this will result in the hash creating a VectorChar, and the C++ will
     not be happy about this."""
+    number = 3
+
     @staticmethod
     def read(file):
         size, = file.readFormat('I')
@@ -293,117 +290,131 @@ class VectorChar(Vector, Char):
 
 
 class Int8(Integer, Type):
+    number = 4
     format = "b"
     numpy = numpy.int8
 
 
 class VectorInt8(NumpyVector, Int8):
-    pass
+    number = 5
 
 
 class UInt8(Integer, Type):
+    number = 6
     format = "B"
     numpy = numpy.uint8
 
 
 class VectorUInt8(NumpyVector, UInt8):
-    pass
+    number = 7
 
 
 class Int16(Integer, Type):
+    number = 8
     format = "h"
     numpy = numpy.int16
 
 
 class VectorInt16(NumpyVector, Int16):
-    pass
+    number = 9
 
 
 class UInt16(Integer, Type):
+    number = 10
     format = "H"
     numpy = numpy.uint16
 
 
 class VectorUInt16(NumpyVector, UInt16):
-    pass
+    number = 11
 
 
 class Int32(Integer, Type):
+    number = 12
     format = "i"
     numpy = numpy.int32
 
 
 class VectorInt32(NumpyVector, Int32):
-    pass
+    number = 13
 
 
 class UInt32(Integer, Type):
+    number = 14
     format = "I"
     numpy = numpy.uint32
 
 
 class VectorUInt32(NumpyVector, UInt32):
-    pass
+    number = 15
 
 
 class Int64(Integer, Type):
+    number = 16
     format = "q"
     numpy = numpy.int64
 
 
 class VectorInt64(NumpyVector, Int64):
-    pass
+    number = 17
 
 
 class UInt64(Integer, Type):
+    number = 18
     format = "Q"
     numpy = numpy.uint64
 
 
 class VectorUInt64(NumpyVector, UInt64):
-    pass
+    number = 19
 
 
 class Float(Number, Type):
+    number = 20
     format = "f"
     numpy = numpy.float32
 
 
 class VectorFloat(NumpyVector, Float):
-    pass
+    number = 21
 
 
 class Double(Number, Type):
+    number = 22
     format = "d"
     numpy = numpy.float64
 
 
 class VectorDouble(NumpyVector, Double):
-    pass
+    number = 23
 
 
 class ComplexFloat(Number, Type):
+    number = 24
     format = "ff"
     numpy = numpy.complex64
 
 
 class VectorComplexFloat(NumpyVector, ComplexFloat):
-    pass
+    number = 25
 
 
 class ComplexDouble(Number, Type):
+    number = 26
     format = "dd"
     numpy = numpy.complex128
 
 
 class VectorComplexDouble(NumpyVector, ComplexDouble):
-    pass
+    number = 27
 
 
 class String(Type):
     """This is the type corresponding to unicode strings, which are
     supposed to be used for all human-readable strings, so for
     everything except binary data."""
+    number = 28
+
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
@@ -429,6 +440,8 @@ class String(Type):
 
 
 class VectorString(Vector, String):
+    number = 29
+
     @staticmethod
     def fromstring(s):
         return StringList(s.split(','))
@@ -461,6 +474,8 @@ class StringList(Special, list):
 
 
 class Hash(Type):
+    number = 30
+
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
@@ -496,7 +511,7 @@ class Hash(Type):
 
 
     def cast(self, other):
-        if isinstance(other, Hash):
+        if isinstance(other, hash.Hash):
             return other
         else:
             raise TypeError(
@@ -504,6 +519,8 @@ class Hash(Type):
 
 
 class VectorHash(Vector, Hash):
+    number = 31
+
     @classmethod
     def read(cls, file):
         return list(super(VectorHash, cls).read(file))
@@ -513,67 +530,9 @@ class VectorHash(Vector, Hash):
         return [Hash.cast(self, o) for o in other]
 
 
-class PtrBool(Type):
-    pass
-
-
-class PtrChar(Type):
-    pass
-
-
-class PtrInt8(Type):
-    pass
-
-
-class PtrUInt8(Type):
-    pass
-
-
-class PtrInt16(Type):
-    pass
-
-
-class PtrUInt16(Type):
-    pass
-
-
-class PtrInt32(Type):
-    pass
-
-
-class PtrUInt32(Type):
-    pass
-
-
-class PtrInt64(Type):
-    pass
-
-
-class PtrUInt64(Type):
-    pass
-
-
-class PtrFloat(Type):
-    pass
-
-
-class PtrDouble(Type):
-    pass
-
-
-class PtrComplexFloat(Type):
-    pass
-
-
-class PtrComplexDouble(Type):
-    pass
-
-
-class PtrString(Type):
-    pass
-
-
 class Schema(Hash):
+    number = 47
+
     @classmethod
     def read(cls, file):
         file.readFormat('I') # ignore length
@@ -593,15 +552,9 @@ class Schema_(Special):
         self.hash = hash
 
 
-class VectorSchema(Type):
-    pass
-
-
-class Any(Type):
-    pass
-
-
 class None_(Type):
+    number = 50
+
     @staticmethod
     def read(file):
         file.readFormat('I') # ignore length
@@ -626,23 +579,3 @@ class None_(Type):
     def cast(self, other):
         if other is not None:
             raise TypeError('cannot cast to None (was {})'.format(other))
-
-
-class VectorNone(Type):
-    pass
-
-
-class Unknown(Type):
-    pass
-
-
-class Simple_(Type):
-    pass
-
-
-class Sequence(Type):
-    pass
-
-
-class Pointer(Type):
-    pass

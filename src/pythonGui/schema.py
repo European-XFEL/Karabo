@@ -11,7 +11,6 @@ from registry import Monkey
 from network import Network
 import icons
 from timestamp import Timestamp
-from util import Weak
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
@@ -59,9 +58,6 @@ class Box(QObject):
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
-
-
-    configuration = Weak()
 
 
     @property
@@ -214,6 +210,14 @@ class Type(hashtypes.Type):
                 treeWidget.onApplyChanged)
         self.completeItem(treeWidget, item, box, isClass)
         return item
+
+
+    def toHash(self, box):
+        return box.value
+
+
+    def fromHash(self, box, data, timestamp=None):
+        box._set(data, timestamp)
 
 
     def redummy(self, box):
@@ -540,6 +544,7 @@ class ChoiceOfNodes(Schema):
 
         # Trigger change of combobox
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
+        self.completeItem(treeWidget, item, box, isClass)
         return item
 
 
