@@ -268,8 +268,8 @@ class BaseDeviceGroup(object):
     This class represents a list of devices.
     """
 
-    def __init__(self, name=""):
-        self.name = name
+    def __init__(self, id=""):
+        self.id = id
         self.devices = []
 
 
