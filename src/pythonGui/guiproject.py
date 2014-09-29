@@ -28,8 +28,9 @@ import imp
 from importlib import import_module
 import marshal
 import os.path
-from tempfile import NamedTemporaryFile
 import sys
+from tempfile import NamedTemporaryFile
+import types
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
@@ -393,7 +394,8 @@ class Macro(object):
 
 
     def load_module(self, fullname):
-        mod = sys.modules.setdefault(fullname, imp.new_module(fullname))
+        mod = types.ModuleType(fullname)
+        sys.modules[fullname] = mod
         mod.__file__ = "{}/macros/{}.py".format(self.project.filename,
                                                 self.name)
         mod.__loader__ = self
@@ -402,11 +404,11 @@ class Macro(object):
         if self.text is None:
             with ZipFile(self.project.filename, "r") as zf:
                 try:
-                    s = zf.read(fn + 'c')
-                except KeyError:
+                    code = marshal.loads(zf.read(fn + 'c'))
+                except (KeyError, EOFError, ValueError, TypeError):
                     exec(zf.read(fn), mod.__dict__)
                 else:
-                    exec(marshal.loads(s), mod.__dict__)
+                    exec(code, mod.__dict__)
         else:
             exec(compile(self.text, fn, "exec"), mod.__dict__)
         return mod
