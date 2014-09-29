@@ -10,7 +10,7 @@ from enums import AccessMode
 from registry import Monkey
 from network import Network
 import icons
-from timestamp import Timestamp
+from karabo.timestamp import Timestamp
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
@@ -21,6 +21,7 @@ from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
 from PyQt4.QtCore import QObject, pyqtSignal
 
+from asyncio import async
 from collections import OrderedDict
 import weakref
 from functools import partial
@@ -48,11 +49,11 @@ class Box(QObject):
         QObject.__init__(self)
         # Path as tuple
         self.path = path
-        self._descriptor = descriptor
         self.configuration = configuration
         self.timestamp = None
         self._value = Dummy()
         self.initialized = False
+        self.descriptor = descriptor
         self.current = None # Support for choice of nodes
 
 
@@ -96,7 +97,7 @@ class Box(QObject):
         self._value = self.descriptor.cast(value)
         self.initialized = True
         self.timestamp = timestamp
-        self.signalUpdateComponent.emit(self, self._value, timestamp)
+        self.configuration.boxChanged(self, self._value, timestamp)
 
 
     def hasValue(self):
@@ -149,6 +150,14 @@ class _BoxValue(object):
 
 class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
+    options = None
+    accessMode = AccessMode.RECONFIGURABLE
+    assignment = 0
+    requiredAccessLevel = 0
+    metricPrefixSymbol = ""
+    unitSymbol = ""
+    displayType = None
+
     def completeItem(self, treeWidget, item, box, isClass):
         if self.assignment == 1: # Mandatory
             f = item.font(0)
@@ -160,11 +169,17 @@ class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
 
 
     def __get__(self, instance, owner):
-        return instance.__dict__[self.key].value
+        if instance is None:
+            return self
+        else:
+            if self.key not in instance.__dict__:
+                raise AttributeError
+            return instance.__dict__[self.key].value
 
 
     def __set__(self, instance, value):
-        instance.__dict__[self.key].set(value)
+        Network().onReconfigure([(getattr(instance.__box__.boxvalue, self.key),
+                                  value)])
 
 
 class Type(hashtypes.Type, metaclass=Monkey):
@@ -264,11 +279,21 @@ class Integer(hashtypes.Integer, metaclass=Monkey):
     classAlias = 'Integer Field'
     icon = icons.int
 
+    minExc = None
+    maxExc = None
+    minInc = None
+    maxInc = None
+
 
 class Number(hashtypes.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     classAlias = "Float Field"
     icon = icons.float
+
+    minExc = None
+    maxExc = None
+    minInc = None
+    maxInc = None
 
 
 class Bool(hashtypes.Bool, metaclass=Monkey):
@@ -282,8 +307,27 @@ class Vector(hashtypes.Vector, metaclass=Monkey):
     classAlias = 'List'
 
 
+class Slot(hashtypes.Slot, metaclass=Monkey):
+    def item(self, treeWidget, parent, box, isClass):
+        item = CommandTreeWidgetItem(self.displayedName, box, treeWidget,
+                                     parent)
+        item.displayText = self.displayedName
+        item.requiredAccessLevel = self.requiredAccessLevel
+        item.onStateChanged()
+        return item
+
+
+    def dummyCast(self, box):
+        return
+
+
+    def execute(self, box):
+        async(self.method.__get__(box.configuration.value, None)())
+
+
 class Object(object):
     def __init__(self, box):
+        self.__box__ = box
         for k, v in type(self).__dict__.items():
             if isinstance(v, hashtypes.Descriptor):
                 b = getattr(box.boxvalue, k, None)
@@ -292,6 +336,15 @@ class Object(object):
                 else:
                     b.descriptor = v
                 self.__dict__[k] = b
+
+
+    def __enter__(self):
+        self.__box__.configuration.addVisible()
+        return self
+
+
+    def __exit__(self, a, b, c):
+        self.__box__.configuration.removeVisible()
 
 
 class Dummy(object):
@@ -315,8 +368,8 @@ class Schema(hashtypes.Descriptor):
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
-        self = dict(Image=Image, Slot=Slot).get(attrs.get('displayType', None),
-                                                cls)(key)
+        self = dict(Image=ImageNode, Slot=SlotNode).get(
+                attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
         for k, h, a in hash.iterall():
@@ -457,7 +510,7 @@ class Schema(hashtypes.Descriptor):
         box.descriptor = None
 
 
-class Image(Schema):
+class ImageNode(Schema):
     classAlias = "Image View"
 
     def item(self, treeWidget, parent, box, isClass):
@@ -466,7 +519,17 @@ class Image(Schema):
         self.completeItem(treeWidget, item, box, isClass)
 
 
-class Slot(Schema):
+class Slot(Object):
+    def __init__(self, box):
+        Object.__init__(self, box)
+        self.box = box
+
+
+    def __call__(self):
+        self.box.execute()
+
+
+class SlotNode(Schema):
     classAlias = "Command"
 
 
@@ -478,6 +541,12 @@ class Slot(Schema):
         item = CommandTreeWidgetItem(self.key, box, treeWidget, parent)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
+
+
+    def getClass(self):
+        if self.cls is None:
+            self.cls = type(str(self.name), (Slot,), self.dict)
+        return self.cls
 
 
 class ChoiceOfNodes(Schema):

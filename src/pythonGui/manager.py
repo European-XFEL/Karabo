@@ -17,7 +17,7 @@
 __all__ = ["Manager"]
 
 
-from configuration import Configuration
+from configuration import Configuration, BulkNotifications
 from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
@@ -471,7 +471,8 @@ class _Manager(QObject):
         if device is None or device.descriptor is None:
             return
 
-        device.fromHash(configuration)
+        with BulkNotifications(device):
+            device.fromHash(configuration)
         if device.status == "schema":
             device.status = "alive"
 

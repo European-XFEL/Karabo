@@ -1,7 +1,7 @@
-import gui
 import sys
+sys.karabo_gui = True
+import gui
 
-if __name__ == "__main__":
-    sys.excepthook = gui.excepthook
-    app = gui.init(sys.argv)
-    sys.exit(app.exec_())
+sys.excepthook = gui.excepthook
+loop = gui.init(sys.argv)
+sys.exit(loop.run_forever())
