@@ -286,7 +286,6 @@ class DeviceDefinitionWidget(QWidget):
         self.cbServer.clear()
 
         for serverId in serverTopology.keys():
-            print "serverId", serverId
             visibility = serverTopology.getAttribute(serverId, "visibility")
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
                 continue
