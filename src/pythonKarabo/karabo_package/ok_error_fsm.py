@@ -72,7 +72,7 @@ class OkErrorFsm(base.BaseFsm):
         '''
     
     def errorFoundAction(self, m1, m2):
-        print "***", m1, m2
+        print("***", m1, m2)
         
     def okStateOnEntry(self):
         '''Actions executed on entry to 'Ok' state

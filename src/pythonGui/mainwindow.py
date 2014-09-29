@@ -65,8 +65,8 @@ class MainWindow(QMainWindow):
         try:
             with open(filePath, 'r') as file:
                 karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
             return ""
 
         try:
@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
     
     def onHelpAbout(self):
         # TODO: add about dialog for karabo including version etc.
-        print "onHelpAbout"
+        print("onHelpAbout")
 
 
     def onAddScene(self, scene):
@@ -285,7 +285,7 @@ class MainWindow(QMainWindow):
             self._showStartUpPage(False, False)
         
         # Check whether scene is already open
-        for i in xrange(self.middleTab.count()):
+        for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if hasattr(divWidget.dockableWidget, "scene"):
                 if divWidget.dockableWidget.scene == scene:
@@ -301,7 +301,7 @@ class MainWindow(QMainWindow):
 
 
     def onRemoveScene(self, scene):
-        for i in xrange(self.middleTab.count()):
+        for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if hasattr(divWidget.dockableWidget, "scene"):
                 if divWidget.dockableWidget.scene == scene:
@@ -319,7 +319,7 @@ class MainWindow(QMainWindow):
         The filename of the scene was already changed in the project panel and
         needs to be updated.
         """
-        for i in xrange(self.middleTab.count()):
+        for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
             if hasattr(divWidget.dockableWidget, "scene"):
                 if divWidget.dockableWidget.scene == scene:

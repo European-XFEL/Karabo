@@ -22,10 +22,10 @@ class Runner(object):
             if not configuration.empty():
                 instance = self.theClass.create(configuration)
         except:
-            print "Exception in user code:"
-            print '-'*60
+            print("Exception in user code:")
+            print('-'*60)
             traceback.print_exc(file=sys.stdout)
-            print '-'*60
+            print('-'*60)
         
         return instance
     
@@ -58,7 +58,7 @@ class Runner(object):
             saveToFile(configuration, "lastConfiguration.xml")
             return configuration
         except Exception as e:
-            print str(e)
+            print(str(e))
             return Hash()
         
     def processOption(self, option, args):
@@ -70,10 +70,10 @@ class Runner(object):
                 if pos > 0:
                     classid = classid[0, pos]
                 schema = self.theClass.getSchema(classid)
-                print "\nGenerating list of expected parameters. Writing output to file: %s.xsd\n" % classid
+                print("\nGenerating list of expected parameters. Writing output to file: %s.xsd\n" % classid)
                 saveToFile(schema, classid + ".xsd")
             else:
-                print "Expecting command line input, telling for whom the xsd file should be generated."
+                print("Expecting command line input, telling for whom the xsd file should be generated.")
         elif lowerOption == "help":
             if len(args) > 2:
                 self.showUsage(args[1], args[2])
@@ -87,25 +87,25 @@ class Runner(object):
                     classid = classid[0, pos]
                 # TODO implement
             else:
-                print "Runner-Version: %s" % Runner.__version__;
-                print "%s--Version: %s" % (theClass.__name__, theClass.__version__)
+                print("Runner-Version: %s" % Runner.__version__);
+                print("%s--Version: %s" % (theClass.__name__, theClass.__version__))
         else:
             self.showUsage(args[0])
     
     def showUsage(self, programName, what = ""):
         self.printXfelWelcome()
-        print "Usage: %s <configuration>\n" % programName
+        print("Usage: %s <configuration>\n" % programName)
         runnableType = self.theClass.__name__
         if what == "":
-            print "The <configuration> reflects a set of (hierarchical) key-value types."
-            print "You can supply <configuration> information as xml file or as command-line input or a combination of both.\n"
-            print "Example:\nAssume the key \"%s.someThreshold\" and a corresponding value \"4.2\".\nThe corresponding xml file should look like this:\n" % runnableType
-            print "  \"<%s><someThreshold>4.2</someThreshold></%s>\"\n\nIf you saved the file under \"config.xml\" you should then type:\n  '%s config.xml'\n\n" % (runnableType, runnableType, programName)
-            print "For the same configuration given as command line arguments you should type:\n  '%s %s.someThreshold=\"4.2\"'\n" % (programName, runnableType)
-            print "Following %s <choice>s are available:" % runnableType
-            print self.theClass.getRegisteredClasses()
-            print "\nType: '%s help <choice>' for help on a specific choice" % programName
-            print "Type: '%s --create-xsd <choice>' to generate full description of all parameters (in xml schema format)" % programName
+            print("The <configuration> reflects a set of (hierarchical) key-value types.")
+            print("You can supply <configuration> information as xml file or as command-line input or a combination of both.\n")
+            print("Example:\nAssume the key \"%s.someThreshold\" and a corresponding value \"4.2\".\nThe corresponding xml file should look like this:\n" % runnableType)
+            print("  \"<%s><someThreshold>4.2</someThreshold></%s>\"\n\nIf you saved the file under \"config.xml\" you should then type:\n  '%s config.xml'\n\n" % (runnableType, runnableType, programName))
+            print("For the same configuration given as command line arguments you should type:\n  '%s %s.someThreshold=\"4.2\"'\n" % (programName, runnableType))
+            print("Following %s <choice>s are available:" % runnableType)
+            print(self.theClass.getRegisteredClasses())
+            print("\nType: '%s help <choice>' for help on a specific choice" % programName)
+            print("Type: '%s --create-xsd <choice>' to generate full description of all parameters (in xml schema format)" % programName)
         else:
             classid = what
             pos = what.find('.')
@@ -115,7 +115,7 @@ class Runner(object):
             else:
                 path = ""
             self.theClass.getSchema(classid).help(path)
-        print
+        print()
         
     def readToken(self, token, config):
         if os.path.exists(token):
@@ -141,11 +141,11 @@ class Runner(object):
     def printXfelWelcome(self):
         runnableType = self.theClass.__name__
         runnableVersion = self.theClass.__version__
-        print "\n ##################################################################"
-        print " #             Simple Karabo %s Runner" % runnableType
-        print " #"
-        print " # Runner-Version: %s" % Runner.__version__
-        print " # Copyright (C) European XFEL GmbH Hamburg. All rights reserved."
-        print " ##################################################################\n"
+        print("\n ##################################################################")
+        print(" #             Simple Karabo %s Runner" % runnableType)
+        print(" #")
+        print(" # Runner-Version: %s" % Runner.__version__)
+        print(" # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.")
+        print(" ##################################################################\n")
         
         

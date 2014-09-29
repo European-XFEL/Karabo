@@ -62,7 +62,7 @@ class EditableComboBox(EditableWidget):
         if value is None:
             return
 
-        index = self.widget.findText(unicode(value))
+        index = self.widget.findText(str(value))
         if index < 0:
             return
 

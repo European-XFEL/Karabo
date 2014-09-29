@@ -31,7 +31,6 @@ End-of-file
 chmod u+x karabo-pythondeviceserver
 cd ../lib
 cp -rf ../../../../../../src/pythonKarabo .
-2to3 -j4 -wn --no-diffs .
 rm -f `find . -type f -name *.pyc`
 rm -rf `find . -type d -name .svn`
 cd $CWD
