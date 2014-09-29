@@ -250,7 +250,7 @@ class WorkflowGroupItem(Item):
         super(WorkflowGroupItem, self).__init__(parent)
         
         self.deviceGroup = deviceGroup
-        self.displayText = deviceGroup.name
+        self.displayText = deviceGroup.id
 
 
     def paintEvent(self, event):

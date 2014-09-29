@@ -141,11 +141,11 @@ class ProjectModel(QStandardItemModel):
                     childItem.appendRow(leafItem)
                 else:
                     # Device groups
-                    leafItem = QStandardItem(deviceObj.name)
+                    leafItem = QStandardItem(deviceObj.id)
                     leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
                     leafItem.setEditable(False)
                     leafItem.setIcon(icons.device_group)
-                    leafItem.setToolTip("{}".format(deviceObj.name))
+                    leafItem.setToolTip("{}".format(deviceObj.id))
                     childItem.appendRow(leafItem)
                     
                     # Iterate through device of group
@@ -631,19 +631,16 @@ class ProjectModel(QStandardItemModel):
             index = selectedIndexes[0]
             device = index.data(ProjectModel.ITEM_OBJECT)
             if device is not None and isinstance(device, Configuration):
-                if device.type == "deviceGroup":
-                    conf = device
+                # Check whether device is already online
+                if device.isOnline():
+                    conf = manager.getDevice(device.id)
                 else:
-                    # Check whether device is already online
-                    if device.isOnline():
-                        conf = manager.getDevice(device.id)
-                    else:
-                        conf = device
+                    conf = device
 
-                        # Check descriptor only with first selection
-                        if device.descriptorRequested is False:
-                            self.checkDescriptor(device)
-                            device.descriptorRequested = True
+                    # Check descriptor only with first selection
+                    if device.descriptorRequested is False:
+                        self.checkDescriptor(device)
+                        device.descriptorRequested = True
                 type = conf.type
             else:
                 conf = None
