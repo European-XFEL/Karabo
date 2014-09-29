@@ -561,7 +561,7 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, type, configuration):
-        print "onDeviceItemChanged", type, configuration, configuration.descriptor
+        print "onDeviceItemChanged", type, configuration
         # Update buttons
         if type == "other" or (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()

@@ -134,6 +134,54 @@ class DeviceGroup(BaseDeviceGroup, Configuration):
     def __init__(self, name=""):
         Configuration.__init__(self, name, "deviceGroup")
         BaseDeviceGroup.__init__(self, name)
+        
+        self._initConfig = None
+
+
+    @property
+    def name(self):
+        return self.id
+
+
+    @name.setter
+    def name(self, id):
+        print "set name", id
+        Configuration.id = id
+        BaseDeviceGroup.id = id
+
+
+    @property
+    def initConfig(self):
+        return self._initConfig
+
+
+    @initConfig.setter
+    def initConfig(self, config):
+        self._initConfig = config
+        # Merge initConfig, if descriptor is not None
+        self.mergeInitConfig()
+
+
+    def mergeInitConfig(self):
+        """
+        This function merges the \self.initConfig into the Configuration.
+        This is only possible, if the descriptor has been set before.
+        """
+        if self.descriptor is None: return
+
+        # Set default values for configuration
+        self.setDefault()
+        if self._initConfig is not None:
+            self.fromHash(self._initConfig)
+
+
+    def onNewDescriptor(self, conf):
+        if self.descriptor is not None:
+            #self.redummy()
+            return
+        self.descriptor = conf.descriptor
+        self.mergeInitConfig()
+        manager.Manager().onShowConfiguration(self)
 
 
 class GuiProject(Project, QObject):
@@ -192,7 +240,9 @@ class GuiProject(Project, QObject):
         deviceGroup = DeviceGroup()
         for index in xrange(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
-            deviceGroup.addDevice(Device(serverId, classId, id, ifexists))
+            device = Device(serverId, classId, id, ifexists)
+            deviceGroup.addDevice(device)
+            device.signalNewDescriptor.connect(deviceGroup.onNewDescriptor)
         Project.addDeviceGroup(self, deviceGroup)
         self.signalProjectModified.emit()
         

@@ -254,7 +254,7 @@ class WorkflowGroupItem(Item):
 
 
     def paintEvent(self, event):
-        self.checkChannels(self.deviceGroup.devices[0])
+        self.checkChannels(self.deviceGroup)
         Item.paintEvent(self, event)
 
 

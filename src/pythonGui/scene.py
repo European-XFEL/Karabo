@@ -1237,7 +1237,7 @@ class Scene(QSvgWidget):
                                                         dialog.startIndex,
                                                         dialog.endIndex)
 
-                    deviceGroup.name = dialog.deviceGroupName
+                    deviceGroup.id = dialog.deviceGroupName
                     
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
