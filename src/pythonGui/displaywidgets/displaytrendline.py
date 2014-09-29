@@ -39,7 +39,7 @@ try:
     from guiqwt.builder import make
     from guiqwt import signals
 except:
-    print "Missing package guiqwt (this is normal under MacOSX and will come later)"
+    print("Missing package guiqwt (this is normal under MacOSX and will come later)")
     useGuiQwt = False
 
 from timestamp import Timestamp
@@ -76,8 +76,8 @@ class Curve(QObject):
 
 
     def getPropertyHistory(self, t0, t1):
-        t0 = unicode(datetime.datetime.utcfromtimestamp(t0).isoformat())
-        t1 = unicode(datetime.datetime.utcfromtimestamp(t1).isoformat())
+        t0 = str(datetime.datetime.utcfromtimestamp(t0).isoformat())
+        t1 = str(datetime.datetime.utcfromtimestamp(t1).isoformat())
         self.box.getPropertyHistory(t0, t1, self.maxHistory)
 
 
@@ -193,7 +193,7 @@ class DisplayTrendline(DisplayWidget):
 
     @property
     def boxes(self):
-        return self.curves.keys()
+        return list(self.curves.keys())
 
 
     def valueChanged(self, box, value, timestamp=None):
@@ -219,5 +219,5 @@ class DisplayTrendline(DisplayWidget):
     def scaleChanged(self):
         asd = self.plot.axisScaleDiv(QwtPlot.xBottom)
         t0, t1 = asd.lowerBound(), asd.upperBound()
-        for v in self.curves.itervalues():
+        for v in self.curves.values():
             v.changeInterval(t0, t1)

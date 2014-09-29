@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on April 7, 2014
@@ -250,7 +250,7 @@ class GuiProject(Project, QObject):
                                               for scene in self.scenes]
 
             configs = Hash()
-            for deviceId, configList in self.configurations.iteritems():
+            for deviceId, configList in self.configurations.items():
                 configs[deviceId] = [Hash("filename", c.filename)
                                      for c in configList]
                 for c in configList:
@@ -261,7 +261,7 @@ class GuiProject(Project, QObject):
             resources = Hash()
             if file is not self.filename:
                 with ZipFile(self.filename, "r") as zin:
-                    for k, v in self.resources.iteritems():
+                    for k, v in self.resources.items():
                         for fn in v:
                             f = "resources/{}/{}".format(k, fn)
                             zf.writestr(f, zin.read(f))

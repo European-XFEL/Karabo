@@ -212,7 +212,7 @@ class Worker(threading.Thread):
                             t = self.dq.popleft()
                 if self.suspended:
                     continue
-            except RuntimeError, e:
+            except RuntimeError as e:
                 t = None
             if self.counter > 0:
                 self.counter -= 1
