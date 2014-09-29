@@ -268,7 +268,7 @@ class PythonDevice(BaseFsm):
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                 except RuntimeError as e:
-                    print "Validation Exception (Intern): " + str(e)
+                    print("Validation Exception (Intern): " + str(e))
                     raise RuntimeError("Validation Exception: " + str(e))
 
                 #if self.validatorIntern.hasParametersInWarnOrAlarm():
@@ -431,7 +431,7 @@ class PythonDevice(BaseFsm):
         self._ss.reply(currentState)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
-        print "onStateUpdate() is deprecated, use updateState() instead"
+        print("onStateUpdate() is deprecated, use updateState() instead")
         self.updateState(currentState)
 
     def exceptionFound(self, shortMessage, detailedMessage):
@@ -463,7 +463,7 @@ class PythonDevice(BaseFsm):
         self._ss.registerSlot(self.slotKillDevice)        
 
     def triggerError(self, s, d):
-        print "The triggerError() function is deprecated, use execute() instead"
+        print("The triggerError() function is deprecated, use execute() instead")
         self.exceptionFound(s, d)
         
     def execute(self, command, *args):
@@ -495,7 +495,7 @@ class PythonDevice(BaseFsm):
             try:
                 self.preReconfigure(validated)
             except Exception as e:
-                print "PythonDevice.slotReconfigure Exception:", str(e)
+                print("PythonDevice.slotReconfigure Exception:", str(e))
                 self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
                 return
@@ -593,6 +593,6 @@ def launchPythonDevice():
         device.run()
         device.__del__()
     except Exception as e:
-        print "Exception caught: " + str(e)
+        print("Exception caught: " + str(e))
     os._exit(77)
     

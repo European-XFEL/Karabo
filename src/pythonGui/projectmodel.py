@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 20, 2014
@@ -163,7 +163,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setToolTip(Project.CONFIGURATIONS_LABEL)
             item.appendRow(childItem)
             
-            for deviceId, configList in project.configurations.iteritems():
+            for deviceId, configList in project.configurations.items():
                 # Add item for device it belongs to
                 leafItem = QStandardItem(deviceId)
                 leafItem.setEditable(False)
@@ -246,7 +246,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def _rFindIndex(self, item, object):
-        for i in xrange(item.rowCount()):
+        for i in range(item.rowCount()):
             childItem = item.child(i)
             resultItem = self._rFindIndex(childItem, object)
             if resultItem:
@@ -505,7 +505,7 @@ class ProjectModel(QStandardItemModel):
 
         project = device.project
 
-        for i in xrange(dialog.count):
+        for i in range(dialog.count):
             deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
             newDevice = self.addDevice(project, device.serverId, device.classId,
                                        deviceId, device.ifexists)
@@ -573,7 +573,7 @@ class ProjectModel(QStandardItemModel):
             return
 
         xml = scene.toXml()
-        for i in xrange(dialog.count):
+        for i in range(dialog.count):
             filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, i+dialog.startIndex)
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)

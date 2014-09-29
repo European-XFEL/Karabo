@@ -271,7 +271,7 @@ class DeviceServer(object):
             elif 'DeviceServer.serverId' in hash:
                 self.serverid = hash['DeviceServer.serverId'] # If file exists, it has priority
             else:
-                print "WARN : Found serverId.xml without serverId contained"
+                print("WARN : Found serverId.xml without serverId contained")
                 self.serverid = self._generateDefaultServerId() # If nothing configured -> generate
                 saveToFile(Hash("DeviceServer.serverId", m_serverId), serverIdFileName, Hash("format.Xml.indentation", 3))
         else: # No file
@@ -430,7 +430,7 @@ class DeviceServer(object):
                     self.availableModules[name] = deviceClass.__classid__
                     self.availableDevices[deviceClass.__classid__] = {"mustNotify": True, "module": name, "xsd": schema}
                     self.newPluginAvailable()
-                    print "Successfully loaded plugin: \"{}.py\"".format(name)
+                    print("Successfully loaded plugin: \"{}.py\"".format(name))
                 except (RuntimeError, AttributeError) as e:
                     self.log.ERROR("Failure while building schema for class {}, base class {} and bases {} : {}".format(
                         deviceClass.__classid__, deviceClass.__base_classid__, deviceClass.__bases_classid__, e.message))
@@ -539,7 +539,7 @@ class DeviceServer(object):
     def notifyNewDeviceAction(self):
         deviceClasses = []
         visibilities = []
-        for (classid, d) in self.availableDevices.items():
+        for (classid, d) in list(self.availableDevices.items()):
             deviceClasses.append(classid)
             if d['mustNotify']:
                 d['mustNotify'] = False
@@ -553,7 +553,7 @@ class DeviceServer(object):
     def slotKillServer(self):
         self.log.INFO("Received kill signal")
         threads = []
-        for deviceid  in self.deviceInstanceMap.keys():
+        for deviceid  in list(self.deviceInstanceMap.keys()):
             self.ss.call(deviceid, "slotKillDevice")
             threads.append(self.deviceInstanceMap[deviceid])
         for t  in threads:
@@ -616,7 +616,7 @@ def main(args):
         if server:
             server.run()
     except Exception as e:
-        print "Exception caught: " + str(e)
+        print("Exception caught: " + str(e))
     
     
 if __name__ == '__main__':

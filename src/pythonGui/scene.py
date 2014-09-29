@@ -6,7 +6,7 @@
 
 """This module contains a class which represents a QSvgWidget."""
 
-from __future__ import unicode_literals
+
 
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
@@ -210,17 +210,17 @@ class Shape(ShapeAction, Loadable):
             d["stroke"] = "none"
         else:
             d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
-            d["stroke-opacity"] = unicode(self.pen.color().alphaF())
+            d["stroke-opacity"] = str(self.pen.color().alphaF())
             d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
-            d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
-            d["stroke-width"] = unicode(self.pen.widthF())
-            d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
+            d["stroke-dashoffset"] = str(self.pen.dashOffset())
+            d["stroke-width"] = str(self.pen.widthF())
+            d["stroke-dasharray"] = " ".join(str(x * self.pen.width())
                                              for x in self.pen.dashPattern())
             d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
-            d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
+            d["stroke-miterlimit"] = str(self.pen.miterLimit())
         if self.brush.style() == Qt.SolidPattern:
             d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
-            d["fill-opacity"] = unicode(self.brush.color().alphaF())
+            d["fill-opacity"] = str(self.brush.color().alphaF())
         else:
             d["fill"] = "none"
 
@@ -466,9 +466,9 @@ class Line(Shape):
 
     def element(self):
         ret = ElementTree.Element(
-            ns_svg + "line", x1=unicode(self.line.x1()),
-            x2=unicode(self.line.x2()), y1=unicode(self.line.y1()),
-            y2=unicode(self.line.y2()))
+            ns_svg + "line", x1=str(self.line.x1()),
+            x2=str(self.line.x2()), y1=str(self.line.y1()),
+            y2=str(self.line.y2()))
         self.savepen(ret)
         return ret
 
@@ -508,9 +508,9 @@ class Rectangle(Shape):
 
     def element(self):
         ret = ElementTree.Element(
-            ns_svg + "rect", x=unicode(self.rect.x()),
-            y=unicode(self.rect.y()), width=unicode(self.rect.width()),
-            height=unicode(self.rect.height()))
+            ns_svg + "rect", x=str(self.rect.x()),
+            y=str(self.rect.y()), width=str(self.rect.width()),
+            height=str(self.rect.height()))
         self.savepen(ret)
         return ret
 
@@ -1023,8 +1023,8 @@ class Scene(QSvgWidget):
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)
-        root.set('width', unicode(self.width()))
-        root.set('height', unicode(self.height()))
+        root.set('width', str(self.width()))
+        root.set('height', str(self.height()))
         return ElementTree.tostring(root)
 
 
@@ -1188,7 +1188,7 @@ class Scene(QSvgWidget):
                 self.ilayout.add_item(layout)
                 layout.selected = True
         elif sourceType == "NavigationTreeView":
-            print "NavigationTreeView"
+            print("NavigationTreeView")
             return
 
         self.project.setModified(True)

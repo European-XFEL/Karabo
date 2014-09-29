@@ -121,7 +121,7 @@ class SelectProjectConfigurationDialog(QDialog):
             self.projConfWidget.addTopLevelItem(item)
             item.setExpanded(True)
             
-            for deviceId, configList in p.configurations.iteritems():
+            for deviceId, configList in p.configurations.items():
                 deviceItem = QTreeWidgetItem([deviceId])
                 item.addChild(deviceItem)
                 deviceItem.setExpanded(True)

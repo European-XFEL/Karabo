@@ -52,11 +52,11 @@ class SqlTreeModelLevel(object):
     def resizeIds(self, size):
         if size < len(self.__ids):
             # Remove elements
-            for i in xrange(len(self.__ids)-size):
+            for i in range(len(self.__ids)-size):
                 self.__ids.pop()
         elif size > len(self.__ids):
             # Add elements
-            for i in xrange(size-len(self.__ids)):
+            for i in range(size-len(self.__ids)):
                 key = 0
                 self.__ids.append(-1)
 
@@ -74,11 +74,11 @@ class SqlTreeModelLevel(object):
     def resizeParentIds(self, size):
         if size < len(self.__parentIds):
             # Remove elements
-            for i in xrange(len(self.__parentIds)-size):
+            for i in range(len(self.__parentIds)-size):
                 self.__parentIds.pop()
         elif size > len(self.__parentIds):
             # Add elements
-            for i in xrange(size-len(self.__parentIds)):
+            for i in range(size-len(self.__parentIds)):
                 self.__parentIds.append(-1)
 
 

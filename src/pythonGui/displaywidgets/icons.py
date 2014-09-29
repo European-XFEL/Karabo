@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from const import ns_karabo
 import icons
 from widget import DisplayWidget
@@ -11,7 +11,7 @@ from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
                          QPixmap)
 
 from os import path
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 from xml.etree.ElementTree import Element
 
@@ -98,7 +98,7 @@ class Icons(DisplayWidget):
     def on_open_clicked(self):
         name = QFileDialog.getOpenFileName(self.dialog, "Open Icon")
         if name:
-            url = "file://" + urllib.pathname2url(name)
+            url = "file://" + urllib.request.pathname2url(name)
             self.setURL(url)
 
 
@@ -256,7 +256,7 @@ class DigitIcons(Icons):
             if v is not None:
                 ee.text = repr(v)
             if f is not None:
-                ee.set('equal', unicode(f).lower())
+                ee.set('equal', str(f).lower())
             if i is not None:
                 ee.set('image', i)
             e.append(ee)

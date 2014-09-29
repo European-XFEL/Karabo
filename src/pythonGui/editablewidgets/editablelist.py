@@ -103,7 +103,7 @@ class EditableList(EditableWidget, DisplayWidget):
 
         if listEdit.exec_() == QDialog.Accepted:
             values = [listEdit.getListElementAt(i)
-                      for i in xrange(listEdit.getListCount())]
+                      for i in range(listEdit.getListCount())]
 
             self.leList.setText(self.boxes[0].descriptor.toString(values))
             
