@@ -92,6 +92,7 @@ class Widget(Registry, QObject):
     @pyqtSlot(object)
     def typeChangedSlot(self, box):
         """ avoid having to declare typeChanged a slot in every widget """
+        print "typeChangedSlot", box
         self.typeChanged(box)
 
 
