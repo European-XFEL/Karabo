@@ -20,6 +20,24 @@ from network import Network
 from PyQt4.QtCore import pyqtSignal
 
 
+class BulkNotifications(object):
+    """Make the configuration not notify every change to the listeners,
+    but only after a set of changes was installed."""
+    def __init__(self, conf):
+        self.configuration = conf
+
+
+    def __enter__(self):
+        self.configuration.bulk_changes = True
+
+
+    def __exit__(self, a, b, c):
+        self.configuration.bulk_changes = False
+        for box, (value, timestamp) in self.configuration.bulk_list.items():
+            box.signalUpdateComponent.emit(box, value, timestamp)
+        self.configuration.bulk_list = { }
+
+
 class Configuration(Box):
     statusChanged = pyqtSignal(object, str, bool)
 
@@ -31,13 +49,15 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
-        assert type in ('class', 'projectClass', 'device')
+        assert type in ('class', 'projectClass', 'device', 'macro')
         self.type = type
         self.id = id
         self.visible = 0
         self._status = "offline"
         self.error = False
         self.parameterEditor = None
+        self.bulk_changes = False
+        self.bulk_list = { }
 
         #if type == "device":
         self.serverId = None
@@ -115,10 +135,17 @@ class Configuration(Box):
         return box
 
 
+    def boxChanged(self, box, value, timestamp):
+        if self.bulk_changes:
+            self.bulk_list[box] = value, timestamp
+        else:
+            box.signalUpdateComponent.emit(box, value, timestamp)
+
+
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
         Box.fillWidget(self, parameterEditor,
-                       self.type in ("class", "projectClass"))
+                       self.type in ("class", "projectClass", "macro"))
         parameterEditor.globalAccessLevelChanged()
 
 
@@ -131,10 +158,16 @@ class Configuration(Box):
             Network().onStartMonitoringDevice(self.id)
 
 
+    __enter__ = addVisible
+
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status != "offline":
             Network().onStopMonitoringDevice(self.id)
+
+
+    def __exit__(self, a, b, c):
+        self.removeVisible()
 
 
     def refresh(self):
