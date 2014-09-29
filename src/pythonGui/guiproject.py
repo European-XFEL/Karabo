@@ -132,22 +132,14 @@ class DeviceGroup(BaseDeviceGroup, Configuration):
 
 
     def __init__(self, name=""):
-        Configuration.__init__(self, name, "deviceGroup")
+        Configuration.__init__(self, name, "projectClass")#"deviceGroup")
         BaseDeviceGroup.__init__(self, name)
         
         self._initConfig = None
-
-
-    @property
-    def name(self):
-        return self.id
-
-
-    @name.setter
-    def name(self, id):
-        print "set name", id
-        Configuration.id = id
-        BaseDeviceGroup.id = id
+        # This flag states whether the descriptor was checked already
+        # This should only happen once when the device was selected the first
+        # time in the project view
+        self.descriptorRequested = False
 
 
     @property
@@ -182,6 +174,11 @@ class DeviceGroup(BaseDeviceGroup, Configuration):
         self.descriptor = conf.descriptor
         self.mergeInitConfig()
         manager.Manager().onShowConfiguration(self)
+
+
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
 
 
 class GuiProject(Project, QObject):
@@ -238,17 +235,16 @@ class GuiProject(Project, QObject):
 
     def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
         deviceGroup = DeviceGroup()
+        # Set server and class id for descriptor request
+        deviceGroup.serverId = serverId
+        deviceGroup.classId = classId
+        
         for index in xrange(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
             device = Device(serverId, classId, id, ifexists)
             deviceGroup.addDevice(device)
-            device.signalNewDescriptor.connect(deviceGroup.onNewDescriptor)
         Project.addDeviceGroup(self, deviceGroup)
         self.signalProjectModified.emit()
-        
-        # Trigger select item to get descriptors
-        for device in deviceGroup.devices:
-            self.signalSelectObject.emit(device)
         
         return deviceGroup
 
