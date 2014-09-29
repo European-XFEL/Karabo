@@ -17,7 +17,7 @@ import globals
 
 from scene import Scene
 from manager import Manager
-from guiproject import Category, Device, GuiProject
+from guiproject import Category, Device, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
@@ -214,8 +214,15 @@ class ProjectTreeView(QTreeView):
 
                 menu.addAction(acAddScene)
                 menu.addAction(acOpenScene)
-                
-        elif (selectedType is Device) or (selectedType is Scene):
+            elif firstObj.displayName == Project.MACROS_LABEL:
+                text = "Add Macro"
+                acAddMacro = QAction(text, self)
+                acAddMacro.setStatusTip(text)
+                acAddMacro.setToolTip(text)
+                acAddMacro.triggered.connect(self.model().onNewMacro)
+
+                menu.addAction(acAddMacro)
+        elif selectedType in (Device, Scene, Macro):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Remove selected"
@@ -268,11 +275,12 @@ class ProjectTreeView(QTreeView):
                 menu.addSeparator()
                 menu.addAction(acInitDevice)
                 menu.addAction(acKillDevice)
+            elif selectedType is Macro:
+                acEdit.triggered.connect(self.model().onEditMacro)
             elif selectedType is Scene:
                 if nbSelected == 1:
                     acEdit.triggered.connect(self.model().onEditScene)
                     acDuplicate.triggered.connect(self.model().onDuplicateScene)
-
                     text = "Save as..."
                     acSaveAs = QAction(text, self)
                     acSaveAs.setStatusTip(text)

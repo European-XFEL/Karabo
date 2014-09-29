@@ -1,7 +1,7 @@
 from PyQt4 import uic
-from PyQt4.QtCore import Qt, pyqtSlot
+from PyQt4.QtCore import QRegExp, Qt, pyqtSlot
 from PyQt4.QtGui import (QDialog, QIcon, QPixmap, QColorDialog, QValidator,
-                         QPalette, QFrame, QFontDialog)
+                         QPalette, QRegExpValidator, QFrame, QFontDialog)
 from os import path
 
 class Validator(QValidator):
@@ -151,3 +151,12 @@ class TextDialog(QDialog):
             ss.append("border: {}px;".format(self.framewidth.value()))
         self.label.setStyleSheet("".join(ss))
         self.label.setText(self.text.text())
+
+
+class MacroDialog(QDialog):
+    def __init__(self):
+        QDialog.__init__(self)
+        uic.loadUi(path.join(path.dirname(__file__), 'macro.ui'), self)
+        v = QRegExpValidator(self)
+        v.setRegExp(QRegExp(r"[A-Za-z_][A-Za-z0-9_]*"))
+        self.name.setValidator(v)
