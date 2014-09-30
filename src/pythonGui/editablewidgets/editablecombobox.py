@@ -58,7 +58,7 @@ class EditableComboBox(EditableWidget):
         return self.boxes[0].descriptor.fromstring(self.widget.currentText())
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
 
@@ -69,6 +69,4 @@ class EditableComboBox(EditableWidget):
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
 
-        if forceRefresh:
-            # Needs to be called to update possible apply buttons
-            self.onEditingFinished(value)
+        self.onEditingFinished(value)

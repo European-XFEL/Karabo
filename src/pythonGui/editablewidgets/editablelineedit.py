@@ -34,37 +34,30 @@ class EditableLineEdit(EditableWidget):
     def __init__(self, box, parent):
         super(EditableLineEdit, self).__init__(box)
         
-        self.lineEdit = QLineEdit(parent)
-        self.lineEdit.textChanged.connect(self.onEditingFinished)
+        self.widget = QLineEdit(parent)
+        self.widget.textChanged.connect(self.onEditingFinished)
 
         # Needed for updates during input, otherwise cursor jumps to end of input
         self.lastCursorPos = 0
 
 
     @property
-    def widget(self):
-        return self.lineEdit
-
-
-    @property
     def value(self):
-        return self.lineEdit.text()
+        return self.widget.text()
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = ""
         
-        with SignalBlocker(self.lineEdit):
-            self.lineEdit.setText(value)
+        with SignalBlocker(self.widget):
+            self.widget.setText(value)
         
-        self.lineEdit.setCursorPosition(self.lastCursorPos)
-        
-        if forceRefresh:
-            # Needs to be called to update possible apply buttons
-            self.onEditingFinished(value)
+        self.widget.setCursorPosition(self.lastCursorPos)
+
+        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):
-        self.lastCursorPos = self.lineEdit.cursorPosition()
+        self.lastCursorPos = self.widget.cursorPosition()
         EditableWidget.onEditingFinished(self, value)
