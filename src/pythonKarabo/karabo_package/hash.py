@@ -196,11 +196,13 @@ class Hash(OrderedDict):
 
     The bit difference to normal python containers is the dot-access method.
     The hash has a built-in knowledge about it containing itself. Thus,
-    one can access subhashes by hash['key.subhash'].
+    one can access subhashes by ``hash['key.subhash']``.
 
     The other speciality are attributes. In python, these can be accessed
-    using a second parameter to the brackets, as in hash['key', 'attribute'].
-    All attributes at the same time can be accessed by hash['key', ...]."""
+    using a second parameter to the brackets, as in
+    ``hash['key', 'attribute']``.
+
+    All attributes at the same time can be accessed by ``hash['key', ...]``."""
 
     hashtype = hashtypes.Hash
 
