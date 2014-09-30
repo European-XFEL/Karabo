@@ -35,7 +35,8 @@ def init(argv):
     loop = EventLoop(argv)
     asyncio.set_event_loop(loop)
     karabo.Macro = Macro
-    karabo.__all__.append("Macro")
+    karabo.DeviceClient = DeviceClient
+    karabo.__all__.extend(["Macro", "DeviceClient"])
     icons.init()
 
     loop.app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
