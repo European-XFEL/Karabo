@@ -26,16 +26,11 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
-class Device(BaseDevice, Configuration):
-    signalDeviceModified = pyqtSignal(bool)
+class BaseConfiguration(Configuration):
 
-    def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
-        Configuration.__init__(self, deviceId, "projectClass", descriptor)
-        BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
 
-        actual = manager.getDevice(deviceId)
-        actual.statusChanged.connect(self.onStatusChanged)
-        self.onStatusChanged(actual, actual.status, actual.error)
+    def __init__(self, deviceId, type, descriptor=None):
+        Configuration.__init__(self, deviceId, type, descriptor)
 
         # This flag states whether the descriptor was checked already
         # This should only happen once when the device was selected the first
@@ -69,12 +64,42 @@ class Device(BaseDevice, Configuration):
             self.fromHash(self._initConfig)
 
 
+    def checkDescriptor(self):
+        if self.descriptorRequested is True:
+            return
+        
+        # Get class configuration
+        conf = manager.getClass(self.serverId, self.classId)
+
+        conf.signalNewDescriptor.connect(self.onNewDescriptor)
+        if conf.descriptor is not None:
+            self.onNewDescriptor(conf)
+
+        self.descriptorRequested = True
+
+
     def onNewDescriptor(self, conf):
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = conf.descriptor
         self.mergeInitConfig()
         manager.Manager().onShowConfiguration(self)
+
+
+    def isOnline(self):
+        raise NotImplementedError, "BaseConfiguration.isOnline"
+
+
+class Device(BaseDevice, BaseConfiguration):
+    signalDeviceModified = pyqtSignal(bool)
+
+    def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
+        BaseConfiguration.__init__(self, deviceId, "projectClass", descriptor)
+        BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
+
+        actual = manager.getDevice(deviceId)
+        actual.statusChanged.connect(self.onStatusChanged)
+        self.onStatusChanged(actual, actual.status, actual.error)
 
 
     def fromXml(self, xmlString):
@@ -123,57 +148,20 @@ class Device(BaseDevice, Configuration):
                 self.status = "incompatible"
 
 
-    #def isOnline(self):
-    #    return self.status not in (
-    #        "offline", "noplugin", "noserver", "incompatible")
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
 
 
-class DeviceGroup(BaseDeviceGroup, Configuration):
+class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
-    def __init__(self, name=""):
-        Configuration.__init__(self, name, "deviceGroup")
+    def __init__(self, type, name=""):
+        BaseConfiguration.__init__(self, name, type)
         BaseDeviceGroup.__init__(self, name)
         
-        self._initConfig = None
-        # This flag states whether the descriptor was checked already
-        # This should only happen once when the device was selected the first
-        # time in the project view
-        self.descriptorRequested = False
-
-
-    @property
-    def initConfig(self):
-        return self._initConfig
-
-
-    @initConfig.setter
-    def initConfig(self, config):
-        self._initConfig = config
-        # Merge initConfig, if descriptor is not None
-        self.mergeInitConfig()
-
-
-    def mergeInitConfig(self):
-        """
-        This function merges the \self.initConfig into the Configuration.
-        This is only possible, if the descriptor has been set before.
-        """
-        if self.descriptor is None: return
-
-        # Set default values for configuration
-        self.setDefault()
-        if self._initConfig is not None:
-            self.fromHash(self._initConfig)
-
-
-    def onNewDescriptor(self, conf):
-        if self.descriptor is not None:
-            #self.redummy()
-            return
-        self.descriptor = conf.descriptor
-        self.mergeInitConfig()
-        manager.Manager().onShowConfiguration(self)
+        # If all device are online there is another deviceGroup to represent this
+        self.instance = None
 
 
     def isOnline(self):
@@ -234,7 +222,7 @@ class GuiProject(Project, QObject):
 
 
     def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
-        deviceGroup = DeviceGroup()
+        deviceGroup = DeviceGroup("deviceGroupClass")
         # Set server and class id for descriptor request
         deviceGroup.serverId = serverId
         deviceGroup.classId = classId
