@@ -117,6 +117,22 @@ class ClientBase(object):
                     device.removeVisible()
 
 
+    @coroutine
+    def getClass(self, serverId, classId):
+        cls = manager.getClass(serverId, classId)
+        with FutureSlot(cls.statusChanged) as fs:
+            while cls.status != "schema":
+                yield from fs
+        return cls.value
+
+
+    @coroutine
+    def startDevice(self, deviceId, cls):
+        serverId, classId = cls.__box__.id.split(".")
+        network.onInitDevice(serverId, classId, deviceId, cls.__box__.toHash())
+        return (yield from self.getDevice(deviceId))
+
+
 class DeviceClient(ClientBase):
     pass
 
