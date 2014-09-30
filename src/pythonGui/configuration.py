@@ -108,6 +108,11 @@ class Configuration(Box):
                 self.statusChanged.emit(self, self.status, self.error)
 
 
+    def isOnline(self):
+        return self.status not in (
+            "offline", "noplugin", "noserver", "incompatible")
+
+
     def getBox(self, path):
         box = self
         for p in path:
