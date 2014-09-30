@@ -254,7 +254,10 @@ class WorkflowGroupItem(Item):
 
 
     def paintEvent(self, event):
-        self.checkChannels(self.deviceGroup)
+        if self.deviceGroup.isOnline() and self.deviceGroup.instance is not None:
+            self.checkChannels(self.deviceGroup.instance)
+        else:
+            self.checkChannels(self.deviceGroup)
         Item.paintEvent(self, event)
 
 

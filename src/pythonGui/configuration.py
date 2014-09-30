@@ -31,7 +31,7 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
-        assert type in ('class', 'projectClass', 'device', 'deviceGroup')
+        assert type in ('class', 'projectClass', 'device', 'deviceGroupClass', 'deviceGroup')
         self.type = type
         self.id = id
         self.visible = 0
@@ -108,11 +108,6 @@ class Configuration(Box):
                 self.statusChanged.emit(self, self.status, self.error)
 
 
-    def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
-
-
     def getBox(self, path):
         box = self
         for p in path:
@@ -123,7 +118,7 @@ class Configuration(Box):
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
         Box.fillWidget(self, parameterEditor,
-                       self.type in ("class", "projectClass"))
+                       self.type in ("class", "projectClass", "deviceGroupClass"))
         parameterEditor.globalAccessLevelChanged()
 
 
