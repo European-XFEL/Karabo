@@ -21,6 +21,7 @@
 __all__ = ["EditableCheckBox"]
 
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.QtCore import Qt
@@ -33,40 +34,27 @@ class EditableCheckBox(EditableWidget):
 
     def __init__(self, box, parent):
         super(EditableCheckBox, self).__init__(box)
-        
-        self.__checkBox = QCheckBox(parent)
-        self.__checkBox.stateChanged.connect(self.onEditingFinished)
 
-
-    @property
-    def widget(self):
-        return self.__checkBox
+        self.widget = QCheckBox(parent)
+        self.widget.stateChanged.connect(self.onEditingFinished)
 
 
     @property
     def value(self):
-        return self.__checkBox.checkState() == Qt.Checked
+        return self.widget.checkState() == Qt.Checked
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = False
-        
+
         checkState = Qt.Checked
-        if (value is True) or (value == "true") or (value == 1):
+        if value in (True, "true", 1):
             checkState = Qt.Checked
         else:
             checkState = Qt.Unchecked
         if value != self.value:
-            self.__checkBox.blockSignals(True)
-            self.__checkBox.setCheckState(checkState)
-            self.__checkBox.blockSignals(False)
-        
-        if forceRefresh:
-            # Needs to be called to update possible apply buttons
-            self.onEditingFinished(checkState)
-        
+            with SignalBlocker(self.widget):
+                self.widget.setCheckState(checkState)
 
-### slots ###
-    def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value == Qt.Checked)
+        self.onEditingFinished(checkState)

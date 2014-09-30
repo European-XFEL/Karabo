@@ -76,7 +76,7 @@ class EditableList(EditableWidget, DisplayWidget):
         return self.valueList
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = []
 
@@ -86,6 +86,7 @@ class EditableList(EditableWidget, DisplayWidget):
             self.leList.setText(box.descriptor.toString(value))
         
         self.leList.setCursorPosition(self.lastCursorPos)
+        self.onEditingFinished(self.leList.text())
 
 
     def onEditingFinished(self, text):

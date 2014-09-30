@@ -5,6 +5,7 @@
 #############################################################################
 
 
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
@@ -32,12 +33,10 @@ class QwtWidget(EditableWidget):
         return self.widget.value()
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        block = self.widget.blockSignals(True)
-        try:
+    def valueChanged(self, box, value, timestamp=None):
+        with SignalBlocker(self.wiget):
             self.widget.setValue(value)
-        finally:
-            self.widget.blockSignals(block)
+        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):
