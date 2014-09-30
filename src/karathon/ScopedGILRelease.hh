@@ -17,20 +17,16 @@ namespace karathon {
     public:
 
         inline ScopedGILRelease() {
-	    if (!m_counter++)
-                m_threadState = PyEval_SaveThread();
+	    if (PyGILState_Check()) m_threadState = PyEval_SaveThread();
+	    else m_threadState = 0;
         }
 
         inline ~ScopedGILRelease() {
-	    if (!--m_counter) {
-                PyEval_RestoreThread(m_threadState);
-                m_threadState = 0;
-	    }
+	    if (m_threadState) PyEval_RestoreThread(m_threadState);
         }
 
     private:
-        static PyThreadState* m_threadState;
-	static int m_counter;
+        PyThreadState* m_threadState;
     };
 }
 
