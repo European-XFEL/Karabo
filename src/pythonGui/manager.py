@@ -269,7 +269,7 @@ class _Manager(QObject):
         conf, classId = self.currentConfigurationAndClassId()
         
         r = XMLParser()
-        with open(filename, 'r') as file:
+        with open(filename, 'rb') as file:
             config = r.read(file.read())
         
         if not config.has(classId):
@@ -300,10 +300,6 @@ class _Manager(QObject):
         if not filename:
             return
 
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".xml"
-
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
             MessageBox.showError("Configuration save failed")
@@ -312,7 +308,7 @@ class _Manager(QObject):
 
         # Save configuration to file
         w = XMLWriter()
-        with open(filename, 'w') as file:
+        with open(filename, 'wb') as file:
             w.writeToFile(config, file)
 
 
