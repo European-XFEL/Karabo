@@ -193,7 +193,7 @@ class  Hash_TestCase(unittest.TestCase):
             h = Hash('a.b.c', [1, 2, 3, 4, 5, 6, 7], 'b.c.d', [False, False, True, True, True, False, True])
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
             self.assertEqual(h.isType('a.b.c', Types.VECTOR_INT32), True)
-            self.assertEqual(str(type(h['a.b.c'])), "<type 'list'>")
+            self.assertEqual(str(type(h['a.b.c'])), "<class 'list'>")
             try:
                 setStdVectorDefaultConversion(Types.VECTOR_INT32)
             except RuntimeError as e:
@@ -202,8 +202,8 @@ class  Hash_TestCase(unittest.TestCase):
             setStdVectorDefaultConversion(Types.NUMPY)
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), False)
             self.assertEqual(isStdVectorDefaultConversion(Types.NUMPY), True)
-            self.assertEqual(str(type(h['a.b.c'])), "<type 'numpy.ndarray'>")
-            self.assertEqual(str(type(h['b.c.d'])), "<type 'numpy.ndarray'>")
+            self.assertEqual(str(type(h['a.b.c'])), "<class 'numpy.ndarray'>")
+            self.assertEqual(str(type(h['b.c.d'])), "<class 'numpy.ndarray'>")
             setStdVectorDefaultConversion(Types.PYTHON)
             self.assertEqual(isStdVectorDefaultConversion(Types.PYTHON), True)
         except Exception as e:
@@ -236,7 +236,7 @@ class  Hash_TestCase(unittest.TestCase):
             h = Hash("a", True)
             self.assertEqual(h.getAs("a", Types.STRING), "1", 'Should return "1" as python string')
             self.assertEqual(h.getAs("a", Types.INT32), 1, 'Should return 1 as an python int')
-            self.assertEqual(h.getAs("a", Types.INT64), 1L, 'Should return 1L as python long')
+            self.assertEqual(h.getAs("a", Types.INT64), 1, 'Should return 1L as python long')
             self.assertEqual(h.getAs("a", Types.FLOAT), 1.0, 'Should return 1.0 as python float')
             self.assertEqual(h.getAs("a", Types.DOUBLE), 1.0, 'Should return 1.0 as python float')
         except Exception as e:
@@ -276,7 +276,7 @@ class  Hash_TestCase(unittest.TestCase):
 
         #TODO
         try:
-            h = Hash("a", bytearray(['4','4','4']))   # value is python bytearray -> std::vector<char>
+            h = Hash("a", bytearray([52,52,52]))   # value is python bytearray -> std::vector<char>
             self.assertEqual(h.getAs("a", Types.STRING), "NDQ0", 'Should return "NDQO" as python string because it assumes vector to contain binary data and does a base64 encode')
         except Exception as e:
             self.fail("test_getAs exception group 5: " + str(e))
@@ -295,18 +295,18 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 7: " + str(e))
             
         try:
-            h = Hash("a", -42L)
+            h = Hash("a", -42)
         except Exception as e:
             self.fail("test_getAs exception group 8: " + str(e))
             
         try:
-            h = Hash("a", [-42L])
+            h = Hash("a", [-42])
             self.assertEqual(h.getAs("a", Types.STRING), "-42", 'Should return "-42" as str')
         except Exception as e:
             self.fail("test_getAs exception group 9: " + str(e))
             
         try:
-            h = Hash("a", np.array([-42L]))
+            h = Hash("a", np.array([-42]))
             self.assertEqual(h.getAs("a", Types.STRING), "-42", 'Should return "-42" as str')
         except Exception as e:
             self.fail("test_getAs exception group 10: " + str(e))
@@ -318,16 +318,16 @@ class  Hash_TestCase(unittest.TestCase):
             self.fail("test_getAs exception group 11: " + str(e))
             
         try:
-            h = Hash("a", -2147483647L)
+            h = Hash("a", -2147483647)
             self.assertEqual(h.getAs("a", Types.STRING), "-2147483647", 'Should return "-2147483647" str')
         except Exception as e:
             self.fail("test_getAs exception group 12: " + str(e))
             
         try:
-            h = Hash("a", 1234567890L)
+            h = Hash("a", 1234567890)
             self.assertEqual(h.getAs("a", Types.STRING), "1234567890", 'Should return "1234567890" str')
-            self.assertEqual(h.getType("a"), Types.INT64)
-            self.assertEqual(str(h.getType("a")), "INT64")
+            self.assertEqual(h.getType("a"), Types.INT32)
+            self.assertEqual(str(h.getType("a")), "INT32")
         except Exception as e:
             self.fail("test_getAs exception group 13: " + str(e))
             
@@ -430,12 +430,12 @@ class  Hash_TestCase(unittest.TestCase):
             h.getKeys(tmp)         # fill set by keys
             tmp.sort()
             it = iter(tmp)
-            self.assertEqual(str(it.next()), "be")
-            self.assertEqual(str(it.next()), "correct")
-            self.assertEqual(str(it.next()), "in")
-            self.assertEqual(str(it.next()), "iterated")
-            self.assertEqual(str(it.next()), "order")
-            self.assertEqual(str(it.next()), "should")
+            self.assertEqual(str(next(it)), "be")
+            self.assertEqual(str(next(it)), "correct")
+            self.assertEqual(str(next(it)), "in")
+            self.assertEqual(str(next(it)), "iterated")
+            self.assertEqual(str(next(it)), "order")
+            self.assertEqual(str(next(it)), "should")
         except Exception as e:
             self.fail("test_iteration exception group 7: " + str(e))
 
@@ -444,12 +444,12 @@ class  Hash_TestCase(unittest.TestCase):
             tmp = list()           # create empty vector
             h.getKeys(tmp)         # fill vector by keys
             it = iter(tmp)
-            self.assertEqual(str(it.next()), "should")
-            self.assertEqual(str(it.next()), "iterated")
-            self.assertEqual(str(it.next()), "in")
-            self.assertEqual(str(it.next()), "correct")
-            self.assertEqual(str(it.next()), "order")
-            self.assertEqual(str(it.next()), "be")
+            self.assertEqual(str(next(it)), "should")
+            self.assertEqual(str(next(it)), "iterated")
+            self.assertEqual(str(next(it)), "in")
+            self.assertEqual(str(next(it)), "correct")
+            self.assertEqual(str(next(it)), "order")
+            self.assertEqual(str(next(it)), "be")
         except Exception as e:
             self.fail("test_iteration exception group 8: " + str(e))
 
@@ -460,19 +460,19 @@ class  Hash_TestCase(unittest.TestCase):
             h.getKeys(l)    # use top level keys
             self.assertEqual(len(l), 3)
             i = iter(l)                         # "canonical" order: on every level insertion order
-            self.assertEqual(str(i.next()), "b")
-            self.assertEqual(str(i.next()), "a")
-            self.assertEqual(str(i.next()), "abc")
+            self.assertEqual(str(next(i)), "b")
+            self.assertEqual(str(next(i)), "a")
+            self.assertEqual(str(next(i)), "abc")
             
             l = [];
             h.getPaths(l)   # use full keys 
             self.assertEqual(len(l), 5)
             i = iter(l)
-            self.assertEqual(str(i.next()), "b")
-            self.assertEqual(str(i.next()), "a.b.c")
-            self.assertEqual(str(i.next()), "a.b.c1.d")
-            self.assertEqual(str(i.next()), "abc.2")
-            self.assertEqual(str(i.next()), "abc.1")
+            self.assertEqual(str(next(i)), "b")
+            self.assertEqual(str(next(i)), "a.b.c")
+            self.assertEqual(str(next(i)), "a.b.c1.d")
+            self.assertEqual(str(next(i)), "abc.2")
+            self.assertEqual(str(next(i)), "abc.1")
         except Exception as e:
             self.fail("test_iteration exception group 9: " + str(e))
             
@@ -480,7 +480,7 @@ class  Hash_TestCase(unittest.TestCase):
             hash = Hash("a.b[0].c.d", "bla-la-la", "a.b[1].c.d", "bla-la-la")
             vec = hash['a.b']
             for h in vec:
-                self.assertEqual(h.__iter__().next().getValue()['d'], "bla-la-la")
+                self.assertEqual(next(h.__iter__()).getValue()['d'], "bla-la-la")
         except Exception as e:
             self.fail("test_iteration exception group 10: " + str(e))
 
@@ -778,13 +778,13 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c", "value")
             h.setAttribute("a.b.c","attr1", 10)
-	    h.setAttribute("a.b.c","attr2", "test")
+            h.setAttribute("a.b.c","attr2", "test")
             attrs = h.getAttributes("a.b.c")
             
-	    node = attrs.getNode("attr1")
+            node = attrs.getNode("attr1")
             self.assertEqual(node.getType(), Types.INT32)
-	    self.assertEqual(node.getValue(), 10)
-	    self.assertEqual(node.getValueAs(Types.STRING), '10')
+            self.assertEqual(node.getValue(), 10)
+            self.assertEqual(node.getValueAs(Types.STRING), '10')
             self.assertEqual(node.getValueAs("STRING"), '10')
             
             node.setType(Types.STRING)
@@ -797,7 +797,7 @@ class  Hash_TestCase(unittest.TestCase):
             self.assertEqual(node.getType(), Types.UINT32)
             self.assertEqual(node.getValue(), 10)
             
-	    node = attrs.getNode("attr2")
+            node = attrs.getNode("attr2")
             self.assertEqual(node.getType(), Types.STRING)
             
         except Exception as e:
@@ -808,7 +808,7 @@ class  Hash_TestCase(unittest.TestCase):
         try:
             h = Hash("a.b.c", "value")
             h.setAttribute("a.b.c","attr1", 12)
-	    h.setAttribute("a.b.c","attr2", True)
+            h.setAttribute("a.b.c","attr2", True)
             
             attrs = h.getAttributes("a.b.c")
             
