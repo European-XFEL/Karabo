@@ -1,3 +1,6 @@
+"""
+.. autofunction:: waitUntil
+"""
 from asyncio import async, coroutine, get_event_loop
 from contextlib import contextmanager
 from functools import wraps
@@ -82,7 +85,9 @@ def waitUntil(condition):
     """this coroutine waits until the function condition returns true
 
     An example of usage:
+
     ::
+
         device = yield from self.getDevice("someDevice")
         yield from waitUntil(lambda: device.speed > 3)
 

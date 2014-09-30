@@ -1,3 +1,15 @@
+""" Everything you need to do asynchronous calls. This is primarily
+for macros.
+
+.. autoclass:: Macro
+
+.. autoclass:: ClientBase
+   :members:
+
+.. autoclass:: DeviceProxy
+   :members:
+"""
+
 import manager
 from network import network
 from schema import Schema, Type, Object, Box
@@ -48,12 +60,15 @@ class DeviceProxy(object):
     """This is a proxy to a real device.
 
     All calls to this device are forwarded to the actual device.
+    They are typically created by calling :meth:`~ClientBase.getDevice`.
     Examples of usage:
 
     ::
 
-        device.speed = 5 # set an attribute
+        device = yield from self.getDevice("someDevice")
+        device.speed = 5 # set a property
         device.start() # call a slot
+
     """
     def __init__(self, device):
         self.__dict__["_device"] = device
@@ -102,7 +117,7 @@ class ClientBase(object):
 
         This coroutine searches for the device and waits until its
         schema and configuration have arrived. It then returns a
-        ProxyDevice for this device."""
+        :class:`DeviceProxy` for this device."""
         device = manager.getDevice(deviceId)
         if device.status == "alive":
             return DeviceProxy(device.value)
@@ -119,6 +134,18 @@ class ClientBase(object):
 
     @coroutine
     def getClass(self, serverId, classId):
+        """get a class from a server
+
+        return the class *classId* from server *serverId*.
+        The result is an object that knows about parameters of this
+        device, so that you can modify them.
+
+        ::
+
+            cls = yield from self.getClass("someServer", "someClass")
+            cls.someParameter = 7
+            self.startDevice("someDeviceName", cls)
+        """
         cls = manager.getClass(serverId, classId)
         with FutureSlot(cls.statusChanged) as fs:
             while cls.status != "schema":
@@ -128,6 +155,10 @@ class ClientBase(object):
 
     @coroutine
     def startDevice(self, deviceId, cls):
+        """start a device
+
+        Start the device *deviceId* with a *cls* retrieved with :meth:`getClass`.
+        """
         serverId, classId = cls.__box__.id.split(".")
         network.onInitDevice(serverId, classId, deviceId, cls.__box__.toHash())
         return (yield from self.getDevice(deviceId))
@@ -138,7 +169,10 @@ class DeviceClient(ClientBase):
 
 
 class Macro(ClientBase, Object, metaclass=MetaMacro):
-    """This is the parent class for all macros """
+    """This is the parent class for all macros.
+
+    It assures that the macro is properly listed in the GUI.
+    Most of its functionality is found in its base class, :class:`ClientBase`"""
     instance = None
     type = "macro"
 
