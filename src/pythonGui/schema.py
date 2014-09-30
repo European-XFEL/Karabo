@@ -4,6 +4,10 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
+"""
+.. autoclass:: Box
+"""
+
 from karabo.hash import Hash
 from karabo import hashtypes
 from enums import AccessMode
