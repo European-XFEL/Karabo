@@ -4,5 +4,7 @@ __date__ ="$Jul 11, 2013 5:20:23 PM$"
 
 import karabo.hash
 from karabo.hashtypes import String, Int32, Slot
+from karabo.async import waitUntil
+from asyncio import sleep
 
-__all__ = ["Macro", "String", "Int32", "Slot"]
+__all__ = ["String", "Int32", "Slot", "waitUntil", "sleep"]
