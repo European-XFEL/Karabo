@@ -123,16 +123,16 @@ class Device(BaseDevice, Configuration):
                 self.status = "incompatible"
 
 
-    def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
+    #def isOnline(self):
+    #    return self.status not in (
+    #        "offline", "noplugin", "noserver", "incompatible")
 
 
 class DeviceGroup(BaseDeviceGroup, Configuration):
 
 
     def __init__(self, name=""):
-        Configuration.__init__(self, name, "projectClass")#"deviceGroup")
+        Configuration.__init__(self, name, "deviceGroup")
         BaseDeviceGroup.__init__(self, name)
         
         self._initConfig = None
@@ -177,8 +177,8 @@ class DeviceGroup(BaseDeviceGroup, Configuration):
 
 
     def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
+        return not [d for d in self.devices \
+             if d.status in ("offline", "noplugin", "noserver", "incompatible")]
 
 
 class GuiProject(Project, QObject):

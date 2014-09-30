@@ -632,7 +632,7 @@ class ProjectModel(QStandardItemModel):
             device = index.data(ProjectModel.ITEM_OBJECT)
             if device is not None and isinstance(device, Configuration):
                 # Check whether device is already online
-                if device.isOnline():
+                if device.isOnline() and device.type in ("device", "projectClass"):
                     conf = manager.getDevice(device.id)
                 else:
                     conf = device
