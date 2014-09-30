@@ -178,8 +178,11 @@ class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
 
 
     def __set__(self, instance, value):
-        Network().onReconfigure([(getattr(instance.__box__.boxvalue, self.key),
-                                  value)])
+        if instance.__box__.configuration.type == "device":
+            Network().onReconfigure([(getattr(instance.__box__.boxvalue,
+                                              self.key), value)])
+        else:
+            instance.__dict__[self.key]._set(self.cast(value), None)
 
 
 class Type(hashtypes.Type, metaclass=Monkey):
