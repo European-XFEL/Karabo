@@ -549,15 +549,6 @@ class ProjectModel(QStandardItemModel):
         self.selectObject(newDevice)
 
 
-    def checkDescriptor(self, device):
-        # Get class configuration
-        conf = manager.getClass(device.serverId, device.classId)
-
-        conf.signalNewDescriptor.connect(device.onNewDescriptor)
-        if conf.descriptor is not None:
-            device.onNewDescriptor(conf)
-
-
     def editScene(self, scene=None):
         dialog = SceneDialog(scene)
         if dialog.exec_() == QDialog.Rejected:
@@ -632,15 +623,26 @@ class ProjectModel(QStandardItemModel):
             device = index.data(ProjectModel.ITEM_OBJECT)
             if device is not None and isinstance(device, Configuration):
                 # Check whether device is already online
-                if device.isOnline() and device.type in ("device", "projectClass"):
-                    conf = manager.getDevice(device.id)
+                if device.isOnline():
+                    if device.type in ("device", "projectClass"):
+                        conf = manager.getDevice(device.id)
+                    elif device.type == 'deviceGroupClass':
+                        if device.instance is None:
+                            device.instance = DeviceGroup('deviceGroup', device.id)
+                            device.instance.serverId = device.serverId
+                            device.instance.classId = device.classId
+                            self.updateData()
+                        
+                        conf = device.instance
+                        print "+++++++ online deviceGroup"
+                        # Check descriptor only with first selection
+                        conf.checkDescriptor()
                 else:
                     conf = device
-
+                    print "---- offline deviceGroup"
                     # Check descriptor only with first selection
-                    if device.descriptorRequested is False:
-                        self.checkDescriptor(device)
-                        device.descriptorRequested = True
+                    conf.checkDescriptor()
+                
                 type = conf.type
             else:
                 conf = None

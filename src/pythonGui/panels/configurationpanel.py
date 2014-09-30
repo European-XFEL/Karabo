@@ -359,7 +359,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
         
-        if configuration.type == "class" or configuration.type == "projectClass":
+        if configuration.type in ("class", "projectClass", "deviceGroupClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -567,8 +567,7 @@ class ConfigurationPanel(QWidget):
             self._hideAllButtons()
         else:
             self.updateButtonsVisibility = configuration is not None and \
-                                           (configuration.type == 'class' or \
-                                            configuration.type == 'projectClass')
+                                           configuration.type in ('class', 'projectClass', 'deviceGroupClass')
         
         if self.prevConfiguration not in (None, configuration) and (self.prevConfiguration.type == "device"):
             self.prevConfiguration.removeVisible()
