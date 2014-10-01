@@ -80,6 +80,7 @@ class Project(object):
 
     def addDeviceGroup(self, deviceGroup):
         self.devices.append(deviceGroup)
+        deviceGroup.project = self
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -271,8 +272,11 @@ class BaseDeviceGroup(object):
     def __init__(self, id=""):
         self.id = id
         self.devices = []
+        
+        self.project = None
 
 
     def addDevice(self, device):
         self.devices.append(device)
+        device.project = self.project
 
