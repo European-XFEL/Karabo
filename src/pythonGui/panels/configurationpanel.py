@@ -488,7 +488,8 @@ class ConfigurationPanel(QWidget):
             # Show waiting page
             self._setParameterEditorIndex(index)
         
-        if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
+        if configuration not in (None, self.prevConfiguration) and \
+           configuration.type in ("device", "deviceGroup"):
             configuration.addVisible()
         
         self.prevConfiguration = configuration
@@ -569,7 +570,8 @@ class ConfigurationPanel(QWidget):
             self.updateButtonsVisibility = configuration is not None and \
                                            configuration.type in ('class', 'projectClass', 'deviceGroupClass')
         
-        if self.prevConfiguration not in (None, configuration) and (self.prevConfiguration.type == "device"):
+        if self.prevConfiguration not in (None, configuration) and \
+           self.prevConfiguration.type in ("device", "deviceGroup"):
             self.prevConfiguration.removeVisible()
 
         self.showParameterPage(configuration)
