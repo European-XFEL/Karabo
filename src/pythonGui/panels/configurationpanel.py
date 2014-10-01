@@ -362,8 +362,7 @@ class ConfigurationPanel(QWidget):
         if configuration.type in ("class", "projectClass", "deviceGroupClass"):
             twParameterEditor.hideColumn(1)
 
-        if configuration is not None:
-            configuration.fillWidget(twParameterEditor)
+        configuration.fillWidget(twParameterEditor)
         
         index = self.__swParameterEditor.addWidget(twParameterEditor)
         return index
