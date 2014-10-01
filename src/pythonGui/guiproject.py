@@ -164,9 +164,41 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         self.instance = None
 
 
+    def createInstance(self):
+        """
+        The online instance of the deviceGroup is created once and returned.
+        """
+        if self.instance is not None:
+            return self.instance
+
+        self.instance = DeviceGroup("deviceGroup", self.id)
+        self.instance.devices = self.devices
+        
+        self.instance.serverId = self.serverId
+        self.instance.classId = self.classId
+
+        return self.instance
+
+
     def isOnline(self):
         return not [d for d in self.devices \
              if d.status in ("offline", "noplugin", "noserver", "incompatible")]
+
+
+    def fillWidget(self, parameterEditor):
+        print "DeviceGroup.fillWidget", self, self.type
+        # TODO: do some more... e.g. connect to devices, deviceConfiguration
+        Configuration.fillWidget(self, parameterEditor)
+
+
+    def addVisible(self):
+        for device in self.devices:
+            device.addVisible()
+
+
+    def removeVisible(self):
+        for device in self.devices:
+            device.removeVisible()
 
 
 class GuiProject(Project, QObject):
