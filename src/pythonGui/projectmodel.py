@@ -627,19 +627,14 @@ class ProjectModel(QStandardItemModel):
                     if device.type in ("device", "projectClass"):
                         conf = manager.getDevice(device.id)
                     elif device.type == 'deviceGroupClass':
-                        if device.instance is None:
-                            device.instance = DeviceGroup('deviceGroup', device.id)
-                            device.instance.serverId = device.serverId
-                            device.instance.classId = device.classId
-                            self.updateData()
+                        instance = device.createInstance()
                         
-                        conf = device.instance
-                        print "+++++++ online deviceGroup"
+                        conf = instance
+                        
                         # Check descriptor only with first selection
                         conf.checkDescriptor()
                 else:
                     conf = device
-                    print "---- offline deviceGroup"
                     # Check descriptor only with first selection
                     conf.checkDescriptor()
                 
