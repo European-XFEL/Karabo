@@ -173,6 +173,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
         self.instance = DeviceGroup("deviceGroup", self.id)
         self.instance.devices = self.devices
+        self.instance.project = self.project
         
         self.instance.serverId = self.serverId
         self.instance.classId = self.classId
@@ -188,6 +189,8 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
     def fillWidget(self, parameterEditor):
         print "DeviceGroup.fillWidget", self, self.type
         # TODO: do some more... e.g. connect to devices, deviceConfiguration
+        #if self.isOnline():
+        #    print "online deviceGroup..
         Configuration.fillWidget(self, parameterEditor)
 
 
@@ -259,11 +262,13 @@ class GuiProject(Project, QObject):
         deviceGroup.serverId = serverId
         deviceGroup.classId = classId
         
+        Project.addDeviceGroup(self, deviceGroup)
+        
         for index in xrange(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
             device = Device(serverId, classId, id, ifexists)
             deviceGroup.addDevice(device)
-        Project.addDeviceGroup(self, deviceGroup)
+        
         self.signalProjectModified.emit()
         
         return deviceGroup

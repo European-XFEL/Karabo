@@ -562,13 +562,13 @@ class ConfigurationPanel(QWidget):
         
 
     def onDeviceItemChanged(self, type, configuration):
-        print "+++ onDeviceItemChanged", type, configuration
         # Update buttons
-        if type == "other" or (configuration is not None and configuration.descriptor is None):
+        if type in ("other", "deviceGroupClass", "deviceGroup") or \
+           (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()
         else:
             self.updateButtonsVisibility = configuration is not None and \
-                                           configuration.type in ('class', 'projectClass', 'deviceGroupClass')
+                                           configuration.type in ('class', 'projectClass')
         
         if self.prevConfiguration not in (None, configuration) and \
            self.prevConfiguration.type in ("device", "deviceGroup"):
