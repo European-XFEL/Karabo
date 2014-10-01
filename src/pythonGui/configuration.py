@@ -126,14 +126,12 @@ class Configuration(Box):
         self.visible += 1
         if self.visible == 1 and self.status not in ("offline", "requested"):
             Network().onStartMonitoringDevice(self.id)
-        print "+++ Configuration.addVisible", self, self.visible
 
 
     def removeVisible(self):
         self.visible -= 1
         if self.visible == 0 and self.status != "offline":
             Network().onStopMonitoringDevice(self.id)
-        print "--- Configuration.removeVisible", self, self.visible
 
 
     def refresh(self):

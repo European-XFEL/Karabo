@@ -92,6 +92,7 @@ class BaseConfiguration(Configuration):
 
 class Device(BaseDevice, BaseConfiguration):
     signalDeviceModified = pyqtSignal(bool)
+    signalDeviceNeedsUpdate = pyqtSignal(object)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
         BaseConfiguration.__init__(self, deviceId, "projectClass", descriptor)
@@ -148,6 +149,11 @@ class Device(BaseDevice, BaseConfiguration):
                 self.status = "incompatible"
 
 
+    def onNewDescriptor(self, conf):
+        BaseConfiguration.onNewDescriptor(self, conf)
+        self.signalDeviceNeedsUpdate.emit(self)
+
+
     def isOnline(self):
         return self.status not in (
             "offline", "noplugin", "noserver", "incompatible")
@@ -179,6 +185,39 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         self.instance.classId = self.classId
 
         return self.instance
+
+
+    def onUpdateDevice(self, device):
+        if device not in self.devices:
+            return
+        
+        if self.descriptor is None:
+            device.initConfig = self.initConfig
+        else:
+            device.initConfig = self.toHash()
+
+
+    def onNewDescriptor(self, conf):
+        BaseConfiguration.onNewDescriptor(self, conf)
+
+        for k, v in self.descriptor.dict.iteritems():
+            box = getattr(self.boxvalue, k, None)
+            if box is None:
+                continue
+            
+            for device in self.devices:
+                deviceBox = getattr(device.boxvalue, k, None)
+                box.signalUpdateComponent.connect(deviceBox.signalUpdateComponent)
+
+            # TODO: go recursivly
+            #print "box.type", type(v)
+            #if isinstance(v, Schema):
+            #    print "... go recursively ..."
+            #    for ck, cv in box.dict.iteritems():
+            #        cBox = getattr(box.boxvalue, ck, None)
+            #        if cBox is None:
+            #            continue
+            #        print "cBox", cBox
 
 
     def isOnline(self):
@@ -267,9 +306,14 @@ class GuiProject(Project, QObject):
         for index in xrange(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
             device = Device(serverId, classId, id, ifexists)
+            device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             deviceGroup.addDevice(device)
         
         self.signalProjectModified.emit()
+        
+        # Trigger select item to get descriptors
+        #for device in deviceGroup.devices:
+        #    self.signalSelectObject.emit(device)
         
         return deviceGroup
 
