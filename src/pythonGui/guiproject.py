@@ -15,6 +15,7 @@ __all__ = ["GuiProject", "Category"]
 
 from configuration import Configuration
 from scene import Scene
+from schema import Schema
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
 import manager
@@ -197,27 +198,26 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
             device.initConfig = self.toHash()
 
 
+    def _connectDevices(self, descriptor, groupBox):
+        for k, v in descriptor.dict.iteritems():
+            childBox = getattr(groupBox, k, None)
+            if childBox is None:
+                continue
+
+            for device in self.devices:
+                deviceBox = device.getBox(childBox.path)
+                if deviceBox is None:
+                    continue
+                childBox.signalUpdateComponent.connect(deviceBox.signalUpdateComponent)
+            
+            if isinstance(v, Schema):
+                self._connectDevices(v, childBox.boxvalue)
+
+
     def onNewDescriptor(self, conf):
         BaseConfiguration.onNewDescriptor(self, conf)
-
-        for k, v in self.descriptor.dict.iteritems():
-            box = getattr(self.boxvalue, k, None)
-            if box is None:
-                continue
-            
-            for device in self.devices:
-                deviceBox = getattr(device.boxvalue, k, None)
-                box.signalUpdateComponent.connect(deviceBox.signalUpdateComponent)
-
-            # TODO: go recursivly
-            #print "box.type", type(v)
-            #if isinstance(v, Schema):
-            #    print "... go recursively ..."
-            #    for ck, cv in box.dict.iteritems():
-            #        cBox = getattr(box.boxvalue, ck, None)
-            #        if cBox is None:
-            #            continue
-            #        print "cBox", cBox
+        # Recursively connect deviceGroup boxes to boxes of devices
+        self._connectDevices(self.descriptor, self.boxvalue)
 
 
     def isOnline(self):
@@ -227,7 +227,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
     def fillWidget(self, parameterEditor):
         print "DeviceGroup.fillWidget", self, self.type
-        # TODO: do some more... e.g. connect to devices, deviceConfiguration
+        # TODO: do some more...
         #if self.isOnline():
         #    print "online deviceGroup..
         Configuration.fillWidget(self, parameterEditor)
