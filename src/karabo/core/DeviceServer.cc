@@ -238,7 +238,7 @@ namespace karabo {
                 m_scanPlugins = false;
                 m_autoStart.resize(2);
                 m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
-                m_autoStart[1] = Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0");
+                m_autoStart[1] = Hash("DataLoggerManager.deviceId", "Karabo_DataLoggerManager_0");
             }
 
             m_connectionConfiguration = input.get<Hash>("connection");
