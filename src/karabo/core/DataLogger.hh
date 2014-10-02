@@ -27,22 +27,21 @@ namespace karabo {
      */
     namespace core {
 
-        class DataLogger : public Device<OkErrorFsm> {
-
+        class DataLogger : public karabo::core::Device<karabo::core::OkErrorFsm> {
             std::string m_deviceToBeLogged;
-            
+
             karabo::util::Schema m_currentSchema;
-            
+
             std::fstream m_configStream;
-            
+
             unsigned int m_lastIndex;
             std::string m_user;
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
             unsigned long long m_flushTime;
-            
+
             long m_startPosition;
-                       
+
         public:
 
             KARABO_CLASSINFO(DataLogger, "DataLogger", "1.0")
@@ -51,7 +50,10 @@ namespace karabo {
 
             DataLogger(const karabo::util::Hash& input);
 
-            virtual ~DataLogger();
+            virtual ~DataLogger() {
+                slotTagDeviceToBeDiscontinued(true, 'L');
+                KARABO_LOG_INFO << "dead.";
+            }
 
 
         private: // Functions
@@ -75,12 +77,10 @@ namespace karabo {
             void slotTagDeviceToBeDiscontinued(const bool wasValidUpToNow, const char reason);
 
             void refreshDeviceInformation();
-            
+
             int determineLastIndex(const std::string& deviceId);
-            
+
             int incrementLastIndex(const std::string& deviceId);
-            
-            void preDestruction();
         };
     }
 }

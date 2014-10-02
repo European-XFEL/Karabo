@@ -19,7 +19,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, DataLoggerManager)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLoggerManager)
 
 
         void DataLoggerManager::expectedParameters(Schema& expected) {
@@ -55,16 +55,17 @@ namespace karabo {
                     .commit();
         }
 
-        DataLoggerManager::DataLoggerManager(const Hash& input) : Device<OkErrorFsm>(input) {
+        DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
         }
 
         DataLoggerManager::~DataLoggerManager() {
+            KARABO_LOG_INFO << "dead.";
         }
 
         void DataLoggerManager::okStateOnEntry() {
             // Register handlers
-            remote().registerInstanceNewMonitor(boost::bind(&karabo::core::DataLoggerManager::instanceNewHandler, this, _1));
-            remote().registerInstanceGoneMonitor(boost::bind(&karabo::core::DataLoggerManager::instanceGoneHandler, this, _1, _2));
+            remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
+            remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
             // Prepare backend to persist data (later we should use brokerhost/brokerport/brokertopic)
             if (!boost::filesystem::exists("karaboHistory")) {
@@ -150,17 +151,15 @@ namespace karabo {
 
                 Epochstamp from;
                 if (params.has("from")) from = Epochstamp(params.get<string>("from"));
-
                 Epochstamp to;
-                if (params.has("to")) to = Epochstamp(params.get<string>("to"));
-
+                if (params.has("to"))   to = Epochstamp(params.get<string>("to"));
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
+                
+                KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
+                KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.toIso8601Ext();
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601();
-                KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.toIso8601();
-
-                DataLoggerIndex idx = findNearestLeftLoggerIndex(deviceId, params.get<string>("from"));
+                DataLoggerIndex idx = findNearestLoggerIndex(deviceId, from);
                 if (idx.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
                     reply(result);
@@ -173,10 +172,18 @@ namespace karabo {
                     reply(result);
                     return;
                 }
-                
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Index found: event: " << idx.m_event
+                        << ", epochstamp: " << idx.m_epoch.toIso8601Ext()
+                        << ", trainId: " << idx.m_train
+                        << ", position: " << idx.m_position
+                        << ", user: " << idx.m_user
+                        << ", fileindex: " << idx.m_fileindex
+                        << ", lastindex: " << lastFileIndex;
+                                        
                 Epochstamp epochstamp(0, 0);
                 long position = idx.m_position;
-                
+
                 for (int i = idx.m_fileindex; i <= lastFileIndex && epochstamp <= to; i++, position = 0) {
                     string filename = "karaboHistory/" + deviceId + "_configuration_" + karabo::util::toString(i) + ".txt";
                     if (!boost::filesystem::exists(boost::filesystem::path(filename))) {
@@ -186,37 +193,37 @@ namespace karabo {
 
                     ifstream ifs(filename.c_str());
                     ifs.seekg(position);
-                    
+
                     string line;
                     while (getline(ifs, line)) {
                         vector<string> tokens;
                         boost::split(tokens, line, boost::is_any_of("|"));
                         if (tokens.size() != 10)
-                            continue;                  // This record is corrupted -- skip it
-                        
+                            continue; // This record is corrupted -- skip it
+
                         //ifs >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> trainId >> path >> type >> value >> user >> flag;
 
-                        const string& flag = tokens[9]; 
+                        const string& flag = tokens[9];
                         if ((flag == "LOGIN" || flag == "LOGOUT") && result.size() > 0) {
                             result[result.size() - 1].setAttribute("v", "isLast", 'L');
                         }
-                        
+
                         const string& path = tokens[5];
                         if (path != property)
                             continue;
-                        
+
                         unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
                         unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
                         epochstamp = Epochstamp(seconds, fraction);
                         if (epochstamp > to)
                             break;
-                        
+
                         Hash hash;
                         const string& type = tokens[6];
                         const string& value = tokens[7];
                         Hash::Node& node = hash.set<string>("v", value);
                         node.setType(Types::from<FromLiteral>(type));
-                        
+
                         unsigned long long trainId = fromString<unsigned long long>(tokens[4]);
                         Timestamp timestamp(epochstamp, Trainstamp(trainId));
                         Hash::Attributes& attrs = hash.getAttributes("v");
@@ -307,31 +314,31 @@ namespace karabo {
                     KARABO_LOG_WARN << "File \"karaboHistory/" << deviceId << ".last\" not found. No data will be sent...";
                     return;
                 }
-                
+
                 {
-                    Epochstamp current(0,0);
+                    Epochstamp current(0, 0);
                     long position = index.m_position;
                     for (int i = index.m_fileindex; i <= lastFileIndex && current <= target; i++, position = 0) {
                         string filename = "karaboHistory/" + deviceId + "_configuration_" + karabo::util::toString(i) + ".txt";
                         ifstream file(filename.c_str());
                         file.seekg(position);
-                        
+
                         string line;
                         while (getline(file, line)) {
                             // file >> timestampAsIso8601 >> timestampAsDouble >> seconds >> fraction >> train >> path >> type >> val >> user >> flag;
                             vector<string> tokens;
                             boost::split(tokens, line, boost::is_any_of("|"));
-                            
+
                             if (tokens.size() != 10)
-                                continue;                // skip corrupted line
-                            
+                                continue; // skip corrupted line
+
                             const string& flag = tokens[9];
                             if (flag == "LOGOUT")
                                 break;
-                            
+
                             const string& path = tokens[5];
                             if (!schema.has(path)) continue;
-                            
+
                             unsigned long long seconds = fromString<unsigned long long>(tokens[2]);
                             unsigned long long fraction = fromString<unsigned long long>(tokens[3]);
                             unsigned long long train = fromString<unsigned long long>(tokens[4]);
@@ -370,7 +377,7 @@ namespace karabo {
             string indexpath = "karaboHistory/" + deviceId + "_index.txt";
             if (!boost::filesystem::exists(boost::filesystem::path(indexpath)))
                 return entry;
-            
+
             ifstream ifs(indexpath.c_str());
             while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble >> seconds >> fraction) {
                 // read the rest of the line (upto '\n')
@@ -379,7 +386,7 @@ namespace karabo {
                     ifs.close();
                     throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + indexpath + "\"");
                 }
-                
+
                 Epochstamp epochstamp(seconds, fraction);
                 if (epochstamp > target) {
                     if (!tail.empty()) {
@@ -400,21 +407,18 @@ namespace karabo {
             return entry;
         }
 
-        DataLoggerIndex DataLoggerManager::findNearestLeftLoggerIndex(const std::string& deviceId, const std::string& timepoint) {
+        DataLoggerIndex DataLoggerManager::findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& target) {
             string timestampAsIso8061;
             double timestampAsDouble;
             unsigned long long seconds, fraction;
             string event;
-            
+
             DataLoggerIndex nearest;
-            
-            KARABO_LOG_FRAMEWORK_DEBUG << "findNearestLeftLoggerIndex: Requested time point: " << timepoint;
-            
+
             string indexpath = "karaboHistory/" + deviceId + "_index.txt";
             if (!boost::filesystem::exists(boost::filesystem::path(indexpath))) return nearest;
             ifstream ifs(indexpath.c_str());
 
-            Epochstamp target(timepoint);
             string tail;
 
             while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble >> seconds >> fraction) {
@@ -424,9 +428,16 @@ namespace karabo {
                     ifs.close();
                     throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + indexpath + "\"");
                 }
-               Epochstamp epochstamp(seconds, fraction);
+                Epochstamp epochstamp(seconds, fraction);
                 if (epochstamp > target) {
-                    if (!tail.empty()) {
+                    if (tail.empty()) {
+                        //there is no record before target timepoint, hence, use this one
+                        nearest.m_event = event;
+                        nearest.m_epoch = epochstamp;
+                        stringstream ss(line);
+                        ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
+                    } else {
+                        // there is record before target timepoint, hence, use previous one
                         stringstream ss(tail);
                         ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                     }
@@ -441,7 +452,7 @@ namespace karabo {
             ifs.close();
             return nearest;
         }
-        
+
         int DataLoggerManager::getFileIndex(const std::string& deviceId) {
             string filename = "karaboHistory/" + deviceId + ".last";
             if (!boost::filesystem::exists(boost::filesystem::path(filename))) return -1;
