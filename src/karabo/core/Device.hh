@@ -46,6 +46,9 @@ namespace karabo {
             KARABO_CLASSINFO(BaseDevice, "BaseDevice", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS;
 
+            virtual ~BaseDevice() {
+            }
+
             virtual void run() = 0;
 
             // TODO
@@ -649,7 +652,7 @@ namespace karabo {
 
             virtual void preDestruction() {
             }
-            
+
         private: // Functions
 
             /**
@@ -721,7 +724,7 @@ namespace karabo {
                 using namespace std;
 
                 SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
-                
+
                 SIGNAL2("signalNoTransition", string, string);
                 connectN("", "signalNoTransition", "*", "slotNoTransition");
 

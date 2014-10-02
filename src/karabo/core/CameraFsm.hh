@@ -18,7 +18,6 @@ namespace karabo {
     namespace core {
 
         class CameraFsm : public BaseFsm {
-                       
         public:
 
             KARABO_CLASSINFO(CameraFsm, "CameraFsm", "1.0")
@@ -63,6 +62,9 @@ namespace karabo {
 
         public:
 
+            virtual ~CameraFsm() {
+            }
+
             /**************************************************************/
             /*                        Events                              */
             /**************************************************************/
@@ -92,7 +94,7 @@ namespace karabo {
             /**************************************************************/
             /*                    Transition Actions                      */
             /**************************************************************/
-            
+
             KARABO_FSM_VE_ACTION2(ErrorFoundAction, errorFoundAction, std::string, std::string);
 
             KARABO_FSM_VE_ACTION0(ResetAction, resetAction)
@@ -140,11 +142,11 @@ namespace karabo {
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, Ok)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-            
+
         private:
-            
+
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-            
+
         };
     }
 }

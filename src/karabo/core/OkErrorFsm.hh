@@ -19,7 +19,6 @@ namespace karabo {
     namespace core {
 
         class OkErrorFsm : public BaseFsm {
-
         public:
 
             KARABO_CLASSINFO(OkErrorFsm, "OkErrorFsm", "0.1")
@@ -41,7 +40,10 @@ namespace karabo {
             }
 
         public:
-            
+
+            virtual ~OkErrorFsm() {
+            }
+
             /**************************************************************/
             /*                        Events                              */
             /**************************************************************/
