@@ -776,7 +776,7 @@ namespace karabo {
             vector<Hash> result;
             // TODO Make this a global slot later
             Hash args("from", from, "to", to, "maxNumData", maxNumData);
-            m_signalSlotable->request("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, key, args).timeout(60000).receive(result);
+            m_signalSlotable.lock()->request("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, key, args).timeout(60000).receive(result);
             return result;
         }
 
@@ -784,7 +784,7 @@ namespace karabo {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(make_pair<Hash, Schema>(Hash(), Schema()));
             Hash hash;
             Schema schema;
-            m_signalSlotable->request("Karabo_DataLoggerManager_0", "slotGetConfigurationFromPast", deviceId, timepoint).timeout(60000).receive(hash, schema);
+            m_signalSlotable.lock()->request("Karabo_DataLoggerManager_0", "slotGetConfigurationFromPast", deviceId, timepoint).timeout(60000).receive(hash, schema);
             return make_pair(hash, schema);
         }
 
