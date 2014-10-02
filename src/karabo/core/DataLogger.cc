@@ -21,7 +21,7 @@ namespace karabo {
         using namespace karabo::util;
         using namespace karabo::io;
 
-        KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<OkErrorFsm>, DataLogger)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::core::BaseDevice, karabo::core::Device<karabo::core::OkErrorFsm>, DataLogger)
 
         void DataLogger::expectedParameters(Schema& expected) {
 
@@ -69,15 +69,8 @@ namespace karabo {
                     .commit();
         }
 
-        DataLogger::DataLogger(const Hash& input) : Device<OkErrorFsm>(input) {
+        DataLogger::DataLogger(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             input.get("deviceToBeLogged", m_deviceToBeLogged);
-        }
-
-        DataLogger::~DataLogger() {
-        }
-
-        void DataLogger::preDestruction() {
-            slotTagDeviceToBeDiscontinued(true, 'L');
         }
 
         void DataLogger::okStateOnEntry() {
@@ -155,12 +148,12 @@ namespace karabo {
                     // Make sure that the file contains '\n' (newline) at the end
                     m_configStream.seekg(0, ios::end);
                     long pos = m_configStream.tellg();
-                    if (pos > 0) {   // ... file is not empty!
+                    if (pos > 0) { // ... file is not empty!
                         string nl;
-                        m_configStream.seekg(pos-1, ios::beg);
-                        m_configStream >> nl;     // if newline exists the status will "fail" or "eof" because "nl" string is empty
-                        if (m_configStream.fail()) m_configStream.clear();   // clear the status otherwise stream will not work
-                        m_configStream.seekg(0);    // without this statement the writing doesn't work
+                        m_configStream.seekg(pos - 1, ios::beg);
+                        m_configStream >> nl; // if newline exists the status will "fail" or "eof" because "nl" string is empty
+                        if (m_configStream.fail()) m_configStream.clear(); // clear the status otherwise stream will not work
+                        m_configStream.seekg(0); // without this statement the writing doesn't work
                         if (!nl.empty()) {
                             m_configStream << "\n";
                             m_configStream.flush();
@@ -179,15 +172,12 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Schema for " << deviceId << " still empty";
                 return;
             }
-
-            // open "deviceId"_configuration.txt file for append mode
-            string filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
-            string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
             if (!m_configStream.is_open()) {
                 return;
             }
             m_user = getSenderInfo("slotChanged")->getUserIdOfSender();
             if (m_user.size() == 0) m_user = "operator";
+
             vector<string> paths;
             configuration.getPaths(paths);
             for (size_t i = 0; i < paths.size(); ++i) {
@@ -207,11 +197,13 @@ namespace karabo {
                     m_configStream.seekg(0, ios::end); // position to EOF
                     long position = m_configStream.tellg(); // get file size
                     if (position == -1) {
+                        string filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
                         throw KARABO_IO_EXCEPTION("Failed to position in file \"" + filename + "\"");
                     }
                     m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|" << t.getFractionalSeconds() << "|"
                             << t.getTrainId() << "|" << path << "|" << type << "|" << value << "|" << m_user << "|LOGIN\n";
                     m_flushTime = t.getSeconds() + get<int>("flushInterval");
+                    string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
                     ofstream indexstream(indexname.c_str(), ios::app);
                     indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
                             << t.getFractionalSeconds() << " " << t.getTrainId() << " " << position << " " << m_user << " " << m_lastIndex << "\n";
@@ -227,12 +219,13 @@ namespace karabo {
                 m_configStream.close();
                 // increment index number for configuration file
                 m_lastIndex = incrementLastIndex(deviceId);
-                filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
+                string filename = get<string>("directory") + "/" + deviceId + "_configuration_" + toString(m_lastIndex) + ".txt";
                 m_configStream.open(filename.c_str(), ios::in | ios::out | ios::app);
                 if (!m_configStream.is_open()) {
                     throw KARABO_IO_EXCEPTION("Failed to open \"" + filename + "\". Check permissions.");
                 }
                 // record changing the file into index file
+                string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
                 ofstream indexstream(indexname.c_str(), ios::app);
                 indexstream << "=NEW " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
                         << m_lastDataTimestamp.getFractionalSeconds() << " " << m_lastDataTimestamp.getTrainId() << " 0 " << m_user << " " << m_lastIndex << "\n";

@@ -43,9 +43,7 @@ namespace karabo {
             }
         };
 
-        class DataLoggerManager : public Device<OkErrorFsm> {
-
-
+        class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
         public:
 
             KARABO_CLASSINFO(DataLoggerManager, "DataLoggerManager", "1.0")
@@ -69,11 +67,11 @@ namespace karabo {
             void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
 
             DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
-            
-            DataLoggerIndex findNearestLeftLoggerIndex(const std::string& deviceId, const std::string& timepoint);
-            
+
+            DataLoggerIndex findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& timepoint);
+
             int getFileIndex(const std::string& deviceId);
-            
+
         private: // Data
 
         };
