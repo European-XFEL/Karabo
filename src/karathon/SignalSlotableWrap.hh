@@ -40,7 +40,7 @@ namespace karathon {
 
             if (autostartEventLoop) {
                 ScopedGILRelease nogil;
-                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
+                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash(), 2));
                 boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // give a chance above thread to start up before leaving this constructor
             }
         }
@@ -59,9 +59,9 @@ namespace karathon {
             return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
         }
 
-        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash()) {
+        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash(), int nThreads = 2) {
             ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
+            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info, nThreads);
         }
 
         void stopEventLoop() {
