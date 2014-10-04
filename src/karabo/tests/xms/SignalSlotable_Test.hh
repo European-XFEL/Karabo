@@ -35,6 +35,7 @@ public:
     }
 
     void slotA(const std::string& msg) {
+        //std::cout << "\nslotA" << std::endl;
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
@@ -48,6 +49,7 @@ public:
     }
 
     void slotB(int someInteger, const karabo::util::Hash& someConfig) {
+        //std::cout << "\nslotB" << std::endl;
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
@@ -56,7 +58,8 @@ public:
     }
     
     void slotC(int number) {
-        boost::mutex::scoped_lock lock(m_mutex);
+        //std::cout << "\nslotC" << std::endl;
+         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
