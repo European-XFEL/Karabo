@@ -1251,8 +1251,11 @@ class Scene(QSvgWidget):
                     proxy.selected = True
                     self.project.signalSelectObject.emit(deviceGroup)
                 
-                # Explicitly emit signal, because project is already marked as modified
-                self.project.signalProjectModified.emit()
+                if self.project.isModified:                    
+                    # Explicitly emit signal, because project is already marked as modified
+                    self.project.signalProjectModified.emit()
+                else:
+                    self.project.setModified(True)
         event.accept()
         QWidget.dropEvent(self, event)
 
