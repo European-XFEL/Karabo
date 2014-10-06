@@ -28,7 +28,7 @@ namespace karathon {
 
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
             T* data = reinterpret_cast<T*> (PyArray_DATA(arr));
-            size_t size = PyArray_NBYTES(arr);
+            //size_t size = PyArray_NBYTES(arr);
 
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
