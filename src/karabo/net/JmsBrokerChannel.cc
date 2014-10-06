@@ -37,22 +37,192 @@ namespace karabo {
 
             MQ_SAFE_CALL(MQCreateSession(m_jmsConnection.m_connectionHandle, m_isTransacted, m_jmsConnection.m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle))
             MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, m_jmsConnection.m_destinationName.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle))
-            
+
+
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
-            
-            m_producerHandle.handle =(MQInt32)0xFEEEFEEE;
+
+            m_producerHandle.handle = (MQInt32) 0xFEEEFEEE;
         }
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
             // Close everything
-            if (m_producerHandle.handle != (MQInt32)0xFEEEFEEE) {
+            if (m_producerHandle.handle != (MQInt32) 0xFEEEFEEE) {
                 MQCloseMessageProducer(m_producerHandle);
             }
+            if (m_hasSyncConsumer) {
+                MQCloseMessageConsumer(m_syncConsumerHandle);
+            }
+
+
             MQFreeDestination(m_destinationHandle);
             MQCloseSession(m_sessionHandle);
+        }
+
+
+        void JmsBrokerChannel::read(std::vector<char>& data) {
+
+            Hash headerDummy;
+            readBinaryMessage(headerDummy, data, false);
+        }
+
+
+        void JmsBrokerChannel::readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader) {
+
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
+
+            try {
+
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQStatus status = consumeMessage(messageHandle, m_syncReadTimeout);
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+
+                if (messageType == MQ_BYTES_MESSAGE) {
+
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                    body.resize(nBytes);
+                    // Copy once here
+                    memcpy(&body[0], bytes, nBytes);
+                    if (withHeader) parseHeader(messageHandle, header);
+
+                } else {
+                    throw KARABO_MESSAGE_EXCEPTION("Received message in wrong format (expecting binary)");
+                }
+                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        MQStatus JmsBrokerChannel::consumeMessage(MQMessageHandle& messageHandle, const int timeout) {
+
+            if (!m_hasSyncConsumer) {
+                MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_syncConsumerHandle));
+                m_hasSyncConsumer = true;
+            }
+
+            return MQReceiveMessageWithTimeout(m_syncConsumerHandle, timeout, &messageHandle);
+        }
+
+
+        void JmsBrokerChannel::parseHeader(const MQMessageHandle& messageHandle, karabo::util::Hash& header) {
+            MQPropertiesHandle propertiesHandle, headerHandle;
+            MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
+            MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
+            getProperties(header, propertiesHandle);
+            getProperties(header, headerHandle);
+            MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
+            MQ_SAFE_CALL(MQFreeProperties(headerHandle))
+        }
+
+
+        void JmsBrokerChannel::read(std::string& data) {
+            Hash headerDummy;
+            readTextMessage(headerDummy, data, false);
+        }
+
+
+        void JmsBrokerChannel::readTextMessage(karabo::util::Hash& header, std::string& body, bool withHeader) {
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
+
+            try {
+
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQStatus status = consumeMessage(messageHandle, m_syncReadTimeout);
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+
+                if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
+                    // Copy once here
+                    body = msgBody;
+                    if (withHeader) parseHeader(messageHandle, header);
+
+                } else {
+                    throw KARABO_MESSAGE_EXCEPTION("Received message in wrong format (expecting text)");
+                }
+                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                // Clean up
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void JmsBrokerChannel::read(karabo::util::Hash& data) {
+
+            Hash dummyHeader;
+            readHashMessage(dummyHeader, data, false);
+
+        }
+
+
+        void JmsBrokerChannel::readHashMessage(karabo::util::Hash& header, karabo::util::Hash& body, bool withHeader) {
+
+            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
+
+            try {
+
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQStatus status = consumeMessage(messageHandle, m_syncReadTimeout);
+                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
+
+                MQMessageType messageType;
+                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
+
+                if (messageType == MQ_BYTES_MESSAGE) {
+                    int nBytes;
+                    const MQInt8* bytes;
+                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                    m_binarySerializer->load(body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
+                    if (withHeader) parseHeader(messageHandle, header);
+                } else if (messageType == MQ_TEXT_MESSAGE) {
+                    ConstMQString msgBody;
+                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
+                    m_textSerializer->load(body, msgBody);
+                    if (withHeader) parseHeader(messageHandle, header);
+                } else {
+                    throw KARABO_MESSAGE_EXCEPTION("Received invalid message type (neither text nor binary)");
+                }
+                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
+                // Clean up
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void JmsBrokerChannel::read(karabo::util::Hash& header, std::vector<char>& body) {
+
+            readBinaryMessage(header, body, true);
+        }
+
+
+        void JmsBrokerChannel::read(karabo::util::Hash& header, std::string& body) {
+
+            readTextMessage(header, body, true);
+        }
+
+
+        void JmsBrokerChannel::read(karabo::util::Hash& header, karabo::util::Hash& body) {
+
+            readHashMessage(header, body, true);
+
         }
 
 
@@ -72,128 +242,11 @@ namespace karabo {
 
 
         void JmsBrokerChannel::preRegisterSynchronousRead() {
-            
+
             boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-            
+
             MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_syncConsumerHandle));
             m_hasSyncConsumer = true;
-        }
-
-
-        void JmsBrokerChannel::read(std::vector<char>& body, karabo::util::Hash& header) {
-            string data;
-            this->read(data, header);
-            body.reserve(body.size() + data.size());
-            std::copy(data.begin(), data.end(), back_inserter(body));
-        }
-
-
-        void JmsBrokerChannel::read(std::string& body, karabo::util::Hash& header) {
-            
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-            
-            try {
-                            
-                MQConsumerHandle consumerHandle = MQ_INVALID_HANDLE;
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQMessageType messageType;
-
-                if (m_hasSyncConsumer) {
-                    consumerHandle = m_syncConsumerHandle;
-                } else {
-                    MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
-                }
-                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
-                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
-                if (messageType == MQ_BYTES_MESSAGE) {
-                    // Body
-                    int nBytes;
-                    const MQInt8* bytes;
-                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
-                    body = string(reinterpret_cast<const char*> (bytes), nBytes);
-                    MQPropertiesHandle propertiesHandle, headerHandle;
-                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                    getProperties(header, propertiesHandle);
-                    getProperties(header, headerHandle);
-                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                } else if (messageType == MQ_TEXT_MESSAGE) {
-                    ConstMQString msgBody;
-                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                    body = msgBody;
-                    MQPropertiesHandle propertiesHandle, headerHandle;
-                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                    getProperties(header, propertiesHandle);
-                    getProperties(header, headerHandle);
-                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                } else {
-                    throw KARABO_MESSAGE_EXCEPTION("Received message which is neither text nor binary");
-                }
-                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
-                // Clean up
-                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-                MQ_SAFE_CALL(MQCloseMessageConsumer(consumerHandle))
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-
-        void JmsBrokerChannel::read(karabo::util::Hash& body, karabo::util::Hash& header) {
-            
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-            
-            try {
-
-                MQConsumerHandle consumerHandle = MQ_INVALID_HANDLE;
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQMessageType messageType;
-
-                if (m_hasSyncConsumer) {
-                    consumerHandle = m_syncConsumerHandle;
-                } else {
-                    MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &consumerHandle));
-                }
-                MQStatus status = MQReceiveMessageWithTimeout(consumerHandle, m_syncReadTimeout, &messageHandle);
-                if (MQStatusIsError(status)) throw KARABO_TIMEOUT_EXCEPTION("Synchronous read timed out");
-                MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
-                if (messageType == MQ_BYTES_MESSAGE) {
-                    int nBytes;
-                    const MQInt8* bytes;
-                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
-                    m_binarySerializer->load(body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                    MQPropertiesHandle propertiesHandle, headerHandle;
-                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                    getProperties(header, propertiesHandle);
-                    getProperties(header, headerHandle);
-                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                } else if (messageType == MQ_TEXT_MESSAGE) {
-                    ConstMQString msgBody;
-                    MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                    m_textSerializer->load(body, msgBody);
-                    MQPropertiesHandle propertiesHandle, headerHandle;
-                    MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                    MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                    getProperties(header, propertiesHandle);
-                    getProperties(header, headerHandle);
-                    MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                    MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                } else {
-                    throw KARABO_MESSAGE_EXCEPTION("Received non-text message, but tried to read as text");
-                }
-                MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
-                // Clean up
-                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-                MQ_SAFE_CALL(MQCloseMessageConsumer(consumerHandle))
-            } catch (...) {
-                KARABO_RETHROW
-            }
         }
 
 
@@ -275,32 +328,34 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::readAsyncStringHash(const ReadStringHashHandler& readHandler) {
+        void JmsBrokerChannel::readAsyncRaw(const ReadRawHandler& readHandler) {
 
-            if (m_hasAsyncHandler) {
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                                                     "if you need more handlers create a new channel on the connection and register there");
-            }
-            m_hasAsyncHandler = true;
+            ensureSingleAsyncHandler();
 
             // Save the callback function
-            m_readStringHashHandler = readHandler;
-
-            // Set up a consumer
-            MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_asyncConsumerHandle));
+            m_readRawHandler = readHandler;
 
             // Start listening for messages by starting an individual thread
-            m_ioService->registerTextMessageChannel(this);
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForRawMessages, this));
         }
 
 
-        void JmsBrokerChannel::listenForTextMessages() {
+        void JmsBrokerChannel::ensureSingleAsyncHandler() {
+            if (m_hasAsyncHandler) {
+                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
+                        "if you need more handlers create a new channel on the connection and register there");
+            }
+            m_hasAsyncHandler = true;
+        }
+
+
+        void JmsBrokerChannel::listenForRawMessages() {
 
             try {
 
                 bool messageReceived = false;
                 do {
-                    messageReceived = signalIncomingTextMessage();
+                    messageReceived = signalIncomingBinaryMessage(false);
                 } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
 
             } catch (const Exception& e) {
@@ -312,148 +367,42 @@ namespace karabo {
         }
 
 
-        bool JmsBrokerChannel::signalIncomingTextMessage() {
+        bool JmsBrokerChannel::signalIncomingBinaryMessage(const bool withHeader) {
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQMessageType messageType;
-
-                MQStatus status = MQReceiveMessageWithTimeout(m_asyncConsumerHandle, 2000, &messageHandle);
+                MQStatus status = consumeMessage(messageHandle, 2000);                
+                
                 if (!MQStatusIsError(status) && !m_isStopped) {
-                    //MQ_SAFE_CALL(MQReceiveMessageWait(consumerHandle, &messageHandle))
-                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
-                    if (messageType == MQ_TEXT_MESSAGE) {
-                        ConstMQString msgBody;
-                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                        Hash::Pointer header(new Hash());
-                        MQPropertiesHandle propertiesHandle, headerHandle;
-                        MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                        MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(*header, propertiesHandle);
-                        getProperties(*header, headerHandle);
-                        MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                        MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle))
-                        if (!m_ioService->isWorking()) {
-                            MQ_SAFE_CALL(MQCloseMessageConsumer(m_asyncConsumerHandle));
-                            m_hasAsyncHandler = false;
-                        }
-                        m_readStringHashHandler(shared_from_this(), string(msgBody), header);
-                        MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-                    } else if (messageType == MQ_BYTES_MESSAGE) {
-                        // Just ignore binary messages
-                    } else {
-                        // Give an error if unexpected message types are going round the broker
-                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
-                    }
-                    return true;
-                }
-            } catch (const Exception& e) {
-                m_signalError(shared_from_this(), e.userFriendlyMsg());
-            } catch (...) {
-                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
-            }
-            return false;
-        }
-
-
-        void JmsBrokerChannel::readAsyncRawHash(const ReadRawHashHandler& readHandler) {
-            if (m_hasAsyncHandler) {
-                throw KARABO_NOT_SUPPORTED_EXCEPTION("You may only register exactly one handler per channel, "
-                                                     "if you need more handlers create a new channel on the connection and register there");
-            }
-            m_hasAsyncHandler = true;
-
-            // Save the callback function
-            m_readRawHashHandler = readHandler;
-
-            // Set up a consumer
-            MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_asyncConsumerHandle));
-
-            // Start listening for messages by starting an individual thread
-            m_ioService->registerBinaryMessageChannel(this);
-        }
-
-
-        void JmsBrokerChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
-            m_readHashHashHandler = handler;
-            readAsyncRawHash(boost::bind(&karabo::net::JmsBrokerChannel::rawHash2HashHash, this, _1, _2, _3, _4));
-        }
-
-
-        void JmsBrokerChannel::listenForBinaryMessages() {
-
-            try {
-
-                bool messageReceived = false;
-                do {
-                    messageReceived = signalIncomingBinaryMessage();
-                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
-
-            } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
-            } catch (...) {
-                Exception::memorize();
-            }
-        }
-
-
-        bool JmsBrokerChannel::signalIncomingBinaryMessage() {
-            try {
-
-                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-                MQMessageType messageType;
-
-                MQStatus status = MQReceiveMessageWithTimeout(m_asyncConsumerHandle, 2000, &messageHandle);
-                if (!MQStatusIsError(status) && !m_isStopped) {
-                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType))
+                    
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    MQMessageType messageType;
+                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
                     if (messageType == MQ_BYTES_MESSAGE) {
                         // Body
                         int nBytes;
                         const MQInt8* bytes;
                         MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
-                        // Header
-                        Hash::Pointer header(new Hash());
-                        MQPropertiesHandle propertiesHandle, headerHandle;
-                        MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                        MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(*header, propertiesHandle);
-                        getProperties(*header, headerHandle);
-                        MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                        MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                        // Thank you, broker!
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
-                        // Free consumer if not needed anymore
+                       
+
+                        if (withHeader) {
+                            Hash::Pointer header(new Hash());
+                            parseHeader(messageHandle, *header);
+                            m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*>(bytes), static_cast<size_t>(nBytes));
+                        } else {
+                            m_readRawHandler(shared_from_this(), reinterpret_cast<const char*>(bytes), static_cast<size_t>(nBytes));
+                        }
+
+                        // Flag that another async reader can be registered now
                         if (!m_ioService->isWorking()) {
-                            MQ_SAFE_CALL(MQCloseMessageConsumer(m_asyncConsumerHandle));
                             m_hasAsyncHandler = false;
                         }
-                        // TODO Check, whether to free the propertiesHandle
-                        m_readRawHashHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), (size_t) nBytes, header);
+
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
-                    } else if (messageType == MQ_TEXT_MESSAGE) {
-                        ConstMQString msgBody;
-                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody))
-                        Hash::Pointer header(new Hash());
-                        MQPropertiesHandle propertiesHandle, headerHandle;
-                        MQ_SAFE_CALL(MQGetMessageProperties(messageHandle, &propertiesHandle))
-                        MQ_SAFE_CALL(MQGetMessageHeaders(messageHandle, &headerHandle))
-                        getProperties(*header, propertiesHandle);
-                        getProperties(*header, headerHandle);
-                        MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                        MQ_SAFE_CALL(MQFreeProperties(headerHandle))
-                        MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
-                        if (!m_ioService->isWorking()) {
-                            MQ_SAFE_CALL(MQCloseMessageConsumer(m_asyncConsumerHandle));
-                            m_hasAsyncHandler = false;
-                        }
-                        // TODO Check, whether to free the propertiesHandle
-                        m_readRawHashHandler(shared_from_this(), msgBody, strlen(msgBody), header);
-                        MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+
                     } else {
                         // Give an error if unexpected message types are going round the broker
-                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (i.e. neither <text> nor <bytes>)");
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting bytes)");
                     }
                     return true;
                 }
@@ -466,19 +415,266 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const std::string& messageBody, const Hash& header) {
-            
+        void JmsBrokerChannel::readAsyncString(const ReadStringHandler& readHandler) {
+
+            ensureSingleAsyncHandler();
+
+            // Save the callback function
+            m_readStringHandler = readHandler;
+
+            // Start listening for messages by starting an individual thread
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForStringMessages, this));
+
+        }
+
+
+        void JmsBrokerChannel::listenForStringMessages() {
+
             try {
+                bool messageReceived = false;
+                do {
+                    messageReceived = signalIncomingTextMessage(false);
+                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+
+            } catch (const Exception& e) {
+                cout << e;
+                Exception::memorize();
+            } catch (...) {
+                Exception::memorize();
+            }
+        }
+
+
+        bool JmsBrokerChannel::signalIncomingTextMessage(const bool withHeader) {
+            try {
+
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQStatus status = consumeMessage(messageHandle, 2000);
                 
+                if (!MQStatusIsError(status) && !m_isStopped) {                    
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                    MQMessageType messageType;
+                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+                            
+                    if (messageType == MQ_TEXT_MESSAGE) {
+                        ConstMQString msgBody;
+                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
+                        if (withHeader) {
+                            Hash::Pointer header(new Hash());
+                            parseHeader(messageHandle, *header);
+                            m_readHashStringHandler(shared_from_this(), header, string(msgBody));
+                        } else {
+                            m_readStringHandler(shared_from_this(), string(msgBody));
+                        }
+
+                        if (!m_ioService->isWorking()) {
+                            m_hasAsyncHandler = false;
+                        }
+
+                        MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+                    } else {
+                        // Give an error if unexpected message types are going round the broker
+                        // TODO call back error function
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type (expecting text)");
+                    }
+                    return true;
+                }
+            } catch (const Exception& e) {
+                m_signalError(shared_from_this(), e.userFriendlyMsg());
+            } catch (...) {
+                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+            }
+            return false;
+        }
+
+
+        void JmsBrokerChannel::readAsyncHash(const ReadHashHandler& readHandler) {
+
+            ensureSingleAsyncHandler();
+
+            // Save the callback function
+            m_readHashHandler = readHandler;
+
+            // Start listening for messages by starting an individual thread
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashMessages, this));
+        }
+
+
+        void JmsBrokerChannel::listenForHashMessages() {
+            try {
+                bool messageReceived = false;
+                do {
+                    messageReceived = signalIncomingHashMessage(false);
+                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+
+            } catch (const Exception& e) {
+                cout << e;
+                Exception::memorize();
+            } catch (...) {
+                Exception::memorize();
+            }
+        }
+
+
+        bool JmsBrokerChannel::signalIncomingHashMessage(const bool withHeader) {
+            try {
+
+                MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
+                MQStatus status = consumeMessage(messageHandle, 2000);
+                
+                
+                if (!MQStatusIsError(status) && !m_isStopped) {
+                    
+                    MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
+                
+                    MQMessageType messageType;
+                    MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
+                     
+                    Hash::Pointer body(new Hash());
+                    
+                    if (messageType == MQ_BYTES_MESSAGE) {
+                        int nBytes;
+                        const MQInt8* bytes;
+                        MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                        m_binarySerializer->load(*body, reinterpret_cast<const char*>(bytes), static_cast<size_t> (nBytes));
+                        
+                    } else if (messageType == MQ_TEXT_MESSAGE) {
+                        ConstMQString msgBody;
+                        MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));   
+                        m_textSerializer->load(*body, msgBody);
+                    } else {
+                        // Give an error if unexpected message types are going round the broker
+                        throw KARABO_MESSAGE_EXCEPTION("Received message of unsupported type");
+                    }
+                    
+                    if (withHeader) {
+                        Hash::Pointer header(new Hash());
+                        parseHeader(messageHandle, *header);
+                        m_readHashHashHandler(shared_from_this(), header, body);
+                    } else {
+                        m_readHashHandler(shared_from_this(), body);
+                    }   
+                    
+                    // Flag that another async reader can be registered now
+                    if (!m_ioService->isWorking()) {
+                        m_hasAsyncHandler = false;
+                    }
+                    
+                    MQ_SAFE_CALL(MQFreeMessage(messageHandle));
+                    
+                    return true;
+                }
+            } catch (const Exception& e) {
+                m_signalError(shared_from_this(), e.userFriendlyMsg());
+            } catch (...) {
+                m_signalError(shared_from_this(), "Unknown exception was raised whilst reading asynchronously");
+            }
+            return false;
+        }
+
+
+        void JmsBrokerChannel::readAsyncHashRaw(const ReadHashRawHandler& readHandler) {
+            ensureSingleAsyncHandler();
+
+            // Save the callback function
+            m_readHashRawHandler = readHandler;
+
+            // Start listening for messages by starting an individual thread          
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashRawMessages, this));
+            
+        }
+
+
+        void JmsBrokerChannel::listenForHashRawMessages() {
+
+            try {
+
+                bool messageReceived = false;
+                do {
+                    messageReceived = signalIncomingBinaryMessage(true);
+                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+
+            } catch (const Exception& e) {
+                cout << e;
+                Exception::memorize();
+            } catch (...) {
+                Exception::memorize();
+            }
+        }
+
+
+        void JmsBrokerChannel::readAsyncHashString(const ReadHashStringHandler& readHandler) {
+
+            ensureSingleAsyncHandler();
+
+            // Save the callback function
+            m_readHashStringHandler = readHandler;
+
+            // Start listening for messages by starting an individual thread                        
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashStringMessages, this));
+        }
+
+
+        void JmsBrokerChannel::listenForHashStringMessages() {
+
+            try {
+
+                bool messageReceived = false;
+                do {
+                    messageReceived = signalIncomingTextMessage(true);
+                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+
+            } catch (const Exception& e) {
+                cout << e;
+                Exception::memorize();
+            } catch (...) {
+                Exception::memorize();
+            }
+        }
+
+
+        void JmsBrokerChannel::readAsyncHashHash(const ReadHashHashHandler& readHandler) {
+            ensureSingleAsyncHandler();
+
+            // Save the callback function
+            m_readHashHashHandler = readHandler;
+
+            // Start listening for messages by starting an individual thread                        
+            m_ioService->registerMessageReceiver(boost::bind(&karabo::net::JmsBrokerChannel::listenForHashHashMessages, this));
+        }
+        
+        void JmsBrokerChannel::listenForHashHashMessages() {
+            
+             try {
+
+                bool messageReceived = false;
+                do {
+                    messageReceived = signalIncomingHashMessage(true);
+                } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
+
+            } catch (const Exception& e) {
+                cout << e;
+                Exception::memorize();
+            } catch (...) {
+                Exception::memorize();
+            }
+             
+        }
+
+
+        void JmsBrokerChannel::write(const std::string& messageBody, const Hash& header) {
+
+            try {
+
                 boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                if (m_producerHandle.handle == (MQInt32)0xFEEEFEEE) {
+                if (m_producerHandle.handle == (MQInt32) 0xFEEEFEEE) {
                     MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
                 }
-                            
+
                 MQ_SAFE_CALL(MQCreateTextMessage(&messageHandle))
                 MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
 
@@ -500,7 +696,7 @@ namespace karabo {
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
                 MQ_SAFE_CALL(MQFreeMessage(messageHandle))
-                
+
 
             } catch (...) {
                 KARABO_RETHROW
@@ -511,17 +707,17 @@ namespace karabo {
         void JmsBrokerChannel::write(const char* messageBody, const size_t& size, const Hash& header) {
 
             try {
-                
-                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);        
+
+                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                if (m_producerHandle.handle == (MQInt32)0xFEEEFEEE) {
+                if (m_producerHandle.handle == (MQInt32) 0xFEEEFEEE) {
                     MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
-                }                
-                
+                }
+
                 MQ_SAFE_CALL(MQCreateBytesMessage(&messageHandle))
                 MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
 

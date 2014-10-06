@@ -100,7 +100,7 @@ namespace karabo {
                 // Start the logging thread
                 m_loggerChannel = m_loggerConnection->start();
                 m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
+                m_loggerChannel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 // Start the guiDebugChannel
@@ -596,7 +596,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash::Pointer& header) {
+        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& logMessage) {
             try {
                 Hash h("type", "log", "message", logMessage);
                 boost::mutex::scoped_lock lock(m_channelMutex);

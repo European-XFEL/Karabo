@@ -214,24 +214,61 @@ namespace karabo {
             #define KARABO_GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
             #define KARABO_GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
 
+            
+            /**
+             * This constructor does nothing. Call init() afterwards for setting up.
+             */
             SignalSlotable();
 
+            /**
+             * Creates a functional SignalSlotable object using an existing connection.
+             * Don't call init() afterwards.
+             * @param instanceId The future instanceId of this object in the distributed system
+             * @param connection An existing broker connection
+             */
             SignalSlotable(const std::string& instanceId,
                     const karabo::net::BrokerConnection::Pointer& connection);
 
+            /**
+             * Creates a function SignalSlotable object allowing to configure the broker connection.
+             * Don't call init() afterwards.
+             * @param instanceId The future instanceId of this object in the distributed system
+             * @param brokerType The broker type (currently only JMS available)
+             * @param brokerConfiguration The sub-configuration for the respective broker type
+             */
             SignalSlotable(const std::string& instanceId,
                     const std::string& brokerType = "Jms",
                     const karabo::util::Hash& brokerConfiguration = karabo::util::Hash());
 
             virtual ~SignalSlotable();
 
+            /**
+             * Initialized the SignalSlotable object (only use in conjunction with empty constructor)
+             * @param instanceId The future instanceId of this object in the distributed system
+             * @param connection An existing broker connection
+             */
             void init(const std::string& instanceId,
                     const karabo::net::BrokerConnection::Pointer& connection);
 
+            /**
+             * Login in order to receive correct access rights
+             * @param username Username 
+             * @param password Password
+             * @param provider Provider (currently only LOCAL and KERBEROS possible)
+             * @return bool indicating success of failure
+             */
             bool login(const std::string& username, const std::string& password, const std::string& provider);
 
+            /**
+             * Logout
+             * @return bool indicating success or failure
+             */
             bool logout();
 
+            /**
+             * Retrieves currently logged in username (empty if not logged in)
+             * @return string username
+             */
             const std::string& getUserName() const;
 
             /**
@@ -653,7 +690,7 @@ namespace karabo {
                 if (it != slotInstances->end()) { // Already registered, append another callback
                     (boost::static_pointer_cast<karabo::xms::Slot0 >(it->second))->registerSlotFunction(slot);
                 } else { // New local slot
-                    boost::shared_ptr<karabo::xms::Slot0> s(new karabo::xms::Slot0(this, funcName));
+                    boost::shared_ptr<karabo::xms::Slot0> s(new karabo::xms::Slot0(funcName));
                     // Bind user's slot-function to Slot
                     s->registerSlotFunction(slot);
                     // Book-keep slot
@@ -668,7 +705,7 @@ namespace karabo {
                 if (it != slotInstances->end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot1<A1> >(it->second))->registerSlotFunction(slot);
                 } else {
-                    boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (this, funcName));
+                    boost::shared_ptr<karabo::xms::Slot1<A1> > s(new karabo::xms::Slot1<A1 > (funcName));
                     s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;
 
@@ -682,7 +719,7 @@ namespace karabo {
                 if (it != slotInstances->end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(it->second))->registerSlotFunction(slot);
                 } else {                   
-                    boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (this, funcName));
+                    boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (funcName));
                     s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;                   
                 }
@@ -695,7 +732,7 @@ namespace karabo {
                 if (it != slotInstances->end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot3<A1, A2, A3> >(it->second))->registerSlotFunction(slot);
                 } else {
-                    boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (this, funcName));
+                    boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (funcName));
                     s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;   
 
@@ -709,7 +746,7 @@ namespace karabo {
                 if (it != slotInstances->end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot4<A1, A2, A3, A4> >(it->second))->registerSlotFunction(slot);
                 } else {
-                    boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (this, funcName));
+                    boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (funcName));
                     s->registerSlotFunction(slot);
                     (*slotInstances)[funcName] = s;   
                 }

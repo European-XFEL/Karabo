@@ -11,10 +11,9 @@
 #ifndef KARABO_XMS_SLOT_HH
 #define	KARABO_XMS_SLOT_HH
 
-#include <boost/type_traits.hpp>
+#include <karabo/util.hpp>
+#include <karabo/log.hpp>
 
-#include <karabo/util/Factory.hh>
-#include <karabo/net/BrokerChannel.hh>
 /**
  * The main European XFEL namespace
  */
@@ -28,17 +27,15 @@ namespace karabo {
         // Forward SignalSlotable
         class SignalSlotable;
 
-        
-
         class Slot {
             
             friend class SignalSlotable;
-            
+
             std::string m_instanceIdOfSender;
             std::string m_userIdOfSender;
             std::string m_accessLevelOfSender;
             std::string m_sessionTokenOfSender;
-            
+
         public:
 
             const std::string& getInstanceIdOfSender() const;
@@ -51,14 +48,11 @@ namespace karabo {
 
         protected:
 
-            // TODO remove if not needed
-            SignalSlotable* m_signalSlotable;
             std::string m_slotFunction;
-            
+
             mutable boost::mutex m_callRegisteredSlotFunctionsMutex;
 
-            Slot(SignalSlotable* signalSlotable, const std::string& slotFunction)
-            : m_signalSlotable(signalSlotable), m_slotFunction(slotFunction) {
+            Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {
             }
 
             void extractSenderInformation(const karabo::util::Hash& header);
@@ -75,8 +69,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Slot0, "Slot0", "1.0")
 
-            Slot0(SignalSlotable* signalSlotable, const std::string& slotFunction)
-            : Slot(signalSlotable, slotFunction) {
+            Slot0(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
             virtual ~Slot0() {
@@ -90,7 +83,7 @@ namespace karabo {
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
                 // This mutex protects against concurrent runs of the same slot function
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex); 
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
                 extractSenderInformation(header);
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
@@ -109,7 +102,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Slot1, "Slot1", "1.0")
 
-            Slot1(SignalSlotable* signalSlotable, const std::string& slotFunction) : Slot(signalSlotable, slotFunction) {
+            Slot1(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
             virtual ~Slot1() {
@@ -122,9 +115,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-                
+
                 boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-                
+
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
@@ -154,8 +147,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Slot2, "Slot2", "1.0")
 
-            Slot2(SignalSlotable* signalSlotable, const std::string& slotFunction)
-            : Slot(signalSlotable, slotFunction) {               
+            Slot2(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
             virtual ~Slot2() {
@@ -168,9 +160,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-                
+
                 boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-                
+
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1>("a1");
@@ -201,8 +193,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Slot3, "Slot3", "1.0")
 
-            Slot3(SignalSlotable* signalSlotable, const std::string& slotFunction)
-            : Slot(signalSlotable, slotFunction) {               
+            Slot3(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
             virtual ~Slot3() {
@@ -215,9 +206,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-                
+
                 boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-                
+
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");
@@ -249,8 +240,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Slot4, "Slot4", "1.0")
 
-            Slot4(SignalSlotable* signalSlotable, const std::string& slotFunction)
-            : Slot(signalSlotable, slotFunction) {                
+            Slot4(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
             virtual ~Slot4() {
@@ -263,9 +253,9 @@ namespace karabo {
         private:
 
             void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-                
+
                 boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-                
+
                 try {
                     extractSenderInformation(header);
                     const A1& a1 = body.get<A1 > ("a1");
@@ -289,7 +279,7 @@ namespace karabo {
             std::vector<SlotHandler> m_slotHandlers;
         };
 
-    } // namespace xms
-} // namespace karabo
+    }
+}
 
 #endif

@@ -14,22 +14,23 @@
 namespace karabo {
     namespace net {
 
+
         KARABO_REGISTER_IN_FACTORY(AbstractIOService, JmsBrokerIOService)
 
         //int JmsBrokerIOService::m_threadCount = 0;
-        
+
         void JmsBrokerIOService::run() {
             m_status = RUNNING;
-            while (activateRegisteredTextMessageHandlers() || activateRegisteredBinaryMessageHandlers() || activateRegisteredWaitHandlers()) {
+            while (activateRegisteredMessageReceivers() || activateRegisteredWaitHandlers()) {
                 m_threadGroup.join_all(); // Whilst this blocks, new message handlers can be registered. If no one was registered the while will return.
             }
             m_status = IDLE;
         }
 
+
         void JmsBrokerIOService::work() {
             m_status = WORKING;
-            activateRegisteredTextMessageHandlers();
-            activateRegisteredBinaryMessageHandlers();
+            activateRegisteredMessageReceivers();
             activateRegisteredWaitHandlers();
             while (m_status != STOPPED) {
                 boost::this_thread::sleep(boost::posix_time::seconds(2));
@@ -38,26 +39,18 @@ namespace karabo {
             m_status = IDLE;
         }
 
-        bool JmsBrokerIOService::activateRegisteredTextMessageHandlers() {
+
+        bool JmsBrokerIOService::activateRegisteredMessageReceivers() {
             boost::mutex::scoped_lock lock(m_mutex);
-            if (m_textMessageChannels.empty()) return false;
-            for (size_t i = 0; i < m_textMessageChannels.size(); ++i) {
-                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForTextMessages, m_textMessageChannels[i]));
+            if (m_messageReceivers.empty()) return false;
+            for (size_t i = 0; i < m_messageReceivers.size(); ++i) {
+                m_threadGroup.create_thread(m_messageReceivers[i]);
             }
-            m_textMessageChannels.clear();
+            m_messageReceivers.clear();
             return true;
         }
 
-        bool JmsBrokerIOService::activateRegisteredBinaryMessageHandlers() {
-            boost::mutex::scoped_lock lock(m_mutex);
-            if (m_binaryMessageChannels.empty()) return false;
-            for (size_t i = 0; i < m_binaryMessageChannels.size(); ++i) {
-                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForBinaryMessages, m_binaryMessageChannels[i]));
-            }
-            m_binaryMessageChannels.clear();
-            return true;
-        }
-        
+
         bool JmsBrokerIOService::activateRegisteredWaitHandlers() {
             boost::mutex::scoped_lock lock(m_mutex);
             if (m_waitHandlers.empty()) return false;
@@ -68,42 +61,39 @@ namespace karabo {
             return true;
         }
 
+
         void JmsBrokerIOService::stop() {
             m_status = STOPPED;
         }
+
 
         bool JmsBrokerIOService::isStopped() {
             return m_status == STOPPED;
         }
 
+
         bool JmsBrokerIOService::isRunning() {
             return m_status == RUNNING;
         }
+
 
         bool JmsBrokerIOService::isWorking() {
             return m_status == WORKING;
         }
 
-        void JmsBrokerIOService::registerTextMessageChannel(JmsBrokerChannel* channel) {
+
+        void JmsBrokerIOService::registerMessageReceiver(const boost::function<void ()>& function) {
             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
-                m_textMessageChannels.push_back(channel);
+                m_messageReceivers.push_back(function);
             } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForTextMessages, channel));
-            }
-        }
-        
-        void JmsBrokerIOService::registerBinaryMessageChannel(JmsBrokerChannel* channel) {            
-            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
-            if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
-                m_binaryMessageChannels.push_back(channel);
-            } else if (m_status == WORKING) {
-                m_threadGroup.create_thread(boost::bind(&karabo::net::JmsBrokerChannel::listenForBinaryMessages, channel));
+                m_threadGroup.create_thread(function);
             }
         }
 
+
         void JmsBrokerIOService::registerWaitChannel(JmsBrokerChannel* channel, const WaitHandler& handler, int milliseconds) {
-             //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
+            //std::cout << "Registering thread No.: " << m_threadCount++ << std::endl;
             if (m_status == IDLE || m_status == STOPPED || m_status == RUNNING) {
                 m_waitHandlers.push_back(boost::tuple<JmsBrokerChannel*, WaitHandler, int>(channel, handler, milliseconds));
             } else if (m_status == WORKING) {
