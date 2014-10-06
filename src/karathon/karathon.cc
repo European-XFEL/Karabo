@@ -98,6 +98,7 @@ void *import_numpy()
 {
     // init Array C-API
     import_array();
+    return 0;
 }
 
 
