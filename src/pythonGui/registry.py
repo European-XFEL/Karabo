@@ -46,9 +46,12 @@ class Loadable(Registry):
     @staticmethod
     def load(element, layout):
         krb = element.get(ns_karabo + "class")
+        ret = None
         if krb is not None:
-            return Loadable.krbclasses[krb].load(element, layout)
-        try:
-            return Loadable.xmltags[element.tag].load(element, layout)
-        except KeyError:
-            return
+            ret = Loadable.krbclasses[krb].load(element, layout)
+        if ret is None:
+            try:
+                return Loadable.xmltags[element.tag].load(element, layout)
+            except KeyError:
+                return
+        return ret

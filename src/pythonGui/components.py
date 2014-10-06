@@ -23,7 +23,8 @@ from messagebox import MessageBox
 from widget import EditableWidget, DisplayWidget, Widget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QToolButton, QWidget)
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMessageBox,
+                         QToolButton, QWidget)
 
 import numpy
 import numbers
@@ -62,16 +63,22 @@ class BaseComponent(Loadable, QObject):
         for k in elem.get(ns_karabo + 'keys').split(","):
             deviceId, path = k.split('.', 1)
             conf = manager.getDevice(deviceId)
-            conf.addVisible()
             boxes.append(conf.getBox(path.split(".")))
-        #commandEnabled=elem.get(ns_karabo + "commandEnabled") == "True"
         parent = ProxyWidget(layout.parentWidget())
-        component = cls(elem.get(ns_karabo + "widget"), boxes[0], parent)
+        wn = elem.get(ns_karabo + "widget")
+        try:
+            component = cls(wn, boxes[0], parent)
+        except KeyError:
+            QMessageBox.warning(layout.parentWidget(), "Widget not found",
+                                "Could not find widget '{}'.".format(wn))
+            return
         parent.setComponent(component)
         parent.setWidget(component.widget)
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
+        for b in boxes:
+            b.configuration.addVisible()
         component.widgetFactory.load(elem)
         elem.clear()
         return component
