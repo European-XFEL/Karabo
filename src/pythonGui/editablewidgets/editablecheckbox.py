@@ -69,4 +69,4 @@ class EditableCheckBox(EditableWidget):
 
 ### slots ###
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value == Qt.Checked)
+        EditableWidget.onEditingFinished(self, value == Qt.Checked)

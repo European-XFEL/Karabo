@@ -208,7 +208,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
                 deviceBox = device.getBox(childBox.path)
                 if deviceBox is None:
                     continue
-                childBox.signalUpdateComponent.connect(deviceBox.signalUpdateComponent)
+                childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
             
             if isinstance(v, Schema):
                 self._connectDevices(v, childBox.boxvalue)
@@ -461,9 +461,14 @@ class GuiProject(Project, QObject):
 
         if device.descriptor is None:
             config = device.initConfig
+            print "initConfig"
         else:
             config = device.toHash()
+            print "toHash"
 
+        print "instantiateDevice", device.id
+        print config
+        print ""
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
                                      config)
 
