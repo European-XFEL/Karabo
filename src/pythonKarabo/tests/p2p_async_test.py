@@ -19,11 +19,11 @@ class Server(threading.Thread):
         #extract io service object
         self.ioserv = self.connection.getIOService()
         self.store = {}
-        print "TCP Async server listening port",port
+        print("TCP Async server listening port",port)
         
     def onError(self, channel, ec):
         if ec.value() != 2:
-            print "Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel))
+            print("Error #%r => %r  -- close channel: id %r" % (ec.value(), ec.message(), id(channel)))
         channel.close()
         
     def onConnect(self, channel):
@@ -34,7 +34,7 @@ class Server(threading.Thread):
             #register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError as e:
-            print "TCP Async server onConnect:",str(e)
+            print("TCP Async server onConnect:",str(e))
     
     def onReadHash(self, channel, hash):
         try:
@@ -43,20 +43,20 @@ class Server(threading.Thread):
             self.store[id(channel)] = hash
             channel.writeAsyncHash(self.store[id(channel)], self.onWriteComplete)
         except RuntimeError as e:
-            print "TCP Async server onReadHash:",str(e)
+            print("TCP Async server onReadHash:",str(e))
     
     def onWriteComplete(self, channel):
         try:
             del self.store[id(channel)]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError as e:
-            print "TCP Async server onReadHash:",str(e)
+            print("TCP Async server onReadHash:",str(e))
         
     def run(self):
         try:
             self.ioserv.run()
         except Exception as e:
-            print "TCP Async server run: " + str(e)
+            print("TCP Async server run: " + str(e))
         
     # this method stops server
     def stop(self):
@@ -79,27 +79,27 @@ class  P2p_asyncTestCase(unittest.TestCase):
         store = {}
         
         def onError(channel, error_code):
-            print "Error #%r => %r" % (error_code.value(), error_code.message())
+            print("Error #%r => %r" % (error_code.value(), error_code.message()))
 
         def onConnect(channel):
             try:
-                print "ASync client onConnect:  Connection established. id is", channel.__id__
+                print("ASync client onConnect:  Connection established. id is", channel.__id__)
                 h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
                 store[channel.__id__] = h  # keep object alive until write complete
                 channel.writeAsyncHash(store[channel.__id__], onWriteComplete)
             except RuntimeError as e:
-                print "ASync client onConnect:",str(e)
+                print("ASync client onConnect:",str(e))
 
         def onWriteComplete(channel):
             try:
-                print "ASync client onWriteComplete: id is", channel.__id__
+                print("ASync client onWriteComplete: id is", channel.__id__)
                 del store[channel.__id__]
                 channel.readAsyncHash(onReadHash)
             except RuntimeError as e:
-                print "ASync client onWriteComplete:",str(e)
+                print("ASync client onWriteComplete:",str(e))
             
         def onReadHash(channel, h):
-            print "ASync client onReadHash: id is", channel.__id__
+            print("ASync client onReadHash: id is", channel.__id__)
             try:
                 self.assertEqual(len(h), 4)
                 self.assertEqual(h['server'], "APPROVED!")
@@ -111,7 +111,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
 
         def onTimeout(channel):
-            print "ASync client onTimeout: stop further communication: id is", channel.__id__
+            print("ASync client onTimeout: stop further communication: id is", channel.__id__)
             channel.close()
 
         # Asynchronous TCP client
