@@ -586,7 +586,6 @@ class ChoiceOfNodes(Schema):
 
 
     def set(self, box, value, timestamp=None):
-        print "#### CHOICE.set", box.key(), value, box.current
         box.current = value
         box._set(box.value, timestamp)
 
