@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 4, 2014

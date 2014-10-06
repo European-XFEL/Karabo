@@ -44,7 +44,7 @@ class Configurator(object):
         '''
         if isinstance(classid, type):
             classid = classid.__classid__
-        if not isinstance(classid, basestring):
+        if not isinstance(classid, str):
             raise TypeError("The argument type '{}' is not allowed. "
                             "Must be a class or a str.".format(type(classid)))
         if classid not in Configurator.registry:
@@ -98,7 +98,7 @@ class Configurator(object):
                 if hasattr(theClass, "expectedParameters"):
                     theClass.expectedParameters(schema) # fill schema in order from base to derived
             except AttributeError as e:
-                print "Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e)
+                print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
         return schema
     
     
@@ -124,7 +124,7 @@ class Configurator(object):
             if type(args[1]) == bool:
                 configuration = args[0]
                 validation = args[1]
-                classid = configuration.keys()[0]
+                classid = list(configuration.keys())[0]
                 configuration = configuration[classid]
             else:
                 classid = args[0]
@@ -133,13 +133,13 @@ class Configurator(object):
         elif len(args) == 1:
             configuration = args[0]
             validation = True
-            classid = configuration.keys()[0]
+            classid = list(configuration.keys())[0]
             configuration = configuration[classid]
         else:
             raise TypeError("Wrong number of arguments and/or their types")
         if isinstance(classid, type):
             classid = classid.__classid__
-        if not isinstance(classid, basestring):
+        if not isinstance(classid, str):
             raise TypeError(
                 "First argument 'classid' must be a python string type")
         if classid not in self.baseRegistry:
@@ -201,11 +201,11 @@ class Configurator(object):
         '''
         Returns list of "classid"'s for all registered classes derived from base class given to constructor.
         '''
-        return self.baseRegistry.keys()
+        return list(self.baseRegistry.keys())
     
     @staticmethod
     def getRegisteredBaseClasses():
         '''
         Returns all classid's of base classes registered in Configurator.
         '''
-        return Configurator.registry.keys()
+        return list(Configurator.registry.keys())

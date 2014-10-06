@@ -135,7 +135,7 @@ class _BoxValue(object):
             return self.__box__.value.__dict__[attr]
         except KeyError:
             if isinstance(self.__box__.value, Dummy):
-                r = Box(self.__box__.path + (unicode(attr),), None,
+                r = Box(self.__box__.path + (str(attr),), None,
                         self.__box__.configuration)
                 self.__box__.value.__dict__[attr] = r
                 return r
@@ -147,10 +147,8 @@ class _BoxValue(object):
         self.value.__dict__[attr] = value
 
 
-class Descriptor(hashtypes.Descriptor):
+class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
-
     def completeItem(self, treeWidget, item, box, isClass):
         if self.assignment == 1: # Mandatory
             f = item.font(0)
@@ -169,9 +167,8 @@ class Descriptor(hashtypes.Descriptor):
         instance.__dict__[self.key].set(value)
 
 
-class Type(hashtypes.Type):
+class Type(hashtypes.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     icon = icons.undefined
 
 
@@ -238,18 +235,14 @@ class Type(hashtypes.Type):
             return box.value
 
 
-class Char(hashtypes.Char):
+class Char(hashtypes.Char, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
-
     classAlias = "Text Field"
     icon = icons.string
 
 
-class String(hashtypes.String):
+class String(hashtypes.String, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
-
     classAlias = "Text Field"
     icon = icons.string
 
@@ -266,36 +259,32 @@ class String(hashtypes.String):
         return item
 
 
-class Integer(hashtypes.Integer):
+class Integer(hashtypes.Integer, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = 'Integer Field'
     icon = icons.int
 
 
-class Number(hashtypes.Number):
+class Number(hashtypes.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = "Float Field"
     icon = icons.float
 
 
-class Bool(hashtypes.Bool):
+class Bool(hashtypes.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = "Toggle Field"
     icon = icons.boolean
 
 
-class Vector(hashtypes.Vector):
+class Vector(hashtypes.Vector, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = 'List'
 
 
 class Object(object):
     def __init__(self, box):
-        for k, v in type(self).__dict__.iteritems():
+        for k, v in type(self).__dict__.items():
             if isinstance(v, hashtypes.Descriptor):
                 b = getattr(box.boxvalue, k, None)
                 if b is None:
@@ -377,12 +366,12 @@ class Schema(hashtypes.Descriptor):
 
 
     def _item(self, treeWidget, parent, box, isClass):
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             if isinstance(v, hashtypes.Descriptor):
                 try:
                     c = getattr(box.boxvalue, k)
                 except AttributeError:
-                    print 'missing {} in {}'.format(k, box.value)
+                    print('missing {} in {}'.format(k, box.value))
                 else:
                     item = v.item(treeWidget, parent, c, isClass)
 
@@ -445,20 +434,20 @@ class Schema(hashtypes.Descriptor):
 
 
     def dispatchUserChanges(self, box, hash):
-        for k, v in hash.iteritems():
+        for k, v in hash.items():
             getattr(box.boxvalue, k).dispatchUserChanges(v)
 
 
     def setDefault(self, box):
         box._value = self.getClass()(box)
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             getattr(box.boxvalue, k).setDefault()
         box._set(box._value, None)
 
 
     def redummy(self, box):
         d = Dummy()
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             b = getattr(box.boxvalue, k)
             if b is not None and b.descriptor is not None:
                 b.redummy()
@@ -498,7 +487,7 @@ class ChoiceOfNodes(Schema):
         self.classAlias = 'Choice Element'
         assert self.defaultValue is None or self.defaultValue in self.dict, \
             'the default value "{}" is not in {} for node {}'.format(
-                self.defaultValue, hash.keys(), key)
+                self.defaultValue, list(hash.keys()), key)
         return self
 
 

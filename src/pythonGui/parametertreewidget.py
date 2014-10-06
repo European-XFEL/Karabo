@@ -248,7 +248,7 @@ class ParameterTreeWidget(QTreeWidget):
         stack = [ ]
         item = self.invisibleRootItem()
         while True:
-            stack.extend(item.child(i) for i in xrange(item.childCount()))
+            stack.extend(item.child(i) for i in range(item.childCount()))
             if not stack:
                 return
             item = stack.pop()

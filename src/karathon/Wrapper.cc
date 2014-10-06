@@ -223,7 +223,7 @@ namespace karathon {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
                 return bp::object(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
-            } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "func_name")) {
+            } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "__name__")) {
                 return boost::any_cast<bp::object >(operand);
             }
             throw KARABO_PYTHON_EXCEPTION("Failed to convert inner Hash type of python object");
@@ -243,7 +243,7 @@ namespace karathon {
             any = b;
             return;
         }
-        if (PyInt_Check(obj.ptr())) {
+        if (PyLong_Check(obj.ptr())) {
             try {
                 any = static_cast<int> (bp::extract<int>(obj));
             } catch (...) {
@@ -264,28 +264,11 @@ namespace karathon {
             any = b;
             return;
         }
-        if (PyString_Check(obj.ptr())) {
-            size_t size = PyString_Size(obj.ptr());
-            const char* data = PyString_AsString(obj.ptr());
-            string b(data, size);
-            any = b;
-            return;
-        }
         if (PyUnicode_Check(obj.ptr())) {
-            bp::object str(bp::handle<>(PyUnicode_AsUTF8String(obj.ptr())));
-            size_t size = PyString_Size(str.ptr());
-            const char* data = PyString_AsString(str.ptr());
+            Py_ssize_t size;
+            const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             string b(data, size);
             any = b;
-            return;
-        }
-        if (PyLong_Check(obj.ptr())) {
-            //return PyLong_AsLongLong(obj.ptr());
-            try {
-                any = static_cast<long long> (bp::extract<long long>(obj));
-            } catch (...) {
-                any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
-            }
             return;
         }
         if (PyByteArray_Check(obj.ptr())) {
@@ -448,7 +431,7 @@ namespace karathon {
                 any = v;
                 return;
             }
-            if (PyInt_Check(list0.ptr())) {
+            if (PyLong_Check(list0.ptr())) {
                 std::vector<int> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<int>(obj[i]);
@@ -464,28 +447,11 @@ namespace karathon {
                 any = v;
                 return;
             }
-            if (PyLong_Check(list0.ptr())) {
-                std::vector<long long> v(size);
-                for (bp::ssize_t i = 0; i < size; ++i) {
-                    v[i] = bp::extract<long>(obj[i]);
-                }
-                any = v;
-                return;
-            }
-            if (PyString_Check(list0.ptr())) {
-                std::vector<std::string> v(size);
-                for (bp::ssize_t i = 0; i < size; ++i) {
-                    v[i] = bp::extract<std::string > (obj[i]);
-                }
-                any = v;
-                return;
-            }
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
-                    size_t size = PyString_Size(str.ptr());
-                    const char* data = PyString_AsString(str.ptr());
+                    Py_ssize_t size;
+                    const char* data = PyUnicode_AsUTF8AndSize(static_cast<bp::object>(obj[i]).ptr(), &size);
                     v[i] = string(data, size);
                 }
                 any = v;
@@ -508,7 +474,7 @@ namespace karathon {
                 return;
             }
         }
-        if (hasattr(obj, "func_name")) {// python function
+        if (hasattr(obj, "__name__")) {// python function
             any = obj;
             return;
         }

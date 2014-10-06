@@ -18,6 +18,5 @@ class MetaRegistry(type):
         super(self, self).register(name, dict)
 
 
-class Registry(Registry):
+class Registry(Registry, metaclass=MetaRegistry):
     """ A class to register subclasses """
-    __metaclass__ = MetaRegistry

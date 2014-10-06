@@ -59,7 +59,7 @@ class SqlTreeModel(QAbstractItemModel):
         columnsChanged = False
 
         if self.__privateModel.columns == -1:
-            for level in xrange(self.__privateModel.nbLevelData()):
+            for level in range(self.__privateModel.nbLevelData()):
                 levelData = self.__privateModel.levelDataAt(level)
 
                 if levelData.nbColumnMapping() == 0:
@@ -69,7 +69,7 @@ class SqlTreeModel(QAbstractItemModel):
                         startIndex = 1
                     else:
                         startIndex = 2
-                    for i in xrange(startIndex, count):
+                    for i in range(startIndex, count):
                         levelData.appendColumnMapping(i)
 
                 # Always show just one column but have more columns in query
@@ -94,7 +94,7 @@ class SqlTreeModel(QAbstractItemModel):
             levelData.clear()
         self.__privateModel.root.clearRows()
 
-        for level in xrange(self.__privateModel.nbLevelData()):
+        for level in range(self.__privateModel.nbLevelData()):
             levelData = self.__privateModel.levelDataAt(level)
             model = levelData.model
 
@@ -107,7 +107,7 @@ class SqlTreeModel(QAbstractItemModel):
             if level > 0:
                 levelData.resizeParentIds(count)
 
-            for row in xrange(count):
+            for row in range(count):
                 index = model.index(row, 0)
                 id = int(model.data(index))
                 levelData.setIdAt(row, id)
@@ -135,7 +135,7 @@ class SqlTreeModel(QAbstractItemModel):
 
         if not columnsChanged:
             newIndices = [] # QModelIndexList
-            for i in xrange(len(oldIndices)):
+            for i in range(len(oldIndices)):
                 newIndices.append(self.findIndex(oldLevels[i], oldIds[i], oldIndices[i].column()))
 
             self.changePersistentIndexList(oldIndices, newIndices)

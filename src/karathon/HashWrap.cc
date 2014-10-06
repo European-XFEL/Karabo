@@ -101,7 +101,7 @@ namespace karathon {
                                    const char sep) {
         // elements of our vectors require to be of the same type
         bp::object list0 = list[0];
-        if (PyInt_Check(list0.ptr())) {
+        if (PyLong_Check(list0.ptr())) {
             std::vector<int> v(size);
             for (bp::ssize_t i = 0; i < size; ++i) {
                 v[i] = bp::extract<int>(list[i]);
@@ -113,7 +113,7 @@ namespace karathon {
                 v[i] = bp::extract<double>(list[i]);
             }
             self.set(key, v, sep);
-        } else if (PyString_Check(list0.ptr())) {
+        } else if (PyUnicode_Check(list0.ptr())) {
             std::vector<std::string> v(size);
             for (bp::ssize_t i = 0; i < size; ++i) {
                 v[i] = bp::extract<std::string > (list[i]);
@@ -159,7 +159,7 @@ namespace karathon {
                                   const std::string& key,
                                   const bp::object& pystr,
                                   const char sep) {
-        if (!PyString_Check(pystr.ptr()))
+        if (!PyUnicode_Check(pystr.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Failed to convert  python string to vector of unsigned char ");
         const std::string& stdstr = bp::extract<std::string > (pystr);
         self.set(key, std::vector<unsigned char>(stdstr.begin(), stdstr.end()), sep);

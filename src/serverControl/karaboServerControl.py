@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import argparse
@@ -182,7 +182,7 @@ def validate_configuration_file_against_schema(file):
     
     try: 
         data = load_json(file)    
-    except ValueError, e:
+    except ValueError as e:
         logging.warn("Syntax error in JSON file: " + file)
         logging.info(str(e))
         return {}
@@ -192,7 +192,7 @@ def validate_configuration_file_against_schema(file):
     logging.debug('====== Loaded configuration ======')
     logging.debug(pprint.pformat(data))
 
-    if u'schema_version' in data.keys():
+    if 'schema_version' in list(data.keys()):
         schema_version = data['schema_version']
         if type(schema_version) != type(1) :
             logging.warn("Schema version must be an integer value")
@@ -209,7 +209,7 @@ def validate_configuration_file_against_schema(file):
     schema = {}
     try:
         schema = get_schema(schema_version)
-    except ValueError, e:
+    except ValueError as e:
         logging.warn("Syntax error in schema definition. Contact the author of the tool")
         logging.warn(str(e))
         return {}
@@ -337,7 +337,7 @@ def save_json( data, filename ):
 
 def get_schema(version):
     
-    if version in __SCHEMA__.keys():
+    if version in list(__SCHEMA__.keys()):
         schema_string = __SCHEMA__[version ]
         return json.loads(schema_string)
     

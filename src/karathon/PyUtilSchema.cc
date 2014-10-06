@@ -439,12 +439,12 @@ struct OverwriteElementWrap {
 namespace schemawrap {
 
     void setAlias(Schema& self, const bp::object& obj, const bp::object& aliasObj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
-            if (PyInt_Check(aliasObj.ptr())) {
+            if (PyLong_Check(aliasObj.ptr())) {
                 int alias = bp::extract<int>(aliasObj);
                 self.setAlias(path, alias);
-            } else if (PyString_Check(aliasObj.ptr())) {
+            } else if (PyUnicode_Check(aliasObj.ptr())) {
                 std::string alias = bp::extract<std::string>(aliasObj);
                 self.setAlias(path, alias);
             } else if (PyFloat_Check(aliasObj.ptr())) {
@@ -472,7 +472,7 @@ namespace schemawrap {
                     self.setAlias(path, v);
                     return;
                 }
-                if (PyInt_Check(list0.ptr())) {
+                if (PyLong_Check(list0.ptr())) {
                     std::vector<int> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
                         v[i] = bp::extract<int>(aliasObj[i]);
@@ -496,7 +496,7 @@ namespace schemawrap {
                     self.setAlias(path, v);
                     return;
                 }
-                if (PyString_Check(list0.ptr())) {
+                if (PyUnicode_Check(list0.ptr())) {
                     std::vector<std::string> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
                         v[i] = bp::extract<std::string > (aliasObj[i]);
@@ -508,8 +508,8 @@ namespace schemawrap {
                     std::vector<std::string> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
                         bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(aliasObj[i]).ptr())));
-                        size_t size = PyString_Size(str.ptr());
-                        const char* data = PyString_AsString(str.ptr());
+                        Py_ssize_t size;
+                        const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                         v[i] = string(data, size);
                     }
                     self.setAlias(path, v);
@@ -527,7 +527,7 @@ namespace schemawrap {
     }
 
     karathon::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             Types::ReferenceType t = schema.getValueType(path);
             return karathon::PyTypes::from(t);
@@ -540,7 +540,7 @@ namespace schemawrap {
     //*********************************************************************
 
     void setMinInc(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -550,7 +550,7 @@ namespace schemawrap {
     }
 
     bp::object getMinInc(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_INC), false);
@@ -559,7 +559,7 @@ namespace schemawrap {
     }
 
     void setMaxInc(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -569,7 +569,7 @@ namespace schemawrap {
     }
 
     bp::object getMaxInc(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_INC), false);
@@ -578,7 +578,7 @@ namespace schemawrap {
     }
 
     void setMinExc(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -588,7 +588,7 @@ namespace schemawrap {
     }
 
     bp::object getMinExc(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MIN_EXC), false);
@@ -597,7 +597,7 @@ namespace schemawrap {
     }
 
     void setMaxExc(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -607,7 +607,7 @@ namespace schemawrap {
     }
 
     bp::object getMaxExc(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_MAX_EXC), false);
@@ -620,7 +620,7 @@ namespace schemawrap {
     //*****************************************************************************
 
     bp::object getMinIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -646,7 +646,7 @@ namespace schemawrap {
     }
 
     bp::object getMaxIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -672,7 +672,7 @@ namespace schemawrap {
     }
 
     bp::object getMinExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -698,7 +698,7 @@ namespace schemawrap {
     }
 
     bp::object getMaxExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -729,7 +729,7 @@ namespace schemawrap {
     //*****************************************************************************
 
     void setWarnLow(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -739,7 +739,7 @@ namespace schemawrap {
     }
 
     bp::object getWarnLow(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_LOW), false);
@@ -748,7 +748,7 @@ namespace schemawrap {
     }
 
     void setWarnHigh(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -758,7 +758,7 @@ namespace schemawrap {
     }
 
     bp::object getWarnHigh(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_WARN_HIGH), false);
@@ -767,7 +767,7 @@ namespace schemawrap {
     }
 
     void setAlarmLow(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -777,7 +777,7 @@ namespace schemawrap {
     }
 
     bp::object getAlarmLow(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_LOW), false);
@@ -786,7 +786,7 @@ namespace schemawrap {
     }
 
     void setAlarmHigh(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -796,7 +796,7 @@ namespace schemawrap {
     }
 
     bp::object getAlarmHigh(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALARM_HIGH), false);
@@ -810,7 +810,7 @@ namespace schemawrap {
     //*************************************************************************************
 
     bp::object getWarnLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -836,7 +836,7 @@ namespace schemawrap {
     }
 
     bp::object getWarnHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -862,7 +862,7 @@ namespace schemawrap {
     }
 
     bp::object getAlarmLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -888,7 +888,7 @@ namespace schemawrap {
     }
 
     bp::object getAlarmHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             switch (pytype) {
                 case karathon::PyTypes::INT32:
@@ -919,7 +919,7 @@ namespace schemawrap {
     //***********************************************************************************
 
     bp::object getKeys(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             bp::list listParams;
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getKeys(path);
@@ -937,7 +937,7 @@ namespace schemawrap {
     }
 
     bp::object getTags(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const std::vector<std::string>& v = schema.getTags(path);
             return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
@@ -946,7 +946,7 @@ namespace schemawrap {
     }
 
     bp::object getOptions(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getOptions(path);
             return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
@@ -955,7 +955,7 @@ namespace schemawrap {
     }
 
     bp::object getAllowedStates(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const vector<string>& v = schema.getAllowedStates(path);
             return karathon::Wrapper::fromStdVectorToPyArray<string>(v);
@@ -969,7 +969,7 @@ namespace schemawrap {
     //*************************************************************
 
     void setDefaultValue(Schema& self, const bp::object& obj, const bp::object& value) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             boost::any any;
             karathon::Wrapper::toAny(value, any);
@@ -979,7 +979,7 @@ namespace schemawrap {
     }
 
     bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_DEFAULT_VALUE), false);
@@ -988,7 +988,7 @@ namespace schemawrap {
     }
 
     bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
 
             switch (pytype) {
@@ -1037,10 +1037,10 @@ namespace schemawrap {
     //************************************************************************
 
     bool aliasHasKey(const Schema& schema, const bp::object& obj) {
-        if (PyInt_Check(obj.ptr())) {
+        if (PyLong_Check(obj.ptr())) {
             int param = bp::extract<int>(obj);
             return schema.aliasHasKey(param);
-        } else if (PyString_Check(obj.ptr())) {
+        } else if (PyUnicode_Check(obj.ptr())) {
             std::string param = bp::extract<std::string>(obj);
             return schema.aliasHasKey(param);
         } else if (PyFloat_Check(obj.ptr())) {
@@ -1065,7 +1065,7 @@ namespace schemawrap {
                 }
                 return schema.aliasHasKey(v);
             }
-            if (PyInt_Check(list0.ptr())) {
+            if (PyLong_Check(list0.ptr())) {
                 std::vector<int> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<int>(obj[i]);
@@ -1086,7 +1086,7 @@ namespace schemawrap {
                 }
                 return schema.aliasHasKey(v);
             }
-            if (PyString_Check(list0.ptr())) {
+            if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<std::string > (obj[i]);
@@ -1097,8 +1097,8 @@ namespace schemawrap {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
-                    size_t size = PyString_Size(str.ptr());
-                    const char* data = PyString_AsString(str.ptr());
+                    Py_ssize_t size;
+                    const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = string(data, size);
                 }
                 return schema.aliasHasKey(v);
@@ -1108,7 +1108,7 @@ namespace schemawrap {
     }
 
     bp::object getAliasFromKey(const Schema& schema, const bp::object& obj) {
-        if (PyString_Check(obj.ptr())) {
+        if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
             const Hash& h = schema.getParameterHash();
             return karathon::Wrapper::toObject(h.getAttributeAsAny(path, KARABO_SCHEMA_ALIAS), false);
@@ -1118,10 +1118,10 @@ namespace schemawrap {
     }
 
     string getKeyFromAlias(const Schema& schema, const bp::object& obj) {
-        if (PyInt_Check(obj.ptr())) {
+        if (PyLong_Check(obj.ptr())) {
             int param = bp::extract<int>(obj);
             return schema.getKeyFromAlias(param);
-        } else if (PyString_Check(obj.ptr())) {
+        } else if (PyUnicode_Check(obj.ptr())) {
             std::string param = bp::extract<std::string>(obj);
             return schema.getKeyFromAlias(param);
         } else if (PyFloat_Check(obj.ptr())) {
@@ -1146,7 +1146,7 @@ namespace schemawrap {
                 }
                 return schema.getKeyFromAlias(v);
             }
-            if (PyInt_Check(list0.ptr())) {
+            if (PyLong_Check(list0.ptr())) {
                 std::vector<int> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<int>(obj[i]);
@@ -1167,7 +1167,7 @@ namespace schemawrap {
                 }
                 return schema.getKeyFromAlias(v);
             }
-            if (PyString_Check(list0.ptr())) {
+            if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<std::string > (obj[i]);
@@ -1178,8 +1178,8 @@ namespace schemawrap {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
-                    size_t size = PyString_Size(str.ptr());
-                    const char* data = PyString_AsString(str.ptr());
+                    Py_ssize_t size;
+                    const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = string(data, size);
                 }
                 return schema.getKeyFromAlias(v);

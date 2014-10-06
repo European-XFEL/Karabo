@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 1, 2012
@@ -168,7 +168,7 @@ class _Manager(QObject):
 
     def onReceivedData(self, hash):
         getattr(self, "handle_" + hash["type"])(
-            **{k: v for k, v in hash.iteritems() if k != "type"})
+            **{k: v for k, v in hash.items() if k != "type"})
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -345,7 +345,7 @@ class _Manager(QObject):
             self.systemHash.merge(systemTopology, "merge")
         # Update navigation and project treemodel
         self.systemTopology.updateData(systemTopology)
-        for v in self.deviceData.itervalues():
+        for v in self.deviceData.values():
             v.updateStatus()
         self.projectTopology.updateNeeded()
 
@@ -423,7 +423,7 @@ class _Manager(QObject):
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
             
-            for v in self.deviceData.itervalues():
+            for v in self.deviceData.values():
                 v.updateStatus()
 
             # Clear corresponding parameter pages
@@ -434,7 +434,7 @@ class _Manager(QObject):
 
     def handle_classSchema(self, serverId, classId, schema):
         if (serverId, classId) not in self.serverClassData:
-            print 'not requested schema for classId {} arrived'.format(classId)
+            print('not requested schema for classId {} arrived'.format(classId))
             return
         conf = self.serverClassData[serverId, classId]
         if conf.descriptor is not None:
@@ -454,7 +454,7 @@ class _Manager(QObject):
         # \configuration might set in the GuiServerDevice
         # but is currently not used here
         if deviceId not in self.deviceData:
-            print 'not requested schema for device {} arrived'.format(deviceId)
+            print('not requested schema for device {} arrived'.format(deviceId))
             return
         
         conf = self.deviceData[deviceId]
