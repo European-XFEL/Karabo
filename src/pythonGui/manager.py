@@ -91,17 +91,6 @@ class _Manager(QObject):
     def closeDatabaseConnection(self):
         self.sqlDatabase.closeConnection()
 
-    
-    def _changeClassData(self, key, value):
-        serverId, classId, property = key.split(".", 2)
-        
-        if "@" in property:
-            # Merge attribute value
-            propertyKey, attributeKey = property.split("@")
-            self.serverClassData[serverId, classId].setAttribute(propertyKey, attributeKey, value)
-        else:
-            self.serverClassData[serverId, classId].set(property, value)
-
 
     def _clearDeviceParameterPage(self, deviceId):
         conf = self.deviceData.get(deviceId)
