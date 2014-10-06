@@ -6,7 +6,6 @@
 
 
 from karabo import hashtypes
-from karabo import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
@@ -359,22 +358,34 @@ class HashMergePolicy:
     REPLACE_ATTRIBUTES = "replace"
 
 
-def factory(tag, attrs):
-    if attrs["KRB_Type"] == "HASH":
-        return HashElement(tag, attrs)
-    elif attrs["KRB_Type"] == "VECTOR_HASH":
-        return ListElement(tag, attrs)
-    else:
-        return SimpleElement(tag, attrs)
-
-
 class XMLParser(object):
+    last = None
+
+
+    def factory(self, tag, attrs):
+        if attrs["KRB_Type"] == "HASH":
+            return HashElement(tag, attrs)
+        elif attrs["KRB_Type"] == "VECTOR_HASH":
+            return ListElement(tag, attrs)
+        else:
+            self.closelast()
+            self.last = SimpleElement(tag, attrs)
+            return self.last
+
+
+    def closelast(self):
+        # while parsing ElementTree does not set text if the is none...
+        if self.last is not None and not hasattr(self.last, "data"):
+            self.last.text = ""
+
+
     def read(self, data):
         """Parse the XML in the buffer data and return the hash"""
-        target = xmlparser.TreeBuilder(element_factory=factory)
-        parser = xmlparser.Parser(target=target)
+        target = ElementTree.TreeBuilder(element_factory=self.factory)
+        parser = ElementTree.XMLParser(target=target)
         parser.feed(data)
         root = target.close()
+        self.closelast()
         if hasattr(root, "artificial"):
             return root.children
         else:
