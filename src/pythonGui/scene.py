@@ -1250,11 +1250,9 @@ class Scene(QSvgWidget):
                     self.ilayout.add_item(proxy)
                     proxy.selected = True
                     self.project.signalSelectObject.emit(deviceGroup)
-                    if deviceGroup.isOnline():
-                        # Update view needed
-                        self.project.signalProjectModified.emit()
                 
-                self.project.setModified(True)
+                # Explicitly emit signal, because project is already marked as modified
+                self.project.signalProjectModified.emit()
         event.accept()
         QWidget.dropEvent(self, event)
 
