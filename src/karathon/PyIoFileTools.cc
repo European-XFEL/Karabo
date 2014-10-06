@@ -166,7 +166,7 @@ namespace karathon {
     template <class T>
     struct loadFromFileWrap {
         static bp::object loadWrap(const bp::object& fileNameObj, const bp::object& conf) {
-            if (PyString_Check(fileNameObj.ptr())) {
+            if (PyUnicode_Check(fileNameObj.ptr())) {
                 string fileName = bp::extract<string>(fileNameObj);
                 Hash config = bp::extract<Hash>(conf);
                 T t = T();

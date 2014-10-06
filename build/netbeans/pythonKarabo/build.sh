@@ -23,10 +23,10 @@ if [ "\$OS" = "Darwin" ]; then
     PYKARABO=\$KARABO/lib
 else
     # Is a site-package in the shipped bundled python environment
-    PYKARABO=\$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
+    PYKARABO=\$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
 fi
 
-python \$PYKARABO/karabo/device_server.py "\$@"
+python3 \$PYKARABO/karabo/device_server.py "\$@"
 End-of-file
 chmod u+x karabo-pythondeviceserver
 cd ../lib

@@ -50,7 +50,7 @@ class DisplayPlot(DisplayWidget):
 
     @property
     def boxes(self):
-        return self.curves.keys()
+        return list(self.curves.keys())
 
 
     value = None

@@ -19,10 +19,10 @@ template <typename T>
 struct AliasAttributeWrap {
 
     static T & aliasPy(T& self, const bp::object& obj) {
-        if (PyInt_Check(obj.ptr())) {
+        if (PyLong_Check(obj.ptr())) {
             int param = bp::extract<int>(obj);
             return self.alias(param);
-        } else if (PyString_Check(obj.ptr())) {
+        } else if (PyUnicode_Check(obj.ptr())) {
             std::string param = bp::extract<std::string>(obj);
             return self.alias(param);
         } else if (PyFloat_Check(obj.ptr())) {
@@ -47,7 +47,7 @@ struct AliasAttributeWrap {
                 }
                 return self.alias(v);
             }
-            if (PyInt_Check(list0.ptr())) {
+            if (PyLong_Check(list0.ptr())) {
                 std::vector<int> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<int>(obj[i]);
@@ -68,7 +68,7 @@ struct AliasAttributeWrap {
                 }
                 return self.alias(v);
             }
-            if (PyString_Check(list0.ptr())) {
+            if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     v[i] = bp::extract<std::string > (obj[i]);
@@ -79,8 +79,8 @@ struct AliasAttributeWrap {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
                     bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
-                    size_t size = PyString_Size(str.ptr());
-                    const char* data = PyString_AsString(str.ptr());
+                    Py_ssize_t size;
+                    const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = std::string(data, size);
                 }
                 return self.alias(v);

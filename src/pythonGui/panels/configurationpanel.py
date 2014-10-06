@@ -13,7 +13,7 @@ __all__ = ["ConfigurationPanel"]
 
 
 from docktabwindow import DockTabWindow
-from documentationpanel import DocumentationPanel
+from .documentationpanel import DocumentationPanel
 import icons
 from manager import Manager
 from navigationtreeview import NavigationTreeView
@@ -618,10 +618,10 @@ class ConfigurationPanel(QWidget):
         timer.stop()
         
         # Check path against path of current parameter editor
-        mapValues = self.__changingTimerDeviceIdMap.values()
-        for i in xrange(len(mapValues)):
+        mapValues = list(self.__changingTimerDeviceIdMap.values())
+        for i in range(len(mapValues)):
             if timer == mapValues[i]:
-                path = self.__changingTimerDeviceIdMap.keys()[i]
+                path = list(self.__changingTimerDeviceIdMap.keys())[i]
                 
                 parameterEditor = self._getParameterEditorByPath(path)
                 if parameterEditor:
@@ -678,7 +678,7 @@ class ConfigurationPanel(QWidget):
             indexInfo = self.twProject.indexInfo()
         else:
             indexInfo = {}
-            print "No device for initiation selected."
+            print("No device for initiation selected.")
 
         if len(indexInfo) == 0:
             return
@@ -692,7 +692,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onGlobalAccessLevelChanged(self):
-        for index in xrange(self.__swParameterEditor.count()):
+        for index in range(self.__swParameterEditor.count()):
             twParameterEditor = self.__swParameterEditor.widget(index)
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()

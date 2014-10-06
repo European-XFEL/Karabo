@@ -1,4 +1,4 @@
-from __future__ import unicode_literals, absolute_import
+
 import karabo.hash
 from karabo.registry import Registry
 
@@ -92,7 +92,7 @@ class Vector(object):
     @classmethod
     def read(cls, file):
         size, = file.readFormat('I')
-        return (super(Vector, cls).read(file) for i in xrange(size))
+        return (super(Vector, cls).read(file) for i in range(size))
 
 
     @classmethod
@@ -130,7 +130,7 @@ class NumpyVector(Vector):
 
     @classmethod
     def toString(cls, data):
-        return ",".join(unicode(x) for x in data)
+        return ",".join(str(x) for x in data)
 
 
     def cast(self, other):
@@ -186,7 +186,7 @@ class Type(Descriptor, Registry):
 
     @classmethod
     def toString(cls, data):
-        return unicode(data)
+        return str(data)
 
 
 class Bool(Type):
@@ -233,7 +233,7 @@ class Char(Simple, Type):
 
     @classmethod
     def toString(cls, data):
-        return base64.b64encode(data)
+        return base64.b64encode(data).decode("ascii")
 
 
     @classmethod
@@ -419,12 +419,12 @@ class String(Type):
     def read(cls, file):
         size, = file.readFormat('I')
         file.pos += size
-        return unicode(file.data[file.pos - size:file.pos], 'utf8')
+        return str(file.data[file.pos - size:file.pos], 'utf8')
 
 
     @staticmethod
     def fromstring(s):
-        return unicode(s)
+        return str(s)
 
 
     @classmethod
@@ -433,10 +433,10 @@ class String(Type):
 
 
     def cast(self, other):
-        if isinstance(other, unicode):
+        if isinstance(other, str):
             return other
         else:
-            return unicode(other)
+            return str(other)
 
 
 class VectorString(Vector, String):
@@ -454,14 +454,14 @@ class VectorString(Vector, String):
 
     @classmethod
     def toString(cls, data):
-        return ",".join(unicode(x) for x in data)
+        return ",".join(str(x) for x in data)
 
 
     def cast(self, other):
         if isinstance(other, StringList):
             return other
         else:
-            return StringList(unicode(s) for s in other)
+            return StringList(str(s) for s in other)
 
 
 class StringList(Special, list):
@@ -480,13 +480,13 @@ class Hash(Type):
     def read(cls, file):
         size, = file.readFormat('I')
         ret = karabo.hash.Hash()
-        for i in xrange(size):
+        for i in range(size):
             key = file.readKey()
             type, = file.readFormat('I')
             type = cls.types[type]
             asize, = file.readFormat('I')
             attrs = { }
-            for i in xrange(asize):
+            for i in range(asize):
                 akey = file.readKey()
                 atype, = file.readFormat('I')
                 atype = cls.types[atype]
@@ -499,11 +499,11 @@ class Hash(Type):
     @classmethod
     def write(cls, file, data):
         file.writeFormat('I', len(data))
-        for k, v in data.iteritems():
+        for k, v in data.items():
             file.writeKey(k)
             file.writeType(v)
             file.writeFormat('I', len(data[k, ...]))
-            for ak, av in data[k, ...].iteritems():
+            for ak, av in data[k, ...].items():
                 file.writeKey(ak)
                 file.writeType(av)
                 file.writeData(av)
@@ -537,7 +537,7 @@ class Schema(Hash):
     def read(cls, file):
         file.readFormat('I') # ignore length
         size, = file.readFormat('B')
-        name = unicode(file.data[file.pos:file.pos + size], "utf8")
+        name = str(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)
         return Schema_(name, ret)

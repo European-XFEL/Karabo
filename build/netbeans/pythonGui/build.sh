@@ -23,7 +23,7 @@ if [ "\$OS" = "Darwin" ]; then
 fi
 
 cd \$KARABO/lib/pythonGui  
-python karabo-gui.py "\$@"
+python3 karabo-gui.py "\$@"
 cd -
 End-of-file
 chmod u+x karabo-gui

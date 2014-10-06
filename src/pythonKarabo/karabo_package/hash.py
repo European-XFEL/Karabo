@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals, absolute_import
+
 from karabo import hashtypes
 from karabo import xmlparser
 
@@ -36,7 +36,7 @@ def _gettype(data):
             return hashtypes.Complex
         elif isinstance(data, bytes):
             return hashtypes.VectorChar
-        elif isinstance(data, unicode):
+        elif isinstance(data, str):
             return hashtypes.String
         elif isinstance(data, Hash):
             return hashtypes.Hash
@@ -63,15 +63,15 @@ class Element(object):
         def parse(vv):
             k, v = vv.split(":", 1)
             return hashtypes.Type.fromname[k[4:]].fromstring(v)
-        self.attrs = {k: parse(v) for k, v in attrs.iteritems()
+        self.attrs = {k: parse(v) for k, v in attrs.items()
                       if k[:4] != "KRB_"}
 
 
     def items(self):
         yield "KRB_Type", self.hashname()
-        for k, v in self.attrs.iteritems():
+        for k, v in self.attrs.items():
             t = _gettype(v)
-            yield k, u'KRB_{}:{}'.format(t.hashname(), t.toString(v))
+            yield k, 'KRB_{}:{}'.format(t.hashname(), t.toString(v))
 
 
 class SimpleElement(Element):
@@ -240,7 +240,7 @@ class Hash(OrderedDict):
             else:
                 self._get(key).attrs[attr] = value
         else:
-            s, p = self._path(unicode(item), True)
+            s, p = self._path(str(item), True)
             if p in s:
                 attrs = s[p, ...]
             else:
@@ -296,7 +296,7 @@ class Hash(OrderedDict):
         hash are merged with the existing ones, otherwise they are overwritten.
         """
         merge = attribute_policy == "merge"
-        for k, v in other.iteritems():
+        for k, v in other.items():
             if isinstance(v, Hash):
                 if k not in self or self[k] is None:
                     self[k] = Hash()
@@ -333,8 +333,8 @@ class Hash(OrderedDict):
 
     def getKeys(self, keys=None):
         if keys is None:
-            return self.keys()
-        return keys.extend(self.keys())
+            return list(self.keys())
+        return keys.extend(list(self.keys()))
 
     def hasAttribute(self, item, key):
         return key in self[item, ...]
@@ -344,7 +344,7 @@ class Hash(OrderedDict):
 
     def paths(self):
         ret = [ ]
-        for k, v in self.iteritems():
+        for k, v in self.items():
             if isinstance(v, Hash):
                 ret.extend([k + '.' + kk for kk in v.paths()])
             else:
@@ -397,8 +397,8 @@ class Writer(object):
 class XMLWriter(Writer):
     def writeToFile(self, hash, file):
         """Write the hash to the file in binary format"""
-        if len(hash) == 1 and isinstance(hash.values()[0], Hash):
-            e = OrderedDict.__getitem__(hash, hash.keys()[0])
+        if len(hash) == 1 and isinstance(list(hash.values())[0], Hash):
+            e = OrderedDict.__getitem__(hash, list(hash.keys())[0])
         else:
             e = HashElement("root")
             e.attrs = dict(KRB_Artificial="")

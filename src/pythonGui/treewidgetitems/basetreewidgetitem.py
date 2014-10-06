@@ -16,7 +16,7 @@ __all__ = ["BaseTreeWidgetItem"]
 
 from collections import OrderedDict
 
-from popupwidget import PopupWidget
+from .popupwidget import PopupWidget
 
 from karabo.hashtypes import Type
 
@@ -46,7 +46,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
     def setupContextMenu(self):
-        raise NotImplementedError, "BaseTreeWidgetItem.setupContextMenu"
+        raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
 
 
     # Returns the display component of the item

@@ -68,7 +68,7 @@ void exportPyXipRawImageData();
 
 void *convert_to_cstring(PyObject *obj)
 {
-    char *ret = PyString_AsString(obj);
+    char *ret = PyUnicode_AsUTF8(obj);
     if (!ret)
         PyErr_Clear();
     return ret;
@@ -89,16 +89,21 @@ void construct_string(PyObject *obj, boost::python::converter::rvalue_from_pytho
 	storage.bytes;
     char *str;
     Py_ssize_t size;
-    PyString_AsStringAndSize(obj, &str, &size);
+    str = PyUnicode_AsUTF8AndSize(obj, &size);
     new (storage) std::string(str, size);
     data->convertible = storage;
+}
+
+void *import_numpy()
+{
+    // init Array C-API
+    import_array();
 }
 
 
 BOOST_PYTHON_MODULE(karathon) {
     PyEval_InitThreads();
-    // init Array C-API
-    import_array();
+    import_numpy();
 
     // util
     exportPyUtilHash();

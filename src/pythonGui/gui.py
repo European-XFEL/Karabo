@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals
+
 __author__="kerstin weger"
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
@@ -67,4 +67,4 @@ def excepthook(type, value, traceback):
     try:
         Network().onError(text)
     except Exception:
-        print "could not sent exception to network"
+        print("could not sent exception to network")

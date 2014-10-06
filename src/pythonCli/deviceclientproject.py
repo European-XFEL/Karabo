@@ -67,8 +67,8 @@ class DeviceClientProject(Project):
         """
         devices = self.getDevices(deviceIds)
         if not devices:
-            print "The given devices do not belong to this project and " \
-                  "therefore can not be instantiated."
+            print("The given devices do not belong to this project and " \
+                  "therefore can not be instantiated.")
         
         runningDevices = self.deviceClient.getDevices()
         for d in devices:
@@ -107,8 +107,8 @@ class DeviceClientProject(Project):
         """
         devices = self.getDevices(deviceIds)
         if not devices:
-            print "The given devices do not belong to this project and " \
-                  "therefore can not be shutdown."
+            print("The given devices do not belong to this project and " \
+                  "therefore can not be shutdown.")
         
         for d in devices:
             self.deviceClient.shutdownDevice(d.deviceId)
