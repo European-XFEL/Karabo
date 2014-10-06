@@ -43,7 +43,7 @@ class BaseFsm(object):
         pass
     
     def noStateTransition(self):
-        print "*** No transition exists for the last event ***"
+        print("*** No transition exists for the last event ***")
     
     def startFsm(self):
         """Start state machine"""

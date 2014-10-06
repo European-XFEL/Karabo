@@ -12,7 +12,7 @@ def Monkey(name, bases, dict):
 
     A class with this metaclass does not actually define a new class, but
     updates an already preexisting class. """
-    for k, v in dict.iteritems():
+    for k, v in dict.items():
         setattr(bases[0], k, v)
     return bases[0]
 
@@ -21,9 +21,8 @@ class MetaRegistry(type(Registry), type(QObject)):
     pass
 
 
-class Registry(Registry):
+class Registry(Registry, metaclass=MetaRegistry):
     """ This is a special case of a registry which inherits QObject """
-    __metaclass__ = MetaRegistry
 
 
 class Loadable(Registry):

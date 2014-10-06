@@ -96,7 +96,7 @@ namespace karathon {
             data = new char[size];
             channel->read(data, size);
         }
-        PyObject* pyobj = PyString_FromStringAndSize(data, size);
+        PyObject* pyobj = PyUnicode_FromStringAndSize(data, size);
         return bp::object(bp::handle<>(pyobj));
     }
 
@@ -120,7 +120,7 @@ namespace karathon {
             data = new char[size];
             channel->read(data, size);
         }
-        PyObject* pyobj = PyString_FromStringAndSize(data, size);
+        PyObject* pyobj = PyUnicode_FromStringAndSize(data, size);
         return bp::make_tuple(bp::object(header), bp::object(bp::handle<>(pyobj)));
     }
 
@@ -148,9 +148,9 @@ namespace karathon {
             ScopedGILRelease nogil;
             channel->write(hash);
             return;
-        } else if (PyString_Check(obj.ptr())) {
-            size_t size = PyString_Size(obj.ptr());
-            const char* data = PyString_AsString(obj.ptr());
+        } else if (PyUnicode_Check(obj.ptr())) {
+            Py_ssize_t size;
+            char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             ScopedGILRelease nogil;
             channel->write(data, size);
             return;
@@ -168,7 +168,7 @@ namespace karathon {
                 ScopedGILRelease nogil;
                 channel->write(hdr, data, size);
                 return;
-            } else if (PyString_Check(obj.ptr())) {
+            } else if (PyUnicode_Check(obj.ptr())) {
                 std::string data = bp::extract<std::string >(obj);
                 ScopedGILRelease nogil;
                 channel->write(hdr, data);
@@ -260,9 +260,9 @@ namespace karathon {
             ScopedGILRelease nogil;
             channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
             return;
-        } else if (PyString_Check(obj.ptr())) {
-            size_t size = PyString_Size(obj.ptr());
-            const char* data = PyString_AsString(obj.ptr());
+        } else if (PyUnicode_Check(obj.ptr())) {
+            Py_ssize_t size;
+            const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
             channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
@@ -357,7 +357,7 @@ namespace karathon {
     }
 
     void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
-        if (PyInt_Check(milliobj.ptr())) {
+        if (PyLong_Check(milliobj.ptr())) {
             int milliseconds = bp::extract<int>(milliobj);
             registerWaitHandler(channel, handler);
             ScopedGILRelease nogil;

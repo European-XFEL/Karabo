@@ -34,7 +34,7 @@ from IPython.qt.svg import svg_to_image
 from base64 import decodestring
 
 import time
-import thread
+import _thread
 
 class DisplayPyCode(DisplayWidget):
     category = "String"
@@ -334,7 +334,7 @@ class DisplayPyCode(DisplayWidget):
             self.__should_refresh = True
             self.__refresh_rate = refresh_rate
             #call execute in a separate thread
-            thread.start_new_thread(self.refreshedExecute, (source,))
+            _thread.start_new_thread(self.refreshedExecute, (source,))
             
     #clear the response field before new executions
     def clearResponseContents(self):
@@ -376,17 +376,17 @@ class DisplayPyCode(DisplayWidget):
         content = msg['content']
         
         data = content['data']
-        if data.has_key('text/html'):
+        if 'text/html' in data:
             html = data['text/html']
             self.__response.setTextColor(QColor("black"))
             self.__response.setHtml(html)      
-        elif data.has_key('text/plain'):
+        elif 'text/plain' in data:
             text = data['text/plain']
             self.__response.setTextColor(QColor("black"))
             self.__response.setPlainText(text)
-        elif data.has_key('image/png'):
+        elif 'image/png' in data:
             self._append_png(decodestring(data['image/png'].encode('ascii')))
-        elif data.has_key('image/svg+xml'):
+        elif 'image/svg+xml' in data:
             self._append_svg(data['image/svg+xml'], True)
             
     
@@ -482,4 +482,4 @@ class DisplayPyCode(DisplayWidget):
                 try:
                     self.onExecuteClicked()
                 except:
-                    print "A problem with IPython execution occured!"
+                    print("A problem with IPython execution occured!")

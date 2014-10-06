@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <burkhard.heisen@xfel.eu>
 # Created on February 17, 2012
@@ -127,7 +127,7 @@ class _Network(QObject):
             self.tcpSocket.waitForDisconnected(5000):
             return
         
-        print "Disconnect failed:", self.tcpSocket.errorString()
+        print("Disconnect failed:", self.tcpSocket.errorString())
 
 
     def _login(self):
@@ -141,7 +141,7 @@ class _Network(QObject):
         if self.username == "god":
             md5 = QCryptographicHash.hash(str(self.password), QCryptographicHash.Md5).toHex()
             if md5 == "39d676ecced45b02da1fb45731790b4c":
-                print "Entering god mode..."
+                print("Entering god mode...")
                 globals.GLOBAL_ACCESS_LEVEL = 1000
             else:
                 globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
@@ -154,17 +154,17 @@ class _Network(QObject):
                 self.authenticator = Authenticator(
                     self.username, self.password, self.provider, ipAddress,
                     self.brokerHost, self.brokerPort, self.brokerTopic)
-            except Exception, e:
-                print "Authenticator not available.", str(e)
+            except Exception as e:
+                print("Authenticator not available.", str(e))
 
             # Execute Login
             ok = False
             try:
                 ok = self.authenticator.login()
-            except Exception, e:
+            except Exception as e:
                 # TODO Fall back to inbuild access level
                 globals.GLOBAL_ACCESS_LEVEL = globals.KARABO_DEFAULT_ACCESS_LEVEL
-                print "Login problem. Please verify, if service is running. " + str(e)
+                print("Login problem. Please verify, if service is running. " + str(e))
                 
                 # Inform the mainwindow to change correspondingly the allowed level-downgrade
                 self.signalUserChanged.emit()
@@ -176,7 +176,7 @@ class _Network(QObject):
                 globals.GLOBAL_ACCESS_LEVEL = \
                     self.authenticator.defaultAccessLevelId
             else:
-                print "Login failed"
+                print("Login failed")
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)
                 #globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
                 return
@@ -196,8 +196,8 @@ class _Network(QObject):
 
         try:
             self.authenticator.logout()
-        except Exception, e:
-            print "Logout problem. Please verify, if service is running. " + str(e)
+        except Exception as e:
+            print("Logout problem. Please verify, if service is running. " + str(e))
 
 
     def onReadServerData(self):
@@ -221,7 +221,7 @@ class _Network(QObject):
 
 
     def onSocketError(self, socketError):
-        print "onSocketError", self.tcpSocket.errorString(), socketError
+        print("onSocketError", self.tcpSocket.errorString(), socketError)
 
         self.disconnectFromServer()
 
