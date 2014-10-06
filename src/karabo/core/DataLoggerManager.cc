@@ -365,7 +365,7 @@ namespace karabo {
         DataLoggerIndex DataLoggerManager::findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint) {
             string timestampAsIso8061;
             double timestampAsDouble;
-            unsigned long long seconds, fraction, trainId;
+            unsigned long long seconds, fraction;
             string event;
             string tail;
             DataLoggerIndex entry;
