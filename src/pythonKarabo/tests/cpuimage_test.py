@@ -172,7 +172,7 @@ class  CpuImage_TestCase(unittest.TestCase):
             self.assertEqual(img.pixelType(), "UINT8")
             self.assertEqual(img.getStatistics().getMin(), 0.0)
             self.assertEqual(img.getStatistics().getMax(), 255.0)
-        except Exception,e:
+        except Exception as e:
             self.fail("test_cpuimage_read_png exception: " + str(e))        
             
 if __name__ == '__main__':

@@ -170,7 +170,7 @@ namespace karathon {
                               const bp::dict& dictionary,
                               const char sep) {
         std::string separator(1, sep);
-        bp::list keys(dictionary.iterkeys());
+        bp::list keys(dictionary.keys());
         for (bp::ssize_t i = 0; i < bp::len(keys); i++) {
             const bp::object& obj = dictionary[keys[i]];
             if (PyDict_Check(obj.ptr())) {
