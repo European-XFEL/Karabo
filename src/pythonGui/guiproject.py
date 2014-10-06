@@ -189,6 +189,10 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def onUpdateDevice(self, device):
+        """
+        This slot is setting the configuration of this device group to the given
+        \device.
+        """
         if device not in self.devices:
             return
         
@@ -199,6 +203,12 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def _connectDevices(self, descriptor, groupBox):
+        """
+        This recursive function connects all boxes of this device group to the
+        corresponding boxes of the various devices.
+        This allows the correct update of all box values once a device group
+        configuration is changed.
+        """
         for k, v in descriptor.dict.iteritems():
             childBox = getattr(groupBox, k, None)
             if childBox is None:
@@ -457,14 +467,9 @@ class GuiProject(Project, QObject):
 
         if device.descriptor is None:
             config = device.initConfig
-            print "initConfig"
         else:
             config = device.toHash()
-            print "toHash"
 
-        print "instantiateDevice", device.id
-        print config
-        print ""
         manager.Manager().initDevice(device.serverId, device.classId, device.id,
                                      config)
 
