@@ -103,6 +103,20 @@ class Box(QObject):
         self.signalUpdateComponent.emit(self, self._value, timestamp)
 
 
+    def onUpdateValue(self, box, value, timestamp):
+        """
+        This slot updates not only the components but also the
+        value of the box.
+        """
+        if self.descriptor is None:
+            return
+        
+        if box.current is not None:
+            value = box.current
+        
+        self.set(value, timestamp)
+
+
     def hasValue(self):
         return self.initialized
 
@@ -572,6 +586,7 @@ class ChoiceOfNodes(Schema):
 
 
     def set(self, box, value, timestamp=None):
+        print "#### CHOICE.set", box.key(), value, box.current
         box.current = value
         box._set(box.value, timestamp)
 
