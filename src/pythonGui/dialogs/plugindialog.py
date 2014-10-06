@@ -91,7 +91,7 @@ class PluginDialog(QDialog):
         self.cbPlugin.clear()
         self.cbServer.clear()
 
-        for serverId in list(serverTopology.keys()):
+        for serverId in serverTopology.keys():
 
             visibility = serverTopology.getAttribute(serverId, "visibility")
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
