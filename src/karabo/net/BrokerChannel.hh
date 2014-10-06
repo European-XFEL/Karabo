@@ -34,15 +34,33 @@ namespace karabo {
             typedef boost::function<void (BrokerChannel::Pointer, const char*, const size_t&) > ReadRawHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>&) > ReadVectorHandler;
             typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > ReadStringHandler;
-            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash&) > ReadHashHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer&) > ReadHashHandler;
 
-            typedef boost::function<void (BrokerChannel::Pointer, const char* /*body*/, const size_t& /*body size*/, const karabo::util::Hash::Pointer& /*header*/) > ReadRawHashHandler;            
-            typedef boost::function<void (BrokerChannel::Pointer, const std::vector<char>& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadVectorHashHandler;
-            typedef boost::function<void (BrokerChannel::Pointer, const std::string& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadStringHashHandler;                        
-            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*body*/, const karabo::util::Hash::Pointer& /*header*/) > ReadHashHashHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*header*/, const char* /*body*/, const size_t& /*body size*/) > ReadHashRawHandler;            
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*header*/, const std::vector<char>& /*body*/) > ReadVectorHashHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*header*/, const std::string& /*body*/) > ReadHashStringHandler;                        
+            typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*header*/, const karabo::util::Hash::Pointer& /*body*/) > ReadHashHashHandler;
 
             typedef boost::function<void (BrokerChannel::Pointer) > WriteCompleteHandler;
             typedef boost::function<void (BrokerChannel::Pointer) > WaitHandler;
+            
+        protected:
+            
+            ReadRawHandler m_readRawHandler;
+            ReadStringHandler m_readStringHandler;
+            ReadHashHandler m_readHashHandler;
+            
+            ReadHashRawHandler m_readHashRawHandler;
+            ReadHashStringHandler m_readHashStringHandler;
+            ReadHashHashHandler m_readHashHashHandler;
+            
+        private:
+            
+            ReadVectorHandler m_readVectorHandler;
+            ReadVectorHashHandler m_readVectorHashHandler;
+            
+            
+        public:
 
             BrokerChannel(BrokerConnection& connection) : m_connection(connection) {
             }
@@ -98,53 +116,44 @@ namespace karabo {
              * The reading will block until the header and data records are read.
              * @return void 
              */
-            virtual void read(std::vector<char>& data, karabo::util::Hash& header) = 0;
+            virtual void read(karabo::util::Hash& header, std::vector<char>& data) = 0;
             /**
              * This function reads from a channel into std::string 
              * The reading will block until the header and data records are read.
              * @return void 
              */
-            virtual void read(std::string& data, karabo::util::Hash& header) = 0;
+            virtual void read(karabo::util::Hash& header, std::string& data) = 0;
 
-            virtual void read(karabo::util::Hash& body, karabo::util::Hash& header) = 0;
+            virtual void read(karabo::util::Hash& header, karabo::util::Hash& body) = 0;
 
             //**************************************************************/
             //*              Asynchronous Read - No Header                 */
             //**************************************************************/
 
-            virtual void readAsyncRaw(const ReadRawHandler& handler) {
-                 throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
-            }
+            virtual void readAsyncRaw(const ReadRawHandler& handler) = 0;                 
 
-            virtual void readAsyncVector(const ReadVectorHandler& handler) {
+            void readAsyncVector(const ReadVectorHandler& handler) {
                 m_readVectorHandler = handler;
                 readAsyncRaw(boost::bind(&karabo::net::BrokerChannel::raw2Vector, this, _1, _2, _3));
             }
 
-            virtual void readAsyncString(const ReadStringHandler& handler) {
-                m_readStringHandler = handler;
-                readAsyncRaw(boost::bind(&karabo::net::BrokerChannel::raw2String, this, _1, _2, _3));
-            }
-
-            virtual void readAsyncHash(const ReadHashHandler& handler) {
-                throw KARABO_NOT_IMPLEMENTED_EXCEPTION("Function not implemented by this broker implementation");
-            }
+            virtual void readAsyncString(const ReadStringHandler& handler) = 0;
+            
+            virtual void readAsyncHash(const ReadHashHandler& handler) = 0;
+                
 
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
 
-            virtual void readAsyncRawHash(const ReadRawHashHandler& handler) = 0;
+            virtual void readAsyncHashRaw(const ReadHashRawHandler& handler) = 0;
             
-            virtual void readAsyncVectorHash(const ReadVectorHashHandler& handler) {
+            void readAsyncHashVector(const ReadVectorHashHandler& handler) {
                 m_readVectorHashHandler = handler;
-                readAsyncRawHash(boost::bind(&karabo::net::BrokerChannel::rawHash2VectorHash, this, _1, _2, _3, _4));
+                readAsyncHashRaw(boost::bind(&karabo::net::BrokerChannel::hashRaw2hashVector, this, _1, _2, _3, _4));
             }
 
-            virtual void readAsyncStringHash(const ReadStringHashHandler& handler) {
-                m_readStringHashHandler = handler;
-                readAsyncRawHash(boost::bind(&karabo::net::BrokerChannel::rawHash2StringHash, this, _1, _2, _3, _4));
-            }
+            virtual void readAsyncHashString(const ReadHashStringHandler& handler) = 0;
 
             virtual void readAsyncHashHash(const ReadHashHashHandler& handler) = 0;
             
@@ -231,35 +240,14 @@ namespace karabo {
                 v.resize(size);
                 memcpy(&v[0], data, size);
                 m_readVectorHandler(channel, v);
-            }
-
-            void raw2String(BrokerChannel::Pointer channel, const char* data, const size_t& size) {
-                std::string s(data, size);
-                m_readStringHandler(channel, s);
-            }
+            }            
          
-            void rawHash2VectorHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
+            void hashRaw2hashVector(BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const char* data, const size_t& size) {
                 std::vector<char> v;
                 v.resize(size);
                 memcpy(&v[0], data, size);
-                m_readVectorHashHandler(channel, v, header);
-            }
-
-            void rawHash2StringHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header) {
-                std::string s(data, size);
-                m_readStringHashHandler(channel, s, header);
-            }
-
-
-        private: // members
-
-            ReadVectorHandler m_readVectorHandler;
-
-            ReadStringHandler m_readStringHandler;
-
-            ReadVectorHashHandler m_readVectorHashHandler;
-
-            ReadStringHashHandler m_readStringHashHandler;
+                m_readVectorHashHandler(channel, header, v);
+            }         
 
         };
     }
