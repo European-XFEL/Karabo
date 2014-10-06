@@ -21,9 +21,9 @@ using namespace std;
 using namespace karabo::util;
 using namespace karabo::net;
 
-void readHandler(BrokerChannel::Pointer channel, const char* body, const size_t& bodySize, const Hash& header) {
+void readHandler(BrokerChannel::Pointer channel, const Hash::Pointer& header, const char* body, const size_t& bodySize) {
     string messageBody(body, bodySize);
-    cout << header << endl;
+    cout << *header << endl;
     cout << messageBody << endl;
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         if (argc <= 1) {
             channel->setFilter("signalFunction <> 'signalHeartbeat'");
         }
-        channel->readAsyncRawHash(readHandler);
+        channel->readAsyncHashRaw(readHandler);
         
         // Block forever
         ioService->work();
