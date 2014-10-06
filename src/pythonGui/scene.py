@@ -29,7 +29,6 @@ from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
-from karabo import xmlparser
 from functools import partial
 
 from itertools import chain
@@ -998,7 +997,7 @@ class Scene(QSvgWidget):
         """
         Parses the given xmlString which represents the SVG.
         """
-        self.tree = xmlparser.parse(BytesIO(xmlString))
+        self.tree = ElementTree.parse(BytesIO(xmlString))
         root = self.tree.getroot()
         self.clean()
         FixedLayout.load(root, widget=self.inner)
