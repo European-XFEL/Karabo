@@ -235,14 +235,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
              if d.status in ("offline", "noplugin", "noserver", "incompatible")]
 
 
-    def fillWidget(self, parameterEditor):
-        print "DeviceGroup.fillWidget", self, self.type
-        # TODO: do some more...
-        #if self.isOnline():
-        #    print "online deviceGroup..
-        Configuration.fillWidget(self, parameterEditor)
-
-
     def addVisible(self):
         for device in self.devices:
             device.addVisible()
