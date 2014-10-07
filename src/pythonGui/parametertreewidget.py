@@ -193,7 +193,8 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _r_globalAccessLevelChanged(self, item):
-        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
+        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL or \
+           (self.conf.type == "deviceGroup" and item.editableComponent is None):
             item.setHidden(True)
         else:
             item.setHidden(False)
