@@ -201,9 +201,11 @@ class Item(QWidget, Loadable):
                     continue
                 
                 if displayType == "Input":
+                    box.signalUpdateComponent.connect(self.update)
                     self.inputChannels.append(box)
                 elif displayType == "Output":
                     self.outputChannels.append(box)
+                    box.signalUpdateComponent.connect(self.update)
             
             rect = self.boundingRect()
             pos = self.parent().fixed_geometry.topLeft()
