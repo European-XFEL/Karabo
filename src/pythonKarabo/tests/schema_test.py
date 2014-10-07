@@ -1,13 +1,13 @@
 
 import unittest
 from karabo.karathon import *
-from configuration_test_classes import *
+from configuration_example_classes import *
 
 
 class  Schema_TestCase(unittest.TestCase):
     #def setUp(self):
     #    try:
-    #        self.schema = TestStruct1.getSchema("TestStruct1")
+    #        self.schema = cc.TestStruct1.getSchema("TestStruct1")
     #        #self.schema = Schema("MyTest", AssemblyRules(AccessType(READ | WRITE | INIT)))
     #        #TestStruct1.expectedParameters(self.schema)
     #    except Exception as e:

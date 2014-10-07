@@ -5,7 +5,7 @@ __date__ ="$Sep 30, 2013$"
 import unittest
 from karabo.karathon import *
 from karabo.decorators import *
-from configuration_test_classes import SomeClass
+from configuration_example_classes import SomeClass
 from PIL import Image
 
 class  CpuImage_TestCase(unittest.TestCase):
