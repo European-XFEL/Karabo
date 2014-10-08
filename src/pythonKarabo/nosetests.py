@@ -9,6 +9,5 @@ import sys
 
 if __name__ == "__main__":
     os.chdir("tests")
-    sys.path.append(os.getcwd())
     nose.run()
     os.chdir("..")
