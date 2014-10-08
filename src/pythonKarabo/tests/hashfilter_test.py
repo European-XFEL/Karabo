@@ -6,7 +6,7 @@ import unittest
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.configurator import Configurator
-from configuration_example_classes import Base, P1, P2, P3, GraphicsRenderer2
+from .configuration_example_classes import Base, P1, P2, P3, GraphicsRenderer2
 
         
 class  HashfilterTestCase(unittest.TestCase):

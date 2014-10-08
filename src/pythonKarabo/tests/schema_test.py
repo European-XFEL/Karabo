@@ -1,7 +1,7 @@
 
 import unittest
 from karabo.karathon import *
-from configuration_example_classes import *
+from .configuration_example_classes import *
 
 
 class  Schema_TestCase(unittest.TestCase):
