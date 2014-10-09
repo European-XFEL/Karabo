@@ -92,7 +92,7 @@ class EditableChoiceElement(EditableWidget):
             self._r_updateChildItems(childItem)
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if not isinstance(value, str):
             value = box.current
 
@@ -102,7 +102,7 @@ class EditableChoiceElement(EditableWidget):
 
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
-        self._updateChoiceItems(index)
+        self.onEditingFinished(index)
 
 
     def onEditingFinished(self, index):
