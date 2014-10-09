@@ -145,6 +145,7 @@ else
     [ -f $PACKAGEDIR/extern/bin/iptest ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest
     [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/irunner
     [ -f $PACKAGEDIR/extern/bin/nosetests ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests
+    [ -f $PACKAGEDIR/extern/bin/nosetests-3.4 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests-3.4
     [ -f $PACKAGEDIR/extern/bin/pycolor ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pycolor
     [ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc
     [ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sift
