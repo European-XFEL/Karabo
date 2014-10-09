@@ -57,7 +57,7 @@ class EditableFileOut(EditableWidget):
         return self.lePath.text()
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = ""
 
