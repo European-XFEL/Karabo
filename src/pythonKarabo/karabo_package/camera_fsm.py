@@ -6,7 +6,7 @@ __date__ ="August  7, 2013"
 
 from karabo.decorators import KARABO_CLASSINFO
 import karabo.base_fsm as base
-from karabo.karathon import SLOT_ELEMENT
+from karabo.legacy import SLOT_ELEMENT
 from karabo.fsm import *
 
 @KARABO_CLASSINFO("CameraFsm", "1.0")
@@ -46,29 +46,29 @@ class CameraFsm(base.BaseFsm):
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
-        KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
-        KARABO_FSM_EVENT0(self, 'ResetEvent',      'reset')
-        KARABO_FSM_EVENT0(self, 'AcquireEvent',    'acquire')
-        KARABO_FSM_EVENT0(self, 'StopEvent',       'stop')
-        KARABO_FSM_EVENT0(self, 'TriggerEvent',    'trigger')        
+        KARABO_FSM_EVENT(self, 'ErrorFoundEvent', 'errorFound')
+        KARABO_FSM_EVENT(self, 'ResetEvent',      'reset')
+        KARABO_FSM_EVENT(self, 'AcquireEvent',    'acquire')
+        KARABO_FSM_EVENT(self, 'StopEvent',       'stop')
+        KARABO_FSM_EVENT(self, 'TriggerEvent',    'trigger')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error', self.errorStateOnEntry, self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Acquisition', self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
-        KARABO_FSM_STATE_EE('Ready', self.readyStateOnEntry, self.readyStateOnExit)
+        KARABO_FSM_STATE('Error', self.errorStateOnEntry, self.errorStateOnExit)
+        KARABO_FSM_STATE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
+        KARABO_FSM_STATE('Acquisition', self.acquisitionStateOnEntry, self.acquisitionStateOnExit)
+        KARABO_FSM_STATE('Ready', self.readyStateOnEntry, self.readyStateOnExit)
         
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
         #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)    
-        KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        KARABO_FSM_ACTION0('ResetAction', self.resetAction)
-        KARABO_FSM_ACTION0('AcquireAction', self.acquireAction)
-        KARABO_FSM_ACTION0('StopAction',  self.stopAction)
-        KARABO_FSM_ACTION0('TriggerAction',  self.triggerAction)
+        KARABO_FSM_ACTION('ErrorFoundAction', self.errorFoundAction, str, str)
+        KARABO_FSM_ACTION('ResetAction', self.resetAction)
+        KARABO_FSM_ACTION('AcquireAction', self.acquireAction)
+        KARABO_FSM_ACTION('StopAction',  self.stopAction)
+        KARABO_FSM_ACTION('TriggerAction',  self.triggerAction)
         
         #**************************************************************
         #*                       Ok State Machine                     *
@@ -98,13 +98,6 @@ class CameraFsm(base.BaseFsm):
     def getFsm(self):
         return self.fsm
     
-    def initFsmSlots(self, sigslot):
-        sigslot.registerSlot(self.acquire)
-        sigslot.registerSlot(self.trigger)
-        sigslot.registerSlot(self.stop)
-        sigslot.registerSlot(self.reset)
-        sigslot.registerSlot(self.errorFound)
-        
     def initializationStateOnEntry(self):
         '''Actions executed on entry to 'Initialization' state
         '''

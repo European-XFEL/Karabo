@@ -6,7 +6,7 @@ __date__ ="$May 12, 2013 5:09:05 PM$"
 
 from karabo.decorators import KARABO_CLASSINFO
 import karabo.base_fsm as base
-from karabo.karathon import SLOT_ELEMENT
+from karabo.legacy import SLOT_ELEMENT
 from karabo.fsm import *
 
 @KARABO_CLASSINFO("OkErrorFsm", "1.0")
@@ -26,21 +26,21 @@ class OkErrorFsm(base.BaseFsm):
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
-        KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
-        KARABO_FSM_EVENT0(self, 'ResetEvent', 'reset')
+        KARABO_FSM_EVENT(self, 'ErrorFoundEvent', 'errorFound')
+        KARABO_FSM_EVENT(self, 'ResetEvent', 'reset')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Ok',      self.okStateOnEntry,      self.okStateOnExit)
+        KARABO_FSM_STATE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
+        KARABO_FSM_STATE('Ok',      self.okStateOnEntry,      self.okStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
         #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)    # <-- this is defined in BaseFsm
-        KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        KARABO_FSM_ACTION0('ResetAction', self.resetAction)
+        KARABO_FSM_ACTION('ErrorFoundAction', self.errorFoundAction, str, str)
+        KARABO_FSM_ACTION('ResetAction', self.resetAction)
 
         #**************************************************************
         #*                      Top Machine                           *
@@ -59,10 +59,6 @@ class OkErrorFsm(base.BaseFsm):
     def getFsm(self):
         return self.fsm
     
-    def initFsmSlots(self, sigslot):
-        sigslot.registerSlot(self.reset)
-        sigslot.registerSlot(self.errorFound)
-        
     def errorStateOnEntry(self):
         '''Actions executed on entry to 'Error' state
         '''

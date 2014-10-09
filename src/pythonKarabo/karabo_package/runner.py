@@ -4,8 +4,8 @@ __date__ ="$May 24, 2013 11:36:55 AM$"
 import os
 import sys
 import traceback
+from karabo.hash import Hash
 from karabo.configurator import Configurator
-from karabo.karathon import Hash, loadFromFile, saveToFile
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -48,14 +48,14 @@ class Runner(object):
             for a in args[1:]:
                 tmp = Hash()
                 self.readToken(a, tmp)
-                configuration += tmp
+                configuration.merge(tmp)
             # auto load configuration "autoload.xml"
             autoLoadFileName = "autoload.xml"
             if os.path.exists(autoLoadFileName):
                 tmp = Hash()
                 loadFromFile(tmp, autoLoadFileName)
-                configuration += tmp
-            saveToFile(configuration, "lastConfiguration.xml")
+                configuration.merge(tmp)
+            #saveToFile(configuration, "lastConfiguration.xml")
             return configuration
         except Exception as e:
             print(str(e))
