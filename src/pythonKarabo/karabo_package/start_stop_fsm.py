@@ -6,29 +6,25 @@ __date__ ="$May 10, 2013 2:35:08 PM$"
 
 from karabo.decorators import KARABO_CLASSINFO
 import karabo.base_fsm as base
-from karabo.karathon import SLOT_ELEMENT
 from karabo.fsm import *
+from karabo.hashtypes import Slot
 
 @KARABO_CLASSINFO("StartStopFsm", "1.0")
 class StartStopFsm(base.BaseFsm):
-    
-    @staticmethod
-    def expectedParameters(expected):
-        
-        e = SLOT_ELEMENT(expected).key("start")
-        e.displayedName("Start").description("Instructs device to go to started state")
-        e.allowedStates("Ok.Stopped")
-        e.commit()
+    start = Slot(
+        displayedName="Start",
+        description="Instructs device to go to started state",
+        allowedStates="Ok.Stopped")
 
-        e = SLOT_ELEMENT(expected).key("stop")
-        e.displayedName("Stop").description("Instructs device to go to stopped state")
-        e.allowedStates("Ok.Started")
-        e.commit()
+    stop = Slot(
+        displayedName="Stop",
+        description="Instructs device to go to stopped state",
+        allowedStates="Ok.Started")
 
-        e = SLOT_ELEMENT(expected).key("reset")
-        e.displayedName("Reset").description("Resets the device in case of an error")
-        e.allowedStates("Error")
-        e.commit()
+    reset = Slot(
+        displayedName="Reset",
+        description="Resets the device in case of an error",
+        allowedStates="Error")
 
     def __init__(self, configuration):
         super(StartStopFsm, self).__init__(configuration)
@@ -36,27 +32,27 @@ class StartStopFsm(base.BaseFsm):
         #**************************************************************
         #*                        Events                              *
         #**************************************************************
-        KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
-        KARABO_FSM_EVENT0(self, 'ResetEvent', 'reset')
-        KARABO_FSM_EVENT0(self, 'StartEvent', 'start')
-        KARABO_FSM_EVENT0(self, 'StopEvent',  'stop')
+        KARABO_FSM_EVENT(self, 'ErrorFoundEvent', 'errorFound')
+        KARABO_FSM_EVENT(self, 'ResetEvent', 'reset')
+        KARABO_FSM_EVENT(self, 'StartEvent', 'start')
+        KARABO_FSM_EVENT(self, 'StopEvent',  'stop')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
-        KARABO_FSM_STATE_EE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
-        KARABO_FSM_STATE_EE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
-        KARABO_FSM_STATE_EE('Started', self.startedStateOnEntry, self.startedStateOnExit)
-        KARABO_FSM_STATE_EE('Stopped', self.stoppedStateOnEntry, self.stoppedStateOnExit)
+        KARABO_FSM_STATE('Error',   self.errorStateOnEntry,   self.errorStateOnExit)
+        KARABO_FSM_STATE('Initialization', self.initializationStateOnEntry, self.initializationStateOnExit)
+        KARABO_FSM_STATE('Started', self.startedStateOnEntry, self.startedStateOnExit)
+        KARABO_FSM_STATE('Stopped', self.stoppedStateOnEntry, self.stoppedStateOnExit)
 
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
         #KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
-        KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        KARABO_FSM_ACTION0('ResetAction', self.resetAction)
-        KARABO_FSM_ACTION0('StartAction', self.startAction)
-        KARABO_FSM_ACTION0('StopAction',  self.stopAction)
+        KARABO_FSM_ACTION('ErrorFoundAction', self.errorFoundAction, str, str)
+        KARABO_FSM_ACTION('ResetAction', self.resetAction)
+        KARABO_FSM_ACTION('StartAction', self.startAction)
+        KARABO_FSM_ACTION('StopAction',  self.stopAction)
 
         #**************************************************************
         #*                      Ok State Machine                      *
@@ -89,11 +85,6 @@ class StartStopFsm(base.BaseFsm):
     def getFsm(self):
         return self.fsm
     
-    def initFsmSlots(self, sigslot):
-        sigslot.registerSlot(self.start)
-        sigslot.registerSlot(self.stop)
-        sigslot.registerSlot(self.reset)
-        sigslot.registerSlot(self.errorFound)
 
     def initializationStateOnEntry(self):
         '''Actions executed on entry to 'Initialization' state
