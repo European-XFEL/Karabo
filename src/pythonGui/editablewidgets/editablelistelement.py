@@ -88,7 +88,7 @@ class EditableListElement(EditableWidget, DisplayWidget):
             self.signalValueChanged.emit(copyItem.box, Hash())
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             return
         
@@ -98,6 +98,8 @@ class EditableListElement(EditableWidget, DisplayWidget):
             # Copy item
             self.copyListItem(value)
             self.__isInit = True
+
+        self.onEditingFinished(value)
 
 
 ### slots ###
