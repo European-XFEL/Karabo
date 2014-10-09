@@ -4,7 +4,6 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Aug 2, 2012 10:39:43 AM$"
 
-from karabo.karathon import AssemblyRules, AccessType, READ, WRITE, INIT
 from karabo.configurator import Configurator
 
 def KARABO_CLASSINFO(classid, version):
@@ -89,7 +88,7 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
             return Configurator(cls.__base_classid__).createList(listname, configuration)
         createList = classmethod(createList)
         theClass.createList = createList
-        def getSchema(cls, classid, rules = AssemblyRules(AccessType(READ|WRITE|INIT))):
+        def getSchema(cls, classid, rules=None):
             '''
             Use this classmethod to get schema for class with "classid" using assembly "rules"
             Example:

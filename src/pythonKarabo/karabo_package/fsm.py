@@ -1,8 +1,9 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 16:17:33 PM$"
 
+from asyncio import async, Condition, coroutine, get_event_loop
 import copy
-import threading
+from karabo.hashtypes import Slot
 from collections import deque
 
 #======================================= Fsm Macros
@@ -35,22 +36,24 @@ def KARABO_FSM_EVENT(self, event_name, method_name):
     def inner(self, *args):
         """Drive state machine by processing an event"""
         self.processEvent(event_instance(event_name, args))
+        return True, ""
+    inner.__doc__ = "Drive state machine by processing an event"
     inner.__name__ = str(method_name)
-    setattr(self.__class__, inner.__name__, inner)
+    slot = getattr(type(self), method_name, None)
+    if slot is not None and isinstance(slot, Slot):
+        slot.method = inner
+    else:
+        setattr(self.__class__, inner.__name__, inner)
     _events_.append(event_name)
 
 KARABO_FSM_EVENT0 = KARABO_FSM_EVENT1 = KARABO_FSM_EVENT2 = \
     KARABO_FSM_EVENT3 = KARABO_FSM_EVENT4 = KARABO_FSM_EVENT
-
-
 # states
 def KARABO_FSM_STATE(name, target_action='', on_entry=NOOP, on_exit=NOOP):
     _states_[name] = (on_entry, on_exit, target_action)
 
-
 def KARABO_FSM_STATE_E(name, on_entry):
     _states_[name] = (on_entry, NOOP, '')
-
 
 def KARABO_FSM_STATE_EE(name, on_entry, on_exit):
     _states_[name] = (on_entry, on_exit, '')
@@ -63,17 +66,10 @@ KARABO_FSM_STATE_AEE = KARABO_FSM_STATE_AE = KARABO_FSM_STATE_A = \
 def KARABO_FSM_INTERRUPT_STATE(name, event, target_action='',
                                on_entry=NOOP, on_exit=NOOP):
     _states_[name] = (on_entry, on_exit, target_action)
-    _interrupts_[name] = event
 
 
-def KARABO_FSM_INTERRUPT_STATE_E(name, event, on_entry):
-    _states_[name] = (on_entry, NOOP, '')
-    _interrupts_[name] = event
 
 
-def KARABO_FSM_INTERRUPT_STATE_EE(name, event, on_entry, on_exit):
-    _states_[name] = (on_entry, on_exit, '')
-    _interrupts_[name] = event
 
 
 KARABO_FSM_INTERRUPT_STATE_AEE = KARABO_FSM_INTERRUPT_STATE_AE = \
@@ -95,6 +91,9 @@ def KARABO_FSM_NO_TRANSITION_ACTION(f):
     _actions_["NoTransition"] = (f, ())
 
 
+def KARABO_FSM_NO_TRANSITION_ACTION(f):
+    _actions_["NoTransition"] = (f, ())
+
 # guards
 
 def KARABO_FSM_GUARD(name, f, *args):
@@ -114,17 +113,9 @@ def KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, f):
 # machines
 
 
-def KARABO_FSM_STATE_MACHINE_E(name, stt, initial, on_entry):
-    _machines_[name] = (stt, initial, on_entry, NOOP, '')
-
-
-def KARABO_FSM_STATE_MACHINE_EE(name, stt, initial, on_entry, on_exit):
-    _machines_[name] = (stt, initial, on_entry, on_exit, '')
-
 
 def KARABO_FSM_STATE_MACHINE(name, stt, initial, target_action='',
                              on_entry=NOOP, on_exit=NOOP):
-    _machines_[name] = (stt, initial, on_entry, on_exit, target_action)
 
 
 KARABO_FSM_STATE_MACHINE_AEE = KARABO_FSM_STATE_MACHINE_AE = \
@@ -138,10 +129,9 @@ def KARABO_FSM_CREATE_MACHINE(name):
                in_state = _in_state)
 
 #======================================== Worker
-class Worker(threading.Thread):
+class Worker:
     
     def __init__(self, callback = None, timeout = -1, repetition = -1):
-        threading.Thread.__init__(self)
         self.callback = callback
         self.timeout  = timeout
         self.repetition = repetition
@@ -149,7 +139,7 @@ class Worker(threading.Thread):
         self.aborted = False
         self.suspended = False
         self.counter = -1
-        self.cv = threading.Condition()  # cv = condition variable
+        self.cv = Condition()  # cv = condition variable
         self.dq = deque()
     
     def set(self, callback, timeout = -1, repetition = -1):
@@ -162,7 +152,7 @@ class Worker(threading.Thread):
     
     def push(self,o):
         if self.running:
-            with self.cv:
+            with (yield from self.cv):
                 self.dq.append(o)
                 self.cv.notify()
             
@@ -182,26 +172,26 @@ class Worker(threading.Thread):
                 break
             try:
                 if self.suspended:
-                    with self.cv:
+                    with (yield from self.cv):
                         while self.suspended:
-                            self.cv.wait()
+                            yield from self.cv.wait()
                         if self.aborted or not self.running:
                             break
                     continue
                 if self.timeout < 0:
-                    with self.cv:
+                    with (yield from self.cv):
                         while len(self.dq) == 0:
-                            self.cv.wait()
+                            yield from self.cv.wait()
                         if not self.suspended:
                             t = self.dq.popleft()
                 elif self.timeout > 0:
-                    with self.cv:
+                    with (yield from self.cv):
                         if len(self.dq) == 0:
-                            self.cv.wait(float(self.timeout) / 1000)   # self.timeout in milliseconds
+                            yield from self.cv.wait(float(self.timeout) / 1000)   # self.timeout in milliseconds
                         if len(self.dq) != 0 and not self.suspended:
                             t = self.dq.popleft()
                 else:
-                    with self.cv:
+                    with (yield from self.cv):
                         if len(self.dq) != 0 and not self.suspended:
                             t = self.dq.popleft()
                 if self.suspended:
@@ -211,23 +201,24 @@ class Worker(threading.Thread):
             if self.counter > 0:
                 self.counter -= 1
             if self.running:
-                self.callback(self.counter == 0)      # self.callback(self.counter == 0)
+                get_event_loop().run_in_executor(None, self.callback,
+                                                 self.counter == 0)
         if self.running:
             self.running = False
             
     def start(self):
         if not self.running:
             self.suspended = False
-            super(Worker, self).start()
+            async(self.run())
         if self.suspended:
-            with self.cv:
+            with (yield from self.cv):
                 self.suspended = False
                 self.cv.notify()
         return self
     
     def stop(self):
         if self.running:
-            with self.cv:
+            with (yield from self.cv):
                 self.running = False
                 self.suspended = False
                 self.cv.notify()
@@ -237,17 +228,17 @@ class Worker(threading.Thread):
         self.aborted = True
         self.running = False
         if self.suspended:
-            with self.cv:
+            with (yield from self.cv):
                 self.suspended = False
                 self.cv.notify()        
         if len(self.dq) != 0:
-            with self.cv:
+            with (yield from self.cv):
                 self.dq.clear()
         return self
     
     def pause(self):
         if not self.suspended:
-            with self.cv:
+            with (yield from self.cv):
                 self.suspended = True
                 self.cv.notify()
             
@@ -404,7 +395,8 @@ class StateMachine(State):
                 raise NameError('Undefined name in StateTransitionTable: {}'.
                                 format(_guard))
 
-            self.stt[_source][_event] = (_target, _actions_[_action], _guards_[_guard])    
+            self.stt[_source][_event] = (_target, _actions_[_action],
+                                         _guards_[_guard])
         
         # use global no_transition
         if "NoTransition" in _actions_:
@@ -430,14 +422,16 @@ class StateMachine(State):
         # entry current state machine
         if hasattr(self, 'entry_action'):
             self.entry_action()
-        self.current_state = copy.copy(self.initial_state)        # shallow copy of states
-        for i in range(len(self.current_state)):
-            if self.current_state[i].ismachine:
-                self.current_state[i].start()
+        # shallow copy of states
+        self.current_state = copy.copy(self.initial_state)
+
+        for i, cs in enumerate(self.current_state):
+            if cs.ismachine:
+                cs.start()
             else:
-                self.current_state[i].entry_action()
-                if None in self.current_state[i]:
-                    self.current_state[i] = self.current_state[i][None]  # anonymous transition
+                cs.entry_action()
+                if None in cs:
+                    self.current_state[i] = cs[None]  # anonymous transition
         
     def stop(self):
         for state_object in self.current_state:

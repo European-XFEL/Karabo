@@ -4,7 +4,11 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 11, 2013 4:20:13 PM$"
 
-from karabo.karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
+
+from karabo.schema import Schema, Validator
+from karabo.hash import Hash
+from karabo.hashtypes import Type
+
 
 class Configurator(object):
     '''
@@ -63,7 +67,7 @@ class Configurator(object):
         self.baseRegistry[derived.__classid__] = derived
         return self
         
-    def getSchema(self, classid, rules = AssemblyRules(AccessType(READ | WRITE | INIT))):
+    def getSchema(self, classid, rules=None):
         '''
         Get schema for class with "classid" derived from base class given to constructor using assembly "rules"
         Example:
@@ -80,6 +84,11 @@ class Configurator(object):
         Derived = self.baseRegistry[classid]   # userclass -> Derived
 
         # building list of classes in inheritance order from bases to the last derived
+        schema = Schema(classid, rules=rules)
+        return self.fillSchema(schema, Derived)
+
+
+    def fillSchema(self, schema, Derived):
         def inheritanceChain(c, bases_id, clist):
             if not isinstance(c, type):
                 return
@@ -88,17 +97,23 @@ class Configurator(object):
                     inheritanceChain(x, bases_id, clist)
             if c not in clist:
                 clist.append(c)
-                
+
         clist = []
         inheritanceChain(Derived, Derived.__bases_classid__, clist)
         # clist contains list of classes in inheritance order
-        schema = Schema(classid, rules)
         for theClass in clist:
             try:
                 if hasattr(theClass, "expectedParameters"):
                     theClass.expectedParameters(schema) # fill schema in order from base to derived
             except AttributeError as e:
                 print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
+                raise
+
+        h = schema.hash
+        for k in Derived._allattrs:
+            v = getattr(Derived, k)
+            h[k] = Hash()
+            h[k, ...] = v.parameters()
         return schema
     
     
