@@ -36,7 +36,6 @@ class QwtWidget(EditableWidget):
     def valueChanged(self, box, value, timestamp=None):
         with SignalBlocker(self.wiget):
             self.widget.setValue(value)
-        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):

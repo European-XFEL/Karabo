@@ -69,4 +69,3 @@ class EditableComboBox(EditableWidget):
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
 
-        self.onEditingFinished(value)

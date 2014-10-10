@@ -49,7 +49,6 @@ class Hexadecimal(EditableWidget, DisplayWidget):
     def valueChanged(self, box, value, timestamp=None):
         with SignalBlocker(self.widget):
             self.widget.setText("{:x}".format(value))
-        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):

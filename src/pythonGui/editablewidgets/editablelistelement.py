@@ -99,8 +99,6 @@ class EditableListElement(EditableWidget, DisplayWidget):
             self.copyListItem(value)
             self.__isInit = True
 
-        self.onEditingFinished(value)
-
 
 ### slots ###
     # slot called when changes need to be sent to Manager

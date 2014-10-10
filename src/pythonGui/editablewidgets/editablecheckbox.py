@@ -56,5 +56,3 @@ class EditableCheckBox(EditableWidget):
         if value != self.value:
             with SignalBlocker(self.widget):
                 self.widget.setCheckState(checkState)
-
-        self.onEditingFinished(checkState)

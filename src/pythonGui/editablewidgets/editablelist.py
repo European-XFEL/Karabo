@@ -86,7 +86,6 @@ class EditableList(EditableWidget, DisplayWidget):
             self.leList.setText(box.descriptor.toString(value))
         
         self.leList.setCursorPosition(self.lastCursorPos)
-        self.onEditingFinished(self.leList.text())
 
 
     def onEditingFinished(self, text):
