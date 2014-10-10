@@ -533,7 +533,6 @@ class ChoiceOfNodes(Schema):
 
         # Trigger change of combobox
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
-        self.completeItem(treeWidget, item, box, isClass)
         return item
 
 

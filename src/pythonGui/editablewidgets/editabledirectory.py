@@ -66,7 +66,6 @@ class EditableDirectory(EditableWidget):
             self.lePath.setText(value)
 
         self.lePath.setCursorPosition(self.lastCursorPos)
-        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):
