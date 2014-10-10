@@ -102,7 +102,7 @@ class EditableChoiceElement(EditableWidget):
 
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
-        self.onEditingFinished(index)
+        self._updateChoiceItems(index)
 
 
     def onEditingFinished(self, index):
