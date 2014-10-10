@@ -67,8 +67,9 @@ class Server(threading.Thread):
 class  P2p_TestCase(unittest.TestCase):
     
     def setUp(self):
-        #start server listening on port 32723
-        self.server = Server(32723)
+        #start server listening, for example, on port 32723
+        self.serverPort = 32723
+        self.server = Server(self.serverPort)
         self.server.start()
         time.sleep(1)
 
@@ -80,7 +81,7 @@ class  P2p_TestCase(unittest.TestCase):
         # Synchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32723))    
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort))    
             #connect to the server
             channel = connection.start()
             print("TCP Sync client open connection: id #", channel.__id__)
