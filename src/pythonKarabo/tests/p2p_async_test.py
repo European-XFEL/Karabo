@@ -4,6 +4,7 @@
 import unittest
 import threading
 import time
+import sys
 from karabo.karathon import *
 
 class Server(threading.Thread):
@@ -11,11 +12,15 @@ class Server(threading.Thread):
     def __init__(self, port):
         threading.Thread.__init__(self)
         #create connection object
-        self.connection = Connection.create("Tcp", Hash("type", "server", "port", port))
-        #set error handler
-        self.connection.setErrorHandler(self.onError)
-        #register connect handler for incoming connections
-        self.connection.startAsync(self.onConnect)
+        try:
+            self.connection = Connection.create("Tcp", Hash("type", "server", "port", port))
+            #set error handler:  IT GIVES SEGFAULT!
+            #self.connection.setErrorHandler(self.onError)
+            #register connect handler for incoming connections
+            self.connection.startAsync(self.onConnect)
+        except:
+            self.connection = None
+            raise
         #extract io service object
         self.ioserv = self.connection.getIOService()
         self.store = {}
@@ -65,8 +70,16 @@ class Server(threading.Thread):
 
 class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
-        #start server listening on port 32123
-        self.server = Server(32123)
+        #start server listening, for example, on port 32323
+        self.serverPort = 32323
+        #choose the port not in use
+        while True:
+            try:
+                self.server = Server(self.serverPort)
+                break
+            except RuntimeError:
+                print("Server port =", str(self.serverPort), "in use. Increment port number ...")
+                self.serverPort += 1
         self.server.start()
         time.sleep(0.5)
 
@@ -117,7 +130,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
         # Asynchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32123))
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort))
             connection.setErrorHandler(onError)
             #register connect handler
             connection.startAsync(onConnect)
@@ -129,4 +142,3 @@ class  P2p_asyncTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

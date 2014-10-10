@@ -67,8 +67,9 @@ class Server(threading.Thread):
 
 class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
-        #start server listening on port 32124
-        self.server = Server(32124)
+        #start server listening, say, on port 32124
+        self.serverPort = 32124
+        self.server = Server(self.serverPort)
         self.server.start()
         time.sleep(1.5)
 
@@ -121,8 +122,8 @@ class  P2p_asyncTestCase(unittest.TestCase):
         # Asynchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", 32124))
-            connection.setErrorHandler(onError)
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort))
+            #connection.setErrorHandler(onError)
             #register connect handler
             connection.startAsync(onConnect)
             ioservice = connection.getIOService()
