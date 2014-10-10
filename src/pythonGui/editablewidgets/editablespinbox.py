@@ -65,5 +65,4 @@ class EditableSpinBox(EditableWidget, DisplayWidget):
         
         with SignalBlocker(self.widget):
             self.widget.setValue(value)
-        
-        self.onEditingFinished(value)
+

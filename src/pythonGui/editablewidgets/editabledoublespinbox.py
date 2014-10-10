@@ -59,7 +59,6 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
             self.widget.setText("{}".format(value))
 
         self.widget.setCursorPosition(self.lastCursorPos)
-        self.onEditingFinished(value)
 
 
 class DoubleLineEdit(NumberLineEdit):
