@@ -50,12 +50,13 @@ class EditableLineEdit(EditableWidget):
         if value is None:
             value = ""
         
+        if not isinstance(value, str):
+            value = value.decode()
+        
         with SignalBlocker(self.widget):
             self.widget.setText(value)
         
         self.widget.setCursorPosition(self.lastCursorPos)
-
-        self.onEditingFinished(value)
 
 
     def onEditingFinished(self, value):
