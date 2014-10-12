@@ -233,7 +233,7 @@ namespace karabo {
                 if (!deviceSection.empty()) {
                     for (Hash::const_iterator it = deviceSection.begin(); it != deviceSection.end(); ++it) {
                         const Hash::Attributes& attributes = it->getAttributes();
-                        if (attributes.get<string>("serverId") == instanceId) {
+                        if (attributes.has("serverId") && attributes.get<string>("serverId") == instanceId) {
                             string deviceId = it->getKey();
                             Hash deviceInstanceInfo;
                             for (Hash::Attributes::const_iterator jt = attributes.begin(); jt != attributes.end(); ++jt) {
