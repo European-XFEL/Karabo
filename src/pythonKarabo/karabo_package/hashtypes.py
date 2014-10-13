@@ -707,6 +707,20 @@ class Schema_(Special):
         self.hash = karabo.hash.Hash()
         self.hash.merge(other.hash)
 
+    def keyHasAlias(self, key):
+        return "alias" in self.hash[key, ...]
+
+    def getAliasAsString(self, key):
+        return self.hash[key, "alias"]
+
+    def getKeyFromAlias(self, alias):
+        for k in self.hash.paths():
+            if alias == self.hash[k, ...].get("alias", None):
+                return k
+
+    def getValueType(self, key):
+        return Type.fromname[self.hash[key, "valueType"]]
+
 
 class None_(Type):
     number = 50

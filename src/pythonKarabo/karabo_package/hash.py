@@ -361,9 +361,8 @@ class Hash(OrderedDict):
         ret = [ ]
         for k, v in self.items():
             if isinstance(v, Hash):
-                ret.extend([k + '.' + kk for kk in v.paths()])
-            else:
-                ret.append(k)
+                ret.extend(k + '.' + kk for kk in v.paths())
+            ret.append(k)
         return ret
 
     def empty(self):
