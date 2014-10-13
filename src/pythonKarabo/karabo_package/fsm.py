@@ -23,13 +23,17 @@ def event_instance(x, a):
 
 
 # global dicts
-_events_ = ['none']
-_states_ = {'none':None}
-_interrupts_ = {}
-_actions_ = {'none':(NOOP, ())}
-_guards_ = {'none':(GNOOP, ())}
-_machines_ = {'none':None}
-_state_periodic_actions_ = {'none':(-1, -1, NOOP)}
+def init_globals():
+    global _events_, _states_, _interrupts_, _actions_, _guards_, _machines_
+    global _state_periodic_actions_
+    _events_ = ['none']
+    _states_ = {'none':None}
+    _interrupts_ = {}
+    _actions_ = {'none':(NOOP, ())}
+    _guards_ = {'none':(GNOOP, ())}
+    _machines_ = {'none':None}
+    _state_periodic_actions_ = {'none':(-1, -1, NOOP)}
+init_globals()
 
 # events
 def KARABO_FSM_EVENT(self, event_name, method_name):
@@ -125,8 +129,10 @@ KARABO_FSM_STATE_MACHINE_AEE = KARABO_FSM_STATE_MACHINE_AE = \
 def KARABO_FSM_CREATE_MACHINE(name):
     (_stt, _initial, _on_entry, _on_exit, _in_state) = _machines_[name]
     cls = type(str(name), (StateMachine,), { })
-    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit,
-               in_state = _in_state)
+    ret = cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit,
+              in_state = _in_state)
+    init_globals()
+    return ret
 
 #======================================== Worker
 class Worker:
@@ -340,10 +346,8 @@ class State(dict):
             return _target_state[None]      # anonymous transition
         
         return _target_state
-        
-    def __setitem__(self, evt, value):
-        dict.__setitem__(self, evt, value)
-        
+
+
 class StateMachine(State):
     ismachine = True
     
