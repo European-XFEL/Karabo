@@ -388,15 +388,19 @@ class PythonDevice(Device):
     def getValueType(self, key):
         return self.fullSchema.getValueType(key)
     
-    def getCurrentConfiguration(self, tags = ""):
-        if tags == "":
+    def getCurrentConfiguration(self, tag=None):
+        if tag is None:
             return self.parameters
-        with self._stateChangeLock:
-            return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
-    
-    def filterByTags(self, configuration, tags):
-        return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
-    
+
+        s = self.fullSchema.hash
+        ret = Hash()
+
+        for k, v in self.parameters.items():
+            a = s[k, ...]
+            if tag in a.get("tags", ""):
+                ret[k] = v
+        return ret
+
     def getServerId(self):
         return self.serverId
     
@@ -453,7 +457,7 @@ class PythonDevice(Device):
         self.exceptionFound(s, d)
         
     def execute(self, command, *args):
-        self._ss.call("", command, *args)
+        async(getattr(self, command)(*args), loop=self._ss.loop)
 
 
     @replySlot("slotChanged")

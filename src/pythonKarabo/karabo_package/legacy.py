@@ -17,7 +17,7 @@ from enum import Enum
 __all__ = ["MetricPrefix", "Unit", "EncodingType", "KARABO_CLASSINFO",
            "Schema", "PATH_ELEMENT", "NODE_ELEMENT", "SLOT_ELEMENT",
            "IMAGE_ELEMENT", "OVERWRITE_ELEMENT", "CHOICE_ELEMENT",
-           "LIST_ELEMENT", "RawImageData", "BaseFsm"]
+           "LIST_ELEMENT", "RawImageData", "BaseFsm", "Types"]
 
 
 def publish(enum):
@@ -166,3 +166,11 @@ class LIST_ELEMENT(Dotter):
     def commit(self):
         self.attributes['nodeType'] = 3
         super(LIST_ELEMENT, self).commit()
+
+
+class Types:
+    pass
+
+for t in hashtypes.Type.types:
+    if t is not None:
+        setattr(Types, t.hashname(), t)
