@@ -31,24 +31,19 @@ namespace karabo {
         Epochstamp::~Epochstamp() {
         }
 
-        Epochstamp::Epochstamp(const time_t& tm) {
-            *this = tm;
+        Epochstamp::Epochstamp(const time_t& tm) : m_seconds(tm), m_fractionalSeconds(0) {
         }
 
-        Epochstamp::Epochstamp(const timeval& tv) {
-            *this = tv;
+        Epochstamp::Epochstamp(const timeval& tv) : m_seconds(tv.tv_sec), m_fractionalSeconds(tv.tv_usec * 1000000000000ULL) {
         }
 
-        Epochstamp::Epochstamp(const timespec& ts) {
-            *this = ts;
+        Epochstamp::Epochstamp(const timespec& ts) : m_seconds(ts.tv_sec), m_fractionalSeconds(ts.tv_nsec * 1000000000ULL) {
         }
 
         Epochstamp::Epochstamp(const std::string& pTime) {
             karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTime);
-            const unsigned long long secondsSinceEpoch = dts.getSecondsSinceEpoch();
-            const unsigned long long fractionalSecond = dts.getFractionalSeconds<unsigned long long>();
-
-            *this = Epochstamp(secondsSinceEpoch, fractionalSecond); //Use other constructor
+            m_seconds = dts.getSecondsSinceEpoch();
+            m_fractionalSeconds = dts.getFractionalSeconds<unsigned long long>();
         }
 
         TimeDuration Epochstamp::elapsed(const Epochstamp& other) const {
@@ -61,12 +56,12 @@ namespace karabo {
         }
 
         timeval Epochstamp::getTimeOfDay() const {
-            timeval result = {m_seconds, m_fractionalSeconds / MICROSEC};
+            timeval result = {m_seconds, m_fractionalSeconds / 1000000000000ULL};  // std::pow(10, MICROSEC)
             return result;
         }
 
         timespec Epochstamp::getClockTime() const {
-            timespec result = {m_seconds, m_fractionalSeconds / NANOSEC};
+            timespec result = {m_seconds, m_fractionalSeconds / 1000000000ULL};    // std::pow(10, NANOSEC)
             return result;
         }
 
@@ -103,8 +98,8 @@ namespace karabo {
 
             static timespec ts;
             clock_gettime(whichtime, &ts);
-
-            *this = ts;
+            this->m_seconds = ts.tv_sec;
+            this->m_fractionalSeconds = ts.tv_nsec * 1000000000ULL; // in ATTOSEC
         }
 #endif
 
