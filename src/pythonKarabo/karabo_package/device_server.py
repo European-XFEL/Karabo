@@ -607,8 +607,12 @@ class Launcher(object):
         self.args = params
 
     def start(self):
-        Popen([sys.executable] + self.args)
+        self.child = Popen([sys.executable] + self.args)
 
+    def join(self):
+        if self.child.poll() is None:
+            self.child.wait()
+        
     
 def main(args):
     try:
