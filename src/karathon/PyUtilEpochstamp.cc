@@ -16,7 +16,6 @@ using namespace std;
 
 void exportPyUtilEpochstamp() {
 
-#if __LP64__ == 1
     bp::enum_< karabo::util::TIME_UNITS>("TIME_UNITS")
             .value("ATTOSEC", karabo::util::ATTOSEC)
             .value("FEMTOSEC", karabo::util::FEMTOSEC)
@@ -31,8 +30,7 @@ void exportPyUtilEpochstamp() {
             .value("DAY", karabo::util::DAY)
             .export_values()
             ;
-#endif
-    
+
     bp::class_<Epochstamp> e("Epochstamp", bp::init<>());
     e.def(bp::init<const unsigned long long&, const unsigned long long&>((bp::arg("seconds"), bp::arg("fractions"))));
     e.def(bp::init< time_t const & >((bp::arg("tm"))));
