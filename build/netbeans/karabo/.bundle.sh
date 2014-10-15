@@ -201,7 +201,7 @@ cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
 # bundle scripts for plugin packages
 cd ../karabo
 cp .bundle-cppplugin.sh .bundle-pythonplugin.sh .extract-cppplugin.sh .extract-pythonplugin.sh $PACKAGEDIR/bin
-cp .extract-dependency.sh .set_relative_rpath.py $PACKAGEDIR/bin
+cp .extract-dependency.sh .set_relative_rpath.py .bundle-dependency.sh $PACKAGEDIR/bin
 
 if [ "$OS" = "Linux" ]; then
 	PACKAGEDIR=$(readlink -f $PACKAGEDIR)
