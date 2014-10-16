@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests></FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>FileInputOutput_Test::writeTextFile</Name>
+    </Test>
+    <Test id="2">
+      <Name>FileInputOutput_Test::readTextFile</Name>
+    </Test>
+    <Test id="3">
+      <Name>FileInputOutput_Test::writeTextSchema</Name>
+    </Test>
+    <Test id="4">
+      <Name>FileInputOutput_Test::readTextSchema</Name>
+    </Test>
+    <Test id="5">
+      <Name>FileInputOutput_Test::writeSequenceToTextFile</Name>
+    </Test>
+    <Test id="6">
+      <Name>FileInputOutput_Test::readSequenceFromTextFile</Name>
+    </Test>
+    <Test id="7">
+      <Name>FileInputOutput_Test::writeBinaryFile</Name>
+    </Test>
+    <Test id="8">
+      <Name>FileInputOutput_Test::readBinaryFile</Name>
+    </Test>
+    <Test id="9">
+      <Name>FileInputOutput_Test::writeBinarySchema</Name>
+    </Test>
+    <Test id="10">
+      <Name>FileInputOutput_Test::readBinarySchema</Name>
+    </Test>
+    <Test id="11">
+      <Name>FileInputOutput_Test::writeSequenceToBinaryFile</Name>
+    </Test>
+    <Test id="12">
+      <Name>FileInputOutput_Test::readSequenceFromBinaryFile</Name>
+    </Test>
+    <Test id="13">
+      <Name>FileInputOutput_Test::writeHdf5File</Name>
+    </Test>
+    <Test id="14">
+      <Name>FileInputOutput_Test::readHdf5File</Name>
+    </Test>
+    <Test id="15">
+      <Name>FileInputOutput_Test::writeSequenceToHdf5File</Name>
+    </Test>
+    <Test id="16">
+      <Name>FileInputOutput_Test::readSequenceFromHdf5File</Name>
+    </Test>
+    <Test id="17">
+      <Name>H5File_Test::testBuffer</Name>
+    </Test>
+    <Test id="18">
+      <Name>H5File_Test::testWrite</Name>
+    </Test>
+    <Test id="19">
+      <Name>H5File_Test::testWriteFailure</Name>
+    </Test>
+    <Test id="20">
+      <Name>H5File_Test::testRead</Name>
+    </Test>
+    <Test id="21">
+      <Name>H5File_Test::testReadTable</Name>
+    </Test>
+    <Test id="22">
+      <Name>H5File_Test::testVectorOfHashes</Name>
+    </Test>
+    <Test id="23">
+      <Name>H5File_Test::testManyGroups</Name>
+    </Test>
+    <Test id="24">
+      <Name>H5File_Test::testManyTables</Name>
+    </Test>
+    <Test id="25">
+      <Name>H5File_Test::testTrainFormat</Name>
+    </Test>
+    <Test id="26">
+      <Name>H5File_Test::testClose</Name>
+    </Test>
+    <Test id="27">
+      <Name>H5Format_Test::testEmptyFormat</Name>
+    </Test>
+    <Test id="28">
+      <Name>H5Format_Test::testManualFormat</Name>
+    </Test>
+    <Test id="29">
+      <Name>H5Format_Test::testDiscoverFromHash</Name>
+    </Test>
+    <Test id="30">
+      <Name>HashBinarySerializer_Test::testSerialization</Name>
+    </Test>
+    <Test id="31">
+      <Name>HashXmlSerializer_Test::testSerialization</Name>
+    </Test>
+    <Test id="32">
+      <Name>Hdf5_Test::testPureHdf5</Name>
+    </Test>
+    <Test id="33">
+      <Name>Hdf5_Test::testKaraboHdf5</Name>
+    </Test>
+    <Test id="34">
+      <Name>Hdf5_Test::testManyDatasets</Name>
+    </Test>
+    <Test id="35">
+      <Name>Hdf5_Test::testManyDatasets1</Name>
+    </Test>
+    <Test id="36">
+      <Name>Hdf5_Test::testSerializer</Name>
+    </Test>
+    <Test id="37">
+      <Name>SchemaSerializer_Test::testBinarySerializer</Name>
+    </Test>
+    <Test id="38">
+      <Name>SchemaSerializer_Test::testXmlSerializer</Name>
+    </Test>
+    <Test id="39">
+      <Name>SchemaXsdSerializer_Test::testXsdSerialization</Name>
+    </Test>
+    <Test id="40">
+      <Name>SchemaXsdSerializer_Test::testTextFileOutputSchema</Name>
+    </Test>
+  </SuccessfulTests>
+  <Statistics>
+    <Tests>40</Tests>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>

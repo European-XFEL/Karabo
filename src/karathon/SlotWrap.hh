@@ -35,8 +35,7 @@ namespace karathon {
 
     public:
 
-        SlotWrap(karabo::xms::SignalSlotable* signalSlotable, const std::string& slotFunction)
-        : karabo::xms::Slot(signalSlotable, slotFunction) {           
+        SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {           
         }
 
         virtual ~SlotWrap() {

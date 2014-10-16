@@ -106,7 +106,7 @@ namespace karathon {
             if (it != slotInstances->end()) { // Already registered
                  (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
             } else {
-                boost::shared_ptr<SlotWrap> s(new SlotWrap(this, functionName));
+                boost::shared_ptr<SlotWrap> s(new SlotWrap(functionName));
                 s->registerSlotFunction(slotFunction); // Bind user's slot-function to Slot
                 (*slotInstances)[functionName] = s;
             }
