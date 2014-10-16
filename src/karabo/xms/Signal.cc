@@ -56,7 +56,7 @@ namespace karabo {
                 // TODO Do not send if no slots are connected
                 //if (m_connectedSlotsString == "__none__") return;
                 karabo::util::Hash header = prepareHeader();
-                m_channel->write(message, header);
+                m_channel->write(header, message);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }

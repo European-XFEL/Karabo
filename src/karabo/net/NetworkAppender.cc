@@ -62,7 +62,7 @@ namespace karabo {
             if (m_logCache.empty()) return;
 
             Hash header("target", "log");
-            m_channel->write(m_logCache, header);
+            m_channel->write(header, m_logCache);
             m_logCache.clear();
         }
 
