@@ -70,13 +70,10 @@ namespace karabo {
             // Types needed by the OpenMQ API
             MQSessionHandle m_sessionHandle;
             MQDestinationHandle m_destinationHandle;
-            MQBool m_isTransacted;
-
-            // Save for asynchronous communication
-            MQConsumerHandle m_asyncConsumerHandle;            
+            MQBool m_isTransacted;                    
 
             // Save for synchronous communication
-            MQConsumerHandle m_syncConsumerHandle;
+            MQConsumerHandle m_consumerHandle;
             
             MQProducerHandle m_producerHandle;
             
@@ -89,7 +86,7 @@ namespace karabo {
             bool m_hasAsyncHandler;
 
             // Flags whether a synchronous consumer was already pre-registered
-            bool m_hasSyncConsumer;
+            bool m_hasConsumer;
 
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
@@ -252,6 +249,7 @@ namespace karabo {
 
         private: //functions
             
+            void ensureExistanceOfConsumer();
             
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
             
