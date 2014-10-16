@@ -182,17 +182,17 @@ namespace karabo {
             //*              Synchronous Write - With Header               */
             //**************************************************************/
 
-            virtual void write(const char* data, const size_t& size, const karabo::util::Hash& header) {
+            virtual void write(const karabo::util::Hash& header, const char* data, const size_t& size) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 
-            virtual void write(const std::vector<char>& data, const karabo::util::Hash& header) {
-                write(static_cast<const char*> (&data[0]), data.size(), header);
+            virtual void write(const karabo::util::Hash& header, const std::vector<char>& data) {
+                write(header, static_cast<const char*> (&data[0]), data.size());
             }
 
-            virtual void write(const std::string& data, const karabo::util::Hash& header) = 0;
+            virtual void write(const karabo::util::Hash& header, const std::string& data) = 0;
 
-            virtual void write(const karabo::util::Hash& data, const karabo::util::Hash& header) = 0;
+            virtual void write(const karabo::util::Hash& header, const karabo::util::Hash& data) = 0;
 
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
