@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
+<TestRun>
+  <FailedTests></FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
+      <Name>ImageTest::testConstructorsFloat</Name>
+    </Test>
+    <Test id="2">
+      <Name>ImageTest::testConstructorsDouble</Name>
+    </Test>
+    <Test id="3">
+      <Name>ImageTest::testConstructorsChar</Name>
+    </Test>
+    <Test id="4">
+      <Name>ImageTest::testImageHeader</Name>
+    </Test>
+    <Test id="5">
+      <Name>RawImageData_Test::testConstructor</Name>
+    </Test>
+    <Test id="6">
+      <Name>RawImageData_Test::testPerformance</Name>
+    </Test>
+  </SuccessfulTests>
+  <Statistics>
+    <Tests>6</Tests>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
+    <Failures>0</Failures>
+  </Statistics>
+</TestRun>

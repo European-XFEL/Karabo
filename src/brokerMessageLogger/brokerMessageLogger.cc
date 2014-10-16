@@ -28,6 +28,12 @@ void readHandler(BrokerChannel::Pointer channel, const Hash::Pointer& header, co
     cout << "-----------------------------------------------------------------------" << endl << endl;
 }
 
+void textReadHandler(BrokerChannel::Pointer channel, const Hash::Pointer& header, const std::string& body) {
+    cout << *header << endl;
+    cout << body << endl;
+    cout << "-----------------------------------------------------------------------" << endl << endl;
+}
+
 int main(int argc, char** argv) {
 
     try {
@@ -42,11 +48,16 @@ int main(int argc, char** argv) {
         // Start connection and obtain a channel
         BrokerChannel::Pointer channel = connection->start();
         
+        BrokerChannel::Pointer textChannel = connection->createChannel();
+        
+        
         // Register async reader
         if (argc <= 1) {
             channel->setFilter("signalFunction <> 'signalHeartbeat'");
+            textChannel->setFilter("signalFunction <> 'signalHeartbeat'");
         }
         channel->readAsyncHashRaw(readHandler);
+        textChannel->readAsyncHashString(textReadHandler);
         
         // Block forever
         ioService->work();
