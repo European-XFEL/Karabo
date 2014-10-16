@@ -184,7 +184,7 @@ namespace karabo {
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
-                m_guiDebugChannel->write(hash, Hash() /*empty header*/);
+                m_guiDebugChannel->write(Hash()/*empty header*/ ,hash);
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();

@@ -678,7 +678,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const std::string& messageBody, const Hash& header) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const std::string& messageBody) {
 
             try {
 
@@ -720,7 +720,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const char* messageBody, const size_t& size, const Hash& header) {
+        void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size) {
 
             try {
 
@@ -761,19 +761,19 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const karabo::util::Hash& data, const karabo::util::Hash& header) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& data) {
 
             Hash modifiedHeader(header);
             if (m_serializationType == "text") {
                 modifiedHeader.set("__format", "Xml");
                 string buffer;
                 m_textSerializer->save(data, buffer);
-                this->write(buffer, modifiedHeader);
+                this->write(modifiedHeader, buffer);
             } else if (m_serializationType == "binary") {
                 modifiedHeader.set("__format", "Bin");
                 std::vector<char> buffer;
                 m_binarySerializer->save(data, buffer);
-                this->write(&buffer[0], buffer.size(), modifiedHeader);
+                this->write(modifiedHeader, &buffer[0], buffer.size());
             }
         }
 
