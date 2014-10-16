@@ -17,12 +17,12 @@ safeRunCommand() {
 originalPwd=$(pwd)
 
 # Make sure the script runs in the correct directory
-scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
-cd ${scriptDir}
-if [ $? -ne 0 ]; then
-    echo " Could not change directory to ${scriptDir}"
-    exit 1;
-fi
+#scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+#cd ${scriptDir}
+#if [ $? -ne 0 ]; then
+#    echo " Could not change directory to ${scriptDir}"
+#    exit 1;
+#fi
 
 if [ -z $KARABO ]; then
     if [ -e $HOME/.karabo/karaboFramework ]; then
