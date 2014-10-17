@@ -18,7 +18,7 @@ from PyQt4.QtCore import QCoreApplication, QDir, QFile
 try:
     from PyQt4.QtSql import QSqlDatabase, QSqlQuery
 except:
-    print "*ERROR* The PyQt4 sql module is not installed"
+    print("*ERROR* The PyQt4 sql module is not installed")
 
 import os.path
 from sys import platform
@@ -70,7 +70,7 @@ class SqlDatabase(QSqlDatabase):
                               "additionalDescription CLOB);"
                 query.exec_(queryText)
         else:
-            print "An error occurred while opening the database connection."
+            print("An error occurred while opening the database connection.")
 
 
     def closeConnection(self):
@@ -85,6 +85,6 @@ class SqlDatabase(QSqlDatabase):
         # Remove database file
         db = QFile(self.dbName)
         if not db.remove():
-            print "Database %s could not be deleted properly." % self.dbName
-            print "Permission problems might be the reason."
+            print("Database %s could not be deleted properly." % self.dbName)
+            print("Permission problems might be the reason.")
 

@@ -85,11 +85,11 @@ class SqlTreeModelPrivate(object):
     def resizeHeaders(self, size):
         if size < len(self.__headers):
             # Remove elements
-            for i in xrange(len(self.__headers)-size):
+            for i in range(len(self.__headers)-size):
                 self.__headers.pop()
         elif size > len(self.__headers):
             # Add elements
-            for i in xrange(size-len(self.__headers)):
+            for i in range(size-len(self.__headers)):
                 self.__headers.append(dict())
 
 

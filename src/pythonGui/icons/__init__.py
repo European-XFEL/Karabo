@@ -26,7 +26,7 @@ class Icon(object):
 def init():
     """This function actually loads the hitherto lazily loaded icons."""
     d = globals()
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if isinstance(v, Icon):
             d[k] = v.icon
 

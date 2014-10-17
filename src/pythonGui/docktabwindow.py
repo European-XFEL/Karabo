@@ -211,7 +211,7 @@ class DivWidget(QFrame):
 
     def onIndexChanged(self, index):
         #TODO: change index, if tab is removed
-        print "onIndexChanged", index
+        print("onIndexChanged", index)
         self.index = index
 
 

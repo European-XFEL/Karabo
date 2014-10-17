@@ -12,7 +12,7 @@
 __all__ = ["PropertyTreeWidgetItem"]
 
 
-from basetreewidgetitem import BaseTreeWidgetItem
+from .basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
 import icons
 
