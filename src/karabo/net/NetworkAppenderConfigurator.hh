@@ -8,7 +8,7 @@
 #ifndef KARABO_LOGCONFIG_NETWORKAPPENDERCONFIGURATOR_HH
 #define	KARABO_LOGCONFIG_NETWORKAPPENDERCONFIGURATOR_HH
 
-#include <log4cpp/Appender.hh>
+#include <krb_log4cpp/Appender.hh>
 #include <karabo/log/AppenderConfigurator.hh>
 #include <karabo/util/Configurator.hh>
 
@@ -24,7 +24,7 @@ namespace karabo {
 
             virtual ~NetworkAppenderConfigurator();
 
-            log4cpp::Appender* create();
+            krb_log4cpp::Appender* create();
 
             static void expectedParameters(karabo::util::Schema& expected);
 

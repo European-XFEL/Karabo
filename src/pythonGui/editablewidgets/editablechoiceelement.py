@@ -92,8 +92,8 @@ class EditableChoiceElement(EditableWidget):
             self._r_updateChildItems(childItem)
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        if not isinstance(value, basestring):
+    def valueChanged(self, box, value, timestamp=None):
+        if not isinstance(value, str):
             value = box.current
 
         index = self.widget.findText(value)

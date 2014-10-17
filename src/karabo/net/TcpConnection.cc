@@ -24,7 +24,6 @@ using namespace karabo::util;
 namespace karabo {
     namespace net {
 
-
         KARABO_REGISTER_FOR_CONFIGURATION(Connection, TcpConnection)
 
         void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
@@ -79,8 +78,11 @@ namespace karabo {
                     .commit();
         }
 
-
-        TcpConnection::TcpConnection(const karabo::util::Hash& input) : Connection(input) {
+        TcpConnection::TcpConnection(const karabo::util::Hash& input)
+        : Connection(input)
+        , m_boostIoServicePointer()
+        , m_resolver()
+        , m_acceptor() {
 
             input.get("hostname", m_hostname);
             input.get("port", m_port);
@@ -90,31 +92,40 @@ namespace karabo {
             input.get("manageAsyncData", m_manageAsyncData);
         }
 
-
         Channel::Pointer TcpConnection::start() {
-            
+
             this->setIOServiceType("Asio");
             // Get the specific boost::asio::io_service object
             m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
-            
+
             m_isAsyncConnect = false;
-            
+
             if (m_connectionType == "server") {
-                BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
-                m_acceptor = acceptor;
-                ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                m_acceptor->open(endpoint.protocol());
-                m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
-                m_acceptor->bind(endpoint);
-                m_acceptor->listen();
+                if (!m_acceptor) {
+                    try {
+                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
+                        ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
+                        acceptor->open(endpoint.protocol());
+                        acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+                        acceptor->bind(endpoint); // <=== here exception possible: port in use
+                        acceptor->listen();
+                        m_acceptor = acceptor;
+                        if (m_port != endpoint.port()) {
+                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
+                        }
+                    } catch (...) {
+                        KARABO_RETHROW
+                    }
+                }
                 return startServer();
             } else {
-                BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
-                m_resolver = resolv;
+                if (!m_resolver) {
+                    BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
+                    m_resolver = resolv;
+                }
                 return startClient();
             }
         }
-
 
         Channel::Pointer TcpConnection::startServer() {
             Channel::Pointer new_channel;
@@ -128,7 +139,6 @@ namespace karabo {
             }
             return new_channel;
         }
-
 
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer new_channel;
@@ -145,44 +155,52 @@ namespace karabo {
             return new_channel;
         }
 
-
         void TcpConnection::startAsync(const ConnectionHandler& handler) {
-            
+
             this->setIOServiceType("Asio");
             // Get the specific boost::asio::io_service object
             m_boostIoServicePointer = getIOService()->castTo<AsioIOService > ()->getBoostIOService();
-            
-            
+
+
             m_isAsyncConnect = true;
             if (m_connectionType == "server") {
-                BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
-                m_acceptor = acceptor;
-                ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
-                m_acceptor->open(endpoint.protocol());
-                m_acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
-                m_acceptor->bind(endpoint);
-                m_acceptor->listen();
+                if (!m_acceptor) {
+                    try {
+                        BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
+                        ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
+                        acceptor->open(endpoint.protocol());
+                        acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+                        acceptor->set_option(ip::tcp::acceptor::enable_connection_aborted(true));
+                        acceptor->bind(endpoint); // <=== here exception possible: port in use
+                        acceptor->listen();
+                        m_acceptor = acceptor;
+                        if (m_port != endpoint.port()) {
+                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
+                        }
+                    } catch (...) {
+                        KARABO_RETHROW
+                    }
+                }
                 startServer(handler);
-            }
-            else if (m_connectionType == "client") {
-                BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
-                m_resolver = resolv;
+            } else if (m_connectionType == "client") {
+                if (!m_resolver) {
+                    BoostTcpResolver resolv(new ip::tcp::resolver(*m_boostIoServicePointer));
+                    m_resolver = resolv;
+                }
                 startClient(handler);
             }
         }
-
 
         void TcpConnection::startServer(const ConnectionHandler& handler) {
             try {
                 Channel::Pointer new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 m_acceptor->async_accept(ch->socket(), boost::bind(&TcpConnection::acceptHandler,
-                                                                   this, new_channel, handler, boost::asio::placeholders::error));
+                        this, new_channel, handler, boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
-
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             if (!e) {
@@ -197,17 +215,15 @@ namespace karabo {
             }
         }
 
-
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
                 m_resolver->async_resolve(query, boost::bind(&TcpConnection::resolveHandler,
-                                                             this, handler, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
+                        this, handler, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
-
 
         void TcpConnection::resolveHandler(const ConnectionHandler& handler, const ErrorCode& e, ip::tcp::resolver::iterator it) {
             try {
@@ -215,7 +231,7 @@ namespace karabo {
                     Channel::Pointer new_channel = createChannel();
                     TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                     ch->socket().async_connect(*it, boost::bind(&TcpConnection::connectHandler,
-                                                                this, new_channel, handler, boost::asio::placeholders::error));
+                            this, new_channel, handler, boost::asio::placeholders::error));
                 } else {
                     throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
@@ -223,7 +239,6 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
-
 
         void TcpConnection::connectHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
@@ -242,7 +257,6 @@ namespace karabo {
             }
         }
 
-
         void TcpConnection::stop() {
             if (m_connectionType == "server")
                 m_acceptor->close();
@@ -252,7 +266,6 @@ namespace karabo {
             // Think about stopping service
             //m_boost_io_service->stop();
         }
-
 
         ChannelPointer TcpConnection::createChannel() {
             ChannelPointer channel(new TcpChannel(shared_from_this()));

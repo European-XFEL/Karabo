@@ -15,7 +15,7 @@
 #include <karabo/util/Configurator.hh>
 #include <boost/filesystem.hpp>
 
-namespace log4cpp {
+namespace krb_log4cpp {
     class Appender;
 }
 
@@ -45,7 +45,7 @@ namespace karabo {
             virtual ~RollingFileAppenderConfigurator() {
             };
 
-            log4cpp::Appender* create();
+            krb_log4cpp::Appender* create();
 
         private: // functions
 

@@ -15,12 +15,12 @@
 #include "Logger.hh"
 #include "AppenderConfigurator.hh"
 #include "CategoryConfigurator.hh"
-#include "log4cpp/Category.hh"
-#include "log4cpp/Appender.hh"
+#include "krb_log4cpp/Category.hh"
+#include "krb_log4cpp/Appender.hh"
 
 using namespace std;
 using namespace karabo::util;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 
 
 namespace karabo {

@@ -19,7 +19,6 @@ namespace karabo {
     namespace core {
 
         class StartStopFsm : public BaseFsm {
-                       
         public:
 
             KARABO_CLASSINFO(StartStopFsm, "StartStopFsm", "1.0")
@@ -56,6 +55,9 @@ namespace karabo {
             }
 
         public:
+
+            virtual ~StartStopFsm() {
+            }
 
             /**************************************************************/
             /*                        Events                              */
@@ -129,11 +131,11 @@ namespace karabo {
                 KARABO_FSM_SET_CONTEXT_SUB(this, m_fsm, Ok)
                 KARABO_FSM_START_MACHINE(m_fsm)
             }
-            
+
         private:
-            
+
             KARABO_FSM_DECLARE_MACHINE(StateMachine, m_fsm);
-            
+
         };
     }
 }

@@ -36,7 +36,7 @@ class PenDialog(QDialog):
         getattr(self, self.linecaps[pen.capStyle()] + 'Cap').setChecked(True)
         getattr(self, self.linejoins[pen.joinStyle()] + 'Join').setChecked(True)
         self.miterlimit.setValue(pen.miterLimit())
-        self.dashes.setText(' '.join(unicode(s)
+        self.dashes.setText(' '.join(str(s)
                             for s in pen.dashPattern()))
         self.dashes.setValidator(Validator(self.dashes))
 
@@ -75,10 +75,10 @@ class PenDialog(QDialog):
         c = self.pen.color()
         c.setAlpha(self.opacity.value())
         self.pen.setColor(c)
-        for k, v in self.linecaps.iteritems():
+        for k, v in self.linecaps.items():
             if getattr(self, v + 'Cap').isChecked():
                 self.pen.setCapStyle(k)
-        for k, v in self.linejoins.iteritems():
+        for k, v in self.linejoins.items():
             if getattr(self, v + 'Join').isChecked():
                 self.pen.setJoinStyle(k)
         self.pen.setMiterLimit(self.miterlimit.value())

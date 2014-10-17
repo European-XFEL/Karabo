@@ -34,7 +34,7 @@ namespace karabo {
             // Grant friendship to container
             template<typename T, typename U>
             friend class OrderedMap;
-            
+
             // Grant friendship to GenericElement (needs to setKey)
             template<class T>
             friend class GenericElement;
@@ -118,12 +118,12 @@ namespace karabo {
 
             template <class T>
             inline T getAttributeAs(const std::string& key) const;
-            
+
             template<typename T, template <typename Elem, typename = std::allocator<Elem> > class Cont >
             inline Cont<T> getAttributeAs(const std::string& key) const;
-            
+
             Element<KeyType>& getAttributeNode(const std::string& key);
-            
+
             const Element<KeyType>& getAttributeNode(const std::string& key) const;
 
             inline bool hasAttribute(const std::string& key) const;
@@ -292,9 +292,9 @@ namespace karabo {
 
             try {
                 std::string value = this->getValueAsString();
-                
+
                 if (value.empty()) return Cont<T>();
-                
+
                 return karabo::util::fromString<T, Cont > (value);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION(karabo::util::createCastFailureMessage(m_key, srcType, tgtType)));
@@ -395,12 +395,12 @@ namespace karabo {
         inline Cont<T> Element<KeyType, AttributeType>::getAttributeAs(const std::string& key) const {
             return m_attributes.template getAs<T, Cont >(key);
         }
-        
+
         template<typename KeyType, typename AttributeType>
         inline Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) {
             return m_attributes.getNode(key);
         }
-        
+
         template<typename KeyType, typename AttributeType>
         inline const Element<KeyType>& Element<KeyType, AttributeType>::getAttributeNode(const std::string& key) const {
             return m_attributes.getNode(key);
@@ -417,7 +417,7 @@ namespace karabo {
             #define _KARABO_HELPER_MACRO(RefType, T)\
                    case Types::RefType: m_value = this->getValueAs<T>(); break;\
                    case Types::VECTOR_##RefType: m_value = this->getValueAs<T, std::vector>(); break;
-
+            
             Types::ReferenceType srcType = this->getType();
             if (tgtType == srcType) return;
             try {
@@ -454,6 +454,10 @@ namespace karabo {
                     case Types::RefType: return karabo::util::toString(getValue<CppType>());\
                     case Types::VECTOR_##RefType: return karabo::util::toString(getValue<std::vector<CppType> >());
 
+            // this needs to be separate macro until not all pair types are supported (i.e. complex and string)
+            #define _KARABO_HELPER_MACRO_1(RefType, CppType)\
+                    case Types::ARRAY_##RefType: return karabo::util::toString(getValue<std::pair<const CppType*, size_t> >());
+
             Types::ReferenceType type = this->getType();
             switch (type) {
                     _KARABO_HELPER_MACRO(BOOL, bool)
@@ -471,11 +475,25 @@ namespace karabo {
                     _KARABO_HELPER_MACRO(COMPLEX_FLOAT, std::complex<float>)
                     _KARABO_HELPER_MACRO(COMPLEX_DOUBLE, std::complex<double>)
                     _KARABO_HELPER_MACRO(STRING, std::string)
-                    _KARABO_HELPER_MACRO(NONE, CppNone)        
+                    _KARABO_HELPER_MACRO(NONE, CppNone)
+                    _KARABO_HELPER_MACRO_1(BOOL, bool)
+                    _KARABO_HELPER_MACRO_1(CHAR, char)
+                    _KARABO_HELPER_MACRO_1(INT8, signed char)
+                    _KARABO_HELPER_MACRO_1(UINT8, unsigned char)
+                    _KARABO_HELPER_MACRO_1(INT16, short)
+                    _KARABO_HELPER_MACRO_1(UINT16, unsigned short)
+                    _KARABO_HELPER_MACRO_1(INT32, int)
+                    _KARABO_HELPER_MACRO_1(UINT32, unsigned int)
+                    _KARABO_HELPER_MACRO_1(INT64, long long)
+                    _KARABO_HELPER_MACRO_1(UINT64, unsigned long long)
+                    _KARABO_HELPER_MACRO_1(FLOAT, float)
+                    _KARABO_HELPER_MACRO_1(DOUBLE, double)
+
                 default:
                     throw KARABO_CAST_EXCEPTION("Could not convert value of key \"" + m_key + "\" to string");
             }
             #undef _KARABO_HELPER_MACRO
+            #undef _KARABO_HELPER_MACRO_1
         }
     }
 }

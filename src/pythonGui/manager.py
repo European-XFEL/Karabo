@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 1, 2012
@@ -21,16 +21,16 @@ from configuration import Configuration
 from dialogs.configurationdialog import SelectProjectDialog, SelectProjectConfigurationDialog
 from datetime import datetime
 from karabo.hash import Hash, XMLWriter, XMLParser
+from karabo.project import ProjectConfiguration
 import globals
 from messagebox import MessageBox
 from navigationtreemodel import NavigationTreeModel
 from network import Network
-from project import ProjectConfiguration
 from projectmodel import ProjectModel
 from sqldatabase import SqlDatabase
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDir, QIODevice, QObject)
+from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 
@@ -65,8 +65,6 @@ class _Manager(QObject):
         self.projectTopology.selectionModel.selectionChanged. \
                         connect(self.onProjectModelSelectionChanged)
 
-        self.systemHash = None
-
         Network().signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
         Network().signalServerConnectionChanged.connect(
@@ -79,12 +77,14 @@ class _Manager(QObject):
 
     # Sets all parameters to start configuration
     def reset(self):
+        self.systemHash = None
+        
         # Map stores { (serverId, class), Configuration }
         self.serverClassData = dict()
         # Map stores { deviceId, Configuration }
         self.deviceData = dict()
         
-        # State, if initiate device is currently processed
+        # State, if instantiate device is currently processed
         self.__isInitDeviceCurrentlyProcessed = False
 
 
@@ -103,34 +103,50 @@ class _Manager(QObject):
             self.serverClassData[serverId, classId].set(property, value)
 
 
-    def _clearServerClassParameterPage(self, serverClassIds):
+    def _clearDeviceParameterPage(self, deviceId):
+        conf = self.deviceData.get(deviceId)
+        if conf is None:
+            return
+        # Clear corresponding parameter page
+        if conf.parameterEditor is not None:
+            conf.parameterEditor.clear()
+
+        if conf.descriptor is not None:
+            conf.redummy()
+
+
+    def _clearServerClassParameterPages(self, serverClassIds):
         for serverClassId in serverClassIds:
-            try:
-                conf = self.serverClassData[serverClassId]
-                # Clear corresponding parameter page
-                if conf.parameterEditor is not None:
-                    conf.parameterEditor.clear()
-                
-                if conf.descriptor is not None:
-                    conf.redummy()
-            except KeyError:
-                pass
+            conf = self.serverClassData.get(serverClassId)
+            if conf is None:
+                return
+
+            # Clear corresponding parameter page
+            if conf.parameterEditor is not None:
+                conf.parameterEditor.clear()
+
+            if conf.descriptor is not None:
+                conf.redummy()
 
 
     def initDevice(self, serverId, classId, deviceId, config=None):
         if config is None:
             # Use standard configuration for server/classId
-            config = self.serverClassData[serverId, classId].toHash()
+            conf = self.serverClassData.get((serverId, classId))
+            if conf is not None:
+                config = conf.toHash()
+            else:
+                config = Hash()
 
         # Send signal to network
         Network().onInitDevice(serverId, classId, deviceId, config)
         self.__isInitDeviceCurrentlyProcessed = True
 
 
-    def killDevice(self, deviceId, showConfirm=True):
+    def shutdownDevice(self, deviceId, showConfirm=True):
         if showConfirm:
-            reply = QMessageBox.question(None, 'Kill device',
-                "Do you really want to kill the device \"<b>{}</b>\"?".format(deviceId),
+            reply = QMessageBox.question(None, 'Shutdown device',
+                "Do you really want to shutdown the device \"<b>{}</b>\"?".format(deviceId),
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
             if reply == QMessageBox.No:
@@ -139,9 +155,9 @@ class _Manager(QObject):
         Network().onKillDevice(deviceId)
 
 
-    def killServer(self, serverId):
-        reply = QMessageBox.question(None, 'Kill device server',
-            "Do you really want to kill the device server \"<b>{}</b>\"?".format(serverId),
+    def shutdownServer(self, serverId):
+        reply = QMessageBox.question(None, 'Shutdown device server',
+            "Do you really want to shutdown the device server \"<b>{}</b>\"?".format(serverId),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.No:
@@ -152,7 +168,7 @@ class _Manager(QObject):
 
     def onReceivedData(self, hash):
         getattr(self, "handle_" + hash["type"])(
-            **{k: v for k, v in hash.iteritems() if k != "type"})
+            **{k: v for k, v in hash.items() if k != "type"})
 
 
     def onServerConnectionChanged(self, isConnected):
@@ -161,8 +177,6 @@ class _Manager(QObject):
         """
         if isConnected:
             return
-
-        self.systemHash = None
 
         # Reset manager settings
         self.reset()
@@ -255,7 +269,7 @@ class _Manager(QObject):
         conf, classId = self.currentConfigurationAndClassId()
         
         r = XMLParser()
-        with open(filename, 'r') as file:
+        with open(filename, 'rb') as file:
             config = r.read(file.read())
         
         if not config.has(classId):
@@ -286,10 +300,6 @@ class _Manager(QObject):
         if not filename:
             return
 
-        fi = QFileInfo(filename)
-        if len(fi.suffix()) < 1:
-            filename += ".xml"
-
         conf, classId = self.currentConfigurationAndClassId()
         if conf is None:
             MessageBox.showError("Configuration save failed")
@@ -298,7 +308,7 @@ class _Manager(QObject):
 
         # Save configuration to file
         w = XMLWriter()
-        with open(filename, 'w') as file:
+        with open(filename, 'wb') as file:
             w.writeToFile(config, file)
 
 
@@ -314,7 +324,6 @@ class _Manager(QObject):
         project.addConfiguration(conf.id, ProjectConfiguration(project,
                                                 dialog.configurationName(),
                                                 Hash(classId, conf.toHash())))
-        self.projectTopology.updateData()
 
 
     def handle_log(self, message):
@@ -332,7 +341,7 @@ class _Manager(QObject):
             self.systemHash.merge(systemTopology, "merge")
         # Update navigation and project treemodel
         self.systemTopology.updateData(systemTopology)
-        for v in self.deviceData.itervalues():
+        for v in self.deviceData.values():
             v.updateStatus()
         self.projectTopology.updateNeeded()
 
@@ -353,8 +362,11 @@ class _Manager(QObject):
                          "is coming up now.#"
             # A log message is triggered
             self.handle_log(logMessage)
+            
+            # Clear deviceId parameter page, if existent
+            self._clearDeviceParameterPage(id)
 
-        self._clearServerClassParameterPage(serverClassIds)
+        self._clearServerClassParameterPages(serverClassIds)
 
         # Update system topology with new configuration
         self.handle_instanceUpdated(topologyEntry)
@@ -400,14 +412,14 @@ class _Manager(QObject):
         elif instanceType == "server":
             # Update system topology
             serverClassIds = self.systemTopology.eraseServer(instanceId)
-            self._clearServerClassParameterPage(serverClassIds)
+            self._clearServerClassParameterPages(serverClassIds)
             
             # Remove server from systemHash
             path = "server." + instanceId
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
             
-            for v in self.deviceData.itervalues():
+            for v in self.deviceData.values():
                 v.updateStatus()
 
             # Clear corresponding parameter pages
@@ -418,7 +430,7 @@ class _Manager(QObject):
 
     def handle_classSchema(self, serverId, classId, schema):
         if (serverId, classId) not in self.serverClassData:
-            print 'not requested schema for classId {} arrived'.format(classId)
+            print('not requested schema for classId {} arrived'.format(classId))
             return
         conf = self.serverClassData[serverId, classId]
         if conf.descriptor is not None:
@@ -429,6 +441,7 @@ class _Manager(QObject):
             conf.setSchema(schema)
             # Set default values for configuration
             conf.setDefault()
+
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
 
@@ -437,7 +450,7 @@ class _Manager(QObject):
         # \configuration might set in the GuiServerDevice
         # but is currently not used here
         if deviceId not in self.deviceData:
-            print 'not requested schema for device {} arrived'.format(deviceId)
+            print('not requested schema for device {} arrived'.format(deviceId))
             return
         
         conf = self.deviceData[deviceId]
@@ -447,9 +460,9 @@ class _Manager(QObject):
         
         # Add configuration with schema to device data
         conf.setSchema(schema)
-        conf.value.state.signalUpdateComponent.connect(
-            self._triggerStateChange)        
-        
+        conf.boxvalue.state.signalUpdateComponent.connect(
+            self._triggerStateChange)
+
         self.onShowConfiguration(conf)
 
 

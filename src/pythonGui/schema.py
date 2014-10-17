@@ -11,7 +11,6 @@ from registry import Monkey
 from network import Network
 import icons
 from timestamp import Timestamp
-from util import Weak
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
@@ -52,16 +51,13 @@ class Box(QObject):
         self._descriptor = descriptor
         self.configuration = configuration
         self.timestamp = None
-        self._value = Dummy(path, configuration)
+        self._value = Dummy()
         self.initialized = False
         self.current = None # Support for choice of nodes
 
 
     def key(self):
         return self.configuration.id + '.' + '.'.join(self.path)
-
-
-    configuration = Weak()
 
 
     @property
@@ -112,7 +108,7 @@ class Box(QObject):
 
         return (self.descriptor is None or
                 self.descriptor.allowedStates is None or
-                self.configuration.value.state.value in
+                self.configuration.value.state in
                     self.descriptor.allowedStates)
 
 
@@ -124,10 +120,35 @@ class Box(QObject):
         return "<{} {}>".format(type(self).__name__, self.key())
 
 
-class Descriptor(hashtypes.Descriptor):
-    # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
+    @property
+    def boxvalue(self):
+        """ don't get the actual value of a box, but a proxy to get the
+        sub-boxes of a value """
+        r = _BoxValue()
+        r.__dict__["__box__"] = self
+        return r
 
+
+class _BoxValue(object):
+    def __getattr__(self, attr):
+        try:
+            return self.__box__.value.__dict__[attr]
+        except KeyError:
+            if isinstance(self.__box__.value, Dummy):
+                r = Box(self.__box__.path + (str(attr),), None,
+                        self.__box__.configuration)
+                self.__box__.value.__dict__[attr] = r
+                return r
+            else:
+                raise AttributeError(attr)
+
+
+    def __setattr__(self, attr, value):
+        self.value.__dict__[attr] = value
+
+
+class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
+    # Means that parent class is overwritten/updated
     def completeItem(self, treeWidget, item, box, isClass):
         if self.assignment == 1: # Mandatory
             f = item.font(0)
@@ -138,9 +159,16 @@ class Descriptor(hashtypes.Descriptor):
         item.allowedStates = self.allowedStates
 
 
-class Type(hashtypes.Type):
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.key].value
+
+
+    def __set__(self, instance, value):
+        instance.__dict__[self.key].set(value)
+
+
+class Type(hashtypes.Type, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     icon = icons.undefined
 
 
@@ -181,33 +209,40 @@ class Type(hashtypes.Type):
         return item
 
 
+    def toHash(self, box):
+        return box.value
+
+
+    def fromHash(self, box, data, timestamp=None):
+        box._set(data, timestamp)
+
+
     def redummy(self, box):
         """ remove all values from box """
-        box._value = Dummy(box.path, box.configuration)
+        box._value = Dummy()
         box.initialized = False
         box.descriptor = None
 
 
     def dummyCast(self, box):
-        """dummy-aware casting of box"""
+        """dummy-aware casting of box
+
+        if the box has a value, cast it to our type, if it has not,
+        just leave it as is."""
         if box.hasValue():
             return self.cast(box.value)
         else:
             return box.value
 
 
-class Char(hashtypes.Char):
+class Char(hashtypes.Char, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
-
     classAlias = "Text Field"
     icon = icons.string
 
 
-class String(hashtypes.String):
+class String(hashtypes.String, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
-
     classAlias = "Text Field"
     icon = icons.string
 
@@ -224,38 +259,34 @@ class String(hashtypes.String):
         return item
 
 
-class Integer(hashtypes.Integer):
+class Integer(hashtypes.Integer, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = 'Integer Field'
     icon = icons.int
 
 
-class Number(hashtypes.Number):
+class Number(hashtypes.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = "Float Field"
     icon = icons.float
 
 
-class Bool(hashtypes.Bool):
+class Bool(hashtypes.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = "Toggle Field"
     icon = icons.boolean
 
 
-class Vector(hashtypes.Vector):
+class Vector(hashtypes.Vector, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    __metaclass__ = Monkey
     classAlias = 'List'
 
 
 class Object(object):
     def __init__(self, box):
-        for k, v in type(self).__dict__.iteritems():
+        for k, v in type(self).__dict__.items():
             if isinstance(v, hashtypes.Descriptor):
-                b = getattr(box.value, k, None)
+                b = getattr(box.boxvalue, k, None)
                 if b is None:
                     b = Box(box.path + (k,), v, box.configuration)
                 else:
@@ -263,23 +294,12 @@ class Object(object):
                 self.__dict__[k] = b
 
 
-    def __setattr__(self, box, value):
-        getattr(self, box).set(value)
-
-
 class Dummy(object):
     """this class represents a not-yet-loaded value.
     it seems to contain all possible attributes, as we don't know yet
-    which attributes might come..."""
-    def __init__(self, path, configuration):
-        self._path = path
-        self._configuration = configuration
+    which attributes might come...
 
-
-    def __getattr__(self, attr):
-        r = Box(self._path + (unicode(attr),), None, self._configuration)
-        setattr(self, attr, r)
-        return r
+    All the actual functionality is done in Box."""
 
 
 class Schema(hashtypes.Descriptor):
@@ -327,6 +347,7 @@ class Schema(hashtypes.Descriptor):
     def parseLeaf(key, hash, attrs, parent):
         ret = Type.fromname[attrs['valueType']]()
         ret.displayedName = key
+        ret.key = key
         Schema.parseAttrs(ret, attrs, parent)
         if ret.options is not None:
             ret.classAlias = "Selection Field"
@@ -345,12 +366,12 @@ class Schema(hashtypes.Descriptor):
 
 
     def _item(self, treeWidget, parent, box, isClass):
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             if isinstance(v, hashtypes.Descriptor):
                 try:
-                    c = getattr(box.value, k)
+                    c = getattr(box.boxvalue, k)
                 except AttributeError:
-                    print 'missing {} in {}'.format(k, box.value)
+                    print('missing {} in {}'.format(k, box.value))
                 else:
                     item = v.item(treeWidget, parent, c, isClass)
 
@@ -384,7 +405,7 @@ class Schema(hashtypes.Descriptor):
     def toHash(self, box):
         ret = Hash()
         for k in self.dict:
-            v = getattr(box.value, k, None)
+            v = getattr(box.boxvalue, k, None)
             if v is None:
                 continue
             if v.hasValue():
@@ -395,7 +416,7 @@ class Schema(hashtypes.Descriptor):
     def fromHash(self, box, value, timestamp=None):
         for k, v, a in value.iterall():
             try:
-                vv = getattr(box._value, k)
+                vv = getattr(box.boxvalue, k)
             except AttributeError:
                 continue
             try:
@@ -413,21 +434,21 @@ class Schema(hashtypes.Descriptor):
 
 
     def dispatchUserChanges(self, box, hash):
-        for k, v in hash.iteritems():
-            getattr(box._value, k).dispatchUserChanges(v)
+        for k, v in hash.items():
+            getattr(box.boxvalue, k).dispatchUserChanges(v)
 
 
     def setDefault(self, box):
         box._value = self.getClass()(box)
-        for k, v in self.dict.iteritems():
-            getattr(box.value, k).setDefault()
+        for k, v in self.dict.items():
+            getattr(box.boxvalue, k).setDefault()
         box._set(box._value, None)
 
 
     def redummy(self, box):
-        d = Dummy(box.path, box.configuration)
-        for k, v in self.dict.iteritems():
-            b = getattr(box.value, k)
+        d = Dummy()
+        for k, v in self.dict.items():
+            b = getattr(box.boxvalue, k)
             if b is not None and b.descriptor is not None:
                 b.redummy()
                 setattr(d, k, b)
@@ -466,7 +487,7 @@ class ChoiceOfNodes(Schema):
         self.classAlias = 'Choice Element'
         assert self.defaultValue is None or self.defaultValue in self.dict, \
             'the default value "{}" is not in {} for node {}'.format(
-                self.defaultValue, hash.keys(), key)
+                self.defaultValue, list(hash.keys()), key)
         return self
 
 
@@ -577,6 +598,6 @@ class ListOfNodes(hashtypes.Descriptor):
 
 
     def redummy(self, box):
-        box._value = Dummy(box.path, box.configuration)
+        box._value = Dummy()
         box.initialized = False
         box.descriptor = None

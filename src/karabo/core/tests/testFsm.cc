@@ -11,7 +11,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include <log4cpp/Category.hh>
+#include <krb_log4cpp/Category.hh>
 
 #include <exfel/util/Factory.hh>
 #include <exfel/util/Test.hh>

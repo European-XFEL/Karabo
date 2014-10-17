@@ -10,7 +10,7 @@
 
 #include <karabo/util/Factory.hh>
 #include <karabo/net/BrokerConnection.hh>
-#include <log4cpp/Appender.hh>
+#include <krb_log4cpp/Appender.hh>
 #include "AppenderConfigurator.hh"
 
 namespace karabo {
@@ -25,7 +25,7 @@ namespace karabo {
 
             virtual ~NetworkAppenderConfigurator();
 
-            log4cpp::Appender* create();
+            krb_log4cpp::Appender* create();
 
             static void expectedParameters(karabo::util::Schema& expected);
             NetworkAppenderConfigurator(const karabo::util::Hash& input);

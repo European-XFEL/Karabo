@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals
+
 __author__="kerstin weger"
 # export PYTHONPATH= <pathToExfelSuite>/lib/debug
 
@@ -59,7 +59,7 @@ def excepthook(type, value, traceback):
     mb = QMessageBox(getattr(value, "icon", QMessageBox.Critical),
                      getattr(value, "title", type.__name__),
                      "{}\n{}\n".format(getattr(value, "message",
-                                               "Unknown error occured"),
+                                  "{}: {}".format(type.__name__, value)),
                                        " " * 300 + "\n"))
     text = "".join(format_exception(type, value, traceback))
     mb.setDetailedText(text)
@@ -67,4 +67,4 @@ def excepthook(type, value, traceback):
     try:
         Network().onError(text)
     except Exception:
-        print "could not sent exception to network"
+        print("could not sent exception to network")

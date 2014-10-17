@@ -17,7 +17,7 @@ GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.ADMIN  # Outside XFEL
 
 # Hidden karabo folder which includes certain karabo related files
-if "win" in platform:
+if platform.startswith("win"):
     HIDDEN_KARABO_FOLDER = path.join(environ['APPDATA'], "karabo")
 else:
     HIDDEN_KARABO_FOLDER = path.join(environ['HOME'], ".karabo")

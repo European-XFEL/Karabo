@@ -41,6 +41,9 @@ class PluginDialog(QDialog):
         self.cbServer = QComboBox()
         self.cbServer.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.cbServer.currentIndexChanged[int].connect(self.onServerChanged)
+        # Lineedit to add a user-defined not yet available server
+        self.leServer = QLineEdit()
+        self.cbServer.setLineEdit(self.leServer)
         fLayout.addRow("Server:     ", self.cbServer)
         vLayout.addWidget(self.gbSelectServer)
 
@@ -49,7 +52,10 @@ class PluginDialog(QDialog):
         fLayout.setContentsMargins(5,5,5,5)
         self.cbPlugin = QComboBox()
         self.cbPlugin.setSizeAdjustPolicy(QComboBox.AdjustToContents)
-        self.cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
+        #self.cbPlugin.currentIndexChanged[int].connect(self.onPluginChanged)
+        # Lineedit to add a user-defined not yet available server
+        self.lePlugin = QLineEdit()
+        self.cbPlugin.setLineEdit(self.lePlugin)
         fLayout.addRow("Device:    ", self.cbPlugin)
         vLayout.addWidget(self.__gbSelectPlugin)
 
@@ -133,9 +139,15 @@ class PluginDialog(QDialog):
         if device is not None:
             self.leDeviceId.setText(device.id)
             index = self.cbServer.findText(device.serverId)
-            self.cbServer.setCurrentIndex(index)
+            if index < 0:
+                self.leServer.setText(device.serverId)
+            else:
+                self.cbServer.setCurrentIndex(index)
             index = self.cbPlugin.findText(device.classId)
-            self.cbPlugin.setCurrentIndex(index)
+            if index < 0:
+                self.lePlugin.setText(device.classId)
+            else:
+                self.cbPlugin.setCurrentIndex(index)
             index = self.cbStartUp.findText(device.ifexists)
             self.cbStartUp.setCurrentIndex(index)
         

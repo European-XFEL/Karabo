@@ -1,3 +1,11 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on April 8, 2013
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
+from util import SignalBlocker
 from widget import EditableWidget
 
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
@@ -10,7 +18,6 @@ class QwtWidget(EditableWidget):
         super(QwtWidget, self).__init__(box)
         self.widget = self.Cls(parent)
 
-        self.valueChanged(self.boxes[0], self.boxes[0].value)
         self.widget.valueChanged.connect(self.onEditingFinished)
 
 
@@ -26,16 +33,13 @@ class QwtWidget(EditableWidget):
         return self.widget.value()
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
-        block = self.widget.blockSignals(True)
-        try:
+    def valueChanged(self, box, value, timestamp=None):
+        with SignalBlocker(self.wiget):
             self.widget.setValue(value)
-        finally:
-            self.widget.blockSignals(block)
 
 
     def onEditingFinished(self, value):
-        self.signalEditingFinished.emit(self.boxes[0], value)
+        EditableWidget.onEditingFinished(self, value)
 
 
 class Slider(QwtWidget):

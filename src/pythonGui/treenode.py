@@ -84,6 +84,6 @@ class TreeNode(object):
     def printTree(self, indent=-2):
         indent = indent + 2;
         for childNode in self.childNodes:
-            print " " * indent, childNode.displayName
+            print(" " * indent, childNode.displayName)
             childNode.printTree(indent)
         

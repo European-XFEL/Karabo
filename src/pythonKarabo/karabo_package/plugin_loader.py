@@ -6,6 +6,7 @@ __date__ ="$May 8, 2013 12:55:50 PM$"
 
 import os
 import sys
+from subprocess import call
 import re
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.karathon import PATH_ELEMENT
@@ -22,26 +23,30 @@ class PluginLoader(object):
         e.displayedName("Plugin Directory").description("Directory to search for plugins")
         e.assignmentOptional().defaultValue("plugins")
         e.isDirectory().expertAccess().commit()
-        
+
+        e = PATH_ELEMENT(expected).key("plugin3Directory")
+        e.displayedName("Python 3 Plugin Directory")
+        e.description("Directory to search and put plugins for python 3")
+        e.assignmentOptional().defaultValue("plugins3")
+        e.isDirectory().expertAccess().commit()
+
     def __init__(self, input):
         if "pluginDirectory" in input:
             self.plugins = input["pluginDirectory"]
+            self.plugins3 = input["plugin3Directory"]
         else:
             self.plugins = os.environ['PWD'] + "/plugins"
-        sys.path.append(self.plugins)
+            self.plugins3 = os.environ['PWD'] + "/plugins3"
+        sys.path.append(self.plugins3)
         self.pattern = re.compile(r'\.py$')
 
     def getPluginDirectory(self):
-        return self.plugins
+        return self.plugins3
 
     def update(self):
-        matches = filter(lambda m: not m is None, [self.pattern.search(x) for x in os.listdir(self.plugins)])
-        modules = list()
-        for m in matches:
-            name = m.string[0:m.start()]              # module name
-            path = self.plugins + "/" + m.string      # path to module source
-            if path.endswith(".pyc"):                 # skip compiled version
-                continue
-            modules.append((name, path,))
-        return modules
-
+        for n in os.listdir(self.plugins):
+            if (n.endswith(".py") and
+                not os.path.exists(os.path.join(self.plugins3, n))):
+                    call(["2to3", "-Wno", self.plugins3,
+                          os.path.join(self.plugins, n)])
+        return [n[:-3] for n in os.listdir(self.plugins3) if n.endswith(".py")]

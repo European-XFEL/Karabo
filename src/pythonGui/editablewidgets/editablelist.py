@@ -26,11 +26,7 @@ from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget, DisplayWidget
 
-from PyQt4.QtCore import pyqtSignal
-from PyQt4.QtGui import QDialog, QFrame, QHBoxLayout, QLineEdit, QToolButton, QWidget
-
-import numbers
-import numpy
+from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 
 class EditableList(EditableWidget, DisplayWidget):
@@ -80,7 +76,7 @@ class EditableList(EditableWidget, DisplayWidget):
         return self.valueList
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = []
 
@@ -94,17 +90,20 @@ class EditableList(EditableWidget, DisplayWidget):
 
     def onEditingFinished(self, text):
         self.lastCursorPos = self.leList.cursorPosition()
-        self.valueList = text.split(',')
+        if text:
+            self.valueList = text.split(',')
+        else:
+            self.valueList = []
         EditableWidget.onEditingFinished(self, self.valueList)
 
 
     def onEditClicked(self):
-        listEdit = ListEdit(self.valueType, True, self.valueList)
+        listEdit = ListEdit(self.boxes[0].descriptor, True, self.valueList)
         listEdit.setTexts("Add", "&Value", "Edit")
 
         if listEdit.exec_() == QDialog.Accepted:
             values = [listEdit.getListElementAt(i)
-                      for i in xrange(listEdit.getListCount())]
+                      for i in range(listEdit.getListCount())]
 
             self.leList.setText(self.boxes[0].descriptor.toString(values))
             

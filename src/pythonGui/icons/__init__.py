@@ -26,7 +26,7 @@ class Icon(object):
 def init():
     """This function actually loads the hitherto lazily loaded icons."""
     d = globals()
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if isinstance(v, Icon):
             d[k] = v.icon
 
@@ -75,7 +75,7 @@ deviceInstanceError = Icon("device-instance-error.png")
 deviceOffline = Icon("offline-32x32.png")
 deviceOfflineNoServer = Icon("offline-no-server.png")
 deviceOfflineNoPlugin = Icon("offline-no-plugin.png")
-deviceIncompatible = Icon("offline-32x32.png")
+deviceIncompatible = Icon("device-incompatible.png")
 signal = Icon("type-schema.png")
 slot = Icon("type-pair.png")
 image = Icon("image-gray-32x32.png")

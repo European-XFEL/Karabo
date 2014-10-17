@@ -158,7 +158,11 @@ namespace karabo {
                     for (size_t i = 0; i < connectedOutputChannels.size(); ++i) {
                         std::vector<std::string> tmp;
                         boost::split(tmp, connectedOutputChannels[i], boost::is_any_of("@:"));
-                        m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                        if (tmp.size() == 2) {
+                            m_connectedOutputChannels.push_back(karabo::util::Hash("instanceId", tmp[0], "channelId", tmp[1]));
+                        } else {
+                            throw KARABO_PARAMETER_EXCEPTION("Illegal format for connected output channel, expecting <deviceId>:<channelName>");
+                        }
                     }
                 }
             }

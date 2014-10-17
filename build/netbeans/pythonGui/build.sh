@@ -1,6 +1,8 @@
 #!/bin/bash
 CWD=$(pwd)
 DIST=dist/$(uname -s)
+# clean previous dist folder - in case of file/folders deletion/creation in oryginal source folder
+rm -rf dist
 mkdir -p $DIST/lib
 mkdir -p $DIST/bin
 cd $DIST/bin
@@ -21,7 +23,7 @@ if [ "\$OS" = "Darwin" ]; then
 fi
 
 cd \$KARABO/lib/pythonGui  
-python karabo-gui.py "\$@"
+python3 karabo-gui.py "\$@"
 cd -
 End-of-file
 chmod u+x karabo-gui

@@ -15,7 +15,7 @@
 
 #include <string>
 #include <vector>
-#include "log4cpp/Priority.hh"
+#include "krb_log4cpp/Priority.hh"
 #include <karabo/util/Configurator.hh>
 #include "AppenderConfigurator.hh"
 
@@ -32,7 +32,7 @@ namespace karabo {
         class CategoryConfigurator {
 
             std::string m_name;
-            log4cpp::Priority::Value m_level;
+            krb_log4cpp::Priority::Value m_level;
             bool m_additivity;
             std::vector<AppenderConfigurator::Pointer> m_appenderConfigurators;
 

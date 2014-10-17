@@ -27,6 +27,7 @@ from karabo import hashtypes
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
+
 import numpy as np
 
 class DisplayImageElement(DisplayWidget):
@@ -38,61 +39,76 @@ class DisplayImageElement(DisplayWidget):
     def __init__(self, box, parent):
         super(DisplayImageElement, self).__init__(box)
 
-        self.__image = QLabel(parent)
-        self.__image.setAutoFillBackground(True)
-        self.__image.setAlignment(Qt.AlignCenter)
-        self.__image.setMinimumHeight(125)
-        self.__image.setMaximumHeight(125)
-        self.__image.setMinimumWidth(125)
-        self.__image.setWordWrap(True)
+        self.image = QLabel(parent)
+        self.image.setAutoFillBackground(True)
+        self.image.setAlignment(Qt.AlignCenter)
+        self.image.setMinimumHeight(125)
+        self.image.setMaximumHeight(125)
+        self.image.setMinimumWidth(125)
+        self.image.setWordWrap(True)
         self.setErrorState(False)
         self.value = None
 
 
     @property
     def widget(self):
-        return self.__image
+        return self.image
 
 
     def setErrorState(self, isError):
         if isError is True:
-            self.__image.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
+            self.image.setStyleSheet("QLabel { background-color : rgba(255,155,155,128); }") # light red
         else:
-            self.__image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
+            self.image.setStyleSheet("QLabel { background-color : rgba(225,242,225,128); }") # light green
 
 
     def valueChanged(self, box, value, timestamp=None):
-        if self.value is None or value is not self.value:
-            if len(value.dims.value) != 2:
-                return
+        if self.value is not None or value is self.value:
+            return
+        
+        if len(value.dims) < 2:
+            return
 
-            # Data type information
-            type = value.type.value
+        # Data type information
+        type = value.type
+        try:
             type = hashtypes.Type.fromname[type].numpy
+        except KeyError as e:
+            e.message = 'Image element has improper type "{}"'.format(type)
+            raise
 
-            # Data itself
-            data = value.data.value
-            npy = np.frombuffer(data, type)
+        # Data itself
+        data = value.data
+        npy = np.frombuffer(data, type)
 
-            # Normalize
-            npy = npy - npy.min()
-            npy *= (255.0 / npy.max())
+        # Normalize
+        npy = npy - npy.min()
+        npy *= (255.0 / npy.max())
 
-            # Cast
-            npy = npy.astype(np.uint8)
+        # Cast
+        npy = npy.astype(np.uint8)
 
-            # Shape
-            dimX, dimY = value.dims.value
+        # Shape
+        dimX = value.dims[0]
+        dimY = value.dims[1]
 
-            # Safety
-            if (dimX < 1) or (dimY < 1) or (len(data) < (dimX*dimY)): return
+        try:
+            npy.shape = dimY, dimX
+        except ValueError as e:
+            e.message = 'Image has improper shape ({}, {}) for size {}'. \
+                format(dimX, dimY, len(npy))
+            raise
 
-            image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
-            image.setColorTable(self.colorTable)
-            pixmap = QPixmap.fromImage(image)
-            
-            # Scale pixmap
-            if pixmap.height() > 125:
-                pixmap = pixmap.scaledToHeight(125)
-                
-            self.__image.setPixmap(pixmap)
+        # Safety
+        if dimX < 1 or dimY < 1:
+            raise RuntimeError('Image has less than two dimensions')
+
+        image = QImage(npy.data, dimX, dimY, dimX, QImage.Format_Indexed8)
+        image.setColorTable(self.colorTable)
+        pixmap = QPixmap.fromImage(image)
+
+        # Scale pixmap
+        if pixmap.height() > 125:
+            pixmap = pixmap.scaledToHeight(125)
+
+        self.image.setPixmap(pixmap)

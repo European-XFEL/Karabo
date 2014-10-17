@@ -14,7 +14,7 @@ __all__ = ["DisplayWidget"]
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt4.QtGui import QLabel, QPixmap
-from registry import Loadable, Registry
+from registry import Registry
 import os.path
 
 
@@ -31,7 +31,6 @@ class Widget(Registry, QObject):
         the box, so make sure __init__ is only called after everything is
         set up so that this poses no problem."""
         super(Widget, self).__init__()
-        self.valueType = None
         if box is not None:
             self.boxes = [box]
 

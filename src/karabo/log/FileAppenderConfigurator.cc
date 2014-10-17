@@ -10,8 +10,8 @@
  */
 
 #include "FileAppenderConfigurator.hh"
-#include "log4cpp/FileAppender.hh"
-#include "log4cpp/Priority.hh"
+#include "krb_log4cpp/FileAppender.hh"
+#include "krb_log4cpp/Priority.hh"
 #include <karabo/util/Hash.hh>
 #include <karabo/util/PathElement.hh>
 #include <karabo/util/SimpleElement.hh>
@@ -19,7 +19,7 @@
 #include <iostream>
 
 using namespace karabo::util;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 
 
 namespace karabo {
@@ -81,8 +81,8 @@ namespace karabo {
         }
 
 
-        log4cpp::Appender* FileAppenderConfigurator::create() {
-            return new log4cpp::FileAppender(getName(), getFilename().string(), isAppendMode(), getAccessMode());
+        krb_log4cpp::Appender* FileAppenderConfigurator::create() {
+            return new krb_log4cpp::FileAppender(getName(), getFilename().string(), isAppendMode(), getAccessMode());
         }
 
 

@@ -18,14 +18,14 @@ namespace karabo {
 
         enum TIME_UNITS {
 
-            // Fractions
-            ATTOSEC = 1ULL, // Atto-second is the smallest time unit = highest resolution for time values.
-            FEMTOSEC = 1000ULL * ATTOSEC,
-            PICOSEC = 1000ULL * FEMTOSEC,
-            NANOSEC = 1000ULL * PICOSEC,
-            MICROSEC = 1000ULL * NANOSEC,
-            MILLISEC = 1000ULL * MICROSEC,
-            ONESECOND = 1000ULL * MILLISEC,
+            // Fractions == the number of zeros after 1
+            ATTOSEC = 0, // Atto-second is the smallest time unit = highest resolution for time values.
+            FEMTOSEC = 3 + ATTOSEC,
+            PICOSEC = 3 + FEMTOSEC,
+            NANOSEC = 3 + PICOSEC,
+            MICROSEC = 3 + NANOSEC,
+            MILLISEC = 3 + MICROSEC,
+            ONESECOND = 3 + MILLISEC,
             NOFRACTION = -1,
 
             SECOND = 1ULL, // Base unit
@@ -256,10 +256,10 @@ namespace karabo {
         inline TimeDuration& TimeDuration::operator +=(const TimeDuration& other) {
             m_Seconds += other.m_Seconds;
             m_Fractions += other.m_Fractions;
-
-            if (m_Fractions > ATTOSEC) {
+            unsigned long long onesec = 1000000000000000000ULL; // one seconds in attoseconds
+            if (m_Fractions > onesec) {
                 ++m_Seconds;
-                m_Fractions -= ATTOSEC;
+                m_Fractions -= onesec;
             }
 
             //m_Seconds += m_Fractions / ATTOSEC;
@@ -270,9 +270,9 @@ namespace karabo {
 
         inline TimeDuration& TimeDuration::operator -=(const TimeDuration& other) {
             m_Seconds -= other.m_Seconds;
-
+            unsigned long long onesec = 1000000000000000000ULL; // one seconds in attoseconds
             if (m_Fractions < other.m_Fractions) {
-                m_Fractions = (ATTOSEC + m_Fractions) - other.m_Fractions;
+                m_Fractions = (onesec - other.m_Fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= other.m_Fractions;

@@ -59,13 +59,10 @@ class EditableSpinBox(EditableWidget, DisplayWidget):
         self.widget.setRange(max(-0x80000000, rmin), min(0x7fffffff, rmax))
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = 0
         
         with SignalBlocker(self.widget):
             self.widget.setValue(value)
-        
-        if forceRefresh:
-            # Needs to be called to update possible apply buttons
-            self.onEditingFinished(value)
+

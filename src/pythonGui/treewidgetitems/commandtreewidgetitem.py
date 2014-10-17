@@ -11,7 +11,7 @@
 __all__ = ["CommandTreeWidgetItem"]
 
 
-from basetreewidgetitem import BaseTreeWidgetItem
+from .basetreewidgetitem import BaseTreeWidgetItem
 from components import DisplayComponent
 import icons
 import manager
@@ -39,7 +39,7 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.__pbCommand.setEnabled(False)
         self.treeWidget().setItemWidget(self, 0, self.__pbCommand)
         self.__pbCommand.clicked.connect(self.onCommandClicked)
-        self.box.configuration.value.state. \
+        self.box.configuration.boxvalue.state. \
             signalUpdateComponent.connect(self.onStateChanged)
 
 
@@ -69,4 +69,4 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 
 
     def onCommandClicked(self):
-        Network().onExecute(self.box)
+        self.box.execute()

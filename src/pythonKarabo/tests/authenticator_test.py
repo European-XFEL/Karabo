@@ -32,12 +32,7 @@ class  Authenticator_TestCase(unittest.TestCase):
         # Important Historical information...
         # (When calling this API from the GUI code it was necessary to encode their parameters)
         #
-        username = username.encode("utf8")
-        password = password.encode("utf8")
-        provider = provider.encode("ascii")
-        brokerHostname = brokerHostname.encode("ascii")
         brokerPortNumber = int(brokerPortNumber)
-        brokerTopic = brokerTopic.encode("utf8")
         #
         # END
         #

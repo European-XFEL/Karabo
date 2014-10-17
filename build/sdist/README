@@ -1,0 +1,74 @@
+To install karaboGui run:
+  python setup.py install
+or
+  python setup.py install --user
+if you want to put all modules included in KaraboGui in user space.
+
+After succesfull installation, run karaboGui python script in scripts folder.
+
+You can add option "--record files.txt", like:
+  python setup.py install --user --record files.txt
+then in the file files.txt you can find full list of installed files.
+Afterwards, you can uninstall KaraboGui with:
+  cat files.txt | xargs rm -rf
+
+
+Notes regarding installation.
+
+You need python installed in your system. Preferably pre-packaged "scientific" python, containing numpy, scipy, matplotlib, ipython, PyQt4, Cython, pyqwt, guidata, guiqwt, etc.
+
+I. Linux
+Use the full karaboFramework installer instead. Otherwise install OS packages (rpms or debs) - not tested.
+
+II. Windows
+You need "Python(x,y)" installed on the Windows machine (https://code.google.com/p/pythonxy/wiki/Downloads)
+You can also use WinPython (http://winpython.sourceforge.net)
+Recommended way is to use dedicated windows installer for KaraboGui
+
+III. MacOS
+1. Install Xcode
+2. Install the Command Line Tools of Xcode. For that open Xcode, and navigate to Xcode->Preferences->Downloads->Components and click "Install".
+3. Put in .profile proper locale (otherwise you will get error from guidata, or karabo gui)
+    export LC_ALL=en_US.UTF-8
+    export LANG=en_US.UTF-8
+4. Download and install XQuartz (.dmg) from this location: http://xquartz.macosforge.org/landing/
+5. Customize xterm so that it respects .profile:
+   Open X11 and select Customize... from the Applications menu, double-click the menu item Terminal and change: “xterm” to “xterm -ls” (this means login shell)
+6. Install MacPorts (install .dmg from www.macports.org)
+7. Install relevant packages using MacPorts. Go to a terminal and type:
+
+sudo port install gcc48
+sudo port select --set gcc mp-gcc48
+sudo port install sqlite3 qt4-mac-sqlite3-plugin python27
+sudo port select --set python python27
+sudo port install py27-pyqt4
+sudo port install py27-numpy py27-scipy
+sudo port install py27-matplotlib +qt4
+sudo port install py27-pyqwt
+sudo port install py27-cython
+sudo port select --set cython cython27
+sudo port install py27-ipython -scientific +notebook +pyqt4
+sudo port select --set sphinx py27-sphinx
+sudo port select --set ipython ipython27
+sudo port select --set nosetests nosetests27
+
+8. Install guidata and guiqwt
+
+cd ~/Downloads
+wget http://guidata.googlecode.com/files/guidata-1.6.1.zip
+unzip guidata-1.6.1.zip
+cd guidata-1.6.1
+python setup.py install --user
+
+cd ~/Downloads
+wget http://guiqwt.googlecode.com/files/guiqwt-2.3.1.zip
+unzip guiqwt-2.3.1.zip 
+cd guiqwt-2.3.1
+python setup.py install --user
+
+
+
+Remark: suds is included in KaraboGui package
+
+None of the known python packages (anaconda, canopy express, etc) contains pyqwt, guidata, guiqwt, so macport is recommended. 
+

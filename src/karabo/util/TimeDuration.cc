@@ -57,9 +57,10 @@ namespace karabo {
         TimeDuration& TimeDuration::add(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds += seconds;
             m_Fractions += fractions;
-            if (m_Fractions > ATTOSEC) {
+            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
+            if (m_Fractions > onesec) {
                 ++m_Seconds;
-                m_Fractions -= ATTOSEC;
+                m_Fractions -= onesec;
             }
             return *this;
         }
@@ -68,9 +69,10 @@ namespace karabo {
         TimeDuration & TimeDuration::add(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds += days * DAY + hours * HOUR + minutes * MINUTE + seconds;
             m_Fractions += fractions;
-            if (m_Fractions > ATTOSEC) {
+            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
+            if (m_Fractions > onesec) {
                 ++m_Seconds;
-                m_Fractions -= ATTOSEC;
+                m_Fractions -= onesec;
             }
             return *this;
         }
@@ -78,8 +80,9 @@ namespace karabo {
 
         TimeDuration& TimeDuration::sub(const TimeValue seconds, const TimeValue fractions) {
             m_Seconds -= seconds;
+            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
             if (m_Fractions < fractions) {
-                m_Fractions = (ATTOSEC + m_Fractions) - fractions;
+                m_Fractions = (onesec - fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= fractions;
@@ -90,8 +93,9 @@ namespace karabo {
 
         TimeDuration & TimeDuration::sub(const int days, const int hours, const int minutes, const TimeValue seconds, const TimeValue fractions) {
             m_Seconds -= days * DAY + hours * HOUR + minutes * MINUTE + seconds;
+            unsigned long long onesec = 1000000000000000000ULL; // with 18 zeros
             if (m_Fractions < fractions) {
-                m_Fractions = (ATTOSEC + m_Fractions) - fractions;
+                m_Fractions = (onesec - fractions) + m_Fractions;
                 --m_Seconds;
             } else {
                 m_Fractions -= fractions;
@@ -142,7 +146,10 @@ namespace karabo {
 
 
         TimeValue TimeDuration::getFractions(const TIME_UNITS unit) const {
-            return m_Fractions / unit;
+            int zeros = int(unit);
+            unsigned long long multiplier = 1ULL;
+            while(zeros-->0) multiplier *= 10ULL;
+            return m_Fractions / multiplier;  // unsigned long long dividing
         }
 
 

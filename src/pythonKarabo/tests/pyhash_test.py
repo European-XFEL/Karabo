@@ -121,7 +121,7 @@ class Hash_TestCase(unittest.TestCase):
         h = Hash()
         h["bool"] = True
         h["int"] = 4
-        h["string"] = u"bla"
+        h["string"] = "bla"
         h["chars"] = b"bla"
         h["vector"] = numpy.arange(7)
         h["emptyvector"] = numpy.array([])
@@ -131,18 +131,18 @@ class Hash_TestCase(unittest.TestCase):
         h["int", "float"] = 7.3
         h["hash", "int"] = 3
         h["string", "chars"] = b"blub"
-        h["chars", "string"] = u"laber"
+        h["chars", "string"] = "laber"
         return h
 
 
     def check_hash(self, h):
-        self.assertEqual(h.keys(), ["bool", "int", "string", "chars",
+        self.assertEqual(list(h.keys()), ["bool", "int", "string", "chars",
                                     "vector", "emptyvector", "hash"])
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
-        self.assertTrue(isinstance(h["string"], unicode))
-        self.assertEqual(h["chars"], "bla")
+        self.assertTrue(isinstance(h["string"], str))
+        self.assertEqual(h["chars"], b"bla")
         self.assertTrue(isinstance(h["chars"], bytes))
         self.assertEqual(h["hash.a"], 3)
         self.assertEqual(h["hash.b"], 7.1)
@@ -152,10 +152,10 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(h["bool", "bool"] is False)
         self.assertEqual(h["int", "float"], 7.3)
         self.assertEqual(h["hash", "int"], 3)
-        self.assertEqual(h["string", "chars"], "blub")
+        self.assertEqual(h["string", "chars"], b"blub")
         self.assertTrue(isinstance(h["string", "chars"], bytes))
         self.assertEqual(h["chars", "string"], "laber")
-        self.assertTrue(isinstance(h["chars", "string"], unicode))
+        self.assertTrue(isinstance(h["chars", "string"], str))
 
 
     def test_xml(self):

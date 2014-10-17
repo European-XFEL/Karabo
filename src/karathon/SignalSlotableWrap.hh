@@ -33,8 +33,6 @@ namespace karathon {
                            const bool autostartEventLoop = true,
                            int heartbeatInterval = 10) : SignalSlotable() {
 
-            if (!PyEval_ThreadsInitialized()) PyEval_InitThreads();
-
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             this->init(instanceId, connection);
 
@@ -96,7 +94,7 @@ namespace karathon {
 
         void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = LOCAL) {
             
-            std::string functionName = bp::extract<std::string>((slotFunction.attr("func_name")));
+            std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
             SlotInstances* slotInstances;
             if (slotType == LOCAL) slotInstances = &(m_localSlotInstances);
             else slotInstances = &(m_globalSlotInstances);

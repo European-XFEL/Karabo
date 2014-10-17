@@ -21,7 +21,7 @@ namespace karathon {
         if (sizeof (unsigned long) == sizeof (unsigned int)) { // 32 bit CPU
             _typeInfoMap = boost::assign::map_list_of
                     _KARABO_HELPER_MACRO(NPY_BOOL, BOOL)
-                    _KARABO_HELPER_MACRO(NPY_UBYTE, CHAR)
+                    _KARABO_HELPER_MACRO(NPY_BYTE, CHAR)
                     _KARABO_HELPER_MACRO(NPY_UBYTE, UINT8)
                     _KARABO_HELPER_MACRO(NPY_SHORT, INT16)
                     _KARABO_HELPER_MACRO(NPY_USHORT, UINT16)
@@ -37,7 +37,7 @@ namespace karathon {
         } else { // 64 bit CPU
             _typeInfoMap = boost::assign::map_list_of
                     _KARABO_HELPER_MACRO(NPY_BOOL, BOOL)
-                    _KARABO_HELPER_MACRO(NPY_UBYTE, CHAR)
+                    _KARABO_HELPER_MACRO(NPY_BYTE, CHAR)
                     _KARABO_HELPER_MACRO(NPY_UBYTE, UINT8)
                     _KARABO_HELPER_MACRO(NPY_SHORT, INT16)
                     _KARABO_HELPER_MACRO(NPY_USHORT, UINT16)

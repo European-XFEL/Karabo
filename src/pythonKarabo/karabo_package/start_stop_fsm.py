@@ -134,5 +134,5 @@ class StartStopFsm(base.BaseFsm):
         '''Actions executed at 'stop' event'''
         
     def resetAction(self):
-        print "Reset action executed"
+        print("Reset action executed")
         

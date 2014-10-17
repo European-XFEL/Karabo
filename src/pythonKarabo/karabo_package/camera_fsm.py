@@ -147,5 +147,5 @@ class CameraFsm(base.BaseFsm):
         '''Actions executed at 'trigger' event'''
 
     def resetAction(self):
-        print "Reset action executed"
+        print("Reset action executed")
         

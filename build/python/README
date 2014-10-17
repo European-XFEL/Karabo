@@ -2,6 +2,8 @@ To create the windows installer, type in the console:
 
 "python setup.py bdist_wininst"
 
+or better run the script ./build.sh
+
 A folder called "dist" is created which contains the executable for Windows.
 We assume that "Python(x,y)" is already installed on the Windows machine.
 

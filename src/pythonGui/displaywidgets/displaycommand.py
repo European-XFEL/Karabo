@@ -21,7 +21,6 @@
 __all__ = ["DisplayCommand"]
 
 
-from network import Network
 from widget import DisplayWidget
 
 from PyQt4.QtGui import QToolButton, QAction
@@ -42,7 +41,7 @@ class DisplayCommand(DisplayWidget):
         action = QAction("NO TEXT", self.widget)
         action.box = box
         self.widget.addAction(action)
-        box.configuration.value.state.signalUpdateComponent.connect(
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.update)
         self.update()
         return True
@@ -64,9 +63,10 @@ class DisplayCommand(DisplayWidget):
 
     def update(self):
         for a in self.widget.actions():
-            a.setEnabled(a.box.descriptor is not None and
-                         a.box.configuration.value.state.value in
-                         a.box.descriptor.allowedStates)
+            descr = a.box.descriptor
+            if descr is None or descr.allowedStates is None:
+                continue
+            a.setEnabled(a.box.configuration.value.state in descr.allowedStates)
         for a in self.widget.actions():
             if a.isEnabled():
                 self.widget.setDefaultAction(a)

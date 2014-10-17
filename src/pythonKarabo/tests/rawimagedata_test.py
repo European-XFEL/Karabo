@@ -26,19 +26,19 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
             self.assertFalse(rdata.isBigEndian())
             dims = rdata.getDimensions()
-            self.assertEqual(dims, [1024L, 1024L])
+            self.assertEqual(dims, [1024, 1024])
             roiOffsets = rdata.getROIOffsets()
-            self.assertEqual(roiOffsets, [0L, 0L]) # default setting
+            self.assertEqual(roiOffsets, [0, 0]) # default setting
             
-            rdata.setROIOffsets([1L, 2L])
+            rdata.setROIOffsets([1, 2])
             roiOffsets = rdata.getROIOffsets()
-            self.assertEqual(roiOffsets, [1L, 2L])
+            self.assertEqual(roiOffsets, [1, 2])
             
             h = rdata.hash()
             self.assertFalse(h["isBigEndian"])   # default setting     
             self.assertEqual(h["encoding"], 3)
             self.assertEqual(h["channelSpace"], 11)
-            self.assertEqual(h["dims"], [1024L, 1024L])
+            self.assertEqual(h["dims"], [1024, 1024])
             rdata.setIsBigEndian(True)
             self.assertTrue(h["isBigEndian"])
         except Exception as e:

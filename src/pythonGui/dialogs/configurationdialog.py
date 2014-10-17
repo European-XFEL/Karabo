@@ -11,7 +11,7 @@ configurations."""
 __all__ = ["SelectProjectDialog", "SelectProjectConfigurationDialog"]
 
 
-from project import ProjectConfiguration
+from karabo.project import ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFormLayout, QLineEdit,
@@ -121,7 +121,7 @@ class SelectProjectConfigurationDialog(QDialog):
             self.projConfWidget.addTopLevelItem(item)
             item.setExpanded(True)
             
-            for deviceId, configList in p.configurations.iteritems():
+            for deviceId, configList in p.configurations.items():
                 deviceItem = QTreeWidgetItem([deviceId])
                 item.addChild(deviceItem)
                 deviceItem.setExpanded(True)
