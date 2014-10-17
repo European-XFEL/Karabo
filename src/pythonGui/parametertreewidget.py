@@ -16,7 +16,7 @@ import globals
 from network import Network
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
-from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
@@ -193,7 +193,8 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _r_globalAccessLevelChanged(self, item):
-        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL:
+        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL or \
+           (self.conf.type == "deviceGroup" and item.editableComponent is None):
             item.setHidden(True)
         else:
             item.setHidden(False)
