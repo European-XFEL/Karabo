@@ -10,7 +10,6 @@
 This module contains a class which represents project related datastructures.
 """
 
-__all__ = ["Project", "ProjectConfiguration"]
 
 __all__ = ["Project", "ProjectConfiguration", "BaseDevice", "BaseDeviceGroup"]
 
