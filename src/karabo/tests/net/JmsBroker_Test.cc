@@ -66,7 +66,9 @@ void JmsBroker_Test::testMethod() {
 
     BrokerIOService::Pointer ioService = connection->getIOService();
 
-    BrokerChannel::Pointer channel = connection->start();
+    connection->start();
+    
+    BrokerChannel::Pointer channel = connection->createChannel();
 
     channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
@@ -97,7 +99,9 @@ void JmsBroker_Test::testBinaryTransport() {
 
     BrokerIOService::Pointer ioService = connection->getIOService();
 
-    BrokerChannel::Pointer channel = connection->start();
+    connection->start();
+    
+    BrokerChannel::Pointer channel = connection->createChannel();
 
     channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 

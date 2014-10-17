@@ -43,7 +43,7 @@ namespace karabo {
 
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
+            void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
             void emit0() {
                 send(karabo::util::Hash());
