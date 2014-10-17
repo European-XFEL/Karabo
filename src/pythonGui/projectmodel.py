@@ -632,11 +632,11 @@ class ProjectModel(QStandardItemModel):
                         conf = instance
                         
                         # Check descriptor only with first selection
-                        conf.checkDescriptor()
+                        conf.checkDeviceSchema()
                 else:
                     conf = device
                     # Check descriptor only with first selection
-                    conf.checkDescriptor()
+                    conf.checkClassSchema()
                 
                 type = conf.type
             else:
