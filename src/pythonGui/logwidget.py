@@ -764,7 +764,7 @@ class LogThread(QThread):
         queryText = "SELECT count(1) FROM tLog;"
         query = QSqlQuery(queryText, Manager().sqlDatabase)
         nbRows = 0
-        while next(query):
+        while query.next():
             nbRows = query.value(0)
 
         # Remove rows if limit is reached
