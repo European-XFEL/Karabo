@@ -54,7 +54,6 @@ namespace karabo {
          *
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
-            
             friend class Requestor;
 
         protected:
@@ -82,8 +81,8 @@ namespace karabo {
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
-            
-            
+
+
 
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
@@ -94,28 +93,29 @@ namespace karabo {
             SlotInstances m_globalSlotInstances;
             // TODO Split into two mutexes
             mutable boost::mutex m_signalSlotInstancesMutex;
-            
+
             karabo::net::BrokerIOService::Pointer m_ioService;
             karabo::net::BrokerConnection::Pointer m_connection;
             karabo::net::BrokerChannel::Pointer m_producerChannel;
             karabo::net::BrokerChannel::Pointer m_consumerChannel;
+            karabo::net::BrokerChannel::Pointer m_heartbeatChannel;
 
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
-            
+
             typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
             std::queue< Event > m_eventQueue;
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
             boost::thread_group m_eventLoopThreads;
-            
+
             bool m_isPingable;
 
             // Reply/Request related
             Replies m_replies;
             boost::mutex m_replyMutex;
-            
-            
+
+
             typedef std::map<std::string, Event > ReceivedReplies;
             ReceivedReplies m_receivedReplies;
             mutable boost::mutex m_receivedRepliesMutex;
@@ -129,7 +129,7 @@ namespace karabo {
             int m_heartbeatInterval;
             static std::set<int> m_reconnectIntervals;
 
-            
+
             mutable boost::mutex m_heartbeatMutex;
 
             boost::thread m_trackingThread;
@@ -214,7 +214,7 @@ namespace karabo {
             #define KARABO_GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
             #define KARABO_GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
 
-            
+
             /**
              * This constructor does nothing. Call init() afterwards for setting up.
              */
@@ -295,7 +295,7 @@ namespace karabo {
 
             void updateInstanceInfo(const karabo::util::Hash& update);
 
-            const karabo::util::Hash& getInstanceInfo() const;           
+            const karabo::util::Hash& getInstanceInfo() const;
 
             void trackExistenceOfInstance(const std::string& instanceId);
 
@@ -678,6 +678,14 @@ namespace karabo {
                 storeSignal(funcName, s, f);
             }
 
+            template <class A1, class A2, class A3>
+            void registerHeartbeatSignal(const std::string& funcName) {
+                if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatChannel, m_instanceId, funcName));
+                boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
+                storeSignal(funcName, s, f);
+            }
+
             SlotInstances* getSlotInstancesPtr(const SlotType& slotType) {
                 if (slotType == LOCAL) return &(m_localSlotInstances);
                 else return &(m_globalSlotInstances);
@@ -696,7 +704,7 @@ namespace karabo {
                     // Book-keep slot
                     (*slotInstances)[funcName] = s;
                 }
-            }
+            }                        
 
             template <class A1>
             void registerSlot(const boost::function<void (const A1&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
@@ -713,15 +721,15 @@ namespace karabo {
             }
 
             template <class A1, class A2>
-            void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {               
+            void registerSlot(const boost::function<void (const A1&, const A2&) >& slot, const std::string& funcName, const SlotType& slotType = LOCAL) {
                 SlotInstances* slotInstances = getSlotInstancesPtr(slotType);
                 SlotInstances::const_iterator it = slotInstances->find(funcName);
                 if (it != slotInstances->end()) {
                     (boost::static_pointer_cast<karabo::xms::Slot2<A1, A2> >(it->second))->registerSlotFunction(slot);
-                } else {                   
+                } else {
                     boost::shared_ptr<karabo::xms::Slot2<A1, A2> > s(new karabo::xms::Slot2<A1, A2 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;                   
+                    (*slotInstances)[funcName] = s;
                 }
             }
 
@@ -734,7 +742,7 @@ namespace karabo {
                 } else {
                     boost::shared_ptr<karabo::xms::Slot3<A1, A2, A3> > s(new karabo::xms::Slot3<A1, A2, A3 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;   
+                    (*slotInstances)[funcName] = s;
 
                 }
             }
@@ -748,7 +756,7 @@ namespace karabo {
                 } else {
                     boost::shared_ptr<karabo::xms::Slot4<A1, A2, A3, A4> > s(new karabo::xms::Slot4<A1, A2, A3, A4 > (funcName));
                     s->registerSlotFunction(slot);
-                    (*slotInstances)[funcName] = s;   
+                    (*slotInstances)[funcName] = s;
                 }
             }
 
@@ -835,9 +843,9 @@ namespace karabo {
                 std::vector<std::string> tokens;
                 boost::split(tokens, hostname, boost::is_any_of("."));
                 return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
-            }           
-            
-            
+            }
+
+
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -851,7 +859,7 @@ namespace karabo {
             void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const boost::shared_ptr<karabo::util::Hash>& body, const boost::shared_ptr<karabo::util::Hash>& header);
 
             bool eventQueueIsEmpty();
-            
+
             bool tryToPopEvent(Event& event);
 
             void processEvents();
@@ -864,6 +872,7 @@ namespace karabo {
             std::string fetchInstanceId(const std::string& signalOrSlotId) const;
 
             std::pair<std::string, std::string> splitIntoInstanceIdAndFunctionName(const std::string& signalOrSlotId, const char sep = ':') const;
+
             std::string prepareInstanceId(const SlotType& slotType) const {
                 if (slotType == LOCAL) return m_instanceId;
                 else return "*";
@@ -892,7 +901,7 @@ namespace karabo {
             }
 
         private: // Functions
-            
+
             void _runEventLoop();
 
             void sanifyInstanceId(std::string& instanceId) const;
@@ -973,23 +982,23 @@ namespace karabo {
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasLocalSlot(const std::string& slotFunction) const;
-            
+
             // Thread-safe, locks m_signalSlotInstancesMutex
             SlotInstancePointer getLocalSlot(const std::string& slotFunction) const;
-            
+
             // Thread-safe, locks m_signalSlotInstancesMutex
             SlotInstancePointer getGlobalSlot(const std::string& slotFunction) const;
-            
+
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool hasSignal(const std::string& signalFunction) const;
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             bool tryToUnregisterSlot(const std::string& signalFunction, const std::string& slotInstanceId, const std::string& slotFunction);
-            
+
             //bool hasGlobal
-            
+
             bool hasReceivedReply(const std::string& replyFromValue) const;
-            
+
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash& header, karabo::util::Hash& body);
 
         };
