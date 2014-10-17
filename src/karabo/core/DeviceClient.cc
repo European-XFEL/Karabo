@@ -26,7 +26,8 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true) {
+        , m_getOlder(true)
+        , m_isSetupSlots(true) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             karabo::xms::SignalSlotable::Pointer p(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -45,17 +46,18 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
-        , m_getOlder(true) {
+        , m_getOlder(true)
+        , m_isSetupSlots(false) {
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
-
-            this->setupSlots();
         }
 
 #define KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(...) if (m_signalSlotable.expired()) { \
                     KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed)."; \
                     return __VA_ARGS__; }
+
+#define KARABO_SETUP_SLOTS  if (!m_isSetupSlots) { m_isSetupSlots = true; this->setupSlots(); }
 
         void DeviceClient::setupSlots() {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
@@ -132,7 +134,7 @@ namespace karabo {
         }
 
         void DeviceClient::slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew was called";
+            KARABO_LOG_FRAMEWORK_DEBUG << "slotInstanceNew of \"" << m_signalSlotable.lock()->getInstanceId() << "\" was called for \"" << instanceId << "\"";
 
             string path(prepareTopologyPath(instanceId, instanceInfo));
 
@@ -157,7 +159,7 @@ namespace karabo {
         }
 
         void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId, const Hash& instanceInfo) {
-            KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
+            KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called for \"" << instanceId << "\"";
 
             try {
                 string path = prepareTopologyPath(instanceId, instanceInfo);
@@ -307,6 +309,7 @@ namespace karabo {
                 this->cacheAvailableInstances();
                 m_topologyInitialized = true;
             }
+            KARABO_SETUP_SLOTS
         }
 
         Hash DeviceClient::getSystemInformation() {
@@ -789,14 +792,17 @@ namespace karabo {
         }
 
         void DeviceClient::registerInstanceNewMonitor(const InstanceNewHandler& callBackFunction) {
+            KARABO_SETUP_SLOTS
             m_instanceNewHandler = callBackFunction;
         }
 
         void DeviceClient::registerInstanceUpdatedMonitor(const InstanceUpdatedHandler& callBackFunction) {
+            KARABO_SETUP_SLOTS
             m_instanceUpdatedHandler = callBackFunction;
         }
 
         void DeviceClient::registerInstanceGoneMonitor(const InstanceGoneHandler& callBackFunction) {
+            KARABO_SETUP_SLOTS
             m_instanceGoneHandler = callBackFunction;
         }
 
