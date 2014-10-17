@@ -9,7 +9,7 @@
    and is created by the factory class DisplayWidget.
 """
 
-from __future__ import absolute_import
+
 
 __all__ = ["DisplayDirectory"]
 

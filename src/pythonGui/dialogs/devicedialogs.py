@@ -13,7 +13,7 @@ __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
 import globals
 
-from duplicatedialog import DuplicateWidget
+from .duplicatedialog import DuplicateWidget
 
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
@@ -285,7 +285,7 @@ class DeviceDefinitionWidget(QWidget):
         self.cbPlugin.clear()
         self.cbServer.clear()
 
-        for serverId in serverTopology.keys():
+        for serverId in list(serverTopology.keys()):
             visibility = serverTopology.getAttribute(serverId, "visibility")
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
                 continue

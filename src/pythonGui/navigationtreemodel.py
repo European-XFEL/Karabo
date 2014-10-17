@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 1, 2013
@@ -222,7 +222,7 @@ class NavigationTreeModel(QAbstractItemModel):
         # Check servers
         if config.has(serverKey):
             serverConfig = config.get(serverKey)
-            for serverId in serverConfig.keys():
+            for serverId in list(serverConfig.keys()):
                 # Check, if serverId is already in central hash
                 index = self.findIndex(serverId)
                 if index is None:
@@ -240,7 +240,7 @@ class NavigationTreeModel(QAbstractItemModel):
         deviceKey = "device"
         if config.has(deviceKey):
             deviceConfig = config.get(deviceKey)
-            for deviceId in deviceConfig.keys():
+            for deviceId in list(deviceConfig.keys()):
                 # Check, if deviceId is already in central hash
                 index = self.findIndex(deviceId)
                 if index is None:
@@ -328,7 +328,7 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def _rFindIndex(self, node, path):
-        for i in xrange(node.childCount()):
+        for i in range(node.childCount()):
             childNode = node.childNode(i)
             resultNode = self._rFindIndex(childNode, path)
             if resultNode:

@@ -191,7 +191,7 @@ class Item(QWidget, Loadable):
             self.descriptor = descr
             
             # Check for all in/output channels
-            for k in descr.dict.keys():
+            for k in list(descr.dict.keys()):
                 box = getattr(device.boxvalue, k, None)
                 if box is None:
                     continue

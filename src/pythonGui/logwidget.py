@@ -25,13 +25,13 @@ from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QLineEdit, QPushButton, QTableView, QToolButton,
                          QVBoxLayout, QWidget)
 
-from Queue import Queue
+from queue import Queue
 from time import sleep
 
 try:
     from PyQt4.QtSql import QSqlTableModel, QSqlQuery, QSqlQueryModel
 except:
-    print "*ERROR* The PyQt4 sql module is not installed"
+    print("*ERROR* The PyQt4 sql module is not installed")
 
 
 # Define date time format
@@ -492,7 +492,7 @@ class LogWidget(QWidget):
                            FROM tLog ORDER BY dateTime DESC;"""
             model.setQuery(queryText, Manager().sqlDatabase)
 
-            for i in xrange(model.rowCount()):
+            for i in range(model.rowCount()):
                 id = model.record(i).value("id")
                 dateTime = model.record(i).value("dateTime")
                 messageType = model.record(i).value("messageType")
@@ -764,7 +764,7 @@ class LogThread(QThread):
         queryText = "SELECT count(1) FROM tLog;"
         query = QSqlQuery(queryText, Manager().sqlDatabase)
         nbRows = 0
-        while query.next():
+        while next(query):
             nbRows = query.value(0)
 
         # Remove rows if limit is reached
@@ -807,7 +807,7 @@ class LogThread(QThread):
 
 
     def onDeleteLater(self):
-        print "onDeleteLater"
+        print("onDeleteLater")
         self.isFinished = True
         self.wait()
 
