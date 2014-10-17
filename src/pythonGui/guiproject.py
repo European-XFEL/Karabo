@@ -65,7 +65,7 @@ class BaseConfiguration(Configuration):
             self.fromHash(self._initConfig)
 
 
-    def checkDescriptor(self):
+    def checkClassSchema(self):
         if self.descriptorRequested is True:
             return
         
@@ -102,6 +102,14 @@ class Device(BaseDevice, BaseConfiguration):
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
+
+
+    #def fromHash(self, configuration):
+    #    print ""
+    #    print "ProjectDevice.fromHash", configuration
+        #if self.deviceGroup is not None:
+        #    self.signalDeviceConfiguration.emit(configuration)
+    #    BaseConfiguration.fromHash(self, configuration)
 
 
     def fromXml(self, xmlString):
@@ -215,13 +223,40 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
                 continue
 
             for device in self.devices:
-                deviceBox = device.getBox(childBox.path)
-                if deviceBox is None:
-                    continue
-                childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
+                if self.isOnline():
+                    # Connect online devices
+                    conf = manager.getDevice(device.id)
+                    deviceBox = conf.getBox(childBox.path)
+                    if deviceBox is None:
+                        continue
+                    childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
+                else:
+                    # Connect project devices
+                    deviceBox = device.getBox(childBox.path)
+                    if deviceBox is None:
+                        continue
+                    childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
             
             if isinstance(v, Schema):
                 self._connectDevices(v, childBox.boxvalue)
+
+
+    def checkDeviceSchema(self):
+        if self.descriptorRequested is True:
+            return
+        
+        # Get device configurations
+        for device in self.devices:
+            conf = manager.getDevice(device.id)
+            
+            conf.signalNewDescriptor.connect(self.onNewDescriptor)
+            if conf.descriptor is not None:
+                self.onNewDescriptor(conf)
+            # Do this only for first device - it is expected that the deviceSchema
+            # is equal for all group devices
+            break
+
+        self.descriptorRequested = True
 
 
     def onNewDescriptor(self, conf):
@@ -237,7 +272,10 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
     def addVisible(self):
         for device in self.devices:
+            oldStatus = device.status
+            device.status = "schema" # Hack to send signal to network
             device.addVisible()
+            device.status = oldStatus
 
 
     def removeVisible(self):

@@ -16,7 +16,7 @@ import globals
 from network import Network
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
-from PyQt4.QtCore import pyqtSignal, QByteArray, QMimeData, QRect, Qt
+from PyQt4.QtCore import pyqtSignal, QMimeData, QRect, Qt
 from PyQt4.QtGui import QAbstractItemView, QCursor, QMenu, QTreeWidget
 
 
