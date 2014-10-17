@@ -72,7 +72,10 @@ class ProjectModel(QStandardItemModel):
             config = conf.toHash()
         else:
             conf = object
-            config = object.toHash()
+            if conf.descriptor is not None:
+                config = conf.toHash()
+            else:
+                config = conf.initConfig
 
         return dict(conf=conf,
                     serverId=object.serverId,
