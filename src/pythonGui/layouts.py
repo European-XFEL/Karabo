@@ -105,7 +105,7 @@ class Layout(Loadable):
         d.update(self.save())
 
         e = ElementTree.Element(ns_svg + "g",
-                                {k: unicode(v) for k, v in d.iteritems()})
+                                {k: str(v) for k, v in d.items()})
         if selected:
             self.add_children(e, True)
         else:
@@ -400,7 +400,7 @@ class GridLayout(Layout, QGridLayout):
             c = self[i].element()
             for n, v in zip(("row", "col", "rowspan", "colspan"),
                             self.getItemPosition(i)):
-                c.set(ns_karabo + n, unicode(v))
+                c.set(ns_karabo + n, str(v))
             e.append(c)
 
 
@@ -440,7 +440,7 @@ class ProxyWidget(QWidget):
         box.configuration.statusChanged.connect(self.showStatus)
         self.showStatus(None, box.configuration.status, box.configuration.error)
 
-        for text, factory in component.factories.iteritems():
+        for text, factory in component.factories.items():
             aliases = factory.getAliasesViaCategory(
                 component.widgetCategory)
             if component.boxes[0].path == ('state',):
@@ -501,7 +501,7 @@ class ProxyWidget(QWidget):
         if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
             raise RuntimeError("lost geometry data")
         ret = ElementTree.Element(ns_svg + "rect",
-                                  {k: unicode(v) for k, v in d.iteritems()})
+                                  {k: str(v) for k, v in d.items()})
         if self.component is not None:
             self.component.save(ret)
         else:

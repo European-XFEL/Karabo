@@ -414,7 +414,7 @@ class EditableApplyLaterComponent(BaseComponent):
     def onApplyClicked(self):
         sendToNetwork = True
         for b in self.boxes:
-            print "++++ onApplyClicked", b, self.widgetFactory.value
+            print("++++ onApplyClicked", b, self.widgetFactory.value)
             b.signalUserChanged.emit(b, self.widgetFactory.value)
             # If this box belongs to a deviceGroup configuration, no need to
             # broadcast to Network
@@ -467,7 +467,7 @@ class EditableApplyLaterComponent(BaseComponent):
                 isEqualEditable = False
             else:
                 isEqualEditable = True
-                for i in xrange(len(value)):
+                for i in range(len(value)):
                     if value[i] != self.widgetFactory.value[i]:
                         isEqualEditable = False
                         break

@@ -3,7 +3,7 @@
 # Created on March 19, 2014
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
-from __future__ import absolute_import, division
+
 __all__ = ["DisplayImageStack"]
 
 from widget import DisplayWidget
@@ -420,7 +420,7 @@ class ImageStack(DisplayWidget):
         self.lineColors = copy.copy(COLORS)
         #delete white
         del self.lineColors["w"]
-        self.lineColors = self.lineColors.values()
+        self.lineColors = list(self.lineColors.values())
 
 
         #selection and column tool bar

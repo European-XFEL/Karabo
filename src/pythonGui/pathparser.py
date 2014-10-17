@@ -1,7 +1,7 @@
 from PyQt4.QtCore import QPointF
 from PyQt4.QtGui import QPainterPath
 
-from itertools import izip
+
 import re
 
 
@@ -9,7 +9,7 @@ class Parser(object):
     re = re.compile("([MmZzLlHhVvCcSsQqTtAa])|"
         "(-?(([0-9]*[.][0-9]*)|[0-9]+)([eE][+-]?[0-9]*)?)")
 
-    def next(self):
+    def __next__(self):
         if self.iter is None:
             self.token = ''
             raise StopIteration
@@ -27,7 +27,7 @@ class Parser(object):
 
     def __iter__(self):
         while self.token is None:
-            yield self.next()
+            yield next(self)
 
 
     def parse(self):
@@ -35,9 +35,9 @@ class Parser(object):
         self.pos = QPointF(0, 0)
         try:
             self.number = self.token = None
-            self.next()
+            next(self)
             while True:
-                token = self.next()
+                token = next(self)
                 getattr(self, token.lower())(token.islower())
                 self.lasttoken = token
         except StopIteration:
@@ -45,7 +45,7 @@ class Parser(object):
 
 
     def points(self, relative):
-        for x, y in izip(self, self):
+        for x, y in zip(self, self):
             if relative:
                 yield self.path.currentPosition() + QPointF(x, y)
             else:
@@ -53,7 +53,7 @@ class Parser(object):
 
 
     def m(self, relative):
-        p = self.points(relative).next()
+        p = next(self.points(relative))
         self.path.moveTo(p)
         self.l(relative)
 
@@ -89,7 +89,7 @@ class Parser(object):
 
     def c(self, relative):
         p = self.points(relative)
-        for a, b, c in izip(p, p, p):
+        for a, b, c in zip(p, p, p):
             self.path.cubicTo(a, b, c)
         self.lastcontrol = b
 
@@ -99,7 +99,7 @@ class Parser(object):
         if self.lasttoken not in 'CcSs':
             self.lastcontrol = self.pos
         a = 2 * self.pos - self.lastcontrol
-        for b, c in izip(p, p):
+        for b, c in zip(p, p):
             self.path.cubicTo(a, b, c)
             a = 2 * c - b
         self.lastcontrol = b
@@ -107,7 +107,7 @@ class Parser(object):
 
     def q(self, relative):
         p = self.points(relative)
-        for a, b in izip(p, p):
+        for a, b in zip(p, p):
             self.path.quadTo(a, b)
         self.lastcontrol = a
 
@@ -123,7 +123,7 @@ class Parser(object):
 
 
     def a(self, relative):
-        for rx, ry, phi, fa, fs, x, y in izip(*(self,) * 7):
+        for rx, ry, phi, fa, fs, x, y in zip(*(self,) * 7):
             pp = (self.path.currentPosition() - QPointF(x, y)) / 2
             cp = (-1) ** (fa == fs) * sqrt(
                  ((rx * ry) ** 2 - (rx * pp.y()) ** 2 - (ry * pp.x()) ** 2) /

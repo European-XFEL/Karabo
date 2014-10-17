@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on April 7, 2014
@@ -88,7 +88,7 @@ class BaseConfiguration(Configuration):
 
 
     def isOnline(self):
-        raise NotImplementedError, "BaseConfiguration.isOnline"
+        raise NotImplementedError("BaseConfiguration.isOnline")
 
 
 class Device(BaseDevice, BaseConfiguration):
@@ -217,7 +217,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         This allows the correct update of all box values once a device group
         configuration is changed.
         """
-        for k, v in descriptor.dict.iteritems():
+        for k, v in descriptor.dict.items():
             childBox = getattr(groupBox, k, None)
             if childBox is None:
                 continue
@@ -343,7 +343,7 @@ class GuiProject(Project, QObject):
         
         Project.addDeviceGroup(self, deviceGroup)
         
-        for index in xrange(start, end):
+        for index in range(start, end):
             id = "{}{}{}".format(deviceId, prefix, index)
             device = Device(serverId, classId, id, ifexists)
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
@@ -452,7 +452,7 @@ class GuiProject(Project, QObject):
                                               for scene in self.scenes]
 
             configs = Hash()
-            for deviceId, configList in self.configurations.iteritems():
+            for deviceId, configList in self.configurations.items():
                 configs[deviceId] = [Hash("filename", c.filename)
                                      for c in configList]
                 for c in configList:
@@ -463,7 +463,7 @@ class GuiProject(Project, QObject):
             resources = Hash()
             if file is not self.filename:
                 with ZipFile(self.filename, "r") as zin:
-                    for k, v in self.resources.iteritems():
+                    for k, v in self.resources.items():
                         for fn in v:
                             f = "resources/{}/{}".format(k, fn)
                             zf.writestr(f, zin.read(f))
