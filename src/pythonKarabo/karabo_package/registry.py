@@ -12,9 +12,11 @@ class Registry(object):
         pass
 
 
-class Registry(Registry):
+class MetaRegistry(type):
+    def __init__(self, name, bases, dict):
+        super(MetaRegistry, self).__init__(name, bases, dict)
+        super(self, self).register(name, dict)
+
+
+class Registry(Registry, metaclass=MetaRegistry):
     """ A class to register subclasses """
-    class __metaclass__(type):
-        def __init__(self, name, bases, dict):
-            super(type(Registry), self).__init__(name, bases, dict)
-            super(self, self).register(name, dict)

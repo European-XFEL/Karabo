@@ -66,7 +66,7 @@ namespace karabo {
 
 
         bool TimePeriod::contain(const Epochstamp& tm) const {
-            return !(before(tm) || after(tm));
+            return (tm >= m_Start && (m_Open || tm <= m_Stop));
         }
 
 

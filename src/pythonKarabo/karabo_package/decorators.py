@@ -19,7 +19,7 @@ def KARABO_CLASSINFO(classid, version):
     '''
     def realDecorator(theClass):
         if isinstance(theClass, type):
-            theClass.__classid__ = classid
+            theClass.__classid__ = str(classid)
             theClass.__version__ = version
             if hasattr(theClass, "__base_classid__"):
                 Configurator(theClass.__base_classid__).registerClass(theClass)
@@ -63,7 +63,7 @@ def KARABO_CONFIGURATION_BASE_CLASS(theClass):
             elif len(args) == 3:
                 return Configurator(cls.__base_classid__).create(args[0], args[1], args[2])
             else:
-                raise TypeError,"Wrong number of arguments and/or their types"
+                raise TypeError("Wrong number of arguments or their types")
         create = classmethod(create)
         theClass.create = create
         def createNode(cls, nodename, classid, configuration):

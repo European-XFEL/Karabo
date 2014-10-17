@@ -7,21 +7,22 @@ from karabo.registry import Registry
 from const import ns_karabo
 
 
-class Monkey(object):
+def Monkey(name, bases, dict):
     """ This is a Monkey-patcher class
 
     A class with this metaclass does not actually define a new class, but
     updates an already preexisting class. """
-    def __new__(cls, name, bases, dict):
-        for k, v in dict.iteritems():
-            setattr(bases[0], k, v)
-        return bases[0]
+    for k, v in dict.items():
+        setattr(bases[0], k, v)
+    return bases[0]
 
 
-class Registry(Registry):
+class MetaRegistry(type(Registry), type(QObject)):
+    pass
+
+
+class Registry(Registry, metaclass=MetaRegistry):
     """ This is a special case of a registry which inherits QObject """
-    class __metaclass__(type(Registry), type(QObject)):
-        pass
 
 
 class Loadable(Registry):
@@ -45,9 +46,12 @@ class Loadable(Registry):
     @staticmethod
     def load(element, layout):
         krb = element.get(ns_karabo + "class")
+        ret = None
         if krb is not None:
-            return Loadable.krbclasses[krb].load(element, layout)
-        try:
-            return Loadable.xmltags[element.tag].load(element, layout)
-        except KeyError:
-            return
+            ret = Loadable.krbclasses[krb].load(element, layout)
+        if ret is None:
+            try:
+                return Loadable.xmltags[element.tag].load(element, layout)
+            except KeyError:
+                return
+        return ret

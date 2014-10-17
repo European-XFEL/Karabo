@@ -4,13 +4,12 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from __future__ import unicode_literals, absolute_import
+
 from karabo import hashtypes
-from karabo import xmlparser
 
 from collections import OrderedDict
 from xml.etree import ElementTree
-from cStringIO import StringIO
+from io import BytesIO
 import numbers
 import numpy
 
@@ -29,14 +28,14 @@ def _gettype(data):
         elif isinstance(data, bool):
             return hashtypes.Bool
         elif isinstance(data, numbers.Integral):
-            return hashtypes.Int64
+            return hashtypes.Int32
         elif isinstance(data, numbers.Real):
             return hashtypes.Double
         elif isinstance(data, numbers.Complex):
             return hashtypes.Complex
         elif isinstance(data, bytes):
             return hashtypes.VectorChar
-        elif isinstance(data, unicode):
+        elif isinstance(data, str):
             return hashtypes.String
         elif isinstance(data, Hash):
             return hashtypes.Hash
@@ -63,15 +62,15 @@ class Element(object):
         def parse(vv):
             k, v = vv.split(":", 1)
             return hashtypes.Type.fromname[k[4:]].fromstring(v)
-        self.attrs = {k: parse(v) for k, v in attrs.iteritems()
+        self.attrs = {k: parse(v) for k, v in attrs.items()
                       if k[:4] != "KRB_"}
 
 
     def items(self):
         yield "KRB_Type", self.hashname()
-        for k, v in self.attrs.iteritems():
+        for k, v in self.attrs.items():
             t = _gettype(v)
-            yield k, u'KRB_{}:{}'.format(t.hashname(), t.toString(v))
+            yield k, 'KRB_{}:{}'.format(t.hashname(), t.toString(v))
 
 
 class SimpleElement(Element):
@@ -240,7 +239,7 @@ class Hash(OrderedDict):
             else:
                 self._get(key).attrs[attr] = value
         else:
-            s, p = self._path(unicode(item), True)
+            s, p = self._path(str(item), True)
             if p in s:
                 attrs = s[p, ...]
             else:
@@ -289,14 +288,14 @@ class Hash(OrderedDict):
             yield k, self[k], self[k, ...]
 
 
-    def merge(self, other, attribute_policy):
+    def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
 
         If the attribute_policy is 'merge', the attributes from the other
         hash are merged with the existing ones, otherwise they are overwritten.
         """
         merge = attribute_policy == "merge"
-        for k, v in other.iteritems():
+        for k, v in other.items():
             if isinstance(v, Hash):
                 if k not in self or self[k] is None:
                     self[k] = Hash()
@@ -333,8 +332,8 @@ class Hash(OrderedDict):
 
     def getKeys(self, keys=None):
         if keys is None:
-            return self.keys()
-        return keys.extend(self.keys())
+            return list(self.keys())
+        return keys.extend(list(self.keys()))
 
     def hasAttribute(self, item, key):
         return key in self[item, ...]
@@ -344,7 +343,7 @@ class Hash(OrderedDict):
 
     def paths(self):
         ret = [ ]
-        for k, v in self.iteritems():
+        for k, v in self.items():
             if isinstance(v, Hash):
                 ret.extend([k + '.' + kk for kk in v.paths()])
             else:
@@ -359,22 +358,34 @@ class HashMergePolicy:
     REPLACE_ATTRIBUTES = "replace"
 
 
-def factory(tag, attrs):
-    if attrs["KRB_Type"] == "HASH":
-        return HashElement(tag, attrs)
-    elif attrs["KRB_Type"] == "VECTOR_HASH":
-        return ListElement(tag, attrs)
-    else:
-        return SimpleElement(tag, attrs)
-
-
 class XMLParser(object):
+    last = None
+
+
+    def factory(self, tag, attrs):
+        if attrs["KRB_Type"] == "HASH":
+            return HashElement(tag, attrs)
+        elif attrs["KRB_Type"] == "VECTOR_HASH":
+            return ListElement(tag, attrs)
+        else:
+            self.closelast()
+            self.last = SimpleElement(tag, attrs)
+            return self.last
+
+
+    def closelast(self):
+        # while parsing ElementTree does not set text if the is none...
+        if self.last is not None and not hasattr(self.last, "data"):
+            self.last.text = ""
+
+
     def read(self, data):
         """Parse the XML in the buffer data and return the hash"""
-        target = xmlparser.TreeBuilder(element_factory=factory)
-        parser = xmlparser.Parser(target=target)
+        target = ElementTree.TreeBuilder(element_factory=self.factory)
+        parser = ElementTree.XMLParser(target=target)
         parser.feed(data)
         root = target.close()
+        self.closelast()
         if hasattr(root, "artificial"):
             return root.children
         else:
@@ -386,7 +397,7 @@ class XMLParser(object):
 class Writer(object):
     def write(self, data):
         """Return the written data as a string"""
-        self.file = StringIO()
+        self.file = BytesIO()
         try:
             self.writeToFile(data, self.file)
             return self.file.getvalue()
@@ -397,8 +408,8 @@ class Writer(object):
 class XMLWriter(Writer):
     def writeToFile(self, hash, file):
         """Write the hash to the file in binary format"""
-        if len(hash) == 1 and isinstance(hash.values()[0], Hash):
-            e = OrderedDict.__getitem__(hash, hash.keys()[0])
+        if len(hash) == 1 and isinstance(list(hash.values())[0], Hash):
+            e = OrderedDict.__getitem__(hash, list(hash.keys())[0])
         else:
             e = HashElement("root")
             e.attrs = dict(KRB_Artificial="")
@@ -418,7 +429,7 @@ class BinaryParser(object):
     def readKey(self):
         size, = self.readFormat('B')
         self.pos += size
-        return self.data[self.pos - size:self.pos]
+        return self.data[self.pos - size:self.pos].decode("ascii")
 
 
     def read(self, data):

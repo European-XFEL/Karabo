@@ -11,7 +11,7 @@ GNOOP = lambda: True
 class Event(object): pass
 def x_ini(self, a): self.x = a
 def x_get(self): return self.x
-def event_instance(x, a): return type(x, (Event,), {'__init__':x_ini, 'payload':x_get})(a)
+def event_instance(x, a): return type(str(x), (Event,), {'__init__':x_ini, 'payload':x_get})(a)
 
 # global dicts
 _events_ = ['none']
@@ -26,7 +26,7 @@ def KARABO_FSM_EVENT0(self, event_name, method_name):
     def inner(self):
         self.processEvent(event_instance(event_name, ()))
     inner.__doc__ = "Drive state machine by processing an event without payload"
-    inner.__name__ = method_name
+    inner.__name__ = str(method_name)
     setattr(self.__class__, inner.__name__, inner)
     _events_.append(event_name)
 
@@ -140,7 +140,7 @@ def KARABO_FSM_STATE_MACHINE_AEE(name, stt, initial, target_action, on_entry, on
        
 def KARABO_FSM_CREATE_MACHINE(name):
     (_stt, _initial, _on_entry, _on_exit, _in_state) = _machines_[name]
-    cls = type(name, (StateMachine,), {})
+    cls = type(str(name), (StateMachine,), {})
     return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit, in_state = _in_state)
 
 #======================================== Worker
@@ -199,9 +199,12 @@ class Worker(threading.Thread):
                 elif self.timeout > 0:
                     t = self.queue.get(True, float(self.timeout) / 1000)   # self.timeout in milliseconds
                 else:
-                    t = self.queue.get(False)
-                self.queue.task_done()
-            except Queue.Empty, e:
+                    with self.cv:
+                        if len(self.dq) != 0 and not self.suspended:
+                            t = self.dq.popleft()
+                if self.suspended:
+                    continue
+            except RuntimeError as e:
                 t = None
             if self.counter > 0:
                 self.counter -= 1
@@ -306,9 +309,11 @@ class State(dict):
         # compare number and type of parameters between event args (ea) and guard args (ga)
         try:
             if sum([type(ea[i]) == ga[i] for i in range(len(ga))]) != len(ga):
-                raise TypeError,'Type mismatch between event payload and guard required parameters'
+                raise TypeError('Type mismatch between event payload and '
+                                'guard required parameters')
         except IndexError:
-            raise SyntaxError,'Event payload has less parameters ("%r") than required by guard ("%r")' % (len(ea), len(ga))
+            raise SyntaxError('Event payload has less parameters ({}) than '
+                              'required by guard ({})'.format(len(ea), len(ga)))
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
@@ -319,9 +324,12 @@ class State(dict):
         af, aa = _action                    # action function and tuple of action arguments
         try:
             if sum([type(ea[i]) == aa[i] for i in range(len(aa))]) != len(aa):
-                raise TypeError,"Type mismatch between event payload and transition action required parameters"
+                raise TypeError("Type mismatch between event payload and "
+                                "transition action required parameters")
         except IndexError:
-            raise SyntaxError,"Event payload has less parameters (%r) than required by transition action (%r)" % (len(ea), len(aa))
+            raise SyntaxError("Event payload has less parameters ({}) than "
+                              "required by transition action ({})".
+                              format(len(ea), len(aa)))
         af(*ea[:len(aa)])                   # call transition action
         
         if _target == "none":
@@ -357,17 +365,19 @@ class StateMachine(State):
             self._setup(initial)
             self.initial_state.append(self.stt[initial])
         else:
-            raise TypeError,"Unsupported type %r for representing initial state. Required str or tuple of str" % type(initial)
+            raise TypeError(
+                "Unsupported type {} for representing initial state. "
+                "Required str or tuple of str".format(type(initial)))
 
         if len(self.initial_state) == 0:
-            raise KeyError, 'Initial state not set.'
+            raise KeyError('Initial state not set.')
         
         self.current_state = list()
         
         for (_source, _event, _target, _action, _guard) in stt:
             
             if _source == 'none':
-                raise AttributeError,"'none' cannot be a source state"
+                raise AttributeError("'none' cannot be a source state")
             elif _source in self.stt:
                 pass
             else:
@@ -381,12 +391,15 @@ class StateMachine(State):
                 self._setup(_target)
                 
             if _event not in _events_:
-                raise NameError,'Undefined name in StateTransitionTable: %r' % _event
+                raise NameError('Undefined name in StateTransitionTable: {}'.
+                                format(_event))
             if _action not in _actions_:
-                raise NameError,'Undefined name in StateTransitionTable: %r' % _action
+                raise NameError('Undefined name in StateTransitionTable: {}'.
+                                format(_action))
             if _guard not in _guards_:
-                raise NameError,'Undefined name in StateTransitionTable: %r' % _guard
-            
+                raise NameError('Undefined name in StateTransitionTable: {}'.
+                                format(_guard))
+
             self.stt[_source][_event] = (_target, _actions_[_action], _guards_[_guard])    
         
         # use global no_transition
@@ -394,20 +407,21 @@ class StateMachine(State):
             _f, _a = _actions_['NoTransition']
             self.no_transition = _f
         else:
-            raise IndexError,'The "no_transition" action was not defined'
-    
+            raise IndexError('The "no_transition" action was not defined')
+
     def _setup(self, sname):
         if sname in _states_:
             (_entry, _exit, _ta) = _states_[sname]
-            self.stt[sname] = type(sname, (State,), {})(self, on_entry=_entry, on_exit=_exit, in_state=_ta)
+            self.stt[sname] = type(str(sname), (State,), {})(self, on_entry=_entry, on_exit=_exit, in_state=_ta)
             if sname in _interrupts_:
                 self.stt[sname].interrupt = _interrupts_[sname]
         elif sname in _machines_:
             (_stt, _initial, _entry, _exit, _ta) = _machines_[sname]
-            self.stt[sname] = type(sname, (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
+            self.stt[sname] = type(str(sname), (StateMachine,), {})(self, _stt, _initial, _entry, _exit, _ta)
         else:
-            raise NameError,'Undefined name of initial state in State machine declaration: %r' % sname
-        
+            raise NameError('Undefined name of initial state in State machine '
+                            'declaration: {}'.format(sname))
+
     def start(self):
         # entry current state machine
         if hasattr(self, 'entry_action'):
@@ -436,7 +450,8 @@ class StateMachine(State):
         # check if the object (instance of Event subclass) was created by "event_instance" call
         is_hit = False
         if not isinstance(o, Event):
-            raise TypeError,'The parameter is not an instance of the "Event" subclass'
+            raise TypeError(
+                'The parameter is not an instance of the "Event" subclass')
         for s in self.current_state:
             if not s.interrupt is None and s.interrupt != o.__class__.__name__:
                 return False

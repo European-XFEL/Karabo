@@ -6,10 +6,9 @@
 
 """This module contains a class which represents a QSvgWidget."""
 
-from __future__ import unicode_literals
 
-from components import (DisplayComponent, EditableApplyLaterComponent,
-                        EditableNoApplyComponent)
+
+from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from dialogs.dialogs import PenDialog, TextDialog
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
@@ -20,22 +19,21 @@ import pathparser
 import icons
 import manager
 
-from PyQt4.QtCore import (Qt, QByteArray, QDir, QEvent, QSize, QRect, QLine,
+from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFileDialog, QFont, QFrame, QLabel,
-                         QLayout, QKeySequence, QMenu, QMessageBox, QPalette,
-                         QPainter, QPen, QStackedLayout,
+                         QFrame, QLabel, QLayout, QKeySequence, QMenu,
+                         QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
                          QWidget)
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
-from karabo import xmlparser
 from functools import partial
-import os.path
+
 from itertools import chain
-from cStringIO import StringIO
+from io import BytesIO
+import copy
 
 
 __all__ = ["Scene"]
@@ -143,6 +141,7 @@ class ShapeAction(Action):
         if hasattr(self, 'shape'):
             parent.set_current_action(None)
             parent.ilayout.shapes.append(self.shape)
+            parent.setModified()
 
 
     def draw(self, painter):
@@ -210,17 +209,17 @@ class Shape(ShapeAction, Loadable):
             d["stroke"] = "none"
         else:
             d["stroke"] = "#{:06x}".format(self.pen.color().rgb() & 0xffffff)
-            d["stroke-opacity"] = unicode(self.pen.color().alphaF())
+            d["stroke-opacity"] = str(self.pen.color().alphaF())
             d["stroke-linecap"] = PenDialog.linecaps[self.pen.capStyle()]
-            d["stroke-dashoffset"] = unicode(self.pen.dashOffset())
-            d["stroke-width"] = unicode(self.pen.widthF())
-            d["stroke-dasharray"] = " ".join(unicode(x * self.pen.width())
+            d["stroke-dashoffset"] = str(self.pen.dashOffset())
+            d["stroke-width"] = str(self.pen.widthF())
+            d["stroke-dasharray"] = " ".join(str(x * self.pen.width())
                                              for x in self.pen.dashPattern())
             d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
-            d["stroke-miterlimit"] = unicode(self.pen.miterLimit())
+            d["stroke-miterlimit"] = str(self.pen.miterLimit())
         if self.brush.style() == Qt.SolidPattern:
             d["fill"] = "#{:06x}".format(self.brush.color().rgb() & 0xffffff)
-            d["fill-opacity"] = unicode(self.brush.color().alphaF())
+            d["fill-opacity"] = str(self.brush.color().alphaF())
         else:
             d["fill"] = "none"
 
@@ -305,6 +304,7 @@ class Select(Action):
                         c.translate(event.pos() - self.moving_pos)
                 self.moving_pos = event.pos()
                 event.accept()
+                parent.setModified()
             elif self.selection_start is not None:
                 self.selection_stop = event.pos()
                 event.accept()
@@ -328,7 +328,9 @@ class Select(Action):
                     return
                 self.resize_item.set_geometry(g)
                 parent.ilayout.update()
+                parent.setModified()
             parent.update()
+            
 
 
     def mouseReleaseEvent(self, parent, event):
@@ -344,6 +346,7 @@ class Select(Action):
             self.selection_start = None
             event.accept()
             parent.update()
+
 
     def draw(self, painter):
         if self.selection_start is not None:
@@ -412,6 +415,7 @@ class LabelAction(Action):
         p.fixed_geometry = QRect(event.pos(), p.sizeHint())
         parent.ilayout.add_item(p)
         parent.set_current_action(None)
+        parent.setModified()
 
 
     def mouseReleaseEvent(self, *args):
@@ -424,16 +428,19 @@ class LabelAction(Action):
 
 class Line(Shape):
     xmltag = ns_svg + "line"
-    text = "Add Line"
+    text = "Add line"
     icon = icons.line
+
 
     def set_points(self, start, end):
         self.line = QLine(start, end)
+
 
     def draw(self, painter):
         painter.setPen(self.pen)
         painter.drawLine(self.line)
         Shape.draw(self, painter)
+
 
     def contains(self, p):
         x1, x2 = self.line.x1(), self.line.x2()
@@ -442,6 +449,7 @@ class Line(Shape):
                 min(y1, y2) - self.fuzzy < p.y() < max(y1, y2) + self.fuzzy and
                 ((x2 - x1) * (p.y() - y1) - (y2 - y1) * (p.x() - x1)) ** 2 <
                 self.fuzzy ** 2 * ((x1 - x2) ** 2 + (y1 - y2) ** 2))
+
 
     def geometry(self):
         return QRect(self.line.p1(), self.line.p2())
@@ -454,13 +462,15 @@ class Line(Shape):
     def translate(self, p):
         self.line.translate(p)
 
+
     def element(self):
         ret = ElementTree.Element(
-            ns_svg + "line", x1=unicode(self.line.x1()),
-            x2=unicode(self.line.x2()), y1=unicode(self.line.y1()),
-            y2=unicode(self.line.y2()))
+            ns_svg + "line", x1=str(self.line.x1()),
+            x2=str(self.line.x2()), y1=str(self.line.y1()),
+            y2=str(self.line.y2()))
         self.savepen(ret)
         return ret
+
 
     @staticmethod
     def load(e, layout):
@@ -472,9 +482,10 @@ class Line(Shape):
         return ret
 
 
-    def edit(self):
+    def edit(self, parent):
         pendialog = PenDialog(self.pen)
         pendialog.exec_()
+        parent.setModified()
 
 
 class Rectangle(Shape):
@@ -482,8 +493,10 @@ class Rectangle(Shape):
     text = "Add rectangle"
     icon = icons.rect
 
+
     def set_points(self, start, end):
         self.rect = QRect(start, end).normalized()
+
 
     def draw(self, painter):
         painter.setPen(self.pen)
@@ -491,11 +504,12 @@ class Rectangle(Shape):
         painter.drawRect(self.rect)
         Shape.draw(self, painter)
 
+
     def element(self):
         ret = ElementTree.Element(
-            ns_svg + "rect", x=unicode(self.rect.x()),
-            y=unicode(self.rect.y()), width=unicode(self.rect.width()),
-            height=unicode(self.rect.height()))
+            ns_svg + "rect", x=str(self.rect.x()),
+            y=str(self.rect.y()), width=str(self.rect.width()),
+            height=str(self.rect.height()))
         self.savepen(ret)
         return ret
 
@@ -528,9 +542,11 @@ class Rectangle(Shape):
         layout.shapes.append(ret)
         return ret
 
-    def edit(self):
+
+    def edit(self, parent):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
+        parent.setModified()
 
 
 class Path(Shape):
@@ -568,9 +584,10 @@ class Path(Shape):
         Shape.draw(self, painter)
 
 
-    def edit(self):
+    def edit(self, parent):
         pendialog = PenDialog(self.pen, self.brush)
         pendialog.exec_()
+        parent.setModified()
 
 
     def element(self):
@@ -757,6 +774,7 @@ class Cut(SimpleAction):
         QApplication.clipboard().setMimeData(self.parent.mimeData())
         self.parent.ilayout.delete_selected()
         self.parent.update()
+        self.parent.setModified()
 
 
 class Copy(SimpleAction):
@@ -787,6 +805,7 @@ class Paste(SimpleAction):
         buf.close()
         self.parent.load(ar)
         self.parent.update()
+        self.parent.setModified()
 
 
 class Delete(SimpleAction):
@@ -796,12 +815,18 @@ class Delete(SimpleAction):
 
 
     def run(self):
+        selected = [c for c in self.parent.ilayout if c.selected]
+        selectedShapes = [s for s in self.parent.ilayout.shapes if s.selected]
+        if not selected and not selectedShapes:
+            return
+        
         if QMessageBox.question(self.parent, "Really delete?",
                                 "Do you really want to delete the items?",
                                 QMessageBox.Yes | QMessageBox.No
                                ) == QMessageBox.Yes:
             self.parent.ilayout.delete_selected()
             self.parent.update()
+            self.parent.setModified()
 
 Separator()
 
@@ -824,6 +849,7 @@ class Raise(SimpleAction):
         for w in self.parent.ilayout.iterWidgets(selected=True):
             w.raise_()
         self.parent.update()
+        self.parent.setModified()
 
 
 class Lower(SimpleAction):
@@ -844,6 +870,7 @@ class Lower(SimpleAction):
         for w in self.parent.ilayout.iterWidgets(selected=True):
             w.lower()
         self.parent.update()
+        self.parent.setModified()
 
 
 class Scene(QSvgWidget):
@@ -876,10 +903,18 @@ class Scene(QSvgWidget):
         self.resize(1024, 768)
 
 
+    def setModified(self):
+        """
+        This scene was modified and this needs to be broadcasted to the project.
+        """
+        self.project.setModified(True)
+
+
     def add_actions(self, source):
         for v in Action.actions:
             action = v.add_action(source, self)
             yield action
+
 
     def set_current_action(self, action):
         self.current_action.action.setChecked(False)
@@ -962,7 +997,7 @@ class Scene(QSvgWidget):
         """
         Parses the given xmlString which represents the SVG.
         """
-        self.tree = xmlparser.parse(StringIO(xmlString))
+        self.tree = ElementTree.parse(BytesIO(xmlString))
         root = self.tree.getroot()
         self.clean()
         FixedLayout.load(root, widget=self.inner)
@@ -983,12 +1018,12 @@ class Scene(QSvgWidget):
         """
         Returns the scene as XML string.
         """
-        root = self.tree.getroot().copy()
+        root = copy.copy(self.tree.getroot())
         tree = ElementTree.ElementTree(root)
         e = self.ilayout.element()
         root.extend(ee for ee in e)
-        root.set('width', unicode(self.width()))
-        root.set('height', unicode(self.height()))
+        root.set('width', str(self.width()))
+        root.set('height', str(self.height()))
         return ElementTree.tostring(root)
 
 
@@ -1058,11 +1093,12 @@ class Scene(QSvgWidget):
             if isinstance(w.widget, Label):
                 dialog = TextDialog(w.widget)
                 dialog.exec_()
+                self.setModified()
             return
         item = self.ilayout.itemAtPosition(event.pos())
         if item is None:
             return
-        item.edit()
+        item.edit(self)
 
 
     def dragEnterEvent(self, event):
@@ -1151,9 +1187,10 @@ class Scene(QSvgWidget):
                 self.ilayout.add_item(layout)
                 layout.selected = True
         elif sourceType == "NavigationTreeView":
-            print "NavigationTreeView"
+            print("NavigationTreeView")
             return
 
+        self.project.setModified(True)
         event.accept()
         QWidget.dropEvent(self, event)
 

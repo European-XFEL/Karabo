@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem.hpp>
-#include <log4cpp/OstreamAppender.hh>
-#include <log4cpp/Category.hh>
-#include <log4cpp/Priority.hh>
+#include <krb_log4cpp/OstreamAppender.hh>
+#include <krb_log4cpp/Category.hh>
+#include <krb_log4cpp/Priority.hh>
 #include <exfel/util/Hash.hh>
 #include <exfel/io/Writer.hh>
 #include <exfel/io/Reader.hh>
@@ -33,7 +33,7 @@ int testLogger(int argc, char** argv) {
   using namespace exfel::log;
   using boost::shared_ptr;
   using namespace boost::filesystem;
-  using namespace log4cpp;
+  using namespace krb_log4cpp;
 
   Test t;
   TEST_INIT(t,argc,argv);

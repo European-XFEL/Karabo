@@ -83,6 +83,8 @@ namespace karabo {
 
         void GuiServerDevice::okStateOnEntry() {
             try {
+                remote().getSystemInformation();
+                
                 // Register handlers
                 remote().registerInstanceNewMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceNewHandler, this, _1));
                 remote().registerInstanceUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::instanceUpdatedHandler, this, _1));
@@ -404,7 +406,7 @@ namespace karabo {
                 if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
 
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
-                call("Karabo_FileDataLogger_0", "slotGetPropertyHistory", deviceId, property, args);
+                call("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, property, args);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
             }

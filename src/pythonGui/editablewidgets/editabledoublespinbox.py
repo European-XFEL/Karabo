@@ -51,7 +51,7 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self.validator.setTop(max)
 
 
-    def valueChanged(self, box, value, timestamp=None, forceRefresh=False):
+    def valueChanged(self, box, value, timestamp=None):
         if value is None:
             value = 0
 
@@ -59,10 +59,6 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
             self.widget.setText("{}".format(value))
 
         self.widget.setCursorPosition(self.lastCursorPos)
-
-        if forceRefresh:
-            # Needs to be called to update possible apply buttons
-            self.onEditingFinished(value)
 
 
 class DoubleLineEdit(NumberLineEdit):

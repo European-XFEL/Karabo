@@ -19,7 +19,6 @@ namespace karabo {
          * This class expresses a time point and holds it in form of an Epochstamp and Trainstamp
          */
         class Timestamp {
-
             Epochstamp m_epochstamp;
             Trainstamp m_trainstamp;
 
@@ -78,6 +77,16 @@ namespace karabo {
              * @return formated string in the specified Time Zone
              */
             std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
+
+            /**
+             * Formats to specified format time stored in the object
+             * 
+             * @param localeName - String that represents the locale to be used [Default: "" == System locale]
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
+             * @return formated string in the specified Time Zone
+             */
+            std::string toFormattedStringLocale(const std::string& localeName = std::string(""), const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
 
             /**
              * Generates a timestamp as double with seconds.fractional format (fractional precision == MICROSEC)

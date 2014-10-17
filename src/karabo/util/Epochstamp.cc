@@ -20,70 +20,53 @@ typedef int clockid_t;
 namespace karabo {
     namespace util {
 
-
         Epochstamp::Epochstamp() {
             now();
         }
-
 
         Epochstamp::Epochstamp(const unsigned long long& seconds, const unsigned long long& fractions) :
         m_seconds(seconds), m_fractionalSeconds(fractions) {
         }
 
-
         Epochstamp::~Epochstamp() {
         }
 
-
-        Epochstamp::Epochstamp(const time_t& tm) {
-            *this = tm;
+        Epochstamp::Epochstamp(const time_t& tm) : m_seconds(tm), m_fractionalSeconds(0) {
         }
 
-
-        Epochstamp::Epochstamp(const timeval& tv) {
-            *this = tv;
+        Epochstamp::Epochstamp(const timeval& tv) : m_seconds(tv.tv_sec), m_fractionalSeconds(tv.tv_usec * 1000000000000ULL) {
         }
 
-
-        Epochstamp::Epochstamp(const timespec& ts) {
-            *this = ts;
+        Epochstamp::Epochstamp(const timespec& ts) : m_seconds(ts.tv_sec), m_fractionalSeconds(ts.tv_nsec * 1000000000ULL) {
         }
-
 
         Epochstamp::Epochstamp(const std::string& pTime) {
             karabo::util::DateTimeString dts = karabo::util::DateTimeString(pTime);
-            const unsigned long long secondsSinceEpoch = dts.getSecondsSinceEpoch();
-            const unsigned long long fractionalSecond = dts.getFractionalSeconds<unsigned long long>();
-
-            *this = Epochstamp(secondsSinceEpoch, fractionalSecond); //Use other constructor
+            m_seconds = dts.getSecondsSinceEpoch();
+            m_fractionalSeconds = dts.getFractionalSeconds<unsigned long long>();
         }
-
 
         TimeDuration Epochstamp::elapsed(const Epochstamp& other) const {
             if (*this < other) return other - * this;
             else return *this -other;
         }
 
-
         time_t Epochstamp::getTime() const {
             return m_seconds;
         }
 
-
         timeval Epochstamp::getTimeOfDay() const {
-            timeval result = {m_seconds, m_fractionalSeconds / MICROSEC};
+            timeval result = {m_seconds, m_fractionalSeconds / 1000000000000ULL};  // std::pow(10, MICROSEC)
             return result;
         }
 
-
         timespec Epochstamp::getClockTime() const {
-            timespec result = {m_seconds, m_fractionalSeconds / NANOSEC};
+            timespec result = {m_seconds, m_fractionalSeconds / 1000000000ULL};    // std::pow(10, NANOSEC)
             return result;
         }
 
         // retrieve the current time
-        #ifdef _WIN32
-
+#ifdef _WIN32
 
         void Epochstamp::now() {
             assert();
@@ -94,8 +77,7 @@ namespace karabo {
             m_TimeVale = static_cast<uint64_t> (static_cast<long double> (wts) / getFrequency() * NANOSEC / resolution);
         }
 
-        #elif __MACH__
-
+#elif __MACH__
 
         void Epochstamp::now() {
             clock_serv_t cclock;
@@ -109,29 +91,25 @@ namespace karabo {
             m_fractionalSeconds = mts.tv_nsec * 1000000000ull;
         }
 
-        #else
-
+#else
 
         void Epochstamp::now() {
             static const clockid_t whichtime = CLOCK_REALTIME; //    CLOCK_REALTIME,  CLOCK_PROCESS_CPUTIME_ID
 
             static timespec ts;
             clock_gettime(whichtime, &ts);
-
-            *this = ts;
+            this->m_seconds = ts.tv_sec;
+            this->m_fractionalSeconds = ts.tv_nsec * 1000000000ULL; // in ATTOSEC
         }
-        #endif
-
+#endif
 
         std::string Epochstamp::toIso8601(TIME_UNITS precision, bool extended) const {
             return this->toIso8601Internal(precision, extended, "");
         }
 
-
         std::string Epochstamp::toIso8601Ext(TIME_UNITS precision, bool extended) const {
             return this->toIso8601Internal(precision, extended, "Z");
         }
-
 
         std::string Epochstamp::toIso8601Internal(TIME_UNITS precision, bool extended, const std::string& localTimeZone) const {
 
@@ -170,7 +148,6 @@ namespace karabo {
             return dateTimeWithFractional;
         }
 
-
         template<typename To, typename PT1>
         const To Epochstamp::concatDateTimeWithFractional(const PT1 dateTime, const TIME_UNITS precision) const {
             ostringstream oss;
@@ -178,17 +155,17 @@ namespace karabo {
             return boost::lexical_cast<To>(oss.str());
         }
 
-
         const double Epochstamp::toTimestamp() const {
             return this->concatDateTimeWithFractional<double, unsigned long long>(m_seconds, MICROSEC);
         }
 
-
-        std::string Epochstamp::getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet) {
+        std::string Epochstamp::getPTime2String(const boost::posix_time::ptime pt,
+                const boost::posix_time::time_facet* facet,
+                const std::string& localeName) {
             std::ostringstream datetime_ss;
 
             // special_locale takes ownership of the p_time_output facet
-            std::locale special_locale(std::locale(""), facet);
+            std::locale special_locale(std::locale(localeName.c_str()), facet);
             datetime_ss.imbue(special_locale);
             datetime_ss << pt;
 
@@ -196,21 +173,25 @@ namespace karabo {
             return datetime_ss.str();
         }
 
-
         std::string Epochstamp::toFormattedString(const std::string& format, const std::string& localTimeZone) const {
+            return this->toFormattedStringInternal("", format, localTimeZone);
+        }
 
+        std::string Epochstamp::toFormattedStringLocale(const std::string& localeName, const std::string& format, const std::string& localTimeZone) const {
+            return this->toFormattedStringInternal(localeName, format, localTimeZone);
+        }
+
+        std::string Epochstamp::toFormattedStringInternal(const std::string& localeName, const std::string& format, const std::string& localTimeZone) const {
             const boost::posix_time::time_facet* facet = new boost::posix_time::time_facet(format.c_str());
             std::string pTime = this->toIso8601Internal(SECOND, false, localTimeZone);
             const boost::posix_time::ptime pt = boost::posix_time::from_iso_string(pTime);
 
-            return getPTime2String(pt, facet);
+            return getPTime2String(pt, facet, localeName);
         }
-
 
         bool Epochstamp::hashAttributesContainTimeInformation(const Hash::Attributes& attributes) {
             return (attributes.has("sec") && attributes.has("frac"));
         }
-
 
         Epochstamp Epochstamp::fromHashAttributes(const Hash::Attributes& attributes) {
             unsigned long long seconds, fraction;
@@ -222,7 +203,6 @@ namespace karabo {
             }
             return Epochstamp(seconds, fraction);
         }
-
 
         void Epochstamp::toHashAttributes(Hash::Attributes& attributes) const {
             attributes.set("sec", m_seconds);

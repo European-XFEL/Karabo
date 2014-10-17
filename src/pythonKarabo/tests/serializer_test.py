@@ -1,6 +1,6 @@
 import unittest
 from karabo.karathon import *
-from configuration_test_classes import *
+from .configuration_example_classes import *
 
 
 class  Serializer_TestCase(unittest.TestCase):

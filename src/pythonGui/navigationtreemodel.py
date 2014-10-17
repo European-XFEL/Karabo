@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on June 1, 2013
@@ -230,6 +230,12 @@ class NavigationTreeModel(QAbstractItemModel):
                 
                 serverClassIds.extend(self.eraseServer(serverId))
                 existingIds.append(serverId)
+                
+                # Check for running devices on that server
+                #childNodes = index.internalPointer().childNodes
+                #for childNode in childNodes:
+                #    for deviceNode in childNode.childNodes:
+                #        existingIds.append(deviceNode.displayName)
         
         deviceKey = "device"
         if config.has(deviceKey):
@@ -322,7 +328,7 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def _rFindIndex(self, node, path):
-        for i in xrange(node.childCount()):
+        for i in range(node.childCount()):
             childNode = node.childNode(i)
             resultNode = self._rFindIndex(childNode, path)
             if resultNode:

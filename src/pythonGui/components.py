@@ -23,7 +23,8 @@ from messagebox import MessageBox
 from widget import EditableWidget, DisplayWidget, Widget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot, QSize, QTimer
-from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QToolButton, QWidget)
+from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMessageBox,
+                         QToolButton, QWidget)
 
 import numpy
 import numbers
@@ -62,16 +63,22 @@ class BaseComponent(Loadable, QObject):
         for k in elem.get(ns_karabo + 'keys').split(","):
             deviceId, path = k.split('.', 1)
             conf = manager.getDevice(deviceId)
-            conf.addVisible()
             boxes.append(conf.getBox(path.split(".")))
-        #commandEnabled=elem.get(ns_karabo + "commandEnabled") == "True"
         parent = ProxyWidget(layout.parentWidget())
-        component = cls(elem.get(ns_karabo + "widget"), boxes[0], parent)
+        wn = elem.get(ns_karabo + "widget")
+        try:
+            component = cls(wn, boxes[0], parent)
+        except KeyError:
+            QMessageBox.warning(layout.parentWidget(), "Widget not found",
+                                "Could not find widget '{}'.".format(wn))
+            return
         parent.setComponent(component)
         parent.setWidget(component.widget)
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
+        for b in boxes:
+            b.configuration.addVisible()
         component.widgetFactory.load(elem)
         elem.clear()
         return component
@@ -264,6 +271,10 @@ class EditableNoApplyComponent(BaseComponent):
     def onEditingFinished(self, box, value):
         box.set(value, None)
 
+        # Configuration changed - so project needs to be informed to show it
+        if box.configuration.type == 'projectClass':
+            box.configuration.signalProjectModified.emit(True)
+
 
 class EditableApplyLaterComponent(BaseComponent):
     # signals
@@ -339,7 +350,7 @@ class EditableApplyLaterComponent(BaseComponent):
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
         if box.hasValue():
             self.onDisplayValueChanged(box, box.value)
-        box.configuration.value.state.signalUpdateComponent.connect(
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
             self.updateButtons)
 
 
@@ -436,6 +447,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
 
+    @pyqtSlot()
     def updateButtons(self):
         """ update the buttons to reflect the current state of affairs """
         allowed = self.boxes[0].isAllowed()
@@ -454,11 +466,11 @@ class EditableApplyLaterComponent(BaseComponent):
             if len(value) != len(self.widgetFactory.value):
                 isEqualEditable = False
             else:
-                for i in xrange(len(value)):
+                isEqualEditable = True
+                for i in range(len(value)):
                     if value[i] != self.widgetFactory.value[i]:
                         isEqualEditable = False
                         break
-                isEqualEditable = True
         else:
             isEqualEditable = (str(value) == str(self.widgetFactory.value))
 
@@ -482,6 +494,11 @@ class EditableApplyLaterComponent(BaseComponent):
         if self.__currentDisplayValue is None:
             return
         self.updateButtons()
+
+
+    def addBox(self, box):
+        """we cannot add several boxes onto one editable thing yet"""
+        pass
 
 
 class ChoiceComponent(BaseComponent):
