@@ -34,8 +34,9 @@ namespace karabo {
             karabo::util::Schema Format::m_schema = Schema();
             bool Format::m_schemaExists = false;
 
+
             void Format::expectedParameters(Schema& expected) {
-                               
+
                 LIST_ELEMENT(expected)
                         .key("elements")
                         .displayedName("Elements")
@@ -60,14 +61,14 @@ namespace karabo {
 
             Format::Format(const karabo::util::Hash& input) {
 
-                if (!m_schemaExists){
+                if (!m_schemaExists) {
                     // we do it here as we cannot run it in static initialization function, because not all pluggable 
                     // element classes may be initialized yet.
-                    m_schema = Format::getSchema("Format");    
+                    m_schema = Format::getSchema("Format");
                     m_schemaExists = true;
-                }              
-                m_elements = Configurator<Element>::createList("elements", input, false);             
-                m_config = Hash("Format", input);              
+                }
+                m_elements = Configurator<Element>::createList("elements", input, false);
+                m_config = Hash("Format", input);
                 mapElementsToKeys();
             }
 
@@ -319,6 +320,7 @@ namespace karabo {
 
             #define _KARABO_IO_H5_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,el); break;            
             #define _KARABO_IO_H5_SEQUENCE_PTR_SIZE(T,cppType) case Types::PTR_##T:  Format::discoverPtrSize<cppType>(h,el); break;      
+            #define _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(T,cppType) case Types::ARRAY_##T:  Format::discoverArraySize<cppType>(h,el); break;      
 
 
             void Format::discoverFromDataElement(const Hash::Node& el, FormatDiscoveryPolicy::ConstPointer policy,
@@ -375,6 +377,38 @@ namespace karabo {
                     }
                     discoverAttributes(el, h);
 
+                } else if (Types::isRawArray(t)) {
+                    string ptrType = ToType<ToLiteral>::to(t);
+                    KARABO_LOG_FRAMEWORK_TRACE_CF << "SEQUENCE: " << ptrType;
+                    string vecType = "VECTOR_" + ptrType.substr(6);
+                    Hash& h = hc.bindReference<Hash > (vecType);
+                    h.set("h5name", key);
+                    h.set("h5path", path);
+                    h.set("key", newKeyPath);
+                    h.set("type", ptrType);
+                    h.set("chunkSize", policy->getDefaultChunkSize());
+                    h.set("compressionLevel", policy->getDefaultCompressionLevel());
+                    switch (t) {
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT32, int)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT32, unsigned int)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(FLOAT, float)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(DOUBLE, double)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT16, short)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT16, unsigned short)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT64, long long)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT64, unsigned long long)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(INT8, signed char)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(UINT8, unsigned char)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(CHAR, char)
+                            _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE(BOOL, bool)
+
+                        default:
+                            throw KARABO_NOT_SUPPORTED_EXCEPTION("Type not supported for key " + key);
+                    }
+
+
+                    discoverAttributes(el, h);
+
                 } else {
                     Hash& h = hc.bindReference<Hash > (ToType<ToLiteral>::to(t));
                     h.set("h5name", key);
@@ -417,6 +451,8 @@ namespace karabo {
             }
 
             #undef _KARABO_IO_H5_SEQUENCE_SIZE
+            #undef _KARABO_IO_H5_SEQUENCE_PTR_SIZE
+            #undef _KARABO_IO_H5_SEQUENCE_ARRAY_SIZE
 
 
             #define _KARABO_IO_H5_ATTRIBUTE_SEQUENCE_SIZE(T,cppType) case Types::VECTOR_##T:  Format::discoverVectorSize<cppType>(h,(*it)); break;                        

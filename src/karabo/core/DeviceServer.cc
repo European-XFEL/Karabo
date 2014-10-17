@@ -40,7 +40,7 @@ namespace karabo {
         using namespace karabo::log;
         using namespace karabo::net;
         using namespace karabo::xms;
-        using namespace log4cpp;
+        using namespace krb_log4cpp;
 
 
         KARABO_REGISTER_FOR_CONFIGURATION(DeviceServer)
@@ -254,7 +254,7 @@ namespace karabo {
                 m_scanPlugins = false;
                 m_autoStart.resize(2);
                 m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
-                m_autoStart[1] = Hash("FileDataLogger.deviceId", "Karabo_FileDataLogger_0");
+                m_autoStart[1] = Hash("DataLoggerManager.deviceId", "Karabo_DataLoggerManager_0");
             }
 
             m_connectionConfiguration = config.get<Hash>("connection");
@@ -382,7 +382,7 @@ namespace karabo {
         }
 
 
-        log4cpp::Category & DeviceServer::log() {
+        krb_log4cpp::Category & DeviceServer::log() {
             return (*m_log);
         }
 

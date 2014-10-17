@@ -16,15 +16,15 @@ from karabo import hashtypes
 import numpy
 from PyQt4.QtCore import QCoreApplication
 from PyQt4.QtGui import (QDialog, QPushButton, QListWidget, QListWidgetItem,
-    QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout, QFontMetrics,
-    QLineEdit)
+                         QInputDialog, QMessageBox, QHBoxLayout, QVBoxLayout,
+                         QFontMetrics)
 
 class ListEdit(QDialog):
 
-    def __init__(self, valueType, duplicatesOk=True, list=[], parent=None):
+    def __init__(self, descriptor, duplicatesOk=True, list=[], parent=None):
         super(ListEdit, self).__init__(parent)
 
-        self.__valueType = valueType
+        self.descriptor = descriptor
 
         self.ask = False
         self.duplicatesOk = duplicatesOk
@@ -99,7 +99,7 @@ class ListEdit(QDialog):
             # insert item
             self._addItem(index)
 
-            w = fm.width(unicode(index))
+            w = fm.width(str(index))
             if w > width:
                 width = w
 
@@ -114,7 +114,7 @@ class ListEdit(QDialog):
 
 
     def _addItem(self, value):
-        item = QListWidgetItem(unicode(value))
+        item = QListWidgetItem(str(value))
         item.editableValue = value
         self.__listWidget.addItem(item)
 
@@ -142,10 +142,10 @@ class ListEdit(QDialog):
 
 
         dialog = QInputDialog.getText
-        if isinstance(self.__valueType, hashtypes.Simple):
-            if issubclass(self.__valueType.numpy, numpy.inexact):
+        if isinstance(self.descriptor, hashtypes.Simple):
+            if issubclass(self.descriptor.numpy, numpy.inexact):
                 dialog = QInputDialog.getDouble
-            elif issubclass(self.__valueType.numpy, numpy.integer):
+            elif issubclass(self.descriptor.numpy, numpy.integer):
                 dialog = QInputDialog.getInt
 
         if currentValue is None:
@@ -165,7 +165,7 @@ class ListEdit(QDialog):
         ok = False
         currentText = ""
         if self.__listWidget.currentItem() is not None:
-            currentText = unicode(self.__listWidget.currentItem().text())
+            currentText = str(self.__listWidget.currentItem().text())
 
         index = 0
         for i in range(len(self.allowedChoices)) :
@@ -186,7 +186,7 @@ class ListEdit(QDialog):
             value = self.retrieveChoice(self.addCaption, self.addLabel);
 
         if (value is None or not self.duplicatesOk and
-            self.__listWidget.findItems(unicode(value), Qt.MatchCaseSensitive)):
+            self.__listWidget.findItems(str(value), Qt.MatchCaseSensitive)):
             return
 
         self._addItem(value)
@@ -201,12 +201,12 @@ class ListEdit(QDialog):
             value = self.retrieveChoice(self.editCaption, self.editLabel)
 
         if (value is None or not self.duplicatesOk and
-            self.__listWidget.findItems(unicode(value), Qt.MatchCaseSensitive)):
+            self.__listWidget.findItems(str(value), Qt.MatchCaseSensitive)):
             return
         
         currentItem = self.__listWidget.currentItem()
         currentItem.editableValue = value
-        currentItem.setText(unicode(value))
+        currentItem.setText(str(value))
         self.onUpdateButtons()
 
 

@@ -16,11 +16,20 @@ safeRunCommand() {
 
 OS=$(uname -s)
 MACHINE=$(uname -m)
-if tmp=$(svn info ../../../ | grep URL)
+if tmp=$(svn info . | grep URL)
 then
+    tmp=${tmp%%-*}
     VERSION=${tmp##*/}
     if [ "$VERSION" = "trunk" ]; then
-        tmp=$(svn info ../../../ | grep Revision)
+        tmp=$(svn info . | grep Revision)
+        VERSION=r${tmp##*: }
+    fi
+elif tmp=$(jsvn info . | grep URL)
+then
+    tmp=${tmp%%-*}
+    VERSION=${tmp##*/}
+    if [ "$VERSION" = "trunk" ]; then
+        tmp=$(jsvn info . | grep Revision)
         VERSION=r${tmp##*: }
     fi
 else

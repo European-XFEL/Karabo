@@ -1,5 +1,5 @@
-Name: karabo
-Version: 1.0.0
+Name: KaraboPackageDependencies
+Version: 1.2
 Description: This file describes all karabo dependencies. It only works within the software bundle.
 URL: https://docs.xfel.eu/share/page/site/KaraboFramework/dashboard
 Libs: -L/opt/local/lib -L/opt/local/lib/nss -L/opt/local/lib/nspr -L/opt/X11/lib -lboost_chrono -lboost_date_time -lboost_filesystem -lboost_python -lboost_regex -lboost_signals -lboost_system -lboost_thread -lhdf5 -llog4cpp -lopenmqc -lpython2.7 -ldl -lpthread -lssl -lcrypto -lX11

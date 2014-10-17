@@ -5,10 +5,10 @@
 
 from karabo.karathon import DeviceClient as CppDeviceClient
 from karabo.karathon import Hash
-from karabo.karathon import Schema
-from karabo.karathon import Authenticator
-from karabo.karathon import Timestamp
+from karabo.karathon import TextSerializerHash
 import karabo.karathon as krb
+
+from deviceclientproject import DeviceClientProject
 
 import IPython
 import re
@@ -41,8 +41,8 @@ def _getVersion():
         try:
             with open(filePath, 'r') as file:
                 karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
             return ""
 
         try:
@@ -52,12 +52,12 @@ def _getVersion():
             return ""
 
 # Welcome
-print "\n#### Karabo Device-Client (version:", _getVersion(),") ####"
-print "To start you need a DeviceClient object, e.g. type:\n"
-print "  d = DeviceClient()\n"
-print "Using this object you can remote control Karabo devices."
-print "You may query servers and devices and set/get properties or execute commands on them."
-print "Hint, use the TAB key for auto-completion."
+print("\n#### Karabo Device-Client (version:", _getVersion(),") ####")
+print("To start you need a DeviceClient object, e.g. type:\n")
+print("  d = DeviceClient()\n")
+print("Using this object you can remote control Karabo devices.")
+print("You may query servers and devices and set/get properties or execute commands on them.")
+print("Hint, use the TAB key for auto-completion.")
 
 
 # The global autocompleter
@@ -89,7 +89,7 @@ def auto_complete_full(self, event):
         if (re.match('.*\($', event.line)):
             return ["\""]
     except:
-        print "Distributed auto-completion failed"
+        print("Distributed auto-completion failed")
     
 def auto_complete_set(self, event):
     try:
@@ -115,7 +115,7 @@ def auto_complete_set(self, event):
         if (re.match('.*\($', event.line)):
             return ["\""]
     except:
-        print "Distributed auto-completion failed"
+        print("Distributed auto-completion failed")
     
 def auto_complete_execute(self, event):
     try:
@@ -141,7 +141,7 @@ def auto_complete_execute(self, event):
         if (re.match('.*\($', event.line)):
             return ["\""]
     except:
-        print "Distributed auto-completion failed"
+        print("Distributed auto-completion failed")
         
 def auto_complete_instantiate(self, event):
     try:
@@ -176,7 +176,7 @@ def auto_complete_instantiate(self, event):
         if (re.match('.*\($', event.line)):
             return ["\""]
     except:
-        print "Distributed auto-completion failed"
+        print("Distributed auto-completion failed")
     
 # Register hooks
 if (ip is not None):
@@ -184,7 +184,7 @@ if (ip is not None):
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerPropertyMonitor')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*registerDeviceMonitor')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*help')
-    ip.set_hook('complete_command', auto_complete_full, re_key = '.*killDevice')
+    ip.set_hook('complete_command', auto_complete_full, re_key = '.*shutdownDevice')
     ip.set_hook('complete_command', auto_complete_full, re_key = '.*show')
 
 
@@ -192,7 +192,7 @@ if (ip is not None):
     ip.set_hook('complete_command', auto_complete_execute, re_key = '.*execute')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*instantiate')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClassSchema')
-    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*killServer')
+    ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*shutdownServer')
     ip.set_hook('complete_command', auto_complete_instantiate, re_key = '.*getClasses')
 
 
@@ -319,6 +319,12 @@ class DeviceClient(object):
         return self.__client.instantiate(serverId, classId, config, timeout)
 
 
+    def _instantiate(self, serverId, classId, deviceId, data, timeout = None):
+        #serializer = BinarySerializerHash.create("Bin") # this does not work
+        serializer = TextSerializerHash.create("Xml")
+        self.instantiateNoWait(serverId, classId, deviceId, serializer.load(data))
+
+
     def instantiateNoWait(self, serverId, classId, deviceId, config = Hash()):
         """
         Instantiate (and configure) a device on a running server.
@@ -336,29 +342,9 @@ class DeviceClient(object):
         # This is hacked here and should be added to c++
         config.set("deviceId", deviceId)
         self.__client.instantiateNoWait(serverId, classId, config)
-
-
-    def instantiateProject(self, projectFile):
-        project = Hash()
-        krb.loadFromFile(project, projectFile)
-        devices = project.get("project.devices")
-        servers = self.getServers()
-        if len(servers) == 0:
-            print "No servers available to start any devices on..."
-            return
-        for device in devices:
-            if device.__iter__().next().getValue().has("serverId"):
-                server = device.__iter__().next().getValue().get("serverId")
-                if server in servers:
-                    self.__client.instantiate(server, device)
-                else:
-                    print "Skipping instantiation, server not found"
-            else:
-                print "Using default server to instantiate"
-                self.__client.instantiate(servers[0], device)                   
         
         
-    def killDevice(self, deviceId, timeout = None):
+    def shutdownDevice(self, deviceId, timeout = None):
         """
         Shuts down a device.
 
@@ -377,7 +363,7 @@ class DeviceClient(object):
         return self.__client.killDevice(deviceId, timeout)
         
         
-    def killDeviceNoWait(self, deviceId):
+    def shutdownDeviceNoWait(self, deviceId):
         """
         Shuts down a device.
 
@@ -390,7 +376,7 @@ class DeviceClient(object):
         self.__client.killDeviceNoWait(deviceId)
         
         
-    def killServer(self, serverId, timeout = None):
+    def shutdownServer(self, serverId, timeout = None):
         """
         Shuts down a server.
 
@@ -409,7 +395,7 @@ class DeviceClient(object):
         return self.__client.killServer(serverId, timeout)
         
         
-    def killServerNoWait(self, serverId):
+    def shutdownServerNoWait(self, serverId):
         """
         Shuts down a server.
 
@@ -594,7 +580,7 @@ class DeviceClient(object):
                 return False, "Condition evaluation timed out"
             else:
                 return True, ""
-        except Exception, e:
+        except Exception as e:
             return False, "Invalid condition string: " + str(e)
         
 
@@ -634,7 +620,7 @@ class DeviceClient(object):
                     return Qwt5.Qwt.QwtText( dt.isoformat() )
 
         except ImportError:
-            print "Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)"
+            print("Missing module (guidata): Interactive image visualization disabled (feature will be enabled later on MacOSX)")
             self.hasGuiData=False
 
         if not self.hasGuiData: return
@@ -669,7 +655,7 @@ class DeviceClient(object):
                     self.__client.registerPropertyMonitor(deviceId, key, self._onImageUpdate)
                 return dialog
             else:
-                print "WARN: Empty image"
+                print("WARN: Empty image")
         elif (displayType == "Curve"):
             if x is None: x = 800
             if y is None: y = 500
@@ -680,7 +666,7 @@ class DeviceClient(object):
                     dialog.get_plot().add_item(make.legend("TR"))
                     dialog.get_itemlist_panel().show()
                     dialog.resize(x, y)
-                curveItem = make.curve(range(0, len(data), 1), data, itemId + unit, color=self.__colors[self.__curveColorIdx % len(self.__colors)])
+                curveItem = make.curve(list(range(0, len(data), 1)), data, itemId + unit, color=self.__colors[self.__curveColorIdx % len(self.__colors)])
                 self.__curveColorIdx += 1
                 plot = dialog.get_plot()
                 plot.add_item(curveItem)
@@ -707,7 +693,7 @@ class DeviceClient(object):
                 plot.setAxisAutoScale(Qwt5.Qwt.QwtPlot.yLeft)
                 plot.setAxisLabelRotation( Qwt5.Qwt.QwtPlot.xBottom, -45.0)
                 plot.setAxisLabelAlignment(Qwt5.Qwt.QwtPlot.xBottom, QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)                               
-            trendlineItem = make.curve(map(lambda x: x[ 1 ], self.__trendlineData[itemId] ), map(lambda x: x[ 0 ], self.__trendlineData[itemId]), itemId + unit, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
+            trendlineItem = make.curve([x[ 1 ] for x in self.__trendlineData[itemId]], [x[ 0 ] for x in self.__trendlineData[itemId]], itemId + unit, color=self.__colors[self.__trendlineColorIdx % len(self.__colors)])
             self.__trendlineColorIdx += 1
             plot = dialog.get_plot()
             plot.add_item(trendlineItem)
@@ -769,7 +755,7 @@ class DeviceClient(object):
     def _onImageUpdate(self, deviceId, key, image, timestamp):
         itemId = deviceId + ":" + key
         if (len(image.get("data")) > 0):
-            if self.__imageItems.has_key(itemId):
+            if itemId in self.__imageItems:
                 imageItem = self.__imageItems[itemId]
                 imageItem.set_data(self._hashImageToNumpyImage(image))
                 
@@ -777,27 +763,27 @@ class DeviceClient(object):
     def _onCurveUpdate(self, deviceId, key, data, timestamp):
         itemId = deviceId + ":" + key
         if (len(data) > 0):
-            if self.__curveItems.has_key(itemId):
+            if itemId in self.__curveItems:
                 curveItem = self.__curveItems[itemId]
-                curveItem.set_data(range(0, len(data), 1), data) 
+                curveItem.set_data(list(range(0, len(data), 1)), data) 
                 
                 
     def _onTrendlineUpdate(self, deviceId, key, value, timestamp):
         itemId = deviceId + ":" + key
-        if self.__trendlineItems.has_key(itemId):
+        if itemId in self.__trendlineItems:
             self.__trendlineData[itemId].append((value, timestamp.toTimestamp()))
             trendlineItem = self.__trendlineItems[itemId]            
-            trendlineItem.set_data( map( lambda x: x[ 1 ], self.__trendlineData[itemId] ), map( lambda x: x[ 0 ], self.__trendlineData[itemId]))
+            trendlineItem.set_data( [x[ 1 ] for x in self.__trendlineData[itemId]], [x[ 0 ] for x in self.__trendlineData[itemId]])
     
     
     def _fromTimeStringToUtcString(self, timestamp):
         date = parser.parse(timestamp)
         if date.tzname() is None:
-            print "Assuming local time for given date ", date
+            print("Assuming local time for given date ", date)
             local_tz = tzlocal.get_localzone()
             date = local_tz.localize(date)
             date = date.astimezone(pytz.utc)
-        print date.isoformat()
+        print(date.isoformat())
         return date.isoformat()
         
         
@@ -830,8 +816,8 @@ class DeviceClient(object):
                     d[monitorName] = float(formattedString)
                 elif valueType == int:
                     d[monitorName] = int(formattedString)
-                elif valueType == long:
-                    d[monitorName] = long(formattedString)
+                elif valueType == int:
+                    d[monitorName] = int(formattedString)
                 elif valueType == complex:
                     d[monitorName] = complex(formattedString)
                 else:
@@ -856,3 +842,19 @@ class DeviceClient(object):
     
     def reloadMonitorFile(self, filename = "monitor.xml"):
         self.monitor = krb.loadFromFile(filename).get("monitor")
+
+
+    def loadProject(self, filename):
+        """
+        This function loads a project via \filename and returns a project object.
+        """
+        project = DeviceClientProject(filename, self)
+        try:
+            project.unzip()
+        except Exception as e:
+            e.message = "While reading the project a <b>critical error</b> " \
+                        "occurred."
+            raise
+
+        return project
+

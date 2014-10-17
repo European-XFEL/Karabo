@@ -336,7 +336,7 @@ namespace karabo {
         void JmsBrokerChannel::readAsyncRaw(const ReadRawHandler& readHandler) {
 
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function
@@ -383,10 +383,10 @@ namespace karabo {
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
-                    
+
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
-                    
+
                     MQMessageType messageType;
                     MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
                     if (messageType == MQ_BYTES_MESSAGE) {
@@ -402,7 +402,7 @@ namespace karabo {
                             m_readHashRawHandler(shared_from_this(), header, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                         } else {
                             m_readRawHandler(shared_from_this(), reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
-                        }                      
+                        }
 
                         MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
@@ -424,7 +424,7 @@ namespace karabo {
         void JmsBrokerChannel::readAsyncString(const ReadStringHandler& readHandler) {
 
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function
@@ -457,15 +457,15 @@ namespace karabo {
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
-               
+
                 MQStatus status = consumeMessage(messageHandle, 2000);
-               
+
                 if (!MQStatusIsError(status) && !m_isStopped) {
                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
-                    
+
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
-                     
+
                     MQMessageType messageType;
                     MQ_SAFE_CALL(MQGetMessageType(messageHandle, &messageType));
 
@@ -474,7 +474,7 @@ namespace karabo {
                         MQ_SAFE_CALL(MQGetTextMessageText(messageHandle, &msgBody));
                         if (withHeader) {
                             Hash::Pointer header(new Hash());
-                            parseHeader(messageHandle, *header);                            
+                            parseHeader(messageHandle, *header);
                             m_readHashStringHandler(shared_from_this(), header, string(msgBody));
                         } else {
                             m_readStringHandler(shared_from_this(), string(msgBody));
@@ -500,7 +500,7 @@ namespace karabo {
         void JmsBrokerChannel::readAsyncHash(const ReadHashHandler& readHandler) {
 
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function
@@ -537,7 +537,7 @@ namespace karabo {
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
-                    
+
                     // Allow registration of another handler
                     if (!m_ioService->isWorking()) m_hasAsyncHandler = false;
 
@@ -584,7 +584,7 @@ namespace karabo {
 
         void JmsBrokerChannel::readAsyncHashRaw(const ReadHashRawHandler& readHandler) {
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function
@@ -617,7 +617,7 @@ namespace karabo {
         void JmsBrokerChannel::readAsyncHashString(const ReadHashStringHandler& readHandler) {
 
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function
@@ -633,7 +633,7 @@ namespace karabo {
             try {
 
                 bool messageReceived = false;
-                do {                    
+                do {
                     messageReceived = signalIncomingTextMessage(true);
                 } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
 
@@ -648,7 +648,7 @@ namespace karabo {
 
         void JmsBrokerChannel::readAsyncHashHash(const ReadHashHashHandler& readHandler) {
             ensureSingleAsyncHandler();
-            
+
             ensureExistanceOfConsumer();
 
             // Save the callback function

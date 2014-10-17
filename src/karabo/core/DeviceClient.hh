@@ -92,7 +92,7 @@ namespace karabo {
 
             mutable boost::mutex m_runtimeSystemDescriptionMutex;
 
-            boost::shared_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
+            boost::weak_ptr<karabo::xms::SignalSlotable> m_signalSlotable;
 
             bool m_isShared;
 
@@ -115,6 +115,8 @@ namespace karabo {
             std::string m_masterDeviceId;
 
             bool m_isAdvancedMode; // DEPRECATED
+            
+            bool m_topologyInitialized;
 
             MasterMode m_masterMode;
 
@@ -177,7 +179,13 @@ namespace karabo {
 
             // DEPRECATE
             void disableAdvancedMode();
-
+            
+            /**
+             * Switch on buithe mechanism of polling network environment known to broker
+             */
+            void enableTopologyBuilding();
+            void disableTopologyBuilding();
+            
             /**
              * Set ageing on or off (on by default)
              * @return 
@@ -420,32 +428,32 @@ namespace karabo {
             void setNoWait(const std::string& instanceId, const karabo::util::Hash& values);
 
             void executeNoWait(const std::string& instanceId, const std::string& command) {
-
-                m_signalSlotable->call(instanceId, command);
+                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1) {
-
-                m_signalSlotable->call(instanceId, command, a1);
+                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2) {
-
-                m_signalSlotable->call(instanceId, command, a1, a2);
+                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2, class A3>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3) {
-
-                m_signalSlotable->call(instanceId, command, a1, a2, a3);
+                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             template <class A1, class A2, class A3, class A4>
             void executeNoWait(const std::string& instanceId, const std::string& command, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
-
-                m_signalSlotable->call(instanceId, command, a1, a2, a3, a4);
+                if (!m_signalSlotable.expired()) m_signalSlotable.lock()->call(instanceId, command, a1, a2, a3, a4);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
             }
 
             std::pair<bool, std::string> execute(const std::string& instanceId, const std::string& command, int timeoutInSeconds = -1) {
@@ -455,7 +463,8 @@ namespace karabo {
                 std::string text = "";
 
                 try {
-                    m_signalSlotable->request(instanceId, command).timeout(timeoutInSeconds * 1000).receive(text);
+                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command).timeout(timeoutInSeconds * 1000).receive(text);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 } catch (const karabo::util::Exception& e) {
 
                     text = e.userFriendlyMsg();
@@ -472,7 +481,8 @@ namespace karabo {
                 std::string text = "";
 
                 try {
-                    m_signalSlotable->request(instanceId, command, a1).timeout(timeoutInSeconds * 1000).receive(text);
+                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1).timeout(timeoutInSeconds * 1000).receive(text);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 } catch (const karabo::util::Exception& e) {
 
                     text = e.userFriendlyMsg();
@@ -489,7 +499,8 @@ namespace karabo {
                 std::string text = "";
 
                 try {
-                    m_signalSlotable->request(instanceId, command, a1, a2).timeout(timeoutInSeconds * 1000).receive(text);
+                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2).timeout(timeoutInSeconds * 1000).receive(text);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 } catch (const karabo::util::Exception& e) {
 
                     text = e.userFriendlyMsg();
@@ -507,7 +518,8 @@ namespace karabo {
                 std::string text = "";
 
                 try {
-                    m_signalSlotable->request(instanceId, command, a1, a2, a3).timeout(timeoutInSeconds * 1000).receive(text);
+                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2, a3).timeout(timeoutInSeconds * 1000).receive(text);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 } catch (const karabo::util::Exception& e) {
 
                     text = e.userFriendlyMsg();
@@ -525,7 +537,8 @@ namespace karabo {
                 std::string text = "";
 
                 try {
-                    m_signalSlotable->request(instanceId, command, a1, a2, a3, a4).timeout(timeoutInSeconds * 1000).receive(text);
+                    if (!m_signalSlotable.expired()) m_signalSlotable.lock()->request(instanceId, command, a1, a2, a3, a4).timeout(timeoutInSeconds * 1000).receive(text);
+                    else KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed).";
                 } catch (const karabo::util::Exception& e) {
                     text = e.userFriendlyMsg();
                     ok = false;
@@ -534,7 +547,9 @@ namespace karabo {
             }
 
         protected: // functions
-
+            
+            void initTopology();
+            
             void cacheAvailableInstances();
 
             karabo::util::Hash prepareTopologyEntry(const std::string& instanceId, const karabo::util::Hash& instanceInfo);

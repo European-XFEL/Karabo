@@ -13,19 +13,18 @@ __all__ = ["ConfigurationPanel"]
 
 
 from docktabwindow import DockTabWindow
-from documentationpanel import DocumentationPanel
+from .documentationpanel import DocumentationPanel
 import icons
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 from parametertreewidget import ParameterTreeWidget
 from projecttreeview import ProjectTreeView
 
-from PyQt4.QtCore import pyqtSignal, Qt, QTimer
+from PyQt4.QtCore import Qt, QTimer
 from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QMovie, QPalette, QPushButton,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
-
 
 class ConfigurationPanel(QWidget):
     ##########################################
@@ -119,7 +118,7 @@ class ConfigurationPanel(QWidget):
         hLayout = QHBoxLayout()
         hLayout.setContentsMargins(0,5,5,5)
         
-        text = "Initiate device"
+        text = "Instantiate device"
         self.pbInitDevice = QPushButton(icons.start, text)
         self.pbInitDevice.setToolTip(text)
         self.pbInitDevice.setStatusTip(text)
@@ -128,7 +127,7 @@ class ConfigurationPanel(QWidget):
         self.pbInitDevice.clicked.connect(self.onInitDevice)
         hLayout.addWidget(self.pbInitDevice)
 
-        text = "Kill instance"
+        text = "Shutdown instance"
         self.pbKillInstance = QPushButton(icons.kill, text)
         self.pbKillInstance.setStatusTip(text)
         self.pbKillInstance.setToolTip(text)
@@ -326,8 +325,7 @@ class ConfigurationPanel(QWidget):
 
 
     def updateResetAllActions(self, configuration):
-        twParameterEditor = self.__swParameterEditor.widget(
-            configuration.index)
+        twParameterEditor = self.__swParameterEditor.widget(configuration.index)
 
         nbSelected = twParameterEditor.nbSelectedApplyEnabledItems()
         if (self.pbResetAll.isEnabled() is True) and (nbSelected > 0):
@@ -482,13 +480,13 @@ class ConfigurationPanel(QWidget):
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
-            if not hasattr(configuration, 'index'):
+            if configuration.index is None:
                 configuration.index = self._createNewParameterPage(configuration)
                 index = 1
             else:
                 index = configuration.index
             # Show waiting page
-            self._setParameterEditorIndex(index)#configuration.index)
+            self._setParameterEditorIndex(index)
         
         if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
             configuration.addVisible()
@@ -526,6 +524,8 @@ class ConfigurationPanel(QWidget):
         This slot is called when the configurator needs a reset which means all
         parameter editor pages need to be cleaned and removed.
         """
+        self.prevConfiguration = None
+        
         # Do not remove the first two widgets (empty page and waiting page)
         while self.__swParameterEditor.count() > 2:
             self._removeParameterEditorPage(self.__swParameterEditor
@@ -542,14 +542,15 @@ class ConfigurationPanel(QWidget):
 
 
     def onShowConfiguration(self, configuration):
-        if hasattr(configuration, 'index'):
+        if configuration.index is None:
+            configuration.index = self._createNewParameterPage(configuration)
+        else:
             twParameterEditor = self.__swParameterEditor.widget(configuration.index)
             twParameterEditor.clear()
             configuration.fillWidget(twParameterEditor)
-        else:
-            configuration.index = self._createNewParameterPage(configuration)
 
-        if self.__swParameterEditor.currentIndex() == 1:
+        currentIndex = self.__swParameterEditor.currentIndex()
+        if (currentIndex == 1) and (self.prevConfiguration is configuration):
             # Waiting page is shown
             self._setParameterEditorIndex(configuration.index)
         
@@ -601,13 +602,13 @@ class ConfigurationPanel(QWidget):
         else:
             timer.stop()
 
-            if hasattr(conf, 'index'):
+            if conf.index is not None:
                 parameterEditor = self.__swParameterEditor.widget(conf.index)
                 parameterEditor.setReadOnly(False)
 
  
     def onErrorState(self, conf, inErrorState):
-        if hasattr(conf, 'index'):
+        if conf.index is not None:
             parameterEditor = self.__swParameterEditor.widget(conf.index)
             parameterEditor.setErrorState(inErrorState)
 
@@ -617,10 +618,10 @@ class ConfigurationPanel(QWidget):
         timer.stop()
         
         # Check path against path of current parameter editor
-        mapValues = self.__changingTimerDeviceIdMap.values()
-        for i in xrange(len(mapValues)):
+        mapValues = list(self.__changingTimerDeviceIdMap.values())
+        for i in range(len(mapValues)):
             if timer == mapValues[i]:
-                path = self.__changingTimerDeviceIdMap.keys()[i]
+                path = list(self.__changingTimerDeviceIdMap.keys())[i]
                 
                 parameterEditor = self._getParameterEditorByPath(path)
                 if parameterEditor:
@@ -677,7 +678,7 @@ class ConfigurationPanel(QWidget):
             indexInfo = self.twProject.indexInfo()
         else:
             indexInfo = {}
-            print "No device for initiation selected."
+            print("No device for initiation selected.")
 
         if len(indexInfo) == 0:
             return
@@ -691,7 +692,7 @@ class ConfigurationPanel(QWidget):
 
 
     def onGlobalAccessLevelChanged(self):
-        for index in xrange(self.__swParameterEditor.count()):
+        for index in range(self.__swParameterEditor.count()):
             twParameterEditor = self.__swParameterEditor.widget(index)
             if isinstance(twParameterEditor, ParameterTreeWidget):
                 twParameterEditor.globalAccessLevelChanged()

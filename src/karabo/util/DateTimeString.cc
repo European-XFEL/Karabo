@@ -276,9 +276,12 @@ namespace karabo {
             // (i.e. [(double) "18 - std::log10((unsigned long long) 15)"] == 3)
             // Alternatively the best option is to do:
             // ["std::log10(ONESECOND / precision)"] == 3
-            int numDigits = std::log10(ONESECOND / precision);
-            oss << '.' << setw(numDigits) << setfill('0') << fractionalSeconds / precision;
-
+            int zeros = int(precision);
+            unsigned long long multiplier = 1;
+            while(zeros-->0) multiplier *= 10ULL;
+            int numDigits = std::log10(1000000000000000000ULL / multiplier);
+            oss << '.' << setw(numDigits) << setfill('0') << fractionalSeconds / multiplier;
+            
             return oss.str();
         }
 

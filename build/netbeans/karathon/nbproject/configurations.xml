@@ -117,8 +117,8 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
-            <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
+            <pElem>${KARABO}/extern/include/python3.4</pElem>
+            <pElem>${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>
@@ -311,6 +311,9 @@
             tool="1"
             flavor2="0">
         <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
           <warningLevel>1</warningLevel>
         </ccTool>
       </item>
@@ -506,8 +509,8 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
-            <pElem>${KARABO}/extern/lib/python2.7/site-packages/numpy/core/include</pElem>
+            <pElem>${KARABO}/extern/include/python3.4</pElem>
+            <pElem>${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include</pElem>
             <pElem>${KARABO}/extern/include</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>
@@ -706,6 +709,9 @@
             flavor2="0">
         <ccTool>
           <commandLine>-Wno-unused-but-set-variable -Wno-strict-aliasing</commandLine>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
         </ccTool>
       </item>
       <item path="../../../src/karathon/PyXipImage.cc"

@@ -17,21 +17,21 @@ import icons
 from manager import Manager
 from util import getSaveFileName
 
-from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QIODevice, QMutex,
-                          QMutexLocker, Qt, QThread)
+from PyQt4.QtCore import (pyqtSignal, QDate, QDateTime, QMutex, QMutexLocker,
+                          Qt, QThread)
 from PyQt4.QtGui import (QAbstractItemView, QColor, QDateTimeEdit,
                          QFormLayout, QFrame, QGroupBox, QHBoxLayout,
-                         QHeaderView, QLabel,
+                         QItemSelectionModel, QLabel,
                          QLineEdit, QPushButton, QTableView, QToolButton,
                          QVBoxLayout, QWidget)
 
-from Queue import Queue
+from queue import Queue
 from time import sleep
 
 try:
     from PyQt4.QtSql import QSqlTableModel, QSqlQuery, QSqlQueryModel
 except:
-    print "*ERROR* The PyQt4 sql module is not installed"
+    print("*ERROR* The PyQt4 sql module is not installed")
 
 
 # Define date time format
@@ -54,7 +54,7 @@ class LogWidget(QWidget):
 
         # Add button to collapse/expand filter options
         text = "Show filter options"
-        self.pbFilterOptions = QPushButton("+ " + text)
+        self.pbFilterOptions = QPushButton("+ {}".format(text))
         self.pbFilterOptions.setStatusTip(text)
         self.pbFilterOptions.setToolTip(text)
         self.pbFilterOptions.setCheckable(True)
@@ -492,7 +492,7 @@ class LogWidget(QWidget):
                            FROM tLog ORDER BY dateTime DESC;"""
             model.setQuery(queryText, Manager().sqlDatabase)
 
-            for i in xrange(model.rowCount()):
+            for i in range(model.rowCount()):
                 id = model.record(i).value("id")
                 dateTime = model.record(i).value("dateTime")
                 messageType = model.record(i).value("messageType")
@@ -538,7 +538,6 @@ class LogTableView(QTableView):
         self.setWordWrap(True)
         self.setAlternatingRowColors(True)
         self.horizontalHeader().setStretchLastSection(True)
-        #self.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
         self.verticalHeader().setVisible(False)
 
         # Selection
@@ -726,16 +725,30 @@ class LogThread(QThread):
                 continue
 
             logMsgList = logMsg.split(' | ')
-            if len(logMsgList) < 1:
-                continue
-
-            dateTime = logMsgList[0]
-            logLevel = logMsgList[1]
-            instanceId = logMsgList[2]
-            description = logMsgList[3]
-            if len(logMsgList) > 4:
+            # Get time stamp
+            try:
+                dateTime = logMsgList[0]
+            except IndexError:
+                dateTime = ""
+            # Get log level
+            try:
+                logLevel = logMsgList[1]
+            except IndexError:
+                logLevel = ""
+            # Get instance ID
+            try:
+                instanceId = logMsgList[2]
+            except IndexError:
+                instanceId = ""
+            # Get description
+            try:
+                description = logMsgList[3]
+            except IndexError:
+                description = ""
+            # Get additional description
+            try:
                 additionalDescription = logMsgList[4]
-            else:
+            except IndexError:
                 additionalDescription = ""
             self.insertInto(dateTime, logLevel, instanceId, description, additionalDescription)
 
@@ -794,7 +807,7 @@ class LogThread(QThread):
 
 
     def onDeleteLater(self):
-        print "onDeleteLater"
+        print("onDeleteLater")
         self.isFinished = True
         self.wait()
 

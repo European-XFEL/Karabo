@@ -16,28 +16,23 @@ CPPUNIT_TEST_SUITE_REGISTRATION(Epochstamp_Test);
 using namespace std;
 using namespace karabo::util;
 
-
 Epochstamp_Test::Epochstamp_Test() {
 }
-
 
 Epochstamp_Test::~Epochstamp_Test() {
 }
 
-
 void Epochstamp_Test::setUp() {
 }
-
 
 void Epochstamp_Test::tearDown() {
 }
 
-
 void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
-                                                const unsigned long long& expectedSeconds,
-                                                const unsigned long long& expectedFractionalSecond,
-                                                bool isCompactString,
-                                                const std::string& expectedToIso8601) {
+        const unsigned long long& expectedSeconds,
+        const unsigned long long& expectedFractionalSecond,
+        bool isCompactString,
+        const std::string& expectedToIso8601) {
     bool writeToClog = false;
 
     if (writeToClog) {
@@ -133,14 +128,13 @@ void Epochstamp_Test::validateStringConstructor(const std::string& pTime,
     return;
 }
 
-
 void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
-                                         const karabo::util::Epochstamp epo2,
-                                         const karabo::util::TIME_UNITS precision,
-                                         const std::string& precisionDesc,
-                                         const bool isCompactString,
-                                         const bool writeToClog,
-                                         const std::string& expectedToIso8601) {
+        const karabo::util::Epochstamp epo2,
+        const karabo::util::TIME_UNITS precision,
+        const std::string& precisionDesc,
+        const bool isCompactString,
+        const bool writeToClog,
+        const std::string& expectedToIso8601) {
 
     //Concatenate function name plus precision description
     std::string functionDesc = "toIso8601Precision >> toIso8601(" + precisionDesc + ") => '";
@@ -164,7 +158,6 @@ void Epochstamp_Test::toIso8601Precision(const karabo::util::Epochstamp epo,
 
     return;
 }
-
 
 void Epochstamp_Test::testConstructors() {
 
@@ -268,7 +261,6 @@ void Epochstamp_Test::testConstructors() {
 
 }
 
-
 void Epochstamp_Test::testToIso8601String() {
 
     // Validate "UNIVERSAL" compact ISO8601 format 
@@ -291,13 +283,13 @@ void Epochstamp_Test::testToIso8601String() {
     validateStringConstructor("20121225T132536.000123456789", 1356441936ULL, 123456789000000ULL, true, "20121225T132536.000123456789000000");
 }
 
-
 void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
-                                                const std::string& format,
-                                                const std::string& pTimeDesiredTimeZone,
-                                                const std::string& expectedStringOutput) {
+        const std::string& format,
+        const std::string& pTimeDesiredTimeZone,
+        const std::string& expectedStringOutput) {
     bool writeToClog = false;
     std::string utcTimeZone = "Z"; //"UTC" == "Z"
+    std::string localeNameUS = "en_US.UTF-8";
 
     if (writeToClog) {
         std::clog << "Validate Constructor (pTime == " << pTime << ")" << std::endl;
@@ -316,25 +308,34 @@ void Epochstamp_Test::validateToFormattedString(const std::string& pTime,
         epo = karabo::util::Epochstamp(pTime);
     }
 
+    /**
+     * Function toFormattedStringLocale and toFormattedString only differ in the used locale, since internally both use
+     * the same function: toFormattedStringInternal
+     * 
+     * toFormattedStringLocale - requires that the locale name
+     * toFormattedString - uses the System locale
+     * 
+     * In this test only the toFormattedStringLocale, since this way it's possible to run successfully this test 
+     * in Systems with a different locale
+     */
     std::string returnFormatedString;
     if (format == "") {
         if (pTimeDesiredTimeZone == utcTimeZone) {
-            returnFormatedString = epo.toFormattedString();
+            returnFormatedString = epo.toFormattedStringLocale(localeNameUS);
         } else {
-            returnFormatedString = epo.toFormattedString("%Y-%b-%d %H:%M:%S", pTimeDesiredTimeZone);
+            returnFormatedString = epo.toFormattedStringLocale(localeNameUS, "%Y-%b-%d %H:%M:%S", pTimeDesiredTimeZone);
         }
     } else {
         if (pTimeDesiredTimeZone == utcTimeZone) {
-            returnFormatedString = epo.toFormattedString(format);
+            returnFormatedString = epo.toFormattedStringLocale(localeNameUS, format);
         } else {
-            returnFormatedString = epo.toFormattedString(format, pTimeDesiredTimeZone);
+            returnFormatedString = epo.toFormattedStringLocale(localeNameUS, format, pTimeDesiredTimeZone);
         }
     }
 
     if (writeToClog) std::clog << "epo.toFormattedString('" << format << "', '" << pTimeDesiredTimeZone << "') => " << returnFormatedString << " == " << expectedStringOutput << std::endl;
     CPPUNIT_ASSERT(returnFormatedString == expectedStringOutput);
 }
-
 
 void Epochstamp_Test::testToFormattedString() {
 

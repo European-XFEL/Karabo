@@ -15,18 +15,20 @@ namespace karathon {
 
     void ConnectionWrap::startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler) {
         IOService::Pointer ioserv = connection->getIOService();
-        {
-            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
-            map<IOService*, map<Connection*, Hash> >::iterator it = m_handlers.find(ioserv.get());
-            if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Connection*, Hash>();
-            map<Connection*, Hash>& cmap = m_handlers[ioserv.get()];
-            map<Connection*, Hash>::iterator ii = cmap.find(connection.get());
-            if (ii == cmap.end()) cmap[connection.get()] = Hash();
-            Hash& hash = cmap[connection.get()];
-            hash.set("_connection", connectionHandler);
+        try {
+            ScopedGILRelease nogil;
+            connection->startAsync(proxyConnectionHandler);
+        } catch(...) {
+            KARABO_RETHROW
         }
-        ScopedGILRelease nogil;
-        connection->startAsync(proxyConnectionHandler);
+        boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+        map<IOService*, map<Connection*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+        if (it == m_handlers.end()) m_handlers[ioserv.get()] = map<Connection*, Hash>();
+        map<Connection*, Hash>& cmap = m_handlers[ioserv.get()];
+        map<Connection*, Hash>::iterator ii = cmap.find(connection.get());
+        if (ii == cmap.end()) cmap[connection.get()] = Hash();
+        Hash& hash = cmap[connection.get()];
+        hash.set("_connection", connectionHandler);
     }
 
     void ConnectionWrap::proxyConnectionHandler(karabo::net::Channel::Pointer channel) {
@@ -49,7 +51,7 @@ namespace karathon {
 
         ScopedGILAcquire gil;
         bp::object onconnect = hash.get<bp::object>("_connection");
-        if (!PyObject_HasAttrString(onconnect.ptr(), "func_name"))
+        if (!PyCallable_Check(onconnect.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         onconnect(bp::object(channel));
     }
@@ -64,7 +66,7 @@ namespace karathon {
             map<Connection*, Hash>::iterator ii = cmap.find(connection.get());
             if (ii == cmap.end()) cmap[connection.get()] = Hash();
             Hash& hash = cmap[connection.get()];
-            hash.set("_error", errorHandler);     // register python error handler for connection
+            hash.set("_error", errorHandler); // register python error handler for connection
         }
         ScopedGILRelease nogil;
         connection->setErrorHandler(proxyErrorHandler);
@@ -90,7 +92,7 @@ namespace karathon {
 
         ScopedGILAcquire gil;
         bp::object onerror = hash.get<bp::object>("_error");
-        if (!PyObject_HasAttrString(onerror.ptr(), "func_name"))
+        if (!PyCallable_Check(onerror.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
         onerror(bp::object(channel), bp::object(code));
     }

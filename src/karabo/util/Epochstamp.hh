@@ -27,7 +27,6 @@ namespace karabo {
          * 
          */
         class Epochstamp {
-
             // Number of seconds since hour 00:00 of the 1st of January, 1970
             unsigned long long m_seconds;
 
@@ -180,6 +179,18 @@ namespace karabo {
              */
             std::string toFormattedString(const std::string& format = std::string("%Y-%b-%d %H:%M:%S"), const std::string& localTimeZone = std::string("Z")) const;
 
+            /**
+             * Formats to specified format time stored in the object
+             * 
+             * @param localeName - String that represents the locale to be used [Default: "" == System locale]
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
+             * @return formated string in the specified Time Zone
+             */
+            std::string toFormattedStringLocale(const std::string& localeName = std::string(""),
+                    const std::string& format = std::string("%Y-%b-%d %H:%M:%S"),
+                    const std::string& localTimeZone = std::string("Z")) const;
+
 
             static bool hashAttributesContainTimeInformation(const Hash::Attributes& attributes);
 
@@ -204,9 +215,24 @@ namespace karabo {
              * 
              * @param pt Boost ptime of a specific moment in time
              * @param facet Boost time_facet to be applied
+             * @param localeName - String that represents the locale to be used
              * @return The specified date/time formatted according to the specified time_facet
              */
-            static std::string getPTime2String(const boost::posix_time::ptime pt, const boost::posix_time::time_facet* facet);
+            static std::string getPTime2String(const boost::posix_time::ptime pt,
+                    const boost::posix_time::time_facet* facet,
+                    const std::string& localeName);
+
+            /**
+             * Formats to specified format time stored in the object
+             * 
+             * @param localeName - String that represents the locale to be used [Default: "" == System locale]
+             * @param format The format of the time point (visit strftime for more info: http://www.cplusplus.com/reference/ctime/strftime/) [Default: "%Y-%b-%d %H:%M:%S"]
+             * @param localTimeZone - String that represents an ISO8601 time zone [Default: "Z" == UTC]
+             * @return formated string in the specified Time Zone
+             */
+            std::string toFormattedStringInternal(const std::string& localeName,
+                    const std::string& format,
+                    const std::string& localTimeZone) const;
 
             /**
              * Generates a sting (respecting ISO-8601) for object time for INTERNAL usage ("%Y%m%dT%H%M%S%f" => "20121225T132536.789333[123456789123]")

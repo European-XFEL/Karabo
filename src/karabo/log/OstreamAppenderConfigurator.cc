@@ -12,12 +12,12 @@
 #include <iostream>
 #include <string>
 #include "OstreamAppenderConfigurator.hh"
-#include "log4cpp/OstreamAppender.hh"
+#include "krb_log4cpp/OstreamAppender.hh"
 #include <karabo/util/SimpleElement.hh>
 
 using namespace std;
 using namespace karabo::util;
-using namespace log4cpp;
+using namespace krb_log4cpp;
 
 
 namespace karabo {
@@ -43,14 +43,14 @@ namespace karabo {
         }
 
 
-        log4cpp::Appender* OstreamAppenderConfigurator::create() {
+        krb_log4cpp::Appender* OstreamAppenderConfigurator::create() {
             if (m_out == "STDERR") {
-                return new log4cpp::OstreamAppender(getName(), &std::cerr);
+                return new krb_log4cpp::OstreamAppender(getName(), &std::cerr);
             }
             if (m_out == "STDOUT") {
-                return new log4cpp::OstreamAppender(getName(), &std::cout);
+                return new krb_log4cpp::OstreamAppender(getName(), &std::cout);
             }
-            return new log4cpp::OstreamAppender(getName(), &std::cerr);
+            return new krb_log4cpp::OstreamAppender(getName(), &std::cerr);
         }
     }
 }

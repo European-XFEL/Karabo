@@ -84,7 +84,7 @@ class PythonDevice(BaseFsm):
         
     def __init__(self, configuration):
         if configuration is None:
-            raise ValueError,"Configuration must be Hash object, not None"
+            raise ValueError("Configuration must be Hash object, not None")
         #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
         super(PythonDevice, self).__init__(configuration)
         
@@ -128,7 +128,9 @@ class PythonDevice(BaseFsm):
         try:
             self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
         except RuntimeError as e:
-            raise RuntimeError,"PythonDevice.__init__: SignalSlotable.create Exception -- " + str(e)
+            raise RuntimeError(
+                "PythonDevice.__init__: SignalSlotable.create Exception -- " +
+                str(e))
         # Setup device logger
         self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
@@ -217,13 +219,14 @@ class PythonDevice(BaseFsm):
         pars = tuple(args)
         with self._stateChangeLock:
             if len(pars) == 0 or len(pars) > 3:
-                raise SyntaxError, "Number of parameters is wrong: from 1 to 3 arguments are allowed."
-            
+                raise SyntaxError("Number of parameters is wrong: "
+                                  "from 1 to 3 arguments are allowed.")
+
             # key, value, timestamp args
             if len(pars) == 3:
                 key, value, stamp = pars
                 if type(stamp) is not Timestamp:
-                    raise TypeError,"The 3rd argument should be Timestamp"
+                    raise TypeError("The 3rd argument should be Timestamp")
                 if isCpuImage(value):
                     self._setImage(key, value)
                     return;
@@ -236,7 +239,7 @@ class PythonDevice(BaseFsm):
             if len(pars) == 1:
                 h = pars[0]
                 if type(h) is not Hash:
-                    raise TypeError,"The only argument should be a Hash"
+                    raise TypeError("The only argument should be a Hash")
                 pars = tuple([h, Timestamp()])   # add timestamp
             
             # key, value or hash, timestamp args
@@ -265,8 +268,8 @@ class PythonDevice(BaseFsm):
                 try:
                     validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
                 except RuntimeError as e:
-                    print "Validation Exception (Intern): " + str(e)
-                    raise RuntimeError,"Validation Exception: " + str(e)
+                    print("Validation Exception (Intern): " + str(e))
+                    raise RuntimeError("Validation Exception: " + str(e))
 
                 #if self.validatorIntern.hasParametersInWarnOrAlarm():
                 #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
@@ -287,8 +290,9 @@ class PythonDevice(BaseFsm):
             try:
                 return self.parameters[key]
             except RuntimeError as e:
-                raise AttributeError,"Error while retrieving '" + key + "' from device"
-            
+                raise AttributeError(
+                    "Error while retrieving '{}' from device".format(key))
+
     def __getitem__(self, key):
         return self.get(key)
     
@@ -359,14 +363,18 @@ class PythonDevice(BaseFsm):
         try:
             return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
         except RuntimeError as e:
-            raise AttributeError,"Error while retrieving alias from parameter (" + key + "): " + str(e)
-        
+            raise AttributeError(
+                "Error while retrieving alias from parameter ({}): {}".
+                format(key, e))
+
     def getKeyFromAlias(self, alias):
         try:
             return self.fullSchema.getKeyFromAlias(alias)
         except RuntimeError as e:
-            raise AttributeError,"Error while retrieving parameter from alias (" + str(alias) + "): " + str(e)
-    
+            raise AttributeError(
+                "Error while retrieving parameter from alias ({}): {}".
+                format(alias, e))
+
     def aliasHasKey(self, alias):
         return self.fullSchema.aliasHasKey(key)
     
@@ -423,12 +431,13 @@ class PythonDevice(BaseFsm):
         self._ss.reply(currentState)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
-        print "onStateUpdate() is deprecated, use updateState() instead"
+        print("onStateUpdate() is deprecated, use updateState() instead")
         self.updateState(currentState)
 
     def exceptionFound(self, shortMessage, detailedMessage):
         self.log.ERROR(shortMessage)
-        self._ss.emit("signalNotification", "EXCEPTION", shortMessage, detailedMessage)
+        self._ss.emit("signalNotification", "EXCEPTION", shortMessage,
+                      detailedMessage, self.deviceid)
 
     def noStateTransition(self):
         self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
@@ -454,7 +463,7 @@ class PythonDevice(BaseFsm):
         self._ss.registerSlot(self.slotKillDevice)        
 
     def triggerError(self, s, d):
-        print "The triggerError() function is deprecated, use execute() instead"
+        print("The triggerError() function is deprecated, use execute() instead")
         self.exceptionFound(s, d)
         
     def execute(self, command, *args):
@@ -469,7 +478,8 @@ class PythonDevice(BaseFsm):
         elif len(args) == 4:
             self._ss.call("", command, args[0], args[1], args[2], args[3])
         else:
-            raise AttributeError,"Number of command parameters should not exceed 4"
+            raise AttributeError(
+                "Number of command parameters should not exceed 4")
           
     
     def slotGetConfiguration(self):
@@ -485,7 +495,7 @@ class PythonDevice(BaseFsm):
             try:
                 self.preReconfigure(validated)
             except Exception as e:
-                print "PythonDevice.slotReconfigure Exception:", str(e)
+                print("PythonDevice.slotReconfigure Exception:", str(e))
                 self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
                 return
@@ -583,6 +593,6 @@ def launchPythonDevice():
         device.run()
         device.__del__()
     except Exception as e:
-        print "Exception caught: " + str(e)
+        print("Exception caught: " + str(e))
     os._exit(77)
     

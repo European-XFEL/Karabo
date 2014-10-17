@@ -5,6 +5,10 @@
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
         <itemPath>../../../src/karabo/core/ComputeDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/ComputeDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogger.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
+        <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.cc</itemPath>
         <itemPath>../../../src/karabo/core/FileDataLogger.hh</itemPath>
@@ -445,6 +449,10 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
+      <itemPath>karaboDependencies-GNU-Linux-x86.pc</itemPath>
+      <itemPath>karaboDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
+      <itemPath>karaboPackageDependencies-GNU-Linux-x86.pc</itemPath>
+      <itemPath>karaboPackageDependencies-GNU_MacPorts-MacOSX.pc</itemPath>
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
@@ -465,7 +473,7 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
@@ -510,6 +518,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2207,7 +2235,7 @@
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/extern/include/hdf5</pElem>
-            <pElem>${KARABO}/extern/include/python2.7</pElem>
+            <pElem>${KARABO}/extern/include/python3.4</pElem>
           </incDir>
           <commandLine>-Wno-unused-local-typedefs</commandLine>
           <preprocessorList>
@@ -2255,6 +2283,26 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/ComputeDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLogger.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/DataLoggerManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
