@@ -18,16 +18,16 @@ from configuration import Configuration
 import globals
 import icons
 from dialogs.duplicatedialog import DuplicateDialog
-from dialogs.plugindialog import PluginDialog
+from dialogs.devicedialogs import DeviceDialog
 from dialogs.scenedialog import SceneDialog
-from guiproject import Category, Device, GuiProject
+from guiproject import Category, Device, DeviceGroup, GuiProject
 from scene import Scene
 import manager
 
 from karabo.project import Project
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
+from PyQt4.QtGui import (QDialog, QFileDialog, QItemSelectionModel,
                          QMessageBox, QStandardItem, QStandardItemModel)
 import os.path
 from zipfile import ZipFile
@@ -51,7 +51,7 @@ class ProjectModel(QStandardItemModel):
         self.projects = []
 
         # Dialog to add and change a device
-        self.pluginDialog = None
+        self.deviceDialog = None
         
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self, self)
@@ -72,7 +72,10 @@ class ProjectModel(QStandardItemModel):
             config = conf.toHash()
         else:
             conf = object
-            config = object.toHash()
+            if conf.descriptor is not None:
+                config = conf.toHash()
+            else:
+                config = conf.initConfig
 
         return dict(conf=conf,
                     serverId=object.serverId,
@@ -122,23 +125,49 @@ class ProjectModel(QStandardItemModel):
             childItem.setIcon(icons.folder)
             childItem.setToolTip(Project.DEVICES_LABEL)
             item.appendRow(childItem)
-            for device in project.devices:
-                leafItem = QStandardItem(device.id)
-                leafItem.setData(device, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
+            for deviceObj in project.devices:
+                if isinstance(deviceObj, Device):
+                    leafItem = QStandardItem(deviceObj.id)
+                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
+                    leafItem.setEditable(False)
 
-                if device.status != "offline" and device.error:
-                    leafItem.setIcon(icons.deviceInstanceError)
+                    if deviceObj.status != "offline" and deviceObj.error:
+                        leafItem.setIcon(icons.deviceInstanceError)
+                    else:
+                        leafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                              noserver=icons.deviceOfflineNoServer,
+                                              noplugin=icons.deviceOfflineNoPlugin,
+                                              offline=icons.deviceOffline,
+                                              incompatible=icons.deviceIncompatible,
+                                             ).get(deviceObj.status, icons.deviceInstance))
+                    leafItem.setToolTip("{} <{}>".format(deviceObj.id, deviceObj.serverId))
+                    childItem.appendRow(leafItem)
                 else:
-                    leafItem.setIcon(dict(error=icons.deviceInstanceError,
-                                          noserver=icons.deviceOfflineNoServer,
-                                          noplugin=icons.deviceOfflineNoPlugin,
-                                          offline=icons.deviceOffline,
-                                          incompatible=icons.deviceIncompatible,
-                                         ).get(
-                                device.status, icons.deviceInstance))
-                leafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
-                childItem.appendRow(leafItem)
+                    # Device groups
+                    leafItem = QStandardItem(deviceObj.id)
+                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
+                    leafItem.setEditable(False)
+                    leafItem.setIcon(icons.device_group)
+                    leafItem.setToolTip("{}".format(deviceObj.id))
+                    childItem.appendRow(leafItem)
+                    
+                    # Iterate through device of group
+                    for device in deviceObj.devices:
+                        subLeafItem = QStandardItem(device.id)
+                        subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
+                        subLeafItem.setEditable(False)
+
+                        if device.status != "offline" and device.error:
+                            subLeafItem.setIcon(icons.deviceInstanceError)
+                        else:
+                            subLeafItem.setIcon(dict(error=icons.deviceInstanceError,
+                                                  noserver=icons.deviceOfflineNoServer,
+                                                  noplugin=icons.deviceOfflineNoPlugin,
+                                                  offline=icons.deviceOffline,
+                                                  incompatible=icons.deviceIncompatible,
+                                                 ).get(device.status, icons.deviceInstance))
+                        subLeafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
+                        leafItem.appendRow(subLeafItem)
 
             # Scenes
             childItem = QStandardItem(Project.SCENES_LABEL)
@@ -183,7 +212,7 @@ class ProjectModel(QStandardItemModel):
         
         # Set last selected object
         if lastSelectionObj is not None:
-            self.selectItem(lastSelectionObj)
+            self.selectObject(lastSelectionObj)
 
 
     def clearParameterPages(self, serverClassIds=[]):
@@ -200,10 +229,10 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateNeeded(self):
-        # Update project view and pluginDialog data
+        # Update project view and deviceDialog data
         self.updateData()
-        if self.pluginDialog is not None:
-            self.pluginDialog.updateServerTopology(manager.Manager().systemHash)
+        if self.deviceDialog is not None:
+            self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
 
 
     def currentDevice(self):
@@ -226,7 +255,7 @@ class ProjectModel(QStandardItemModel):
         return self.selectionModel.currentIndex()
 
 
-    def selectItem(self, object):
+    def selectObject(self, object):
         """
         This function gets an object which can be of type Configuration or Scene
         and selects the corresponding item.
@@ -340,10 +369,12 @@ class ProjectModel(QStandardItemModel):
         This includes a connection, if project changes and the view update after
         appending project to list.
         """
+        # Whenever the project is modified - view must be updated
         project.signalProjectModified.connect(self.updateData)
+        project.signalSelectObject.connect(self.selectObject)
         self.projects.append(project)
         self.updateData()
-        self.selectItem(project)
+        self.selectObject(project)
 
 
     def projectNew(self, filename):
@@ -416,19 +447,19 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         
         # Show dialog to select plugin
-        self.pluginDialog = PluginDialog()
-        if not self.pluginDialog.updateServerTopology(manager.Manager().systemHash, device):
+        self.deviceDialog = DeviceDialog()
+        if not self.deviceDialog.updateServerTopology(manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
             "are <br>started correctly!")
             return
         
-        if self.pluginDialog.exec_() == QDialog.Rejected:
+        if self.deviceDialog.exec_() == QDialog.Rejected:
             return
         
         if device is not None:
             # Get configuration of device, if classId is the same
-            if device.classId == self.pluginDialog.classId:
+            if device.classId == self.deviceDialog.classId:
                 if device.descriptor is None:
                     config = device.initConfig
                 else:
@@ -440,33 +471,37 @@ class ProjectModel(QStandardItemModel):
             # order
             index = project.remove(device)
             device = self.insertDevice(index, project,
-                                       self.pluginDialog.serverId,
-                                       self.pluginDialog.classId,
-                                       self.pluginDialog.deviceId,
-                                       self.pluginDialog.startupBehaviour)
+                                       self.deviceDialog.serverId,
+                                       self.deviceDialog.classId,
+                                       self.deviceDialog.deviceId,
+                                       self.deviceDialog.startupBehaviour)
             
             # Set config, if set
             if config is not None:
                 device.initConfig = config
+
+            self.updateData()
         else:
             # Add new device
             device = self.addDevice(project,
-                                    self.pluginDialog.serverId,
-                                    self.pluginDialog.classId,
-                                    self.pluginDialog.deviceId,
-                                    self.pluginDialog.startupBehaviour)
+                                    self.deviceDialog.serverId,
+                                    self.deviceDialog.classId,
+                                    self.deviceDialog.deviceId,
+                                    self.deviceDialog.startupBehaviour)
         
-        self.updateData()
-        self.selectItem(device)
-        self.pluginDialog = None
+        self.selectObject(device)
+        self.deviceDialog = None
 
 
-    def addDevice(self, project, serverId, classId, deviceId, ifexists):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists, updateNeeded=True):
         """
         Add a device for the given \project with the given data.
         """
         
         for d in project.devices:
+            if isinstance(d, DeviceGroup):
+                continue
+
             if deviceId == d.id:
                 reply = QMessageBox.question(None, 'Device already exists',
                     "Another device with the same device ID \"<b>{}</b>\" <br> "
@@ -482,9 +517,7 @@ class ProjectModel(QStandardItemModel):
                                            classId, deviceId, ifexists)
                 return device
         
-        device = Device(serverId, classId, deviceId, ifexists)
-        project.addDevice(device)
-        
+        device = project.newDevice(serverId, classId, deviceId, ifexists, updateNeeded)
         return device
 
 
@@ -503,12 +536,11 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        project = device.project
-
-        for i in range(dialog.count):
-            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, i + dialog.startIndex)
-            newDevice = self.addDevice(project, device.serverId, device.classId,
-                                       deviceId, device.ifexists)
+        for index in range(dialog.startIndex, dialog.endIndex):
+            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, index)
+            newDevice = self.addDevice(self.currentProject(), device.serverId,
+                                       device.classId, deviceId, device.ifexists,
+                                       False)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -518,16 +550,7 @@ class ProjectModel(QStandardItemModel):
             newDevice.initConfig = config
         
         self.updateData()
-        self.selectItem(newDevice)
-
-
-    def checkDescriptor(self, device):
-        # Get class configuration
-        conf = manager.getClass(device.serverId, device.classId)
-
-        conf.signalNewDescriptor.connect(device.onNewDescriptor)
-        if conf.descriptor is not None:
-            device.onNewDescriptor(conf)
+        self.selectObject(newDevice)
 
 
     def editScene(self, scene=None):
@@ -542,6 +565,7 @@ class ProjectModel(QStandardItemModel):
             fi = QFileInfo(scene.filename)
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
+
             # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
             scene.project.setModified(True)
@@ -561,8 +585,8 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.openScene(scene)
 
-        self.updateData()
-        self.selectItem(scene)
+        #self.updateData()
+        self.selectObject(scene)
         
         return scene
 
@@ -573,13 +597,13 @@ class ProjectModel(QStandardItemModel):
             return
 
         xml = scene.toXml()
-        for i in range(dialog.count):
-            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, i+dialog.startIndex)
+        for index in range(dialog.startIndex, dialog.endIndex):
+            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, index)
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)
         
         self.updateData()
-        self.selectItem(newScene)
+        self.selectObject(newScene)
 
 
     def openScene(self, scene):
@@ -601,24 +625,29 @@ class ProjectModel(QStandardItemModel):
         else:
             index = selectedIndexes[0]
             device = index.data(ProjectModel.ITEM_OBJECT)
-        
-        if device is not None and isinstance(device, Configuration):
-            # Check whether device is already online
-            if device.isOnline():
-                conf = manager.getDevice(device.id)
-            else:
-                conf = device
+            if device is not None and isinstance(device, Configuration):
+                # Check whether device is already online
+                if device.isOnline():
+                    if device.type in ("device", "projectClass"):
+                        conf = manager.getDevice(device.id)
+                    elif device.type == 'deviceGroupClass':
+                        instance = device.createInstance()
+                        
+                        conf = instance
+                        
+                        # Check descriptor only with first selection
+                        conf.checkDeviceSchema()
+                else:
+                    conf = device
+                    # Check descriptor only with first selection
+                    conf.checkClassSchema()
                 
-                # Check descriptor only with first selection
-                if device.descriptorRequested is False:
-                    self.checkDescriptor(device)
-                    device.descriptorRequested = True
-            type = conf.type
-        else:
-            conf = None
-            type = "other"
+                type = conf.type
+            else:
+                conf = None
+                type = "other"
 
-        self.signalItemChanged.emit(type, conf)
+            self.signalItemChanged.emit(type, conf)
 
 
     def onCloseProject(self):
@@ -712,7 +741,7 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as fin:
             scene.fromXml(fin.read())
         project.addScene(scene)
-        self.selectItem(scene)
+        self.selectObject(scene)
 
 
     def onRemove(self):
@@ -773,5 +802,5 @@ class ProjectModel(QStandardItemModel):
         
         if showConfirm:
             self.updateData()
-            self.selectItem(project)
+            self.selectObject(project)
         

@@ -273,7 +273,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         # Configuration changed - so project needs to be informed to show it
         if box.configuration.type == 'projectClass':
-            box.configuration.signalProjectModified.emit(True)
+            box.configuration.signalDeviceModified.emit(True)
 
 
 class EditableApplyLaterComponent(BaseComponent):
@@ -419,11 +419,19 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
-        self.__busyTimer.start(5000)
+        sendToNetwork = True
         for b in self.boxes:
+            print("++++ onApplyClicked", b, self.widgetFactory.value)
             b.signalUserChanged.emit(b, self.widgetFactory.value)
-        Network().onReconfigure([(b, self.widgetFactory.value)
-                                 for b in self.boxes])
+            # If this box belongs to a deviceGroup configuration, no need to
+            # broadcast to Network
+            if b.configuration.type == "deviceGroup":
+                sendToNetwork = False
+        
+        if sendToNetwork:
+            self.__busyTimer.start(5000)
+            Network().onReconfigure([(b, self.widgetFactory.value)
+                                     for b in self.boxes])
 
 
     def onApplyRemoteChanges(self):

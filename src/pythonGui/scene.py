@@ -11,7 +11,10 @@
 from components import (DisplayComponent, EditableApplyLaterComponent)
 
 from dialogs.dialogs import PenDialog, TextDialog
+from dialogs.devicedialogs import DeviceGroupDialog
+from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
+from sceneitems.workflowitems import WorkflowItem, WorkflowGroupItem
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
@@ -23,7 +26,7 @@ from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QFrame, QLabel, QLayout, QKeySequence, QMenu,
+                         QDialog, QFrame, QLabel, QLayout, QKeySequence, QMenu,
                          QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
                          QWidget)
 from PyQt4.QtSvg import QSvgWidget
@@ -874,6 +877,8 @@ class Lower(SimpleAction):
 
 
 class Scene(QSvgWidget):
+
+    
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
@@ -1106,8 +1111,13 @@ class Scene(QSvgWidget):
         
         if sourceType == "ParameterTreeWidget":
             source = event.source()
-            if (source is not None) and (source is not self) and self.designMode \
+            if (source is not None) and self.designMode \
                and not (source.conf.type == "class"):
+                event.accept()
+        elif sourceType == "NavigationTreeView":
+            source = event.source()
+            if (source is not None) and self.designMode \
+               and source.indexInfo().get("type") == NavigationItemTypes.CLASS:
                 event.accept()
         QWidget.dragEnterEvent(self, event)
 
@@ -1186,11 +1196,59 @@ class Scene(QSvgWidget):
                 layout.fixed_geometry = QRect(event.pos(), layout.sizeHint())
                 self.ilayout.add_item(layout)
                 layout.selected = True
+            self.project.setModified(True)
         elif sourceType == "NavigationTreeView":
-            print("NavigationTreeView")
-            return
+            itemInfo = source.indexInfo(source.currentIndex())
+            serverId  = itemInfo.get("serverId")
+            classId = itemInfo.get("classId")
+            
+            # Restore cursor for dialog input
+            QApplication.restoreOverrideCursor()
+            # Open dialog to set up new device
+            dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
+            if dialog.exec_() == QDialog.Accepted:
+                if not dialog.isDeviceGroup:
+                    # Create only one device configuration and add to project
+                    object = self.project.newDevice(dialog.serverId,
+                                                    dialog.classId,
+                                                    dialog.deviceId,
+                                                    dialog.startupBehaviour,
+                                                    True)
 
-        self.project.setModified(True)
+                    # Create scene item associated with device
+                    proxy = ProxyWidget(self.inner)
+                    workflowItem = WorkflowItem(object, proxy)
+                else:
+                    # Create device group and add to project
+                    object = self.project.newDeviceGroup(dialog.serverId,
+                                                        dialog.classId,
+                                                        dialog.deviceId,
+                                                        dialog.startupBehaviour,
+                                                        dialog.displayPrefix,
+                                                        dialog.startIndex,
+                                                        dialog.endIndex)
+
+                    object.id = dialog.deviceGroupName
+                    
+                    # Create scene item associated with device
+                    proxy = ProxyWidget(self.inner)
+                    workflowItem = WorkflowGroupItem(object, proxy)
+                
+                rect = workflowItem.boundingRect()
+                proxy.setWidget(workflowItem)
+                proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
+                proxy.show()
+
+                self.ilayout.add_item(proxy)
+                proxy.selected = True
+                
+                if self.project.isModified:                    
+                    # Explicitly emit signal, because project is already marked as modified
+                    self.project.signalProjectModified.emit()
+                else:
+                    self.project.setModified(True)
+                
+                self.project.signalSelectObject.emit(object)
         event.accept()
         QWidget.dropEvent(self, event)
 
