@@ -69,7 +69,7 @@ namespace karabo {
             /**
              * Starts the connection
              */
-            virtual BrokerChannelPointer start() = 0;
+            virtual void start() = 0;
 
             /**
              * Stops the connection
@@ -104,7 +104,7 @@ namespace karabo {
              * This function creates a "channel" for the given connection.
              * @return Pointer to BrokerChannel
              */
-            virtual BrokerChannelPointer createChannel() = 0;
+            virtual BrokerChannelPointer createChannel(const std::string& subDestination = "") = 0;
 
             /**
              * This function returns a pointer to a IO service that had to be

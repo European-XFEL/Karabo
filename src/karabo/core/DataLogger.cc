@@ -85,8 +85,8 @@ namespace karabo {
             SLOT2(slotSchemaUpdated, Schema /*changedSchema*/, string /*deviceId*/);
             SLOT2(slotTagDeviceToBeDiscontinued, bool /*wasValidUpToNow*/, char /*reason*/);
 
-            connectT(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
-            connectT(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
+            connect(m_deviceToBeLogged, "signalChanged", "", "slotChanged");
+            connect(m_deviceToBeLogged, "signalSchemaUpdated", "", "slotSchemaUpdated");
 
             if (!boost::filesystem::exists(get<string>("directory"))) {
                 boost::filesystem::create_directory(get<string>("directory"));

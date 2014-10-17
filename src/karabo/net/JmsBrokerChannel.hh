@@ -99,7 +99,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(JmsBrokerChannel, "JmsBrokerChannel", "1.0")
 
-            JmsBrokerChannel(JmsBrokerConnection& connection);
+            JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
             
@@ -184,7 +184,7 @@ namespace karabo {
              * @param data The textual data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const karabo::util::Hash& header, const std::string& data);
+            void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4);
 
             /**
              * Low level writing within the JMS framework
@@ -192,9 +192,9 @@ namespace karabo {
              * @param data The binary data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const karabo::util::Hash& header, const char* data, const size_t& size);
+            void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4);
 
-            void write(const karabo::util::Hash& header, const karabo::util::Hash& data);
+            void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4);
 
             //**************************************************************/
             //*                Errors, Timing, Selections                  */

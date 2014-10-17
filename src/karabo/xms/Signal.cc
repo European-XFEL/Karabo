@@ -42,7 +42,7 @@ namespace karabo {
             updateConnectedSlotsString();
         }
 
-        bool Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
+        void Signal::unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction) {
             std::map<std::string, std::set<std::string> >::iterator it = m_registeredSlots.find(slotInstanceId);
             if (it != m_registeredSlots.end()) {
                 it->second.erase(slotFunction);

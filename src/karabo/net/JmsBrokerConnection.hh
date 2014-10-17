@@ -46,7 +46,7 @@ namespace karabo {
 
             JmsBrokerConnection(const karabo::util::Hash& input);
 
-            BrokerChannel::Pointer start();
+            void start();
 
             void stop();
 
@@ -58,7 +58,7 @@ namespace karabo {
 
             const std::string& getBrokerTopic() const;
 
-            BrokerChannel::Pointer createChannel();
+            BrokerChannel::Pointer createChannel(const std::string& subDestionation = "");
 
             bool getDeliveryInhibition() const {
                 return m_deliveryInhibition;

@@ -22,7 +22,7 @@ namespace karabo {
     namespace net {
 
 
-        JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection) :
+        JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination) :
         BrokerChannel(connection), m_jmsConnection(connection), m_serializationType(connection.m_serializationType), m_filterCondition(""),
         m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000) {
 
@@ -34,10 +34,12 @@ namespace karabo {
             if (m_jmsConnection.m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
                 m_isTransacted = MQ_TRUE;
             }
-
-            MQ_SAFE_CALL(MQCreateSession(m_jmsConnection.m_connectionHandle, m_isTransacted, m_jmsConnection.m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle))
-            MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, m_jmsConnection.m_destinationName.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle))
-
+            
+            MQ_SAFE_CALL(MQCreateSession(m_jmsConnection.m_connectionHandle, m_isTransacted, m_jmsConnection.m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle));
+            
+            string destination = m_jmsConnection.m_destinationName;
+            if (!subDestination.empty()) destination += "_" + subDestination;
+            MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle));
 
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
@@ -678,7 +680,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const karabo::util::Hash& header, const std::string& messageBody) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const std::string& messageBody, const int priority) {
 
             try {
 
@@ -707,7 +709,7 @@ namespace karabo {
 
                 //cout << " Sending message: " << endl << messageBody << endl;
 
-                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive))
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
@@ -720,7 +722,7 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size) {
+        void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
 
             try {
 
@@ -749,7 +751,7 @@ namespace karabo {
                     MQ_SAFE_CALL(MQSetBytesMessageBytes(messageHandle, reinterpret_cast<MQInt8*> (const_cast<char*> (messageBody)), size));
                 }
 
-                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, 4, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive))
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
@@ -761,19 +763,19 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& data) {
+        void JmsBrokerChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority) {
 
             Hash modifiedHeader(header);
             if (m_serializationType == "text") {
                 modifiedHeader.set("__format", "Xml");
                 string buffer;
                 m_textSerializer->save(data, buffer);
-                this->write(modifiedHeader, buffer);
+                this->write(modifiedHeader, buffer, priority);
             } else if (m_serializationType == "binary") {
                 modifiedHeader.set("__format", "Bin");
                 std::vector<char> buffer;
                 m_binarySerializer->save(data, buffer);
-                this->write(modifiedHeader, &buffer[0], buffer.size());
+                this->write(modifiedHeader, &buffer[0], buffer.size(), priority);
             }
         }
 

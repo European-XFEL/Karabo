@@ -45,9 +45,11 @@ int main(int argc, char** argv) {
         // Get a IOService object (for async reading later)
         BrokerIOService::Pointer ioService = connection->getIOService();
         
-        // Start connection and obtain a channel
-        BrokerChannel::Pointer channel = connection->start();
+        // Start connection
+        connection->start();
         
+        // Obtain channels
+        BrokerChannel::Pointer channel = connection->createChannel();        
         BrokerChannel::Pointer textChannel = connection->createChannel();
         
         

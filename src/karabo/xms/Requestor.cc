@@ -56,7 +56,7 @@ namespace karabo {
 
         void Requestor::sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const {
             try {
-                m_signalSlotable->m_producerChannel->write(header, body);
+                m_signalSlotable->m_producerChannel->write(header, body, 9);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Problems sending request"));
             }

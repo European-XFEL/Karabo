@@ -882,11 +882,11 @@ namespace karabo {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             boost::mutex::scoped_lock lock(m_instanceUsageMutex);
             if (m_instanceUsage.find(instanceId) == m_instanceUsage.end()) { // Not there yet
-                p->connectT(instanceId, "signalChanged", "", "slotChanged");
-                p->connectT(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
+                p->connect(instanceId, "signalChanged", "", "slotChanged");
+                p->connect(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
             } else if (m_instanceUsage[instanceId] >= CONNECTION_KEEP_ALIVE) { // Died before
-                p->connectT(instanceId, "signalChanged", "", "slotChanged");
-                p->connectT(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
+                p->connect(instanceId, "signalChanged", "", "slotChanged");
+                p->connect(instanceId, "signalSchemaUpdated", "", "slotSchemaUpdated");
             }
             m_instanceUsage[instanceId] = 0;
         }

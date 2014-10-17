@@ -100,13 +100,15 @@ namespace karabo {
                 boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
 
                 // Start the logging thread
-                m_loggerChannel = m_loggerConnection->start();
+                m_loggerConnection->start();
+                m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
                 m_loggerChannel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 // Start the guiDebugChannel
-                m_guiDebugChannel = m_guiDebugConnection->start();
+                m_guiDebugConnection->start();
+                m_guiDebugChannel = m_guiDebugConnection->createChannel();
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in okStateOnEntry(): " << e.userFriendlyMsg();
