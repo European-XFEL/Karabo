@@ -123,6 +123,8 @@ namespace karabo {
             boost::thread m_ageingThread;
 
             bool m_getOlder;
+            
+            bool m_isSetupSlots;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;

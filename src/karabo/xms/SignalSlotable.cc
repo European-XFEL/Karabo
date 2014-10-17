@@ -925,7 +925,7 @@ namespace karabo {
             Hash h;
             h.set("connections", vector<Hash > ());
             h.set("instanceInfo", Hash());
-            h.set("countdown", 10);
+            h.set("countdown", 60);
             h.set("isExplicitlyTracked", isExplicitlyTracked);
             m_trackedComponents.set(instanceId, h);
         }
