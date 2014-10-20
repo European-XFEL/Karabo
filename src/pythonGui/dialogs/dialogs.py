@@ -147,7 +147,7 @@ class TextDialog(QDialog):
         if self.background.isChecked():
             ss.append("background-color: {};".format(self.back.name()))
         self.label.hasBackground = self.background.isChecked()
-        if self.framewidth.value > 0:
+        if self.framewidth.value() > 0:
             ss.append("border: {}px;".format(self.framewidth.value()))
         self.label.setStyleSheet("".join(ss))
         self.label.setText(self.text.text())
