@@ -60,11 +60,8 @@ namespace karabo {
         void DeviceClient::setupSlots() {
             karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
             p->registerSlot<Hash, string > (boost::bind(&karabo::core::DeviceClient::slotChanged, this, _1, _2), "slotChanged");
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
-            p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
-            p->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
-            p->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
+            p->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
+            p->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema");
         }
 
         void DeviceClient::checkMaster() {
@@ -305,6 +302,12 @@ namespace karabo {
             if (!m_topologyInitialized) {
                 this->checkMaster();
                 this->cacheAvailableInstances();
+                SignalSlotable::Pointer p = m_signalSlotable.lock();
+                p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
+                p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
+                p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
+                p->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
+                p->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));                
                 m_topologyInitialized = true;
             }
         }
@@ -802,13 +805,13 @@ namespace karabo {
 
         void DeviceClient::registerSchemaUpdatedMonitor(const SchemaUpdatedHandler& callBackFunction) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            m_signalSlotable.lock()->registerSlot<Schema, string > (boost::bind(&karabo::core::DeviceClient::slotSchemaUpdated, this, _1, _2), "slotSchemaUpdated");
+            
             m_schemaUpdatedHandler = callBackFunction;
         }
 
         void DeviceClient::registerClassSchemaMonitor(const ClassSchemaHandler& callBackFunction) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            m_signalSlotable.lock()->registerSlot<Schema, string, string > (boost::bind(&karabo::core::DeviceClient::slotClassSchema, this, _1, _2, _3), "slotClassSchema");
+            
             m_classSchemaHandler = callBackFunction;
         }
 
