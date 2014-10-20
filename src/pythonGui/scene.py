@@ -14,7 +14,8 @@ from dialogs.dialogs import PenDialog, TextDialog
 from dialogs.devicedialogs import DeviceGroupDialog
 from enums import NavigationItemTypes
 from layouts import FixedLayout, GridLayout, BoxLayout, ProxyWidget, Layout
-from sceneitems.workflowitems import WorkflowItem, WorkflowGroupItem
+from sceneitems.workflowitems import (Item, WorkflowConnection, WorkflowItem, 
+                                      WorkflowGroupItem)
 
 from registry import Loadable, Registry
 from const import ns_karabo, ns_svg
@@ -893,6 +894,9 @@ class Scene(QSvgWidget):
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
+        self.worflow_item = None
+        self.workflow_connection = None
+        
         self.current_action = self.default_action = Select()
         self.current_action.action = QAction(self) # never displayed
         self.simple_actions = [ ]
@@ -1056,7 +1060,29 @@ class Scene(QSvgWidget):
     def mousePressEvent(self, event):
         if not self.designMode:
             return
+            
         if event.button() == Qt.LeftButton:
+            # Check for WorkflowItems...
+            proxy = self.ilayout.itemAtPosition(event.pos())
+            if proxy is not None:
+                if isinstance(proxy, ProxyWidget):
+                    #widget = proxy.widget
+                    if isinstance(proxy.widget, Item):
+                        #self.worflow_item = widget
+                        #self.worflow_item.mousePressEvent(proxy, event)
+                        
+                        # Create workflow connection item in scene
+                        self.workflow_connection = WorkflowConnection(self)
+                        self.workflow_connection.mousePressEvent(proxy, event)
+                        
+                        proxy = ProxyWidget(self.inner)
+                        #rect = self.workflow_connection.boundingRect()
+                        proxy.setWidget(self.workflow_connection)
+                        proxy.fixed_geometry = QRect(event.pos(), QSize(100,100))
+                        proxy.show()
+
+                        self.ilayout.add_item(proxy)
+            
             self.current_action.mousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
@@ -1079,11 +1105,18 @@ class Scene(QSvgWidget):
 
 
     def mouseMoveEvent(self, event):
+        if self.workflow_connection is not None:
+            self.workflow_connection.mouseMoveEvent(self, event)
         self.current_action.mouseMoveEvent(self, event)
         QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
+        if self.workflow_connection is not None:
+            self.workflow_connection.mouseReleaseEvent(self, event)
+        #self.worflow_item = None
+        self.workflow_connection = None
+        
         self.current_action.mouseReleaseEvent(self, event)
         QWidget.mouseReleaseEvent(self, event)
 
@@ -1230,7 +1263,7 @@ class Scene(QSvgWidget):
 
                     object.id = dialog.deviceGroupName
                     
-                    # Create scene item associated with device
+                    # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowGroupItem(object, proxy)
                 
@@ -1238,7 +1271,7 @@ class Scene(QSvgWidget):
                 proxy.setWidget(workflowItem)
                 proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
                 proxy.show()
-
+                
                 self.ilayout.add_item(proxy)
                 proxy.selected = True
                 
