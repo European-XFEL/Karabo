@@ -15,7 +15,7 @@
 
 #include "SignalWrap.hh"
 #include "SlotWrap.hh"
-#include "MemberSlotWrap.hh"
+//#include "MemberSlotWrap.hh"
 #include "RequestorWrap.hh"
 #include "ScopedGILRelease.hh"
 
@@ -38,7 +38,7 @@ namespace karathon {
 
             if (autostartEventLoop) {
                 ScopedGILRelease nogil;
-                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
+                m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash(), 2));
                 boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // give a chance above thread to start up before leaving this constructor
             }
         }
@@ -57,9 +57,9 @@ namespace karathon {
             return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
         }
 
-        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash()) {
+        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash(), int nThreads = 2) {
             ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
+            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info, nThreads);
         }
 
         void stopEventLoop() {
@@ -92,21 +92,21 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getAvailableSlots(instanceId));
         }
 
-        void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = SPECIFIC) {
+        void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = LOCAL) {
+            
             std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
-            if (m_slotInstances.find(functionName) != m_slotInstances.end()) return; // Already registered
-            karabo::net::BrokerChannel::Pointer channel = m_connection->createChannel(); // New Channel
-            std::string instanceId = prepareInstanceId(slotType);
-            if (Wrapper::hasattr(slotFunction, "__self__")) { // Member function
-                const bp::object & selfObject(slotFunction.attr("__self__"));
-                std::string funcName(bp::extract<std::string > (slotFunction.attr("__name__")));
-                boost::shared_ptr<MemberSlotWrap> s(new MemberSlotWrap(this, channel, instanceId, functionName)); // New specific slot
-                s->registerSlotFunction(funcName, selfObject.ptr()); // Bind user's slot-function to Slot
-                storeSlot(functionName, s, channel); // Keep slot and his channel alive
-            } else { // Free function
-                boost::shared_ptr<SlotWrap> s(new SlotWrap(this, channel, instanceId, functionName)); // New specific slot
-                s->registerSlotFunction(slotFunction.ptr()); // Bind user's slot-function to Slot
-                storeSlot(functionName, s, channel); // Keep slot and his channel alive
+            SlotInstances* slotInstances;
+            if (slotType == LOCAL) slotInstances = &(m_localSlotInstances);
+            else slotInstances = &(m_globalSlotInstances);
+            
+            
+            SlotInstances::const_iterator it = slotInstances->find(functionName);
+            if (it != slotInstances->end()) { // Already registered
+                 (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
+            } else {
+                boost::shared_ptr<SlotWrap> s(new SlotWrap(functionName));
+                s->registerSlotFunction(slotFunction); // Bind user's slot-function to Slot
+                (*slotInstances)[functionName] = s;
             }
         }
 
@@ -115,52 +115,52 @@ namespace karathon {
         }
 
         void registerSignalPy1(const std::string& funcName, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
             boost::function<void (const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy1, s, _1));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy2(const std::string& funcName, const bp::object&, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
             boost::function<void (const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy2, s, _1, _2));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy3(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
             boost::function<void (const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy3, s, _1, _2, _3));
             storeSignal(funcName, s, f);
         }
 
         void registerSignalPy4(const std::string& funcName, const bp::object&, const bp::object&, const bp::object&, const bp::object&) {
-            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_signalChannel, m_instanceId, funcName));
+            boost::shared_ptr<karathon::SignalWrap> s(new karathon::SignalWrap(this, m_producerChannel, m_instanceId, funcName));
             boost::function<void (const bp::object&, const bp::object&, const bp::object&, const bp::object&) > f(boost::bind(&karathon::SignalWrap::emitPy4, s, _1, _2, _3, _4));
             storeSignal(funcName, s, f);
         }
 
         void callPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) const {
-            SignalWrap s(this, m_signalChannel, m_instanceId, "call");
+            SignalWrap s(this, m_producerChannel, m_instanceId, "__call__");
             if (instanceId.empty()) instanceId = m_instanceId;
             s.registerSlot(instanceId, functionName);
             s.emitPy1(a1);
         }
 
         void callPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) const {
-            SignalWrap s(this, m_signalChannel, m_instanceId, "call");
+            SignalWrap s(this, m_producerChannel, m_instanceId, "__call__");
             if (instanceId.empty()) instanceId = m_instanceId;
             s.registerSlot(instanceId, functionName);
             s.emitPy2(a1, a2);
         }
 
         void callPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) const {
-            SignalWrap s(this, m_signalChannel, m_instanceId, "call");
+            SignalWrap s(this, m_producerChannel, m_instanceId, "__call__");
             if (instanceId.empty()) instanceId = m_instanceId;
             s.registerSlot(instanceId, functionName);
             s.emitPy3(a1, a2, a3);
         }
 
         void callPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) const {
-            SignalWrap s(this, m_signalChannel, m_instanceId, "call");
+            SignalWrap s(this, m_producerChannel, m_instanceId, "__call__");
             if (instanceId.empty()) instanceId = m_instanceId;
             s.registerSlot(instanceId, functionName);
             s.emitPy4(a1, a2, a3, a4);
@@ -183,28 +183,28 @@ namespace karathon {
         }
 
         RequestorWrap requestPy0(std::string instanceId, const std::string& functionName) {
-            if (instanceId.empty()) instanceId = m_instanceId;
-            return RequestorWrap(m_requestChannel, m_instanceId).callPy(instanceId, functionName);
+            if (instanceId.empty()) instanceId = m_instanceId;            
+            return RequestorWrap(this).callPy(instanceId, functionName);
         }
 
         RequestorWrap requestPy1(std::string instanceId, const std::string& functionName, const bp::object& a1) {
             if (instanceId.empty()) instanceId = m_instanceId;
-            return RequestorWrap(m_requestChannel, m_instanceId).callPy(instanceId, functionName, a1);
+            return RequestorWrap(this).callPy(instanceId, functionName, a1);
         }
 
         RequestorWrap requestPy2(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2) {
             if (instanceId.empty()) instanceId = m_instanceId;
-            return RequestorWrap(m_requestChannel, m_instanceId).callPy(instanceId, functionName, a1, a2);
+            return RequestorWrap(this).callPy(instanceId, functionName, a1, a2);
         }
 
         RequestorWrap requestPy3(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3) {
             if (instanceId.empty()) instanceId = m_instanceId;
-            return RequestorWrap(m_requestChannel, m_instanceId).callPy(instanceId, functionName, a1, a2, a3);
+            return RequestorWrap(this).callPy(instanceId, functionName, a1, a2, a3);
         }
 
         RequestorWrap requestPy4(std::string instanceId, const std::string& functionName, const bp::object& a1, const bp::object& a2, const bp::object& a3, const bp::object& a4) {
             if (instanceId.empty()) instanceId = m_instanceId;
-            return RequestorWrap(m_requestChannel, m_instanceId).callPy(instanceId, functionName, a1, a2, a3, a4);
+            return RequestorWrap(this).callPy(instanceId, functionName, a1, a2, a3, a4);
         }
 
         void replyPy0() {

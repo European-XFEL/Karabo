@@ -52,6 +52,8 @@ namespace karabo {
             bool isRunning();
 
             bool isWorking();
+            
+            void registerMessageReceiver(const boost::function<void ()>& function);
 
             void registerTextMessageChannel(JmsBrokerChannel* channel);
 
@@ -72,14 +74,13 @@ namespace karabo {
             boost::thread_group m_threadGroup;
             std::vector<JmsBrokerChannel*> m_textMessageChannels;
             std::vector<JmsBrokerChannel*> m_binaryMessageChannels;
+            std::vector<boost::function<void ()> > m_messageReceivers;
             std::vector<boost::tuple<JmsBrokerChannel*, WaitHandler, int> > m_waitHandlers;
             boost::mutex m_mutex;
             
         private: // functions
 
-            bool activateRegisteredTextMessageHandlers();
-
-            bool activateRegisteredBinaryMessageHandlers();
+            bool activateRegisteredMessageReceivers();                      
             
             bool activateRegisteredWaitHandlers();
 
