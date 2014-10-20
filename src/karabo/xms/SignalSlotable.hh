@@ -1000,7 +1000,7 @@ namespace karabo {
 
             bool hasReceivedReply(const std::string& replyFromValue) const;
 
-            void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash& header, karabo::util::Hash& body);
+            void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
         };
     }

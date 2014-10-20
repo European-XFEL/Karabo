@@ -69,25 +69,25 @@ namespace karathon {
         bp::tuple waitForReply(const int& milliseconds) {
             try {
                 timeout(milliseconds);
-                karabo::util::Hash body, header;
+                karabo::util::Hash::Pointer body, header;
 
                 {
                     ScopedGILRelease nogil;                    
                     receiveResponse(header, body);
                 }
 
-                size_t arity = body.size();
+                size_t arity = body->size();
                 switch (arity) {
                     case 0:
-                        return prepareTuple0(body);
+                        return prepareTuple0(*body);
                     case 1:
-                        return prepareTuple1(body);
+                        return prepareTuple1(*body);
                     case 2:
-                        return prepareTuple2(body);
+                        return prepareTuple2(*body);
                     case 3:
-                        return prepareTuple3(body);
+                        return prepareTuple3(*body);
                     case 4:
-                        return prepareTuple4(body);
+                        return prepareTuple4(*body);
                     default:
                         throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send as response (max 4 are currently supported");
                 }
