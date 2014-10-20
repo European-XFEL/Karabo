@@ -30,22 +30,22 @@ JmsBroker_Test::~JmsBroker_Test() {
 }
 
 
-void JmsBroker_Test::readHandler1(karabo::net::BrokerChannel::Pointer channel, const std::string& body, const karabo::util::Hash& header) {
+void JmsBroker_Test::readHandler1(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& body) {
 
     if ((body == "Random message body") &&
-            (header.has("randomHeaderGarbage") == true) &&
-            (header.get<string > ("randomHeaderGarbage") == "indeed")) {
+            (header->has("randomHeaderGarbage") == true) &&
+            (header->get<string > ("randomHeaderGarbage") == "indeed")) {
         m_messagesRead++;
     }
     
     channel->readAsyncHashHash(boost::bind(&JmsBroker_Test::readHandler2, this, _1, _2, _3));
 
-    channel->write(m_hash, Hash());
+    channel->write(Hash(), m_hash);
 }
 
 
-void JmsBroker_Test::readHandler2(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash& body, const karabo::util::Hash& header) {
-    if (karabo::util::similar(body, m_hash)) {
+void JmsBroker_Test::readHandler2(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+    if (karabo::util::similar(*body, m_hash)) {
         m_messagesRead++;
     }
 }
@@ -66,13 +66,17 @@ void JmsBroker_Test::testMethod() {
 
     BrokerIOService::Pointer ioService = connection->getIOService();
 
-    BrokerChannel::Pointer channel = connection->start();
+    connection->start();
+    
+    BrokerChannel::Pointer channel = connection->createChannel();
 
-    channel->readAsyncStringHash(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
     //channel->setErrorHandler(&onError);
+    
+    boost::this_thread::sleep(boost::posix_time::millisec(100));
 
-    channel->write("Random message body", Hash("randomHeaderGarbage", "indeed"));
+    channel->write(Hash("randomHeaderGarbage", "indeed"), "Random message body");
 
     ioService->run();
 
@@ -95,13 +99,15 @@ void JmsBroker_Test::testBinaryTransport() {
 
     BrokerIOService::Pointer ioService = connection->getIOService();
 
-    BrokerChannel::Pointer channel = connection->start();
+    connection->start();
+    
+    BrokerChannel::Pointer channel = connection->createChannel();
 
-    channel->readAsyncStringHash(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
+    channel->readAsyncHashString(boost::bind(&JmsBroker_Test::readHandler1, this, _1, _2, _3));
 
     //channel->setErrorHandler(&onError);
 
-    channel->write("Random message body", Hash("randomHeaderGarbage", "indeed"));
+    channel->write(Hash("randomHeaderGarbage", "indeed"), "Random message body");
 
     ioService->run();
 

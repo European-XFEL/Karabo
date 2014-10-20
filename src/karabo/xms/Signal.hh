@@ -43,7 +43,7 @@ namespace karabo {
 
             void registerSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
-            bool unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
+            void unregisterSlot(const std::string& slotInstanceId, const std::string& slotFunction);
 
             void emit0() {
                 send(karabo::util::Hash());
@@ -88,11 +88,10 @@ namespace karabo {
             karabo::net::BrokerChannel::Pointer m_channel;
             std::string m_signalInstanceId;
             std::string m_signalFunction;
-            std::string m_registeredSlotFunctionsString;
+            std::string m_registeredSlotsString;
             std::string m_registeredSlotInstanceIdsString;
             size_t m_nRegisteredSlots;
-            std::map<std::string, size_t> m_registeredSlotFunctions;
-            std::map<std::string, size_t> m_registeredSlotInstanceIds;
+            std::map<std::string, std::set<std::string> > m_registeredSlots;
         };
 
     } // namespace xms

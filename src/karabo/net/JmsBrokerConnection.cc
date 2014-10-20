@@ -228,9 +228,8 @@ namespace karabo {
         }
 
 
-        BrokerChannel::Pointer JmsBrokerConnection::start() {
-            MQ_SAFE_CALL(MQStartConnection(m_connectionHandle))
-            return createChannel();
+        void JmsBrokerConnection::start() {
+            MQ_SAFE_CALL(MQStartConnection(m_connectionHandle));
         }
 
 
@@ -268,8 +267,8 @@ namespace karabo {
         }
 
 
-        BrokerChannel::Pointer JmsBrokerConnection::createChannel() {
-            BrokerChannel::Pointer channel(new JmsBrokerChannel(*this));
+        BrokerChannel::Pointer JmsBrokerConnection::createChannel(const std::string& subDestination) {
+            BrokerChannel::Pointer channel(new JmsBrokerChannel(*this, subDestination));
             this->registerChannel(channel);
             return channel;
         }

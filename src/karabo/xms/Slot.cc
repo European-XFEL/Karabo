@@ -8,7 +8,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-#include "SignalSlotable.hh"
 #include "Slot.hh"
 
 using namespace karabo::util;
@@ -38,17 +37,6 @@ namespace karabo {
         }
 
 
-        void Slot::handlePossibleReply(const karabo::util::Hash& header) {
-            std::pair<bool, karabo::util::Hash> possibleReply = m_signalSlotable->digestPotentialReply();
-            if (possibleReply.first) {
-                if (header.has("replyTo")) {
-                    karabo::util::Hash replyHeader("replyFrom", header.get<std::string > ("replyTo"));
-                    m_channel->write(possibleReply.second, replyHeader);
-                }
-            }
-        }
-
-
         void Slot::extractSenderInformation(const karabo::util::Hash& header) {
             boost::optional<const Hash::Node&> node = header.find("userId");
             if (node) m_userIdOfSender = node->getValue<string>();
@@ -66,6 +54,6 @@ namespace karabo {
             m_accessLevelOfSender = "";
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
-        }      
+        }
     }
 }

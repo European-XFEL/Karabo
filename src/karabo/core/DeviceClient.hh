@@ -123,8 +123,6 @@ namespace karabo {
             boost::thread m_ageingThread;
 
             bool m_getOlder;
-            
-            bool m_isSetupSlots;
 
             InstanceNewHandler m_instanceNewHandler;
             InstanceUpdatedHandler m_instanceUpdatedHandler;
@@ -137,7 +135,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.0");
+            KARABO_CLASSINFO(DeviceClient, "DeviceClient", "1.2");
 
             /**
              * Constructor which establishes an own connection to the communication system (default JMS - OpenMQ)

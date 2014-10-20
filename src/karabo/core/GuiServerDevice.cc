@@ -100,13 +100,15 @@ namespace karabo {
                 boost::thread(boost::bind(&karabo::net::IOService::run, m_ioService));
 
                 // Start the logging thread
-                m_loggerChannel = m_loggerConnection->start();
+                m_loggerConnection->start();
+                m_loggerChannel = m_loggerConnection->createChannel();
                 m_loggerChannel->setFilter("target = 'log'");
-                m_loggerChannel->readAsyncStringHash(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
+                m_loggerChannel->readAsyncHashString(boost::bind(&karabo::core::GuiServerDevice::logHandler, this, _1, _2, _3));
                 boost::thread(boost::bind(&karabo::net::BrokerIOService::work, m_loggerIoService));
 
                 // Start the guiDebugChannel
-                m_guiDebugChannel = m_guiDebugConnection->start();
+                m_guiDebugConnection->start();
+                m_guiDebugChannel = m_guiDebugConnection->createChannel();
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in okStateOnEntry(): " << e.userFriendlyMsg();
@@ -186,7 +188,7 @@ namespace karabo {
         void GuiServerDevice::onGuiError(const karabo::util::Hash& hash) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGuiError";
-                m_guiDebugChannel->write(hash, Hash() /*empty header*/);
+                m_guiDebugChannel->write(Hash()/*empty header*/ ,hash);
 
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGuiError(): " << e.userFriendlyMsg();
@@ -598,13 +600,13 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const std::string& logMessage, const karabo::util::Hash & header) {
+        void GuiServerDevice::logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& logMessage) {
             try {
-                Hash instanceInfo("type", "log", "message", logMessage);
+                Hash h("type", "log", "message", logMessage);
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs
                 for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    it->first->write(instanceInfo);
+                    it->first->write(h);
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in logHandler(): " << e.userFriendlyMsg();

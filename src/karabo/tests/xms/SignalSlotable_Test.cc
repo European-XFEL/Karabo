@@ -5,6 +5,8 @@
  * Created on Apr 4, 2013, 1:24:22 PM
  */
 
+#include <boost/thread/pthread/thread_data.hpp>
+
 #include "SignalSlotable_Test.hh"
 
 using namespace std;
@@ -35,6 +37,9 @@ void SignalSlotable_Test::tearDown() {
 void SignalSlotable_Test::testMethod() {
 
     try {
+        
+        //karabo::log::Logger::configure(Hash("priority", "DEBUG"));
+        
         BrokerConnection::Pointer connection;
 
         try {
@@ -48,7 +53,7 @@ void SignalSlotable_Test::testMethod() {
 
         SignalSlotDemo ssDemo("SignalSlotDemo", connection);
 
-        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, 0, Hash()));
+        boost::thread t(boost::bind(&SignalSlotable::runEventLoop, &ssDemo, 10, Hash(), 2));
         
         // Give thread some time to come up
         boost::this_thread::sleep(boost::posix_time::milliseconds(100));
@@ -64,9 +69,10 @@ void SignalSlotable_Test::testMethod() {
             CPPUNIT_ASSERT(false == true);
         }
         CPPUNIT_ASSERT(reply == 2);
-        
-        ssDemo.call("SignalSlotDemo", "slotC", 1);
             
+        ssDemo.call("SignalSlotDemo", "slotC", 1);
+                
+        boost::this_thread::sleep(boost::posix_time::seconds(1));
         ssDemo.stopEventLoop();
         t.join();
 

@@ -2,8 +2,8 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 16:17:33 PM$"
 
 import copy
+import Queue
 import threading
-from collections import deque
 
 #======================================= Fsm Macros
 NOOP = lambda: None
@@ -154,26 +154,31 @@ class Worker(threading.Thread):
         self.running = False
         self.aborted = False
         self.suspended = False
+        self.queue = Queue.Queue()
         self.counter = -1
         self.cv = threading.Condition()  # cv = condition variable
-        self.dq = deque()
     
     def set(self, callback, timeout = -1, repetition = -1):
         self.callback = callback
         self.timeout  = timeout
         self.repetition = repetition
 
+    def cond(self, s):
+        if type(s) is bool:
+            return s
+        if s is None:
+            return False
+        return True
+
     def is_running(self):
         return self.running
     
-    def push(self,o):
+    def push(self, o):
         if self.running:
-            with self.cv:
-                self.dq.append(o)
-                self.cv.notify()
+            self.queue.put(o)
             
     def isRepetitionCounterExpired(self):
-        return self.counter == 0
+        return self.counter == 1
     
     def run(self):
         self.running = True
@@ -181,31 +186,18 @@ class Worker(threading.Thread):
         self.suspended = False
         self.counter = self.repetition
         while not self.aborted:
-            t = None
             if self.counter == 0:
                 break
-            if not self.running:
+            if not self.running and self.queue.empty():
                 break
             try:
-                if self.suspended:
-                    with self.cv:
-                        while self.suspended:
-                            self.cv.wait()
-                        if self.aborted or not self.running:
-                            break
-                    continue
+                with self.cv:
+                    while self.suspended:
+                        self.cv.wait()
                 if self.timeout < 0:
-                    with self.cv:
-                        while len(self.dq) == 0:
-                            self.cv.wait()
-                        if not self.suspended:
-                            t = self.dq.popleft()
+                    t = self.queue.get(True)
                 elif self.timeout > 0:
-                    with self.cv:
-                        if len(self.dq) == 0:
-                            self.cv.wait(float(self.timeout) / 1000)   # self.timeout in milliseconds
-                        if len(self.dq) != 0 and not self.suspended:
-                            t = self.dq.popleft()
+                    t = self.queue.get(True, float(self.timeout) / 1000)   # self.timeout in milliseconds
                 else:
                     with self.cv:
                         if len(self.dq) != 0 and not self.suspended:
@@ -216,7 +208,7 @@ class Worker(threading.Thread):
                 t = None
             if self.counter > 0:
                 self.counter -= 1
-            if self.running:
+            if self.running or not self.cond(t):
                 self.callback(self.counter == 0)      # self.callback(self.counter == 0)
         if self.running:
             self.running = False
@@ -233,10 +225,7 @@ class Worker(threading.Thread):
     
     def stop(self):
         if self.running:
-            with self.cv:
-                self.running = False
-                self.suspended = False
-                self.cv.notify()
+            self.running = False
         return self
     
     def abort(self):
@@ -246,16 +235,16 @@ class Worker(threading.Thread):
             with self.cv:
                 self.suspended = False
                 self.cv.notify()        
-        if len(self.dq) != 0:
-            with self.cv:
-                self.dq.clear()
+        while not self.queue.empty():
+            t = self.queue.get(False)
+            self.queue.task_done()
         return self
     
     def pause(self):
         if not self.suspended:
             with self.cv:
                 self.suspended = True
-                self.cv.notify()
+            
             
 #======================================== Base classes...    
 class State(dict):
