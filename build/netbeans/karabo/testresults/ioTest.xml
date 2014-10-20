@@ -81,50 +81,53 @@
       <Name>H5File_Test::testClose</Name>
     </Test>
     <Test id="27">
-      <Name>H5Format_Test::testEmptyFormat</Name>
+      <Name>H5File_Test::testArray</Name>
     </Test>
     <Test id="28">
-      <Name>H5Format_Test::testManualFormat</Name>
+      <Name>H5Format_Test::testEmptyFormat</Name>
     </Test>
     <Test id="29">
-      <Name>H5Format_Test::testDiscoverFromHash</Name>
+      <Name>H5Format_Test::testManualFormat</Name>
     </Test>
     <Test id="30">
-      <Name>HashBinarySerializer_Test::testSerialization</Name>
+      <Name>H5Format_Test::testDiscoverFromHash</Name>
     </Test>
     <Test id="31">
-      <Name>HashXmlSerializer_Test::testSerialization</Name>
+      <Name>HashBinarySerializer_Test::testSerialization</Name>
     </Test>
     <Test id="32">
-      <Name>Hdf5_Test::testPureHdf5</Name>
+      <Name>HashXmlSerializer_Test::testSerialization</Name>
     </Test>
     <Test id="33">
-      <Name>Hdf5_Test::testKaraboHdf5</Name>
+      <Name>Hdf5_Test::testPureHdf5</Name>
     </Test>
     <Test id="34">
-      <Name>Hdf5_Test::testManyDatasets</Name>
+      <Name>Hdf5_Test::testKaraboHdf5</Name>
     </Test>
     <Test id="35">
-      <Name>Hdf5_Test::testManyDatasets1</Name>
+      <Name>Hdf5_Test::testManyDatasets</Name>
     </Test>
     <Test id="36">
-      <Name>Hdf5_Test::testSerializer</Name>
+      <Name>Hdf5_Test::testManyDatasets1</Name>
     </Test>
     <Test id="37">
-      <Name>SchemaSerializer_Test::testBinarySerializer</Name>
+      <Name>Hdf5_Test::testSerializer</Name>
     </Test>
     <Test id="38">
-      <Name>SchemaSerializer_Test::testXmlSerializer</Name>
+      <Name>SchemaSerializer_Test::testBinarySerializer</Name>
     </Test>
     <Test id="39">
-      <Name>SchemaXsdSerializer_Test::testXsdSerialization</Name>
+      <Name>SchemaSerializer_Test::testXmlSerializer</Name>
     </Test>
     <Test id="40">
+      <Name>SchemaXsdSerializer_Test::testXsdSerialization</Name>
+    </Test>
+    <Test id="41">
       <Name>SchemaXsdSerializer_Test::testTextFileOutputSchema</Name>
     </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>40</Tests>
+    <Tests>41</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>

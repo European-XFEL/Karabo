@@ -11,8 +11,6 @@
 #include "DataLoggerManager.hh"
 #include "karabo/io/FileTools.hh"
 
-#define DATALOGGER_PREFIX "DataLogger-"
-
 namespace karabo {
     namespace core {
 
@@ -86,8 +84,8 @@ namespace karabo {
                         if (deviceId == m_instanceId) continue; // Skip myself
 
                         // Check if deviceId is known in the world
-                        string loggerId = DATALOGGER_PREFIX + deviceId;
-                        {
+                        string loggerId = "DataLogger-" + deviceId;
+                        if (!remote().exists(loggerId).first) {
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
@@ -117,8 +115,8 @@ namespace karabo {
                     // Consider the devices that should be archived 
                     if (entry.hasAttribute(deviceId, "archive") && (entry.getAttribute<bool>(deviceId, "archive") == true)) {
                         // Check whether according logger device exists (it should not) and instantiate
-                        string loggerId = DATALOGGER_PREFIX + deviceId;
-                        {
+                        string loggerId = "DataLogger-" + deviceId;
+                        if (!remote().exists(loggerId).first) {
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
@@ -137,7 +135,7 @@ namespace karabo {
 
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
-                string loggerId = DATALOGGER_PREFIX + instanceId;
+                string loggerId = "DataLogger-" + instanceId;
                 this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                 remote().killDeviceNoWait(loggerId);
             } catch (const Exception& e) {

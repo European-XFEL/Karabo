@@ -177,6 +177,14 @@ namespace karabo {
                         .assignmentOptional().defaultValue(20)
                         .adminAccess()
                         .commit();
+                
+                INT32_ELEMENT(expected).key("nThreads")
+                        .displayedName("Number of threads")
+                        .description("Defines the number of threads that can be used to work on incoming events")
+                        .assignmentOptional().defaultValue(2)
+                        .minInc(1)
+                        .adminAccess()
+                        .commit();
 
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
@@ -677,7 +685,7 @@ namespace karabo {
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, this->get<int>("nThreads")));
 
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));

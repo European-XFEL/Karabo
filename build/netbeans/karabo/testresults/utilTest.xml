@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests>
-    <FailedTest id="15">
-      <Name>Epochstamp_Test::testToFormattedString</Name>
-      <FailureType>Assertion</FailureType>
-      <Location>
-        <File>../../../src/karabo/tests/util/Epochstamp_Test.cc</File>
-        <Line>335</Line>
-      </Location>
-      <Message>assertion failed
-- Expression: returnFormatedString == expectedStringOutput
-</Message>
-    </FailedTest>
-  </FailedTests>
+  <FailedTests></FailedTests>
   <SuccessfulTests>
     <Test id="1">
       <Name>Base64_Test::testEncode</Name>
@@ -55,6 +43,9 @@
     </Test>
     <Test id="14">
       <Name>Epochstamp_Test::testToIso8601String</Name>
+    </Test>
+    <Test id="15">
+      <Name>Epochstamp_Test::testToFormattedString</Name>
     </Test>
     <Test id="16">
       <Name>Factory_Test::testObjectCreation</Name>
@@ -230,8 +221,8 @@
   </SuccessfulTests>
   <Statistics>
     <Tests>72</Tests>
-    <FailuresTotal>1</FailuresTotal>
+    <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
-    <Failures>1</Failures>
+    <Failures>0</Failures>
   </Statistics>
 </TestRun>

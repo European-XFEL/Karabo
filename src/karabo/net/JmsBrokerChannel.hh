@@ -70,16 +70,10 @@ namespace karabo {
             // Types needed by the OpenMQ API
             MQSessionHandle m_sessionHandle;
             MQDestinationHandle m_destinationHandle;
-            MQBool m_isTransacted;
-
-            // Save for asynchronous communication
-            MQConsumerHandle m_asyncConsumerHandle;
-            ReadStringHashHandler m_readStringHashHandler;
-            ReadRawHashHandler m_readRawHashHandler;
-            ReadHashHashHandler m_readHashHashHandler;
+            MQBool m_isTransacted;                    
 
             // Save for synchronous communication
-            MQConsumerHandle m_syncConsumerHandle;
+            MQConsumerHandle m_consumerHandle;
             
             MQProducerHandle m_producerHandle;
             
@@ -92,22 +86,51 @@ namespace karabo {
             bool m_hasAsyncHandler;
 
             // Flags whether a synchronous consumer was already pre-registered
-            bool m_hasSyncConsumer;
+            bool m_hasConsumer;
 
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
             
             // Consumer mutex
-            boost::mutex m_syncConsumerMutex;
+            boost::mutex m_synchReadWriteMutex;
             
 
         public:
 
             KARABO_CLASSINFO(JmsBrokerChannel, "JmsBrokerChannel", "1.0")
 
-            JmsBrokerChannel(JmsBrokerConnection& connection);
+            JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
+            
+            /**************************************************************/
+            /*              Synchronous Read - No Header                  */
+            /**************************************************************/
+
+            /**
+             * This function reads binary messages into vector of chars. 
+             * The reading will block until the data record is read.
+             * The vector will be updated accordingly.
+             * @param data The received binary data             
+             */
+            virtual void read(std::vector<char>& data);
+
+            /**
+             * This function reads text messages into a string.
+             * The reading will block until the data record is read.
+             * The string will be updated accordingly.
+             * @param data The received textual data
+             */
+            virtual void read(std::string& data);
+
+            /**
+             * This function reads messages into a Hash object.
+             * The reading will block until the data record is read.
+             * The hash will be updated accordingly.
+             * @param data The received data serialized into Hash
+             */
+            virtual void read(karabo::util::Hash& data);
+
 
             /**************************************************************/
             /*              Synchronous Read - With Header                */
@@ -118,26 +141,38 @@ namespace karabo {
              * The reading will block until the header and data records are read.
              * @return void 
              */
-            virtual void read(std::vector<char>& body, karabo::util::Hash& header);
+            virtual void read(karabo::util::Hash& header, std::vector<char>& body);
+            
             /**
              * This function reads from a channel into std::string 
              * The reading will block until the header and data records are read.
              * @return void 
              */
-            virtual void read(std::string& body, karabo::util::Hash& header);
+            virtual void read(karabo::util::Hash& header, std::string& body);
 
-            virtual void read(karabo::util::Hash& body, karabo::util::Hash& header);
+            virtual void read(karabo::util::Hash& header, karabo::util::Hash& body);
 
 
+            //**************************************************************/
+            //*           Asynchronous Read - Without Header               */
+            //**************************************************************/
+
+            void readAsyncRaw(const ReadRawHandler& readHandler);
+
+            void readAsyncString(const ReadStringHandler& readHandler);
+            
+            void readAsyncHash(const ReadHashHandler& handler);
+            
+            
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
 
-            void readAsyncRawHash(const ReadRawHashHandler& readHandler);
+            void readAsyncHashRaw(const ReadHashRawHandler& readHandler);
 
+            void readAsyncHashString(const ReadHashStringHandler& readHandler);
+            
             void readAsyncHashHash(const ReadHashHashHandler& handler);
-
-            void readAsyncStringHash(const ReadStringHashHandler& readHandler);
 
             //**************************************************************/
             //*              Synchronous Write - With Header               */
@@ -149,7 +184,7 @@ namespace karabo {
              * @param data The textual data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const std::string& data, const karabo::util::Hash& header);
+            void write(const karabo::util::Hash& header, const std::string& data, const int priority = 4);
 
             /**
              * Low level writing within the JMS framework
@@ -157,9 +192,9 @@ namespace karabo {
              * @param data The binary data (body) of the message
              * @param header The list of properties to be send as JMS properties
              */
-            void write(const char* data, const size_t& size, const karabo::util::Hash& header);
+            void write(const karabo::util::Hash& header, const char* data, const size_t& size, const int priority = 4);
 
-            void write(const karabo::util::Hash& data, const karabo::util::Hash& header);
+            void write(const karabo::util::Hash& header, const karabo::util::Hash& data, const int priority = 4);
 
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
@@ -195,28 +230,50 @@ namespace karabo {
             void stop();
 
             void close();
+            
+            void listenForRawMessages();
+            
+            void listenForStringMessages();
+            
+            void listenForHashMessages();
+            
+            void listenForHashRawMessages();
 
-            // This function listens for text messages and may block depending on the IOSerice mode (e.g. work())
-            void listenForTextMessages();
-
-            // This function listens for binary messages and may block depending on the IOSerice mode (e.g. work())
-            void listenForBinaryMessages();
-
+            void listenForHashStringMessages();
+            
+            void listenForHashHashMessages();
+           
             void deadlineTimer(const WaitHandler& handler, int milliseconds);
 
         private: //functions
-
+            
+            void ensureExistanceOfConsumer();
+            
+            void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
+            
+            void readTextMessage(karabo::util::Hash& header, std::string& body, bool withHeader);
+            
+            void readHashMessage(karabo::util::Hash& header, karabo::util::Hash& body, bool withHeader);
+            
+            MQStatus consumeMessage(MQMessageHandle& messageHandle, const int timeout);
+            
+            void parseHeader(const MQMessageHandle& messageHandle, karabo::util::Hash& header);
+            
+            void ensureSingleAsyncHandler();
+            
             /**
              * Signals arrival of a message to the private m_readStringHashHandler
              * @return true if a message was received, false otherwise (timed out)
              */
-            bool signalIncomingTextMessage();
+            bool signalIncomingTextMessage(const bool withHeader);
 
             /**
              * Signals arrival of a message to the private m_readVectorHashHandler
              * @return true if a message was received, false otherwise (timed out)
              */
-            bool signalIncomingBinaryMessage();
+            bool signalIncomingBinaryMessage(const bool withHeader);
+            
+            bool signalIncomingHashMessage(const bool withHeader);
 
             void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);
 
@@ -224,7 +281,7 @@ namespace karabo {
 
             std::string prepareSelector() const;
 
-            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash& header);
+            void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
 
         };
     }
