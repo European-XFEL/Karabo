@@ -33,7 +33,7 @@ import stat
 import re
 import shutil
 import string
-import StringIO
+import io
 import subprocess
 import logging
 import collections
@@ -80,15 +80,15 @@ def determineFileTypes(file_output_list):
     textlist = []
     otherlist = []
     for file in file_output_list:
-        if re.search("ELF .* (executable|shared object).*dynamically linked", file):
-            elflist.append(re.match('(.*?):', file).group(1))
-        elif re.search("[ \t\n\r\f\v]text[ \t\n\r\f\v\,]", file):
+        if re.search(b"ELF .* (executable|shared object).*dynamically linked", file):
+            elflist.append(re.match(b'(.*?):', file).group(1))
+        elif re.search(b"[ \t\n\r\f\v]text[ \t\n\r\f\v\,]", file):
             # the comma is taken into account as a trailing separator so that also files
             # categorized as "ASCII text, with very long lines" (e.g., Qt prl files)
             # are recognized as text files
-            textlist.append(re.match('(.*?):', file).group(1))
+            textlist.append(re.match(b'(.*?):', file).group(1))
         else:
-            otherlist.append(re.match('(.*?):', file).group(1))
+            otherlist.append(re.match(b'(.*?):', file).group(1))
     return (elflist, textlist, otherlist)
 
 ######################################
@@ -123,8 +123,8 @@ def getLibNames(filename):
     ldd = subprocess.Popen(["ldd", filename], \
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     lddres = ldd.communicate() # return value: tuple (stdout, atderr)
-    ldds = StringIO.StringIO(lddres[0]) # elegantere Methode?
-    liblist = map(extractLibNameLdd, ldds)
+    ldds = io.StringIO(lddres[0].decode('ascii')) # elegantere Methode?
+    liblist = list(map(extractLibNameLdd, ldds))
     return [os.path.realpath(x) for x in liblist if x is not None and x is not '']
     #return [x for x in liblist if x is not None and x is not '']
 
@@ -134,8 +134,8 @@ def getExclusionList(get_it):
         ldconf = subprocess.Popen(["/sbin/ldconfig", "-p"], \
             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ldconfres = ldconf.communicate()
-        ldconfs = StringIO.StringIO(ldconfres[0])
-        liblist = map(extractLibNameLdconf, ldconfs)
+        ldconfs = io.StringIO(ldconfres[0].decode('ascii'))
+        liblist = list(map(extractLibNameLdconf, ldconfs))
         return [os.path.realpath(x) for x in liblist if x is not None and x is not '']
     else:
         return []
@@ -144,14 +144,14 @@ def getExclusionPaths(filename):
     """ Reads and returns the exclusion list of paths to system libraries from the given file"""
     try:
         f = open(filename, 'r')
-    except IOError, e:
+    except IOError as e:
         if filename == "":
             _LOGGER.info("INFO: No exclusion file specified. No pathnames excluded.")
         else:
             _LOGGER.warn("WARNING: Problem reading exclusion file %r (%s) ! No pathnames excluded.", filename, e)
         return []
     else:
-        liste = map(string.strip, f.readlines())
+        liste = list(map(str.strip, f.readlines()))
         # the following is the handling of the "include" statement in /etc/ld.so.conf
         # without that, the following line would be sufficient:
         # return map(string.strip, f.readlines())
@@ -233,7 +233,7 @@ def getPreviousRpath(filename):
     per = subprocess.Popen(["patchelf", "--print-rpath", filename], \
             stdout=subprocess.PIPE)
     perres = per.communicate()
-    perstring = perres[0].strip()
+    perstring = str(perres[0]).strip()
     rpath = [normRpathDir(d) for d in perstring.split(os.pathsep) if d]
     _LOGGER.debug("Previous rpath for %r: %r", filename, rpath)
     return rpath
@@ -262,6 +262,7 @@ def constructRpath(file, pathset):
 
 def cleanupRpath(filename, filelist, exliblist, expathlist, basepath, warn):
     """Returns an rpath for a given file, that does not contain directories from the exclusion list."""
+    filename = filename.decode('ascii')
     rpath = getPreviousRpath(filename)
     return [d for d in rpath if d not in expathlist]
 
@@ -270,6 +271,7 @@ def generateRpath(filename, filelist, exliblist, expathlist, basepath, warn):
     exclusion list and the basepath)
     If warn is True, warnings are printed if the file links to libraries
     which are neither excluded by the exlist nor located inside the basepath"""
+    filename = filename.decode('ascii')
     cgb = classifyLibraries(getLibNames(filename), basepath, filelist, exliblist, expathlist)
     if (warn == True and len(cgb[2])):
         for lib in cgb[2]:
@@ -282,7 +284,8 @@ def generateRpath(filename, filelist, exliblist, expathlist, basepath, warn):
 def runPatchelf(filename, rpath):
     """Sets the rpath of the specified filename using the patchelf command
     leaving the inode number intact."""
-    if not isinstance(rpath, basestring):
+    filename = filename.decode('ascii')
+    if not isinstance(rpath, str):
         rpath = os.pathsep.join(rpath)
     tmpfile = filename + ".to_be_patched"
     try:
@@ -378,7 +381,7 @@ def main():
         parser.error("no valid pathname specified")
     basepath = os.path.abspath(args[0])
     filelist = getFileList(basepath)
-    filetypes = determineFileTypes(map(runFile, filelist))
+    filetypes = determineFileTypes(list(map(runFile, filelist)))
     runElfTreatment(filetypes[0], filelist, getExclusionList(options.use_ldconfcache), getExclusionPaths(options.exfilename), basepath, options.warn)
     if (options.text):
         runTextTreatment(filetypes[1], basepath)
