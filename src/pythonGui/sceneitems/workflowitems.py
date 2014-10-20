@@ -12,7 +12,7 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 
-from PyQt4.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
+from PyQt4.QtCore import (QLine, QPoint, QPointF, QRect, QRectF, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
                          QPainter, QPolygon, QWidget)
 
@@ -35,13 +35,45 @@ class Item(QWidget, Loadable):
         self.descriptor = None
 
 
+    def mousePressEvent(self, proxy, event):
+        print()
+        pos = proxy.pos()
+        rect = QRect(pos.x(), pos.y(), self.width(), self.height())
+        center = rect.center()
+        currentPos = event.pos()
+        
+        # TODO: what happens, if we have more than one in/output channels?
+        if currentPos.x() < center.x():
+            print("input...")
+            # TODO: return inputChannel position
+        else:
+            print("output...")
+            # TODO: return outputChannel position
+                    
+        print("Item.mousePressEvent", self.inputChannels, self.outputChannels)
+        
+        #QWidget.mousePressEvent(self, event)
+
+
+    def mouseMoveEvent(self, proxy, event):
+        print()
+        print("Item.mouseMoveEvent", proxy.pos())
+        #QWidget.mouseMoveEvent(self, event)
+
+
+    def mouseReleaseEvent(self, proxy, event):
+        print()
+        print("Item.mouseReleaseEvent", proxy.pos())
+        #QWidget.mouseReleaseEvent(self, event)
+
+
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        fm = QFontMetrics(painter.font())
-        textWidth = fm.width(self.displayText)
+        #fm = QFontMetrics(painter.font())
+        #textWidth = fm.width(self.displayText)
         
         w = self.width()
         h = self.height()
@@ -284,4 +316,45 @@ class WorkflowGroupItem(Item):
         item.setStyleSheet("".join(ss))
         
         return proxy
+
+
+class WorkflowConnection(QWidget):
+
+
+    def __init__(self, parent):
+        super(WorkflowConnection, self).__init__(parent)
+        
+        self.curve = QLine()
+
+
+    def set_points(self, start, end):
+        self.curve.setPoints(start, end)
+        self.update()
+
+
+    def mousePressEvent(self, proxy, event):
+        self.startPos = proxy.pos()
+        self.set_points(self.startPos, self.startPos)
+        #event.accept()
+
+
+    def mouseMoveEvent(self, proxy, event):
+        self.set_points(self.startPos, event.pos())
+        #event.accept()
+
+
+    def mouseReleaseEvent(self, proxy, event):
+        print()
+        print("WorkflowConnection.mouseReleaseEvent", event.pos())
+
+
+    def paintEvent(self, event):
+        painter = QPainter()
+        painter.begin(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        #painter.setPen(self.pen)
+        painter.drawLine(self.curve)
+
+        painter.end()
 
