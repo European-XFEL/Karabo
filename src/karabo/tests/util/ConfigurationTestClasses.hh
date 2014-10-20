@@ -514,5 +514,66 @@ namespace configurationTest {
         }
     };
 
+    struct SchemaNodeElements {
+        KARABO_CLASSINFO(SchemaNodeElements, "SchemaNodeElements", "1.0");
+
+        SchemaNodeElements(const karabo::util::Hash& config) {
+        }
+
+        virtual ~SchemaNodeElements() {
+        }
+
+        static void expectedParameters(karabo::util::Schema & expected) {
+            
+            NODE_ELEMENT(expected).key("monitor")
+                    .displayedName("Monitor")
+                    .description("A Monitor (Node element containing count and other Node elements: stats)")
+                    .commit();
+            
+            UINT32_ELEMENT(expected).key("monitor.count")
+                    .displayedName("Count")
+                    .description("Test count element")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(777)
+                    .commit();
+
+            NODE_ELEMENT(expected).key("monitor.stats")
+                    .description("Complex status node empty for a while...")
+                    .displayedName("Stats")
+                    .commit();
+
+        }
+    };
+    
+    struct SchemaNodeInjected {
+        KARABO_CLASSINFO(SchemaNodeInjected, "SchemaNodeInjected", "1.0");
+        
+        SchemaNodeInjected(const karabo::util::Hash& config) {
+        }
+
+        virtual ~SchemaNodeInjected() {
+        }
+
+        static void expectedParameters(karabo::util::Schema & expected) {
+
+            NODE_ELEMENT(expected).key("monitor")
+                    .displayedName("Monitor new")
+                    .description("A Monitor new (Node element containing count and other Node elements: stats)")
+                    .commit();
+            
+            NODE_ELEMENT(expected).key("monitor.stats")
+                    .description("Complex status node having d1 parameter")
+                    .displayedName("Stats")
+                    .commit();
+
+            FLOAT_ELEMENT(expected).key("monitor.stats.d1")
+                    .description("D1 parameter in 'monitor.stats' node")
+                    .displayedName("D1")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(3.1415f)
+                    .commit();
+            
+        }
+    };
 }
 #endif

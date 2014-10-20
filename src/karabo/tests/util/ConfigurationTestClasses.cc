@@ -13,5 +13,6 @@ namespace configurationTest {
     KARABO_REGISTER_FOR_CONFIGURATION(Shape, Rectangle);
     KARABO_REGISTER_FOR_CONFIGURATION(GraphicsRenderer);
     KARABO_REGISTER_FOR_CONFIGURATION(TestStruct1, TestStruct2);
+    KARABO_REGISTER_FOR_CONFIGURATION(SchemaNodeElements);
 
 }
