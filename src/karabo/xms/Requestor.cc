@@ -62,7 +62,7 @@ namespace karabo {
             }
         }
 
-        void Requestor::receiveResponse(karabo::util::Hash& header, karabo::util::Hash& body) {
+        void Requestor::receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
             
             //if (m_isReceived) throw KARABO_SIGNALSLOT_EXCEPTION("You have to send a request before you can receive a response");
             int currentWaitingTime = 0;
