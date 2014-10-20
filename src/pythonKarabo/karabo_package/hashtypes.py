@@ -16,7 +16,7 @@ This file closely corresponds to karabo.util.ReferenceType.
 The C++ types are mostly implemented by using the corresponding numpy type."""
 
 
-class _Parameter(object):
+class Attribute(object):
     def __init__(self, default=None):
         self.default = default
 
@@ -54,12 +54,12 @@ class Enumable(object):
 
 
 class Simple(object):
-    unitSymbol = _Parameter("")
-    metricPrefixSymbol = _Parameter("")
-    minExc = _Parameter()
-    maxExc = _Parameter()
-    minInc = _Parameter()
-    maxInc = _Parameter()
+    unitSymbol = Attribute("")
+    metricPrefixSymbol = Attribute("")
+    minExc = Attribute()
+    maxExc = Attribute()
+    minInc = Attribute()
+    maxInc = Attribute()
 
     @classmethod
     def read(cls, file):
@@ -192,19 +192,20 @@ class NumpyVector(Vector):
 
 
 class Descriptor(object):
-    displayedName = _Parameter()
-    description = _Parameter()
-    allowedStates = _Parameter()
-    defaultValue = _Parameter()
-    accessMode = _Parameter(AccessMode.RECONFIGURABLE)
-    assignment = _Parameter(Assignment.OPTIONAL)
-    requiredAccessLevel = _Parameter(AccessLevel.OBSERVER)
-    displayType = _Parameter()
+    displayedName = Attribute()
+    alias = Attribute()
+    description = Attribute()
+    allowedStates = Attribute()
+    defaultValue = Attribute()
+    accessMode = Attribute(AccessMode.RECONFIGURABLE)
+    assignment = Attribute(Assignment.OPTIONAL)
+    requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
+    displayType = Attribute()
     enum = None
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            if isinstance(getattr(type(self), k, None), _Parameter):
+            if isinstance(getattr(type(self), k, None), Attribute):
                 setattr(self, k, v)
             else:
                 raise TypeError("__init__ got unexpected keyword argument: {}".
@@ -213,7 +214,7 @@ class Descriptor(object):
 
     def parameters(self):
         return {p: getattr(self, p) for p in dir(type(self))
-                if isinstance(getattr(type(self), p), _Parameter) and
+                if isinstance(getattr(type(self), p), Attribute) and
                    getattr(self, p) is not None}
 
 
@@ -274,29 +275,31 @@ class Type(Descriptor, Registry):
     fromname = { }
     strs = { }
 
-    options = _Parameter()
+    options = Attribute()
 
 
     @classmethod
     def hashname(cls):
-        s = ''
-        lastlower = False
-        for c in cls.__name__:
-            if c.isupper() and lastlower:
-                s += '_'
-            s += c.capitalize()
-            lastlower = c.islower()
-        return s.rstrip('_')
-
+        return cls._hashname
 
     @classmethod
     def register(cls, name, dict):
         super(Type, cls).register(name, dict)
         cls.types[cls.number] = cls
-        cls.fromname[cls.hashname()] = cls
+
+        if "number" in dict:
+            s = ''
+            lastlower = False
+            for c in cls.__name__:
+                if c.isupper() and lastlower:
+                    s += '_'
+                s += c.capitalize()
+                lastlower = c.islower()
+            cls._hashname = s.rstrip('_')
+
+        cls.fromname[cls._hashname] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
-
 
     @classmethod
     def toString(cls, data):
