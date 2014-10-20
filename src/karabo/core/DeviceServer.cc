@@ -83,14 +83,14 @@ namespace karabo {
                     .adminAccess()
                     .assignmentOptional().defaultValue(false)
                     .commit();
-            
+
             INT32_ELEMENT(expected).key("heartbeatInterval")
                     .displayedName("Heartbeat interval")
                     .description("The heartbeat interval")
                     .assignmentOptional().defaultValue(20)
                     .adminAccess()
                     .commit();
-            
+
             INT32_ELEMENT(expected).key("nThreads")
                     .displayedName("Number of threads")
                     .description("Defines the number of threads that can be used to work on incoming events")
@@ -261,7 +261,7 @@ namespace karabo {
             m_connection = BrokerConnection::createChoice("connection", config);
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
             loadLogger(config);
-            
+
             m_heartbeatIntervall = config.get<int>("heartbeatInterval");
             m_nThreads = config.get<int>("nThreads");
         }
@@ -391,14 +391,14 @@ namespace karabo {
         }
 
 
-        void DeviceServer::idleStateOnEntry() {
+        void DeviceServer::okStateOnEntry() {
 
             KARABO_LOG_INFO << "DeviceServer starts up with id: " << m_serverId;
 
             // Check whether we have installed devices available
             updateAvailableDevices();
             if (!m_availableDevices.empty()) {
-                inbuildDevicesAvailable();
+                newPluginAvailable();
             }
 
 
@@ -441,7 +441,7 @@ namespace karabo {
                         }
                         boost::this_thread::sleep(boost::posix_time::milliseconds(3000));
                         if (inError) {
-                            endError();
+                            reset();
                             inError = false;
                         }
                     } catch (const Exception& e) {
@@ -473,19 +473,14 @@ namespace karabo {
             KARABO_LOG_ERROR << "[short] " << user;
             KARABO_LOG_ERROR << "[detailed] " << detail;
         }
+        
 
+        void DeviceServer::slotStartDevice(const karabo::util::Hash& configuration) {
 
-        void DeviceServer::endErrorAction() {
-
-        }
-
-
-        void DeviceServer::startDeviceAction(const karabo::util::Hash& hash) {
-
-            if (hash.has("classId")) {
-                instantiateNew(hash);
+            if (configuration.has("classId")) {
+                instantiateNew(configuration);
             } else {
-                instantiateOld(hash);
+                instantiateOld(configuration);
             }
         }
 
@@ -516,12 +511,18 @@ namespace karabo {
                 // Inject connection
                 config.set("_connection_", m_connectionConfiguration);
 
-                BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
-                boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 
-                // Associate deviceInstance with its thread
-                string deviceInstanceId = device->getInstanceId();
-                m_deviceInstanceMap[deviceInstanceId] = t;
+                string deviceInstanceId;
+                {
+                    boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+
+                    BaseDevice::Pointer device = BaseDevice::create(classId, config); // TODO If constructor blocks, we are lost here!!
+                    boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
+
+                    // Associate deviceInstance with its thread
+                    deviceInstanceId = device->getInstanceId();
+                    m_deviceInstanceMap[deviceInstanceId] = t;
+                }
 
                 // Answer initiation of device
                 reply(true, deviceInstanceId); // TODO think about
@@ -576,7 +577,7 @@ namespace karabo {
         }
 
 
-        void DeviceServer::notifyNewDeviceAction() {
+        void DeviceServer::newPluginAvailable() {
             vector<string> deviceClasses;
             vector<int> visibilities;
             deviceClasses.reserve(m_availableDevices.size());
@@ -613,17 +614,23 @@ namespace karabo {
 
             KARABO_LOG_INFO << "Received kill signal";
 
-            // Notify all devices
-            for (DeviceInstanceMap::const_iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
-                call(it->first, "slotKillDevice");
-            }
+            {
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
 
-            for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
-                it->second->join();
-                m_deviceThreads.remove_thread(it->second);
-            }
 
-            m_deviceInstanceMap.clear();
+                // Notify all devices
+                for (DeviceInstanceMap::const_iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                    call(it->first, "slotKillDevice");
+                }
+
+                for (DeviceInstanceMap::iterator it = m_deviceInstanceMap.begin(); it != m_deviceInstanceMap.end(); ++it) {
+                    it->second->join();
+                    m_deviceThreads.remove_thread(it->second);
+                }
+
+                m_deviceInstanceMap.clear();
+
+            }
 
             // Reply the same
             reply(m_serverId);
@@ -636,14 +643,16 @@ namespace karabo {
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
             KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death." << instanceId;
-
-            DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
-            if (it != m_deviceInstanceMap.end()) {
-                boost::thread* t = it->second;
-                t->join();
-                m_deviceThreads.remove_thread(t);
-                m_deviceInstanceMap.erase(it);
-                KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
+            {
+                boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
+                DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
+                if (it != m_deviceInstanceMap.end()) {
+                    boost::thread* t = it->second;
+                    t->join();
+                    m_deviceThreads.remove_thread(t);
+                    m_deviceInstanceMap.erase(it);
+                    KARABO_LOG_INFO << "Device: \"" << instanceId << "\" removed from server.";
+                }
             }
         }
 

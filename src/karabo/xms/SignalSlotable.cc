@@ -75,7 +75,8 @@ namespace karabo {
             m_connection->start();
             m_producerChannel = m_connection->createChannel();
             m_consumerChannel = m_connection->createChannel();            
-            m_heartbeatChannel = m_connection->createChannel("beats");
+            m_heartbeatProducerChannel = m_connection->createChannel("beats");
+            m_heartbeatConsumerChannel = m_connection->createChannel("beats");
 
             registerDefaultSignalsAndSlots();
         }
@@ -234,8 +235,8 @@ namespace karabo {
             m_consumerChannel->setFilter(selector);
             m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
             
-            m_heartbeatChannel->setFilter(selector);
-            m_heartbeatChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
+            m_heartbeatConsumerChannel->setFilter(selector);
+            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
         }
 
 
@@ -1493,7 +1494,11 @@ namespace karabo {
                     for (Hash::iterator it = trackedComponents.begin(); it != trackedComponents.end(); ++it) {
                         Hash& entry = it->getValue<Hash>();
 
+                        const string& instanceId = it->getKey();
+                        
                         int countdown = entry.get<int>("countdown");
+                        
+                        cout << endl << m_instanceId << "(" << instanceId << "): " << countdown << endl;
 
                         if (countdown == 0) { // Connection lost
                             const Hash& instanceInfo = entry.get<Hash>("instanceInfo");
@@ -1518,8 +1523,8 @@ namespace karabo {
                         }
                     }
 
-                    // We are sleeping twice as long as the count-down ticks (which ticks in seconds)
-                    boost::this_thread::sleep(boost::posix_time::seconds(2));
+                    // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
+                    boost::this_thread::sleep(boost::posix_time::seconds(3));
                 }
 
             } catch (const Exception& e) {

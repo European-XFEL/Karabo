@@ -98,7 +98,8 @@ namespace karabo {
             karabo::net::BrokerConnection::Pointer m_connection;
             karabo::net::BrokerChannel::Pointer m_producerChannel;
             karabo::net::BrokerChannel::Pointer m_consumerChannel;
-            karabo::net::BrokerChannel::Pointer m_heartbeatChannel;
+            karabo::net::BrokerChannel::Pointer m_heartbeatProducerChannel;
+             karabo::net::BrokerChannel::Pointer m_heartbeatConsumerChannel;
 
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
@@ -681,7 +682,7 @@ namespace karabo {
             template <class A1, class A2, class A3>
             void registerHeartbeatSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, funcName));
                 boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }
