@@ -643,3 +643,15 @@ void Schema_Test::testOverwriteElement() {
     CPPUNIT_ASSERT(schema.getAliasFromKey<int>("exampleKey3") == 20);
 }
 
+void Schema_Test::testMerge() {
+    Schema schema = Configurator<SchemaNodeElements>::getSchema("SchemaNodeElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
+
+    Schema schema2("SchemaNodeElements", Schema::AssemblyRules(READ | WRITE | INIT));
+    SchemaNodeInjected::expectedParameters(schema2);
+    CPPUNIT_ASSERT(schema2.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
+
+    schema.merge(schema2);
+    CPPUNIT_ASSERT(schema.getDefaultValue<unsigned int>("monitor.count") == 777);
+    CPPUNIT_ASSERT(schema.getDefaultValue<float>("monitor.stats.d1") == 3.1415f);
+}
