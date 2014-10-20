@@ -656,7 +656,7 @@ class BoxGroup(GroupAction):
         rect, widgets = self.gather_widgets()
         if rect.isNull():
             return
-        widgets.sort(cmp)
+        widgets.sort(key=cmp)
         for w in widgets:
             if isinstance(w, Layout):
                 group.addItem(w)
@@ -673,8 +673,7 @@ class VerticalGroup(GroupActions, BoxGroup):
 
 
     def run(self):
-        self.doit(BoxLayout(BoxLayout.TopToBottom),
-                  lambda x, y: x.geometry().y() - y.geometry().y())
+        self.doit(BoxLayout(BoxLayout.TopToBottom), lambda x: x.geometry().y())
 
 
 class HorizontalGroup(GroupActions, BoxGroup):
@@ -683,8 +682,7 @@ class HorizontalGroup(GroupActions, BoxGroup):
 
 
     def run(self):
-        self.doit(BoxLayout(BoxLayout.LeftToRight),
-                  lambda x, y: x.geometry().x() - y.geometry().x())
+        self.doit(BoxLayout(BoxLayout.LeftToRight), lambda x: x.geometry().x())
 
 
 class GridGroup(GroupActions, BoxGroup):
