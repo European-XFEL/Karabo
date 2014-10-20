@@ -256,11 +256,11 @@ class Slot(Descriptor):
         if instance is None:
             return self
         else:
-            return self.method.__get__(instance, owner)
+            return self.method(instance, owner)
 
 
     def __call__(self, method):
-        self.method = coroutine(method)
+        self.method = coroutine(method).__get__
         return self
 
 
@@ -315,6 +315,17 @@ class Type(Descriptor, Registry):
         ret["nodeType"] = 0
         ret["valueType"] = self.hashname()
         return ret
+
+
+    @coroutine
+    def method(self, instance, value):
+        """this is to be called if the value is changed from the outside"""
+        setattr(instance, self.key, value)
+
+
+    def __call__(self, method):
+        self.method = coroutine(method)
+        return self
 
 
 class Bool(Type):
