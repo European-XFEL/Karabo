@@ -81,7 +81,7 @@ namespace karabo {
 
             Requestor& receive() {
                 try {
-                    karabo::util::Hash header, body;                  
+                    karabo::util::Hash::Pointer header, body;                  
                     receiveResponse(header, body);
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
@@ -96,9 +96,9 @@ namespace karabo {
             template <class A1>
             Requestor& receive(A1& a1) {
                 try {                   
-                    karabo::util::Hash header, body;
+                    karabo::util::Hash::Pointer header, body;
                     receiveResponse(header, body);
-                    a1 = body.get<A1 > ("a1");
+                    a1 = body->get<A1 > ("a1");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -112,10 +112,10 @@ namespace karabo {
             template <class A1, class A2>
             Requestor& receive(A1& a1, A2& a2) {
                 try {                    
-                    karabo::util::Hash body, header;
+                    karabo::util::Hash::Pointer body, header;
                     receiveResponse(body, header);
-                    a1 = body.get<A1 > ("a1");
-                    a2 = body.get<A2 > ("a2");
+                    a1 = body->get<A1 > ("a1");
+                    a2 = body->get<A2 > ("a2");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -129,11 +129,11 @@ namespace karabo {
             template <class A1, class A2, class A3>
             Requestor& receive(A1& a1, A2& a2, A3& a3) {
                 try {
-                    karabo::util::Hash body, header;
+                    karabo::util::Hash::Pointer body, header;
                     receiveResponse(body, header);
-                    a1 = body.get<A1 > ("a1");
-                    a2 = body.get<A2 > ("a2");
-                    a3 = body.get<A3 > ("a3");
+                    a1 = body->get<A1 > ("a1");
+                    a2 = body->get<A2 > ("a2");
+                    a3 = body->get<A3 > ("a3");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -147,12 +147,12 @@ namespace karabo {
             template <class A1, class A2, class A3, class A4>
             Requestor& receive(A1& a1, A2& a2, A3& a3, A4& a4) {
                 try {
-                    karabo::util::Hash body, header;
+                    karabo::util::Hash::Pointer body, header;
                     receiveResponse(body, header);
-                    a1 = body.get<A1 > ("a1");
-                    a2 = body.get<A2 > ("a2");
-                    a3 = body.get<A3 > ("a3");
-                    a4 = body.get<A4 > ("a4");
+                    a1 = body->get<A1 > ("a1");
+                    a2 = body->get<A2 > ("a2");
+                    a3 = body->get<A3 > ("a3");
+                    a4 = body->get<A4 > ("a4");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -175,7 +175,7 @@ namespace karabo {
 
             void sendRequest(const karabo::util::Hash& header, const karabo::util::Hash& body) const;
 
-            void receiveResponse(karabo::util::Hash& header, karabo::util::Hash& body);
+            void receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
        
 

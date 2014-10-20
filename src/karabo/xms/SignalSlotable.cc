@@ -1674,13 +1674,15 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::util::Hash& header, karabo::util::Hash& body) {
+        void SignalSlotable::popReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
             boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
-            ReceivedReplies::const_iterator it = m_receivedReplies.find(replyId);
+            ReceivedReplies::iterator it = m_receivedReplies.find(replyId);
             if (it != m_receivedReplies.end()) {
-                header = *(it->second.first);
-                body = *(it->second.second);
+                header = it->second.first;
+                body = it->second.second;
             }
+            // Remove
+            m_receivedReplies.erase(it);
         }
     }
 }
