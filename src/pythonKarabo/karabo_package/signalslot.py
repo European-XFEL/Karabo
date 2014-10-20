@@ -286,6 +286,10 @@ class SignalSlotable(Configurable):
         if self.notify_changes:
             self.signalChanged(Hash(attr.key, value), self.deviceId)
 
+    def setChildValue(self, key, value):
+        if self.notify_changes:
+            self.signalChanged(Hash(key, value), self.deviceId)
+
     @coroutine
     def slotSchemaUpdated(self, schema, deviceId):
         future = self.__schemaFutures.pop(deviceId, None)

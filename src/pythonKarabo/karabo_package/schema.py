@@ -19,7 +19,9 @@ class MetaConfigurable(type(Registry)):
 class Configurable(Registry, metaclass=MetaConfigurable):
     _subclasses = []
 
-    def __init__(self, configuration={}):
+    def __init__(self, configuration={}, parent=None, key=None):
+        self._parent = parent
+        self._key = key
         for k in self._allattrs:
             t = getattr(type(self), k)
             if k in configuration:
@@ -79,7 +81,12 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         return ListOfNodes(cls, **kwargs)
 
     def setValue(self, key, value):
+        if self._parent is not None:
+            self._parent.setChildValue(self._key + "." + key.key, value)
         self.__dict__[key] = value
+
+    def setChildValue(self, key, value):
+        self._parent.setChildValue(self._key + "." + key, value)
 
     def run(self):  # endpoint for multiple inheritance
         self.running = True
@@ -99,7 +106,7 @@ class Node(Descriptor):
         return self.cls.getClassSchema().hash
 
     def __set__(self, instance, value):
-        instance.setValue(self, self.cls(value))
+        instance.setValue(self, self.cls(value, instance, self.key))
 
     def asHash(self, instance):
         r = karabo.hash.Hash()
