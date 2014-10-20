@@ -141,7 +141,7 @@ class Device(SignalSlotable):
         for k, v in reconfiguration.items():
             t = getattr(type(self), k)
             if isinstance(t, Type):
-                setattr(self, k, t.cast(v))
+                yield from t.method(self, t.cast(v))
         self.signalChanged(reconfiguration, self.deviceId)
         return True, ""
 
