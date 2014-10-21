@@ -23,7 +23,7 @@ def _gettype(data):
         else:
             return hashtypes.Type.strs[data.dtype.str]
     except AttributeError:
-        if isinstance(data, hashtypes.Special):
+        if hasattr(data, "hashtype"):
             return data.hashtype
         elif isinstance(data, bool):
             return hashtypes.Bool
@@ -37,8 +37,6 @@ def _gettype(data):
             return hashtypes.VectorChar
         elif isinstance(data, str):
             return hashtypes.String
-        elif isinstance(data, Hash):
-            return hashtypes.Hash
         elif isinstance(data, list):
             if data:
                 return _gettype(data[0]).vectortype
@@ -189,18 +187,25 @@ class ListElement(Element):
 
 
 class Hash(OrderedDict):
-    """This is a replacement for the Karabo C++ Hash
+    """This is the serialization data structure of Karabo
 
-    It has most of the C++ functionality, plus some typical
-    python methods.
+    Every data that gets transfered over the network or saved to file
+    by Karabo is in this format.
+
+    It is mostly an extended :class:`dict`.
 
     The bit difference to normal python containers is the dot-access method.
     The hash has a built-in knowledge about it containing itself. Thus,
-    one can access subhashes by hash['key.subhash'].
+    one can access subhashes by ``hash['key.subhash']``.
 
     The other speciality are attributes. In python, these can be accessed
-    using a second parameter to the brackets, as in hash['key', 'attribute'].
-    All attributes at the same time can be accessed by hash['key', ...]."""
+    using a second parameter to the brackets, as in
+    ``hash['key', 'attribute']``.
+
+    All attributes at the same time can be accessed by ``hash['key', ...]``."""
+
+    hashtype = hashtypes.Hash
+
     def __init__(self, *args):
         if len(args) == 1:
             OrderedDict.__init__(self, args[0])
@@ -284,6 +289,11 @@ class Hash(OrderedDict):
 
 
     def iterall(self):
+        """ Iterate over key, value and attributes
+
+        This behaves like the ``items()`` method of python :class:`dict`,
+        just that it yields not only key and value but also the attributes
+        for it. """
         for k in self:
             yield k, self[k], self[k, ...]
 
@@ -291,7 +301,7 @@ class Hash(OrderedDict):
     def merge(self, other, attribute_policy='merge'):
         """Merge the hash other into this hash.
 
-        If the attribute_policy is 'merge', the attributes from the other
+        If the *attribute_policy* is ``'merge'``, the attributes from the other
         hash are merged with the existing ones, otherwise they are overwritten.
         """
         merge = attribute_policy == "merge"
@@ -463,3 +473,9 @@ class BinaryWriter(Writer):
     def writeToFile(self, data, file):
         self.file = file
         hashtypes.Hash.write(self, data)
+
+
+def saveToFile(hash, fn):
+    w = XMLWriter()
+    with open(fn, 'wb') as out:
+        w.writeToFile(hash, out)

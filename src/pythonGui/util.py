@@ -8,6 +8,7 @@ from PyQt4.QtGui import QFileDialog
 
 import weakref
 
+
 class Weak(object):
     """ this declares a member variable of a class to be weak
 

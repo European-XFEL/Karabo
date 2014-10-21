@@ -11,13 +11,18 @@ __author__="kerstin weger"
 import util # assure sip api is set first
 from traceback import print_exception, format_exception
 
+from async import EventLoop, Macro, DeviceClient
 from mainwindow import MainWindow
 from network import Network
 from manager import Manager
 
-from PyQt4.QtGui import QApplication, QMessageBox
+import karabo
+
+from PyQt4.QtGui import QMessageBox
 
 import numpy
+
+import asyncio
 
 from displaywidgets import *
 from editablewidgets import *
@@ -27,10 +32,14 @@ import icons
 
 def init(argv):
     numpy.set_printoptions(suppress=True, threshold=10)
-    app = QApplication(argv)
+    loop = EventLoop(argv)
+    asyncio.set_event_loop(loop)
+    karabo.Macro = Macro
+    karabo.DeviceClient = DeviceClient
+    karabo.__all__.extend(["Macro", "DeviceClient"])
     icons.init()
 
-    app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
+    loop.app.setStyleSheet("QPushButton { text-align: left; padding: 5px; }")
     
 #    app.setStyleSheet(""
 #        "exfel--gui--DockWindow exfel--gui--DivWidget {"
@@ -51,7 +60,7 @@ def init(argv):
         window.onServerConnectionChanged)
     Network().signalUserChanged.connect(window.onUpdateAccessLevel)
     window.show()
-    return app
+    return loop
 
 
 def excepthook(type, value, traceback):

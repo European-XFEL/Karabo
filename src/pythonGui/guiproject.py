@@ -17,12 +17,20 @@ from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.project import Project, BaseDevice
+import karabo
 import manager
+from finders import MacroContext
 
 from PyQt4.QtCore import pyqtSignal, QObject
+from PyQt4.QtGui import QMessageBox
 
+import imp
+from importlib import import_module
+import marshal
 import os.path
+import sys
 from tempfile import NamedTemporaryFile
+import types
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
@@ -138,6 +146,7 @@ class GuiProject(Project, QObject):
 
         # List of Scene
         self.scenes = []
+        self.modules = { } # the modules in the macro context
         
         # States whether the project was changed or not
         self.isModified = False
@@ -207,6 +216,17 @@ class GuiProject(Project, QObject):
             data = zf.read("{}/{}".format(self.SCENES_KEY, s["filename"]))
             scene.fromXml(data)
             self.addScene(scene)
+
+        self.macros = {k: Macro(self, k) for k in
+                       projectConfig.get(self.MACROS_KEY, [ ])}
+        with MacroContext(self):
+            try:
+                for m in self.macros.values():
+                    m.run()
+            except Exception as e:
+                QMessageBox.warning(None, "Macro Error",
+                        "error excuting macro {}:\n{}".format(m.name, e))
+
         self.setModified(False)
 
 
@@ -267,6 +287,21 @@ class GuiProject(Project, QObject):
                             zf.writestr(f, zin.read(f))
                         resources[k] = v
             projectConfig["resources"] = resources
+
+            macros = Hash()
+            for m in self.macros.values():
+                f = "macros/{}.py".format(m.name)
+                t = m.text
+                if t is None:
+                    with ZipFile(self.filename, "r") as zin:
+                        t = zin.read(f)
+                zf.writestr(f, t)
+                try:
+                    zf.writestr(f + 'c', marshal.dumps(compile(t, f, "exec")))
+                except SyntaxError:
+                    pass
+                macros[m.name] = f
+            projectConfig[self.MACROS_KEY] = macros
 
             # Create folder structure and save content
             projectConfig = Hash(self.PROJECT_KEY, projectConfig)
@@ -332,6 +367,53 @@ class GuiProject(Project, QObject):
             manager.Manager().shutdownDevice(d.id, False)
 
 
+class Macro(object):
+    def __init__(self, project, name):
+        self.project = project
+        self.name = name
+        self.module = None
+        self.text = None
+        self.modules = { }
+        self.macros = { }
+
+
+    def run(self):
+        if self.module is None:
+            self.module = import_module("macros." + self.name)
+        else:
+            imp.reload(self.module)
+        self.macros = {k: v for k, v in self.module.__dict__.items()
+                       if isinstance(v, type) and
+                          issubclass(v, karabo.Macro) and
+                          v is not karabo.Macro}
+
+
+    def load(self):
+        with ZipFile(self.project.filename, "r") as zf:
+            self.text = zf.read("macros/{}.py".format(self.name)).decode("utf8")
+
+
+    def load_module(self, fullname):
+        mod = types.ModuleType(fullname)
+        sys.modules[fullname] = mod
+        mod.__file__ = "{}/macros/{}.py".format(self.project.filename,
+                                                self.name)
+        mod.__loader__ = self
+        mod.__package__ = b"macros"
+        fn = "macros/{}.py".format(self.name)
+        if self.text is None:
+            with ZipFile(self.project.filename, "r") as zf:
+                try:
+                    code = marshal.loads(zf.read(fn + 'c'))
+                except (KeyError, EOFError, ValueError, TypeError):
+                    exec(zf.read(fn), mod.__dict__)
+                else:
+                    exec(code, mod.__dict__)
+        else:
+            exec(compile(self.text, fn, "exec"), mod.__dict__)
+        return mod
+
+
 class Category(object):
     """
     This class represents a project category and is only used to have an object
@@ -341,4 +423,3 @@ class Category(object):
         super(Category, self).__init__()
         
         self.displayName = displayName
-

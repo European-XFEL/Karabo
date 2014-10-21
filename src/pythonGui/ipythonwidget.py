@@ -7,10 +7,14 @@
 
 __all__ = ["IPythonWidget"]
 
+from karabo import cli
+
 # Import the console machinery from ipython
 from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
 from IPython.qt.inprocess import QtInProcessKernelManager
 from IPython.lib import guisupport
+
+import asyncio
 
 
 class IPythonWidget(RichIPythonWidget):
@@ -27,7 +31,8 @@ class IPythonWidget(RichIPythonWidget):
         self.kernel_manager = kernel_manager = QtInProcessKernelManager()
         kernel_manager.start_kernel()
         kernel_manager.kernel.gui = 'qt4'
-        
+        cli.load_ipython_extension(kernel_manager.kernel.shell, False)
+
         self.kernel_client = kernel_client = self._kernel_manager.client()
         kernel_client.start_channels()
 

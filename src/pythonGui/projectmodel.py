@@ -20,11 +20,13 @@ import icons
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.plugindialog import PluginDialog
 from dialogs.scenedialog import SceneDialog
-from guiproject import Category, Device, GuiProject
+from dialogs.dialogs import MacroDialog
+from guiproject import Category, Device, GuiProject, Macro
 from scene import Scene
 import manager
 
 from karabo.project import Project
+import karabo
 
 from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
 from PyQt4.QtGui import (QBrush, QDialog, QFileDialog, QItemSelectionModel,
@@ -40,6 +42,7 @@ class ProjectModel(QStandardItemModel):
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     signalRenameScene = pyqtSignal(object) # scene
+    signalAddMacro = pyqtSignal(object)
 
     ITEM_OBJECT = Qt.UserRole
 
@@ -179,6 +182,25 @@ class ProjectModel(QStandardItemModel):
                     subLeafItem.setToolTip(config.filename)
                     leafItem.appendRow(subLeafItem)
 
+            childItem = QStandardItem(Project.MACROS_LABEL)
+            childItem.setData(Category(Project.MACROS_LABEL),
+                              ProjectModel.ITEM_OBJECT)
+            childItem.setEditable(False)
+            childItem.setIcon(icons.folder)
+            item.appendRow(childItem)
+
+            for m in project.macros.values():
+                leafItem = QStandardItem(m.name)
+                leafItem.setIcon(icons.file)
+                leafItem.setEditable(False)
+                childItem.appendRow(leafItem)
+                leafItem.setData(m, ProjectModel.ITEM_OBJECT)
+
+                for k, v in m.macros.items():
+                    subLeafItem = QStandardItem(k)
+                    subLeafItem.setData(v, ProjectModel.ITEM_OBJECT)
+                    subLeafItem.setEditable(False)
+                    leafItem.appendRow(subLeafItem)
         self.endResetModel()
         
         # Set last selected object
@@ -601,24 +623,30 @@ class ProjectModel(QStandardItemModel):
         else:
             index = selectedIndexes[0]
             device = index.data(ProjectModel.ITEM_OBJECT)
-        
-        if device is not None and isinstance(device, Configuration):
+
+        if isinstance(device, type) and issubclass(device, karabo.Macro):
+            if device.instance is None:
+                device.instance = Configuration(device.__name__, "macro",
+                                                device.getSchema())
+
+            conf = device.instance
+            ctype = "macro"
+        elif isinstance(device, Configuration):
             # Check whether device is already online
             if device.isOnline():
                 conf = manager.getDevice(device.id)
             else:
                 conf = device
                 
-                # Check descriptor only with first selection
                 if device.descriptorRequested is False:
                     self.checkDescriptor(device)
                     device.descriptorRequested = True
-            type = conf.type
+            ctype = conf.type
         else:
             conf = None
-            type = "other"
+            ctype = "other"
 
-        self.signalItemChanged.emit(type, conf)
+        self.signalItemChanged.emit(ctype, conf)
 
 
     def onCloseProject(self):
@@ -685,6 +713,25 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateScene(self):
         self.duplicateScene(self.currentScene())
+
+
+    def onNewMacro(self):
+        dialog = MacroDialog()
+        if dialog.exec_() != dialog.Accepted or not dialog.name.text():
+            return
+
+        project = self.currentProject()
+        macro = Macro(self.currentProject(), dialog.name.text())
+        macro.text = ""
+        project.macros[macro.name] = macro
+        self.signalAddMacro.emit(macro)
+
+
+    def onEditMacro(self):
+        index = self.selectionModel.currentIndex()
+        macro = index.data(ProjectModel.ITEM_OBJECT)
+        macro.load()
+        self.signalAddMacro.emit(macro)
 
 
     def onSaveAsScene(self):
