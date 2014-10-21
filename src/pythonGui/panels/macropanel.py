@@ -35,11 +35,12 @@ class MacroPanel(QWidget):
         self.edit.setPlainText(macro.load())
         PygmentsHighlighter(self.edit.document())
         layout.addWidget(self.edit)
+        self.edit.setLineWrapMode(QTextEdit.NoWrap)
         self.macro = macro
 
 
     def setupToolBars(self, tb, parent):
-        tb.addAction(icons.save, "Save", self.onSave)
+        tb.addAction(icons.start, "Run", self.onRun)
 
 
     def eventFilter(self, object, event):
@@ -50,7 +51,7 @@ class MacroPanel(QWidget):
         return False
 
 
-    def onSave(self):
+    def onRun(self):
         try:
             with MacroContext(self.macro.project):
                 self.macro.run()
