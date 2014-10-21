@@ -24,8 +24,7 @@ from finders import MacroContext
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
 
-import imp
-from importlib import import_module
+from importlib import import_module, reload
 import marshal
 import os.path
 import sys
@@ -382,11 +381,14 @@ class Macro(object):
         if self.module is None:
             self.module = import_module("macros." + self.name)
         else:
-            imp.reload(self.module)
+            self.module = reload(self.module)
         self.macros = {k: v for k, v in self.module.__dict__.items()
                        if isinstance(v, type) and
                           issubclass(v, karabo.Macro) and
                           v is not karabo.Macro}
+        for k, v in self.macros.items():
+            v.instance = Configuration(k, "macro", v.getSchema())
+        self.project.signalProjectModified.emit()
 
 
     def load(self):
