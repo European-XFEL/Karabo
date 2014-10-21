@@ -14,7 +14,7 @@ from registry import Loadable
 
 from PyQt4.QtCore import (QLine, QPoint, QPointF, QRect, QRectF, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
-                         QPainter, QPolygon, QWidget)
+                         QPainter, QPainterPath, QPolygon, QWidget)
 
 
 class Item(QWidget, Loadable):
@@ -328,33 +328,61 @@ class WorkflowConnection(QWidget):
 
 
     def set_points(self, start, end):
-        self.curve.setPoints(start, end)
+        #self.curve.setPoints(start, end)
+        self.curve = QLine(start, end)
         self.update()
 
 
-    def mousePressEvent(self, proxy, event):
-        self.startPos = proxy.pos()
+    def mousePressEvent(self, event):
+        self.startPos = event.pos()
         self.set_points(self.startPos, self.startPos)
-        #event.accept()
 
 
-    def mouseMoveEvent(self, proxy, event):
+    def mouseMoveEvent(self, parent, event):
         self.set_points(self.startPos, event.pos())
-        #event.accept()
 
 
-    def mouseReleaseEvent(self, proxy, event):
-        print()
-        print("WorkflowConnection.mouseReleaseEvent", event.pos())
+    def mouseReleaseEvent(self, parent, event):
+        proxy = ProxyWidget(parent.inner)
+        proxy.setWidget(self)
+        rect = self.geometry()
+        print("rect", rect, self.curve)
+        #proxy.fixed_geometry = QRect(QPoint(posX, posY), QSize(rect.width(), rect.height()))
+        proxy.fixed_geometry = QRect(rect.topLeft(), QSize(rect.width(), rect.height()))
+        proxy.show()
+        parent.ilayout.add_item(proxy)
+        parent.setModified()
+
+
+    def draw(self, painter):
+        #painter.setPen(self.pen)
+        c1 = QPoint(self.curve.p1().x() + self.curve.dx()/3,
+                    self.curve.p1().y() - self.curve.dy()/3)
+
+        c2 = QPoint(self.curve.p2().x() - self.curve.dx()/3,
+                    self.curve.p2().y() + self.curve.dy()/3)
+        
+        path = QPainterPath(self.curve.p1())
+        path.cubicTo(c1, c2, self.curve.p2())
+        painter.drawPath(path)
+        #painter.drawLine(self.curve)
 
 
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
-
-        #painter.setPen(self.pen)
-        painter.drawLine(self.curve)
-
+        #rect = self.geometry()
+        #print("geometry", rect, rect.width(), rect.height())
+        #painter.translate(QPoint(rect.width()/2, rect.height()/2))
+        self.draw(painter)
         painter.end()
+
+
+    def geometry(self):
+        """
+        Calculate bounding rectangle for this connection. 
+        """
+        print("    curve", self.curve.p1(), self.curve.p2())
+        return QRect(self.curve.p1(), self.curve.p2())
 
