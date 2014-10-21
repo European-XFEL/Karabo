@@ -66,7 +66,7 @@ class DisplayImageElement(DisplayWidget):
         if self.value is not None or value is self.value:
             return
         
-        if len(value.dims) != 2:
+        if len(value.dims) < 2:
             return
 
         # Data type information
