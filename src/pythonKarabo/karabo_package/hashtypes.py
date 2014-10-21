@@ -1,8 +1,11 @@
 
 import karabo.hash
 from karabo.registry import Registry
+from karabo.enums import AccessLevel, AccessMode, Assignment
 
+from asyncio import coroutine
 import base64
+from enum import Enum
 import numpy
 
 
@@ -13,7 +16,51 @@ This file closely corresponds to karabo.util.ReferenceType.
 The C++ types are mostly implemented by using the corresponding numpy type."""
 
 
+class _Parameter(object):
+    def __init__(self, default=None):
+        self.default = default
+
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        else:
+            return instance.__dict__.get(self, self.default)
+
+
+    def __set__(self, instance, value):
+        instance.__dict__[self] = value
+
+
+class Enumable(object):
+    def __init__(self, enum=None, **kwargs):
+        super().__init__(**kwargs)
+        assert enum is None or issubclass(enum, Enum)
+        self.enum = enum
+
+
+    def cast(self, other):
+        if isinstance(other, self.enum):
+            return other
+        else:
+            raise TypeError("{} required here".format(self.enum))
+
+
+    def asHash(self, data):
+        if self.enum is None:
+            return self.cast(data)
+        else:
+            return data.value
+
+
 class Simple(object):
+    unitSymbol = _Parameter("")
+    metricPrefixSymbol = _Parameter("")
+    minExc = _Parameter()
+    maxExc = _Parameter()
+    minInc = _Parameter()
+    maxInc = _Parameter()
+
     @classmethod
     def read(cls, file):
         ret = numpy.frombuffer(file.data, cls.numpy, 1, file.pos)[0]
@@ -32,13 +79,15 @@ class Simple(object):
 
 
     def cast(self, other):
-        if isinstance(other, self.numpy):
+        if self.enum is not None:
+            return super().cast(other)
+        elif isinstance(other, self.numpy):
             return other
         else:
             return self.numpy(other)
 
 
-class Integer(Simple):
+class Integer(Simple, Enumable):
     def getMinMax(self):
         info = numpy.iinfo(self.numpy)
         min = self.minExc
@@ -143,7 +192,75 @@ class NumpyVector(Vector):
 
 
 class Descriptor(object):
-    pass
+    displayedName = _Parameter()
+    description = _Parameter()
+    allowedStates = _Parameter()
+    defaultValue = _Parameter()
+    accessMode = _Parameter(AccessMode.RECONFIGURABLE)
+    assignment = _Parameter(Assignment.OPTIONAL)
+    requiredAccessLevel = _Parameter(AccessLevel.OBSERVER)
+    displayType = _Parameter()
+    enum = None
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            if isinstance(getattr(type(self), k, None), _Parameter):
+                setattr(self, k, v)
+            else:
+                raise TypeError("__init__ got unexpected keyword argument: {}".
+                                format(k))
+
+
+    def parameters(self):
+        return {p: getattr(self, p) for p in dir(type(self))
+                if isinstance(getattr(type(self), p), _Parameter) and
+                   getattr(self, p) is not None}
+
+
+    def subschema(self):
+        return karabo.hash.Hash()
+
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        else:
+            if self not in instance.__dict__:
+                raise AttributeError
+            return instance.__dict__[self]
+
+
+    def __set__(self, instance, value):
+        v = self.cast(value)
+        instance.setValue(self, v)
+
+
+class Slot(Descriptor):
+    def parameters(self):
+        ret = super(Slot, self).parameters()
+        ret["nodeType"] = 1
+        ret["displayType"] = "Slot"
+        return ret
+
+
+    def asHash(self, other):
+        return karabo.hash.Hash()
+
+
+    def cast(self, other):
+        return karabo.hash.Hash()
+
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        else:
+            return self.method.__get__(instance, owner)
+
+
+    def __call__(self, method):
+        self.method = coroutine(method)
+        return self
 
 
 class Special(object):
@@ -152,15 +269,12 @@ class Special(object):
 
 
 class Type(Descriptor, Registry):
-    """This is the base class for all types in the Karabo type hierarchy.
-
-    The sub-classes of this class are an exact correspondance to the
-    types defined in karabo.util.ReferenceType. The order of the
-    sub-classes matters. Do not subclass this class unless the underlying
-    C++ has been changed as well!"""
+    """This is the base class for all types in the Karabo type hierarchy. """
     types = [None] * 51
     fromname = { }
     strs = { }
+
+    options = _Parameter()
 
 
     @classmethod
@@ -187,6 +301,17 @@ class Type(Descriptor, Registry):
     @classmethod
     def toString(cls, data):
         return str(data)
+
+
+    def asHash(self, data):
+        return self.cast(data)
+
+
+    def parameters(self):
+        ret = super(Type, self).parameters()
+        ret["nodeType"] = 0
+        ret["valueType"] = self.hashname()
+        return ret
 
 
 class Bool(Type):
@@ -409,7 +534,7 @@ class VectorComplexDouble(NumpyVector, ComplexDouble):
     number = 27
 
 
-class String(Type):
+class String(Enumable, Type):
     """This is the type corresponding to unicode strings, which are
     supposed to be used for all human-readable strings, so for
     everything except binary data."""
@@ -433,7 +558,9 @@ class String(Type):
 
 
     def cast(self, other):
-        if isinstance(other, str):
+        if self.enum is not None:
+            return super().cast(other)
+        elif isinstance(other, str):
             return other
         else:
             return str(other)
@@ -511,11 +638,11 @@ class Hash(Type):
 
 
     def cast(self, other):
-        if isinstance(other, hash.Hash):
+        if other.hashtype is type(self):
             return other
         else:
-            raise TypeError(
-                'cannot cast anything to Hash (was {})'.format(other))
+            raise TypeError('cannot cast anything to {} (was {})'.
+                            format(type(self).__name__, type(other).__name__))
 
 
 class VectorHash(Vector, Hash):
@@ -535,21 +662,44 @@ class Schema(Hash):
 
     @classmethod
     def read(cls, file):
-        file.readFormat('I') # ignore length
+        l, = file.readFormat('I') # ignore length
+        op = file.pos
         size, = file.readFormat('B')
         name = str(file.data[file.pos:file.pos + size], "utf8")
         file.pos += size
         ret = super(Schema, cls).read(file)
+        assert file.pos - op == l, 'failed: {} {} {}'.format(file.pos, op, l)
         return Schema_(name, ret)
+
+
+    @classmethod
+    def write(cls, file, data):
+        writer = karabo.hash.BinaryWriter()
+        h = writer.write(data.hash)
+        s = data.name.encode('utf8')
+        print(len(h), len(s))
+        file.writeFormat('I', len(h) + len(s) + 1)
+        file.writeFormat('B', len(s))
+        file.file.write(s)
+        file.file.write(h)
 
 
 class Schema_(Special):
     hashtype = Schema
 
 
-    def __init__(self, name, hash):
+    def __init__(self, name=None, hash=None, rules=None):
         self.name = name
-        self.hash = hash
+        if hash is None:
+            self.hash = karabo.hash.Hash()
+        else:
+            self.hash = hash
+        self.rules = rules
+
+
+    def copy(self, other):
+        self.hash = karabo.hash.Hash()
+        self.hash.merge(other.hash)
 
 
 class None_(Type):

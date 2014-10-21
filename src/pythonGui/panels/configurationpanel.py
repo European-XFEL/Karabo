@@ -359,7 +359,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
         
-        if configuration.type == "class" or configuration.type == "projectClass":
+        if configuration.type in ("class", "projectClass", "macro"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -480,11 +480,13 @@ class ConfigurationPanel(QWidget):
         if configuration is None:
             self._setParameterEditorIndex(0)
         else:
+            index = configuration.index
             if configuration.index is None:
                 configuration.index = self._createNewParameterPage(configuration)
-                index = 1
-            else:
-                index = configuration.index
+                if configuration.type != "macro":
+                    index = 1
+                else:
+                    index = configuration.index
             # Show waiting page
             self._setParameterEditorIndex(index)
         

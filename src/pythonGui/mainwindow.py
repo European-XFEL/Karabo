@@ -23,6 +23,7 @@ from network import Network
 from panels.configurationpanel import ConfigurationPanel
 from panels.custommiddlepanel import CustomMiddlePanel
 from panels.loggingpanel import LoggingPanel
+from panels.macropanel import MacroPanel
 from panels.navigationpanel import NavigationPanel
 from panels.notificationpanel import NotificationPanel
 from panels.placeholderpanel import PlaceholderPanel
@@ -191,6 +192,7 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalAddScene.connect(self.onAddScene)
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
+        self.projectPanel.signalAddMacro.connect(self.onAddMacro)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
         leftArea.setStretchFactor(1,1)
@@ -296,7 +298,14 @@ class MainWindow(QMainWindow):
         customView = CustomMiddlePanel(scene, self.acServerConnect.isChecked())
         self.middleTab.addDockableTab(customView, scene.filename)
         customView.signalClosed.connect(self.onCustomViewRemoved)
-        if self.middleTab.count()-1 > 0:
+        if self.middleTab.count() > 1:
+            self.middleTab.updateTabsClosable()
+
+
+    def onAddMacro(self, macro):
+        macroView = MacroPanel(macro)
+        self.middleTab.addDockableTab(macroView, macro.name)
+        if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
 
 
