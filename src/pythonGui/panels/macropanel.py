@@ -15,10 +15,10 @@ from network import Network
 from toolbar import ToolBar
 from finders import MacroContext
 
-from PyQt4.QtCore import Qt, pyqtSignal
+from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.QtGui import (QWidget, QTextEdit, QHBoxLayout, QMessageBox)
 
-
+from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
 class MacroPanel(QWidget):
     signalSave = pyqtSignal(str, str)
@@ -29,15 +29,25 @@ class MacroPanel(QWidget):
         layout = QHBoxLayout(self)
         self.setLayout(layout)
         self.edit = QTextEdit(self)
+        self.edit.installEventFilter(self)
         self.edit.setAcceptRichText(False)
         self.edit.setStyleSheet("font-family: monospace")
         self.edit.setPlainText(macro.text)
+        PygmentsHighlighter(self.edit.document())
         layout.addWidget(self.edit)
         self.macro = macro
 
 
     def setupToolBars(self, tb, parent):
         tb.addAction(icons.save, "Save", self.onSave)
+
+
+    def eventFilter(self, object, event):
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Tab:
+                self.edit.textCursor().insertText("    ")
+                return True
+        return False
 
 
     def onSave(self):
