@@ -625,10 +625,6 @@ class ProjectModel(QStandardItemModel):
             device = index.data(ProjectModel.ITEM_OBJECT)
 
         if isinstance(device, type) and issubclass(device, karabo.Macro):
-            if device.instance is None:
-                device.instance = Configuration(device.__name__, "macro",
-                                                device.getSchema())
-
             conf = device.instance
             ctype = "macro"
         elif isinstance(device, Configuration):
@@ -722,7 +718,6 @@ class ProjectModel(QStandardItemModel):
 
         project = self.currentProject()
         macro = Macro(self.currentProject(), dialog.name.text())
-        macro.text = ""
         project.macros[macro.name] = macro
         self.signalAddMacro.emit(macro)
 
@@ -730,7 +725,6 @@ class ProjectModel(QStandardItemModel):
     def onEditMacro(self):
         index = self.selectionModel.currentIndex()
         macro = index.data(ProjectModel.ITEM_OBJECT)
-        macro.load()
         self.signalAddMacro.emit(macro)
 
 
