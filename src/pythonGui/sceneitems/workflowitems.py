@@ -55,18 +55,6 @@ class Item(QWidget, Loadable):
         #QWidget.mousePressEvent(self, event)
 
 
-    def mouseMoveEvent(self, proxy, event):
-        print()
-        print("Item.mouseMoveEvent", proxy.pos())
-        #QWidget.mouseMoveEvent(self, event)
-
-
-    def mouseReleaseEvent(self, proxy, event):
-        print()
-        print("Item.mouseReleaseEvent", proxy.pos())
-        #QWidget.mouseReleaseEvent(self, event)
-
-
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
@@ -356,11 +344,22 @@ class WorkflowConnection(QWidget):
 
     def draw(self, painter):
         #painter.setPen(self.pen)
-        c1 = QPoint(self.curve.p1().x() + self.curve.dx()/3,
-                    self.curve.p1().y() - self.curve.dy()/3)
+        x1 = self.curve.p1().x()
+        x2 = self.curve.p2().x()
+        
+        # TODO: this is different between in/output channels
+        if x1 < x2:
+            c1 = QPoint(self.curve.p1().x() + self.curve.dx()/2,
+                        self.curve.p1().y())
 
-        c2 = QPoint(self.curve.p2().x() - self.curve.dx()/3,
-                    self.curve.p2().y() + self.curve.dy()/3)
+            c2 = QPoint(self.curve.p2().x() - self.curve.dx()/2,
+                        self.curve.p2().y())
+        else:
+            c1 = QPoint(self.curve.p1().x() - self.curve.dx()/2,
+                        self.curve.p1().y())
+
+            c2 = QPoint(self.curve.p2().x() + self.curve.dx()/2,
+                        self.curve.p2().y())
         
         path = QPainterPath(self.curve.p1())
         path.cubicTo(c1, c2, self.curve.p2())
