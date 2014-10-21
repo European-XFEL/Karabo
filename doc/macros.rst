@@ -5,6 +5,7 @@ Karabo uses `Python <http://www.python.org>`_ as a macro language. So it might
 be a good idea to have a look at the `Python Documentation
 <http://docs.python.org/3/>`_ first, especially at the `Tutorial
 <http://docs.python.org/3/tutorial/index.html>`_.
+The GUI also has a built-in command line in which one can try out things.
 
 Macros are organized into classes, which then contain methods, which are the
 actually executable units. They are shown in the GUI by buttons one can click
