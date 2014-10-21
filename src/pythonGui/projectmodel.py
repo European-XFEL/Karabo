@@ -625,10 +625,6 @@ class ProjectModel(QStandardItemModel):
             device = index.data(ProjectModel.ITEM_OBJECT)
 
         if isinstance(device, type) and issubclass(device, karabo.Macro):
-            if device.instance is None:
-                device.instance = Configuration(device.__name__, "macro",
-                                                device.getSchema())
-
             conf = device.instance
             ctype = "macro"
         elif isinstance(device, Configuration):
