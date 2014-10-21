@@ -4,6 +4,7 @@ Welcome to Karabo's documentation!
 Contents:
 
 .. toctree::
+   cli
    macros
    widget
    devices
