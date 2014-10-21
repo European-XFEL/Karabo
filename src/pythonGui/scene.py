@@ -131,13 +131,11 @@ class ShapeAction(Action):
         self.start_pos = event.pos()
         self.shape = self.Shape()
         self.shape.set_points(self.start_pos, self.start_pos)
-        event.accept()
 
 
     def mouseMoveEvent(self, parent, event):
         if event.buttons() and hasattr(self, 'shape'):
             self.shape.set_points(self.start_pos, event.pos())
-            event.accept()
             parent.update()
 
 
@@ -894,7 +892,6 @@ class Scene(QSvgWidget):
         layout = QStackedLayout(self)
         layout.addWidget(self.inner)
         
-        self.worflow_item = None
         self.workflow_connection = None
         
         self.current_action = self.default_action = Select()
@@ -1066,22 +1063,10 @@ class Scene(QSvgWidget):
             proxy = self.ilayout.itemAtPosition(event.pos())
             if proxy is not None:
                 if isinstance(proxy, ProxyWidget):
-                    #widget = proxy.widget
                     if isinstance(proxy.widget, Item):
-                        #self.worflow_item = widget
-                        #self.worflow_item.mousePressEvent(proxy, event)
-                        
                         # Create workflow connection item in scene
                         self.workflow_connection = WorkflowConnection(self)
-                        self.workflow_connection.mousePressEvent(proxy, event)
-                        
-                        proxy = ProxyWidget(self.inner)
-                        #rect = self.workflow_connection.boundingRect()
-                        proxy.setWidget(self.workflow_connection)
-                        proxy.fixed_geometry = QRect(event.pos(), QSize(100,100))
-                        proxy.show()
-
-                        self.ilayout.add_item(proxy)
+                        self.workflow_connection.mousePressEvent(event)
             
             self.current_action.mousePressEvent(self, event)
         else:
@@ -1114,7 +1099,6 @@ class Scene(QSvgWidget):
     def mouseReleaseEvent(self, event):
         if self.workflow_connection is not None:
             self.workflow_connection.mouseReleaseEvent(self, event)
-        #self.worflow_item = None
         self.workflow_connection = None
         
         self.current_action.mouseReleaseEvent(self, event)
@@ -1310,6 +1294,8 @@ class Scene(QSvgWidget):
                     if item.selected:
                         painter.drawRect(item.geometry())
             painter.restore()
+            if self.workflow_connection is not None:
+                self.workflow_connection.draw(painter)
             self.current_action.draw(painter)
         finally:
             painter.end()
