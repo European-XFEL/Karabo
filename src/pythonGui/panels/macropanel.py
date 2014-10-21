@@ -32,7 +32,7 @@ class MacroPanel(QWidget):
         self.edit.installEventFilter(self)
         self.edit.setAcceptRichText(False)
         self.edit.setStyleSheet("font-family: monospace")
-        self.edit.setPlainText(macro.text)
+        self.edit.setPlainText(macro.load())
         PygmentsHighlighter(self.edit.document())
         layout.addWidget(self.edit)
         self.macro = macro
@@ -51,7 +51,6 @@ class MacroPanel(QWidget):
 
 
     def onSave(self):
-        self.macro.text = self.edit.toPlainText()
         try:
             with MacroContext(self.macro.project):
                 self.macro.run()

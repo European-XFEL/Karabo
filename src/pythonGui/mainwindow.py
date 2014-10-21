@@ -305,6 +305,7 @@ class MainWindow(QMainWindow):
     def onAddMacro(self, macro):
         macroView = MacroPanel(macro)
         self.middleTab.addDockableTab(macroView, macro.name)
+        macro.editor = macroView
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
 
