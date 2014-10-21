@@ -291,10 +291,11 @@ class GuiProject(Project, QObject):
             macros = Hash()
             for m in self.macros.values():
                 f = "macros/{}.py".format(m.name)
-                t = m.text
-                if t is None:
+                if m.editor is None:
                     with ZipFile(self.filename, "r") as zin:
                         t = zin.read(f)
+                else:
+                    t = m.editor.edit.toPlainText()
                 zf.writestr(f, t)
                 try:
                     zf.writestr(f + 'c', marshal.dumps(compile(t, f, "exec")))
@@ -372,9 +373,9 @@ class Macro(object):
         self.project = project
         self.name = name
         self.module = None
-        self.text = None
         self.modules = { }
         self.macros = { }
+        self.editor = None
 
 
     def run(self):
@@ -390,7 +391,7 @@ class Macro(object):
 
     def load(self):
         with ZipFile(self.project.filename, "r") as zf:
-            self.text = zf.read("macros/{}.py".format(self.name)).decode("utf8")
+            return zf.read("macros/{}.py".format(self.name)).decode("utf8")
 
 
     def load_module(self, fullname):
@@ -399,9 +400,9 @@ class Macro(object):
         mod.__file__ = "{}/macros/{}.py".format(self.project.filename,
                                                 self.name)
         mod.__loader__ = self
-        mod.__package__ = b"macros"
+        mod.__package__ = "macros"
         fn = "macros/{}.py".format(self.name)
-        if self.text is None:
+        if self.editor is None:
             with ZipFile(self.project.filename, "r") as zf:
                 try:
                     code = marshal.loads(zf.read(fn + 'c'))
@@ -410,7 +411,8 @@ class Macro(object):
                 else:
                     exec(code, mod.__dict__)
         else:
-            exec(compile(self.text, fn, "exec"), mod.__dict__)
+            exec(compile(self.editor.edit.toPlainText(), fn, "exec"),
+                 mod.__dict__)
         return mod
 
 
