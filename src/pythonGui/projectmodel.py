@@ -722,7 +722,6 @@ class ProjectModel(QStandardItemModel):
 
         project = self.currentProject()
         macro = Macro(self.currentProject(), dialog.name.text())
-        macro.text = ""
         project.macros[macro.name] = macro
         self.signalAddMacro.emit(macro)
 
@@ -730,7 +729,6 @@ class ProjectModel(QStandardItemModel):
     def onEditMacro(self):
         index = self.selectionModel.currentIndex()
         macro = index.data(ProjectModel.ITEM_OBJECT)
-        macro.load()
         self.signalAddMacro.emit(macro)
 
 
