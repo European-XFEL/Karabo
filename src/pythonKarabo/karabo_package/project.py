@@ -53,7 +53,7 @@ class Project(object):
         self.devices = []
         # Map for {deviceId, [ProjectConfiguration]}
         self.configurations = dict()
-        self.macros = []
+        self.macros = {}
         self.resources = { }
         self.monitors = []
 

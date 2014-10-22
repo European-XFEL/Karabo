@@ -32,7 +32,10 @@ class MacroPanel(QWidget):
         self.edit.installEventFilter(self)
         self.edit.setAcceptRichText(False)
         self.edit.setStyleSheet("font-family: monospace")
-        self.edit.setPlainText(macro.load())
+        try:
+            self.edit.setPlainText(macro.load())
+        except KeyError:
+            pass
         PygmentsHighlighter(self.edit.document())
         layout.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
