@@ -121,6 +121,19 @@ namespace karabo {
             ReceivedReplies m_receivedReplies;
             mutable boost::mutex m_receivedRepliesMutex;
 
+            // Use (mutex, condition variable) pair for waiting simultaneously many events
+            struct BoostMutexCond {
+                boost::mutex m_mutex;
+                boost::condition_variable m_cond;
+                BoostMutexCond() : m_mutex(), m_cond() {}
+            private:
+                BoostMutexCond(BoostMutexCond&);
+            };
+            
+            typedef std::map<std::string, boost::shared_ptr<BoostMutexCond> > ReceivedRepliesBMC;
+            ReceivedRepliesBMC m_receivedRepliesBMC;
+            mutable boost::mutex m_receivedRepliesBMCMutex;
+
             karabo::util::Hash m_emitFunctions;
             std::vector<boost::any> m_slots;
 
@@ -1002,6 +1015,8 @@ namespace karabo {
 
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
+            bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
+            
         };
     }
 }
