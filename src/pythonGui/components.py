@@ -165,12 +165,13 @@ class DisplayComponent(BaseComponent):
     def changeWidget(self, factory, alias):
         self.classAlias = alias
         oldWidget = self.widgetFactory.widget
+        oldFactory = self.widgetFactory
         self.widgetFactory.setParent(None)
         self.widgetFactory = factory.getClass(alias)(
-            self.boxes[0], oldWidget.parent())
+            oldFactory.boxes[0], oldWidget.parent())
         self.widgetFactory.setReadOnly(True)
         self.connectWidget(self.boxes[0])
-        for b in self.boxes[1:]:
+        for b in oldFactory.boxes[1:]:
             self.widgetFactory.addBox(b)
             self.connectWidget(b)
         oldWidget.parent().setWidget(self.widgetFactory.widget)
