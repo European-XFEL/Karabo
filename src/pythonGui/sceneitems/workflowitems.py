@@ -330,11 +330,35 @@ class WorkflowConnection(QWidget):
 
 
     def mouseReleaseEvent(self, parent, event):
+        print()
+        print("INITIAL start, end", self.start_pos, self.end_pos)
+        #if self.start_pos.x() < self.end_pos.x():
+        #    print("switch start and end pos")
+        #    tmp = self.start_pos
+        #    self.start_pos = self.end_pos
+        #    self.end_pos = tmp
+        
+        #w = self.curveWidth()
+        #h = self.curveHeight()
+        
+        #print("start, end", self.start_pos, self.end_pos)
+        
+        #sx = self.start_pos.x()
+        #sy = self.start_pos.y()
+        
+        #ex = self.end_pos.x()
+        #ey = self.end_pos.y()
+        
+        # Translate both point into the origin
+        #self.start_pos.setX(0)
+        #self.start_pos.setY(sy - ey)
+        
+        #self.end_pos.setX(ex - sx)
+        #self.end_pos.setY(0)
+        
         proxy = ProxyWidget(parent.inner)
         proxy.setWidget(self)
         rect = self.path.boundingRect()
-        print("mouseReleaseEvent after", rect)
-        
         proxy.fixed_geometry = QRect(int(rect.x()), int(rect.y()), 
                                      int(rect.width()), int(rect.height()))
         proxy.show()
@@ -345,20 +369,16 @@ class WorkflowConnection(QWidget):
     def draw(self, painter):
         #painter.setPen(self.pen)
         
-        dx = abs(self.end_pos.x() - self.start_pos.x())
-        dy = abs(self.end_pos.y() - self.start_pos.y())
-        
-        length = math.sqrt(dx**2 + dy**2)
+        length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
+        delta = length/2
         
         # TODO: this is different between in/output channels
         if self.start_pos.x() < self.end_pos.x():
-            c1 = QPoint(self.start_pos.x() + length/4, self.start_pos.y())
-
-            c2 = QPoint(self.end_pos.x() - length/4, self.end_pos.y())
+            c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
+            c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
         else:
-            c1 = QPoint(self.start_pos.x() - length/4, self.start_pos.y())
-
-            c2 = QPoint(self.end_pos.x() + length/4, self.end_pos.y())
+            c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
+            c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
         self.path = QPainterPath(self.start_pos)
         self.path.cubicTo(c1, c2, self.end_pos)
@@ -371,4 +391,12 @@ class WorkflowConnection(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         self.draw(painter)
         painter.end()
+
+
+    def curveWidth(self):
+        return abs(self.end_pos.x() - self.start_pos.x())
+
+
+    def curveHeight(self):
+        return abs(self.end_pos.y() - self.start_pos.y())
 
