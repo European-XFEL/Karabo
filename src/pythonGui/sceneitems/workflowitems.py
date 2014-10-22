@@ -316,7 +316,7 @@ class WorkflowConnection(QWidget):
         
         self.start_pos = None
         self.end_pos = None
-        self.path = None
+        self.curve = None
 
 
     def mousePressEvent(self, event):
@@ -358,7 +358,7 @@ class WorkflowConnection(QWidget):
         
         proxy = ProxyWidget(parent.inner)
         proxy.setWidget(self)
-        rect = self.path.boundingRect()
+        rect = self.curve.boundingRect()
         proxy.fixed_geometry = QRect(int(rect.x()), int(rect.y()), 
                                      int(rect.width()), int(rect.height()))
         proxy.show()
@@ -380,9 +380,9 @@ class WorkflowConnection(QWidget):
             c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
-        self.path = QPainterPath(self.start_pos)
-        self.path.cubicTo(c1, c2, self.end_pos)
-        painter.drawPath(self.path)
+        self.curve = QPainterPath(self.start_pos)
+        self.curve.cubicTo(c1, c2, self.end_pos)
+        painter.drawPath(self.curve)
 
 
     def paintEvent(self, event):
