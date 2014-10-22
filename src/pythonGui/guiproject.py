@@ -25,6 +25,7 @@ from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
 
 from importlib import import_module, reload
+from importlib.util import cache_from_source
 import marshal
 import os.path
 import sys
@@ -297,7 +298,8 @@ class GuiProject(Project, QObject):
                     t = m.editor.edit.toPlainText()
                 zf.writestr(f, t)
                 try:
-                    zf.writestr(f + 'c', marshal.dumps(compile(t, f, "exec")))
+                    zf.writestr(cache_from_source(f),
+                                marshal.dumps(compile(t, f, "exec")))
                 except SyntaxError:
                     pass
                 macros[m.name] = f
@@ -372,16 +374,19 @@ class Macro(object):
         self.project = project
         self.name = name
         self.module = None
-        self.modules = { }
         self.macros = { }
         self.editor = None
 
 
     def run(self):
-        if self.module is None:
-            self.module = import_module("macros." + self.name)
-        else:
-            self.module = reload(self.module)
+        try:
+            if self.module is None:
+                self.module = import_module("macros." + self.name)
+            else:
+                self.module = reload(self.module)
+        except:
+            self.module = None
+            raise
         self.macros = {k: v for k, v in self.module.__dict__.items()
                        if isinstance(v, type) and
                           issubclass(v, karabo.Macro) and
@@ -396,26 +401,19 @@ class Macro(object):
             return zf.read("macros/{}.py".format(self.name)).decode("utf8")
 
 
-    def load_module(self, fullname):
-        mod = types.ModuleType(fullname)
-        sys.modules[fullname] = mod
-        mod.__file__ = "{}/macros/{}.py".format(self.project.filename,
-                                                self.name)
-        mod.__loader__ = self
-        mod.__package__ = "macros"
+    def exec_module(self, module):
         fn = "macros/{}.py".format(self.name)
         if self.editor is None:
             with ZipFile(self.project.filename, "r") as zf:
                 try:
-                    code = marshal.loads(zf.read(fn + 'c'))
+                    code = marshal.loads(zf.read(cache_from_source(fn)))
                 except (KeyError, EOFError, ValueError, TypeError):
-                    exec(zf.read(fn), mod.__dict__)
+                    exec(compile(zf.read(fn), fn, "exec"), module.__dict__)
                 else:
-                    exec(code, mod.__dict__)
+                    exec(code, module.__dict__)
         else:
             exec(compile(self.editor.edit.toPlainText(), fn, "exec"),
-                 mod.__dict__)
-        return mod
+                 module.__dict__)
 
 
 class Category(object):

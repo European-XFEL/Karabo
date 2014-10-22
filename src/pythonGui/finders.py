@@ -3,6 +3,8 @@
 import manager
 import sys
 
+from importlib.machinery import ModuleSpec
+
 
 class ProjectFinder(object):
     project = None
@@ -13,8 +15,15 @@ class ProjectFinder(object):
             raise ImportError
 
 
-    def find_module(self, name):
-        return self.project.macros.get(name[7:])
+    def find_spec(self, name, target):
+        if target is None:
+            s = ModuleSpec(name, self.project.macros.get(name[7:]),
+                           origin=self.project.filename + "/macros/" +
+                           name[7:])
+            s.has_location = True
+            return s
+        else:
+            return target.__spec__
 
 
 projectmagic = "some random text for projects"

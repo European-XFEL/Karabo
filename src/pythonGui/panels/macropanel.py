@@ -32,7 +32,10 @@ class MacroPanel(QWidget):
         self.edit.installEventFilter(self)
         self.edit.setAcceptRichText(False)
         self.edit.setStyleSheet("font-family: monospace")
-        self.edit.setPlainText(macro.load())
+        try:
+            self.edit.setPlainText(macro.load())
+        except KeyError:
+            pass
         PygmentsHighlighter(self.edit.document())
         layout.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
@@ -62,9 +65,10 @@ class MacroPanel(QWidget):
                 c.movePosition(c.Down, n=e.lineno - 1)
                 c.movePosition(c.Right, n=e.offset)
                 self.edit.setTextCursor(c)
-            QMessageBox.warning(self.edit, "Syntax Error",
-                                "{}{}^\nin {} line {}".format(
-                                e.text, " " * e.offset, e.filename, e.lineno))
+            QMessageBox.warning(self.edit, type(e).__name__,
+                                "{}\n{}{}^\nin {} line {}".format(
+                                e.msg, e.text, " " * e.offset, e.filename,
+                                e.lineno))
 
 
     def onDock(self):
