@@ -17,6 +17,7 @@
 #include <sys/types.h>
 
 #include <karabo/webAuth/Authenticator.hh>
+#include <boost/date_time/time_duration.hpp>
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
@@ -111,9 +112,31 @@ namespace karabo {
 
             // Check whether this message is a reply
             if (header->has("replyFrom")) {
-                KARABO_LOG_FRAMEWORK_INFO << m_instanceId << ": Injecting reply from: " << header->get<string>("signalInstanceId");
+                KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Injecting reply from: " << header->get<string>("signalInstanceId");
+                string replyId = header->get<string>("replyFrom");
+#if defined(KARABO_SIGNAL_SLOTABLE_TIMED_WAIT_AND_POP_RECEIVED_REPLY_POLLING)
                 boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
-                m_receivedReplies[header->get<string>("replyFrom")] = std::make_pair(header, body);
+                m_receivedReplies[replyId] = std::make_pair(header, body);
+#else
+                boost::shared_ptr<BoostMutexCond> bmc;
+                try {
+                    boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
+                    ReceivedRepliesBMC::iterator it = m_receivedRepliesBMC.find(replyId);
+                    if (it != m_receivedRepliesBMC.end()) bmc = it->second;
+                } catch(...) {
+                    KARABO_RETHROW
+                }
+                // insert reply and notify only if it is expected
+                if (!bmc)
+                    return;
+                try {
+                    boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
+                    m_receivedReplies[replyId] = std::make_pair(header, body);
+                } catch(...) {
+                    KARABO_RETHROW
+                }
+                bmc->m_cond.notify_one(); // notify only if 
+#endif
             } else {
                 {
                     boost::mutex::scoped_lock lock(m_eventQueueMutex);
@@ -1683,6 +1706,52 @@ namespace karabo {
             }
             // Remove
             m_receivedReplies.erase(it);
+        }
+
+
+        bool SignalSlotable::timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout) {
+#if defined(KARABO_SIGNAL_SLOTABLE_TIMED_WAIT_AND_POP_RECEIVED_REPLY_POLLING)
+            int currentWaitingTime = 0;
+            while (!hasReceivedReply(replyId) && currentWaitingTime < timeout) {
+                boost::this_thread::sleep(boost::posix_time::milliseconds(2));
+                currentWaitingTime += 2;
+            }
+            if (currentWaitingTime >= timeout) return false;
+            
+            popReceivedReply(replyId, header, body);
+            return true;
+#else
+            bool result = true;
+            boost::shared_ptr<BoostMutexCond> bmc(new BoostMutexCond);
+            try {
+                boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
+                m_receivedRepliesBMC[replyId] = bmc;
+            } catch(...) {
+                KARABO_RETHROW
+            }
+            boost::system_time waitUntil = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
+            try {
+                boost::mutex::scoped_lock lock(bmc->m_mutex);
+                while (!this->hasReceivedReply(replyId)) {
+                    if (!bmc->m_cond.timed_wait(lock, waitUntil)) {
+                        result = false;
+                        break;
+                    }
+                }
+            } catch(...) {
+                KARABO_RETHROW
+            }
+            try {
+                boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
+                m_receivedRepliesBMC.erase(replyId);
+            } catch(...) {
+                KARABO_RETHROW
+            }
+            if (result) {
+                popReceivedReply(replyId, header, body);
+            }
+            return result;
+#endif
         }
     }
 }

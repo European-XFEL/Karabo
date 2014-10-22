@@ -63,18 +63,9 @@ namespace karabo {
         }
 
         void Requestor::receiveResponse(karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body) {
-            
-            //if (m_isReceived) throw KARABO_SIGNALSLOT_EXCEPTION("You have to send a request before you can receive a response");
-            int currentWaitingTime = 0;
-            while (!m_signalSlotable->hasReceivedReply(m_replyId) && currentWaitingTime < m_timeout) {
-                boost::this_thread::sleep(boost::posix_time::milliseconds(2));
-                currentWaitingTime += 2;
-            }
-            if (currentWaitingTime >= m_timeout) {
+            if (!m_signalSlotable->timedWaitAndPopReceivedReply(m_replyId, header, body, m_timeout)) {
                 throw KARABO_TIMEOUT_EXCEPTION("Reply timed out");
             }
-            
-            m_signalSlotable->popReceivedReply(m_replyId, header, body);
             
             m_isReceived = true;
             m_isRequested = false;
