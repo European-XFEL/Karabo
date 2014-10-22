@@ -330,31 +330,29 @@ class WorkflowConnection(QWidget):
 
 
     def mouseReleaseEvent(self, parent, event):
-        print()
-        print("INITIAL start, end", self.start_pos, self.end_pos)
-        #if self.start_pos.x() < self.end_pos.x():
-        #    print("switch start and end pos")
-        #    tmp = self.start_pos
-        #    self.start_pos = self.end_pos
-        #    self.end_pos = tmp
+        if self.start_pos.x() > self.end_pos.x():
+            tmp = self.start_pos
+            self.start_pos = self.end_pos
+            self.end_pos = tmp
+       
+        sx = self.start_pos.x()
+        sy = self.start_pos.y()
         
-        #w = self.curveWidth()
-        #h = self.curveHeight()
+        ex = self.end_pos.x()
+        ey = self.end_pos.y()
         
-        #print("start, end", self.start_pos, self.end_pos)
-        
-        #sx = self.start_pos.x()
-        #sy = self.start_pos.y()
-        
-        #ex = self.end_pos.x()
-        #ey = self.end_pos.y()
-        
-        # Translate both point into the origin
-        #self.start_pos.setX(0)
-        #self.start_pos.setY(sy - ey)
-        
-        #self.end_pos.setX(ex - sx)
-        #self.end_pos.setY(0)
+        if sy > ey:
+            self.start_pos.setX(0)
+            self.start_pos.setY(sy - ey)
+
+            self.end_pos.setX(ex - sx)
+            self.end_pos.setY(0)
+        else:
+            self.start_pos.setX(0)
+            self.start_pos.setY(0)
+
+            self.end_pos.setX(ex - sx)
+            self.end_pos.setY(ey - sy)
         
         proxy = ProxyWidget(parent.inner)
         proxy.setWidget(self)
@@ -370,15 +368,15 @@ class WorkflowConnection(QWidget):
         #painter.setPen(self.pen)
         
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
-        delta = length/2
+        delta = length/3
         
         # TODO: this is different between in/output channels
-        if self.start_pos.x() < self.end_pos.x():
-            c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
-            c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
-        else:
-            c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
-            c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
+        #if self.start_pos.x() < self.end_pos.x():
+        c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
+        c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
+        #else:
+        #    c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
+        #    c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
         self.curve = QPainterPath(self.start_pos)
         self.curve.cubicTo(c1, c2, self.end_pos)
