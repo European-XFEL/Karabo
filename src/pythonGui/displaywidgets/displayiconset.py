@@ -7,6 +7,7 @@ from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
 import re
+import os.path
 
 ns_inkscape = "{http://www.inkscape.org/namespaces/inkscape}"
 ElementTree.register_namespace("inkscape", ns_inkscape[1:-1])
@@ -17,16 +18,22 @@ class Element(ElementTree.Element):
         super(Element, self).__init__(tag, attrib, **extra)
         label = self.get(ns_inkscape + 'label')
         if label is not None:
-            self.label = re.compile(label)
-        else:
-            self.label = None
-        self.filter = ""
+            self.set(">label", re.compile(label))
 
 
     def __iter__(self):
         for i in range(len(self)):
-            if self[i].label is None or self[i].label.match(self.filter):
-                yield self[i]
+            e = self[i]
+            l = e.get(">label")
+            filter = self.get(">filter")
+            if l is None or l.match(filter):
+                yield e
+
+
+    def items(self):
+        for k, v in super().items():
+            if k[0] != ">":
+                yield k, v
 
 
 class DisplayIconset(DisplayWidget):
@@ -40,9 +47,7 @@ class DisplayIconset(DisplayWidget):
         action = QAction("Change Iconset...", self.widget)
         action.triggered.connect(self.onChangeIcons)
         self.widget.addAction(action)
-        self.xml = ElementTree.ElementTree(ElementTree.fromstring(
-            '<svg xmlns:svg="http://www.w3.org/2000/svg"/>'))
-        self.filename = None
+        self.setFilename(os.path.join(os.path.dirname(__file__), "empty.svg"))
 
 
     def save(self, e):
@@ -72,14 +77,14 @@ class DisplayIconset(DisplayWidget):
         self.filename = fn
         parser = ElementTree.XMLParser(target=ElementTree.TreeBuilder(
             element_factory=Element))
-        value = self.xml.getroot().filter
         self.xml = ElementTree.ElementTree()
         self.xml.parse(fn, parser)
-        self.valueChanged(None, value)
+        if self.boxes[0].hasValue():
+            self.valueChanged(None, self.boxes[0].value)
 
 
     def valueChanged(self, box, value, timestamp=None):
-        self.xml.getroot().filter = value
+        self.xml.getroot().set(">filter", value)
         buffer = QBuffer()
         buffer.open(QBuffer.WriteOnly)
         self.xml.write(buffer)
