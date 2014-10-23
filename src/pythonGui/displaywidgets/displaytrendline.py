@@ -1,28 +1,9 @@
-#############################################################################
-# Author: <kerstin.weger@xfel.eu>
-# Created on August 14, 2012
-# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
-#############################################################################
-
-
-"""This module contains a class which represents a widget plugin for attributes
-   and is created by the factory class DisplayWidget.
-   
-   Each plugin needs to implement the following interface:
-   
-   def getCategoryAliasClassName():
-       pass
-   
-    class Maker:
-        def make(self, **params):
-            return Attribute*(**params)
-"""
 
 __all__ = ["DisplayTrendline"]
 
-
 import time
 import datetime
+from bisect import bisect
 
 from manager import Manager
 from widget import DisplayWidget
@@ -31,16 +12,12 @@ from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
 
 import numpy
 
-useGuiQwt = True
-try:
-    from PyQt4.Qwt5.Qwt import QwtPlot, QwtScaleDraw, QwtText
-    from guiqwt.plot import CurveDialog, PlotManager
-    from guiqwt.tools import SelectPointTool
-    from guiqwt.builder import make
-    from guiqwt import signals
-except:
-    print("Missing package guiqwt (this is normal under MacOSX and will come later)")
-    useGuiQwt = False
+from PyQt4.Qwt5.Qwt import (QwtPlot, QwtScaleDraw, QwtText,
+                            QwtLinearScaleEngine, QwtScaleDiv)
+from guiqwt.plot import CurveDialog, PlotManager
+from guiqwt.tools import SelectPointTool
+from guiqwt.builder import make
+from guiqwt import signals
 
 from karabo.timestamp import Timestamp
 
@@ -108,18 +85,54 @@ class Curve(QObject):
 
 class DateTimeScaleDraw(QwtScaleDraw):
         '''Class used to draw a datetime axis on our plot. '''
-        def __init__(self, *args):
-            QwtScaleDraw.__init__( self, *args )
+        formats = ((60, "%Y-%m-%d %H:%M", "%Ss"),
+                   (60 * 60, "%Y-%m-%d", "%H:%M"),
+                   (60 * 60 * 24, "%Y-%m-%d", "%Hh"),
+                   (60 * 60 * 24 * 7, "%b %Y", "%d"),
+                   (60 * 60 * 24 * 30, "%Y", "%d/%m"))
 
+        def setFormat(self, start, ss):
+            self.start = start
+            for s, maj, min in self.formats:
+                if ss < s:
+                    break
+            self.major = maj
+            self.minor = min
 
         def label(self, value):
             '''create the text of each label to draw the axis. '''
+            if value == self.start:
+                fmt = self.minor + "\n" + self.major
+            else:
+                fmt = self.minor
             try:
                 dt = datetime.datetime.fromtimestamp(value)
             except:
                 dt = datetime.datetime.fromtimestamp(0)
-            return QwtText(dt.isoformat())
-        
+            return QwtText(dt.strftime(fmt))
+
+
+class ScaleEngine(QwtLinearScaleEngine):
+    def __init__(self, drawer):
+        super().__init__()
+        self.drawer = drawer
+
+    def divideScale(self, x1, x2, maxMajorSteps, maxMinorSteps, stepSize):
+        ss = (x2 - x1) / maxMajorSteps
+        a = [1, 2, 5, 10, 20, 60,
+             60 * 2, 60 * 5, 60 * 10, 60 * 30, 60 * 60,
+             3600 * 2, 3600 * 4, 3600 * 8, 3600 * 12, 3600 * 24,
+             3600 * 24 * 2, 3600 * 24 * 4, 3600 * 24 * 7]
+        pos = bisect(a, ss)
+        if pos == len(a):
+            v = a[-1]
+            while v < ss:
+                v *= 2
+        else:
+            v = a[pos]
+        start = int(x1 // v + 1) * v
+        self.drawer.setFormat(start, v)
+        return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
 class DisplayTrendline(DisplayWidget):
     category = "Digit"
@@ -128,10 +141,6 @@ class DisplayTrendline(DisplayWidget):
  
     def __init__(self, box, parent):
         super(DisplayTrendline, self).__init__(None)
-        if not useGuiQwt:
-            self.dialog = None
-            return
-
         self.dialog = CurveDialog(edit=False, toolbar=True,
                                   wintitle="Trendline")
         self.plot = self.dialog.get_plot()
@@ -157,17 +166,16 @@ class DisplayTrendline(DisplayWidget):
         self.manager.register_other_tools()
         self.manager.add_tool(SelectPointTool, title='Test',
                               on_active_item=True, mode='create')
-        
-        make.legend('TL')
 
-        self.plot.setAxisScaleDraw(QwtPlot.xBottom, DateTimeScaleDraw())
+        drawer = DateTimeScaleDraw()
+        self.plot.setAxisScaleEngine(QwtPlot.xBottom, ScaleEngine(drawer))
+        self.plot.setAxisScaleDraw(QwtPlot.xBottom, drawer)
         self.plot.setAxisAutoScale(QwtPlot.yLeft)
         self.lasttime = time.time()
         self.plot.setAxisScale(QwtPlot.xBottom,
                                round(time.time() - 1), round(time.time() + 10))
-        self.plot.setAxisLabelRotation(QwtPlot.xBottom, -45.0)
         self.plot.setAxisLabelAlignment(QwtPlot.xBottom,
-                                        Qt.AlignLeft | Qt.AlignBottom)
+                                        Qt.AlignRight | Qt.AlignBottom)
         self.addBox(box)
 
 
@@ -193,7 +201,7 @@ class DisplayTrendline(DisplayWidget):
 
     @property
     def boxes(self):
-        return list(self.curves.keys())
+        return list(self.curves)
 
 
     def valueChanged(self, box, value, timestamp=None):
