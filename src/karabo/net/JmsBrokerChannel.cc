@@ -24,7 +24,7 @@ namespace karabo {
 
         JmsBrokerChannel::JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination) :
         BrokerChannel(connection), m_jmsConnection(connection), m_serializationType(connection.m_serializationType), m_filterCondition(""),
-        m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000) {
+        m_isStopped(false), m_hasAsyncHandler(false), m_syncReadTimeout(100000), m_hasConsumer(false), m_hasProducer(false) {
 
             // Get the type specific IO service
             m_ioService = m_jmsConnection.getIOService()->castTo<JmsBrokerIOService > ();
@@ -34,9 +34,9 @@ namespace karabo {
             if (m_jmsConnection.m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
                 m_isTransacted = MQ_TRUE;
             }
-            
+
             MQ_SAFE_CALL(MQCreateSession(m_jmsConnection.m_connectionHandle, m_isTransacted, m_jmsConnection.m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle));
-            
+
             string destination = m_jmsConnection.m_destinationName;
             if (!subDestination.empty()) destination += "_" + subDestination;
             MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(), m_jmsConnection.m_destinationType, &m_destinationHandle));
@@ -44,23 +44,19 @@ namespace karabo {
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
-
-            m_producerHandle.handle = (MQInt32) 0xFEEEFEEE;
         }
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
             // Close everything
-            if (m_producerHandle.handle != (MQInt32) 0xFEEEFEEE) {
-                MQCloseMessageProducer(m_producerHandle);
+            if (m_hasProducer) {
+                MQ_SAFE_CALL(MQCloseMessageProducer(m_producerHandle));
             }
             if (m_hasConsumer) {
-                MQCloseMessageConsumer(m_consumerHandle);
+                MQ_SAFE_CALL(MQCloseMessageConsumer(m_consumerHandle));
             }
-
-
-            MQFreeDestination(m_destinationHandle);
-            MQCloseSession(m_sessionHandle);
+            MQ_SAFE_CALL(MQFreeDestination(m_destinationHandle));
+            MQ_SAFE_CALL(MQCloseSession(m_sessionHandle));
         }
 
 
@@ -72,8 +68,6 @@ namespace karabo {
 
 
         void JmsBrokerChannel::readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader) {
-
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
             try {
 
@@ -109,13 +103,16 @@ namespace karabo {
 
             ensureExistanceOfConsumer();
 
-            return MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle);
+            MQStatus status;
+            MQ_SAFE_CALL_STATUS(MQReceiveMessageWithTimeout(m_consumerHandle, timeout, &messageHandle), status);
+            return status;
         }
 
 
         void JmsBrokerChannel::ensureExistanceOfConsumer() {
             if (!m_hasConsumer) {
                 MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_consumerHandle));
+                boost::mutex::scoped_lock lock(m_openMQMutex);
                 m_hasConsumer = true;
             }
         }
@@ -139,7 +136,6 @@ namespace karabo {
 
 
         void JmsBrokerChannel::readTextMessage(karabo::util::Hash& header, std::string& body, bool withHeader) {
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
             try {
 
@@ -180,8 +176,6 @@ namespace karabo {
 
         void JmsBrokerChannel::readHashMessage(karabo::util::Hash& header, karabo::util::Hash& body, bool withHeader) {
 
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-
             try {
 
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -194,7 +188,7 @@ namespace karabo {
                 if (messageType == MQ_BYTES_MESSAGE) {
                     int nBytes;
                     const MQInt8* bytes;
-                    MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                    MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                     m_binarySerializer->load(body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
                     if (withHeader) parseHeader(messageHandle, header);
                 } else if (messageType == MQ_TEXT_MESSAGE) {
@@ -245,15 +239,6 @@ namespace karabo {
 
         void JmsBrokerChannel::setTimeoutSyncRead(int milliseconds) {
             m_syncReadTimeout = milliseconds;
-        }
-
-
-        void JmsBrokerChannel::preRegisterSynchronousRead() {
-
-            boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-
-            MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection.m_deliveryInhibition, &m_consumerHandle));
-            m_hasConsumer = true;
         }
 
 
@@ -395,7 +380,7 @@ namespace karabo {
                         // Body
                         int nBytes;
                         const MQInt8* bytes;
-                        MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                        MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
 
 
                         if (withHeader) {
@@ -535,6 +520,7 @@ namespace karabo {
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQStatus status = consumeMessage(messageHandle, 2000);
 
+                std::cout << "signalIncomingHashMessage" << endl;
 
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
@@ -551,7 +537,7 @@ namespace karabo {
                     if (messageType == MQ_BYTES_MESSAGE) {
                         int nBytes;
                         const MQInt8* bytes;
-                        MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes);
+                        MQ_SAFE_CALL(MQGetBytesMessageBytes(messageHandle, &bytes, &nBytes));
                         m_binarySerializer->load(*body, reinterpret_cast<const char*> (bytes), static_cast<size_t> (nBytes));
 
                     } else if (messageType == MQ_TEXT_MESSAGE) {
@@ -574,6 +560,11 @@ namespace karabo {
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
                     return true;
+                } else if (MQStatusIsError(status)) {
+                    MQString tmp = MQGetStatusString(status);
+                    std::string errorString(tmp);
+                    MQFreeString(tmp);
+                    std::cout << "ERROR: " << errorString << std::endl;
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());
@@ -684,36 +675,32 @@ namespace karabo {
 
             try {
 
-                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
-
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                if (m_producerHandle.handle == (MQInt32) 0xFEEEFEEE) {
-                    MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
-                }
+                ensureProducerAvailable();
 
-                MQ_SAFE_CALL(MQCreateTextMessage(&messageHandle))
-                MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
+                MQ_SAFE_CALL(MQCreateTextMessage(&messageHandle));
+                MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
 
                 // Add some default properties
                 Hash properties(header);
                 //properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
-                MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
+                MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle));
 
                 // TODO Care about the proper freeing of propertiesHandle
 
-                MQ_SAFE_CALL(MQSetTextMessageText(messageHandle, messageBody.c_str()))
+                MQ_SAFE_CALL(MQSetTextMessageText(messageHandle, messageBody.c_str()));
 
                 //cout << " Sending message: " << endl << messageBody << endl;
 
-                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive));
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                MQ_SAFE_CALL(MQFreeMessage(messageHandle))
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
 
             } catch (...) {
@@ -722,40 +709,45 @@ namespace karabo {
         }
 
 
+        void JmsBrokerChannel::ensureProducerAvailable() {
+            if (!m_hasProducer) {
+                MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
+                boost::mutex::scoped_lock lock(m_openMQMutex);
+                m_hasProducer = true;
+            }
+        }
+
+
         void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
 
             try {
-
-                boost::mutex::scoped_lock lock(m_synchReadWriteMutex);
 
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
-                if (m_producerHandle.handle == (MQInt32) 0xFEEEFEEE) {
-                    MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
-                }
+                ensureProducerAvailable();
 
-                MQ_SAFE_CALL(MQCreateBytesMessage(&messageHandle))
-                MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle))
+                MQ_SAFE_CALL(MQCreateBytesMessage(&messageHandle));
+                MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
 
                 // Add some default properties
                 Hash properties(header);
                 //properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
 
-                MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle))
+                MQ_SAFE_CALL(MQSetMessageProperties(messageHandle, propertiesHandle));
                         // TODO Care about the proper freeing of propertiesHandle
 
                 if (size > 0) {
                     MQ_SAFE_CALL(MQSetBytesMessageBytes(messageHandle, reinterpret_cast<MQInt8*> (const_cast<char*> (messageBody)), size));
                 }
 
-                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive))
+                MQ_SAFE_CALL(MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY, priority, m_jmsConnection.m_messageTimeToLive));
 
                 // Clean up
                 //MQ_SAFE_CALL(MQFreeProperties(propertiesHandle))
-                MQ_SAFE_CALL(MQFreeMessage(messageHandle))
+                MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
             } catch (...) {
                 KARABO_RETHROW

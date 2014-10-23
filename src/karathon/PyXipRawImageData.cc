@@ -109,7 +109,7 @@ void exportPyXipRawImageData() {
             .def("getChannelSpace", &RawImageDataWrap::getChannelSpace)
             .def("setIsBigEndian", &RawImageDataWrap::setIsBigEndian, bp::arg("bigFlag"))
             .def("isBigEndian", &RawImageDataWrap::isBigEndian)
-            .def("getHeader", &RawImageDataWrap::getHeader)
+            .def("getHeader", &RawImageDataWrap::getHeaderPy)
             .def("setHeader", &RawImageDataWrap::setHeaderPy, bp::arg("header"))
             .def("hash", (const Hash & (RawImageData::*)() const) (&RawImageData::hash), bp::return_internal_reference<>())
             .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)

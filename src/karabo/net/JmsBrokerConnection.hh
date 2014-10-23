@@ -33,6 +33,27 @@ namespace karabo {
          * The Connection class.
          */
         class JmsBrokerConnection : public BrokerConnection {
+            
+            
+            std::string m_hostname;
+            unsigned int m_port;
+            std::string m_destinationName;
+            MQDestinationType m_destinationType;
+            std::string m_username;
+            std::string m_password;
+            std::string m_protocol;
+            unsigned int m_ping;
+            bool m_trustBroker;
+            bool m_acknowledgeSent;
+            bool m_deliveryInhibition;
+            unsigned int m_acknowledgeTimeout;
+            MQAckMode m_acknowledgeMode;
+            int m_messageTimeToLive;
+            
+            mutable boost::mutex m_openMQMutex;
+
+            MQConnectionHandle m_connectionHandle;
+            
 
         public:
 
@@ -64,24 +85,7 @@ namespace karabo {
                 return m_deliveryInhibition;
             }
 
-        private:
-
-            std::string m_hostname;
-            unsigned int m_port;
-            std::string m_destinationName;
-            MQDestinationType m_destinationType;
-            std::string m_username;
-            std::string m_password;
-            std::string m_protocol;
-            unsigned int m_ping;
-            bool m_trustBroker;
-            bool m_acknowledgeSent;
-            bool m_deliveryInhibition;
-            unsigned int m_acknowledgeTimeout;
-            MQAckMode m_acknowledgeMode;
-            int m_messageTimeToLive;
-
-            MQConnectionHandle m_connectionHandle;
+        private:           
 
             void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
 

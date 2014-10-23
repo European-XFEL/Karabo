@@ -86,7 +86,7 @@ namespace karathon {
             for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
             karabo::util::Dims dimensions;
             dimensions.fromVector(tmp);
-         
+
             // ChannelSpace
             PyArray_Descr* dtype = PyArray_DESCR(arr);
             karabo::xip::ChannelSpaceType channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
@@ -191,10 +191,10 @@ namespace karathon {
             karabo::util::Dims d = self.getROIOffsets();
             return karathon::Wrapper::fromStdVectorToPyList(d.toVector());
         }
-        
-        //        bp::object getHeader() {
-        //            return bp::object(getHeader());
-        //        }
+
+        static karabo::util::Hash getHeaderPy(const RawImageData& self) {
+            return self.getHeader();
+        }
 
         static void setHeaderPy(RawImageData& self, const bp::object & obj) {
             // TODO also support dict here!!
