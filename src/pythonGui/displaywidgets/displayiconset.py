@@ -2,12 +2,13 @@ from const import ns_karabo
 from widget import DisplayWidget
 
 from PyQt4.QtCore import pyqtSlot, QBuffer
-from PyQt4.QtGui import QAction, QFileDialog
+from PyQt4.QtGui import QAction, QFileDialog, QInputDialog
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
 import re
 import os.path
+import urllib.request
 
 ns_inkscape = "{http://www.inkscape.org/namespaces/inkscape}"
 ElementTree.register_namespace("inkscape", ns_inkscape[1:-1])
@@ -20,7 +21,6 @@ class Element(ElementTree.Element):
         if label is not None:
             self.set(">label", re.compile(label))
 
-
     def __iter__(self):
         for i in range(len(self)):
             e = self[i]
@@ -28,7 +28,6 @@ class Element(ElementTree.Element):
             filter = self.get(">filter")
             if l is None or l.match(filter):
                 yield e
-
 
     def items(self):
         for k, v in super().items():
@@ -42,27 +41,35 @@ class DisplayIconset(DisplayWidget):
 
     def __init__(self, box, parent):
         super(DisplayIconset, self).__init__(box)
-        
+
         self.widget = QSvgWidget(parent)
-        action = QAction("Change Iconset...", self.widget)
+        action = QAction("Iconset from file...", self.widget)
         action.triggered.connect(self.onChangeIcons)
         self.widget.addAction(action)
-        self.setFilename(os.path.join(os.path.dirname(__file__), "empty.svg"))
-
+        action = QAction("Iconset from URL...", self.widget)
+        action.triggered.connect(self.onChangeURL)
+        self.widget.addAction(action)
+        action = QAction("Copy iconset to project", self.widget)
+        action.triggered.connect(self.onToProject)
+        self.widget.addAction(action)
+        self.setURL("file://" + urllib.request.pathname2url(
+            os.path.join(os.path.dirname(__file__), "empty.svg")))
 
     def save(self, e):
-        if self.filename is not None:
-            e.set(ns_karabo + "filename", self.filename)
-
+        if self.url is not None:
+            e.set(ns_karabo + "url", self.url)
 
     def load(self, e):
-        name = e.get(ns_karabo + "filename")
+        url = e.get(ns_karabo + "url")
+        if url is None:
+            name = e.get(ns_karabo + "filename")
+            if name is not None:
+                url = urllib.request.pathname2url(name)
         self.valueChanged(None, "")
-        if name is None:
-            self.filename = None
+        if url is None:
+            self.url = None
         else:
-            self.setFilename(e.get(ns_karabo + "filename"))
-
+            self.setURL(url)
 
     @pyqtSlot()
     def onChangeIcons(self):
@@ -70,18 +77,28 @@ class DisplayIconset(DisplayWidget):
                                          filter="*.svg")
         if not fn:
             return
-        self.setFilename(fn)
+        self.setURL("file://" + urllib.request.pathname2url(fn))
 
+    @pyqtSlot()
+    def onChangeURL(self):
+        url, ok = QInputDialog.getText(self.widget, "Set URL",
+                                       "New iconset URL:", text=self.url)
+        if ok:
+            self.setURL(url)
 
-    def setFilename(self, fn):
-        self.filename = fn
+    @pyqtSlot()
+    def onToProject(self):
+        self.setURL(self.project.addResource("iconset",
+                                             self.project.getURL(self.url)))
+
+    def setURL(self, url):
+        self.url = url
         parser = ElementTree.XMLParser(target=ElementTree.TreeBuilder(
             element_factory=Element))
-        self.xml = ElementTree.ElementTree()
-        self.xml.parse(fn, parser)
+        parser.feed(self.project.getURL(self.url))
+        self.xml = ElementTree.ElementTree(parser.close())
         if self.boxes[0].hasValue():
             self.valueChanged(None, self.boxes[0].value)
-
 
     def valueChanged(self, box, value, timestamp=None):
         self.xml.getroot().set(">filter", value)
@@ -90,4 +107,3 @@ class DisplayIconset(DisplayWidget):
         self.xml.write(buffer)
         buffer.close()
         self.widget.load(buffer.buffer())
-
