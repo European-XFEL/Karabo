@@ -36,7 +36,6 @@ class DisplayTrendline(DisplayWidget):
                                   wintitle="XY-Plot")
         self.plot = self.widget.get_plot()
         self.plot.set_antialiasing(True)
-        self.plot.setAxisTitle(QwtPlot.xBottom, box.descriptor.displayedName)
 
         self.manager = PlotManager(self)
         self.manager.add_plot(self.plot)
@@ -58,11 +57,14 @@ class DisplayTrendline(DisplayWidget):
         else:
             self.lastxvalue = None
 
+    def typeChanged(self, box):
+        pos = QwtPlot.xBottom if box is self.xbox else QwtPlot.yLeft
+        self.plot.setAxisTitle(pos, box.descriptor.displayedName)
+
     def addBox(self, box):
         if self.ybox is None:
-            self.plot.setAxisTitle(QwtPlot.yLeft, box.descriptor.displayedName)
             self.ybox = box
-            self.curve = make.curve([ ], [ ], 'Random values', "r")
+            self.curve = make.curve([], [], 'Random values', "r")
             self.plot.add_item(self.curve)
             return True
         else:
