@@ -306,7 +306,7 @@ namespace karabo {
                  * Example:
                  * slotFunctions -> |FooInstance:slotFoo1,slotFoo2|BarInstance:slotBar1,slotBar2|"
                  */
-
+                
                 boost::optional<const Hash::Node&> allSlotsNode = header.find("slotFunctions");
                 if (allSlotsNode) {
                     std::vector<string> allSlots;
@@ -318,14 +318,14 @@ namespace karabo {
 
 
                     BOOST_FOREACH(string instanceSlots, allSlots) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Processing instanceSlots: " << instanceSlots;
+                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
                         size_t pos = instanceSlots.find_first_of(":");
                         if (pos == std::string::npos) {
-                            KARABO_LOG_FRAMEWORK_WARN << "Encountered badly shaped message header";
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Encountered badly shaped message header";
                             continue;
                         }
                         string instanceId = instanceSlots.substr(0, pos);
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Instance is: " << instanceId;
+                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Instance is: " << instanceId;
 
                         // We should call only functions defined for our instanceId or global ("*") ones
                         if (instanceId == m_instanceId || instanceId == "*") {
@@ -334,10 +334,10 @@ namespace karabo {
 
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << "Going to call global " << slotFunction << " if registered";
+                                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getGlobalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << "Now calling " << slotFunction;
+                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
                                         // This will synchronously call back all registered slot functions
                                         slot->callRegisteredSlotFunctions(header, body);
                                         // In the body of the slot callback the user may have placed a reply
@@ -349,14 +349,14 @@ namespace karabo {
 
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << "Going to call local " << slotFunction << " if registered";
+                                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getLocalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << "Now calling " << slotFunction;
+                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
                                         slot->callRegisteredSlotFunctions(header, body);
                                         sendPotentialReply(header);
                                     } else {
-                                        KARABO_LOG_FRAMEWORK_WARN << "Received a call from ? to non-existing slot \"" << slotFunction << "\"";
+                                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a call from ? to non-existing slot \"" << slotFunction << "\"";
                                     }
                                 }
                             }
