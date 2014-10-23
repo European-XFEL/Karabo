@@ -11,7 +11,7 @@ from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
                          QPixmap)
 
 from os import path
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
 import re
 from xml.etree.ElementTree import Element
 
