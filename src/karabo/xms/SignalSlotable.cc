@@ -153,6 +153,8 @@ namespace karabo {
             m_isPingable = false;
 
             m_instanceInfo = instanceInfo;
+            
+            m_runEventLoop = true;
 
             startEmittingHeartbeats(heartbeatInterval);            
             startTrackingSystem();
@@ -189,12 +191,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::_runEventLoop() {
-
-            m_runEventLoop = true;
+        void SignalSlotable::_runEventLoop() {            
 
             while (m_runEventLoop) {
-
+                
                 if (eventQueueIsEmpty()) { // If queue is empty we wait for the next event
                     boost::mutex::scoped_lock lock(m_waitMutex);
                     m_hasNewEvent.wait(lock);
@@ -290,7 +290,7 @@ namespace karabo {
 
             Event event;
             while (tryToPopEvent(event)) {
-
+                
                 /* Header and body are shared pointers               
                  * By now the event variable keeps the only reference to them and hence the objects alive
                  * In the next while loop header and body will be destructed
@@ -365,6 +365,13 @@ namespace karabo {
                 }
             }
         }
+        
+        
+        void SignalSlotable::registerReply(const karabo::util::Hash& reply) {
+            boost::mutex::scoped_lock lock(m_replyMutex);
+            m_replies[boost::this_thread::get_id()] = reply;
+        }
+
 
 
         void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header) {

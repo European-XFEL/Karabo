@@ -684,6 +684,10 @@ namespace karabo {
                 instanceInfo.set("host", boost::asio::ip::host_name());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
+                
+                std::cout << "######## INTERVAL: " << this->get<int>("heartbeatInterval") << std::endl;
+                
+                
 
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, this->get<int>("nThreads")));
 

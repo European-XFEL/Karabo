@@ -909,10 +909,7 @@ namespace karabo {
                 }
             }
 
-            void registerReply(const karabo::util::Hash& reply) {
-                boost::mutex::scoped_lock lock(m_replyMutex);
-                m_replies[boost::this_thread::get_id()] = reply;
-            }
+            void registerReply(const karabo::util::Hash& reply);
 
         private: // Functions
 

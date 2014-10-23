@@ -38,11 +38,22 @@ namespace karabo {
          * broker.
          */
         class JmsBrokerChannel : public BrokerChannel, public boost::enable_shared_from_this<JmsBrokerChannel> {
-
             // JMS-Error handling convenience
             #define MQ_SAFE_CALL(mqCall) \
             { \
               MQStatus status; \
+              boost::mutex::scoped_lock lock(m_openMQMutex); \
+              if (MQStatusIsError(status = (mqCall)) == MQ_TRUE) { \
+                MQString tmp = MQGetStatusString(status); \
+                std::string errorString(tmp); \
+                MQFreeString(tmp); \
+                throw KARABO_OPENMQ_EXCEPTION(errorString); \
+              } \
+            }
+            
+            #define MQ_SAFE_CALL_STATUS(mqCall, status) \
+            { \
+              boost::mutex::scoped_lock lock(m_openMQMutex); \
               if (MQStatusIsError(status = (mqCall)) == MQ_TRUE) { \
                 MQString tmp = MQGetStatusString(status); \
                 std::string errorString(tmp); \
@@ -70,13 +81,13 @@ namespace karabo {
             // Types needed by the OpenMQ API
             MQSessionHandle m_sessionHandle;
             MQDestinationHandle m_destinationHandle;
-            MQBool m_isTransacted;                    
+            MQBool m_isTransacted;
 
             // Save for synchronous communication
             MQConsumerHandle m_consumerHandle;
-            
+
             MQProducerHandle m_producerHandle;
-            
+
             // User supplied filtering on broker
             std::string m_filterCondition;
 
@@ -84,16 +95,19 @@ namespace karabo {
 
             // Protects against registering multiple async handlers
             bool m_hasAsyncHandler;
-
-            // Flags whether a synchronous consumer was already pre-registered
-            bool m_hasConsumer;
-
+            
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
-            
+
+            // Flags whether a consumer exists
+            bool m_hasConsumer;
+
+            // Flags whether a producer exists
+            bool m_hasProducer;                        
+
             // Consumer mutex
-            boost::mutex m_synchReadWriteMutex;
-            
+            mutable boost::mutex m_openMQMutex;
+
 
         public:
 
@@ -102,7 +116,7 @@ namespace karabo {
             JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
-            
+
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
@@ -142,7 +156,7 @@ namespace karabo {
              * @return void 
              */
             virtual void read(karabo::util::Hash& header, std::vector<char>& body);
-            
+
             /**
              * This function reads from a channel into std::string 
              * The reading will block until the header and data records are read.
@@ -160,10 +174,10 @@ namespace karabo {
             void readAsyncRaw(const ReadRawHandler& readHandler);
 
             void readAsyncString(const ReadStringHandler& readHandler);
-            
+
             void readAsyncHash(const ReadHashHandler& handler);
-            
-            
+
+
             //**************************************************************/
             //*              Asynchronous Read - With Header               */
             //**************************************************************/
@@ -171,7 +185,7 @@ namespace karabo {
             void readAsyncHashRaw(const ReadHashRawHandler& readHandler);
 
             void readAsyncHashString(const ReadHashStringHandler& readHandler);
-            
+
             void readAsyncHashHash(const ReadHashHashHandler& handler);
 
             //**************************************************************/
@@ -199,7 +213,7 @@ namespace karabo {
             //**************************************************************/
             //*                Errors, Timing, Selections                  */
             //**************************************************************/
-            
+
             /**
              * This function allows to specify arbitrary JMS conform selections
              * Example:
@@ -209,8 +223,6 @@ namespace karabo {
              * @param filterCondition A SQL compliant (WHERE clause) condition
              */
             void setFilter(const std::string& filterCondition);
-
-            void preRegisterSynchronousRead();
 
             /**
              * This function returns the currently set JMS selection
@@ -230,37 +242,39 @@ namespace karabo {
             void stop();
 
             void close();
-            
+
             void listenForRawMessages();
-            
+
             void listenForStringMessages();
-            
+
             void listenForHashMessages();
-            
+
             void listenForHashRawMessages();
 
             void listenForHashStringMessages();
-            
+
             void listenForHashHashMessages();
-           
+
             void deadlineTimer(const WaitHandler& handler, int milliseconds);
 
         private: //functions
-            
+
             void ensureExistanceOfConsumer();
-            
+
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
-            
+
             void readTextMessage(karabo::util::Hash& header, std::string& body, bool withHeader);
-            
+
             void readHashMessage(karabo::util::Hash& header, karabo::util::Hash& body, bool withHeader);
-            
+
             MQStatus consumeMessage(MQMessageHandle& messageHandle, const int timeout);
-            
+
             void parseHeader(const MQMessageHandle& messageHandle, karabo::util::Hash& header);
-            
+
             void ensureSingleAsyncHandler();
             
+            void ensureProducerAvailable();
+
             /**
              * Signals arrival of a message to the private m_readStringHashHandler
              * @return true if a message was received, false otherwise (timed out)
@@ -272,7 +286,7 @@ namespace karabo {
              * @return true if a message was received, false otherwise (timed out)
              */
             bool signalIncomingBinaryMessage(const bool withHeader);
-            
+
             bool signalIncomingHashMessage(const bool withHeader);
 
             void setProperties(const karabo::util::Hash& properties, const MQPropertiesHandle& propertiesHandle);
