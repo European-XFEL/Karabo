@@ -319,14 +319,14 @@ namespace karabo {
 
 
                     BOOST_FOREACH(string instanceSlots, allSlots) {
-                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
+                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
                         size_t pos = instanceSlots.find_first_of(":");
                         if (pos == std::string::npos) {
                             KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Encountered badly shaped message header";
                             continue;
                         }
                         string instanceId = instanceSlots.substr(0, pos);
-                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Instance is: " << instanceId;
+                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Instance is: " << instanceId;
 
                         // We should call only functions defined for our instanceId or global ("*") ones
                         if (instanceId == m_instanceId || instanceId == "*") {
@@ -335,10 +335,10 @@ namespace karabo {
 
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
+                                    //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getGlobalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": ***** Now calling global " << slotFunction << " MQPriority: " << int(header.get<signed char>("MQPriority"));
+                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
                                         // This will synchronously call back all registered slot functions
                                         slot->callRegisteredSlotFunctions(header, body);
                                         // In the body of the slot callback the user may have placed a reply
@@ -350,10 +350,10 @@ namespace karabo {
 
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
-                                    KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
+                                    //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getLocalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": ***** Now calling " << slotFunction << " MQPriority: " << int(header.get<signed char>("MQPriority"));
+                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
                                         slot->callRegisteredSlotFunctions(header, body);
                                         sendPotentialReply(header);
                                     } else {
@@ -386,6 +386,13 @@ namespace karabo {
                     replyHeader.set("signalFunction", "__reply__");
                     replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
                     m_producerChannel->write(replyHeader, it->second);
+                } else if (header.has("replyInstanceIds")) {
+                    karabo::util::Hash replyHeader;
+                    replyHeader.set("signalInstanceId", m_instanceId);
+                    replyHeader.set("signalFunction", "__replyNoWait__");
+                    replyHeader.set("slotInstanceIds", header.get<string>("replyInstanceIds"));
+                    replyHeader.set("slotFunctions", header.get<string>("replyFunctions"));
+                    m_producerChannel->write(replyHeader, it->second, 9);                   
                 }
                 m_replies.erase(it);
             }
@@ -1534,12 +1541,15 @@ namespace karabo {
                         if (countdown == 0) { // Connection lost
                             const Hash& instanceInfo = entry.get<Hash>("instanceInfo");
 
-                            KARABO_LOG_FRAMEWORK_WARN << "Instance \"" << it->getKey() << "\" silently disappeared (no heartbeats received anymore)";
+                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Instance \"" << it->getKey() << "\" silently disappeared (no heartbeats received anymore)";
 
                             if (m_instanceNotAvailableHandler) {
                                 try {
-                                    // Only explicitely tracked instances inform about their death
-                                    if (entry.get<bool>("isExplicitlyTracked")) m_instanceNotAvailableHandler(it->getKey(), instanceInfo); // Inform via callback
+                                    // Only explicitely tracked instances inform about their death                                    
+                                    if (entry.get<bool>("isExplicitlyTracked")) {
+                                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Calling back InstanceNotAvailableHandler with \"" << it->getKey() << "\"";
+                                        m_instanceNotAvailableHandler(it->getKey(), instanceInfo); // Inform via callback   
+                                    }
                                 } catch (const Exception& e) {
                                     KARABO_LOG_FRAMEWORK_ERROR << e;
                                 } catch (...) {

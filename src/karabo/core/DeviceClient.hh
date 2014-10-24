@@ -560,7 +560,7 @@ namespace karabo {
 
             virtual void setupSlots();
 
-            virtual void slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
+            virtual void _slotChanged(const karabo::util::Hash& hash, const std::string& instanceId);
 
             virtual void slotInstanceNew(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
@@ -568,9 +568,9 @@ namespace karabo {
 
             virtual void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            virtual void slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
+            virtual void _slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId);
 
-            virtual void slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
+            virtual void _slotClassSchema(const karabo::util::Schema& schema, const std::string& classId, const std::string& serverId);
 
 
 

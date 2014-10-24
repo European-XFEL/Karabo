@@ -14,8 +14,8 @@
 namespace karabo {
     namespace xms {
 
-        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction) :
-        m_signalSlotable(signalSlotable), m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction) {
+        Signal::Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction, const int priority) :
+        m_signalSlotable(signalSlotable), m_channel(channel), m_signalInstanceId(signalInstanceId), m_signalFunction(signalFunction), m_priority(priority) {
             updateConnectedSlotsString();
         }
 
@@ -56,7 +56,7 @@ namespace karabo {
                 // TODO Do not send if no slots are connected
                 //if (m_connectedSlotsString == "__none__") return;
                 karabo::util::Hash header = prepareHeader();
-                m_channel->write(header, message);
+                m_channel->write(header, message, m_priority);
             } catch (const karabo::util::Exception& e) {
                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Problem sending a signal"))
             }
