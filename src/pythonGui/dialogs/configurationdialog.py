@@ -48,6 +48,7 @@ class SelectProjectDialog(QDialog):
             item.setData(Qt.UserRole, p)
             self.projectWidget.addItem(item)
         self.projectWidget.itemClicked.connect(self.onProjectSelectionChanged)
+        self.projectWidget.setCurrentRow(0)
         
         vLayout.addWidget(self.projectWidget)
         
