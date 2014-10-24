@@ -793,6 +793,9 @@ class ProjectModel(QStandardItemModel):
         while project.devices:
             object = project.devices[-1]
             self.removeObject(project, object, False)
+        
+        # Update needed in the end
+        self.updateData()
 
 
     def removeObject(self, project, object, showConfirm=True):

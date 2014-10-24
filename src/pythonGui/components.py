@@ -347,7 +347,7 @@ class EditableApplyLaterComponent(BaseComponent):
     def connectWidget(self, box):
         BaseComponent.connectWidget(self, box)
         self.widgetFactory.signalEditingFinished.connect(self.onEditingFinished)
-        box.signalUserChanged.connect(self.widgetFactory.valueChangedSlot)
+        box.signalUserChanged.connect(self.onUserChanged)
         box.signalUpdateComponent.connect(self.onDisplayValueChanged)
         if box.hasValue():
             self.onDisplayValueChanged(box, box.value)
@@ -445,6 +445,11 @@ class EditableApplyLaterComponent(BaseComponent):
         self.__currentDisplayValue = value
         self.__busyTimer.stop()
         self.hasConflict = True
+        self.updateButtons()
+
+
+    def onUserChanged(self, box, value):
+        self.widgetFactory.valueChangedSlot(box, value)
         self.updateButtons()
 
 
