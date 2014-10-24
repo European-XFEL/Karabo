@@ -520,7 +520,7 @@ namespace karabo {
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQStatus status = consumeMessage(messageHandle, 2000);
 
-                std::cout << "signalIncomingHashMessage" << endl;
+                //std::cout << "signalIncomingHashMessage" << endl;
 
                 if (!MQStatusIsError(status) && !m_isStopped) {
 

@@ -105,7 +105,12 @@ namespace karabo {
             boost::condition_variable m_hasNewEvent;
 
             typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
-            std::queue< Event > m_eventQueue;
+            struct CompareEventPriority {
+                bool operator()(const Event& lhs, const Event& rhs) const {
+                    return lhs.first->get<signed char>("MQPriority") < rhs.first->get<signed char>("MQPriority");
+                }
+            };
+            std::priority_queue< Event, std::vector<Event>, CompareEventPriority > m_eventQueue;
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
             boost::thread_group m_eventLoopThreads;
