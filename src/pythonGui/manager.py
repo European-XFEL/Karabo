@@ -320,10 +320,38 @@ class _Manager(QObject):
 
         project = dialog.selectedProject()
         conf, classId = self.currentConfigurationAndClassId()
+        
+        # Check, if another configuration with same name already exists
+        name = dialog.configurationName()
+        if name.endswith(".xml"):
+            name = name[:-4]
+        
+        overwrite = False
+        for deviceId, configs in project.configurations.items():
+            if deviceId == conf.id:
+                for c in configs:
+                    if c.filename[:-4] == name:
+                        reply = QMessageBox.question(None, 'Project configuration already exists',
+                            "Another configuration with the same name \"<b>{}</b>\" <br> "
+                            "already exists. Do you want to overwrite it?".format(name),
+                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                        if reply == QMessageBox.No:
+                            return
+
+                        overwrite = True
+                        break
+            
+            if overwrite:
+                # Overwrite existing device
+                project.removeConfiguration(deviceId, c)
+                break
+        
         # Add configuration to project
-        project.addConfiguration(conf.id, ProjectConfiguration(project,
-                                                dialog.configurationName(),
-                                                Hash(classId, conf.toHash())))
+        project.addConfiguration(conf.id, ProjectConfiguration(project, name,
+                                                  Hash(classId, conf.toHash())))
+
+        self.projectTopology.updateData()
 
 
     def handle_log(self, message):
