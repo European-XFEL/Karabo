@@ -5,15 +5,15 @@
 #############################################################################
 
 
-__all__ = ["WorkflowItem", "WorkflowGroupItem"]
+__all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowConnection"]
 
 from const import ns_karabo
 from layouts import ProxyWidget
 import manager
 from registry import Loadable
 
-from PyQt4.QtCore import (QLine, QPoint, QPointF, QRect, QRectF, QSize, Qt)
-from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetrics, QFontMetricsF,
+from PyQt4.QtCore import (QPoint, QRect, QSize, Qt)
+from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
                          QPainter, QPainterPath, QPolygon, QWidget)
 
 import math
@@ -53,7 +53,7 @@ class Item(QWidget, Loadable):
             # TODO: return outputChannel position
                     
         print("Item.mousePressEvent", self.inputChannels, self.outputChannels)
-        
+
         #QWidget.mousePressEvent(self, event)
 
 
