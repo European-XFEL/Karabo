@@ -5,7 +5,7 @@
 #############################################################################
 
 
-__all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowConnection"]
+__all__ = ["WorkflowItem", "WorkflowGroupItem", "WorkflowChannel", "WorkflowConnection"]
 
 from const import ns_karabo
 from layouts import ProxyWidget
@@ -23,6 +23,8 @@ class Item(QWidget, Loadable):
 
     WIDTH = 5
     CHANNEL_LENGTH = 45
+    INPUT = "Input"
+    OUTPUT = "Output"
     
 
     def __init__(self, parent):
@@ -31,8 +33,8 @@ class Item(QWidget, Loadable):
         self.font = QFont()
         self.displayText = ""
         
-        self.inputChannels = []
-        self.outputChannels = []
+        self.inputChannels = [] # list of WorkflowChannels of type input
+        self.outputChannels = [] # list of WorkflowChannels of type output
         
         self.descriptor = None
 
@@ -94,82 +96,29 @@ class Item(QWidget, Loadable):
 
 
     def paintInputChannels(self, painter):
-        for input in self.inputChannels:
-            # This only works for one inputChannel - height needs to be adjusted
-            rect = self.outlineRect()
-            startPoint = QPoint(-rect.width()/2, 0)
-            endPoint = QPoint(startPoint.x() - Item.CHANNEL_LENGTH, 0)
+        rect = self.outlineRect()
+        nbChannels = len(self.inputChannels)
+        yDelta = rect.height() / (nbChannels+1)
+        for index, input in enumerate(self.inputChannels):
+            y = yDelta * index
+            if nbChannels > 1:
+                y -= (yDelta/2)
 
-            painter.setBrush(QBrush(Qt.white))
-            painter.drawLine(startPoint, endPoint)
-            
-            if input.current == "BinaryFile":
-                self._drawInputShape(painter, endPoint)
-            elif input.current == "Hdf5File":
-                self._drawRectShape(painter, QPoint(endPoint.x() - Item.WIDTH, endPoint.y()))
-            elif input.current == "Network":
-                self._drawCircleShape(painter, endPoint)
-            elif input.current == "TextFile":
-                self._drawDiamondShape(painter, QPoint(endPoint.x() + Item.WIDTH, endPoint.y()))
-            else:
-                self._drawCircleShape(painter, endPoint)
+            start_point = QPoint(-rect.width()/2, y)
+            input.draw(start_point, painter)
 
 
     def paintOutputChannels(self, painter):
-        for output in self.outputChannels:
-            # This only works for one inputChannel - height needs to be adjusted
-            rect = self.outlineRect()
-            startPoint = QPoint(rect.width()/2, 0)
-            endPoint = QPoint(startPoint.x() + Item.CHANNEL_LENGTH, 0)
+        rect = self.outlineRect()
+        nbChannels = len(self.outputChannels)
+        yDelta = rect.height() / (nbChannels+1)
+        for index, output in enumerate(self.outputChannels):
+            y = yDelta * index
+            if nbChannels > 1:
+                y -= (yDelta/2)
 
-            painter.setBrush(QBrush(Qt.white))
-            painter.drawLine(startPoint, endPoint)
-            
-            if output.current == "BinaryFile":
-                self._drawOutputShape(painter, endPoint)
-            elif output.current == "Hdf5File":
-                self._drawRectShape(painter, QPoint(endPoint.x() - Item.WIDTH, endPoint.y()))
-            elif output.current == "Network":
-                self._drawCircleShape(painter, endPoint)
-            elif output.current == "TextFile":
-                self._drawDiamondShape(painter, QPoint(endPoint.x() + Item.WIDTH, endPoint.y()))
-            else:
-                self._drawCircleShape(painter, endPoint)
-
-
-    def _drawCircleShape(self, painter, point):
-        painter.drawEllipse(point, Item.WIDTH, Item.WIDTH)
-
-
-    def _drawRectShape(self, painter, point):
-        painter.drawRect(point.x(), point.y() - Item.WIDTH, 2 * Item.WIDTH, 2 * Item.WIDTH)
-
-
-    def _drawDiamondShape(self, painter, point):
-        points = [point,
-                  QPoint(point.x() - Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y()),
-                  QPoint(point.x() - Item.WIDTH, point.y() + Item.WIDTH)]
-        
-        painter.drawPolygon(QPolygon(points))
-
-
-    def _drawOutputShape(self, painter, point):
-        point = QPoint(point.x() - Item.WIDTH, point.y())
-        points = [point,
-                  QPoint(point.x() + 2 * Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() + 2 * Item.WIDTH, point.y() + Item.WIDTH)]
-        
-        painter.drawPolygon(QPolygon(points))
-
-
-    def _drawInputShape(self, painter, point):
-        point = QPoint(point.x() + Item.WIDTH, point.y())
-        points = [point,
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
-        
-        painter.drawPolygon(QPolygon(points))
+            start_point = QPoint(rect.width()/2, y)
+            output.draw(start_point, painter)
 
 
     def outlineRect(self):
@@ -188,7 +137,7 @@ class Item(QWidget, Loadable):
 
     def boundingRect(self):
         """
-        Calculate bounding rectangle for this item. 
+        Calculate bounding rectangle for this item including channels. 
         """
         rect = self.outlineRect()
         
@@ -222,12 +171,10 @@ class Item(QWidget, Loadable):
                 if displayType is None:
                     continue
                 
-                if displayType == "Input":
-                    box.signalUpdateComponent.connect(self.update)
-                    self.inputChannels.append(box)
-                elif displayType == "Output":
-                    self.outputChannels.append(box)
-                    box.signalUpdateComponent.connect(self.update)
+                if displayType == Item.INPUT:
+                    self.inputChannels.append(WorkflowChannel(displayType, box, self))
+                elif displayType == Item.OUTPUT:
+                    self.outputChannels.append(WorkflowChannel(displayType, box, self))
             
             rect = self.boundingRect()
             pos = self.parent().fixed_geometry.topLeft()
@@ -306,6 +253,80 @@ class WorkflowGroupItem(Item):
         item.setStyleSheet("".join(ss))
         
         return proxy
+
+
+class WorkflowChannel(QWidget):
+
+
+    def __init__(self, type, box, parent):
+        super(WorkflowChannel, self).__init__(parent)
+        
+        assert type in (Item.INPUT, Item.OUTPUT)
+        self.type = type
+        self.box = box
+        self.box.signalUpdateComponent.connect(self.update)
+
+
+    def draw(self, start_pos, painter):
+        self.start_pos = start_pos
+        painter.setBrush(QBrush(Qt.white))
+        
+        if self.type == Item.INPUT:
+            end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
+        elif self.type == Item.OUTPUT:
+            end_pos = QPoint(self.start_pos.x() + Item.CHANNEL_LENGTH, self.start_pos.y())
+            
+        painter.drawLine(self.start_pos, end_pos)
+
+        if self.box.current == "BinaryFile":
+            self._drawInputShape(painter, end_pos)
+        elif self.box.current == "Hdf5File":
+            self._drawRectShape(painter, QPoint(end_pos.x() - Item.WIDTH, end_pos.y()))
+        elif self.box.current == "Network":
+            self._drawCircleShape(painter, end_pos)
+        elif self.box.current == "TextFile":
+            self._drawDiamondShape(painter, QPoint(end_pos.x() + Item.WIDTH, end_pos.y()))
+        else:
+            self._drawCircleShape(painter, end_pos)
+
+
+    def _drawCircleShape(self, painter, point):
+        painter.drawEllipse(point, Item.WIDTH, Item.WIDTH)
+
+
+    def _drawRectShape(self, painter, point):
+        painter.drawRect(point.x(), point.y() - Item.WIDTH, 2 * Item.WIDTH, 2 * Item.WIDTH)
+
+
+    def _drawDiamondShape(self, painter, point):
+        points = [point,
+                  QPoint(point.x() - Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y()),
+                  QPoint(point.x() - Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
+
+
+    def _drawOutputShape(self, painter, point):
+        point = QPoint(point.x() - Item.WIDTH, point.y())
+        points = [point,
+                  QPoint(point.x() + 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() + 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
+
+
+    def _drawInputShape(self, painter, point):
+        point = QPoint(point.x() + Item.WIDTH, point.y())
+        points = [point,
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPoint(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painter.drawPolygon(QPolygon(points))
+
+
+    def paintEvent(self, event):
+        print("WorkflowChannel.paintEvent")
 
 
 class WorkflowConnection(QWidget):
