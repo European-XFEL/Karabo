@@ -176,6 +176,7 @@ class Item(QWidget, Loadable):
                 elif displayType == Item.OUTPUT:
                     self.outputChannels.append(WorkflowChannel(displayType, box, self))
             
+            # Update geometry of proxy to new channels
             rect = self.boundingRect()
             pos = self.parent().fixed_geometry.topLeft()
             self.parent().fixed_geometry = QRect(pos, QSize(rect.width(), rect.height()))
@@ -264,7 +265,7 @@ class WorkflowChannel(QWidget):
         assert type in (Item.INPUT, Item.OUTPUT)
         self.type = type
         self.box = box
-        self.box.signalUpdateComponent.connect(self.update)
+        self.box.signalUpdateComponent.connect(parent.update)
 
 
     def draw(self, start_pos, painter):
@@ -323,10 +324,6 @@ class WorkflowChannel(QWidget):
                   QPoint(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
         
         painter.drawPolygon(QPolygon(points))
-
-
-    def paintEvent(self, event):
-        print("WorkflowChannel.paintEvent")
 
 
 class WorkflowConnection(QWidget):
