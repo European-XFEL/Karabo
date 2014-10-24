@@ -78,6 +78,7 @@ namespace karabo {
 
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNotAvailableHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
+            typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
@@ -323,6 +324,8 @@ namespace karabo {
             void registerInstanceNotAvailableHandler(const InstanceNotAvailableHandler& instanceNotAvailableCallback);
 
             void registerInstanceAvailableAgainHandler(const InstanceAvailableAgainHandler& instanceAvailableAgainCallback);
+            
+            void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
@@ -487,7 +490,14 @@ namespace karabo {
 
             Requestor request(std::string instanceId, const std::string& functionName) {
                 if (instanceId.empty()) instanceId = m_instanceId;
-                return Requestor(this).call(instanceId, functionName);
+                return Requestor(this).request(instanceId, functionName);
+            }
+            
+            Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName, 
+            std::string replyInstanceId, const std::string& replyFunctionName) {
+                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
+                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
+                return Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName);
             }
 
             /**
@@ -521,7 +531,15 @@ namespace karabo {
             template <class A1>
             Requestor request(std::string instanceId, const std::string& functionName, const A1& a1) {
                 if (instanceId.empty()) instanceId = m_instanceId;
-                return Requestor(this).call(instanceId, functionName, a1);
+                return Requestor(this).request(instanceId, functionName, a1);
+            }
+            
+            template <class A1>
+            Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName, 
+            std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1) {
+                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
+                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
+                return Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1);
             }
 
             /**
@@ -566,7 +584,15 @@ namespace karabo {
             template <class A1, class A2>
             Requestor request(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2) {
                 if (instanceId.empty()) instanceId = m_instanceId;
-                return Requestor(this).call(instanceId, functionName, a1, a2);
+                return Requestor(this).request(instanceId, functionName, a1, a2);
+            }
+            
+            template <class A1, class A2>
+            Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName, 
+            std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2) {
+                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
+                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
+                return Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2);
             }
 
             /**
@@ -598,7 +624,15 @@ namespace karabo {
             template <class A1, class A2, class A3>
             Requestor request(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3) {
                 if (instanceId.empty()) instanceId = m_instanceId;
-                return Requestor(this).call(instanceId, functionName, a1, a2, a3);
+                return Requestor(this).request(instanceId, functionName, a1, a2, a3);
+            }
+            
+            template <class A1, class A2, class A3>
+            Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName, 
+            std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3) {
+                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
+                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
+                return Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2, a3);
             }
 
             /**
@@ -631,7 +665,15 @@ namespace karabo {
             template <class A1, class A2, class A3, class A4>
             Requestor request(std::string instanceId, const std::string& functionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 if (instanceId.empty()) instanceId = m_instanceId;
-                return Requestor(this).call(instanceId, functionName, a1, a2, a3, a4);
+                return Requestor(this).request(instanceId, functionName, a1, a2, a3, a4);
+            }
+            
+            template <class A1, class A2, class A3, class A4>
+            Requestor requestNoWait(std::string requestInstanceId, const std::string& requestFunctionName, 
+            std::string replyInstanceId, const std::string& replyFunctionName, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+                if (requestInstanceId.empty()) requestInstanceId = m_instanceId;
+                if (replyInstanceId.empty()) replyInstanceId = m_instanceId;
+                return Requestor(this).requestNoWait(requestInstanceId, requestFunctionName, replyInstanceId, replyFunctionName, a1, a2, a3, a4);
             }
 
             void reply() {
@@ -700,7 +742,7 @@ namespace karabo {
             template <class A1, class A2, class A3>
             void registerHeartbeatSignal(const std::string& funcName) {
                 if (m_signalInstances.find(funcName) != m_signalInstances.end()) return;
-                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, funcName));
+                boost::shared_ptr<karabo::xms::Signal> s(new karabo::xms::Signal(this, m_heartbeatProducerChannel, m_instanceId, funcName, 9));
                 boost::function<void (const A1&, const A2&, const A3&) > f(boost::bind(&karabo::xms::Signal::emit3<A1, A2, A3>, s, _1, _2, _3));
                 storeSignal(funcName, s, f);
             }

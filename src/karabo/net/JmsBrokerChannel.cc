@@ -520,8 +520,6 @@ namespace karabo {
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQStatus status = consumeMessage(messageHandle, 2000);
 
-                //std::cout << "signalIncomingHashMessage" << endl;
-
                 if (!MQStatusIsError(status) && !m_isStopped) {
 
                     MQ_SAFE_CALL(MQAcknowledgeMessages(m_sessionHandle, messageHandle));
@@ -560,11 +558,6 @@ namespace karabo {
                     MQ_SAFE_CALL(MQFreeMessage(messageHandle));
 
                     return true;
-                } else if (MQStatusIsError(status)) {
-                    MQString tmp = MQGetStatusString(status);
-                    std::string errorString(tmp);
-                    MQFreeString(tmp);
-                    std::cout << "ERROR: " << errorString << std::endl;
                 }
             } catch (const Exception& e) {
                 m_signalError(shared_from_this(), e.userFriendlyMsg());

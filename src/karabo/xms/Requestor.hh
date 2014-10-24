@@ -50,32 +50,82 @@ namespace karabo {
 
             Requestor& setResponder(const std::string& instanceId, const std::string& responseFunction);
 
-            Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction) {
+            Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction) {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash());
                 return *this;
             }
 
             template <class A1>
-            Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) {
+            Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1) {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1));
                 return *this;
             }
 
             template <class A1, class A2>
-            Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
+            Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));
                 return *this;
             }
 
             template <class A1, class A2, class A3>
-            Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
+            Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
                 return *this;
             }
 
             template <class A1, class A2, class A3, class A4>
-            Requestor& call(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+            Requestor& request(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
+                return *this;
+            }
+            
+            Requestor& requestNoWait(
+            const std::string& requestSlotInstanceId, 
+            const std::string& requestSlotFunction,
+            const std::string replySlotInstanceId, 
+            const std::string& replySlotFunction) {
+                sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash());
+                return *this;
+            }
+
+            template <class A1>
+            Requestor& requestNoWait(
+            const std::string& requestSlotInstanceId, 
+            const std::string& requestSlotFunction,
+            const std::string replySlotInstanceId, 
+            const std::string& replySlotFunction, 
+            const A1& a1) {
+                sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1));
+                return *this;
+            }
+
+            template <class A1, class A2>
+            Requestor& requestNoWait(
+            const std::string& requestSlotInstanceId, 
+            const std::string& requestSlotFunction,
+            const std::string replySlotInstanceId, 
+            const std::string& replySlotFunction,
+            const A1& a1, const A2& a2) {
+                sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2));
+                return *this;
+            }
+
+            template <class A1, class A2, class A3>
+            Requestor& requestNoWait(  
+            const std::string& requestSlotInstanceId, 
+            const std::string& requestSlotFunction,
+            const std::string replySlotInstanceId, 
+            const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3) {
+                sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
+                return *this;
+            }
+
+            template <class A1, class A2, class A3, class A4>
+            Requestor& requestNoWait( const std::string& requestSlotInstanceId, 
+            const std::string& requestSlotFunction,
+            const std::string replySlotInstanceId, 
+            const std::string& replySlotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+                sendRequest(prepareHeaderNoWait(requestSlotInstanceId, requestSlotFunction, replySlotInstanceId, replySlotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 return *this;
             }
 
@@ -168,6 +218,9 @@ namespace karabo {
         protected: // functions
 
             karabo::util::Hash prepareHeader(const std::string& slotInstanceId, const std::string& slotFunction);
+            
+            karabo::util::Hash prepareHeaderNoWait(const std::string& requestSlotInstanceId, const std::string& requestSlotFunction,
+            const std::string& replySlotInstanceId, const std::string& replySlotFunction);
 
             void registerRequest();
 

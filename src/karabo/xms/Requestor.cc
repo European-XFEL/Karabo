@@ -43,6 +43,26 @@ namespace karabo {
             header.set("userName", m_signalSlotable->getUserName());
             return header;
         }
+        
+        
+        karabo::util::Hash Requestor::prepareHeaderNoWait(const std::string& requestSlotInstanceId, 
+                const std::string& requestSlotFunction, 
+                const std::string& replySlotInstanceId, 
+                const std::string& replySlotFunction) {
+            
+            karabo::util::Hash header;
+            header.set("replyInstanceIds", "|" + replySlotInstanceId + "|");
+            header.set("replyFunctions", "|" + replySlotInstanceId + ":" + replySlotFunction + "|");
+            header.set("signalInstanceId", m_signalSlotable->getInstanceId());
+            header.set("signalFunction", "__requestNoWait__");
+            header.set("slotInstanceIds", "|" + requestSlotInstanceId + "|");
+            header.set("slotFunctions", "|" + requestSlotInstanceId + ":" + requestSlotFunction + "|");
+            header.set("hostName", boost::asio::ip::host_name());
+            header.set("userName", m_signalSlotable->getUserName());
+            return header;
+
+        }
+
 
         void Requestor::registerRequest() {
             if (m_isRequested) throw KARABO_SIGNALSLOT_EXCEPTION("You have to receive an answer before you can send a new request");

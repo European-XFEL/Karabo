@@ -87,7 +87,7 @@ namespace karabo {
             INT32_ELEMENT(expected).key("heartbeatInterval")
                     .displayedName("Heartbeat interval")
                     .description("The heartbeat interval")
-                    .assignmentOptional().defaultValue(20)
+                    .assignmentOptional().defaultValue(10)
                     .adminAccess()
                     .commit();
 
@@ -659,10 +659,10 @@ namespace karabo {
 
         void DeviceServer::slotGetClassSchema(const std::string& classId) {
             Schema schema = BaseDevice::getSchema(classId);
-            std::string senderId = getSenderInfo("slotGetClassSchema")->getInstanceIdOfSender();
+            //std::string senderId = getSenderInfo("slotGetClassSchema")->getInstanceIdOfSender();
             // TODO One could ship also the to be called slot, to make things more generic
-            call(senderId, "slotClassSchema", schema, classId, this->getInstanceId());
-            reply(schema);
+            //call(senderId, "slotClassSchema", schema, classId, this->getInstanceId());
+            reply(schema, classId, this->getInstanceId());
         }
 
 

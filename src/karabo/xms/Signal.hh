@@ -34,7 +34,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(Signal, "Signal", "1.0")
 
-            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction);
+            Signal(const SignalSlotable* signalSlotable, const karabo::net::BrokerChannel::Pointer& channel, const std::string& signalInstanceId, const std::string& signalFunction, const int priority = 4);
 
             virtual ~Signal() {
             }
@@ -92,6 +92,7 @@ namespace karabo {
             std::string m_registeredSlotInstanceIdsString;
             size_t m_nRegisteredSlots;
             std::map<std::string, std::set<std::string> > m_registeredSlots;
+            int m_priority;
         };
 
     } // namespace xms
