@@ -174,7 +174,7 @@ namespace karabo {
                 INT32_ELEMENT(expected).key("heartbeatInterval")
                         .displayedName("Heartbeat interval")
                         .description("The heartbeat interval")
-                        .assignmentOptional().defaultValue(20)
+                        .assignmentOptional().defaultValue(120)
                         .adminAccess()
                         .commit();
                 
@@ -685,10 +685,6 @@ namespace karabo {
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
                 
-                std::cout << "######## INTERVAL: " << this->get<int>("heartbeatInterval") << std::endl;
-                
-                
-
                 boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, this->get<int>("nThreads")));
 
                 // Give the broker communication some time to come up
@@ -753,9 +749,24 @@ namespace karabo {
             }
 
             void slotGetConfiguration() {
-                std::string senderId = this->getSenderInfo("slotGetConfiguration")->getInstanceIdOfSender();
-                call(senderId, "slotChanged", m_parameters, m_deviceId);
-                reply(m_parameters);
+                //std::string senderId = this->getSenderInfo("slotGetConfiguration")->getInstanceIdOfSender();
+                //call(senderId, "slotChanged", m_parameters, m_deviceId);
+                reply(m_parameters, m_deviceId);
+            }
+            
+             void slotGetSchema(bool onlyCurrentState) {
+
+                //std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
+
+                if (onlyCurrentState) {
+                    const std::string& currentState = get<std::string > ("state");
+                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);
+                    //call(senderId, "slotSchemaUpdated", schema, m_deviceId);
+                    reply(schema, m_deviceId);
+                } else {
+                    //call(senderId, "slotSchemaUpdated", m_fullSchema, m_deviceId);
+                    reply(m_fullSchema, m_deviceId);
+                }
             }
 
             void slotReconfigure(const karabo::util::Hash& newConfiguration) {
@@ -801,22 +812,7 @@ namespace karabo {
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 emit("signalChanged", reconfiguration, getInstanceId());
                 this->postReconfigure();
-            }
-
-            void slotGetSchema(bool onlyCurrentState) {
-
-                std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
-
-                if (onlyCurrentState) {
-                    const std::string& currentState = get<std::string > ("state");
-                    const karabo::util::Schema& schema = getStateDependentSchema(currentState);
-                    call(senderId, "slotSchemaUpdated", schema, m_deviceId);
-                    reply(schema);
-                } else {
-                    call(senderId, "slotSchemaUpdated", m_fullSchema, m_deviceId);
-                    reply(m_fullSchema);
-                }
-            }
+            }           
 
             void slotKillDevice() {
                 // It is important to know who gave us the kill signal
