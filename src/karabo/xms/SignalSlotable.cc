@@ -278,7 +278,8 @@ namespace karabo {
         bool SignalSlotable::tryToPopEvent(Event& event) {
             boost::mutex::scoped_lock lock(m_eventQueueMutex);
             if (!m_eventQueue.empty()) {
-                event = m_eventQueue.front();
+                //event = m_eventQueue.front();    // usual queue
+                event = m_eventQueue.top();        // priority queue
                 m_eventQueue.pop();
                 return true;
             }
@@ -337,7 +338,7 @@ namespace karabo {
                                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getGlobalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
+                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": ***** Now calling global " << slotFunction << " MQPriority: " << int(header.get<signed char>("MQPriority"));
                                         // This will synchronously call back all registered slot functions
                                         slot->callRegisteredSlotFunctions(header, body);
                                         // In the body of the slot callback the user may have placed a reply
@@ -352,7 +353,7 @@ namespace karabo {
                                     KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getLocalSlot(slotFunction);
                                     if (slot) {
-                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
+                                        KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": ***** Now calling " << slotFunction << " MQPriority: " << int(header.get<signed char>("MQPriority"));
                                         slot->callRegisteredSlotFunctions(header, body);
                                         sendPotentialReply(header);
                                     } else {
@@ -384,7 +385,7 @@ namespace karabo {
                     replyHeader.set("signalInstanceId", m_instanceId);
                     replyHeader.set("signalFunction", "__reply__");
                     replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
-                    m_producerChannel->write(replyHeader, it->second, 9);
+                    m_producerChannel->write(replyHeader, it->second);
                 }
                 m_replies.erase(it);
             }
