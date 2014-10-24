@@ -75,7 +75,7 @@ namespace karabo {
 
         void DataLogger::okStateOnEntry() {
             // stop "age" thread to avoid disconnection
-            remote().setAgeing(false);
+            //remote().setAgeing(false);
 
             m_user = "."; //TODO:  Define proper user running a device. The dot is unknown user?
             m_pendingLogin = false;
@@ -102,14 +102,16 @@ namespace karabo {
         void DataLogger::refreshDeviceInformation() {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "refreshDeviceInformation " << m_deviceToBeLogged;
-                Schema schema = remote().getDeviceSchemaNoWait(m_deviceToBeLogged);
-                Hash hash = remote().getConfigurationNoWait(m_deviceToBeLogged);
-
-                // call slotSchemaUpdated updated by hand
-                if (!schema.empty()) slotSchemaUpdated(schema, m_deviceToBeLogged);
-
-                // call slotChanged by hand
-                if (!hash.empty()) slotChanged(hash, m_deviceToBeLogged);
+                requestNoWait(m_deviceToBeLogged, "slotGetSchema", "", "slotSchemaUpdated", false);
+                requestNoWait(m_deviceToBeLogged, "slotGetConfiguration", "", "slotChanged");
+//                Schema schema = remote().getDeviceSchemaNoWait(m_deviceToBeLogged);
+//                Hash hash = remote().getConfigurationNoWait(m_deviceToBeLogged);
+//
+//                // call slotSchemaUpdated updated by hand
+//                if (!schema.empty()) slotSchemaUpdated(schema, m_deviceToBeLogged);
+//
+//                // call slotChanged by hand
+//                if (!hash.empty()) slotChanged(hash, m_deviceToBeLogged);
 
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_INIT_EXCEPTION("Could not create new entry for " + m_deviceToBeLogged));
