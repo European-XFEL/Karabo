@@ -84,6 +84,20 @@ class Project(object):
             self.configurations[deviceId] = [configuration]
 
 
+    def removeConfiguration(self, deviceId, configuration):
+        """
+        Remove the ProjectConfiguration from the configurations dictionary.
+        
+        If the list of device configurations just has the given configuration,
+        the complete entry is removed.
+        """
+        if configuration in self.configurations[deviceId]:
+            if len(self.configurations[deviceId]) == 1:
+                del self.configurations[deviceId]
+            else:
+                self.configurations[deviceId].remove(configuration)
+
+
     def addResource(self, category, data):
         """add the data into the resources of given category
 
