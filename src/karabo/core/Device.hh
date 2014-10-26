@@ -75,6 +75,9 @@ namespace karabo {
             mutable boost::mutex m_stateDependendSchemaMutex;
 
             mutable boost::mutex m_objectStateChangeMutex;
+            
+            // Regular expression for error detection in state word
+            boost::regex m_errorRegex;
 
             // progressBar related
             int m_progressMin;
@@ -196,7 +199,7 @@ namespace karabo {
                 FSM::expectedParameters(expected);
             }
 
-            Device(const karabo::util::Hash& configuration) {
+            Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase) {
 
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
@@ -573,9 +576,8 @@ namespace karabo {
             virtual void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
-                    set("state", currentState);
-                    static const boost::regex e(".*error.*", boost::regex::icase);
-                    if (boost::regex_match(currentState, e)) {
+                    set("state", currentState);                    
+                    if (boost::regex_match(currentState, m_errorRegex)) {
                         updateInstanceInfo(karabo::util::Hash("status", "error"));
                     } else {
                         // Reset the error status
