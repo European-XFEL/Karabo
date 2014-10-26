@@ -111,7 +111,8 @@ namespace karabo {
                     return lhs.first->get<signed char>("MQPriority") < rhs.first->get<signed char>("MQPriority");
                 }
             };
-            std::priority_queue< Event, std::vector<Event>, CompareEventPriority > m_eventQueue;
+            //std::priority_queue< Event, std::vector<Event>, CompareEventPriority > m_eventQueue;
+            std::deque<Event> m_eventQueue;
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
             boost::thread_group m_eventLoopThreads;
@@ -917,7 +918,9 @@ namespace karabo {
 
             void stopBrokerMessageConsumption();
 
-            void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const boost::shared_ptr<karabo::util::Hash>& body, const boost::shared_ptr<karabo::util::Hash>& header);
+            void injectEvent(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
+            
+            void injectHeartbeat(karabo::net::BrokerChannel::Pointer /*channel*/, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body);
 
             bool eventQueueIsEmpty();
 
