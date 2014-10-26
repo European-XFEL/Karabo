@@ -18,6 +18,7 @@
 
 #include <karabo/webAuth/Authenticator.hh>
 #include <boost/date_time/time_duration.hpp>
+#include <bits/stl_deque.h>
 
 #include "SignalSlotable.hh"
 #include "karabo/util/Version.hh"
@@ -140,11 +141,21 @@ namespace karabo {
             } else {
                 {
                     boost::mutex::scoped_lock lock(m_eventQueueMutex);
-                    m_eventQueue.push(std::make_pair(header, body));
+                    m_eventQueue.push_back(std::make_pair(header, body));
                 }
                 m_hasNewEvent.notify_one();
             }
         }
+        
+        
+        void SignalSlotable::injectHeartbeat(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
+            {
+                boost::mutex::scoped_lock lock(m_eventQueueMutex);
+                m_eventQueue.push_front(std::make_pair(header, body));
+            }
+            m_hasNewEvent.notify_one();
+        }
+
 
 
         void SignalSlotable::runEventLoop(int heartbeatInterval, const karabo::util::Hash& instanceInfo, int nThreads) {
@@ -258,8 +269,9 @@ namespace karabo {
             m_consumerChannel->setFilter(selector);
             m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
             
+            selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%'";
             m_heartbeatConsumerChannel->setFilter(selector);
-            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
+            m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
         }
 
 
@@ -278,9 +290,9 @@ namespace karabo {
         bool SignalSlotable::tryToPopEvent(Event& event) {
             boost::mutex::scoped_lock lock(m_eventQueueMutex);
             if (!m_eventQueue.empty()) {
-                //event = m_eventQueue.front();    // usual queue
-                event = m_eventQueue.top();        // priority queue
-                m_eventQueue.pop();
+                event = m_eventQueue.front();    // usual queue
+                //event = m_eventQueue.top();        // priority queue
+                m_eventQueue.pop_front();
                 return true;
             }
             return false;
