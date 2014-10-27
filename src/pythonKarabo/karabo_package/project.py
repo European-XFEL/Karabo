@@ -20,6 +20,7 @@ import hashlib
 import os.path
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
+from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
@@ -48,6 +49,7 @@ class Project(object):
 
         self.version = 1
         self.filename = filename
+        self.uuid = str(uuid4())
 
         # List of devices
         self.devices = []
@@ -151,6 +153,8 @@ class Project(object):
             projectConfig = XMLParser().read(data)
 
             self.version = projectConfig[self.PROJECT_KEY, "version"]
+            self.uuid = projectConfig[self.PROJECT_KEY, ...].get("uuid",
+                                                                 self.uuid)
 
             self.parse(projectConfig[self.PROJECT_KEY], zf)
 
