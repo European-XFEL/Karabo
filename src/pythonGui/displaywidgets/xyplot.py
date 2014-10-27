@@ -26,7 +26,7 @@ class Activate(ToggleTool):
         plot.replot()
 
 
-class DisplayTrendline(DisplayWidget):
+class XYPlot(DisplayWidget):
     category = "Digit"
     alias = "XY-Plot"
 
