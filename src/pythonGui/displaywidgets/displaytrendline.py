@@ -70,6 +70,8 @@ class Curve(QObject):
 
     @pyqtSlot(object, object)
     def onHistoricData(self, box, data):
+        if not data:
+            return
         l = [(e['v'], Timestamp.fromHashAttributes(e.getAttributes('v')).
              toTimestamp()) for e in data]
         pos = self.data[:self.fill, 1].searchsorted(l[-1][1])
