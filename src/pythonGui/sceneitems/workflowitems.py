@@ -12,9 +12,10 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 
-from PyQt4.QtCore import (QPoint, QRect, QSize, Qt)
+from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
-                         QPainter, QPainterPath, QPolygon, QWidget)
+                         QPainter, QPainterPath, QPolygon, QPolygonF,
+                         QWidget)
 
 import math
 
@@ -41,22 +42,20 @@ class Item(QWidget, Loadable):
 
     def mousePressEvent(self, proxy, event):
         print()
-        pos = proxy.pos()
-        rect = QRect(pos.x(), pos.y(), self.width(), self.height())
-        center = rect.center()
-        currentPos = event.pos()
         
-        # TODO: what happens, if we have more than one in/output channels?
-        if currentPos.x() < center.x():
-            print("input...")
-            # TODO: return inputChannel position
-        else:
-            print("output...")
-            # TODO: return outputChannel position
-                    
-        print("Item.mousePressEvent", self.inputChannels, self.outputChannels)
+        for input in self.inputChannels:
+            channelHit = input.hit(proxy, event.pos())
+            print("=== input", channelHit)
+            #if channelHit:
+            #    return input
+        
+        for output in self.outputChannels:
+            channelHit = output.hit(proxy, event.pos())
+            print("=== output", channelHit)
+            #if channelHit:
+            #    return output
 
-        #QWidget.mousePressEvent(self, event)
+        return None
 
 
     def paintEvent(self, event):
@@ -78,20 +77,7 @@ class Item(QWidget, Loadable):
         
         self.paintInputChannels(painter)
         self.paintOutputChannels(painter)
-        
-        #pen = painter.pen()
-        #if self.isSelected():
-        #    pen.setStyle(Qt.DotLine)
-        #    pen.setWidth(2)
-        
-        #painter.setFont(self.font)
-        #painter.setPen(pen)
-        #painter.setBrush(QColor(224,240,255)) # light blue
-        #rect = self._outlineRect()
-        #print "rect", rect
-        #painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
-        #painter.setPen(self.textColor)
-        #painter.drawText(rect, Qt.AlignCenter, self.displayText)
+
         painter.end()
 
 
@@ -268,30 +254,37 @@ class WorkflowChannel(QWidget):
         self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
+        self.start_pos = None
+        self.end_pos = None
 
 
     def draw(self, start_pos, painter):
         self.start_pos = start_pos
-        painter.setBrush(QBrush(Qt.white))
-        
         if self.type == Item.INPUT:
-            end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
+            self.end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
         elif self.type == Item.OUTPUT:
-            end_pos = QPoint(self.start_pos.x() + Item.CHANNEL_LENGTH, self.start_pos.y())
-            
-        painter.drawLine(self.start_pos, end_pos)
-
+            self.end_pos = QPoint(self.start_pos.x() + Item.CHANNEL_LENGTH, self.start_pos.y())
+        
+        # Just for help - draw bounding rectangle
+        painter.drawRect(self.boundingRect())
+        
+        painter.drawLine(self.start_pos, self.end_pos)
+        
         self.painterPath = QPainterPath()
+        #self.painterPath.addPolygon(QPolygonF([QPointF(self.start_pos), QPointF(self.end_pos)]))
+        
         if self.box.current == "BinaryFile":
-            self._drawInputShape(self.painterPath, end_pos)
+            self._drawInputShape(self.painterPath, self.end_pos)
         elif self.box.current == "Hdf5File":
-            self._drawRectShape(self.painterPath, QPoint(end_pos.x() - Item.WIDTH, end_pos.y()))
+            self._drawRectShape(self.painterPath, QPoint(self.end_pos.x() - Item.WIDTH, self.end_pos.y()))
         elif self.box.current == "Network":
-            self._drawCircleShape(self.painterPath, end_pos)
+            self._drawCircleShape(self.painterPath, self.end_pos)
         elif self.box.current == "TextFile":
-            self._drawDiamondShape(self.painterPath, QPoint(end_pos.x() + Item.WIDTH, end_pos.y()))
+            self._drawDiamondShape(self.painterPath, QPoint(self.end_pos.x() + Item.WIDTH, self.end_pos.y()))
         else:
-            self._drawCircleShape(self.painterPath, end_pos)
+            self._drawCircleShape(self.painterPath, self.end_pos)
+        
+        painter.setBrush(QBrush(Qt.white))
         painter.drawPath(self.painterPath)
 
 
@@ -304,12 +297,12 @@ class WorkflowChannel(QWidget):
 
 
     def _drawDiamondShape(self, painterPath, point):
-        points = [point,
-                  QPoint(point.x() - Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y()),
-                  QPoint(point.x() - Item.WIDTH, point.y() + Item.WIDTH)]
+        points = [QPointF(point),
+                  QPointF(point.x() - Item.WIDTH, point.y() - Item.WIDTH),
+                  QPointF(point.x() - 2 * Item.WIDTH, point.y()),
+                  QPointF(point.x() - Item.WIDTH, point.y() + Item.WIDTH)]
         
-        painterPath.addPolygon(QPolygon(points))
+        painterPath.addPolygon(QPolygonF(points))
 
 
     def _drawOutputShape(self, painterPath, point):
@@ -322,12 +315,58 @@ class WorkflowChannel(QWidget):
 
 
     def _drawInputShape(self, painterPath, point):
-        point = QPoint(point.x() + Item.WIDTH, point.y())
+        point = QPointF(point.x() + Item.WIDTH, point.y())
         points = [point,
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+                  QPointF(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPointF(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
         
-        painterPath.addPolygon(QPolygon(points))
+        painterPath.addPolygon(QPolygonF(points))
+
+
+    def boundingRect(self):
+        if self.painterPath is None:
+            return QRect()
+
+        pathRect = self.painterPath.boundingRect()
+        topLeft = QPoint(self.start_pos.x(), pathRect.y())
+
+        width = self.end_pos.x() - self.start_pos.x()
+        
+        if self.type == Item.INPUT:
+            delta = -Item.WIDTH
+        elif self.type == Item.OUTPUT:
+            delta = Item.WIDTH
+        
+        rect = QRect(topLeft, QSize(width + delta, pathRect.height()))
+        return rect
+
+
+    def hit(self, proxy, pos):
+        """
+        proxy - the proxy this channel belongs to
+        pos - the mouse position
+        """
+        
+        rect = self.boundingRect()
+        print()
+        print("++++ pos", pos.x(), pos.y())
+        
+        localPos = proxy.mapFromParent(pos)
+        print("++++ localPos", localPos.x(), localPos.y())
+        
+        topLeft = rect.topLeft()
+        globalTopLeft = proxy.mapToParent(topLeft)
+        print(":::", topLeft, globalTopLeft)
+        
+        bottomRight = rect.bottomRight()
+        globalBottomRight = proxy.mapToParent(bottomRight)
+        print(":::", bottomRight, globalBottomRight)
+        
+        print()
+        globalRect = QRect(globalTopLeft, globalBottomRight)
+        print("localRect", rect)
+        print("globalRect", globalRect, globalRect.contains(pos))
+        return globalRect.contains(pos)
 
 
 class WorkflowConnection(QWidget):
@@ -352,6 +391,9 @@ class WorkflowConnection(QWidget):
 
 
     def mouseReleaseEvent(self, parent, event):
+        if self.curve is None:
+            return
+        
         if self.start_pos.x() > self.end_pos.x():
             tmp = self.start_pos
             self.start_pos = self.end_pos
