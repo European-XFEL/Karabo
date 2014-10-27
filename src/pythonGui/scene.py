@@ -1063,7 +1063,11 @@ class Scene(QSvgWidget):
             proxy = self.ilayout.itemAtPosition(event.pos())
             if proxy is not None:
                 if isinstance(proxy, ProxyWidget):
-                    if isinstance(proxy.widget, Item):
+                    widget = proxy.widget
+                    if isinstance(widget, Item):
+                        # Check, if in/output channel was hit and return
+                        channel = widget.mousePressEvent(proxy, event)
+                        
                         # Create workflow connection item in scene
                         self.workflow_connection = WorkflowConnection(self)
                         self.workflow_connection.mousePressEvent(event)
