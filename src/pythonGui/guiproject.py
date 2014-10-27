@@ -308,6 +308,7 @@ class GuiProject(Project, QObject):
             # Create folder structure and save content
             projectConfig = Hash(self.PROJECT_KEY, projectConfig)
             projectConfig[self.PROJECT_KEY, "version"] = self.version
+            projectConfig[self.PROJECT_KEY, "uuid"] = self.uuid
             zf.writestr("{}.xml".format(Project.PROJECT_KEY),
                         XMLWriter().write(projectConfig))
 
