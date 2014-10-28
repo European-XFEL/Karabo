@@ -945,7 +945,7 @@ namespace karabo {
 
         void DeviceClient::setNoWait(const std::string& instanceId, const karabo::util::Hash& values) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-            stayConnected(instanceId);
+            //stayConnected(instanceId);
             m_signalSlotable.lock()->call(instanceId, "slotReconfigure", values);
         }
 
