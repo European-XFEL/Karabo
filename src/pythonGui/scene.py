@@ -1067,11 +1067,14 @@ class Scene(QSvgWidget):
                     if isinstance(widget, Item):
                         # Check, if in/output channel was hit and return
                         channel = widget.mousePressEvent(proxy, event)
-                        print("channel", channel)
-                        # Create workflow connection item in scene
-                        self.workflow_connection = WorkflowConnection(self)
-                        self.workflow_connection.mousePressEvent(event)
-            
+                        if channel is not None and channel.allowConnection():
+                            proxy.selected = False
+                            # Create workflow connection item in scene - only
+                            # for allowed connection (Network)
+                            self.workflow_connection = WorkflowConnection(self)
+                            self.workflow_connection.mousePressEvent(event)
+                            QWidget.mousePressEvent(self, event)
+                            return
             self.current_action.mousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())

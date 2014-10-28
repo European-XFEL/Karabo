@@ -249,7 +249,11 @@ class WorkflowGroupItem(Item):
 
 
 class WorkflowChannel(QWidget):
-
+    
+    BINARY_FILE = "BinaryFile"
+    HDF5_FILE = "Hdf5File"
+    NETWORK = "Network"
+    TEXT_FILE = "TextFile"
 
     def __init__(self, type, box, parent):
         super(WorkflowChannel, self).__init__(parent)
@@ -260,6 +264,7 @@ class WorkflowChannel(QWidget):
         self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
+        
         self.start_pos = QPoint(0, 0)
         if self.type == Item.INPUT:
             self.end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
@@ -272,21 +277,17 @@ class WorkflowChannel(QWidget):
 
     def draw(self, painter):
         painter.setBrush(QBrush(Qt.white))
-        # Just for help - draw bounding rectangle
-        painter.drawRect(self.boundingRect())
-        
+
         painter.drawLine(self.start_pos, self.end_pos)
         
         self.painterPath = QPainterPath()
-        #self.painterPath.addPolygon(QPolygonF([QPointF(self.start_pos), QPointF(self.end_pos)]))
-        
-        if self.box.current == "BinaryFile":
+        if self.box.current == WorkflowChannel.BINARY_FILE:
             self._drawInputShape(self.painterPath, self.end_pos)
-        elif self.box.current == "Hdf5File":
+        elif self.box.current == WorkflowChannel.HDF5_FILE:
             self._drawRectShape(self.painterPath, QPoint(self.end_pos.x() - Item.WIDTH, self.end_pos.y()))
-        elif self.box.current == "Network":
+        elif self.box.current == WorkflowChannel.NETWORK:
             self._drawCircleShape(self.painterPath, self.end_pos)
-        elif self.box.current == "TextFile":
+        elif self.box.current == WorkflowChannel.TEXT_FILE:
             self._drawDiamondShape(self.painterPath, QPoint(self.end_pos.x() + Item.WIDTH, self.end_pos.y()))
         else:
             self._drawCircleShape(self.painterPath, self.end_pos)
@@ -355,6 +356,10 @@ class WorkflowChannel(QWidget):
         rect = self.boundingRect()
         rect = self.transform.mapRect(rect)
         return rect.contains(pos)
+
+
+    def allowConnection(self):
+        return self.box.current == WorkflowChannel.NETWORK
 
 
 class WorkflowConnection(QWidget):
