@@ -41,19 +41,17 @@ class Item(QWidget, Loadable):
 
 
     def mousePressEvent(self, proxy, event):
-        print()
+        localPos = proxy.mapFromParent(event.pos())
         
         for input in self.inputChannels:
-            channelHit = input.hit(proxy, event.pos())
-            print("=== input", channelHit)
-            #if channelHit:
-            #    return input
+            channelHit = input.hit(localPos)
+            if channelHit:
+                return input
         
         for output in self.outputChannels:
-            channelHit = output.hit(proxy, event.pos())
-            print("=== output", channelHit)
-            #if channelHit:
-            #    return output
+            channelHit = output.hit(localPos)
+            if channelHit:
+                return output
 
         return None
 
@@ -90,8 +88,12 @@ class Item(QWidget, Loadable):
             if nbChannels > 1:
                 y -= (yDelta/2)
 
+            painter.save()
             start_point = QPoint(-rect.width()/2, y)
-            input.draw(start_point, painter)
+            painter.translate(start_point)
+            input.draw(painter)
+            input.transform = painter.transform()
+            painter.restore()
 
 
     def paintOutputChannels(self, painter):
@@ -103,8 +105,12 @@ class Item(QWidget, Loadable):
             if nbChannels > 1:
                 y -= (yDelta/2)
 
+            painter.save()
             start_point = QPoint(rect.width()/2, y)
-            output.draw(start_point, painter)
+            painter.translate(start_point)
+            output.draw(painter)
+            output.transform = painter.transform()
+            painter.restore()
 
 
     def outlineRect(self):
@@ -254,17 +260,18 @@ class WorkflowChannel(QWidget):
         self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
-        self.start_pos = None
-        self.end_pos = None
-
-
-    def draw(self, start_pos, painter):
-        self.start_pos = start_pos
+        self.start_pos = QPoint(0, 0)
         if self.type == Item.INPUT:
             self.end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
         elif self.type == Item.OUTPUT:
             self.end_pos = QPoint(self.start_pos.x() + Item.CHANNEL_LENGTH, self.start_pos.y())
-        
+
+        # Matrix of painter to draw this channel
+        self.transform = None
+
+
+    def draw(self, painter):
+        painter.setBrush(QBrush(Qt.white))
         # Just for help - draw bounding rectangle
         painter.drawRect(self.boundingRect())
         
@@ -284,7 +291,6 @@ class WorkflowChannel(QWidget):
         else:
             self._drawCircleShape(self.painterPath, self.end_pos)
         
-        painter.setBrush(QBrush(Qt.white))
         painter.drawPath(self.painterPath)
 
 
@@ -341,32 +347,14 @@ class WorkflowChannel(QWidget):
         return rect
 
 
-    def hit(self, proxy, pos):
+    def hit(self, pos):
         """
-        proxy - the proxy this channel belongs to
-        pos - the mouse position
+        pos - mapped local position.
+        return, whether this channel was hit or not.
         """
-        
         rect = self.boundingRect()
-        print()
-        print("++++ pos", pos.x(), pos.y())
-        
-        localPos = proxy.mapFromParent(pos)
-        print("++++ localPos", localPos.x(), localPos.y())
-        
-        topLeft = rect.topLeft()
-        globalTopLeft = proxy.mapToParent(topLeft)
-        print(":::", topLeft, globalTopLeft)
-        
-        bottomRight = rect.bottomRight()
-        globalBottomRight = proxy.mapToParent(bottomRight)
-        print(":::", bottomRight, globalBottomRight)
-        
-        print()
-        globalRect = QRect(globalTopLeft, globalBottomRight)
-        print("localRect", rect)
-        print("globalRect", globalRect, globalRect.contains(pos))
-        return globalRect.contains(pos)
+        rect = self.transform.mapRect(rect)
+        return rect.contains(pos)
 
 
 class WorkflowConnection(QWidget):
