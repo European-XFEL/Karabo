@@ -21,19 +21,22 @@ class Broker:
         self.deviceId = deviceId
         self.classId = classId
 
-    def call(self, signal, slots, targets, reply, args):
+    def call(self, signal, targets, reply, args):
         hash = Hash()
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
         p = openmq.Properties()
         p['signalFunction'] = signal
         p['signalInstanceId'] = self.deviceId
-        p['slotFunction'] = (b'|' + b'||'.join(
-            s if isinstance(s, bytes) else s.encode("utf8")
-            for s in slots) + b'|') if slots else b'__none__'
-        p['slotInstanceId'] = (b'|' + b'||'.join(
-            t if isinstance(t, bytes) else t.encode("utf8")
-            for t in targets) + b'|') if targets else b'__none__'
+        if targets:
+            p['slotInstanceIds'] = ('|' + '||'.join(t for t in targets) + '|'
+                                   ).encode("utf8")
+            p['slotFunctions'] = ('|' + '||'.join(
+                "{}:{}".format(k, ",".join(v)) for k, v in targets.items()) +
+                '|').encode("utf8")
+        else:
+            p['slotInstanceIds'] = b'__none__'
+            p['slotFunctions'] = b'__none__'
         if reply is not None:
             p['replyTo'] = reply
         p['hostname'] = "exflpcx18981"
@@ -45,15 +48,34 @@ class Broker:
         m.properties = p
         self.producer.send(m, 1, 4, 1000)
 
-    def emit(self, signal, slots, targets, *args):
-        self.call(signal, slots, targets, None, args)
+    def emit(self, signal, targets, *args):
+        self.call(signal, targets, None, args)
 
-    def reply(self, whom, *args):
+    def reply(self, replyTo, whom, *args):
         hash = Hash()
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
         p = openmq.Properties()
-        p['replyFrom'] = whom
+        p['replyFrom'] = replyTo
+        p['signalInstanceId'] = self.deviceId
+        p['signalFunction'] = "__reply__"
+        p['slotInstanceIds'] = b'|' + whom + b'|'
+        p['__format'] = 'Bin'
+        writer = BinaryWriter()
+        m = openmq.BytesMessage()
+        m.data = writer.write(hash)
+        m.properties = p
+        self.producer.send(m, 1, 4, 1000)
+
+    def replyNoWait(self, replyInstanceIds, replyFunctions, *args):
+        hash = Hash()
+        for i, a in enumerate(args):
+            hash['a{}'.format(i + 1)] = a
+        p = openmq.Properties()
+        p['signalInstanceId'] = self.deviceId
+        p['signalFunction'] = "__replyNoWait__"
+        p['slotInstanceIds'] = replyInstanceIds
+        p['slotFunctions'] = replyFunctions
         p['__format'] = 'Bin'
         writer = BinaryWriter()
         m = openmq.BytesMessage()
@@ -62,7 +84,7 @@ class Broker:
         self.producer.send(m, 1, 4, 1000)
 
     def connect(self, deviceId, signal, slot):
-        self.emit("call", ["slotConnectToSignal"], [deviceId], signal,
+        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
                   slot.__self__.deviceId, slot.__name__, 0)
 
     def registerSlot(self, x):
