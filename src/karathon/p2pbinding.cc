@@ -84,6 +84,10 @@ void exportp2p() {
                      "Register handler that will be called when the message is arrived.  Never blocks. The message will be represented as bytearray.")
                 .def("readAsyncHash", &ChannelWrap().readAsyncHash, (bp::arg("handler")),
                      "Register handler that will be called when the message is arrived.  Never blocks. The message will be represented as Hash.")
+                .def("readAsyncHashStr", &ChannelWrap().readAsyncHashStr, (bp::arg("handler")),
+                     "Register handler that will be called when the message is arrived.  Never blocks. The message will have a header as Hash and a body as bytearray.")
+                .def("readAsyncHashHash", &ChannelWrap().readAsyncHashHash, (bp::arg("handler")),
+                     "Register handler that will be called when the message is arrived.  Never blocks. The message will have a header and a body as two Hashes.")
                 .def("write", &ChannelWrap().write, (bp::arg("obj")),
                      "This method writes the object given in parameter list synchronously, i.e. blocks until the IO operation is completed.")
                 .def("write", &ChannelWrap().write2, (bp::arg("obj"), bp::arg("body")),
