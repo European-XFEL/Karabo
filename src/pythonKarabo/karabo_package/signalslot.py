@@ -61,20 +61,22 @@ class BoundSignal(object):
     def __init__(self, device, name, signal):
         self.device = device
         self.name = name
-        self.connected = []
+        self.connected = {}
         self.args = signal.args
 
     def connect(self, target, slot, dunno):
-        self.connected.append((target, slot, dunno))
+        self.connected.setdefault(target, set()).add(slot)
 
     def disconnect(self, target, slot):
-        self.connected = [(t, s, d) for t, s, d in self.connected
-                          if t != target or s != slot]
+        s = self.connected.get(target, None)
+        if s is not None:
+            s.discard(slot)
+            if not s:
+                del self.connected[target]
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
-        self.device._ss.emit(self.name, [s for t, s, d in self.connected],
-                             [t for t, s, d in self.connected], *args)
+        self.device._ss.emit(self.name, self.connected, *args)
 
 
 class Client(object):
@@ -179,10 +181,10 @@ class SignalSlotable(Configurable):
     def consume(self):
         self._ss.consumer = openmq.Consumer(
             self._ss.session, self._ss.destination,
-            "slotInstanceId LIKE '%|{}|%' OR replyFrom LIKE '{}-%'"
-            "OR slotInstanceId LIKE '%|*|%'".format(
+            "slotInstanceIds LIKE '%|{}|%' "
+            "OR slotInstanceIds LIKE '%|*|%'".format(
                 self.deviceId, self.deviceId), False)
-        self._ss.emit('call', ['slotInstanceNew'], ['*'],
+        self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         try:
             while self.running:
@@ -190,7 +192,7 @@ class SignalSlotable(Configurable):
                     (yield from get_event_loop().run_in_executor(
                         None, self._ss.consumer.receiveMessage))))
         finally:
-            self._ss.emit('call', ['slotInstanceGone'], ['*'],
+            self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
     def run(self):
@@ -228,36 +230,44 @@ class SignalSlotable(Configurable):
                 f.set_result(params)
             return
 
-        slots = message.properties['slotFunction']
-        #for k in message.properties:
-        #    print k, message.properties[k]
+        slots = (message.properties['slotFunctions'][1:-1]).decode(
+            "utf8").split('||')
+        slots = {k: v.split(",") for k, v in (s.split(":") for s in slots)}
+
         try:
             replyTo = message.properties['replyTo']
         except openmq.Error:
             replyTo = None
+        try:
+            replyInstanceIds = message.properties['replyInstanceIds']
+        except openmq.Error:
+            replyInstanceIds = None
 
         sender = message.properties['signalInstanceId']
-        for s in slots[1:-1].split(b'||'):
-            try:
-                slot = getattr(self, s.decode("utf8"), None)
-                if slot is None:
-                    if ("|{}|".format(self.deviceId).encode("ascii") in
-                            message.properties['slotInstanceId']):
-                        raise AttributeError
-                    else:
-                        return
+
+        try:
+            slots = [getattr(self, s) for s in slots.get(self.deviceId, [])
+                    ] + [getattr(self, s) for s in slots.get("*", [])
+                         if hasattr(self, s)]
+            for slot in slots:
                 reply = yield from slot(*params)
                 if not isinstance(reply, tuple):
                     reply = reply,
                 if hasattr(slot, "replySlot"):
-                    self._ss.emit('call', [slot.replySlot],
-                                  [message.properties['signalInstanceId']],
-                                  *reply)
-                if replyTo is not None:
-                    self._ss.reply(replyTo, *reply)
-            except Exception as e:
-                sys.excepthook(*sys.exc_info())
-                print("Slot={}".format(s.decode("utf8")))
+                    self._ss.emit(
+                        'call', {message.properties['signalInstanceId'].
+                                 decode("utf8"): [slot.replySlot]}, *reply)
+                if replyTo is not None and reply != (None,):
+                    self._ss.reply(replyTo,
+                                   message.properties['signalInstanceId'],
+                                   *reply)
+                if replyInstanceIds is not None:
+                    self._ss.replyNoWait(replyInstanceIds,
+                                         message.properties['replyFunctions'],
+                                         *reply)
+        except Exception as e:
+            sys.excepthook(*sys.exc_info())
+            print("Slot={}".format(slots))
 
     def stopEventLoop(self):
         self.running = False
@@ -278,7 +288,7 @@ class SignalSlotable(Configurable):
 
     def updateInstanceInfo(self, info):
         self.info.merge(info)
-        self._ss.emit('call', ['slotInstanceUpdated'], ['*'],
+        self._ss.emit('call', {'*': ['slotInstanceUpdated']},
                       self.deviceId, self.info)
 
     def setValue(self, attr, value):
