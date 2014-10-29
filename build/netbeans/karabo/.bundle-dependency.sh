@@ -16,6 +16,16 @@ safeRunCommand() {
 
 originalPwd=$(pwd)
 
+# check if arguments are passed or not
+if [ $# -eq 0]; then
+    echo "No arguments passed"
+else
+    echo "Arguments found"
+    CND_DIST=$1
+    CONF=$2
+    PLATFORM=$3
+fi
+
 # Make sure the script runs in the correct directory
 #scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
 #cd ${scriptDir}
@@ -88,7 +98,7 @@ DEPNAME=`basename $originalPwd`
 PACKAGENAME=$DEPNAME-$DEPVERSION-$KARABOVERSION
 EXTRACT_SCRIPT=$KARABO/bin/.extract-dependency.sh
 INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
-DISTDIR=$originalPwd/dist
+DISTDIR=$originalPwd/localdist
 PACKAGEDIR=$originalPwd/package
 
 # Always clean the bundle
