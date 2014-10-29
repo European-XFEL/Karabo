@@ -38,9 +38,13 @@ class Item(QWidget, Loadable):
         self.outputChannels = [] # list of WorkflowChannels of type output
         
         self.descriptor = None
+        
+        # Position of ProxyWidget for later transformation when drawing connections
+        self.proxyPos = None
 
 
     def mousePressEvent(self, proxy, event):
+        self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
         
         for input in self.inputChannels:
@@ -362,30 +366,45 @@ class WorkflowChannel(QWidget):
         return self.box.current == WorkflowChannel.NETWORK
 
 
+    def mappedPos(self):
+        point = self.transform.map(self.end_pos)
+        point += self.parent().proxyPos
+        return point
+
+
 class WorkflowConnection(QWidget):
 
 
     def __init__(self, parent):
         super(WorkflowConnection, self).__init__(parent)
         
+        # Describe the in/output channels this connection belongs to
+        self.start_channel = None
+        self.end_channel = None
+        
         self.start_pos = None
         self.end_pos = None
         self.curve = None
 
 
-    def mousePressEvent(self, event):
-        self.start_pos = event.pos()
+    def mousePressEvent(self, channel, event):
+        self.start_channel = channel
+        self.start_pos = channel.mappedPos()
         self.end_pos = self.start_pos
 
 
-    def mouseMoveEvent(self, parent, event):
+    def mouseMoveEvent(self, event):
         self.end_pos = event.pos()
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, event):
+    def mouseReleaseEvent(self, parent, channel, event):
         if self.curve is None:
             return
+        
+        self.end_channel = channel
+        # Overwrite
+        self.end_pos = channel.mappedPos()
         
         if self.start_pos.x() > self.end_pos.x():
             tmp = self.start_pos
