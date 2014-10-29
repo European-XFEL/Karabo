@@ -1054,27 +1054,35 @@ class Scene(QSvgWidget):
             c.selected = False
 
 
+    def workflowChannelHit(self, event):
+        """
+        Returns ProxyWidget and corresponding WorkflowItem, if there are any at
+        the given position.
+        """
+        proxy = self.ilayout.itemAtPosition(event.pos())
+        if proxy is not None:
+            if isinstance(proxy, ProxyWidget):
+                workflowItem = proxy.widget
+                # Check for WorkflowItem...
+                if isinstance(workflowItem, Item):
+                    return workflowItem.mousePressEvent(proxy, event), proxy
+        return None, None
+
+
     def mousePressEvent(self, event):
         if not self.designMode:
             return
             
         if event.button() == Qt.LeftButton:
-            # Check for WorkflowItems...
-            proxy = self.ilayout.itemAtPosition(event.pos())
-            if proxy is not None:
-                if isinstance(proxy, ProxyWidget):
-                    widget = proxy.widget
-                    if isinstance(widget, Item):
-                        # Check, if in/output channel was hit and return
-                        channel = widget.mousePressEvent(proxy, event)
-                        if channel is not None and channel.allowConnection():
-                            proxy.selected = False
-                            # Create workflow connection item in scene - only
-                            # for allowed connection (Network)
-                            self.workflow_connection = WorkflowConnection(self)
-                            self.workflow_connection.mousePressEvent(event)
-                            QWidget.mousePressEvent(self, event)
-                            return
+            channel, proxy = self.workflowChannelHit(event)
+            if channel is not None and channel.allowConnection():
+                proxy.selected = False
+                # Create workflow connection item in scene - only for allowed
+                # connection type (Network)
+                self.workflow_connection = WorkflowConnection(self)
+                self.workflow_connection.mousePressEvent(channel, event)
+                QWidget.mousePressEvent(self, event)
+                return
             self.current_action.mousePressEvent(self, event)
         else:
             child = self.inner.childAt(event.pos())
@@ -1098,14 +1106,16 @@ class Scene(QSvgWidget):
 
     def mouseMoveEvent(self, event):
         if self.workflow_connection is not None:
-            self.workflow_connection.mouseMoveEvent(self, event)
+            self.workflow_connection.mouseMoveEvent(event)
         self.current_action.mouseMoveEvent(self, event)
         QWidget.mouseMoveEvent(self, event)
 
 
     def mouseReleaseEvent(self, event):
         if self.workflow_connection is not None:
-            self.workflow_connection.mouseReleaseEvent(self, event)
+            channel, _ = self.workflowChannelHit(event)
+            if channel is not None and channel.allowConnection():
+                self.workflow_connection.mouseReleaseEvent(self, channel, event)
         self.workflow_connection = None
         
         self.current_action.mouseReleaseEvent(self, event)
