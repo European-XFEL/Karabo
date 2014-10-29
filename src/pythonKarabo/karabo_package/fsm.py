@@ -45,9 +45,9 @@ def KARABO_FSM_EVENT(self, event_name, method_name):
     inner.__name__ = str(method_name)
     slot = getattr(type(self), method_name, None)
     if slot is not None and isinstance(slot, Slot):
-        slot.method = inner
+        slot(inner)
     else:
-        setattr(self.__class__, inner.__name__, inner)
+        setattr(type(self), inner.__name__, coroutine(inner))
     _events_.append(event_name)
 
 KARABO_FSM_EVENT0 = KARABO_FSM_EVENT1 = KARABO_FSM_EVENT2 = \
