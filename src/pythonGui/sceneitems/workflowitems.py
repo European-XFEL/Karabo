@@ -11,6 +11,7 @@ from const import ns_karabo
 from layouts import ProxyWidget
 import manager
 from registry import Loadable
+from schema import Dummy
 
 from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
@@ -446,6 +447,9 @@ class WorkflowConnection(QWidget):
         proxy.show()
         parent.ilayout.add_item(proxy)
         parent.setModified()
+        
+        # Reconfigure
+        self.updateChannelBox()
 
 
     def draw(self, painter):
@@ -480,4 +484,28 @@ class WorkflowConnection(QWidget):
 
     def curveHeight(self):
         return abs(self.end_pos.y() - self.start_pos.y())
+
+
+    def updateChannelBox(self):
+        """
+        This function is called once a connection is completed and start/end channels
+        are set. Then the box of the input channel needs to be notified about
+        the connection to the output channel.
+        """
+        # Add output channel to input channel box ("connectedOutputChannels")
+        inputBox = self.end_channel.box
+        value = inputBox.value
+        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
+        inputChannelBox = inputBox.configuration.getBox(path)
+        value = inputChannelBox.value
+        
+        outputBox = self.start_channel.box
+        newOutputChannel = "{}:{}".format(outputBox.configuration.id, '.'.join(outputBox.path))
+        if isinstance(value, Dummy):
+            value = [newOutputChannel]
+        else:
+            value.append(newOutputChannel)
+        
+        # Update box configuration
+        inputChannelBox.set(value, None)
 
