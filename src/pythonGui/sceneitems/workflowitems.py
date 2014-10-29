@@ -67,11 +67,8 @@ class Item(QWidget, Loadable):
         
         #fm = QFontMetrics(painter.font())
         #textWidth = fm.width(self.displayText)
-        
-        w = self.width()
-        h = self.height()
 
-        painter.translate(QPoint(w/2, h/2))
+        painter.translate(QPoint(self.width()/2, self.height()/2))
         rect = self.outlineRect()
         painter.setBrush(QColor(224,240,255)) # light blue
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
@@ -286,7 +283,7 @@ class WorkflowChannel(QWidget):
         
         self.painterPath = QPainterPath()
         if self.box.current == WorkflowChannel.BINARY_FILE:
-            self._drawInputShape(self.painterPath, self.end_pos)
+            self._drawTriangleShape(self.painterPath, self.end_pos)
         elif self.box.current == WorkflowChannel.HDF5_FILE:
             self._drawRectShape(self.painterPath, QPoint(self.end_pos.x() - Item.WIDTH, self.end_pos.y()))
         elif self.box.current == WorkflowChannel.NETWORK:
@@ -294,7 +291,7 @@ class WorkflowChannel(QWidget):
         elif self.box.current == WorkflowChannel.TEXT_FILE:
             self._drawDiamondShape(self.painterPath, QPoint(self.end_pos.x() + Item.WIDTH, self.end_pos.y()))
         else:
-            self._drawCircleShape(self.painterPath, self.end_pos)
+            self._drawTriangleShape(self.painterPath, self.end_pos)
         
         painter.drawPath(self.painterPath)
 
@@ -316,13 +313,11 @@ class WorkflowChannel(QWidget):
         painterPath.addPolygon(QPolygonF(points))
 
 
-    def _drawOutputShape(self, painterPath, point):
-        point = QPoint(point.x() - Item.WIDTH, point.y())
-        points = [point,
-                  QPoint(point.x() + 2 * Item.WIDTH, point.y() - Item.WIDTH),
-                  QPoint(point.x() + 2 * Item.WIDTH, point.y() + Item.WIDTH)]
-        
-        painterPath.addPolygon(QPolygon(points))
+    def _drawTriangleShape(self, painterPath, point):
+        if self.type == Item.INPUT:
+            self._drawInputShape(painterPath, point)
+        elif self.type == Item.OUTPUT:
+            self._drawOutputShape(painterPath, point)
 
 
     def _drawInputShape(self, painterPath, point):
@@ -330,6 +325,15 @@ class WorkflowChannel(QWidget):
         points = [point,
                   QPointF(point.x() - 2 * Item.WIDTH, point.y() - Item.WIDTH),
                   QPointF(point.x() - 2 * Item.WIDTH, point.y() + Item.WIDTH)]
+        
+        painterPath.addPolygon(QPolygonF(points))
+
+
+    def _drawOutputShape(self, painterPath, point):
+        point = QPointF(point.x() - Item.WIDTH, point.y())
+        points = [point,
+                  QPointF(point.x() + 2 * Item.WIDTH, point.y() - Item.WIDTH),
+                  QPointF(point.x() + 2 * Item.WIDTH, point.y() + Item.WIDTH)]
         
         painterPath.addPolygon(QPolygonF(points))
 
@@ -387,7 +391,7 @@ class WorkflowConnection(QWidget):
         self.curve = None
 
 
-    def mousePressEvent(self, channel, event):
+    def mousePressEvent(self, channel):
         self.start_channel = channel
         self.start_pos = channel.mappedPos()
         self.end_pos = self.start_pos
@@ -398,18 +402,22 @@ class WorkflowConnection(QWidget):
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, channel, event):
+    def mouseReleaseEvent(self, parent, channel):
         if self.curve is None:
             return
         
         self.end_channel = channel
-        # Overwrite
+        # Overwrite end position with exact channel position
         self.end_pos = channel.mappedPos()
         
         if self.start_pos.x() > self.end_pos.x():
             tmp = self.start_pos
             self.start_pos = self.end_pos
             self.end_pos = tmp
+            
+            tmp_channel = self.start_channel
+            self.start_channel = self.end_channel
+            self.end_channel = tmp_channel
        
         sx = self.start_pos.x()
         sy = self.start_pos.y()
@@ -446,13 +454,12 @@ class WorkflowConnection(QWidget):
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
-        # TODO: this is different between in/output channels
-        #if self.start_pos.x() < self.end_pos.x():
-        c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
-        c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
-        #else:
-        #    c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
-        #    c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
+        if self.start_channel.type == Item.OUTPUT:
+            c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
+            c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
+        elif self.start_channel.type == Item.INPUT:
+            c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
+            c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
         self.curve = QPainterPath(self.start_pos)
         self.curve.cubicTo(c1, c2, self.end_pos)
