@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>444</width>
-    <height>386</height>
+    <width>625</width>
+    <height>593</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_6">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -72,20 +72,7 @@
         </widget>
        </item>
        <item>
-        <widget class="Label" name="image">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-        </widget>
+        <widget class="QListWidget" name="list"/>
        </item>
        <item>
         <widget class="QStackedWidget" name="stack">
@@ -204,19 +191,15 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QLineEdit" name="textValue"/>
+           </item>
           </layout>
          </widget>
         </widget>
        </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLineEdit" name="textValue"/>
-         </item>
          <item>
           <widget class="QPushButton" name="addValue">
            <property name="maximumSize">
@@ -265,17 +248,30 @@
          </item>
         </layout>
        </item>
-       <item>
-        <widget class="QListWidget" name="list"/>
-       </item>
       </layout>
+     </item>
+     <item>
+      <widget class="Label" name="image">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
