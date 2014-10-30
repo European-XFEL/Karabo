@@ -14,7 +14,6 @@ __all__ = ["Project", "ProjectConfiguration"]
 
 
 from karabo.hash import XMLParser, XMLWriter
-from karabo.hashtypes import StringList
 
 import hashlib
 import os.path
@@ -107,7 +106,7 @@ class Project(object):
         with ZipFile(self.filename, mode="a", compression=ZIP_DEFLATED) as zf:
             digest = hashlib.sha1(data).hexdigest()
             zf.writestr("resources/{}/{}".format(category, digest), data)
-        self.resources.setdefault(category, StringList()).append(digest)
+        self.resources.setdefault(category, set()).add(digest)
         return "project:resources/{}/{}".format(category, digest)
 
 
@@ -184,7 +183,7 @@ class Project(object):
                                               filename))
                 configuration.fromXml(data)
                 self.addConfiguration(deviceId, configuration)
-        self.resources = {k: v for k, v in
+        self.resources = {k: set(v) for k, v in
                           projectConfig["resources"].items()}
 
 

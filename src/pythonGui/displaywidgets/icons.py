@@ -8,7 +8,7 @@ from karabo import hashtypes
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSignal, pyqtSlot, QByteArray, QBuffer
 from PyQt4.QtGui import (QAction, QApplication, QDialog, QFileDialog, QLabel,
-                         QPixmap)
+                         QMessageBox, QPixmap)
 
 from os import path
 import urllib.request
@@ -56,9 +56,14 @@ class Item:
 
     def getPixmap(self, project):
         pixmap = QPixmap()
-        if not pixmap.loadFromData(project.getURL(self.url)):
-            raise RuntimeError("could not read image from url {}".
-                               format(self.url))
+        try:
+            if not pixmap.loadFromData(project.getURL(self.url)):
+                raise RuntimeError("could not read image from url {}".
+                                   format(self.url))
+        except KeyError:
+            QMessageBox.warning(None, "Icon not found",
+                                'could not find an icon')
+            self.pixmap = None
         self.pixmap = pixmap
 
 
