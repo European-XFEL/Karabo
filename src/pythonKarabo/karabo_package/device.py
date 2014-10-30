@@ -483,9 +483,9 @@ class PythonDevice(BaseFsm):
           
     
     def slotGetConfiguration(self):
-        senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
-        self._ss.call(senderId, "slotChanged", self.parameters, self.deviceid)
-        self._ss.reply(self.parameters)
+        #senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
+        #self._ss.call(senderId, "slotChanged", self.parameters, self.deviceid)
+        self._ss.reply(self.parameters, self.deviceid)
         
     def slotReconfigure(self, newConfiguration):
         if newConfiguration.empty():
@@ -523,16 +523,16 @@ class PythonDevice(BaseFsm):
     
     def slotGetSchema(self, onlyCurrentState):
 
-        senderId = self._ss.getSenderInfo("slotGetSchema").getInstanceIdOfSender()
+        #senderId = self._ss.getSenderInfo("slotGetSchema").getInstanceIdOfSender()
 
         if onlyCurrentState:
             currentState = self["state"]
             schema = self._getStateDependentSchema(currentState)
-            self._ss.call(senderId, "slotSchemaUpdated", schema, self.deviceid)
-            self._ss.reply(schema)
+            #self._ss.call(senderId, "slotSchemaUpdated", schema, self.deviceid)
+            self._ss.reply(schema, self.deviceid)
         else:
-            self._ss.call(senderId, "slotSchemaUpdated", self.fullSchema, self.deviceid)
-            self._ss.reply(self.fullSchema)
+            #self._ss.call(senderId, "slotSchemaUpdated", self.fullSchema, self.deviceid)
+            self._ss.reply(self.fullSchema, self.deviceid)
    
     def slotKillDevice(self):
         senderid = self.serverid # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
