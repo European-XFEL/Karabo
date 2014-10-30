@@ -113,6 +113,7 @@ namespace karabo {
             unsigned int m_sizeofLength;
             bool m_lengthIsTextFlag;
             bool m_manageAsyncData;
+            int m_compressionUsageThreshold;
         };
     }
 }

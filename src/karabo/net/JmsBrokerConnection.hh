@@ -49,6 +49,7 @@ namespace karabo {
             unsigned int m_acknowledgeTimeout;
             MQAckMode m_acknowledgeMode;
             int m_messageTimeToLive;
+            int m_compressionUsageThreshold;
             
             mutable boost::mutex m_openMQMutex;
 

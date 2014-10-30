@@ -296,7 +296,18 @@ namespace karabo {
             std::string prepareSelector() const;
 
             void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
+            
+            void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority);
+            
+            void sendBinaryMessage(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
 
+            void sendBinaryMessageCompressed(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
+            
+            void compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target);
+            
+            void decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& data);
+
+            void decompressSnappy(const char* compressed, size_t compressed_length, std::string& data);
         };
     }
 }
