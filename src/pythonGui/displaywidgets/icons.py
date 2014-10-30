@@ -290,3 +290,55 @@ class DigitIcons(Icons):
                 item.value = parse(ee.text)
                 item.equal = ee.get('equal') == 'true'
             self.items.append(item)
+
+
+class SelectionDialog(Dialog):
+    def __init__(self, project, items, descriptor):
+        super().__init__(project, items)
+        self.editable.hide()
+
+    def textFromItem(self, item):
+        return item.value
+
+
+class SelectionIcons(Icons):
+    category = "Selection"
+    alias = "Selection Icons"
+    Dialog = SelectionDialog
+
+    def typeChanged(self, box):
+        items = []
+        for o in box.descriptor.options:
+            for item in self.items:
+                if item.value == o:
+                    items.append(item)
+            else:
+                item = Item()
+                item.value = o
+                print('added item', o)
+                items.append(item)
+        self.items = items
+
+    def valueChanged(self, box, value, timestamp=None):
+        for item in self.items:
+            if item.value == value:
+                self.setPixmap(item.pixmap)
+                return
+        raise RuntimeError('value "{}" of "{}" not in options ({})'.
+                           format(value, box.key(), box.descriptor.options))
+
+    def save(self, e):
+        for item in self.items:
+            ee = Element(ns_karabo + "option")
+            if item.value is not None:
+                ee.text = item.value
+            if item.url is not None:
+                ee.set('image', item.url)
+            e.append(ee)
+
+    def load(self, e):
+        self.items = []
+        for ee in e:
+            item = Item(ee, self.project)
+            item.value = ee.text
+            self.items.append(item)
