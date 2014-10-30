@@ -39,6 +39,8 @@ namespace karabo {
             unsigned int m_minData;
             bool m_keepDataUntilNew;
             std::string m_onSlowness;
+            
+            std::string m_interface;
 
             unsigned int m_channelId;
 
@@ -86,7 +88,7 @@ namespace karabo {
                         .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>@<channelName>)")
                         .assignmentOptional().noDefaultValue()
                         .reconfigurable()
-                        .commit();
+                        .commit();                                
 
                 STRING_ELEMENT(expected).key("dataDistribution")
                         .displayedName("Data Distribution")
@@ -125,8 +127,13 @@ namespace karabo {
                         .assignmentOptional().defaultValue(true)
                         .reconfigurable()
                         .commit();
-
-
+                
+                 STRING_ELEMENT(expected).key("interface")
+                        .displayedName("Interface")
+                        .description("The local interface (IP address) to which the socket should be bound")
+                        .assignmentOptional().defaultValue("default")
+                        .expertAccess()
+                        .commit();
 
             }
 
@@ -141,6 +148,7 @@ namespace karabo {
                 config.get("keepDataUntilNew", m_keepDataUntilNew);
                 config.get("onSlowness", m_onSlowness);
                 config.get("respondToEndOfStream", m_respondToEndOfStream);
+                config.get("interface", m_interface);
 
                 m_channelId = Memory<T>::registerChannel();
                 m_inactiveChunk = Memory<T>::registerChunk(m_channelId);
@@ -174,6 +182,8 @@ namespace karabo {
                 if (config.has("keepDataUntilNew")) config.get("keepDataUntilNew", m_keepDataUntilNew);
                 if (config.has("onSlowness")) config.get("onSlowness", m_onSlowness);
                 if (config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
+                if (config.has("interface")) config.get("interface", m_interface);
+                
             }
 
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
@@ -235,7 +245,8 @@ namespace karabo {
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const {
                 const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
                 const unsigned int& port = outputChannelInfo.get<unsigned int>("port");
-                karabo::util::Hash h("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port);
+                const std::string& interface = outputChannelInfo.get<std::string>("inerface");
+                karabo::util::Hash h("Tcp.type", "client", "Tcp.hostname", hostname, "Tcp.port", port, "Tcp.interface", interface);
                 return h;
             }
 
@@ -244,6 +255,7 @@ namespace karabo {
                 const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
                 const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
                 const std::string& port = outputChannelInfo.getAs<std::string>("port");
+                //const std::string& interface = outputChannelInfo.getAs<std::string>("interface");
 
                 karabo::net::Channel::Pointer channel;
                 bool connected = false;
