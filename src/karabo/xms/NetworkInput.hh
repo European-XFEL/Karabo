@@ -243,7 +243,7 @@ namespace karabo {
             }
 
             karabo::util::Hash prepareConnectionConfiguration(const karabo::util::Hash& outputChannelInfo) const {
-                const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+                std::string hostname = outputChannelInfo.get<std::string > ("hostname");
                 const unsigned int& port = outputChannelInfo.get<unsigned int>("port");
                 const std::string& interface = outputChannelInfo.get<std::string>("interface");
                 if (interface != "default") hostname = interface;
