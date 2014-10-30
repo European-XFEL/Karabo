@@ -24,6 +24,7 @@ using namespace karabo::util;
 namespace karabo {
     namespace net {
 
+
         KARABO_REGISTER_FOR_CONFIGURATION(Connection, TcpConnection)
 
         void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
@@ -47,6 +48,14 @@ namespace karabo {
                     .displayedName("Hostport")
                     .description("Hostport of a peer for type 'client' and local port for type 'server'")
                     .assignmentOptional().defaultValue(11111)
+                    .commit();
+
+            STRING_ELEMENT(expected)
+                    .key("interface")
+                    .displayedName("Interface")
+                    .description("The local interface (IP address) to which the socket should be bound")
+                    .assignmentOptional().defaultValue("default")
+                    .expertAccess()
                     .commit();
 
             UINT32_ELEMENT(expected)
@@ -78,6 +87,7 @@ namespace karabo {
                     .commit();
         }
 
+
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
         : Connection(input)
         , m_boostIoServicePointer()
@@ -89,8 +99,10 @@ namespace karabo {
             input.get("type", m_connectionType);
             input.get("sizeofLength", m_sizeofLength);
             input.get("messageTagIsText", m_lengthIsTextFlag);
-            input.get("manageAsyncData", m_manageAsyncData);
+            input.get("manageAsyncData", m_manageAsyncData);           
+            input.get("interface", m_interface);            
         }
+
 
         Channel::Pointer TcpConnection::start() {
 
@@ -104,7 +116,14 @@ namespace karabo {
                 if (!m_acceptor) {
                     try {
                         BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
-                        ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
+                        ip::tcp::endpoint endpoint;
+
+                        if (m_interface == "default") {
+                            endpoint = ip::tcp::endpoint(ip::tcp::v4(), m_port);
+                        } else {
+                            endpoint = ip::tcp::endpoint(ip::address::from_string(m_interface), m_port);
+                        }
+
                         acceptor->open(endpoint.protocol());
                         acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
                         acceptor->bind(endpoint); // <=== here exception possible: port in use
@@ -127,6 +146,7 @@ namespace karabo {
             }
         }
 
+
         Channel::Pointer TcpConnection::startServer() {
             Channel::Pointer new_channel;
             try {
@@ -140,6 +160,7 @@ namespace karabo {
             return new_channel;
         }
 
+
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer new_channel;
             try {
@@ -147,6 +168,11 @@ namespace karabo {
                 ip::tcp::resolver::iterator endpoint_iterator = m_resolver->resolve(query);
                 new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
+                if (m_interface != "default") {
+                    ch->socket().open(ip::tcp::v4());
+                    ip::tcp::endpoint localEndpoint(ip::address::from_string(m_interface), 0);
+                    ch->socket().bind(localEndpoint); // bind to specific interface
+                }
                 ch->socket().connect(*endpoint_iterator);
                 //cout << "Successfully connected to: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
             } catch (...) {
@@ -154,6 +180,7 @@ namespace karabo {
             }
             return new_channel;
         }
+
 
         void TcpConnection::startAsync(const ConnectionHandler& handler) {
 
@@ -166,8 +193,15 @@ namespace karabo {
             if (m_connectionType == "server") {
                 if (!m_acceptor) {
                     try {
+
                         BoostTcpAcceptor acceptor(new ip::tcp::acceptor(*m_boostIoServicePointer));
-                        ip::tcp::endpoint endpoint(ip::tcp::v4(), m_port);
+
+                        ip::tcp::endpoint endpoint;
+                        if (m_interface == "default") {
+                            endpoint = ip::tcp::endpoint(ip::tcp::v4(), m_port);
+                        } else {
+                            endpoint = ip::tcp::endpoint(ip::address::from_string(m_interface), m_port);
+                        }
                         acceptor->open(endpoint.protocol());
                         acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
                         acceptor->set_option(ip::tcp::acceptor::enable_connection_aborted(true));
@@ -191,6 +225,7 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::startServer(const ConnectionHandler& handler) {
             try {
                 Channel::Pointer new_channel = this->createChannel();
@@ -201,6 +236,7 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             if (!e) {
@@ -215,6 +251,7 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
                 ip::tcp::resolver::query query(ip::tcp::v4(), m_hostname, karabo::util::toString(m_port));
@@ -224,6 +261,7 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpConnection::resolveHandler(const ConnectionHandler& handler, const ErrorCode& e, ip::tcp::resolver::iterator it) {
             try {
@@ -239,6 +277,7 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpConnection::connectHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
@@ -257,6 +296,7 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::stop() {
             if (m_connectionType == "server")
                 m_acceptor->close();
@@ -266,6 +306,7 @@ namespace karabo {
             // Think about stopping service
             //m_boost_io_service->stop();
         }
+
 
         ChannelPointer TcpConnection::createChannel() {
             ChannelPointer channel(new TcpChannel(shared_from_this()));

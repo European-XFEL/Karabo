@@ -108,11 +108,12 @@ namespace karabo {
             BoostTcpAcceptor m_acceptor;
             std::string m_connectionType;
             std::string m_hostname;
+            std::string m_interface;
             unsigned int m_port;
             bool m_isAsyncConnect;
             unsigned int m_sizeofLength;
             bool m_lengthIsTextFlag;
-            bool m_manageAsyncData;
+            bool m_manageAsyncData;            
         };
     }
 }

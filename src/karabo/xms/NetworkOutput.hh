@@ -60,6 +60,9 @@ namespace karabo {
 
             // Server related
             unsigned int m_ownPort;
+            
+            // Socket related
+            std::string m_interface;
 
             karabo::net::Connection::Pointer m_dataConnection;
             //TcpChannelPointer m_dataChannel;
@@ -136,12 +139,15 @@ namespace karabo {
                         .assignmentOptional().defaultValue("wait")
                         .init()
                         .commit();
-
-//                OVERWRITE_ELEMENT(expected).key("enableAppendMode")
-//                        .setNowAdminAccess()
-//                        .commit();
-
-
+                
+              
+                STRING_ELEMENT(expected).key("interface")
+                        .displayedName("Interface")
+                        .description("The local interface (IP address) to which the socket should be bound")
+                        .assignmentOptional().defaultValue("default")
+                        .expertAccess()
+                        .commit();
+                
             }
 
             /**
@@ -152,6 +158,7 @@ namespace karabo {
 
                 config.get("distributionMode", m_distributionMode);
                 config.get("noInputShared", m_onNoSharedInputChannelAvailable);
+                config.get("interface", m_interface);
 
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
@@ -167,8 +174,8 @@ namespace karabo {
                 while (tryAgain > 0) {
                     try {
                         m_ownPort = Statics::generateServerPort();
-                        karabo::util::Hash h("Tcp.type", "server", "Tcp.port", m_ownPort);
-                        m_dataConnection = karabo::net::Connection::create(h);
+                        karabo::util::Hash h("type", "server", "port", m_ownPort, "interface", m_interface);
+                        m_dataConnection = karabo::net::Connection::create("Tcp", h);
                         m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnectionError, this, _1, _2));
                         m_dataIOService = m_dataConnection->getIOService();
                         m_dataConnection->startAsync(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnect, this, _1));
@@ -196,7 +203,7 @@ namespace karabo {
             }
 
             karabo::util::Hash getInformation() const {
-                return karabo::util::Hash("connectionType", "tcp", "hostname", boost::asio::ip::host_name(), "port", m_ownPort);
+                return karabo::util::Hash("connectionType", "tcp", "hostname", boost::asio::ip::host_name(), "port", m_ownPort, "interface", m_interface);
             }
 
             void write(const T& data) {
