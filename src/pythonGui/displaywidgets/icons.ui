@@ -266,13 +266,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QListWidget" name="list">
-         <item>
-          <property name="text">
-           <string>default</string>
-          </property>
-         </item>
-        </widget>
+        <widget class="QListWidget" name="list"/>
        </item>
       </layout>
      </item>
