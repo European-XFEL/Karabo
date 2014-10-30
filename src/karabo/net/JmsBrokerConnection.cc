@@ -154,6 +154,15 @@ namespace karabo {
                     .minInc(0)
                     .expertAccess()
                     .commit();
+            
+            INT32_ELEMENT(expected)
+                    .key("compressionUsageThreshold")
+                    .displayedName("Compression Usage Threshold")
+                    .description("The limit size to decide about applying a compression to the message. '-1' means 'compression is off'.")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(128*1024)
+                    .expertAccess()
+                    .commit();
 
             // TODO See whether to include also flow control parameters
 
@@ -182,7 +191,8 @@ namespace karabo {
             input.get("deliveryInhibition", m_deliveryInhibition);
             input.get("acknowledgeTimeout", m_acknowledgeTimeout);
             input.get("messageTimeToLive", m_messageTimeToLive);
-
+            input.get("compressionUsageThreshold", m_compressionUsageThreshold);
+            
             string acknowledgeMode;
             input.get("acknowledgeMode", acknowledgeMode);
             if (acknowledgeMode == "auto") m_acknowledgeMode = MQ_AUTO_ACKNOWLEDGE;
