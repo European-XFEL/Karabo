@@ -50,7 +50,7 @@ class DeviceServer(SignalSlotable):
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this server at all",
         assignment=Assignment.OPTIONAL,
-        defaultValue=AccessLevel.OBSERVER, options="0 1 2 3 4",
+        defaultValue=AccessLevel.OBSERVER, options=[0, 1, 2, 3, 4],
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.RECONFIGURABLE)
 

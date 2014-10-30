@@ -277,6 +277,10 @@ class Type(Descriptor, Registry):
 
     options = Attribute()
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.options is not None:
+            self.options = [self.cast(o) for o in self.options]
 
     @classmethod
     def hashname(cls):
