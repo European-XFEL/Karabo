@@ -15,6 +15,7 @@
 #include "TcpConnection.hh"
 #include "TcpChannel.hh"
 #include "AsioIOService.hh"
+#include "karabo/log/Logger.hh"
 #include <karabo/util/SimpleElement.hh>
 
 using namespace std;
@@ -76,6 +77,15 @@ namespace karabo {
                     .init()
                     .expertAccess()
                     .commit();
+            
+            INT32_ELEMENT(expected)
+                    .key("compressionUsageThreshold")
+                    .displayedName("Compression Usage Threshold")
+                    .description("The limit size to decide about applying a compression to the message.")
+                    .reconfigurable()
+                    .assignmentOptional().defaultValue(128*1024)
+                    .expertAccess()
+                    .commit();
         }
 
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
@@ -90,6 +100,7 @@ namespace karabo {
             input.get("sizeofLength", m_sizeofLength);
             input.get("messageTagIsText", m_lengthIsTextFlag);
             input.get("manageAsyncData", m_manageAsyncData);
+            input.get("compressionUsageThreshold", m_compressionUsageThreshold);
         }
 
         Channel::Pointer TcpConnection::start() {
@@ -133,7 +144,7 @@ namespace karabo {
                 new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 m_acceptor->accept(ch->socket());
-                //cout << "New incoming connect: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -148,7 +159,7 @@ namespace karabo {
                 new_channel = this->createChannel();
                 TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (new_channel);
                 ch->socket().connect(*endpoint_iterator);
-                //cout << "Successfully connected to: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
+                KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << ch->socket().remote_endpoint().address() << ":" << ch->socket().remote_endpoint().port();
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -204,8 +215,8 @@ namespace karabo {
 
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             if (!e) {
-                //                TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (channel);
-                //                cout << "acceptHandler: New incoming connect: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
+                TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
+                KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
                 handler(channel);
             } else {
                 if (m_errorHandler)
@@ -243,8 +254,8 @@ namespace karabo {
         void TcpConnection::connectHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
-                    //                    TcpChannel::Pointer ch = boost::static_pointer_cast<TcpChannel > (channel);
-                    //                    cout << "Successfully connected to: " << ch->socket().remote_endpoint().address() << " : " << ch->socket().remote_endpoint().port() << endl;
+                    TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
                     handler(channel);
                 } else {
                     if (m_errorHandler)

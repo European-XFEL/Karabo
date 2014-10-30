@@ -242,7 +242,14 @@ namespace karabo {
             
             void prepareHashFromData(karabo::util::Hash& hash) const;
 
-
+            void decompressSnappy();
+            void decompressSnappy(const char* compressed, size_t compressed_length, char* data, const size_t& size);
+            void decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& data);
+            
+            void compressSnappy(const std::string& uncompressed, std::string& compressed);
+            void compressSnappy(const std::vector<char>& source, std::vector<char>& target);
+            void compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target);
+            
             void read(char*& data, size_t& size, char*& hdr, size_t& hsize);
             void write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize);
 
