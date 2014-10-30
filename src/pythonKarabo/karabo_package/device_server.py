@@ -571,11 +571,11 @@ class DeviceServer(object):
             self.log.INFO("Device \"{}\" removed from server.".format(id))
 
     def slotGetClassSchema(self, classid):
-        slotInfo = self.ss.getSenderInfo("slotGetClassSchema")
-        senderId = slotInfo.getInstanceIdOfSender()
+        #slotInfo = self.ss.getSenderInfo("slotGetClassSchema")
+        #senderId = slotInfo.getInstanceIdOfSender()
         schema = Configurator(PythonDevice).getSchema(classid)
-        self.ss.call(senderId, "slotClassSchema", schema, classid, self.serverid)
-        self.ss.reply(schema)
+        #self.ss.call(senderId, "slotClassSchema", schema, classid, self.serverid)
+        self.ss.reply(schema, classid, self.serverid)
         
     def processEvent(self, event):
         with self.processEventLock:
