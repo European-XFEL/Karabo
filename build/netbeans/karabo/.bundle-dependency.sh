@@ -17,10 +17,10 @@ safeRunCommand() {
 originalPwd=$(pwd)
 
 # check if arguments are passed or not
-if [ $# -eq 0]; then
-    echo "No arguments passed"
+if [ $# -eq 0 ]; then
+    echo "No arguments passed from .install.sh, building will proceed as usual.."
 else
-    echo "Arguments found"
+    echo "Arguments found; assigning arguments to variables and proceeding with build.."
     CND_DIST=$1
     CONF=$2
     PLATFORM=$3
