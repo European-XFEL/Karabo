@@ -163,7 +163,7 @@ namespace karabo {
             Requestor& receive(A1& a1, A2& a2) {
                 try {                    
                     karabo::util::Hash::Pointer body, header;
-                    receiveResponse(body, header);
+                    receiveResponse(header, body);
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                 } catch (const karabo::util::TimeoutException&) {
@@ -180,7 +180,7 @@ namespace karabo {
             Requestor& receive(A1& a1, A2& a2, A3& a3) {
                 try {
                     karabo::util::Hash::Pointer body, header;
-                    receiveResponse(body, header);
+                    receiveResponse(header, body);
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                     a3 = body->get<A3 > ("a3");
@@ -198,7 +198,7 @@ namespace karabo {
             Requestor& receive(A1& a1, A2& a2, A3& a3, A4& a4) {
                 try {
                     karabo::util::Hash::Pointer body, header;
-                    receiveResponse(body, header);
+                    receiveResponse(header, body);
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                     a3 = body->get<A3 > ("a3");
