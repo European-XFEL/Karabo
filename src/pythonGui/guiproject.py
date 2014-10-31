@@ -16,6 +16,7 @@ __all__ = ["GuiProject", "Category"]
 from configuration import Configuration
 from scene import Scene
 from karabo.hash import Hash, XMLParser, XMLWriter
+from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice
 import karabo
 import manager
@@ -285,7 +286,7 @@ class GuiProject(Project, QObject):
                         for fn in v:
                             f = "resources/{}/{}".format(k, fn)
                             zf.writestr(f, zin.read(f))
-                        resources[k] = v
+                        resources[k] = StringList(v)
             projectConfig["resources"] = resources
 
             macros = Hash()
