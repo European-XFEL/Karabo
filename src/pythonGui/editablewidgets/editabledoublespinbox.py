@@ -71,6 +71,8 @@ class DoubleLineEdit(NumberLineEdit):
 
     @property
     def value(self):
+        if not self.widget.text():
+            return 0
         return float(self.widget.text())
 
 
@@ -118,4 +120,6 @@ class IntLineEdit(NumberLineEdit):
 
     @property
     def value(self):
+        if not self.widget.text():
+            return 0
         return int(self.widget.text())
