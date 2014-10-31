@@ -13,7 +13,7 @@ class Server(threading.Thread):
         threading.Thread.__init__(self)
         #create connection object
         try:
-            self.connection = Connection.create("Tcp", Hash("type", "server", "port", port))
+            self.connection = Connection.create("Tcp", Hash("type", "server", "port", port, "compressionUsageThreshold", 1))
             #set error handler:  IT GIVES SEGFAULT!
             #self.connection.setErrorHandler(self.onError)
             #register connect handler for incoming connections
@@ -23,8 +23,9 @@ class Server(threading.Thread):
             raise
         #extract io service object
         self.ioserv = self.connection.getIOService()
-        self.store = {}
-        print("TCP Async server listening port",port)
+        self.storeHdr = {}
+        self.storeBody = {}
+        print("Server listening port",port)
         
     def onError(self, channel, ec):
         if ec.value() != 2:
@@ -33,35 +34,69 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
+            print("Server.onConnect entered...")
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             channel.setErrorHandler(self.onError);
             #register read Hash handler for this channel (client)
-            channel.readAsyncHash(self.onReadHash)
+            channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
-            print("TCP Async server onConnect:",str(e))
+            print("*** Server.onConnect:",str(e))
+            raise
+        except:
+            print("*** Server.onConnect unexpected error:", sys.exc_info()[0])
+            raise
+        finally:        
+            print("Server.onConnect exit.")
     
-    def onReadHash(self, channel, hash):
+    def onReadHashHash(self, channel, header, hash):
         try:
+            print("Server.onReadHashHash entered...")
             hash["server"] = "APPROVED!"
             # Use id(channel) or channel.__id__.  Don't use channel directly -- this is local variable! It can be reused or garbage collected
-            self.store[id(channel)] = hash
-            channel.writeAsyncHash(self.store[id(channel)], self.onWriteComplete)
+            identifier = str(id(channel))
+            self.storeHdr[identifier] = header
+            self.storeBody[identifier] = hash
+            channel.writeAsyncHashHash(self.storeHdr[identifier], self.storeBody[identifier], self.onWriteComplete)
         except RuntimeError as e:
-            print("TCP Async server onReadHash:",str(e))
+            print("TCP Async server onReadHashHash:",str(e))
+            raise
+        except:
+            print("*** Server.onReadHashHash unexpected error:", sys.exc_info()[0])
+            raise
+        finally:        
+            print("Server.onReadHashHash exit.")
     
     def onWriteComplete(self, channel):
         try:
-            del self.store[id(channel)]
-            channel.readAsyncHash(self.onReadHash)
+            print("Server.onWriteComplete entered... id = ", identifier)
+            identifier = str(id(channel))
+            if identifier in self.storeHdr:   del self.storeHdr[identifier]
+            if identifier in self.storeBody:  del self.storeBody[identifier]
+            channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
-            print("TCP Async server onReadHash:",str(e))
+            print("*** RuntimeError in Server.onWriteComplete:",str(e))
+            raise
+        except KeyError as e:
+            print("*** KeyError in Server.onWriteComplete:",str(e))
+            raise
+        except:
+            print("*** Server.onWriteComplete unexpected error:", sys.exc_info()[0])
+            raise
+        finally:        
+            print("Server.onWriteComplete exit.")
         
     def run(self):
         try:
+            print("Server.run entered...")
             self.ioserv.run()
         except Exception as e:
-            print("TCP Async server run: " + str(e))
+            print("*** Exception in Server.run: " + str(e))
+        except:
+            print("*** Server.run unexpected error:", sys.exc_info()[0])
+            raise
+        finally:        
+            print("Server.run exit.")
         
     # this method stops server
     def stop(self):
@@ -89,49 +124,52 @@ class  P2p_asyncTestCase(unittest.TestCase):
 
     def test_p2p_async(self):
         #define store for Hash written asynchronously
-        store = {}
+        storeHdr = {}
+        storeBody = {}
         
         def onError(channel, error_code):
             print("Error #%r => %r" % (error_code.value(), error_code.message()))
 
         def onConnect(channel):
             try:
-                print("ASync client onConnect:  Connection established. id is", channel.__id__)
-                h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
-                store[channel.__id__] = h  # keep object alive until write complete
-                channel.writeAsyncHash(store[channel.__id__], onWriteComplete)
+                print("client.onConnect entered... id is", channel.__id__)
+                h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25], "d", Hash("abc", 'rabbish'))
+                storeHdr[channel.__id__] = Hash("par1", 12)
+                storeBody[channel.__id__] = h  # keep object alive until write complete
+                channel.writeAsyncHashHash(storeHdr[channel.__id__], storeBody[channel.__id__], onWriteComplete)
             except RuntimeError as e:
                 print("ASync client onConnect:",str(e))
 
         def onWriteComplete(channel):
             try:
                 print("ASync client onWriteComplete: id is", channel.__id__)
-                del store[channel.__id__]
-                channel.readAsyncHash(onReadHash)
+                del storeHdr[channel.__id__]
+                del storeBody[channel.__id__]
+                channel.readAsyncHashHash(onReadHashHash)
             except RuntimeError as e:
                 print("ASync client onWriteComplete:",str(e))
             
-        def onReadHash(channel, h):
-            print("ASync client onReadHash: id is", channel.__id__)
+        def onReadHashHash(channel, header, h):
+            print("ASync client onReadHashHash: id is", channel.__id__, "and header is ...\n" + str(header))
             try:
                 self.assertEqual(len(h), 4)
                 self.assertEqual(h['server'], "APPROVED!")
                 self.assertEqual(h['a.b.c'], 1)
-                self.assertEqual(h['x.y.z'], [1,2,3,4,5])
+                self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])
                 self.assertEqual(h['d.abc'], 'rabbish')
                 channel.waitAsync(100, onTimeout)
             except Exception as e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
 
         def onTimeout(channel):
-            print("ASync client onTimeout: stop further communication: id is", channel.__id__)
+            print("Client.onTimeout: stop further communication: id is", channel.__id__)
             channel.close()
 
         # Asynchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort))
-            connection.setErrorHandler(onError)
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort, "compressionUsageThreshold", 1))
+            #connection.setErrorHandler(onError)
             #register connect handler
             connection.startAsync(onConnect)
             ioservice = connection.getIOService()
