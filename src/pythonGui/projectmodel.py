@@ -781,6 +781,26 @@ class ProjectModel(QStandardItemModel):
             self.updateData()
 
 
+    def onRemoveConfiguration(self):
+        selectedIndexes = self.selectionModel.selectedIndexes()
+        nbSelected = len(selectedIndexes)
+        if nbSelected > 1:
+            reply = QMessageBox.question(None, 'Remove items',
+                "Do you really want to remove selected items?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return
+
+        for index in selectedIndexes:
+            deviceId = index.parent().data()
+            object = index.data(ProjectModel.ITEM_OBJECT)
+            # Remove data from project
+            object.project.removeConfiguration(deviceId, object)
+
+        self.updateData()
+
+
     def onRemoveDevices(self):
         reply = QMessageBox.question(None, 'Remove devices',
             "Do you really want to remove all devices?",
