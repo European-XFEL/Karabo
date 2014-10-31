@@ -192,10 +192,19 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size) {
-        ScopedGILAcquire gil;
-        bp::object handler = getPythonReadHandler(channel);
-        if (handler != bp::object())
-            handler(bp::object(channel), bp::object(size));
+        try {
+            ScopedGILAcquire gil;
+            bp::object handler = getPythonReadHandler(channel);
+            if (handler == bp::object())
+                throw KARABO_PYTHON_EXCEPTION("proxyReadSizeInBytesHandler: Python handler was not found.");
+            try {
+                handler(bp::object(channel), bp::object(size));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
     }
 
     void ChannelWrap::readAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& handler) {
@@ -206,9 +215,18 @@ namespace karathon {
 
     void ChannelWrap::proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s) {
         ScopedGILAcquire gil;
-        bp::object handler = getPythonReadHandler(channel);
-        if (handler != bp::object())
-            handler(bp::object(channel), bp::object(s));
+        try {
+            bp::object handler = getPythonReadHandler(channel);
+            if (handler == bp::object())
+                throw KARABO_PYTHON_EXCEPTION("proxyReadStringHandler: Python handler was not found.");
+            try {
+                handler(bp::object(channel), bp::object(s));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
     }
 
     void ChannelWrap::readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler) {
@@ -218,10 +236,19 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
-        ScopedGILAcquire gil;
-        bp::object handler = getPythonReadHandler(channel);
-        if (handler != bp::object())
-            handler(bp::object(channel), bp::object(h));
+        try {
+            ScopedGILAcquire gil;
+            bp::object handler = getPythonReadHandler(channel);
+            if (handler == bp::object())
+                throw KARABO_PYTHON_EXCEPTION("proxyReadHashHandler: Python handler was not found.");
+            try {
+                handler(bp::object(channel), bp::object(h));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
     }
 
     void ChannelWrap::readAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& handler) {
@@ -232,10 +259,19 @@ namespace karathon {
 
     void ChannelWrap::proxyReadHashVectorHandler(karabo::net::Channel::Pointer channel,
             const karabo::util::Hash& h, const std::vector<char>& v) {
-        ScopedGILAcquire gil;
-        bp::object handler = getPythonReadHandler(channel);
-        if (handler != bp::object())
-            handler(bp::object(channel), bp::object(h), bp::object(v));
+        try {
+            ScopedGILAcquire gil;
+            bp::object handler = getPythonReadHandler(channel);
+            if (handler == bp::object())
+                throw KARABO_PYTHON_EXCEPTION("proxyReadHashVectorHandler: Python handler was not found.");
+            try {
+                handler(bp::object(channel), bp::object(h), bp::object(v));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
     }
 
     void ChannelWrap::readAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& handler) {
@@ -245,10 +281,19 @@ namespace karathon {
     }
 
     void ChannelWrap::proxyReadHashHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b) {
-        ScopedGILAcquire gil;
-        bp::object handler = getPythonReadHandler(channel);
-        if (handler != bp::object())
-            handler(bp::object(channel), bp::object(h), bp::object(b));
+        try {
+            ScopedGILAcquire gil;
+            bp::object handler = getPythonReadHandler(channel);
+            if (handler == bp::object())
+                throw KARABO_PYTHON_EXCEPTION("proxyReadHashHashHandler: Python handler was not found.");
+            try {
+                handler(bp::object(channel), bp::object(h), bp::object(b));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
+        }
     }
 
     void ChannelWrap::writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& obj, const bp::object& handler) {
@@ -274,8 +319,9 @@ namespace karathon {
     void ChannelWrap::proxyWriteCompleteHandler(karabo::net::Channel::Pointer channel) {
         Connection::Pointer connection = channel->getConnection();
         IOService::Pointer ioserv = connection->getIOService();
+        ScopedGILAcquire gil;
         bp::object onwrite;
-        {
+        try {
             boost::mutex::scoped_lock lock(m_changedHandlersMutex);
             map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
             if (it == m_handlers.end()) return;
@@ -287,9 +333,17 @@ namespace karathon {
                 throw KARABO_PYTHON_EXCEPTION("Logical error: WriteComplete handler's registration is not found");
             onwrite = h.get<bp::object>("_write");
             h.erase("_write");
+        } catch (...) {
+            KARABO_RETHROW
         }
-        ScopedGILAcquire gil;
-        onwrite(bp::object(channel));
+        try {
+            if (onwrite == bp::object()) {
+                throw KARABO_PYTHON_EXCEPTION("Cannot execute WriteComplete handler: registration was invalid.");
+            }
+            onwrite(bp::object(channel));
+        } catch (...) {
+            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+        }
     }
 
     void ChannelWrap::writeAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& data, const bp::object& handler) {
@@ -338,22 +392,30 @@ namespace karathon {
     void ChannelWrap::proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
         Connection::Pointer connection = channel->getConnection();
         IOService::Pointer ioserv = connection->getIOService();
-        bp::object onerr;
-        {
-            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
-            map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
-            if (it == m_handlers.end()) return;
-            map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
-            map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
-            if (ii == cmap.end()) return;
-            Hash& h = ii->second;
-            if (!h.has("_error"))
-                throw KARABO_PYTHON_EXCEPTION("Logical error: Error handler's registration is not found");
-            onerr = h.get<bp::object>("_error");
-            //h.erase("_error");     <--- comment it:  error handler lives forever
+        try {
+            ScopedGILAcquire gil;
+            bp::object onerr;
+            {
+                boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+                map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+                if (it == m_handlers.end()) return;
+                map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+                map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+                if (ii == cmap.end()) return;
+                Hash& h = ii->second;
+                if (!h.has("_error"))
+                    throw KARABO_PYTHON_EXCEPTION("Logical error: Error handler's registration is not found");
+                onerr = h.get<bp::object>("_error");
+                //h.erase("_error");     <--- comment it:  error handler lives forever
+            }
+            try {
+                onerr(bp::object(channel), bp::object(code));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
         }
-        ScopedGILAcquire gil;
-        onerr(bp::object(channel), bp::object(code));
     }
 
     void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
@@ -370,21 +432,31 @@ namespace karathon {
     void ChannelWrap::proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel) {
         Connection::Pointer connection = channel->getConnection();
         IOService::Pointer ioserv = connection->getIOService();
-        bp::object onwait;
-        {
-            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
-            map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
-            if (it == m_handlers.end()) return;
-            map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
-            map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
-            if (ii == cmap.end()) return;
-            Hash& h = ii->second;
-            if (!h.has("_wait"))
-                throw KARABO_PYTHON_EXCEPTION("Logical error: WaitComplete handler's registration is not found");
-            onwait = h.get<bp::object>("_wait");
-            //h.erase("_error");     <--- comment it:  error handler lives forever
+        try {
+            ScopedGILAcquire gil;
+            bp::object onwait;
+            try {
+                boost::mutex::scoped_lock lock(m_changedHandlersMutex);
+                map<IOService*, map<Channel*, Hash> >::iterator it = m_handlers.find(ioserv.get());
+                if (it == m_handlers.end()) return;
+                map<Channel*, Hash>& cmap = it->second; // reference to internal connections map
+                map<Channel*, Hash>::iterator ii = cmap.find(channel.get());
+                if (ii == cmap.end()) return;
+                Hash& h = ii->second;
+                if (!h.has("_wait"))
+                    throw KARABO_PYTHON_EXCEPTION("Logical error: WaitComplete handler's registration is not found");
+                onwait = h.get<bp::object>("_wait");
+                //h.erase("_error");     <--- comment it:  error handler lives forever
+            } catch (...) {
+                KARABO_RETHROW
+            }
+            try {
+                onwait(bp::object(channel));
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+            }
+        } catch (...) {
+            KARABO_RETHROW
         }
-        ScopedGILAcquire gil;
-        onwait(bp::object(channel));
     }
 }
