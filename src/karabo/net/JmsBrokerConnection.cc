@@ -160,6 +160,7 @@ namespace karabo {
                     .displayedName("Compression Usage Threshold")
                     .description("The limit size to decide about applying a compression to the message. '-1' means 'compression is off'.")
                     .reconfigurable()
+                    .unit(Unit::BYTE)
                     .assignmentOptional().defaultValue(128*1024)
                     .expertAccess()
                     .commit();
