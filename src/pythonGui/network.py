@@ -321,6 +321,9 @@ class _Network(QObject):
 
         changes is a list of pairs (box, value). They all must belong to
         the same device."""
+        if not changes:
+            return
+        
         h = Hash()
         h["type"] = "reconfigure"
         id = changes[0][0].configuration.id
