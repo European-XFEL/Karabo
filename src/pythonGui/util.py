@@ -4,7 +4,7 @@ sip.setapi("QString", 2)
 sip.setapi("QVariant", 2)
 sip.setapi("QUrl", 2)
 
-from PyQt4.QtGui import QFileDialog
+from PyQt4.QtGui import QDialog, QFileDialog
 
 import weakref
 
@@ -53,6 +53,8 @@ def getSaveFileName(title, dir="", description="", suffix=""):
     dialog.setDefaultSuffix(suffix)
     dialog.setFileMode(QFileDialog.AnyFile)
     dialog.setAcceptMode(QFileDialog.AcceptSave)
-    dialog.exec_()
+    if dialog.exec_() == QDialog.Rejected:
+        return []
+    
     if len(dialog.selectedFiles()) == 1:
         return dialog.selectedFiles()[0]
