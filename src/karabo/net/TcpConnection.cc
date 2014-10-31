@@ -83,7 +83,8 @@ namespace karabo {
                     .displayedName("Compression Usage Threshold")
                     .description("The limit size to decide about applying a compression to the message.")
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(128*1024)
+                    .assignmentOptional().defaultValue(-1)
+                    .unit(Unit::BYTE)
                     .expertAccess()
                     .commit();
         }

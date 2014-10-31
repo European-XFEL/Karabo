@@ -33,7 +33,6 @@ namespace karabo {
          */
         template <class T>
         class NetworkOutput : public karabo::io::Output<T> {
-
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -61,7 +60,8 @@ namespace karabo {
             // Server related
             std::string m_hostname;
             unsigned int m_ownPort;
-            
+            int m_compression;
+
             karabo::net::Connection::Pointer m_dataConnection;
             //TcpChannelPointer m_dataChannel;
             karabo::net::IOService::Pointer m_dataIOService;
@@ -137,11 +137,21 @@ namespace karabo {
                         .assignmentOptional().defaultValue("wait")
                         .init()
                         .commit();
-                
+
                 STRING_ELEMENT(expected).key("hostname")
                         .displayedName("Hostname")
                         .description("The hostname to which connecting clients will be routed to")
-                        .assignmentOptional().defaultValue(boost::asio::ip::host_name())                     
+                        .assignmentOptional().defaultValue("default")
+                        .commit();
+
+
+                INT32_ELEMENT(expected).key("compression")
+                        .displayedName("Compression")
+                        .description("Configures when the data is compressed (-1 = off, 0 = always, >0 = threshold in MB")
+                        .expertAccess()
+                        .unit(Unit::BYTE)
+                        .metricPrefix(MetricPrefix::MEGA)
+                        .assignmentOptional().defaultValue(-1)
                         .commit();
             }
 
@@ -154,7 +164,8 @@ namespace karabo {
                 config.get("distributionMode", m_distributionMode);
                 config.get("noInputShared", m_onNoSharedInputChannelAvailable);
                 config.get("hostname", m_hostname);
-
+                if (m_hostname == "default") m_hostname = boost::asio::ip::host_name();
+                config.get("compression", m_compression);
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "NoInputShared: " << m_onNoSharedInputChannelAvailable;
 
@@ -169,12 +180,12 @@ namespace karabo {
                 while (tryAgain > 0) {
                     try {
                         m_ownPort = Statics::generateServerPort();
-                        karabo::util::Hash h("Tcp.type", "server", "Tcp.port", m_ownPort);
-                        m_dataConnection = karabo::net::Connection::create(h);
+                        karabo::util::Hash h("type", "server", "port", m_ownPort, "compressionUsageThreshold", m_compression * 10E06);
+                        m_dataConnection = karabo::net::Connection::create("Tcp", h);
                         m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnectionError, this, _1, _2));
                         m_dataIOService = m_dataConnection->getIOService();
                         m_dataConnection->startAsync(boost::bind(&karabo::xms::NetworkOutput<T>::onTcpConnect, this, _1));
-                        
+
                         // Start data thread
                         m_dataThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_dataIOService));
 
@@ -197,7 +208,7 @@ namespace karabo {
 
             }
 
-            karabo::util::Hash getInformation() const {
+            karabo::util::Hash getInformation() const {                
                 return karabo::util::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_ownPort);
             }
 
@@ -255,7 +266,7 @@ namespace karabo {
                     if (dataDistribution == "shared") {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Registering shared-input channel of instance: " << instanceId;
                         m_registeredSharedInputs.push_back(info);
-                    } else {                        
+                    } else {
                         bool isNew = true;
                         for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) {
                             karabo::util::Hash& channelInfo = m_registeredCopyInputs[i];
@@ -359,7 +370,7 @@ namespace karabo {
                         KARABO_LOG_FRAMEWORK_DEBUG << "Connected (copy) input on instanceId " << instanceId << " disconnected";
                         m_registeredCopyInputs.erase(it);
 
-                         // Delete from input queue
+                        // Delete from input queue
                         InputChannelQueue::iterator jt = std::find(m_copyNext.begin(), m_copyNext.end(), instanceId);
                         if (jt != m_copyNext.end()) {
                             boost::mutex::scoped_lock lock(m_nextInputMutex);
@@ -445,7 +456,7 @@ namespace karabo {
 
                 // Unset endOfStream flag
                 if (m_unsetEndOfStreamFlag) m_isEndOfStream = false;
-                
+
                 // If no data was written return
                 if (MemoryType::size(m_channelId, m_chunkId) == 0) return;
 
@@ -461,14 +472,14 @@ namespace karabo {
                 MemoryType::unregisterChunk(m_channelId, chunkId);
 
                 // Register new chunkId for writing to
-                 m_chunkId = MemoryType::registerChunk(m_channelId);
+                m_chunkId = MemoryType::registerChunk(m_channelId);
 
-                 // Distribute chunk(s)
+                // Distribute chunk(s)
                 distribute(chunkId);
 
                 // Copy chunk(s)
                 copy(chunkId);
-                
+
             }
 
             void signalEndOfStream() {
@@ -513,7 +524,7 @@ namespace karabo {
 
             }
 
-            void registerWritersOnChunk(unsigned int chunkId) {                
+            void registerWritersOnChunk(unsigned int chunkId) {
                 // Only one of the shared inputs will be provided with data
                 if (!m_registeredSharedInputs.empty()) MemoryType::incrementChunkUsage(m_channelId, chunkId);
                 for (size_t i = 0; i < m_registeredCopyInputs.size(); ++i) MemoryType::incrementChunkUsage(m_channelId, chunkId);
@@ -532,7 +543,7 @@ namespace karabo {
 
                 // Next input
                 unsigned int sharedInputIdx = getNextSharedInputIdx();
-                
+
                 if (m_distributionMode == "round-robin") {
 
                     karabo::util::Hash channelInfo = m_registeredSharedInputs[sharedInputIdx];
@@ -641,7 +652,7 @@ namespace karabo {
                 // Synchronous write as it takes no time here
                 KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Now writing out (local memory)";
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
-                
+
                 // The input channel will decrement the chunkId usage, as he uses the same memory location
                 // unregisterWriterFromChunk(chunkId);
             }
@@ -649,13 +660,13 @@ namespace karabo {
             void distributeRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo) {
 
                 const TcpChannelPointer& tcpChannel = channelInfo.get<TcpChannelPointer > ("tcpChannel");
-                
+
                 karabo::util::Hash header;
                 std::vector<char> data;
                 MemoryType::readAsContiguosBlock(data, header, m_channelId, chunkId);
 
                 tcpChannel->write(header, data); // Blocks whilst writing
-                
+
                 unregisterWriterFromChunk(chunkId);
                 //MemoryType::decrementChannelUsage(m_channelId, chunkId); // Later use this one!
 
@@ -721,7 +732,7 @@ namespace karabo {
 
                 tcpChannel->write(header, data);
 
-                unregisterWriterFromChunk(chunkId);              
+                unregisterWriterFromChunk(chunkId);
             }
         };
 

@@ -198,7 +198,7 @@ namespace karabo {
             }
 
             void connect(const karabo::util::Hash& outputChannelInfo) {
-
+                
                 std::string connectionType = outputChannelInfo.get<std::string > ("connectionType");
 
                 if (connectionType == "tcp") {
