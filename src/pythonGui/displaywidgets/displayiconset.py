@@ -2,7 +2,7 @@ from const import ns_karabo
 from widget import DisplayWidget
 
 from PyQt4.QtCore import pyqtSlot, QBuffer
-from PyQt4.QtGui import QAction, QFileDialog, QInputDialog
+from PyQt4.QtGui import QAction, QFileDialog, QInputDialog, QMessageBox
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
@@ -69,7 +69,13 @@ class DisplayIconset(DisplayWidget):
         if url is None:
             self.url = None
         else:
-            self.setURL(url)
+            try:
+                self.setURL(url)
+            except KeyError:
+                QMessageBox.warning(None, "Resource not found",
+                                    'could not find iconset for "{}"'.
+                                    format(self.boxes[0].key()))
+                self.url = None
 
     @pyqtSlot()
     def onChangeIcons(self):
