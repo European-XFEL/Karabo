@@ -65,12 +65,14 @@ class ProjectPanel(QWidget):
         self.acProjectNew = QAction(icons.new, "&New project", self)
         self.acProjectNew.setStatusTip(text)
         self.acProjectNew.setToolTip(text)
+        self.acProjectNew.setEnabled(False)
         self.acProjectNew.triggered.connect(self.onProjectNew)
 
         text = "Open project"
         self.acProjectOpen = QAction(icons.open, "&Open project", self)
         self.acProjectOpen.setStatusTip(text)
         self.acProjectOpen.setToolTip(text)
+        self.acProjectOpen.setEnabled(False)
         self.acProjectOpen.triggered.connect(self.onProjectOpen)
 
         text = "Save project"
@@ -97,10 +99,17 @@ class ProjectPanel(QWidget):
 
     def setupDefaultProject(self):
         self.twProject.setupDefaultProject()
+        self.enableToolBar(True)
 
 
     def closeAllProjects(self):
+        self.enableToolBar(False)
         return self.twProject.closeAllProjects()
+
+
+    def enableToolBar(self, enabled):
+        self.acProjectNew.setEnabled(enabled)
+        self.acProjectOpen.setEnabled(enabled)
 
 
 ### slots ###
