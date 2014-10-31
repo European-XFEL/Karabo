@@ -21,7 +21,7 @@ from guiproject import Category, Device, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
-from karabo.project import Project
+from karabo.project import Project, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QDialog, QCursor,
@@ -290,6 +290,24 @@ class ProjectTreeView(QTreeView):
                     menu.addSeparator()
                     menu.addAction(acSaveAs)
         
+        elif selectedType is ProjectConfiguration:
+            if nbSelected > 1:
+                text = "Remove selected"
+            else:
+                # TODO
+                #text = "Edit"
+                #acEdit = QAction(text, self)
+                #acEdit.setStatusTip(text)
+                #acEdit.setToolTip(text)
+                #acEdit.triggered.connect(self.model().onEditConfiguration)
+                #menu.addAction(acEdit)
+                text = "Remove"
+            acRemove = QAction(text, self)
+            acRemove.setStatusTip(text)
+            acRemove.setToolTip(text)
+            acRemove.triggered.connect(self.model().onRemoveConfiguration)
+            menu.addAction(acRemove)
+
         menu.exec_(QCursor.pos())
 
 
