@@ -43,6 +43,13 @@ class Item(QWidget, Loadable):
         self.proxyPos = None
 
 
+    def getDeviceIds(self):
+        """
+        A list of all related deviceIds is returned.
+        """
+        raise NotImplementedError("Item.getDeviceIds")
+
+
     def mousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
@@ -184,6 +191,13 @@ class WorkflowItem(Item):
         self.displayText = device.id
 
 
+    def getDeviceIds(self):
+        """
+        A list of all related deviceIds is returned.
+        """
+        return [self.device.id]
+
+
     def paintEvent(self, event):
         self.checkChannels(self.device)
         Item.paintEvent(self, event)
@@ -216,6 +230,16 @@ class WorkflowGroupItem(Item):
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
+
+
+    def getDeviceIds(self):
+        """
+        A list of all related deviceIds is returned.
+        """
+        deviceIds = []
+        for device in self.deviceGroup.devices:
+            deviceIds.append(device.id)
+        return deviceIds
 
 
     def paintEvent(self, event):
@@ -256,25 +280,25 @@ class WorkflowChannel(QWidget):
     NETWORK = "Network"
     TEXT_FILE = "TextFile"
 
-    def __init__(self, type, box, parent):
+    def __init__(self, channel_type, box, parent):
         super(WorkflowChannel, self).__init__(parent)
         
-        assert type in (Item.INPUT, Item.OUTPUT)
-        self.type = type
+        assert channel_type in (Item.INPUT, Item.OUTPUT)
+        self.channel_type = channel_type
         self.box = box
         self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
         
         self.start_pos = QPoint(0, 0)
-        if self.type == Item.INPUT:
+        if self.channel_type == Item.INPUT:
             self.end_pos = QPoint(self.start_pos.x() - Item.CHANNEL_LENGTH, self.start_pos.y())
-        elif self.type == Item.OUTPUT:
+        elif self.channel_type == Item.OUTPUT:
             self.end_pos = QPoint(self.start_pos.x() + Item.CHANNEL_LENGTH, self.start_pos.y())
 
         # Matrix of painter to draw this channel
         self.transform = None
-
+        
 
     def draw(self, painter):
         painter.setBrush(QBrush(Qt.white))
@@ -314,9 +338,9 @@ class WorkflowChannel(QWidget):
 
 
     def _drawTriangleShape(self, painterPath, point):
-        if self.type == Item.INPUT:
+        if self.channel_type == Item.INPUT:
             self._drawInputShape(painterPath, point)
-        elif self.type == Item.OUTPUT:
+        elif self.channel_type == Item.OUTPUT:
             self._drawOutputShape(painterPath, point)
 
 
@@ -347,9 +371,9 @@ class WorkflowChannel(QWidget):
 
         width = self.end_pos.x() - self.start_pos.x()
         
-        if self.type == Item.INPUT:
+        if self.channel_type == Item.INPUT:
             delta = -Item.WIDTH
-        elif self.type == Item.OUTPUT:
+        elif self.channel_type == Item.OUTPUT:
             delta = Item.WIDTH
         
         rect = QRect(topLeft, QSize(width + delta, pathRect.height()))
@@ -448,7 +472,7 @@ class WorkflowConnection(QWidget):
         parent.setModified()
         
         # Reconfigure
-        self.updateChannelBox()
+        self.reconfigureInputChannel()
 
 
     def draw(self, painter):
@@ -457,10 +481,10 @@ class WorkflowConnection(QWidget):
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
-        if self.start_channel.type == Item.OUTPUT:
+        if self.start_channel.channel_type == Item.OUTPUT:
             c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
-        elif self.start_channel.type == Item.INPUT:
+        elif self.start_channel.channel_type == Item.INPUT:
             c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
@@ -485,26 +509,33 @@ class WorkflowConnection(QWidget):
         return abs(self.end_pos.y() - self.start_pos.y())
 
 
-    def updateChannelBox(self):
+    def reconfigureInputChannel(self):
         """
         This function is called once a connection is completed and start/end channels
         are set. Then the box of the input channel needs to be notified about
         the connection to the output channel.
         """
-        # Add output channel to input channel box ("connectedOutputChannels")
+        # Get input channel box ("connectedOutputChannels") which is going to be
+        # reconfigured
         inputBox = self.end_channel.box
         value = inputBox.value
         path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
         inputChannelBox = inputBox.configuration.getBox(path)
         value = inputChannelBox.value
         
+        # Get data from output channel
         outputBox = self.start_channel.box
-        newOutputChannel = "{}:{}".format(outputBox.configuration.id, '.'.join(outputBox.path))
-        if isinstance(value, Dummy):
-            value = [newOutputChannel]
-        else:
-            value.append(newOutputChannel)
+        deviceIds = self.start_channel.parent().getDeviceIds()
+        connectedOutputChannels = []
+        for id in deviceIds:
+            output = "{}:{}".format(id, '.'.join(outputBox.path))
+            connectedOutputChannels.append(output)
         
+        if isinstance(value, Dummy):
+            value = connectedOutputChannels
+        else:
+            value.append(connectedOutputChannels)
+
         # Update box configuration
         inputChannelBox.set(value, None)
 
