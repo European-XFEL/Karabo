@@ -161,7 +161,17 @@ namespace karabo {
                     .description("The limit size to decide about applying a compression to the message. '-1' means 'compression is off'.")
                     .reconfigurable()
                     .unit(Unit::BYTE)
-                    .assignmentOptional().defaultValue(128*1024)
+                    .assignmentOptional().defaultValue(-1)
+                    .expertAccess()
+                    .commit();
+            
+            STRING_ELEMENT(expected)
+                    .key("compression")
+                    .displayedName("Compression")
+                    .description("Compression library used")
+                    .init()
+                    .assignmentOptional().defaultValue(string("snappy"))
+                    .options("snappy")
                     .expertAccess()
                     .commit();
 
@@ -193,6 +203,7 @@ namespace karabo {
             input.get("acknowledgeTimeout", m_acknowledgeTimeout);
             input.get("messageTimeToLive", m_messageTimeToLive);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
+            input.get("compression", m_compression);
             
             string acknowledgeMode;
             input.get("acknowledgeMode", acknowledgeMode);
