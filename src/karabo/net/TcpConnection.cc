@@ -83,8 +83,18 @@ namespace karabo {
                     .displayedName("Compression Usage Threshold")
                     .description("The limit size to decide about applying a compression to the message.")
                     .reconfigurable()
-                    .assignmentOptional().defaultValue(-1)
                     .unit(Unit::BYTE)
+                    .assignmentOptional().defaultValue(-1)
+                    .expertAccess()
+                    .commit();
+            
+            STRING_ELEMENT(expected)
+                    .key("compression")
+                    .displayedName("Compression")
+                    .description("Compression library used")
+                    .init()
+                    .assignmentOptional().defaultValue(string("snappy"))
+                    .options("snappy")
                     .expertAccess()
                     .commit();
         }
@@ -102,6 +112,7 @@ namespace karabo {
             input.get("messageTagIsText", m_lengthIsTextFlag);
             input.get("manageAsyncData", m_manageAsyncData);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
+            input.get("compression", m_compression);
         }
 
         Channel::Pointer TcpConnection::start() {

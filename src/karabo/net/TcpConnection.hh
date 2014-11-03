@@ -114,6 +114,7 @@ namespace karabo {
             bool m_lengthIsTextFlag;
             bool m_manageAsyncData;
             int m_compressionUsageThreshold;
+            std::string m_compression;
         };
     }
 }

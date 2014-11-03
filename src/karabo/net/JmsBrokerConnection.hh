@@ -50,6 +50,7 @@ namespace karabo {
             MQAckMode m_acknowledgeMode;
             int m_messageTimeToLive;
             int m_compressionUsageThreshold;
+            std::string m_compression;
             
             mutable boost::mutex m_openMQMutex;
 
