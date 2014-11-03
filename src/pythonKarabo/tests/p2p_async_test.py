@@ -69,8 +69,8 @@ class Server(threading.Thread):
     
     def onWriteComplete(self, channel):
         try:
-            print("Server.onWriteComplete entered... id = ", identifier)
             identifier = str(id(channel))
+            print("Server.onWriteComplete entered... id = ", identifier)
             if identifier in self.storeHdr:   del self.storeHdr[identifier]
             if identifier in self.storeBody:  del self.storeBody[identifier]
             channel.readAsyncHashHash(self.onReadHashHash)
