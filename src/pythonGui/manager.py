@@ -119,7 +119,7 @@ class _Manager(QObject):
         for serverClassId in serverClassIds:
             conf = self.serverClassData.get(serverClassId)
             if conf is None:
-                return
+                continue
 
             # Clear corresponding parameter page
             if conf.parameterEditor is not None:
