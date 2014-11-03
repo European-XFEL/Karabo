@@ -52,6 +52,7 @@ namespace karabo {
                 SLOT0(start);
                 SLOT0(stop);
                 SLOT0(reset);
+                SLOT2(errorFound, std::string, std::string);
             }
 
         public:

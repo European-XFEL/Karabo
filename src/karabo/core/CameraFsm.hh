@@ -56,6 +56,7 @@ namespace karabo {
                 SLOT0(trigger);
                 SLOT0(stop);
                 SLOT0(reset);
+                SLOT2(errorFound, std::string, std::string);
             }
 
 
