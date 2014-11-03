@@ -15,8 +15,7 @@ from schema import Dummy
 
 from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
-                         QPainter, QPainterPath, QPolygon, QPolygonF,
-                         QWidget)
+                         QPainter, QPainterPath, QPolygonF, QWidget)
 
 import math
 
