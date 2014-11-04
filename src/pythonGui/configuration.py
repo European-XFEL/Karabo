@@ -49,7 +49,7 @@ class Configuration(Box):
         """
 
         super(Configuration, self).__init__((), descriptor, self)
-        assert type in ('class', 'projectClass', 'device', 'macro')
+        assert type in ('class', 'projectClass', 'device', 'macro', 'deviceGroupClass', 'deviceGroup')
         self.type = type
         self.id = id
         self.visible = 0
@@ -145,7 +145,7 @@ class Configuration(Box):
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
         Box.fillWidget(self, parameterEditor,
-                       self.type in ("class", "projectClass", "macro"))
+                       self.type in ("class", "projectClass", "macro", "deviceGroupClass"))
         parameterEditor.globalAccessLevelChanged()
 
 
