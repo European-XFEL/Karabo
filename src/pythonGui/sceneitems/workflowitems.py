@@ -298,7 +298,11 @@ class WorkflowChannel(QWidget):
 
         # Matrix of painter to draw this channel
         self.transform = None
-        
+
+
+    def getDeviceIds(self):
+        return self.parent().getDeviceIds()
+
 
     def draw(self, painter):
         painter.setBrush(QBrush(Qt.white))
@@ -525,7 +529,8 @@ class WorkflowConnection(QWidget):
         
         # Get data from output channel
         outputBox = self.start_channel.box
-        deviceIds = self.start_channel.parent().getDeviceIds()
+        # Get all deviceIds of the outputChannel
+        deviceIds = self.start_channel.getDeviceIds()
         connectedOutputChannels = []
         for id in deviceIds:
             output = "{}:{}".format(id, '.'.join(outputBox.path))
@@ -534,7 +539,7 @@ class WorkflowConnection(QWidget):
         if isinstance(value, Dummy):
             value = connectedOutputChannels
         else:
-            value.append(connectedOutputChannels)
+            value.extend(connectedOutputChannels)
 
         # Update box configuration
         inputChannelBox.set(value, None)
