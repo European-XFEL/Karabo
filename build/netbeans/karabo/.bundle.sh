@@ -153,7 +153,8 @@ else
     # TODO: Some files from 'bin' are still not converted: pyuic4
 fi
 
-cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/ # <-- karathon.so 
+mkdir $PYKARABO/legacy
+cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/legacy/ # <-- karathon.so 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
 # Check if symbolic link "libkarathon.so" exists. If not, create it! 
