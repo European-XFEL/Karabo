@@ -35,7 +35,7 @@ class PopupWidget(QWidget):
         
         htmlString = ("<table>" +
                       "".join("<tr><td><b>{}</b>:   </td><td>{}</td></tr>".
-                              format(*p) for p in list(info.items())) + "</table>")
+                              format(*p) for p in info.items()) + "</table>")
         self.__teInfo.setHtml(htmlString)
         
         self.__teInfo.fitHeightToContent(len(info))
