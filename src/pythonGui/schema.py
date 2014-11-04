@@ -104,6 +104,20 @@ class Box(QObject):
         self.configuration.boxChanged(self, self._value, timestamp)
 
 
+    def onUpdateValue(self, box, value, timestamp):
+        """
+        This slot updates not only the components but also the
+        value of the box.
+        """
+        if self.descriptor is None:
+            return
+        
+        if box.current is not None:
+            value = box.current
+        
+        self.set(value, timestamp)
+
+
     def hasValue(self):
         return self.initialized
 

@@ -21,7 +21,6 @@
 __all__ = ["DisplayImageElement"]
 
 from widget import DisplayWidget
-import copy
 
 from karabo import hashtypes
 
