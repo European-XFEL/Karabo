@@ -95,12 +95,6 @@ namespace karabo {
 
             std::map<int, int> m_writersOnChunk;
 
-            bool m_isEndOfStream;
-            bool m_forwardEOS;
-
-            bool m_unsetEndOfStreamFlag;
-
-
         public:
 
             KARABO_CLASSINFO(NetworkOutput, "Network", "1.0")
@@ -159,7 +153,7 @@ namespace karabo {
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
-            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config), m_sharedInputIndex(0), m_isEndOfStream(false), m_unsetEndOfStreamFlag(true) {
+            NetworkOutput(const karabo::util::Hash& config) : karabo::io::Output<T>(config), m_sharedInputIndex(0) {
 
                 config.get("distributionMode", m_distributionMode);
                 config.get("noInputShared", m_onNoSharedInputChannelAvailable);
@@ -225,6 +219,7 @@ namespace karabo {
 
 
             // TODO Implement this !!!!
+
             void onTcpConnectionError(TcpChannelPointer, const karabo::net::ErrorCode& error) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Tcp connection error, code: " << error.value() << ", message: " << error.message();
             }
@@ -452,10 +447,7 @@ namespace karabo {
 
             void update() {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";
-
-                // Unset endOfStream flag
-                if (m_unsetEndOfStreamFlag) m_isEndOfStream = false;
+                KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT update()";             
 
                 // If no data was written return
                 if (MemoryType::size(m_channelId, m_chunkId) == 0) return;
@@ -484,18 +476,8 @@ namespace karabo {
 
             void signalEndOfStream() {
 
-                // End of stream should be send only exactly once
-                if (m_isEndOfStream) return;
-
-                // Update sets m_isEndOfStream to false -> we have to set it here, now
-                // It is also needed to switch to synchronous TCP write as we have to now wait until all left data
-                // was sent.
-                m_isEndOfStream = true;
-                m_unsetEndOfStreamFlag = false;
                 // If there is still some data in the pipe, put it out
                 if (MemoryType::size(m_channelId, m_chunkId) > 0) update();
-
-                m_unsetEndOfStreamFlag = true;
 
                 // Wait until all queued data is fetched
                 bool doWait = true;
