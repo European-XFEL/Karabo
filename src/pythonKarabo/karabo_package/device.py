@@ -664,6 +664,6 @@ def launchPythonDevice():
     os._exit(77)
 
 # for legacy users of this module:
-from karabo.legacy import *
-from karabo.legacy import __all__
+from karabo.karathon import *
+from karabo.karathon import __all__
 __all__ = __all__ + ["PythonDevice"]
