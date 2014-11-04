@@ -67,7 +67,7 @@ class Device(SignalSlotable):
         displayedName="ClassID",
         description="The (factory)-name of the class of this device",
         requiredAccessLevel=AccessLevel.EXPERT,
-        accessMode=AccessMode.READONLY, defaultValue="PythonDevice")
+        accessMode=AccessMode.READONLY)
 
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
     signalSchemaUpdated = Signal(hashtypes.Schema(), hashtypes.String())
@@ -95,7 +95,8 @@ class Device(SignalSlotable):
     @classmethod
     def register(cls, name, dict):
         super(Device, cls).register(name, dict)
-        Device.subclasses[name] = cls
+        if "abstract" not in dict:
+            Device.subclasses[name] = cls
 
 
     def initInfo(self):
@@ -187,6 +188,7 @@ class Device(SignalSlotable):
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
 class PythonDevice(Device):
+    abstract = True
 
     instanceCountPerDeviceServer = dict()
 
@@ -519,6 +521,8 @@ class PythonDevice(Device):
 
 
 class Macro(PythonDevice): #, DeviceClient):
+    abstract = True
+
     @coroutine
     def runit(self):
         yield from getattr(self, method)()
@@ -534,6 +538,8 @@ class Macro(PythonDevice): #, DeviceClient):
 
 
 class OldDeviceClient(PythonDevice):
+    abstract = True
+
     def __init__(self, parent):
         self.parent = parent
         self.parent._ss.emit("call", ["slotPing"], ["*"],
@@ -642,6 +648,8 @@ class OldDeviceClient(PythonDevice):
 
 
 class DeviceClient(PythonDevice):
+    abstract = True
+
     def __init__(self):
         h = Hash("_deviceId_", "DeviceClient")
         v = Validator()
