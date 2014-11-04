@@ -222,7 +222,7 @@ class NavigationTreeModel(QAbstractItemModel):
         # Check servers
         if config.has(serverKey):
             serverConfig = config.get(serverKey)
-            for serverId in serverConfig.keys():
+            for serverId in list(serverConfig.keys()):
                 # Check, if serverId is already in central hash
                 index = self.findIndex(serverId)
                 if index is None:
@@ -240,7 +240,7 @@ class NavigationTreeModel(QAbstractItemModel):
         deviceKey = "device"
         if config.has(deviceKey):
             deviceConfig = config.get(deviceKey)
-            for deviceId in deviceConfig.keys():
+            for deviceId in list(deviceConfig.keys()):
                 # Check, if deviceId is already in central hash
                 index = self.findIndex(deviceId)
                 if index is None:
@@ -493,26 +493,9 @@ class NavigationTreeModel(QAbstractItemModel):
 
 
     def mimeData(self, nodes):
-        itemInfo = self.indexInfo(nodes[0])
-
-        serverId  = itemInfo.get("serverId")
-        navigationItemType = itemInfo.get("type")
-        displayName = ""
-
-        if navigationItemType == NavigationItemTypes.CLASS:
-            displayName = itemInfo.get("classId")
-
         mimeData = QMimeData()
-
+        # Source type
         mimeData.setData("sourceType", "NavigationTreeView")
-        if navigationItemType:
-            mimeData.setData("navigationItemType",
-                             QByteArray.number(navigationItemType))
-        if serverId:
-            mimeData.setData("serverId", serverId)
-        if displayName:
-            mimeData.setData("displayName", displayName)
-
         return mimeData
 
 
