@@ -6,7 +6,7 @@ __date__ ="August  7, 2013"
 
 from karabo.decorators import KARABO_CLASSINFO
 import karabo.base_fsm as base
-from karabo.legacy import SLOT_ELEMENT
+from karabo.karathon import SLOT_ELEMENT
 from karabo.fsm import *
 
 @KARABO_CLASSINFO("CameraFsm", "1.0")
