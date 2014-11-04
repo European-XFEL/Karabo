@@ -9,7 +9,7 @@ class Parser(object):
     re = re.compile("([MmZzLlHhVvCcSsQqTtAa])|"
         "(-?(([0-9]*[.][0-9]*)|[0-9]+)([eE][+-]?[0-9]*)?)")
 
-    def next(self):
+    def __next__(self):
         if self.iter is None:
             self.token = ''
             raise StopIteration
@@ -27,7 +27,7 @@ class Parser(object):
 
     def __iter__(self):
         while self.token is None:
-            yield self.next()
+            yield next(self)
 
 
     def parse(self):
@@ -35,9 +35,9 @@ class Parser(object):
         self.pos = QPointF(0, 0)
         try:
             self.number = self.token = None
-            self.next()
+            next(self)
             while True:
-                token = self.next()
+                token = next(self)
                 getattr(self, token.lower())(token.islower())
                 self.lasttoken = token
         except StopIteration:
@@ -53,7 +53,7 @@ class Parser(object):
 
 
     def m(self, relative):
-        p = self.points(relative).next()
+        p = next(self.points(relative))
         self.path.moveTo(p)
         self.l(relative)
 
