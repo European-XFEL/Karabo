@@ -10,8 +10,8 @@
 This module contains a class which represents project related datastructures.
 """
 
-__all__ = ["Project", "ProjectConfiguration"]
 
+__all__ = ["Project", "ProjectConfiguration", "BaseDevice", "BaseDeviceGroup"]
 
 from karabo.hash import XMLParser, XMLWriter
 
@@ -76,6 +76,11 @@ class Project(object):
     def insertDevice(self, index, device):
         self.devices.insert(index, device)
         device.project = self
+
+
+    def addDeviceGroup(self, deviceGroup):
+        self.devices.append(deviceGroup)
+        deviceGroup.project = self
 
 
     def addConfiguration(self, deviceId, configuration):
@@ -160,19 +165,36 @@ class Project(object):
 
     def parse(self, projectConfig, zf):
         for d in projectConfig[self.DEVICES_KEY]:
-            serverId = d.get("serverId")
+            group = d.get("group")
+            if group is not None:
+                deviceGroup = DeviceGroup(d.getAttribute("group", "name"))
+                for item in group:
+                    serverId = item.get("serverId")
+                    filename = item.get("filename")
+                    data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                    assert filename.endswith(".xml")
+                    filename = filename[:-4]
 
-            filename = d.get("filename")
-            data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
-            assert filename.endswith(".xml")
-            filename = filename[:-4]
+                    for classId, config in XMLParser().read(data).items():
+                        device = self.Device(serverId, classId, filename,
+                                             item.get("ifexists"))
 
-            for classId, config in XMLParser().read(data).items():
-                device = self.Device(serverId, classId, filename,
-                                     d.get("ifexists"))
-                device.initConfig = config
-                break # there better be only one!
-            self.addDevice(device)
+                        device.initConfig = config
+                        deviceGroup.append(device)
+                        break # there better be only one!
+                self.addDeviceGroup(deviceGroup)
+            else:
+                serverId = d.get("serverId")
+                filename = d.get("filename")
+                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                assert filename.endswith(".xml")
+                filename = filename[:-4]
+
+                for classId, config in XMLParser().read(data).items():
+                    device = self.newDevice(serverId, classId, filename,
+                                            d.get("ifexists"), False)
+                    device.initConfig = config
+                    break # there better be only one!
         for deviceId, configList in projectConfig[
                             self.CONFIGURATIONS_KEY].items():
             # Vector of hashes
@@ -256,4 +278,21 @@ class BaseDevice(object):
         self.ifexists = ifexists
         
         self.project = None
+
+
+class BaseDeviceGroup(object):
+    """
+    This class represents a list of devices.
+    """
+
+    def __init__(self, id=""):
+        self.id = id
+        self.devices = []
+        
+        self.project = None
+
+
+    def addDevice(self, device):
+        self.devices.append(device)
+        device.project = self.project
 

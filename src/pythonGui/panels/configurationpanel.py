@@ -359,7 +359,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
         
-        if configuration.type in ("class", "projectClass", "macro"):
+        if configuration.type in ("class", "projectClass", "macro", "deviceGroupClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:
@@ -490,7 +490,8 @@ class ConfigurationPanel(QWidget):
             # Show waiting page
             self._setParameterEditorIndex(index)
         
-        if configuration not in (None, self.prevConfiguration) and (configuration.type == "device"):
+        if configuration not in (None, self.prevConfiguration) and \
+           configuration.type in ("device", "deviceGroup"):
             configuration.addVisible()
         
         self.prevConfiguration = configuration
@@ -564,14 +565,15 @@ class ConfigurationPanel(QWidget):
 
     def onDeviceItemChanged(self, type, configuration):
         # Update buttons
-        if type == "other" or (configuration is not None and configuration.descriptor is None):
+        if type in ("other", "deviceGroupClass", "deviceGroup") or \
+           (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()
         else:
             self.updateButtonsVisibility = configuration is not None and \
-                                           (configuration.type == 'class' or \
-                                            configuration.type == 'projectClass')
+                                           configuration.type in ('class', 'projectClass')
         
-        if self.prevConfiguration not in (None, configuration) and (self.prevConfiguration.type == "device"):
+        if self.prevConfiguration not in (None, configuration) and \
+           self.prevConfiguration.type in ("device", "deviceGroup"):
             self.prevConfiguration.removeVisible()
 
         self.showParameterPage(configuration)
