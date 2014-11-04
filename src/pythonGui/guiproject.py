@@ -10,11 +10,12 @@
 This module contains a class which represents the project related datastructure.
 """
 
-__all__ = ["GuiProject", "Category"]
+__all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
 
 from configuration import Configuration
 from scene import Scene
+from schema import Schema
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
@@ -111,45 +112,6 @@ class Device(BaseDevice, BaseConfiguration):
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
-
-        # This flag states whether the descriptor was checked already
-        # This should only happen once when the device was selected the first
-        # time in the project view
-        self.descriptorRequested = False
-        self._initConfig = None
-
-
-    @property
-    def initConfig(self):
-        return self._initConfig
-
-
-    @initConfig.setter
-    def initConfig(self, config):
-        self._initConfig = config
-        # Merge initConfig, if descriptor is not None
-        self.mergeInitConfig()
-
-
-    def mergeInitConfig(self):
-        """
-        This function merges the \self.initConfig into the Configuration.
-        This is only possible, if the descriptor has been set before.
-        """
-        if self.descriptor is None: return
-
-        # Set default values for configuration
-        self.setDefault()
-        if self._initConfig is not None:
-            self.fromHash(self._initConfig)
-
-
-    def onNewDescriptor(self, conf):
-        if self.descriptor is not None:
-            self.redummy()
-        self.descriptor = conf.descriptor
-        self.mergeInitConfig()
-        manager.Manager().onShowConfiguration(self)
 
 
     def fromXml(self, xmlString):
@@ -660,4 +622,3 @@ class Category(object):
         super(Category, self).__init__()
         
         self.displayName = displayName
-
