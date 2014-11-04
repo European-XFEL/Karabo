@@ -654,13 +654,19 @@ class ProjectModel(QStandardItemModel):
         elif isinstance(device, Configuration):
             # Check whether device is already online
             if device.isOnline():
-                conf = manager.getDevice(device.id)
+                if device.type in ("device", "projectClass"):
+                    conf = manager.getDevice(device.id)
+                elif device.type == 'deviceGroupClass':
+                    instance = device.createInstance()
+
+                    conf = instance
+
+                    # Check descriptor only with first selection
+                    conf.checkDeviceSchema()
             else:
                 conf = device
-                
-                if device.descriptorRequested is False:
-                    self.checkDescriptor(device)
-                    device.descriptorRequested = True
+                # Check descriptor only with first selection
+                conf.checkClassSchema()
             ctype = conf.type
         else:
             conf = None
