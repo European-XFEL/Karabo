@@ -100,7 +100,24 @@ class DeviceServer(SignalSlotable):
         self.seqnum = 0
 
 
-        self.loggerConfiguration = Hash()
+        self.loggerConfiguration = Hash(
+            "categories", [Hash("Category", Hash(
+                "name", "karabo", "additivity", False,
+                "appenders", [Hash("RollingFile", Hash(
+                    "layout", Hash("Pattern", Hash(
+                        "format", "%d{%F %H:%M:%S} %p  %c  : %m%n")),
+                    "filename", "device-server.log"))]))],
+             "appenders", [
+                Hash("Ostream", Hash("layout", Hash(
+                    "Pattern", Hash("format", "%p %c  : %m%n")))),
+                Hash("RollingFile", Hash(
+                    "layout",
+                    Hash("Pattern", Hash("format",
+                                         "%d{%F %H:%M:%S} %p  %c  : %m%n")),
+                    "filename", "device-server.log")),
+                Hash("Network", Hash("layout", Hash(
+                    "Pattern", Hash("format",
+                                    "%d{%F %H:%M:%S} | %p | %c | %m"))))])
 
 
     def run(self):
@@ -169,6 +186,7 @@ class DeviceServer(SignalSlotable):
             classid, deviceid, config = self.parseNew(hash)
         else:
             classid, deviceid, config = self.parseOld(hash)
+        config["Logger"] = self.loggerConfiguration
 
         # create temporary instance to check the configuration parameters are valid
         try:
