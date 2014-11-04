@@ -29,9 +29,8 @@ namespace karabo {
          */
         template <class T>
         class NetworkInput : public karabo::io::Input<T> {
-
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
-            typedef std::map<std::string, karabo::net::Channel::Pointer> TcpChannels;
+            typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<T> MemoryType;
 
             std::vector<karabo::util::Hash> m_connectedOutputChannels;
@@ -57,6 +56,9 @@ namespace karabo {
             bool m_isEndOfStream;
             bool m_respondToEndOfStream;
 
+            // Tracks channels that send EOS
+            std::set<karabo::net::Channel::Pointer> m_eosChannels;
+            
         public:
 
             KARABO_CLASSINFO(NetworkInput, "Network", "1.0")
@@ -114,7 +116,7 @@ namespace karabo {
                 BOOL_ELEMENT(expected).key("keepDataUntilNew")
                         .displayedName("Keep data until new")
                         .description("If true, keeps data until new data from an connected output is provided. "
-                                     "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
+                        "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                         .assignmentOptional().defaultValue(false)
                         .reconfigurable()
                         .commit();
@@ -176,6 +178,13 @@ namespace karabo {
                 if (config.has("respondToEndOfStream")) config.get("respondToEndOfStream", m_respondToEndOfStream);
             }
 
+            /**
+             * Returns a vector of currently connected output channels
+             * Each Hash in the vector has the following structure:
+             * instanceId (STRING)
+             * channelId (STRING)
+             * @return A vector of hashes describing the connected output channels
+             */
             std::vector<karabo::util::Hash> getConnectedOutputChannels() {
                 return m_connectedOutputChannels;
             }
@@ -224,11 +233,13 @@ namespace karabo {
 
                 const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
                 const std::string& port = outputChannelInfo.getAs<std::string>("port");
-                
+
                 TcpChannels::iterator it = m_tcpChannels.find(hostname + port);
                 if (it != m_tcpChannels.end()) {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Disconnecting...";
                     it->second->close(); // Closes channel
+
+                    // TODO think about erasing it here
                 }
             }
 
@@ -267,6 +278,8 @@ namespace karabo {
                 m_tcpChannels.insert(std::make_pair(hostname + port, channel));
             }
 
+            // TODO Keep m_connectedOutputChannels in sync and adapt eos tokens on sudden death
+
             void onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
                 KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();
             }
@@ -283,7 +296,10 @@ namespace karabo {
 
                 if (header.has("endOfStream")) {
 
-                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Received EOS";
+                    // Track the channels that sent eos
+                    m_eosChannels.insert(channel);
+
+                    KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Received EOS #" << m_eosChannels.size();
                     if (m_respondToEndOfStream) m_isEndOfStream = true;
                     if (this->getMinimumNumberOfData() <= 0) {
                         KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering another compute";
@@ -291,8 +307,14 @@ namespace karabo {
                         this->triggerIOEvent();
                     }
 
-                    if (m_respondToEndOfStream) KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering EOS function";
-                    if (m_respondToEndOfStream) this->triggerEndOfStreamEvent();
+                    if (m_eosChannels.size() == m_tcpChannels.size()) {
+                        if (m_respondToEndOfStream) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "INPUT Triggering EOS function after reception of " << m_eosChannels.size() << " EOS tokens";
+                            this->triggerEndOfStreamEvent();
+                        }
+                        // Reset eos tracker
+                        m_eosChannels.clear();
+                    }
 
                     channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
                     return;
