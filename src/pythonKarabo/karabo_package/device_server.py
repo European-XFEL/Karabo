@@ -15,10 +15,11 @@ import platform
 import threading
 import time
 import inspect
+from subprocess import Popen, PIPE
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.plugin_loader import PluginLoader
 from karabo.device import Device, SignalSlotable
-from karabo.hash import Hash, BinaryWriter, XMLParser, saveToFile
+from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
 from karabo.hashtypes import Schema, String, Int32
 from karabo import hashtypes
 from karabo.runner import Runner
@@ -177,9 +178,6 @@ class DeviceServer(SignalSlotable):
             validator = Validator()
             self.log.DEBUG(
                 "Trying to validate the configuration on device server")
-            validated = validator.validate(schema, config)
-            self.log.DEBUG(
-                "Validated configuration is ...\n{}".format(validated))
             launcher = Launcher(cls, config)
             launcher.start()
             self.deviceInstanceMap[deviceid] = launcher
@@ -271,8 +269,8 @@ class DeviceServer(SignalSlotable):
     @replySlot("slotClassSchema")
     @coroutine
     def slotGetClassSchema(self, classid):
-        return (Device.subclasses[classid].getClassSchema(),
-                classid, self.serverId)
+        l = Launcher(Device.subclasses[classid])
+        return (l.getSchema(), classid, self.serverId)
 
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
@@ -313,6 +311,31 @@ class Launcher:
     def start(self):
         device = self.cls(self.config)
         device.run()
+
+
+class Launcher:
+    def __init__(self, cls, config=None):
+        self.cls = cls
+        self.config = config
+
+    def start(self):
+        child = Popen([sys.executable,
+                       os.path.join(os.path.dirname(__file__), "launcher.py"),
+                       sys.modules[self.cls.__module__].__file__,
+                       self.cls.__classid__,
+                       "1", "run"], stdin=PIPE)
+        BinaryWriter().writeToFile(self.config, child.stdin)
+        child.stdin.close()
+
+    def getSchema(self):
+        child = Popen([sys.executable,
+                       os.path.join(os.path.dirname(__file__), "launcher.py"),
+                       sys.modules[self.cls.__module__].__file__,
+                       self.cls.__classid__,
+                       "1", "schema"], stdout=PIPE)
+        h = BinaryParser().read(child.stdout.read())
+        child.wait()
+        return h["schema"]
 
 
 def main(args):
