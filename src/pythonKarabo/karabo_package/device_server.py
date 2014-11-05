@@ -4,7 +4,8 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
-from asyncio import async, coroutine, get_event_loop, set_event_loop, sleep
+from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
+                     create_subprocess_exec, wait, wait_for)
 import os
 import os.path
 import sys
@@ -150,10 +151,6 @@ class DeviceServer(SignalSlotable):
         self.signalClassSchema.connect("*", "slotClassSchema",
                                        ConnectionType.NO_TRACK)
 
-    def onStateUpdate(self, currentState):
-        return currentState
-
-
     @coroutine
     def scanPlugins(self):
         availableModules = set()
@@ -196,9 +193,7 @@ class DeviceServer(SignalSlotable):
             validator = Validator()
             self.log.DEBUG(
                 "Trying to validate the configuration on device server")
-            launcher = Launcher(cls, config)
-            launcher.start()
-            self.deviceInstanceMap[deviceid] = launcher
+            self.deviceInstanceMap[deviceid] = yield from launch(cls, config)
             return (True, deviceid)
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".
@@ -254,42 +249,44 @@ class DeviceServer(SignalSlotable):
             "visibilities", [c.visibility.defaultValue.value
                              for c in Device.subclasses.values()]))
 
-    def noStateTransition(self):
-        self.log.DEBUG('DeviceServer "{}" does not allow the transition '
-                       'for this event'.format(self.serverId))
-
-
     @coroutine
     def slotKillServer(self):
-        self.log.INFO("Received kill signal")
-        threads = []
-        for deviceid  in self.deviceInstanceMap.keys():
-            self.ss.call(deviceid, "slotKillDevice")
-            threads.append(self.deviceInstanceMap[deviceid])
-        for t  in threads:
-            if t: t.join()
-        self.deviceInstanceMap = {}
-        self.ss.call("*", "slotDeviceServerInstanceGone", self.serverId)
-        self.stopDeviceServer()
+        if not deviceInstanceMap:
+            return
+        self._ss.emit("call", {k: ["slotKillDevice"]
+                               for k in self.deviceInstanceMap})
+        done, pending = yield from wait(
+            [v.wait() for v in self.deviceInstanceMap.values()], timeout=10)
+        if pending:
+            print("some devices could not be killed")
+        self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
+                      self.serverId)
 
 
     @coroutine
     def slotDeviceGone(self, id):
-        self.log.WARN("Device \"{}\" notifies fulture death".format(id))
-        if id in self.deviceInstanceMap:
-            self.ss.call(id, "slotKillDeviceInstance")
-            t = self.deviceInstanceMap[id]
-            if t: t.join()
-            del self.deviceInstanceMap[id]
-            self.log.INFO("Device \"{}\" removed from server.".format(id))
+        gone = self.deviceInstanceMap.pop(id, None)
+        if gone is not None:
+            try:
+                yield from wait_for(gone.wait(), 10)
+            except TimeoutError:
+                print('device "{}" claimed to have gone but did not'.
+                      format(id))
+        print("gone", id, self.deviceInstanceMap)
 
 
     @replySlot("slotClassSchema")
     @coroutine
     def slotGetClassSchema(self, classid):
-        l = Launcher(Device.subclasses[classid])
-        return (l.getSchema(), classid, self.serverId)
-
+        cls = Device.subclasses[classid]
+        child = yield from create_subprocess_exec(
+            sys.executable,
+            os.path.join(os.path.dirname(__file__), "launcher.py"),
+            sys.modules[cls.__module__].__file__,
+            cls.__classid__, "1", "schema", stdout=PIPE)
+        stdout, stderr = yield from child.communicate()
+        h = BinaryParser().read(stdout)
+        return h["schema"], classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
@@ -302,59 +299,16 @@ class DeviceServer(SignalSlotable):
             return "{}_{}_{}".format(self.serverId, devClassId, cnt + 1)
 
 
-class Launcher(threading.Thread):
-    def __init__(self, cls, config):
-        threading.Thread.__init__(self)
-        self.cls = cls
-        self.config = config
-
-
-    def run(self):
-        loop = EventLoop()
-        set_event_loop(loop)
-        device = self.cls(self.config)
-        device.run()
-        try:
-            loop.run_forever()
-        finally:
-            loop.close()
-
-
-class Launcher:
-    def __init__(self, cls, config):
-        self.cls = cls
-        self.config = config
-
-
-    def start(self):
-        device = self.cls(self.config)
-        device.run()
-
-
-class Launcher:
-    def __init__(self, cls, config=None):
-        self.cls = cls
-        self.config = config
-
-    def start(self):
-        child = Popen([sys.executable,
-                       os.path.join(os.path.dirname(__file__), "launcher.py"),
-                       sys.modules[self.cls.__module__].__file__,
-                       self.cls.__classid__,
-                       "1", "run"], stdin=PIPE)
-        BinaryWriter().writeToFile(self.config, child.stdin)
-        child.stdin.close()
-
-    def getSchema(self):
-        child = Popen([sys.executable,
-                       os.path.join(os.path.dirname(__file__), "launcher.py"),
-                       sys.modules[self.cls.__module__].__file__,
-                       self.cls.__classid__,
-                       "1", "schema"], stdout=PIPE)
-        h = BinaryParser().read(child.stdout.read())
-        child.wait()
-        return h["schema"]
-
+@coroutine
+def launch(cls, config):
+    child = yield from create_subprocess_exec(
+        sys.executable,
+        os.path.join(os.path.dirname(__file__), "launcher.py"),
+        sys.modules[cls.__module__].__file__, cls.__classid__,
+        "1", "run", stdin=PIPE)
+    BinaryWriter().writeToFile(config, child.stdin)
+    child.stdin.close()
+    return child
 
 def main(args):
     loop = EventLoop()
