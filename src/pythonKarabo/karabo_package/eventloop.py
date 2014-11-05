@@ -102,7 +102,7 @@ class Client(object):
                     f.set_result(v)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", ["slotReconfigure"], [self.deviceId],
+        self._device._ss.emit("call", {deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
 
@@ -132,10 +132,10 @@ class EventLoop(SelectorEventLoop):
     @coroutine
     def get_device(self, deviceId):
         f = self.device.slotSchemaUpdated[self.deviceId]
-        self.device._ss.emit("call", ["slotGetSchema"], [self.deviceId], False)
+        self.device._ss.emit("call", {self.deviceId: ["slotGetSchema"]}, False)
         schema = yield from f
         f = self.device.slotChanged[self.deviceId]
-        self.device._ss.emit("call", ["slotGetConfiguration"], [self.deviceId])
+        self.device._ss.emit("call", {self.deviceId: ["slotGetConfiguration"]})
         self.device._ss.connect(self.deviceId, "signalChanged",
                                 self.device.slotChanged)
         hash = yield from f
@@ -149,7 +149,7 @@ class EventLoop(SelectorEventLoop):
             elif a["nodeType"] == 1 and a["displayType"] == "Slot":
                 s = Slot()
                 s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", [name], [self.deviceId])
+                    "call", {self.deviceId: [name]})
                 dict[k] = s
         cls = type(self.schema.name.encode("ascii"), (Client,), dict)
         o = cls()
