@@ -542,7 +542,7 @@ class OldDeviceClient(PythonDevice):
 
     def __init__(self, parent):
         self.parent = parent
-        self.parent._ss.emit("call", ["slotPing"], ["*"],
+        self.parent._ss.emit("call", {"*": ["slotPing"]},
                              self.parent.deviceId, False, False)
         self.devices = { }
         async(self.run(), loop=self.parent._ss.loop)
@@ -610,7 +610,7 @@ class OldDeviceClient(PythonDevice):
 
 
     def instantiateNoWait(self, server, cls, configuration):
-        self.parent._ss.emit("call", ["slotStartDevice"], [server],
+        self.parent._ss.emit("call", {server: ["slotStartDevice"]},
                              Hash("classId", cls,
                                   "deviceId", configuration.get("deviceId", ""),
                                   "configuration", configuration))
@@ -635,7 +635,7 @@ class OldDeviceClient(PythonDevice):
 
 
     def executeNoWait(self, instanceId, slot, *args):
-        self.parent._ss.emit("call", [slot], [instanceId], *args)
+        self.parent._ss.emit("call", {instanceId: [slot]}, *args)
 
 
     def execute(self, instanceId, slot, *args, timeout=3):

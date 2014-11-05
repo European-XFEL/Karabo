@@ -101,7 +101,7 @@ class Client(object):
             f.set_result(hash)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", ["slotReconfigure"], [self.deviceId],
+        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
 
@@ -154,7 +154,8 @@ class SignalSlotable(Configurable):
             if instanceId == self.deviceId:
                 return self.info
         else:
-            self._ss.emit("call", ["slotPingAnswer"], self.deviceId, self.info)
+            self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
+                          self.deviceId, self.info)
         if track and instanceId != self.deviceId:
             self.signalHeartbeat.connect(instanceId, "slotHeartbeat", None)
 
@@ -200,9 +201,9 @@ class SignalSlotable(Configurable):
         async(self.consume())
         super().run()
 
-    def call(self, slot, target, *args):
+    def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
-        self._ss.call("call", [slot], [target], reply, args)
+        self._ss.call("call", {device: [target]}, reply, args)
         future = Future(loop=self._ss.loop)
         self.__repliers[reply] = future
         return future
@@ -321,7 +322,7 @@ class SignalSlotable(Configurable):
         if ret is not None:
             return ret
 
-        self._ss.emit("call", ["slotGetSchema"], [deviceId], False)
+        self._ss.emit("call", {deviceId: ["slotGetSchema"]}, False)
         schema = yield from self.__schemaFutures.setdefault(
             deviceId, Future(loop=self._ss.loop))
 
@@ -334,11 +335,11 @@ class SignalSlotable(Configurable):
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
                 s = Slot()
                 s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", [name], [self.deviceId])
+                    "call", {self.deviceId: [name]})
                 dict[k] = s
         cls = type(schema.name, (Client,), dict)
 
-        self._ss.emit("call", ["slotGetConfiguration"], [deviceId])
+        self._ss.emit("call", {deviceId: "slotGetConfiguration"})
         self._ss.connect(deviceId, "signalChanged", self.slotChanged)
         ret = cls(self)
         self.__devices[deviceId] = ret
