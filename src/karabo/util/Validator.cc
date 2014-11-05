@@ -469,7 +469,7 @@ namespace karabo {
             if (m_injectTimestamps) {
                 Hash::Attributes& attributes = node.getAttributes();
                 if (!Timestamp::hashAttributesContainTimeInformation(attributes)) {
-                    Timestamp().toHashAttributes(attributes);
+                    m_timestamp.toHashAttributes(attributes);
                 }
             }
         }
