@@ -251,14 +251,14 @@ class DeviceServer(SignalSlotable):
 
     @coroutine
     def slotKillServer(self):
-        if not deviceInstanceMap:
-            return
-        self._ss.emit("call", {k: ["slotKillDevice"]
-                               for k in self.deviceInstanceMap})
-        done, pending = yield from wait(
-            [v.wait() for v in self.deviceInstanceMap.values()], timeout=10)
-        if pending:
-            print("some devices could not be killed")
+        if self.deviceInstanceMap:
+            self._ss.emit("call", {k: ["slotKillDevice"]
+                                   for k in self.deviceInstanceMap})
+            done, pending = yield from wait(
+                [v.wait() for v in self.deviceInstanceMap.values()], timeout=10)
+            if pending:
+                print("some devices could not be killed")
+        self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
 
@@ -272,8 +272,6 @@ class DeviceServer(SignalSlotable):
             except TimeoutError:
                 print('device "{}" claimed to have gone but did not'.
                       format(id))
-        print("gone", id, self.deviceInstanceMap)
-
 
     @replySlot("slotClassSchema")
     @coroutine
