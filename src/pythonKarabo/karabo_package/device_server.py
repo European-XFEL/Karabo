@@ -189,10 +189,6 @@ class DeviceServer(SignalSlotable):
         try:
             pluginDir = self.pluginLoader.pluginDirectory
             cls = Device.subclasses[classid]
-            schema = cls.getClassSchema()
-            validator = Validator()
-            self.log.DEBUG(
-                "Trying to validate the configuration on device server")
             self.deviceInstanceMap[deviceid] = yield from launch(cls, config)
             return (True, deviceid)
         except Exception as e:
