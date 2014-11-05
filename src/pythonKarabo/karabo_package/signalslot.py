@@ -188,10 +188,15 @@ class SignalSlotable(Configurable):
         self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         try:
-            while self.running:
-                async(self.handleMessage(
-                    (yield from get_event_loop().run_in_executor(
-                        None, self._ss.consumer.receiveMessage))))
+            while True:
+                try:
+                    message = yield from get_event_loop().run_in_executor(
+                        None, self._ss.consumer.receiveMessage, 1000)
+                except openmq.Error as e:
+                    if e.status != 2103:  # timeout
+                        raise
+                else:
+                    async(self.handleMessage(message))
         finally:
             self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -248,8 +253,8 @@ class SignalSlotable(Configurable):
 
         try:
             slots = [getattr(self, s) for s in slots.get(self.deviceId, [])
-                    ] + [getattr(self, s) for s in slots.get("*", [])
-                         if hasattr(self, s)]
+                     ] + [getattr(self, s) for s in slots.get("*", [])
+                          if hasattr(self, s)]
             for slot in slots:
                 reply = yield from slot(*params)
                 if not isinstance(reply, tuple):
@@ -271,7 +276,7 @@ class SignalSlotable(Configurable):
             print("Slot={}".format(slots))
 
     def stopEventLoop(self):
-        self.running = False
+        get_event_loop().stop()
 
     @coroutine
     def slotConnectToSignal(self, signal, target, slot, dunno):
