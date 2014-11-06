@@ -5,6 +5,7 @@ from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.hashtypes import Descriptor, Schema_ as Schema  # this is not nice
 from karabo.registry import Registry
 
+from asyncio import coroutine
 from enum import Enum
 from functools import partial
 from collections import OrderedDict
@@ -18,6 +19,7 @@ class MetaConfigurable(type(Registry)):
 
 class Configurable(Registry, metaclass=MetaConfigurable):
     _subclasses = []
+    schema = None
 
     def __init__(self, configuration={}, parent=None, key=None):
         self._parent = parent
@@ -64,6 +66,11 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                         k: v.value if isinstance(v, Enum) else v
                         for k, v in v.parameters().items()}
         return schema
+
+    @classmethod
+    @coroutine
+    def getClassSchema_async(cls, rules=None):
+        return cls.getClassSchema(rules)
 
     def __dir__(self):
         return list(self._allattrs)

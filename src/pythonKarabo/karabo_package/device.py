@@ -21,6 +21,7 @@ from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.registry import Registry
 from karabo.eventloop import EventLoop
+from karabo.launcher import getClassSchema_async, sameThread, legacy
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Device", "1.0")
@@ -73,6 +74,8 @@ class Device(SignalSlotable):
     signalSchemaUpdated = Signal(hashtypes.Schema(), hashtypes.String())
 
     subclasses = { }
+
+    launch = classmethod(sameThread)
 
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)
@@ -203,6 +206,7 @@ class PythonDevice(Device):
                   displayedName="Logger",
                   requiredAccessLevel=AccessLevel.EXPERT)
 
+    launch = classmethod(legacy)
 
     def __init__(self, configuration):
         if configuration is None:
@@ -354,6 +358,8 @@ class PythonDevice(Device):
         # notify the distributed system...
         self.signalSchemaUpdated(self.fullSchema, self.deviceId)
         self.log.INFO("Schema appended")
+
+    getClassSchema_async = classmethod(getClassSchema_async)
     
     def setProgress(self, value, associatedText = ""):
         v = self.progressMin + value / (self.progressMax - self.progressMin)
