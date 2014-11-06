@@ -418,18 +418,18 @@ namespace karathon {
         }
     }
 
-    void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler) {
+    void ChannelWrap::waitAsync(karabo::net::Channel::Pointer channel, const bp::object& milliobj, const bp::object& handler, const std::string& id) {
         if (PyLong_Check(milliobj.ptr())) {
             int milliseconds = bp::extract<int>(milliobj);
             registerWaitHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->waitAsync(milliseconds, proxyWaitCompleteHandler);
+            channel->waitAsync(milliseconds, proxyWaitCompleteHandler, id);
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
     }
 
-    void ChannelWrap::proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel) {
+    void ChannelWrap::proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel, const std::string& id) {
         Connection::Pointer connection = channel->getConnection();
         IOService::Pointer ioserv = connection->getIOService();
         try {
@@ -451,7 +451,7 @@ namespace karathon {
                 KARABO_RETHROW
             }
             try {
-                onwait(bp::object(channel));
+                onwait(bp::object(channel), id);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
             }

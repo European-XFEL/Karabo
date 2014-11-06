@@ -24,14 +24,13 @@ namespace bp = boost::python;
 namespace karathon {
 
     class SignalSlotableWrap : public karabo::xms::SignalSlotable {
-
     public:
 
         SignalSlotableWrap(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                           const std::string& connectionType = "Jms",
-                           const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                           const bool autostartEventLoop = true,
-                           int heartbeatInterval = 10) : SignalSlotable() {
+                const std::string& connectionType = "Jms",
+                const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
+                const bool autostartEventLoop = true,
+                int heartbeatInterval = 10) : SignalSlotable() {
 
             karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
             this->init(instanceId, connection);
@@ -50,10 +49,10 @@ namespace karathon {
         }
 
         static boost::shared_ptr<SignalSlotableWrap> create(const std::string& instanceId = generateInstanceId<SignalSlotable>(),
-                                                            const std::string& connectionType = "Jms",
-                                                            const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
-                                                            bool autostart = false,
-                                                            int heartbeatInterval = 10) {
+                const std::string& connectionType = "Jms",
+                const karabo::util::Hash& connectionParameters = karabo::util::Hash(),
+                bool autostart = false,
+                int heartbeatInterval = 10) {
             return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
         }
 
@@ -93,16 +92,16 @@ namespace karathon {
         }
 
         void registerSlotPy(const bp::object& slotFunction, const SlotType& slotType = LOCAL) {
-            
+
             std::string functionName = bp::extract<std::string>((slotFunction.attr("__name__")));
             SlotInstances* slotInstances;
             if (slotType == LOCAL) slotInstances = &(m_localSlotInstances);
             else slotInstances = &(m_globalSlotInstances);
-            
-            
+
+
             SlotInstances::const_iterator it = slotInstances->find(functionName);
             if (it != slotInstances->end()) { // Already registered
-                 (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
+                (boost::static_pointer_cast<SlotWrap >(it->second))->registerSlotFunction(slotFunction);
             } else {
                 boost::shared_ptr<SlotWrap> s(new SlotWrap(functionName));
                 s->registerSlotFunction(slotFunction); // Bind user's slot-function to Slot
@@ -183,7 +182,7 @@ namespace karathon {
         }
 
         RequestorWrap requestPy0(std::string instanceId, const std::string& functionName) {
-            if (instanceId.empty()) instanceId = m_instanceId;            
+            if (instanceId.empty()) instanceId = m_instanceId;
             return RequestorWrap(this).callPy(instanceId, functionName);
         }
 
@@ -245,10 +244,10 @@ namespace karathon {
 
         template <class T>
         boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name,
-                                                                      const std::string& type,
-                                                                      const karabo::util::Hash& config,
-                                                                      const bp::object& onRead,
-                                                                      const bp::object& onEndOfStream) {
+                const std::string& type,
+                const karabo::util::Hash& config,
+                const bp::object& onRead,
+                const bp::object& onEndOfStream) {
 
             karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
             channel->setInstanceId(m_instanceId);
@@ -266,9 +265,9 @@ namespace karathon {
 
         template <class T>
         boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name,
-                                                                        const std::string& type,
-                                                                        const karabo::util::Hash& config,
-                                                                        const bp::object& onOutputPossibleHandler) {
+                const std::string& type,
+                const karabo::util::Hash& config,
+                const bp::object& onOutputPossibleHandler) {
             using namespace karabo::util;
 
             karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
@@ -284,7 +283,7 @@ namespace karathon {
 
         template <class InputType>
         boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash& input,
-                                                         const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
+                const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
             using namespace karabo::util;
 
             karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
@@ -303,7 +302,7 @@ namespace karathon {
 
         template <class OutputType>
         boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input,
-                                                           const bp::object& onOutputPossibleHandler) {
+                const bp::object& onOutputPossibleHandler) {
             using namespace karabo::util;
 
             karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
@@ -337,9 +336,41 @@ namespace karathon {
             return bp::object(d);
         }
 
+        void proxyTimerHandler(boost::shared_ptr<SignalSlotable> ss, const std::string& id) {
+            bool found = false;
+            boost::shared_ptr<SignalSlotableWrap> ssw = boost::dynamic_pointer_cast<SignalSlotableWrap>(ss);
+            if (!ssw) return;
+            ScopedGILAcquire gil;
+            bp::object handler;
+            {
+                boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
+                std::map<std::string, bp::object>::iterator it = m_timerHandlersPy.find(id);
+                if (it == m_timerHandlersPy.end()) return; // not registered
+                handler = it->second;
+                found = true;
+                m_timerHandlersPy.erase(it); // <--- unregister handler
+            }
+            if (found)
+                handler(bp::object(ssw), id); // <--- call python handler (inside it may register itself again :)
+        }
+
+        void startTimerPy(int millis, const bp::object& timerHandler, const std::string& id) {
+            {
+                boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
+                m_timerHandlersPy[id] = timerHandler;
+            }
+            startTimer(millis, boost::bind(&SignalSlotableWrap::proxyTimerHandler, this, boost::static_pointer_cast<SignalSlotable>(shared_from_this()), id), id);
+        }
+
+        void killTimerPy(const std::string& id) {
+            boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
+            m_timerHandlersPy.erase(id);
+        }
+
     private: // members
         boost::thread m_eventLoop;
-
+        boost::mutex m_timerHandlersPyMutex;
+        std::map<std::string, bp::object> m_timerHandlersPy;
     };
 }
 
