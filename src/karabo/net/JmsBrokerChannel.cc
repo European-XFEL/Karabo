@@ -978,14 +978,14 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler) {
-            m_ioService->registerWaitChannel(this, handler, milliseconds);
+        void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
+            m_ioService->registerWaitChannel(this, handler, milliseconds, id);
         }
 
 
-        void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds) {
+        void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id) {
             boost::this_thread::sleep(boost::posix_time::milliseconds(milliseconds));
-            handler(shared_from_this());
+            handler(shared_from_this(), id);
         }
 
 

@@ -736,13 +736,13 @@ namespace karabo {
                 SIGNAL2("signalChanged", karabo::util::Hash /*configuration*/, string /*deviceId*/);
 
                 SIGNAL2("signalNoTransition", string, string);
-                connectN("", "signalNoTransition", "*", "slotNoTransition");
+                connect("", "signalNoTransition", "*", "slotNoTransition", NO_TRACK);
 
                 SIGNAL4("signalNotification", string /*type*/, string /*messageShort*/, string /*messageDetail*/, string /*deviceId*/);
-                connectN("", "signalNotification", "*", "slotNotification");
+                connect("", "signalNotification", "*", "slotNotification", NO_TRACK);
 
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
-                connectN("", "signalSchemaUpdated", "*", "slotSchemaUpdated");
+                connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", NO_TRACK);
 
                 SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
                 SLOT0(slotGetConfiguration)

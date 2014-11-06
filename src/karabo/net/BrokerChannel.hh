@@ -42,7 +42,7 @@ namespace karabo {
             typedef boost::function<void (BrokerChannel::Pointer, const karabo::util::Hash::Pointer& /*header*/, const karabo::util::Hash::Pointer& /*body*/) > ReadHashHashHandler;
 
             typedef boost::function<void (BrokerChannel::Pointer) > WriteCompleteHandler;
-            typedef boost::function<void (BrokerChannel::Pointer) > WaitHandler;
+            typedef boost::function<void (BrokerChannel::Pointer, const std::string&) > WaitHandler;
             
         protected:
             
@@ -200,7 +200,7 @@ namespace karabo {
 
             virtual void setErrorHandler(const BrokerErrorHandler& handler) = 0;
 
-            virtual void waitAsync(int milliseconds, const WaitHandler& handler) {
+            virtual void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Not implemented!");
             }
 

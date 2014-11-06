@@ -100,7 +100,7 @@ namespace karabo {
             karabo::net::BrokerChannel::Pointer m_producerChannel;
             karabo::net::BrokerChannel::Pointer m_consumerChannel;
             karabo::net::BrokerChannel::Pointer m_heartbeatProducerChannel;
-             karabo::net::BrokerChannel::Pointer m_heartbeatConsumerChannel;
+            karabo::net::BrokerChannel::Pointer m_heartbeatConsumerChannel;
 
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
@@ -182,6 +182,8 @@ namespace karabo {
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
+            typedef boost::function<void (SignalSlotable::Pointer, const std::string&)> ExpireHandler;
+            
             /**
              * Slots may be of two different types:
              * SPECIFIC: The slot is unique in the given network
@@ -907,7 +909,10 @@ namespace karabo {
                 return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
             }
 
+            void startTimer(int milliseconds, const ExpireHandler& handler, const std::string& id);
 
+            void killTimer(const std::string& id);
+            
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1063,7 +1068,13 @@ namespace karabo {
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
+          
+            void asyncTimerHandler(karabo::net::BrokerChannel::Pointer p, const std::string& id);
+
             
+        private:
+            mutable boost::mutex m_timerMutex;
+            std::map<std::string, ExpireHandler> m_timerHandlers;
         };
     }
 }

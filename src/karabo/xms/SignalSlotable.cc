@@ -76,9 +76,11 @@ namespace karabo {
             // Start connection (and take the default channel for signals)
             m_connection->start();
             m_producerChannel = m_connection->createChannel();
-            m_consumerChannel = m_connection->createChannel();            
+            m_consumerChannel = m_connection->createChannel();
             m_heartbeatProducerChannel = m_connection->createChannel("beats");
             m_heartbeatConsumerChannel = m_connection->createChannel("beats");
+
+            m_timerHandlers.clear();
 
             registerDefaultSignalsAndSlots();
         }
@@ -124,7 +126,7 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
                     ReceivedRepliesBMC::iterator it = m_receivedRepliesBMC.find(replyId);
                     if (it != m_receivedRepliesBMC.end()) bmc = it->second;
-                } catch(...) {
+                } catch (...) {
                     KARABO_RETHROW
                 }
                 // insert reply and notify only if it is expected
@@ -133,7 +135,7 @@ namespace karabo {
                 try {
                     boost::mutex::scoped_lock lock(m_receivedRepliesMutex);
                     m_receivedReplies[replyId] = std::make_pair(header, body);
-                } catch(...) {
+                } catch (...) {
                     KARABO_RETHROW
                 }
                 bmc->m_cond.notify_one(); // notify only if 
@@ -146,7 +148,7 @@ namespace karabo {
                 m_hasNewEvent.notify_one();
             }
         }
-        
+
         
         void SignalSlotable::injectHeartbeat(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
             {
@@ -164,10 +166,10 @@ namespace karabo {
             m_isPingable = false;
 
             m_instanceInfo = instanceInfo;
-            
+
             m_runEventLoop = true;
 
-            startEmittingHeartbeats(heartbeatInterval);            
+            startEmittingHeartbeats(heartbeatInterval);
             startTrackingSystem();
             startBrokerMessageConsumption();
 
@@ -189,7 +191,7 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
             m_isPingable = true;
-            
+
             m_eventLoopThreads.join_all(); // Join all event dispatching threads
 
             KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << m_instanceId << "\" shuts cleanly down";
@@ -202,10 +204,10 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::_runEventLoop() {            
+        void SignalSlotable::_runEventLoop() {
 
             while (m_runEventLoop) {
-                
+
                 if (eventQueueIsEmpty()) { // If queue is empty we wait for the next event
                     boost::mutex::scoped_lock lock(m_waitMutex);
                     m_hasNewEvent.wait(lock);
@@ -268,7 +270,7 @@ namespace karabo {
             string selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%' OR slotInstanceIds LIKE '%|*|%'";
             m_consumerChannel->setFilter(selector);
             m_consumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectEvent, this, _1, _2, _3));
-            
+
             selector = "slotInstanceIds LIKE '%|" + m_instanceId + "|%'";
             m_heartbeatConsumerChannel->setFilter(selector);
             m_heartbeatConsumerChannel->readAsyncHashHash(boost::bind(&karabo::xms::SignalSlotable::injectHeartbeat, this, _1, _2, _3));
@@ -303,7 +305,7 @@ namespace karabo {
 
             Event event;
             while (tryToPopEvent(event)) {
-                
+
                 /* Header and body are shared pointers               
                  * By now the event variable keeps the only reference to them and hence the objects alive
                  * In the next while loop header and body will be destructed
@@ -319,7 +321,7 @@ namespace karabo {
                  * Example:
                  * slotFunctions -> |FooInstance:slotFoo1,slotFoo2|BarInstance:slotBar1,slotBar2|"
                  */
-                
+
                 boost::optional<const Hash::Node&> allSlotsNode = header.find("slotFunctions");
                 if (allSlotsNode) {
                     std::vector<string> allSlots;
@@ -378,7 +380,7 @@ namespace karabo {
                 }
             }
         }
-        
+
         
         void SignalSlotable::registerReply(const karabo::util::Hash& reply) {
             boost::mutex::scoped_lock lock(m_replyMutex);
@@ -404,7 +406,7 @@ namespace karabo {
                     replyHeader.set("signalFunction", "__replyNoWait__");
                     replyHeader.set("slotInstanceIds", header.get<string>("replyInstanceIds"));
                     replyHeader.set("slotFunctions", header.get<string>("replyFunctions"));
-                    m_producerChannel->write(replyHeader, it->second, 9);                   
+                    m_producerChannel->write(replyHeader, it->second, 9);
                 }
                 m_replies.erase(it);
             }
@@ -425,11 +427,11 @@ namespace karabo {
 
             // Emits a "still-alive" signal
             registerHeartbeatSignal<string, int, Hash>("signalHeartbeat");
-            
+
             // Listener for heartbeats
             SLOT3(slotHeartbeat, string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
-            
-            
+
+
             //SIGNAL3("signalHeartbeat", string /*instanceId*/, int /*heartbeatIntervalInSec*/, Hash /*instanceInfo*/)
 
             // Signals a successful disconnection
@@ -446,7 +448,7 @@ namespace karabo {
 
             // Global slot instance gone
             GLOBAL_SLOT2(slotInstanceGone, string /*instanceId*/, Hash /*instanceInfo*/)
-            
+
             // Listener for ping answers
             SLOT2(slotPingAnswer, string /*instanceId*/, Hash /*instanceInfo*/)
 
@@ -1440,7 +1442,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {                       
+        void SignalSlotable::refreshTimeToLiveForConnectedSlot(const std::string& instanceId, int countdown, const karabo::util::Hash & instanceInfo) {
 
             /**
              * Several cases:
@@ -1544,11 +1546,9 @@ namespace karabo {
                     for (Hash::iterator it = trackedComponents.begin(); it != trackedComponents.end(); ++it) {
                         Hash& entry = it->getValue<Hash>();
 
-                        const string& instanceId = it->getKey();
-                        
                         int countdown = entry.get<int>("countdown");
-                        
-                        //cout << endl << m_instanceId << "(" << instanceId << "): " << countdown << endl;
+
+                        //cout << endl << m_instanceId << "(" << it->getKey() << "): " << countdown << endl;
 
                         if (countdown == 0) { // Connection lost
                             const Hash& instanceInfo = entry.get<Hash>("instanceInfo");
@@ -1747,7 +1747,7 @@ namespace karabo {
                 currentWaitingTime += 2;
             }
             if (currentWaitingTime >= timeout) return false;
-            
+
             popReceivedReply(replyId, header, body);
             return true;
 #else
@@ -1756,7 +1756,7 @@ namespace karabo {
             try {
                 boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
                 m_receivedRepliesBMC[replyId] = bmc;
-            } catch(...) {
+            } catch (...) {
                 KARABO_RETHROW
             }
             boost::system_time waitUntil = boost::get_system_time() + boost::posix_time::milliseconds(timeout);
@@ -1768,13 +1768,13 @@ namespace karabo {
                         break;
                     }
                 }
-            } catch(...) {
+            } catch (...) {
                 KARABO_RETHROW
             }
             try {
                 boost::mutex::scoped_lock lock(m_receivedRepliesBMCMutex);
                 m_receivedRepliesBMC.erase(replyId);
-            } catch(...) {
+            } catch (...) {
                 KARABO_RETHROW
             }
             if (result) {
@@ -1782,6 +1782,32 @@ namespace karabo {
             }
             return result;
 #endif
+        }
+
+        void SignalSlotable::startTimer(int milliseconds, const ExpireHandler& handler, const std::string& id) {
+            boost::mutex::scoped_lock lock(m_timerMutex);
+            m_timerHandlers[id] = handler;
+            m_heartbeatProducerChannel->waitAsync(milliseconds, boost::bind(&SignalSlotable::asyncTimerHandler, this, m_heartbeatProducerChannel, id), id);
+        }
+
+        void SignalSlotable::killTimer(const std::string& id) {
+            boost::mutex::scoped_lock lock(m_timerMutex);
+            m_timerHandlers.erase(id);
+        }
+        
+        void SignalSlotable::asyncTimerHandler(karabo::net::BrokerChannel::Pointer p, const std::string& id) {
+            bool found = false;
+            ExpireHandler handler;
+            {
+                boost::mutex::scoped_lock lock(m_timerMutex);
+                std::map<std::string, ExpireHandler>::iterator it = m_timerHandlers.find(id);
+                if (it != m_timerHandlers.end()) {
+                    found = true;
+                    handler = it->second;
+                    m_timerHandlers.erase(it);
+                }
+            }
+            if (found) handler(shared_from_this(), id);
         }
     }
 }
