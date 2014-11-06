@@ -12,6 +12,7 @@
 #define	KARABO_NET_JMSBROKERIOSERVICE_HH
 
 #include "AbstractIOService.hh"
+#include "BrokerChannel.hh"
 
 /**
  * The main European XFEL namespace
@@ -21,7 +22,6 @@ namespace karabo {
     namespace net {
 
         // Forward
-        class BrokerChannel;
         class JmsBrokerChannel;
 
         /**
@@ -29,9 +29,6 @@ namespace karabo {
          */
         class JmsBrokerIOService : public AbstractIOService {
         public:
-
-            typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
-            typedef boost::function<void (BrokerChannelPointer) > WaitHandler;
 
             KARABO_CLASSINFO(JmsBrokerIOService, "Jms", "1.0")
 
@@ -59,7 +56,7 @@ namespace karabo {
 
             void registerBinaryMessageChannel(JmsBrokerChannel* channel);
 
-            void registerWaitChannel(JmsBrokerChannel* channel, const WaitHandler& handler, int milliseconds);
+            void registerWaitChannel(JmsBrokerChannel* channel, const BrokerChannel::WaitHandler& handler, int milliseconds, const std::string& id);
 
         private: // members
 
@@ -75,7 +72,7 @@ namespace karabo {
             std::vector<JmsBrokerChannel*> m_textMessageChannels;
             std::vector<JmsBrokerChannel*> m_binaryMessageChannels;
             std::vector<boost::function<void ()> > m_messageReceivers;
-            std::vector<boost::tuple<JmsBrokerChannel*, WaitHandler, int> > m_waitHandlers;
+            std::vector<boost::tuple<JmsBrokerChannel*, BrokerChannel::WaitHandler, int, std::string> > m_waitHandlers;
             boost::mutex m_mutex;
             
         private: // functions

@@ -727,20 +727,20 @@ namespace karabo {
             }
         }
 
-        void TcpChannel::waitAsync(int millisecs, const WaitHandler& handler) {
+        void TcpChannel::waitAsync(int millisecs, const WaitHandler& handler, const std::string& id) {
             try {
                 m_timer.expires_from_now(boost::posix_time::milliseconds(millisecs));
-                m_timer.async_wait(boost::bind(&TcpChannel::asyncWaitHandler, this, handler, boost::asio::placeholders::error));
+                m_timer.async_wait(boost::bind(&TcpChannel::asyncWaitHandler, this, handler, id, boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
-        void TcpChannel::asyncWaitHandler(const Channel::WaitHandler& handler, const ErrorCode& e) {
+        void TcpChannel::asyncWaitHandler(const Channel::WaitHandler& handler, const std::string& id, const ErrorCode& e) {
             try {
                 if (!e) {
                     try {
-                        handler(shared_from_this());
+                        handler(shared_from_this(), id);
                     } catch (...) {
                         KARABO_RETHROW
                     }

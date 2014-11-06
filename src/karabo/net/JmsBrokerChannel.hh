@@ -232,7 +232,7 @@ namespace karabo {
 
             void setTimeoutSyncRead(int milliseconds);
 
-            void waitAsync(int milliseconds, const WaitHandler& handler);
+            void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
 
             void setErrorHandler(const BrokerErrorHandler& handler);
 
@@ -255,7 +255,7 @@ namespace karabo {
 
             void listenForHashHashMessages();
 
-            void deadlineTimer(const WaitHandler& handler, int milliseconds);
+            void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
 
         private: //functions
 
