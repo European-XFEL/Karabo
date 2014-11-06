@@ -38,7 +38,6 @@ namespace karabo {
             std::string m_user;
             karabo::util::Timestamp m_lastDataTimestamp;
             bool m_pendingLogin;
-            unsigned long long m_flushTime;
 
             long m_startPosition;
 
@@ -81,6 +80,8 @@ namespace karabo {
             int determineLastIndex(const std::string& deviceId);
 
             int incrementLastIndex(const std::string& deviceId);
+            
+            void flushHandler(karabo::xms::SignalSlotable::Pointer p, const std::string& flushId);
         };
     }
 }

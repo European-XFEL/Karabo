@@ -49,7 +49,7 @@ namespace karabo {
                     .displayedName("Flush interval")
                     .description("The interval after which the memory accumulated data is made persistent")
                     .unit(Unit::SECOND)
-                    .assignmentOptional().defaultValue(40)
+                    .assignmentOptional().defaultValue(60)
                     .reconfigurable()
                     .commit();
 
@@ -152,6 +152,9 @@ namespace karabo {
                     }
                 }
                 m_pendingLogin = true;
+                int millis = get<int>("flushInterval") * 1000;
+                string timerId("flush-to-disk");
+                startTimer(millis, boost::bind(&DataLogger::flushHandler, this, boost::static_pointer_cast<SignalSlotable>(shared_from_this()), timerId), timerId);
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
             }
@@ -193,7 +196,6 @@ namespace karabo {
                     }
                     m_configStream << t.toIso8601Ext() << "|" << fixed << t.toTimestamp() << "|" << t.getSeconds() << "|" << t.getFractionalSeconds() << "|"
                             << t.getTrainId() << "|" << path << "|" << type << "|" << value << "|" << m_user << "|LOGIN\n";
-                    m_flushTime = t.getSeconds() + get<int>("flushInterval");
                     string indexname = get<string>("directory") + "/" + deviceId + "_index.txt";
                     ofstream indexstream(indexname.c_str(), ios::app);
                     indexstream << "+LOG " << t.toIso8601Ext() << " " << fixed << t.toTimestamp() << " " << t.getSeconds() << " "
@@ -221,14 +223,17 @@ namespace karabo {
                 indexstream << "=NEW " << m_lastDataTimestamp.toIso8601Ext() << " " << fixed << m_lastDataTimestamp.toTimestamp() << " " << m_lastDataTimestamp.getSeconds() << " "
                         << m_lastDataTimestamp.getFractionalSeconds() << " " << m_lastDataTimestamp.getTrainId() << " 0 " << m_user << " " << m_lastIndex << "\n";
                 indexstream.close();
-            } else {
-                if (m_flushTime <= m_lastDataTimestamp.getSeconds()) {
-                    m_configStream.flush();
-                    m_flushTime = m_lastDataTimestamp.getSeconds() + get<int>("flushInterval");
-                }
             }
         }
 
+        void DataLogger::flushHandler(karabo::xms::SignalSlotable::Pointer pointer, const std::string& id) {
+            if (m_configStream.is_open()) {
+                m_configStream.flush();
+            }
+            int millis = get<int>("flushInterval") * 1000;
+            startTimer(millis, boost::bind(&DataLogger::flushHandler, this, pointer, id), id);
+        }
+        
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
             m_currentSchema = schema;
