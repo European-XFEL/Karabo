@@ -147,6 +147,7 @@ class SignalSlotable(Configurable):
         self.__schemaFutures = {}
         self.__devices = {}
         self.__repliers = {}
+        self._tasks = set()
 
     @coroutine
     def slotPing(self, instanceId, replyIfMe, track=None):
@@ -196,15 +197,20 @@ class SignalSlotable(Configurable):
                     if e.status != 2103:  # timeout
                         raise
                 else:
-                    async(self.handleMessage(message))
+                    self.async(self.handleMessage(message))
         finally:
             self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
     def run(self):
-        async(self.heartbeats())
-        async(self.consume())
+        self.async(self.heartbeats())
+        self.async(self.consume())
         super().run()
+
+    def async(self, coro):
+        task = async(coro, loop=self._ss.loop)
+        self._tasks.add(task)
+        task.add_done_callback(lambda task: self._tasks.remove(task))
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())

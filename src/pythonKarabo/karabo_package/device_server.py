@@ -4,7 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
-from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
+from asyncio import (coroutine, get_event_loop, set_event_loop, sleep,
                      create_subprocess_exec, wait, wait_for)
 import os
 import os.path
@@ -16,6 +16,7 @@ import platform
 import threading
 import time
 import inspect
+from importlib import import_module
 from subprocess import Popen, PIPE
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.plugin_loader import PluginLoader
@@ -132,7 +133,7 @@ class DeviceServer(SignalSlotable):
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
-        async(self.scanPlugins())
+        self.async(self.scanPlugins())
         super().run()
 
 
@@ -159,7 +160,7 @@ class DeviceServer(SignalSlotable):
                 if name in availableModules:
                     continue
                 try:
-                    module = __import__(name)
+                    module = import_module(name)
                 except Exception as e:
                     self.log.WARN("scanPlugins: Cannot import module {} -- {}".
                                   format(name,e))
@@ -189,7 +190,7 @@ class DeviceServer(SignalSlotable):
         try:
             pluginDir = self.pluginLoader.pluginDirectory
             cls = Device.subclasses[classid]
-            self.deviceInstanceMap[deviceid] = yield from launch(cls, config)
+            self.deviceInstanceMap[deviceid] = yield from cls.launch(config)
             return (True, deviceid)
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".
@@ -273,14 +274,7 @@ class DeviceServer(SignalSlotable):
     @coroutine
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
-        child = yield from create_subprocess_exec(
-            sys.executable,
-            os.path.join(os.path.dirname(__file__), "launcher.py"),
-            sys.modules[cls.__module__].__file__,
-            cls.__classid__, "1", "schema", stdout=PIPE)
-        stdout, stderr = yield from child.communicate()
-        h = BinaryParser().read(stdout)
-        return h["schema"], classid, self.serverId
+        return (yield from cls.getClassSchema_async()), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
@@ -292,17 +286,6 @@ class DeviceServer(SignalSlotable):
         else:
             return "{}_{}_{}".format(self.serverId, devClassId, cnt + 1)
 
-
-@coroutine
-def launch(cls, config):
-    child = yield from create_subprocess_exec(
-        sys.executable,
-        os.path.join(os.path.dirname(__file__), "launcher.py"),
-        sys.modules[cls.__module__].__file__, cls.__classid__,
-        "1", "run", stdin=PIPE)
-    BinaryWriter().writeToFile(config, child.stdin)
-    child.stdin.close()
-    return child
 
 def main(args):
     loop = EventLoop()
