@@ -144,7 +144,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
             print("client.onReadStr entered... id is", channel.__id__)
             try:
                 self.assertEqual(s, "a.b.c 1, x.y.z, [1,2,3,4,5], d, abc, rabbish")
-                channel.waitAsync(100, onTimeout)
+                channel.waitAsync(100, onTimeout, "some timeout ID")
             except Exception as e:
                 self.fail("*** client.onReadStr exception group 1: " + str(e))
                 raise
@@ -154,8 +154,8 @@ class  P2p_asyncTestCase(unittest.TestCase):
             finally:
                 print("client.onReadStr exit")
 
-        def onTimeout(channel):
-            print("client.onTimeout entered and stopped further communication: id is", channel.__id__)
+        def onTimeout(channel, timeoutId):
+            print("client.onTimeout entered with timeout ID =", timeoutId, " and stopped further communication: id is", channel.__id__)
             channel.close()
             print("client.onTimeout exit")
 
