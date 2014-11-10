@@ -247,7 +247,6 @@ class ProjectModel(QStandardItemModel):
                         if device.descriptor is not None:
                             device.initConfig = device.toHash()
                         device.parameterEditor.clear()
-        
 
 
     def updateNeeded(self):
@@ -590,7 +589,7 @@ class ProjectModel(QStandardItemModel):
 
             # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
-            scene.project.setModified(True)
+            scene.project.setModified(True, True)
 
 
     def _createScene(self, project, sceneName):
