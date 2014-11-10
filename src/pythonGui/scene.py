@@ -228,6 +228,7 @@ class Shape(ShapeAction, Loadable):
 
     def draw(self, painter):
         if self.selected:
+            print("draw selection", self)
             black = QPen(Qt.black)
             black.setStyle(Qt.DashLine)
             white = QPen(Qt.white)
@@ -881,6 +882,7 @@ class Scene(QSvgWidget):
         self.project = project
         # Connect signals to forward selection of scene item
         self.signalSceneItemSelected.connect(self.project.signalSelectObject)
+        self.project.signalDeviceSelected.connect(self.onSelectionChanged)
         
         self.filename = name
         fi = QFileInfo(self.filename)
@@ -1278,7 +1280,7 @@ class Scene(QSvgWidget):
                 
                 self.clear_selection()
                 self.ilayout.add_item(proxy)
-                proxy.selected = True
+                #proxy.selected = True
                 
                 self.project.setModified(True, True)
                 self.project.signalSelectObject.emit(object)
@@ -1315,4 +1317,24 @@ class Scene(QSvgWidget):
             self.current_action.draw(painter)
         finally:
             painter.end()
+
+
+    def onSelectionChanged(self, _, object):
+        """
+        This slot is called whenever an item of the project panel is selected.
+        The corresponding scene item is selected as well, if existent.
+        """
+        if object is None:
+            return
+        
+        for c in self.ilayout:
+            if not isinstance(c, ProxyWidget):
+                continue
+            
+            workflowItem = c.widget
+            if isinstance(workflowItem, Item) and (workflowItem.getObject() is object):
+                self.clear_selection()
+                c.selected = True
+                self.update()
+                return
 

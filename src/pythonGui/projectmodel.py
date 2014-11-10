@@ -393,6 +393,7 @@ class ProjectModel(QStandardItemModel):
         # Whenever the project is modified - view must be updated
         project.signalProjectModified.connect(self.updateData)
         project.signalSelectObject.connect(self.selectObject)
+        self.signalItemChanged.connect(project.signalDeviceSelected)
         self.projects.append(project)
         self.updateData()
         self.selectObject(project)
