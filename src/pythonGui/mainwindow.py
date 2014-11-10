@@ -17,7 +17,7 @@ import icons
 
 from docktabwindow import DockTabWindow
 import globals
-from enums import AccessLevel
+from karabo.enums import AccessLevel
 from network import Network
 
 from panels.configurationpanel import ConfigurationPanel

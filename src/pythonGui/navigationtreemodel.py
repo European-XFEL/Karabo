@@ -15,7 +15,7 @@ __all__ = ["NavigationTreeModel"]
 from enums import NavigationItemTypes
 import globals
 from karabo.hash import Hash
-from enums import AccessLevel
+from karabo.enums import AccessLevel
 import manager
 from treenode import TreeNode
 import icons
@@ -53,7 +53,8 @@ class NavigationTreeModel(QAbstractItemModel):
             
             host = attrs.get("host", "UNKNOWN")
             version = attrs.get("version")
-            visibility = attrs.get("visibility", AccessLevel.OBSERVER)
+            visibility = AccessLevel(attrs.get("visibility",
+                                               AccessLevel.OBSERVER))
 
             # Create node for host
             hostNode = self.rootNode.getNode(host)
@@ -76,7 +77,7 @@ class NavigationTreeModel(QAbstractItemModel):
                 if classNode is None:
                     classNode = TreeNode(classId, path, serverNode)
                     serverNode.appendChildNode(classNode)
-                classNode.visibility = visibility
+                classNode.visibility = AccessLevel(visibility)
 
 
     def _handleDeviceData(self, config):
@@ -90,7 +91,8 @@ class NavigationTreeModel(QAbstractItemModel):
             if len(attrs) < 1:
                 continue
             
-            visibility = attrs.get("visibility", AccessLevel.OBSERVER)
+            visibility = AccessLevel(attrs.get("visibility",
+                                               AccessLevel.OBSERVER))
             host = attrs.get("host", "UNKNOWN")
             serverId = attrs.get("serverId", "unknown-server")
             classId = attrs.get("classId", "unknown-class")

@@ -54,8 +54,6 @@ class Enumable(object):
 
 
 class Simple(object):
-    unitSymbol = Attribute("")
-    metricPrefixSymbol = Attribute("")
     minExc = Attribute()
     maxExc = Attribute()
     minInc = Attribute()
@@ -205,7 +203,7 @@ class Descriptor(object):
 
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
-            if isinstance(getattr(type(self), k, None), Attribute):
+            if isinstance(getattr(self.__class__, k, None), Attribute):
                 setattr(self, k, v)
             else:
                 raise TypeError("__init__ got unexpected keyword argument: {}".
@@ -276,6 +274,8 @@ class Type(Descriptor, Registry):
     strs = { }
 
     options = Attribute()
+    unitSymbol = Attribute("")
+    metricPrefixSymbol = Attribute("")
 
 
     @classmethod
