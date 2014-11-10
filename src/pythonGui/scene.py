@@ -23,7 +23,7 @@ import pathparser
 import icons
 import manager
 
-from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
+from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
@@ -332,7 +332,6 @@ class Select(Action):
                 parent.ilayout.update()
                 parent.setModified()
             parent.update()
-            
 
 
     def mouseReleaseEvent(self, parent, event):
@@ -874,12 +873,15 @@ class Lower(SimpleAction):
 
 
 class Scene(QSvgWidget):
-
+    signalSceneItemSelected = pyqtSignal(object)
     
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
         self.project = project
+        # Connect signals to forward selection of scene item
+        self.signalSceneItemSelected.connect(self.project.signalSelectObject)
+        
         self.filename = name
         fi = QFileInfo(self.filename)
         if len(fi.suffix()) < 1:
@@ -1063,6 +1065,8 @@ class Scene(QSvgWidget):
                 workflowItem = proxy.widget
                 # Check for WorkflowItem...
                 if isinstance(workflowItem, Item):
+                    # Send selection signal to connected project
+                    self.signalSceneItemSelected.emit(workflowItem.getObject())
                     return proxy, workflowItem.mousePressEvent(proxy, event)
         return None, None
 
@@ -1162,7 +1166,7 @@ class Scene(QSvgWidget):
             w.dropEvent(event)
             if event.isAccepted():
                 return
-
+        
         mimeData = event.mimeData()
         sourceType = mimeData.data("sourceType")
 
@@ -1170,6 +1174,7 @@ class Scene(QSvgWidget):
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
 
+            self.clear_selection()
             for item in selectedItems:
                 # Create layout for coming context
                 layout = BoxLayout(QBoxLayout.LeftToRight)
@@ -1271,10 +1276,11 @@ class Scene(QSvgWidget):
                 proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
                 proxy.show()
                 
+                self.clear_selection()
                 self.ilayout.add_item(proxy)
                 proxy.selected = True
                 
-                self.project.setModified(True)
+                self.project.setModified(True, True)
                 self.project.signalSelectObject.emit(object)
         event.accept()
         QWidget.dropEvent(self, event)
