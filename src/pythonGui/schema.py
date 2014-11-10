@@ -10,7 +10,7 @@
 
 from karabo.hash import Hash
 from karabo import hashtypes
-from enums import AccessMode
+from karabo.enums import AccessMode, AccessLevel
 from registry import Monkey
 from network import Network
 import icons
@@ -168,13 +168,6 @@ class _BoxValue(object):
 
 class Descriptor(hashtypes.Descriptor, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    options = None
-    accessMode = AccessMode.RECONFIGURABLE
-    assignment = 0
-    requiredAccessLevel = 0
-    metricPrefixSymbol = ""
-    unitSymbol = ""
-    displayType = None
 
     def completeItem(self, treeWidget, item, box, isClass):
         if self.assignment == 1: # Mandatory
@@ -230,11 +223,11 @@ class Type(hashtypes.Type, metaclass=Monkey):
         component = None
         item.editableComponent = None
         if isClass:
-            if self.accessMode & (
-                    AccessMode.INITONLY | AccessMode.RECONFIGURABLE):
+            if self.accessMode in (AccessMode.INITONLY,
+                                   AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
-            if self.accessMode & AccessMode.RECONFIGURABLE:
+            if self.accessMode is AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
             item.editableComponent = component(item.classAlias, box, treeWidget)
@@ -300,21 +293,11 @@ class Integer(hashtypes.Integer, metaclass=Monkey):
     classAlias = 'Integer Field'
     icon = icons.int
 
-    minExc = None
-    maxExc = None
-    minInc = None
-    maxInc = None
-
 
 class Number(hashtypes.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
     classAlias = "Float Field"
     icon = icons.float
-
-    minExc = None
-    maxExc = None
-    minInc = None
-    maxInc = None
 
 
 class Bool(hashtypes.Bool, metaclass=Monkey):
@@ -410,11 +393,16 @@ class Schema(hashtypes.Descriptor):
         for a in copy:
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
-        self.accessMode = attrs.get('accessMode', 0)
+        self.accessMode = AccessMode(attrs.get('accessMode',
+                                               AccessMode.INITONLY))
         self.metricPrefixSymbol = attrs.get('metricPrefixSymbol', '')
         self.unitSymbol = attrs.get('unitSymbol', '')
-        ral = 0 if parent is None else parent.requiredAccessLevel
-        self.requiredAccessLevel = max(attrs.get('requiredAccessLevel', 0), ral)
+        if parent is None:
+            ral = AccessLevel.OBSERVER
+        else:
+            ral = parent.requiredAccessLevel
+        self.requiredAccessLevel = max(AccessLevel(
+            attrs.get('requiredAccessLevel', AccessLevel.OBSERVER)), ral)
 
 
     @staticmethod
@@ -592,8 +580,8 @@ class ChoiceOfNodes(Schema):
         component = None
 
         if isClass:
-            if self.accessMode & (AccessMode.INITONLY |
-                                  AccessMode.RECONFIGURABLE):
+            if self.accessMode in (AccessMode.INITONLY,
+                                   AccessMode.RECONFIGURABLE):
                 component = EditableNoApplyComponent
         else:
             if False: #attrs['accessMode'] & AccessMode.RECONFIGURABLE:
@@ -680,7 +668,7 @@ class ListOfNodes(hashtypes.Descriptor):
     def item(self, treeWidget, parent, box, isClass):
         item = PropertyTreeWidgetItem(box, treeWidget, parent)
         item.displayText = box.path[-1]
-        item.requiredAccessLevel = 100
+        item.requiredAccessLevel = AccessLevel.GOD
 
 
     def dummyCast(self, box):

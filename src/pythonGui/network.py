@@ -22,7 +22,7 @@ from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QObject
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.hash import Hash, BinaryParser, BinaryWriter
-from enums import AccessLevel
+from karabo.enums import AccessLevel
 
 import globals
 import socket
@@ -175,7 +175,7 @@ class _Network(QObject):
 
             if ok:
                 globals.GLOBAL_ACCESS_LEVEL = \
-                    self.authenticator.defaultAccessLevelId
+                    AccessLevel(self.authenticator.defaultAccessLevelId)
             else:
                 print("Login failed")
                 self.onSocketError(QAbstractSocket.ConnectionRefusedError)

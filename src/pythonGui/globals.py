@@ -4,7 +4,7 @@
 # Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
 #############################################################################
 
-from enums import AccessLevel
+from karabo.enums import AccessLevel
 from os import environ, path
 from sys import platform
 
