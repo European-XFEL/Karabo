@@ -221,7 +221,15 @@ class ProjectTreeView(QTreeView):
                 acAddMacro.setToolTip(text)
                 acAddMacro.triggered.connect(self.model().onNewMacro)
 
+
+                text = "Load Macro"
+                acLoadMacro = QAction(text, self)
+                acLoadMacro.setStatusTip(text)
+                acLoadMacro.setToolTip(text)
+                acLoadMacro.triggered.connect(self.model().onLoadMacro)
+
                 menu.addAction(acAddMacro)
+                menu.addAction(acLoadMacro)
         elif selectedType in (Device, Scene, Macro):
             # Device or Scene menu
             if nbSelected > 1:
