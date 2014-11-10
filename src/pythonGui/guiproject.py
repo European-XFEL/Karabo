@@ -587,6 +587,7 @@ class Macro(object):
                           v is not karabo.Macro}
         for k, v in self.macros.items():
             v.instance = Configuration(k, "macro", v.getSchema())
+            v.instance.setDefault()
         self.project.signalProjectModified.emit()
 
 
