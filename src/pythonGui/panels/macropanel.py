@@ -13,6 +13,7 @@ __all__ = ["MacroPanel"]
 import icons
 from network import Network
 from toolbar import ToolBar
+from util import getSaveFileName
 from finders import MacroContext
 
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
@@ -44,6 +45,7 @@ class MacroPanel(QWidget):
 
     def setupToolBars(self, tb, parent):
         tb.addAction(icons.start, "Run", self.onRun)
+        tb.addAction(icons.save, "Save", self.onSave)
 
 
     def eventFilter(self, object, event):
@@ -69,6 +71,15 @@ class MacroPanel(QWidget):
                                 "{}\n{}{}^\nin {} line {}".format(
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
+
+
+    def onSave(self):
+        fn = getSaveFileName("Save Macro to File", suffix="py")
+        if not fn:
+            return
+
+        with open(fn, "w") as out:
+            out.write(self.edit.toPlainText())
 
 
     def onDock(self):
