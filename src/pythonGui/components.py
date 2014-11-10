@@ -420,19 +420,19 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
-        sendToNetwork = True
+        network = []
         for b in self.boxes:
-            print("++++ onApplyClicked", b, self.widgetFactory.value)
             b.signalUserChanged.emit(b, self.widgetFactory.value)
             # If this box belongs to a deviceGroup configuration, no need to
             # broadcast to Network
-            if b.configuration.type == "deviceGroup":
-                sendToNetwork = False
-        
-        if sendToNetwork:
+            if b.configuration.type == "macro":
+                b.set(self.widgetFactory.value)
+            elif b.configuration.type != "deviceGroup":
+                network.append((b, self.widgetFactory.value))
+
+        if network:
             self.__busyTimer.start(5000)
-            Network().onReconfigure([(b, self.widgetFactory.value)
-                                     for b in self.boxes])
+            Network().onReconfigure(network)
 
 
     def onApplyRemoteChanges(self):
