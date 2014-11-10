@@ -747,9 +747,23 @@ class ProjectModel(QStandardItemModel):
             return
 
         project = self.currentProject()
-        macro = Macro(self.currentProject(), dialog.name.text())
+        macro = Macro(project, dialog.name.text())
         project.macros[macro.name] = macro
         self.signalAddMacro.emit(macro)
+
+
+    def onLoadMacro(self):
+        fn = QFileDialog.getOpenFileName(None, "Load Macro",
+                                         filter="Python Macros (*.py)")
+        if not fn:
+            return
+        project = self.currentProject()
+        name = os.path.basename(fn).split(".")[0]
+        macro = Macro(project, name)
+        project.macros[macro.name] = macro
+        self.signalAddMacro.emit(macro)
+        with open(fn, "r") as file:
+            macro.editor.edit.setPlainText(file.read())
 
 
     def onEditMacro(self):
