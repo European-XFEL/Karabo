@@ -290,6 +290,7 @@ class GuiProject(Project, QObject):
 
     signalProjectModified = pyqtSignal()
     signalSelectObject = pyqtSignal(object)
+    signalDeviceSelected = pyqtSignal(str, object)
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
