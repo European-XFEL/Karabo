@@ -1274,12 +1274,7 @@ class Scene(QSvgWidget):
                 self.ilayout.add_item(proxy)
                 proxy.selected = True
                 
-                if self.project.isModified:                    
-                    # Explicitly emit signal, because project is already marked as modified
-                    self.project.signalProjectModified.emit()
-                else:
-                    self.project.setModified(True)
-                
+                self.project.setModified(True)
                 self.project.signalSelectObject.emit(object)
         event.accept()
         QWidget.dropEvent(self, event)
