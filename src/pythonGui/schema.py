@@ -325,8 +325,12 @@ class Slot(hashtypes.Slot, metaclass=Monkey):
         return
 
 
+    def setDefault(self, box):
+        return
+
+
     def execute(self, box):
-        async(self.method.__get__(box.configuration.value, None)())
+        async(self.method(box.configuration.value, None)())
 
 
 class Object(object):
