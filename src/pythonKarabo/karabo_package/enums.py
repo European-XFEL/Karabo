@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import total_ordering
 
 __all__ = ["AccessLevel", "AccessMode", "Assignment", "MetricPrefix", "Unit"]
 
@@ -9,18 +10,26 @@ ChannelSpaceType = (
     "f_32_1", "u_64_1", "s_64_1", "f_64_1")
 
 
+@total_ordering
 class AccessLevel(Enum):
     OBSERVER = 0
     USER = 1
     OPERATOR = 2
     EXPERT = 3
     ADMIN = 4
+    GOD = 5
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
 
 class AccessMode(Enum):
     UNDEFINED = -1
     INITONLY = 1
     READONLY = 2
     RECONFIGURABLE = 4
+    BUG_IN_CHOICEELEMENT = 7
 
 class Assignment(Enum):
     OPTIONAL = 0
