@@ -302,7 +302,16 @@ class GuiProject(Project, QObject):
         self.isModified = False
 
 
-    def setModified(self, isModified):
+    def setModified(self, isModified, forceEmit=False):
+        """
+        The project was modified and the associated modelview needs to be updated.
+        
+        isModified - states, whether modification was done
+        forceEmit - states, whether an update of the modelview is necessary
+        """
+        if not forceEmit and self.isModified == isModified:
+            return
+        
         self.isModified = isModified
         self.signalProjectModified.emit()
 

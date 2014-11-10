@@ -50,6 +50,13 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDeviceIds")
 
 
+    def getObject(self):
+        """
+        The object to the related device (group) is returned.
+        """
+        raise NotImplementedError("Item.getObject")
+
+
     def mousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
@@ -198,6 +205,13 @@ class WorkflowItem(Item):
         return [self.device.id]
 
 
+    def getObject(self):
+        """
+        The object to the related device is returned.
+        """
+        return self.device
+
+
     def paintEvent(self, event):
         self.checkChannels(self.device)
         Item.paintEvent(self, event)
@@ -242,11 +256,18 @@ class WorkflowGroupItem(Item):
         return deviceIds
 
 
-    def paintEvent(self, event):
+    def getObject(self):
+        """
+        The object to the related device group is returned.
+        """
         if self.deviceGroup.isOnline() and self.deviceGroup.instance is not None:
-            self.checkChannels(self.deviceGroup.instance)
-        else:
-            self.checkChannels(self.deviceGroup)
+            return self.deviceGroup.instance
+        
+        return self.deviceGroup
+
+
+    def paintEvent(self, event):
+        self.checkChannels(self.getObject())
         Item.paintEvent(self, event)
 
 
