@@ -303,9 +303,6 @@ class GuiProject(Project, QObject):
 
 
     def setModified(self, isModified):
-        if self.isModified == isModified:
-            return
-        
         self.isModified = isModified
         self.signalProjectModified.emit()
 
