@@ -359,7 +359,7 @@ class ConfigurationPanel(QWidget):
         twParameterEditor.signalApplyChanged.connect(self.onApplyChanged)
         twParameterEditor.itemSelectionChanged.connect(self.onSelectionChanged)
         
-        if configuration.type in ("class", "projectClass", "macro", "deviceGroupClass"):
+        if configuration.type in ("class", "projectClass", "deviceGroupClass"):
             twParameterEditor.hideColumn(1)
 
         if configuration is not None:

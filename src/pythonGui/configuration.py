@@ -145,7 +145,7 @@ class Configuration(Box):
     def fillWidget(self, parameterEditor):
         self.parameterEditor = parameterEditor
         Box.fillWidget(self, parameterEditor,
-                       self.type in ("class", "projectClass", "macro", "deviceGroupClass"))
+                       self.type in ("class", "projectClass", "deviceGroupClass"))
         parameterEditor.globalAccessLevelChanged()
 
 
