@@ -178,6 +178,15 @@ class Project(object):
             group = d.get("group")
             if group is not None:
                 deviceGroup = self.DeviceGroup(d.getAttribute("group", "id"))
+                deviceGroup.serverId = d.getAttribute("group", "serverId")
+                deviceGroup.classId = d.getAttribute("group", "classId")
+                
+                filename = d.getAttribute("group", "filename")
+                data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                for _, config in XMLParser().read(data).items():
+                    deviceGroup.initConfig = config
+                    break # there better be only one!
+                
                 for item in group:
                     serverId = item.get("serverId")
                     filename = item.get("filename")
@@ -300,6 +309,17 @@ class BaseDeviceGroup(object):
         self.devices = []
         
         self.project = None
+
+
+    @property
+    def id(self):
+        return self._id
+
+
+    @id.setter
+    def id(self, id):
+        self._id = id
+        self.filename = "{}.xml".format(id)
 
 
     def addDevice(self, device):
