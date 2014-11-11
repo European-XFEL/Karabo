@@ -1248,27 +1248,32 @@ class Scene(QSvgWidget):
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.isDeviceGroup:
-                    # Create only one device configuration and add to project
-                    object = self.project.newDevice(dialog.serverId,
-                                                    dialog.classId,
-                                                    dialog.deviceId,
-                                                    dialog.startupBehaviour,
-                                                    True)
+                    object = self.project.getDevice(dialog.deviceId)
+                    if object is None:
+                        # Create only one device configuration and add to project,
+                        # if not exists
+                        object = self.project.newDevice(dialog.serverId,
+                                                        dialog.classId,
+                                                        dialog.deviceId,
+                                                        dialog.startupBehaviour,
+                                                        True)
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(object, proxy)
                 else:
-                    # Create device group and add to project
-                    object = self.project.newDeviceGroup(dialog.serverId,
-                                                        dialog.classId,
-                                                        dialog.deviceId,
-                                                        dialog.startupBehaviour,
-                                                        dialog.displayPrefix,
-                                                        dialog.startIndex,
-                                                        dialog.endIndex)
+                    object = self.project.getDevice(dialog.deviceGroupName)
+                    if object is None:
+                        # Create device group and add to project, if not exists
+                        object = self.project.newDeviceGroup(dialog.serverId,
+                                                            dialog.classId,
+                                                            dialog.deviceId,
+                                                            dialog.startupBehaviour,
+                                                            dialog.displayPrefix,
+                                                            dialog.startIndex,
+                                                            dialog.endIndex)
 
-                    object.id = dialog.deviceGroupName
+                        object.id = dialog.deviceGroupName
                     
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
