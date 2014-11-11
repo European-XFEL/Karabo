@@ -29,7 +29,6 @@ class AccessMode(Enum):
     INITONLY = 1
     READONLY = 2
     RECONFIGURABLE = 4
-    BUG_IN_CHOICEELEMENT = 7
 
 class Assignment(Enum):
     OPTIONAL = 0
