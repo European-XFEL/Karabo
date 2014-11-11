@@ -584,20 +584,11 @@ class ChoiceOfNodes(Schema):
         component = None
 
         if isClass:
-            if self.accessMode in (AccessMode.INITONLY,
-                                   AccessMode.RECONFIGURABLE):
-                component = EditableNoApplyComponent
+            component = EditableNoApplyComponent
         else:
-            if False: #attrs['accessMode'] & AccessMode.RECONFIGURABLE:
-                component = EditableApplyLaterComponent
-            else:
-                component = ChoiceComponent
-        if component is not None:
-            item.editableComponent = component(item.classAlias, box, treeWidget)
-        if component is EditableApplyLaterComponent:
-            item.editableComponent.signalApplyChanged.connect(
-                self.treeWidget.onApplyChanged)
+            component = ChoiceComponent
 
+        item.editableComponent = component(item.classAlias, box, treeWidget)
         self.completeItem(treeWidget, item, box, isClass)
 
         for i in range(item.childCount()):
