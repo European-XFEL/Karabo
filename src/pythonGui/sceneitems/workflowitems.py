@@ -12,6 +12,7 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 from schema import Dummy
+import scene
 
 from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
@@ -225,9 +226,18 @@ class WorkflowItem(Item):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
+        # Get scene this item belongs to
+        parent = layout.parent()
+        while not isinstance(parent, scene.Scene):
+            parent = parent.parent()
+        
         deviceId = elem.get(ns_karabo + "text")
-        item = WorkflowItem(manager.getDevice(deviceId), proxy)
+        
+        # Get related device from project...
+        device = parent.project.getDevice(deviceId)
+
+        proxy = ProxyWidget(layout.parentWidget())
+        item = WorkflowItem(device, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
         ss = [ ]
@@ -274,11 +284,17 @@ class WorkflowGroupItem(Item):
 
     @staticmethod
     def load(elem, layout):
+        # Get scene this item belongs to
+        parent = layout.parent()
+        while not isinstance(parent, scene.Scene):
+            parent = parent.parent()
+        
+        id = elem.get(ns_karabo + "text")
+        
+        # Get related device from project...
+        deviceGroup = parent.project.getDevice(id)
+        
         proxy = ProxyWidget(layout.parentWidget())
-        displayText = elem.get(ns_karabo + "text")
-        return proxy
-        # TODO: get existing device group via unique id
-        deviceGroup = manager.getDeviceGroup(id) #DeviceGroup(displayText)
         item = WorkflowGroupItem(deviceGroup, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
