@@ -312,6 +312,8 @@ class Vector(hashtypes.Vector, metaclass=Monkey):
 
 
 class Slot(hashtypes.Slot, metaclass=Monkey):
+    classAlias = "Command"
+
     def item(self, treeWidget, parent, box, isClass):
         item = CommandTreeWidgetItem(self.displayedName, box, treeWidget,
                                      parent)
