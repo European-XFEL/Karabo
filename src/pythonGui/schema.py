@@ -312,6 +312,8 @@ class Vector(hashtypes.Vector, metaclass=Monkey):
 
 
 class Slot(hashtypes.Slot, metaclass=Monkey):
+    classAlias = "Command"
+
     def item(self, treeWidget, parent, box, isClass):
         item = CommandTreeWidgetItem(self.displayedName, box, treeWidget,
                                      parent)
@@ -330,7 +332,7 @@ class Slot(hashtypes.Slot, metaclass=Monkey):
 
 
     def execute(self, box):
-        async(self.method(box.configuration.value, None)())
+        async(self.method.__get__(box.configuration.value, None)())
 
 
 class Object(object):
