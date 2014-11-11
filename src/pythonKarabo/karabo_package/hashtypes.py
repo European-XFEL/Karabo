@@ -199,6 +199,8 @@ class Descriptor(object):
     assignment = Attribute(Assignment.OPTIONAL)
     requiredAccessLevel = Attribute(AccessLevel.OBSERVER)
     displayType = Attribute()
+    unitSymbol = Attribute("")
+    metricPrefixSymbol = Attribute("")
     enum = None
 
     def __init__(self, **kwargs):
@@ -274,8 +276,6 @@ class Type(Descriptor, Registry):
     strs = { }
 
     options = Attribute()
-    unitSymbol = Attribute("")
-    metricPrefixSymbol = Attribute("")
 
 
     @classmethod
