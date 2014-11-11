@@ -13,6 +13,7 @@ __all__ = ["DeviceDialog", "DeviceGroupDialog", "DeviceDefinitionWidget"]
 
 import globals
 
+from karabo.enums import AccessLevel
 from .duplicatedialog import DuplicateWidget
 
 from PyQt4.QtCore import pyqtSignal
@@ -285,8 +286,8 @@ class DeviceDefinitionWidget(QWidget):
         self.cbPlugin.clear()
         self.cbServer.clear()
 
-        for serverId in list(serverTopology.keys()):
-            visibility = serverTopology.getAttribute(serverId, "visibility")
+        for serverId in serverTopology:
+            visibility = AccessLevel(serverTopology[serverId, "visibility"])
             if visibility > globals.GLOBAL_ACCESS_LEVEL:
                 continue
 
@@ -297,15 +298,11 @@ class DeviceDefinitionWidget(QWidget):
             if not deviceClasses:
                 continue
 
-            visibleClasses = []
-            visibilities = serverTopology.getAttribute(serverId, "visibilities")
-            i = -1
-            for classId in deviceClasses:
-                i = i + 1
-                if visibilities[i] <= globals.GLOBAL_ACCESS_LEVEL:
-                    visibleClasses.append(classId)
-
-            self.cbServer.addItem(serverId, visibleClasses)
+            visi = serverTopology.getAttribute(serverId, "visibilities")
+            self.cbServer.addItem(serverId,
+                                  [c for c, v in zip(deviceClasses, visi)
+                                   if AccessLevel(v) <=
+                                       globals.GLOBAL_ACCESS_LEVEL])
 
         # No servers and therefore no plugins available?
         if self.cbServer.count() < 1:
