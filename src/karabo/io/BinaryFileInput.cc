@@ -17,6 +17,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Input<Hash>, BinaryFileInput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Input<Schema>, BinaryFileInput<Schema>)
+        KARABO_REGISTER_FOR_CONFIGURATION(Input<std::vector<char> >, BinaryFileInput<std::vector<char> >)
 
     }
 }
