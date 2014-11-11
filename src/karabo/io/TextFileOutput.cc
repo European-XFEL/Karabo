@@ -17,5 +17,6 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Hash>, TextFileOutput<Hash>)
         KARABO_REGISTER_FOR_CONFIGURATION(Output<Schema>, TextFileOutput<Schema>)
+        KARABO_REGISTER_FOR_CONFIGURATION(Output<std::vector<char> >, TextFileOutput<std::vector<char> >)
     }
 }
