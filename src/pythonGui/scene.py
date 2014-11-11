@@ -1083,8 +1083,7 @@ class Scene(QSvgWidget):
                 proxy.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
-                self.workflow_connection = WorkflowConnection(self)
-                self.workflow_connection.mousePressEvent(channel)
+                self.workflow_connection = WorkflowConnection(self, channel)
                 QWidget.mousePressEvent(self, event)
                 return
             self.current_action.mousePressEvent(self, event)
@@ -1120,6 +1119,8 @@ class Scene(QSvgWidget):
             _, channel = self.workflowChannelHit(event)
             if channel is not None and channel.allowConnection():
                 self.workflow_connection.mouseReleaseEvent(self, channel)
+            else:
+                self.update()
             self.workflow_connection = None
         
         self.current_action.mouseReleaseEvent(self, event)
@@ -1280,7 +1281,6 @@ class Scene(QSvgWidget):
                 
                 self.clear_selection()
                 self.ilayout.add_item(proxy)
-                #proxy.selected = True
                 
                 self.project.setModified(True, True)
                 self.project.signalSelectObject.emit(object)
@@ -1337,4 +1337,8 @@ class Scene(QSvgWidget):
                 c.selected = True
                 self.update()
                 return
+
+        # No corresponding object found - clear selection
+        self.clear_selection()
+        self.update()
 

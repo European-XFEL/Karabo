@@ -428,22 +428,22 @@ class WorkflowChannel(QWidget):
 class WorkflowConnection(QWidget):
 
 
-    def __init__(self, parent):
+    def __init__(self, parent, start_channel):
         super(WorkflowConnection, self).__init__(parent)
         
         # Describe the in/output channels this connection belongs to
-        self.start_channel = None
+        self.start_channel = start_channel
         self.end_channel = None
         
-        self.start_pos = None
-        self.end_pos = None
+        self.start_pos = self.start_channel.mappedPos()
+        self.end_pos = self.start_pos
         self.curve = None
 
 
-    def mousePressEvent(self, channel):
-        self.start_channel = channel
-        self.start_pos = channel.mappedPos()
-        self.end_pos = self.start_pos
+    #def mousePressEvent(self, channel):
+    #    self.start_channel = channel
+    #    self.start_pos = channel.mappedPos()
+    #    self.end_pos = self.start_pos
 
 
     def mouseMoveEvent(self, event):
@@ -451,13 +451,14 @@ class WorkflowConnection(QWidget):
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, channel):
-        if self.curve is None:
+    def mouseReleaseEvent(self, parent, end_channel):
+        if self.curve is None or self.start_channel is end_channel:
+            parent.update()
             return
         
-        self.end_channel = channel
+        self.end_channel = end_channel
         # Overwrite end position with exact channel position
-        self.end_pos = channel.mappedPos()
+        self.end_pos = self.end_channel.mappedPos()
         
         if self.start_pos.x() > self.end_pos.x():
             tmp = self.start_pos
