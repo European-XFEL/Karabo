@@ -74,6 +74,25 @@ class BaseConfiguration(Configuration):
             self.fromHash(self._initConfig)
 
 
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.fromHash(XMLParser().read(xmlString))
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        if self.descriptor is not None:
+            config = self.toHash()
+        else:
+            config = self._initConfig
+
+        return XMLWriter().write(Hash(self.classId, config))
+
+
     def checkClassSchema(self):
         if self.descriptorRequested is True:
             return
@@ -112,24 +131,6 @@ class Device(BaseDevice, BaseConfiguration):
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
-
-
-    def fromXml(self, xmlString):
-        """
-        This function loads the corresponding XML file of this configuration.
-        """
-        self.fromHash(XMLParser().read(xmlString))
-
-
-    def toXml(self):
-        """
-        This function returns the configurations' XML file as a string.
-        """
-        if self.descriptor is not None:
-            config = self.toHash()
-        else:
-            config = self._initConfig
-        return XMLWriter().write(Hash(self.classId, config))
 
 
     def onStatusChanged(self, conf, status, error):
@@ -455,11 +456,15 @@ class GuiProject(Project, QObject):
                                           "classId", device.classId,
                                           "filename", device.filename,
                                           "ifexists", device.ifexists))
+                    # Save group configuration to file
+                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
+                                deviceObj.toXml())
                     deviceGroupHash = Hash("group", group)
-                    print()
-                    print("group", group)
-                    print("deviceGroupHash", deviceGroupHash)
                     deviceGroupHash.setAttribute("group", "id", deviceObj.id)
+                    deviceGroupHash.setAttribute("group", "filename", deviceObj.filename)
+                    deviceGroupHash.setAttribute("group", "serverId", deviceObj.serverId)
+                    deviceGroupHash.setAttribute("group", "classId", deviceObj.classId)
+                    
                     deviceHash.append(deviceGroupHash)
             projectConfig[self.DEVICES_KEY] = deviceHash
             
