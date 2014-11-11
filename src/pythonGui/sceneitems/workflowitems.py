@@ -34,8 +34,8 @@ class Item(QWidget, Loadable):
         self.font = QFont()
         self.displayText = ""
         
-        self.inputChannels = [] # list of WorkflowChannels of type input
-        self.outputChannels = [] # list of WorkflowChannels of type output
+        self.input_channels = [] # list of WorkflowChannels of type input
+        self.output_channels = [] # list of WorkflowChannels of type output
         
         self.descriptor = None
         
@@ -61,12 +61,12 @@ class Item(QWidget, Loadable):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
         
-        for input in self.inputChannels:
+        for input in self.input_channels:
             channelHit = input.hit(localPos)
             if channelHit:
                 return input
         
-        for output in self.outputChannels:
+        for output in self.output_channels:
             channelHit = output.hit(localPos)
             if channelHit:
                 return output
@@ -75,6 +75,8 @@ class Item(QWidget, Loadable):
 
 
     def paintEvent(self, event):
+        self.checkChannels(self.getObject())
+
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -96,9 +98,9 @@ class Item(QWidget, Loadable):
 
     def paintInputChannels(self, painter):
         rect = self.outlineRect()
-        nbChannels = len(self.inputChannels)
+        nbChannels = len(self.input_channels)
         yDelta = rect.height() / (nbChannels+1)
-        for index, input in enumerate(self.inputChannels):
+        for index, input in enumerate(self.input_channels):
             y = yDelta * index
             if nbChannels > 1:
                 y -= (yDelta/2)
@@ -113,9 +115,9 @@ class Item(QWidget, Loadable):
 
     def paintOutputChannels(self, painter):
         rect = self.outlineRect()
-        nbChannels = len(self.outputChannels)
+        nbChannels = len(self.output_channels)
         yDelta = rect.height() / (nbChannels+1)
-        for index, output in enumerate(self.outputChannels):
+        for index, output in enumerate(self.output_channels):
             y = yDelta * index
             if nbChannels > 1:
                 y -= (yDelta/2)
@@ -149,9 +151,9 @@ class Item(QWidget, Loadable):
         rect = self.outlineRect()
         
         addWidth = 0
-        if self.inputChannels:
+        if self.input_channels:
             addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
-        elif self.outputChannels:
+        elif self.output_channels:
             addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
         
         rect.setWidth(rect.width() + addWidth)
@@ -179,9 +181,9 @@ class Item(QWidget, Loadable):
                     continue
                 
                 if displayType == Item.INPUT:
-                    self.inputChannels.append(WorkflowChannel(displayType, box, self))
+                    self.input_channels.append(WorkflowChannel(displayType, box, self))
                 elif displayType == Item.OUTPUT:
-                    self.outputChannels.append(WorkflowChannel(displayType, box, self))
+                    self.output_channels.append(WorkflowChannel(displayType, box, self))
             
             # Update geometry of proxy to new channels
             rect = self.boundingRect()
@@ -209,12 +211,10 @@ class WorkflowItem(Item):
         """
         The object to the related device is returned.
         """
+        if self.device.isOnline():
+            return manager.getDevice(self.device.id)
+        
         return self.device
-
-
-    def paintEvent(self, event):
-        self.checkChannels(self.device)
-        Item.paintEvent(self, event)
 
 
     def save(self, ele):
@@ -264,11 +264,6 @@ class WorkflowGroupItem(Item):
             return self.deviceGroup.instance
         
         return self.deviceGroup
-
-
-    def paintEvent(self, event):
-        self.checkChannels(self.getObject())
-        Item.paintEvent(self, event)
 
 
     def save(self, ele):
@@ -425,7 +420,7 @@ class WorkflowChannel(QWidget):
         return point
 
 
-class WorkflowConnection(QWidget):
+class WorkflowConnection(QWidget, Loadable):
 
 
     def __init__(self, parent, start_channel):
