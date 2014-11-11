@@ -588,6 +588,7 @@ class Macro(object):
         for k, v in self.macros.items():
             v.instance = Configuration(k, "macro", v.getSchema())
             v.instance.setDefault()
+            v.instance.status = "alive"
         self.project.signalProjectModified.emit()
 
 

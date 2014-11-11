@@ -1186,10 +1186,13 @@ class Scene(QSvgWidget):
                 # Get Boxes. "box" is in the project, "realbox" the
                 # one on the device. They are the same if not from a project
                 box = item.box
-                realbox = manager.getDevice(box.configuration.id
-                                            ).getBox(box.path)
-                if realbox.descriptor is not None:
-                    box = realbox
+                if box.configuration.type == "projectClass":
+                    realbox = manager.getDevice(box.configuration.id
+                                                ).getBox(box.path)
+                    if realbox.descriptor is not None:
+                        box = realbox
+                else:
+                    realbox = box
 
                 # Create display component, if available
                 configDisplayComponent = item.displayComponent
