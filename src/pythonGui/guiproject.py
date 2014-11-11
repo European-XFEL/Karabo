@@ -173,9 +173,9 @@ class Device(BaseDevice, BaseConfiguration):
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
-    def __init__(self, type, name=""):
-        BaseConfiguration.__init__(self, name, type)
-        BaseDeviceGroup.__init__(self, name)
+    def __init__(self, id="", type="deviceGroupClass"):
+        BaseConfiguration.__init__(self, id, type)
+        BaseDeviceGroup.__init__(self, id)
         
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
@@ -188,7 +188,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.instance is not None:
             return self.instance
 
-        self.instance = DeviceGroup("deviceGroup", self.id)
+        self.instance = DeviceGroup(self.id, "deviceGroup")
         self.instance.devices = self.devices
         self.instance.project = self.project
         
@@ -287,6 +287,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 class GuiProject(Project, QObject):
     Device = Device
+    DeviceGroup = DeviceGroup
 
     signalProjectModified = pyqtSignal()
     signalSelectObject = pyqtSignal(object)
@@ -346,7 +347,7 @@ class GuiProject(Project, QObject):
 
 
     def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
-        deviceGroup = DeviceGroup("deviceGroupClass")
+        deviceGroup = DeviceGroup()
         # Set server and class id for descriptor request
         deviceGroup.serverId = serverId
         deviceGroup.classId = classId
@@ -437,7 +438,7 @@ class GuiProject(Project, QObject):
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
             deviceHash = []
             for deviceObj in self.devices:
-                if isinstance(deviceObj, Configuration):
+                if isinstance(deviceObj, Device):
                     zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
                                 deviceObj.toXml())
                     
@@ -447,7 +448,7 @@ class GuiProject(Project, QObject):
                                            "ifexists", deviceObj.ifexists))
                 else:
                     group = []
-                    for device in deviceObj:
+                    for device in deviceObj.devices:
                         zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                                     device.toXml())
                         group.append(Hash("serverId", device.serverId,
@@ -455,7 +456,10 @@ class GuiProject(Project, QObject):
                                           "filename", device.filename,
                                           "ifexists", device.ifexists))
                     deviceGroupHash = Hash("group", group)
-                    deviceGroupHash.setAttribute("group", "name", deviceObj.name)
+                    print()
+                    print("group", group)
+                    print("deviceGroupHash", deviceGroupHash)
+                    deviceGroupHash.setAttribute("group", "id", deviceObj.id)
                     deviceHash.append(deviceGroupHash)
             projectConfig[self.DEVICES_KEY] = deviceHash
             

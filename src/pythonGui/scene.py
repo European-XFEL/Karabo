@@ -1324,7 +1324,7 @@ class Scene(QSvgWidget):
         This slot is called whenever an item of the project panel is selected.
         The corresponding scene item is selected as well, if existent.
         """
-        if object is None:
+        if object is None or self.ilayout is None:
             return
         
         for c in self.ilayout:

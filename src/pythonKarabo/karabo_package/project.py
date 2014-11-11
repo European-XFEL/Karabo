@@ -78,6 +78,16 @@ class Project(object):
         device.project = self
 
 
+    def getDevice(self, id):
+        """
+        The first occurence of the device (group) with the given \id is returned.
+        """
+        for device in self.devices:
+            if id == device.id:
+                return device
+        return None
+
+
     def addDeviceGroup(self, deviceGroup):
         self.devices.append(deviceGroup)
         deviceGroup.project = self
@@ -167,7 +177,7 @@ class Project(object):
         for d in projectConfig[self.DEVICES_KEY]:
             group = d.get("group")
             if group is not None:
-                deviceGroup = DeviceGroup(d.getAttribute("group", "name"))
+                deviceGroup = self.DeviceGroup(d.getAttribute("group", "id"))
                 for item in group:
                     serverId = item.get("serverId")
                     filename = item.get("filename")
@@ -180,7 +190,7 @@ class Project(object):
                                              item.get("ifexists"))
 
                         device.initConfig = config
-                        deviceGroup.append(device)
+                        deviceGroup.addDevice(device)
                         break # there better be only one!
                 self.addDeviceGroup(deviceGroup)
             else:
