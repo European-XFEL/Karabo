@@ -49,7 +49,7 @@ namespace karabo {
                     node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
                     node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
                     node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-                    node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                    node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 }
                 return *this;
             }
@@ -70,7 +70,7 @@ namespace karabo {
                 node.setAttribute(KARABO_SCHEMA_CLASS_ID, T::classInfo().getClassId());
                 node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, T::classInfo().getClassId());
                 node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-                node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 return *this;
             }
 
@@ -113,7 +113,7 @@ namespace karabo {
         protected:
 
             void beforeAddition() {
-                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, READ | WRITE | INIT);
+                if (!this->m_node->hasAttribute(KARABO_SCHEMA_ACCESS_MODE)) this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::CHOICE_OF_NODES);
             }
 
