@@ -599,6 +599,9 @@ class ChoiceOfNodes(Schema):
             if item.defaultValue is None:
                 if i > 0:
                     child.setHidden(True)
+                else:
+                    if box.current is None:
+                        box.current = child.text(0)
             else:
                 if child.text(0) != item.defaultValue:
                     child.setHidden(True)
