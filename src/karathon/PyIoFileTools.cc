@@ -146,6 +146,41 @@ namespace karathon {
             ScopedGILRelease nogil;
             self->update();
         }
+        
+        static bp::object getInstanceId(const boost::shared_ptr<karabo::io::Output<T> >& self) {
+            return bp::object(self->getInstanceId());
+        }
+
+
+        static void setInstanceId(const boost::shared_ptr<karabo::io::Output<T> >& self, const std::string& instanceId) {
+            self->setInstanceId(instanceId);
+        }
+
+
+        static void setOutputHandlerType(const boost::shared_ptr<karabo::io::Output<T> >& self, const std::string& type) {
+            self->setOutputHandlerType(type);
+        }
+
+
+        static bp::object getInformation(const boost::shared_ptr<karabo::io::Output<T> >& self) {
+            return bp::object(self->getInformation());
+        }
+
+
+        static bool canCompute(const boost::shared_ptr<karabo::io::Output<T> >& self) {
+            return self->canCompute();
+        }
+
+
+        static void signalEndOfStream(const boost::shared_ptr<karabo::io::Output<T> >& self) {
+            ScopedGILRelease nogil;
+            self->signalEndOfStream();
+        }
+
+
+        static void registerIOEventHandler(const boost::shared_ptr<karabo::io::Output<T> >& self, const bp::object& handler) {
+            self->registerIOEventHandler(handler);
+        }
     };
 
 
@@ -227,6 +262,19 @@ void exportPyIo() {
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractInput)
                 ;
     }
+    {
+        bp::class_<AbstractOutput, boost::shared_ptr<AbstractOutput>, boost::noncopyable>("AbstractOutput", bp::init<>())
+                .def("setInstanceId", &karathon::AbstractOutputWrap::setInstanceId, (bp::arg("instanceId")))
+                .def("getInstanceId", &karathon::AbstractOutputWrap::getInstanceId)
+                .def("setOutputHandlerType", &karathon::AbstractOutputWrap::setOutputHandlerType, (bp::arg("type")))
+                .def("getInformation", &karathon::AbstractOutputWrap::getInformation)
+                .def("canCompute", &karathon::AbstractOutputWrap::canCompute)
+                .def("update", &karathon::AbstractOutputWrap::update)
+                .def("signalEndOfStream", &karathon::AbstractOutputWrap::signalEndOfStream)
+                .def("registerIOEventHandler", &karathon::AbstractOutputWrap::registerIOEventHandler, (bp::arg("handler")))
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(AbstractOutput)
+                ;
+    }
 }
 
 // TODO: DEPRECATE THIS
@@ -282,8 +330,15 @@ void exportPyIoOutput() {
                 .def("write"
                      , (void (SpecificOutput::*)(T const &))(&SpecificOutput::write)
                      , (bp::arg("data")))
-                .def("update", &karathon::OutputWrap<T>::update)
                 .def("use_count", &boost::shared_ptr<SpecificOutput>::use_count)
+                .def("setInstanceId", &karathon::OutputWrap<T>::setInstanceId, (bp::arg("instanceId")))
+                .def("getInstanceId", &karathon::OutputWrap<T>::getInstanceId)
+                .def("setOutputHandlerType", &karathon::OutputWrap<T>::setOutputHandlerType, (bp::arg("type")))
+                .def("getInformation", &karathon::OutputWrap<T>::getInformation)
+                .def("canCompute", &karathon::OutputWrap<T>::canCompute)
+                .def("update", &karathon::OutputWrap<T>::update)
+                .def("signalEndOfStream", &karathon::OutputWrap<T>::signalEndOfStream)
+                .def("registerIOEventHandler", &karathon::OutputWrap<T>::registerIOEventHandler, (bp::arg("handler")))
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(SpecificOutput)
                 ;
