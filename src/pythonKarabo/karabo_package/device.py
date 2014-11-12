@@ -140,7 +140,12 @@ class PythonDevice(BaseFsm):
         
         # Initialize Device slots
         self._initDeviceSlots()
-        
+    
+    @property
+    def signalSlotable(self):
+        '''Get SignalSlotable object embeded in PythonDevice instance.'''
+        return self._ss
+    
     def loadLogger(self,input):
         config = input["Logger"]
 
