@@ -427,7 +427,8 @@ class EditableApplyLaterComponent(BaseComponent):
             # broadcast to Network
             if b.configuration.type == "macro":
                 b.set(self.widgetFactory.value)
-            elif b.configuration.type != "deviceGroup":
+            elif (b.configuration.type != "deviceGroup" and
+                  b.descriptor is not None):
                 network.append((b, self.widgetFactory.value))
 
         if network:
