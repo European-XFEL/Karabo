@@ -337,11 +337,13 @@ class Slot(hashtypes.Slot, metaclass=Monkey):
 
 class Object(object):
     def __init__(self, box):
-        assert isinstance(box.value, Dummy)
         self.__box__ = box
         sdict = type(self).__dict__
-        self.__dummies__ = {k: v for k, v in box.value.__dict__.items()
-                            if isinstance(v, Box) and k not in sdict}
+        if isinstance(box.value, Dummy):
+            self.__dummies__ = {k: v for k, v in box.value.__dict__.items()
+                                if isinstance(v, Box) and k not in sdict}
+        else:
+            self.__dummies__ = {}
         for k, v in sdict.items():
             if isinstance(v, hashtypes.Descriptor):
                 b = getattr(box.boxvalue, k, None)
