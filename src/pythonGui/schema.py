@@ -337,8 +337,12 @@ class Slot(hashtypes.Slot, metaclass=Monkey):
 
 class Object(object):
     def __init__(self, box):
+        assert isinstance(box.value, Dummy)
         self.__box__ = box
-        for k, v in type(self).__dict__.items():
+        sdict = type(self).__dict__
+        self.__dummies__ = {k: v for k, v in box.value.__dict__.items()
+                            if isinstance(v, Box) and k not in sdict}
+        for k, v in sdict.items():
             if isinstance(v, hashtypes.Descriptor):
                 b = getattr(box.boxvalue, k, None)
                 if b is None:
@@ -520,6 +524,8 @@ class Schema(hashtypes.Descriptor):
             if b is not None and b.descriptor is not None:
                 b.redummy()
                 setattr(d, k, b)
+        for k, v in box.value.__dummies__.items():
+            setattr(d, k, v)
         box._value = d
         box.initialized = False
         box.descriptor = None
