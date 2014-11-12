@@ -5,6 +5,7 @@ from karabo.hash import BinaryParser, Hash
 from karabo.hashtypes import String, Int32, Type, Slot
 from karabo.enums import AccessLevel, Assignment, AccessMode
 from karabo.schema import Schema, Configurable
+from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
@@ -171,6 +172,17 @@ class SignalSlotable(Configurable):
     @coroutine
     def slotDisconnectFromSlot(self, *args):
         print("SDFS", args)
+
+
+    @coroutine
+    def slotGetOutputChannelInformation(self, ioChannelId, processId):
+        ch = getattr(self, ioChannelId, None)
+        if isinstance(ch, NetworkOutput):
+            ret = ch.getInformation()
+            ret["memoryLocation"] = "remote"
+            return True, ret
+        else:
+            return False, Hash()
 
     @coroutine
     def heartbeats(self):
