@@ -290,7 +290,7 @@ class WorkflowGroupItem(Item):
             parent = parent.parent()
         
         id = elem.get(ns_karabo + "text")
-        
+
         # Get related device from project...
         deviceGroup = parent.project.getDevice(id)
         

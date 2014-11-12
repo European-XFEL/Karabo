@@ -177,13 +177,12 @@ class Project(object):
         for d in projectConfig[self.DEVICES_KEY]:
             group = d.get("group")
             if group is not None:
-                deviceGroup = self.DeviceGroup(d.getAttribute("group", "id"))
-                deviceGroup.serverId = d.getAttribute("group", "serverId")
-                deviceGroup.classId = d.getAttribute("group", "classId")
-                
                 filename = d.getAttribute("group", "filename")
                 data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
                 for _, config in XMLParser().read(data).items():
+                    deviceGroup = self.DeviceGroup(d.getAttribute("group", "id"))
+                    deviceGroup.serverId = d.getAttribute("group", "serverId")
+                    deviceGroup.classId = d.getAttribute("group", "classId")
                     deviceGroup.initConfig = config
                     break # there better be only one!
                 
@@ -210,10 +209,11 @@ class Project(object):
                 filename = filename[:-4]
 
                 for classId, config in XMLParser().read(data).items():
-                    device = self.newDevice(serverId, classId, filename,
-                                            d.get("ifexists"), False)
+                    device = self.Device(serverId, classId, filename,
+                                         d.get("ifexists"))
                     device.initConfig = config
                     break # there better be only one!
+                self.addDevice(device)
         for deviceId, configList in projectConfig[
                             self.CONFIGURATIONS_KEY].items():
             # Vector of hashes

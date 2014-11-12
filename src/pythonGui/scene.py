@@ -1244,11 +1244,12 @@ class Scene(QSvgWidget):
             
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
-            # Open dialog to set up new device
+            # Open dialog to set up new device (group)
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.isDeviceGroup:
                     object = self.project.getDevice(dialog.deviceId)
+                    # TODO: overwrite existing device?
                     if object is None:
                         # Create only one device configuration and add to project,
                         # if not exists
@@ -1263,6 +1264,7 @@ class Scene(QSvgWidget):
                     workflowItem = WorkflowItem(object, proxy)
                 else:
                     object = self.project.getDevice(dialog.deviceGroupName)
+                    # TODO: overwrite existing device group?
                     if object is None:
                         # Create device group and add to project, if not exists
                         object = self.project.newDeviceGroup(dialog.serverId,
