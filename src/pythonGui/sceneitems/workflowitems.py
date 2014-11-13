@@ -169,7 +169,6 @@ class Item(QWidget, Loadable):
     def checkChannels(self, device):
         descr = device.descriptor
         if descr is not None and self.descriptor is None:
-            print("checkChannels", device)
             self.descriptor = descr
             
             # Check for all in/output channels
