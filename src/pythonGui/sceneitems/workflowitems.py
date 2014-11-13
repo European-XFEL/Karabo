@@ -169,6 +169,7 @@ class Item(QWidget, Loadable):
     def checkChannels(self, device):
         descr = device.descriptor
         if descr is not None and self.descriptor is None:
+            print("checkChannels", device)
             self.descriptor = descr
             
             # Check for all in/output channels
@@ -235,6 +236,8 @@ class WorkflowItem(Item):
         
         # Get related device from project...
         device = parent.project.getDevice(deviceId)
+        # Trigger selection to get descriptor
+        parent.project.signalSelectObject.emit(device)
 
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowItem(device, proxy)
@@ -293,6 +296,8 @@ class WorkflowGroupItem(Item):
 
         # Get related device from project...
         deviceGroup = parent.project.getDevice(id)
+        # Trigger selection to get descriptor
+        parent.project.signalSelectObject.emit(deviceGroup)
         
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowGroupItem(deviceGroup, proxy)
