@@ -88,7 +88,6 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateData(self):
-        print("++++ updateData ++++")
         # Get last selected object
         selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
