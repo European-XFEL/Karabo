@@ -439,22 +439,28 @@ class WorkflowChannel(QWidget):
 class WorkflowConnection(QWidget, Loadable):
 
 
-    def __init__(self, parent, start_channel):
+    def __init__(self, parent, start_channel=None):
         super(WorkflowConnection, self).__init__(parent)
         
+        self._init(start_channel)
+
+
+    def _init(self, start_channel):
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
         self.end_channel = None
         
-        self.start_pos = self.start_channel.mappedPos()
+        if self.start_channel is None:
+            self.start_channel_type = ""
+            self.start_pos = QPoint()
+        else:
+            # Save the channel type - in the end the only channel parameter
+            # necessary to draw this connection
+            self.start_channel_type = self.start_channel.channel_type
+            self.start_pos = self.start_channel.mappedPos()
+        
         self.end_pos = self.start_pos
         self.curve = None
-
-
-    #def mousePressEvent(self, channel):
-    #    self.start_channel = channel
-    #    self.start_pos = channel.mappedPos()
-    #    self.end_pos = self.start_pos
 
 
     def mouseMoveEvent(self, event):
@@ -479,6 +485,8 @@ class WorkflowConnection(QWidget, Loadable):
             tmp_channel = self.start_channel
             self.start_channel = self.end_channel
             self.end_channel = tmp_channel
+            
+            self.start_channel_type = self.start_channel.channel_type
        
         sx = self.start_pos.x()
         sy = self.start_pos.y()
@@ -514,14 +522,14 @@ class WorkflowConnection(QWidget, Loadable):
 
     def draw(self, painter):
         #painter.setPen(self.pen)
-        
+
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
-        if self.start_channel.channel_type == Item.OUTPUT:
+        if self.start_channel_type == Item.OUTPUT:
             c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
-        elif self.start_channel.channel_type == Item.INPUT:
+        elif self.start_channel_type == Item.INPUT:
             c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
@@ -576,4 +584,33 @@ class WorkflowConnection(QWidget, Loadable):
 
         # Update box configuration
         inputChannelBox.set(value, None)
+
+
+    def save(self, ele):
+        ele.set(ns_karabo + "class", "WorkflowConnection")
+        ele.set(ns_karabo + "start_channel_type", self.start_channel_type)
+        ele.set(ns_karabo + "start_x", str(self.start_pos.x()))
+        ele.set(ns_karabo + "start_y", str(self.start_pos.y()))
+        ele.set(ns_karabo + "end_x", str(self.end_pos.x()))
+        ele.set(ns_karabo + "end_y", str(self.end_pos.y()))
+
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        connection = WorkflowConnection(proxy)
+        connection.start_channel_type = elem.get(ns_karabo + "start_channel_type")
+        
+        start_x = int(elem.get(ns_karabo + "start_x"))
+        start_y = int(elem.get(ns_karabo + "start_y"))
+        connection.start_pos = QPoint(start_x, start_y)
+        
+        end_x = int(elem.get(ns_karabo + "end_x"))
+        end_y = int(elem.get(ns_karabo + "end_y"))
+        connection.end_pos = QPoint(end_x, end_y)
+        
+        proxy.setWidget(connection)
+        layout.loadPosition(elem, proxy)
+        
+        return proxy
 
