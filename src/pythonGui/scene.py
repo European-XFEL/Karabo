@@ -23,7 +23,7 @@ import pathparser
 import icons
 import manager
 
-from PyQt4.QtCore import (Qt, QByteArray, QEvent, QSize, QRect, QLine,
+from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
@@ -228,6 +228,7 @@ class Shape(ShapeAction, Loadable):
 
     def draw(self, painter):
         if self.selected:
+            print("draw selection", self)
             black = QPen(Qt.black)
             black.setStyle(Qt.DashLine)
             white = QPen(Qt.white)
@@ -332,7 +333,6 @@ class Select(Action):
                 parent.ilayout.update()
                 parent.setModified()
             parent.update()
-            
 
 
     def mouseReleaseEvent(self, parent, event):
@@ -874,12 +874,16 @@ class Lower(SimpleAction):
 
 
 class Scene(QSvgWidget):
-
+    signalSceneItemSelected = pyqtSignal(object)
     
     def __init__(self, project, name, parent=None, designMode=True):
         super(Scene, self).__init__(parent)
 
         self.project = project
+        # Connect signals to forward selection of scene item
+        self.signalSceneItemSelected.connect(self.project.signalSelectObject)
+        self.project.signalDeviceSelected.connect(self.onSelectionChanged)
+        
         self.filename = name
         fi = QFileInfo(self.filename)
         if len(fi.suffix()) < 1:
@@ -1063,6 +1067,8 @@ class Scene(QSvgWidget):
                 workflowItem = proxy.widget
                 # Check for WorkflowItem...
                 if isinstance(workflowItem, Item):
+                    # Send selection signal to connected project
+                    self.signalSceneItemSelected.emit(workflowItem.getObject())
                     return proxy, workflowItem.mousePressEvent(proxy, event)
         return None, None
 
@@ -1077,8 +1083,7 @@ class Scene(QSvgWidget):
                 proxy.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
-                self.workflow_connection = WorkflowConnection(self)
-                self.workflow_connection.mousePressEvent(channel)
+                self.workflow_connection = WorkflowConnection(self, channel)
                 QWidget.mousePressEvent(self, event)
                 return
             self.current_action.mousePressEvent(self, event)
@@ -1114,6 +1119,8 @@ class Scene(QSvgWidget):
             _, channel = self.workflowChannelHit(event)
             if channel is not None and channel.allowConnection():
                 self.workflow_connection.mouseReleaseEvent(self, channel)
+            else:
+                self.update()
             self.workflow_connection = None
         
         self.current_action.mouseReleaseEvent(self, event)
@@ -1162,7 +1169,7 @@ class Scene(QSvgWidget):
             w.dropEvent(event)
             if event.isAccepted():
                 return
-
+        
         mimeData = event.mimeData()
         sourceType = mimeData.data("sourceType")
 
@@ -1170,6 +1177,7 @@ class Scene(QSvgWidget):
         if sourceType == "ParameterTreeWidget":
             selectedItems = source.selectedItems()
 
+            self.clear_selection()
             for item in selectedItems:
                 # Create layout for coming context
                 layout = BoxLayout(QBoxLayout.LeftToRight)
@@ -1239,31 +1247,38 @@ class Scene(QSvgWidget):
             
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
-            # Open dialog to set up new device
+            # Open dialog to set up new device (group)
             dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.isDeviceGroup:
-                    # Create only one device configuration and add to project
-                    object = self.project.newDevice(dialog.serverId,
-                                                    dialog.classId,
-                                                    dialog.deviceId,
-                                                    dialog.startupBehaviour,
-                                                    True)
+                    object = self.project.getDevice(dialog.deviceId)
+                    # TODO: overwrite existing device?
+                    if object is None:
+                        # Create only one device configuration and add to project,
+                        # if not exists
+                        object = self.project.newDevice(dialog.serverId,
+                                                        dialog.classId,
+                                                        dialog.deviceId,
+                                                        dialog.startupBehaviour,
+                                                        True)
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(object, proxy)
                 else:
-                    # Create device group and add to project
-                    object = self.project.newDeviceGroup(dialog.serverId,
-                                                        dialog.classId,
-                                                        dialog.deviceId,
-                                                        dialog.startupBehaviour,
-                                                        dialog.displayPrefix,
-                                                        dialog.startIndex,
-                                                        dialog.endIndex)
+                    object = self.project.getDevice(dialog.deviceGroupName)
+                    # TODO: overwrite existing device group?
+                    if object is None:
+                        # Create device group and add to project, if not exists
+                        object = self.project.newDeviceGroup(dialog.serverId,
+                                                            dialog.classId,
+                                                            dialog.deviceId,
+                                                            dialog.startupBehaviour,
+                                                            dialog.displayPrefix,
+                                                            dialog.startIndex,
+                                                            dialog.endIndex)
 
-                    object.id = dialog.deviceGroupName
+                        object.id = dialog.deviceGroupName
                     
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
@@ -1274,8 +1289,8 @@ class Scene(QSvgWidget):
                 proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
                 proxy.show()
                 
+                self.clear_selection()
                 self.ilayout.add_item(proxy)
-                proxy.selected = True
                 
                 self.project.setModified(True)
                 self.project.signalSelectObject.emit(object)
@@ -1312,4 +1327,28 @@ class Scene(QSvgWidget):
             self.current_action.draw(painter)
         finally:
             painter.end()
+
+
+    def onSelectionChanged(self, _, object):
+        """
+        This slot is called whenever an item of the project panel is selected.
+        The corresponding scene item is selected as well, if existent.
+        """
+        if object is None or self.ilayout is None:
+            return
+        
+        for c in self.ilayout:
+            if not isinstance(c, ProxyWidget):
+                continue
+            
+            workflowItem = c.widget
+            if isinstance(workflowItem, Item) and (workflowItem.getObject() is object):
+                self.clear_selection()
+                c.selected = True
+                self.update()
+                return
+
+        # No corresponding object found - clear selection
+        self.clear_selection()
+        self.update()
 
