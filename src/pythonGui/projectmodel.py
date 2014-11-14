@@ -593,7 +593,7 @@ class ProjectModel(QStandardItemModel):
 
             # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
-            scene.project.setModified(True)
+            scene.project.setModified(True, True)
 
 
     def _createScene(self, project, sceneName):
@@ -674,7 +674,7 @@ class ProjectModel(QStandardItemModel):
         else:
             conf = None
             ctype = "other"
-
+        
         self.signalItemChanged.emit(ctype, conf)
 
 
