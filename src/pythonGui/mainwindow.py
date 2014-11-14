@@ -302,14 +302,6 @@ class MainWindow(QMainWindow):
             self.middleTab.updateTabsClosable()
 
 
-    def onAddMacro(self, macro):
-        macroView = MacroPanel(macro)
-        self.middleTab.addDockableTab(macroView, macro.name)
-        macro.editor = macroView
-        if self.middleTab.count() > 1:
-            self.middleTab.updateTabsClosable()
-
-
     def onRemoveScene(self, scene):
         for i in range(self.middleTab.count()):
             divWidget = self.middleTab.widget(i)
@@ -340,6 +332,14 @@ class MainWindow(QMainWindow):
         # If tabwidget is empty - show start page instead
         if self.middleTab.count() < 1:
             self._createPlaceholderPanel()
+
+
+    def onAddMacro(self, macro):
+        macroView = MacroPanel(macro)
+        self.middleTab.addDockableTab(macroView, macro.name)
+        macro.editor = macroView
+        if self.middleTab.count() > 1:
+            self.middleTab.updateTabsClosable()
 
 
     def onChangeAccessLevel(self, action):
@@ -405,3 +405,11 @@ class MainWindow(QMainWindow):
             self.acUser.setChecked(False)
             self.acObserver.setChecked(False)
 
+
+    def onUpdateScenes(self):
+        for i in range(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "scene"):
+                scene = divWidget.dockableWidget.scene
+                if scene.isVisible():
+                    scene.update()
