@@ -46,7 +46,7 @@ namespace karabo {
              * @param timeout time in milliseconds auxiliary thread is waiting on the <b>request</b> queue; 0 means <i>nowait</i> mode; <0 means <i>waiting forever</i>
              * @param repetition <0 means <i>cycling forever</i>; 0 makes no sense; >0 means number of cycles.
              */
-            Worker(const boost::function<void(const bool&, const T&)>& callback, int timeout = -1, int repetition = -1)
+            Worker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
             : m_callback(callback)
             , m_timeout(timeout)
             , m_repetition(repetition)
@@ -69,7 +69,7 @@ namespace karabo {
              * @param timeout     timeout for receiving from queue
              * @param repetition  repetition counter
              */
-            Worker& set(const boost::function<void(const bool&, const T&)>& callback, int timeout = -1, int repetition = -1) {
+            Worker& set(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1) {
                 m_callback = callback;
                 m_timeout = timeout;
                 m_repetition = repetition;
@@ -157,7 +157,7 @@ namespace karabo {
                 }
             }
 
-            virtual bool cond(const T& t) = 0;
+            virtual bool stopCondition(const T& t) = 0;
 
             bool isRepetitionCounterExpired() const {
                 return m_count == 0;
@@ -199,13 +199,15 @@ namespace karabo {
                         if (!m_request.empty()) {
                             t = m_request.front();
                             m_request.pop();
+                            if (stopCondition(t))
+                                break;
                         }
                     }
                     // decrement counter and call callback if not suspended
                     if (m_count > 0)
                         m_count--;
-                    if (m_running || !cond(t)) {
-                        m_callback(m_count == 0, t);
+                    if (m_running) {
+                        m_callback(m_count == 0);
                     }
                 }
                 if (m_running) {
@@ -215,7 +217,7 @@ namespace karabo {
             }
 
         private:
-            boost::function<void (const bool&, const T&) > m_callback; // this callback defined once in constructor
+            boost::function<void (bool) > m_callback; // this callback defined once in constructor
             int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
             int m_repetition; // number of periodic cycles, <0 = no limit
             bool m_running; // "running" flag (default: true)
@@ -234,7 +236,7 @@ namespace karabo {
             FsmWorker() : Worker<bool>() {
             }
 
-            FsmWorker(const boost::function<void(const bool&, const bool&)>& callback, int timeout = -1, int repetition = -1)
+            FsmWorker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
             : Worker<bool>(callback, timeout, repetition) {
             }
 
@@ -242,8 +244,8 @@ namespace karabo {
                 abort().join();
             }
 
-            bool cond(const bool& data) {
-                return data;
+            bool stopCondition(const bool& data) {
+                return false;
             }
         };
     }

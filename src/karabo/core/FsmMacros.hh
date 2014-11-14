@@ -541,10 +541,10 @@ virtual bool func(const t1&, const t2&, const t3&);
 
 #define _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
 struct name { \
-    name() : m_timeout(timeout), m_repetition(repetition) {} \
-    void setContext(Self* const ctx) { m_context = ctx; } \
-    void operator()(const bool& expired, const bool& stopPeriodicProcessing) { \
-            m_context->func(expired, stopPeriodicProcessing); \
+    name() : m_timeout(timeout), m_repetition(repetition), m_context(0) {} \
+    void setContext(Self* const ctx) {if (!ctx) KARABO_LOG_FRAMEWORK_DEBUG << #name << ": WARNING set context  as NULL."; m_context = ctx; } \
+    void operator()(bool expired) { \
+            m_context->func(expired); \
     } \
     int getTimeout() const { return m_timeout; } \
     int getRepetition() const { return m_repetition; } \
@@ -555,16 +555,16 @@ private: \
 };
 #define KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-void func(const bool&, const bool&);
+void func(bool);
 #define KARABO_FSM_V_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(const bool&, const bool&);
+virtual void func(bool);
 #define KARABO_FSM_VE_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(const bool&, const bool&) {}
+virtual void func(bool) {}
 #define KARABO_FSM_PV_PERIODIC_ACTION(name, timeout, repetition, func) \
 _KARABO_FSM_PERIODIC_ACTION_IMPL1(name, timeout, repetition, func) \
-virtual void func(const bool&, const bool&) = 0;
+virtual void func(bool) = 0;
 
 
 /**************************************************************/
@@ -797,7 +797,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -808,7 +808,7 @@ struct name : public boost::msm::front::state<karabo::core::FsmBaseState> { \
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
             f.getContext()->exitFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -883,9 +883,9 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
-            } catch(karabo::util::Exception const& e) { \
+        } catch(karabo::util::Exception const& e) { \
             _onError<Fsm>(f, e.userFriendlyMsg(), e.detailedMsg()); \
         } catch(...) { \
             _onError<Fsm>(f); \
@@ -899,7 +899,7 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -925,7 +925,7 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     name() {this->setStateName(#name);} \
     template <class Event, class Fsm> void on_entry(Event const&, Fsm & f) { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": entry"; \
             f.getContext()->entryFunc(); \
         } catch(karabo::util::Exception const& e) { \
@@ -936,7 +936,7 @@ struct name : public boost::msm::front::terminate_state<karabo::core::FsmBaseSta
     } \
     template <class Event, class Fsm> void on_exit(Event const&, Fsm & f)  { \
         try { \
-             this->setFsmName(f.getFsmName()); \
+            this->setFsmName(f.getFsmName()); \
             KARABO_LOG_FRAMEWORK_DEBUG << #name << ": exit"; \
             f.getContext()->exitFunc();  \
         } catch(karabo::util::Exception const& e) { \
