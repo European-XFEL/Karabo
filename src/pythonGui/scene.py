@@ -228,7 +228,6 @@ class Shape(ShapeAction, Loadable):
 
     def draw(self, painter):
         if self.selected:
-            print("draw selection", self)
             black = QPen(Qt.black)
             black.setStyle(Qt.DashLine)
             white = QPen(Qt.white)
