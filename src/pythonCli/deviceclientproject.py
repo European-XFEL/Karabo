@@ -13,7 +13,7 @@ __all__ = ["DeviceClientProject", "ProjectDevice"]
 
 
 from karabo.hash import Hash, XMLParser, XMLWriter
-from karabo.project import Project, BaseDevice
+from karabo.project import Project, BaseDevice, BaseDeviceGroup
 
 import os.path
 
@@ -40,8 +40,20 @@ class ProjectDevice(BaseDevice):
         return XMLWriter().write(Hash(self.classId, self._initConfig))
 
 
+
+class ProjectDeviceGroup(BaseDeviceGroup):
+
+    def __init__(self, id):
+        BaseDeviceGroup.__init__(self, id)
+
+        self.serverId = None
+        self.classId = None
+
+
+
 class DeviceClientProject(Project):
     Device = ProjectDevice
+    DeviceGroup = ProjectDeviceGroup
 
     def __init__(self, filename, deviceClient):
         super(DeviceClientProject, self).__init__(filename)

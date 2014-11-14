@@ -12,6 +12,7 @@ from layouts import ProxyWidget
 import manager
 from registry import Loadable
 from schema import Dummy
+import scene
 
 from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
@@ -34,8 +35,8 @@ class Item(QWidget, Loadable):
         self.font = QFont()
         self.displayText = ""
         
-        self.inputChannels = [] # list of WorkflowChannels of type input
-        self.outputChannels = [] # list of WorkflowChannels of type output
+        self.input_channels = [] # list of WorkflowChannels of type input
+        self.output_channels = [] # list of WorkflowChannels of type output
         
         self.descriptor = None
         
@@ -50,16 +51,23 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getDeviceIds")
 
 
+    def getObject(self):
+        """
+        The object to the related device (group) is returned.
+        """
+        raise NotImplementedError("Item.getObject")
+
+
     def mousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
         
-        for input in self.inputChannels:
+        for input in self.input_channels:
             channelHit = input.hit(localPos)
             if channelHit:
                 return input
         
-        for output in self.outputChannels:
+        for output in self.output_channels:
             channelHit = output.hit(localPos)
             if channelHit:
                 return output
@@ -68,6 +76,8 @@ class Item(QWidget, Loadable):
 
 
     def paintEvent(self, event):
+        self.checkChannels(self.getObject())
+
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -89,9 +99,9 @@ class Item(QWidget, Loadable):
 
     def paintInputChannels(self, painter):
         rect = self.outlineRect()
-        nbChannels = len(self.inputChannels)
+        nbChannels = len(self.input_channels)
         yDelta = rect.height() / (nbChannels+1)
-        for index, input in enumerate(self.inputChannels):
+        for index, input in enumerate(self.input_channels):
             y = yDelta * index
             if nbChannels > 1:
                 y -= (yDelta/2)
@@ -106,9 +116,9 @@ class Item(QWidget, Loadable):
 
     def paintOutputChannels(self, painter):
         rect = self.outlineRect()
-        nbChannels = len(self.outputChannels)
+        nbChannels = len(self.output_channels)
         yDelta = rect.height() / (nbChannels+1)
-        for index, output in enumerate(self.outputChannels):
+        for index, output in enumerate(self.output_channels):
             y = yDelta * index
             if nbChannels > 1:
                 y -= (yDelta/2)
@@ -142,9 +152,9 @@ class Item(QWidget, Loadable):
         rect = self.outlineRect()
         
         addWidth = 0
-        if self.inputChannels:
+        if self.input_channels:
             addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
-        elif self.outputChannels:
+        elif self.output_channels:
             addWidth += 4*Item.WIDTH + 2*Item.CHANNEL_LENGTH
         
         rect.setWidth(rect.width() + addWidth)
@@ -172,9 +182,9 @@ class Item(QWidget, Loadable):
                     continue
                 
                 if displayType == Item.INPUT:
-                    self.inputChannels.append(WorkflowChannel(displayType, box, self))
+                    self.input_channels.append(WorkflowChannel(displayType, box, self))
                 elif displayType == Item.OUTPUT:
-                    self.outputChannels.append(WorkflowChannel(displayType, box, self))
+                    self.output_channels.append(WorkflowChannel(displayType, box, self))
             
             # Update geometry of proxy to new channels
             rect = self.boundingRect()
@@ -198,9 +208,14 @@ class WorkflowItem(Item):
         return [self.device.id]
 
 
-    def paintEvent(self, event):
-        self.checkChannels(self.device)
-        Item.paintEvent(self, event)
+    def getObject(self):
+        """
+        The object to the related device is returned.
+        """
+        if self.device.isOnline():
+            return manager.getDevice(self.device.id)
+        
+        return self.device
 
 
     def save(self, ele):
@@ -211,9 +226,20 @@ class WorkflowItem(Item):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
+        # Get scene this item belongs to
+        parent = layout.parent()
+        while not isinstance(parent, scene.Scene):
+            parent = parent.parent()
+        
         deviceId = elem.get(ns_karabo + "text")
-        item = WorkflowItem(manager.getDevice(deviceId), proxy)
+        
+        # Get related device from project...
+        device = parent.project.getDevice(deviceId)
+        # Trigger selection to get descriptor
+        parent.project.signalSelectObject.emit(device)
+
+        proxy = ProxyWidget(layout.parentWidget())
+        item = WorkflowItem(device, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
         ss = [ ]
@@ -242,12 +268,14 @@ class WorkflowGroupItem(Item):
         return deviceIds
 
 
-    def paintEvent(self, event):
+    def getObject(self):
+        """
+        The object to the related device group is returned.
+        """
         if self.deviceGroup.isOnline() and self.deviceGroup.instance is not None:
-            self.checkChannels(self.deviceGroup.instance)
-        else:
-            self.checkChannels(self.deviceGroup)
-        Item.paintEvent(self, event)
+            return self.deviceGroup.instance
+        
+        return self.deviceGroup
 
 
     def save(self, ele):
@@ -258,11 +286,19 @@ class WorkflowGroupItem(Item):
 
     @staticmethod
     def load(elem, layout):
+        # Get scene this item belongs to
+        parent = layout.parent()
+        while not isinstance(parent, scene.Scene):
+            parent = parent.parent()
+        
+        id = elem.get(ns_karabo + "text")
+
+        # Get related device from project...
+        deviceGroup = parent.project.getDevice(id)
+        # Trigger selection to get descriptor
+        parent.project.signalSelectObject.emit(deviceGroup)
+        
         proxy = ProxyWidget(layout.parentWidget())
-        displayText = elem.get(ns_karabo + "text")
-        return proxy
-        # TODO: get existing device group via unique id
-        deviceGroup = manager.getDeviceGroup(id) #DeviceGroup(displayText)
         item = WorkflowGroupItem(deviceGroup, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
@@ -404,25 +440,31 @@ class WorkflowChannel(QWidget):
         return point
 
 
-class WorkflowConnection(QWidget):
+class WorkflowConnection(QWidget, Loadable):
 
 
-    def __init__(self, parent):
+    def __init__(self, parent, start_channel=None):
         super(WorkflowConnection, self).__init__(parent)
         
+        self._init(start_channel)
+
+
+    def _init(self, start_channel):
         # Describe the in/output channels this connection belongs to
-        self.start_channel = None
+        self.start_channel = start_channel
         self.end_channel = None
         
-        self.start_pos = None
-        self.end_pos = None
-        self.curve = None
-
-
-    def mousePressEvent(self, channel):
-        self.start_channel = channel
-        self.start_pos = channel.mappedPos()
+        if self.start_channel is None:
+            self.start_channel_type = ""
+            self.start_pos = QPoint()
+        else:
+            # Save the channel type - in the end the only channel parameter
+            # necessary to draw this connection
+            self.start_channel_type = self.start_channel.channel_type
+            self.start_pos = self.start_channel.mappedPos()
+        
         self.end_pos = self.start_pos
+        self.curve = None
 
 
     def mouseMoveEvent(self, event):
@@ -430,13 +472,14 @@ class WorkflowConnection(QWidget):
         self.update()
 
 
-    def mouseReleaseEvent(self, parent, channel):
-        if self.curve is None:
+    def mouseReleaseEvent(self, parent, end_channel):
+        if self.curve is None or self.start_channel is end_channel:
+            parent.update()
             return
         
-        self.end_channel = channel
+        self.end_channel = end_channel
         # Overwrite end position with exact channel position
-        self.end_pos = channel.mappedPos()
+        self.end_pos = self.end_channel.mappedPos()
         
         if self.start_pos.x() > self.end_pos.x():
             tmp = self.start_pos
@@ -446,6 +489,8 @@ class WorkflowConnection(QWidget):
             tmp_channel = self.start_channel
             self.start_channel = self.end_channel
             self.end_channel = tmp_channel
+            
+            self.start_channel_type = self.start_channel.channel_type
        
         sx = self.start_pos.x()
         sy = self.start_pos.y()
@@ -481,14 +526,14 @@ class WorkflowConnection(QWidget):
 
     def draw(self, painter):
         #painter.setPen(self.pen)
-        
+
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
-        if self.start_channel.channel_type == Item.OUTPUT:
+        if self.start_channel_type == Item.OUTPUT:
             c1 = QPoint(self.start_pos.x() + delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() - delta, self.end_pos.y())
-        elif self.start_channel.channel_type == Item.INPUT:
+        elif self.start_channel_type == Item.INPUT:
             c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
         
@@ -543,4 +588,33 @@ class WorkflowConnection(QWidget):
 
         # Update box configuration
         inputChannelBox.set(value, None)
+
+
+    def save(self, ele):
+        ele.set(ns_karabo + "class", "WorkflowConnection")
+        ele.set(ns_karabo + "start_channel_type", self.start_channel_type)
+        ele.set(ns_karabo + "start_x", str(self.start_pos.x()))
+        ele.set(ns_karabo + "start_y", str(self.start_pos.y()))
+        ele.set(ns_karabo + "end_x", str(self.end_pos.x()))
+        ele.set(ns_karabo + "end_y", str(self.end_pos.y()))
+
+
+    @staticmethod
+    def load(elem, layout):
+        proxy = ProxyWidget(layout.parentWidget())
+        connection = WorkflowConnection(proxy)
+        connection.start_channel_type = elem.get(ns_karabo + "start_channel_type")
+        
+        start_x = int(elem.get(ns_karabo + "start_x"))
+        start_y = int(elem.get(ns_karabo + "start_y"))
+        connection.start_pos = QPoint(start_x, start_y)
+        
+        end_x = int(elem.get(ns_karabo + "end_x"))
+        end_y = int(elem.get(ns_karabo + "end_y"))
+        connection.end_pos = QPoint(end_x, end_y)
+        
+        proxy.setWidget(connection)
+        layout.loadPosition(elem, proxy)
+        
+        return proxy
 

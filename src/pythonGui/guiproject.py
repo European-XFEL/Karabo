@@ -74,6 +74,25 @@ class BaseConfiguration(Configuration):
             self.fromHash(self._initConfig)
 
 
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.fromHash(XMLParser().read(xmlString))
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        if self.descriptor is not None:
+            config = self.toHash()
+        else:
+            config = self._initConfig
+
+        return XMLWriter().write(Hash(self.classId, config))
+
+
     def checkClassSchema(self):
         if self.descriptorRequested is True:
             return
@@ -112,24 +131,6 @@ class Device(BaseDevice, BaseConfiguration):
         actual = manager.getDevice(deviceId)
         actual.statusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
-
-
-    def fromXml(self, xmlString):
-        """
-        This function loads the corresponding XML file of this configuration.
-        """
-        self.fromHash(XMLParser().read(xmlString))
-
-
-    def toXml(self):
-        """
-        This function returns the configurations' XML file as a string.
-        """
-        if self.descriptor is not None:
-            config = self.toHash()
-        else:
-            config = self._initConfig
-        return XMLWriter().write(Hash(self.classId, config))
 
 
     def onStatusChanged(self, conf, status, error):
@@ -173,9 +174,9 @@ class Device(BaseDevice, BaseConfiguration):
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
-    def __init__(self, type, name=""):
-        BaseConfiguration.__init__(self, name, type)
-        BaseDeviceGroup.__init__(self, name)
+    def __init__(self, id="", type="deviceGroupClass"):
+        BaseConfiguration.__init__(self, id, type)
+        BaseDeviceGroup.__init__(self, id)
         
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
@@ -188,7 +189,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.instance is not None:
             return self.instance
 
-        self.instance = DeviceGroup("deviceGroup", self.id)
+        self.instance = DeviceGroup(self.id, "deviceGroup")
         self.instance.devices = self.devices
         self.instance.project = self.project
         
@@ -287,9 +288,11 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 class GuiProject(Project, QObject):
     Device = Device
+    DeviceGroup = DeviceGroup
 
     signalProjectModified = pyqtSignal()
     signalSelectObject = pyqtSignal(object)
+    signalDeviceSelected = pyqtSignal(str, object)
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
@@ -302,7 +305,16 @@ class GuiProject(Project, QObject):
         self.isModified = False
 
 
-    def setModified(self, isModified):
+    def setModified(self, isModified): #, forceEmit=False):
+        """
+        The project was modified and the associated modelview needs to be updated.
+        
+        isModified - states, whether modification was done
+        forceEmit - states, whether an update of the modelview is necessary
+        """
+        #if not forceEmit and self.isModified == isModified:
+        #    return
+        
         self.isModified = isModified
         self.signalProjectModified.emit()
 
@@ -335,8 +347,15 @@ class GuiProject(Project, QObject):
         return device
 
 
+    def addDeviceGroup(self, deviceGroup):
+        Project.addDeviceGroup(self, deviceGroup)
+        self.setModified(True)
+        for device in deviceGroup.devices:
+            device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
+
+
     def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
-        deviceGroup = DeviceGroup("deviceGroupClass")
+        deviceGroup = DeviceGroup()
         # Set server and class id for descriptor request
         deviceGroup.serverId = serverId
         deviceGroup.classId = classId
@@ -427,7 +446,7 @@ class GuiProject(Project, QObject):
         with ZipFile(file, mode="w", compression=ZIP_DEFLATED) as zf:
             deviceHash = []
             for deviceObj in self.devices:
-                if isinstance(deviceObj, Configuration):
+                if isinstance(deviceObj, Device):
                     zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
                                 deviceObj.toXml())
                     
@@ -437,15 +456,22 @@ class GuiProject(Project, QObject):
                                            "ifexists", deviceObj.ifexists))
                 else:
                     group = []
-                    for device in deviceObj:
+                    for device in deviceObj.devices:
                         zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                                     device.toXml())
                         group.append(Hash("serverId", device.serverId,
                                           "classId", device.classId,
                                           "filename", device.filename,
                                           "ifexists", device.ifexists))
+                    # Save group configuration to file
+                    zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
+                                deviceObj.toXml())
                     deviceGroupHash = Hash("group", group)
-                    deviceGroupHash.setAttribute("group", "name", deviceObj.name)
+                    deviceGroupHash.setAttribute("group", "id", deviceObj.id)
+                    deviceGroupHash.setAttribute("group", "filename", deviceObj.filename)
+                    deviceGroupHash.setAttribute("group", "serverId", deviceObj.serverId)
+                    deviceGroupHash.setAttribute("group", "classId", deviceObj.classId)
+                    
                     deviceHash.append(deviceGroupHash)
             projectConfig[self.DEVICES_KEY] = deviceHash
             
