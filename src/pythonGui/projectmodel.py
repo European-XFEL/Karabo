@@ -247,7 +247,6 @@ class ProjectModel(QStandardItemModel):
                         if device.descriptor is not None:
                             device.initConfig = device.toHash()
                         device.parameterEditor.clear()
-        
 
 
     def updateNeeded(self):
@@ -282,7 +281,7 @@ class ProjectModel(QStandardItemModel):
         This function gets an object which can be of type Configuration or Scene
         and selects the corresponding item.
         """
-        index = self.findIndex(object)
+        index = self.findIndex(object)     
         if index is not None and object is not None:
             self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
         else:
@@ -394,9 +393,9 @@ class ProjectModel(QStandardItemModel):
         # Whenever the project is modified - view must be updated
         project.signalProjectModified.connect(self.updateData)
         project.signalSelectObject.connect(self.selectObject)
+        self.signalItemChanged.connect(project.signalDeviceSelected)
         self.projects.append(project)
         self.updateData()
-        self.selectObject(project)
 
 
     def projectNew(self, filename):
@@ -406,30 +405,34 @@ class ProjectModel(QStandardItemModel):
         project = GuiProject(filename)
         project.zip()
         self.appendProject(project)
+        self.selectObject(project)
         return project
 
 
     def projectOpen(self, filename):
         """
-        This function opens a project file, creates a new projects, adds it to
+        This function opens a project file, creates a new project, adds it to
         the project list and updates the view.
         """
         self.closeExistentProject(filename)
         
         project = GuiProject(filename)
         try:
+            # Already append project to get setup signals
+            self.appendProject(project)
             project.unzip()
         except Exception as e:
+            # Remove project again, if failure
+            self.removeProject(project)
             e.message = "While reading the project a <b>critical error</b> " \
                         "occurred."
             raise
-
-        self.appendProject(project)
 
         # Open new loaded project scenes
         for scene in project.scenes:
             self.signalAddScene.emit(scene)
         
+        self.selectObject(project)
         return project
 
 

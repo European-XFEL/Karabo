@@ -37,6 +37,7 @@ from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 class _Manager(QObject):
     # signals
     signalReset = pyqtSignal()
+    signalUpdateScenes = pyqtSignal()
 
     signalNewNavigationItem = pyqtSignal(dict) # id, name, type, (status), (refType), (refId), (schema)
     signalSelectNewNavigationItem = pyqtSignal(str) # deviceId
@@ -461,6 +462,8 @@ class _Manager(QObject):
 
         # Notify ConfigurationPanel
         self.onShowConfiguration(conf)
+        # Trigger update scenes
+        self.signalUpdateScenes.emit()
 
 
     def handle_deviceSchema(self, deviceId, schema, configuration=None):
@@ -481,6 +484,8 @@ class _Manager(QObject):
             self._triggerStateChange)
 
         self.onShowConfiguration(conf)
+        # Trigger update scenes
+        self.signalUpdateScenes.emit()
 
 
     def handle_deviceConfiguration(self, deviceId, configuration):
