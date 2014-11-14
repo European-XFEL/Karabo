@@ -231,12 +231,17 @@ class WorkflowItem(Item):
         while not isinstance(parent, scene.Scene):
             parent = parent.parent()
         
+        project = parent.project
+        # Hack: to get ProjectModel updated with all loaded devices and make
+        # upcoming selectObject signal work
+        project.setModified(True, True)
+        
         deviceId = elem.get(ns_karabo + "text")
         
         # Get related device from project...
-        device = parent.project.getDevice(deviceId)
+        device = project.getDevice(deviceId)
         # Trigger selection to get descriptor
-        parent.project.signalSelectObject.emit(device)
+        project.signalSelectObject.emit(device)
 
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowItem(device, proxy)
@@ -291,12 +296,17 @@ class WorkflowGroupItem(Item):
         while not isinstance(parent, scene.Scene):
             parent = parent.parent()
         
+        project = parent.project
+        # Hack: to get ProjectModel updated with all loaded devices and make
+        # upcoming selectObject signal work
+        project.setModified(True, True)
+        
         id = elem.get(ns_karabo + "text")
 
         # Get related device from project...
-        deviceGroup = parent.project.getDevice(id)
+        deviceGroup = project.getDevice(id)
         # Trigger selection to get descriptor
-        parent.project.signalSelectObject.emit(deviceGroup)
+        project.signalSelectObject.emit(deviceGroup)
         
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowGroupItem(deviceGroup, proxy)

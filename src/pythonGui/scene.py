@@ -1291,7 +1291,7 @@ class Scene(QSvgWidget):
                 self.clear_selection()
                 self.ilayout.add_item(proxy)
                 
-                self.project.setModified(True)
+                self.project.setModified(True, True)
                 self.project.signalSelectObject.emit(object)
         event.accept()
         QWidget.dropEvent(self, event)
