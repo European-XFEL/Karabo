@@ -70,9 +70,9 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
             return 0
         
         value = self.widget.text()
-        #state, _, _ = self.validator.validate(value, 0)
-        #if state == QValidator.Invalid or state == QValidator.Intermediate:
-        #    value = 0
+        state, _, _ = self.validator.validate(value, 0)
+        if state == QValidator.Invalid or state == QValidator.Intermediate:
+            value = 0
         return value
 
 
@@ -86,8 +86,7 @@ class DoubleLineEdit(NumberLineEdit):
 
     @property
     def value(self):
-        value = self.validate_value()
-        return float(value)
+        return float(self.validate_value())
 
 
 class IntValidator(QValidator):
@@ -134,5 +133,4 @@ class IntLineEdit(NumberLineEdit):
 
     @property
     def value(self):
-        value = self.validate_value()
-        return int(value)
+        return int(self.validate_value())
