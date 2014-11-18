@@ -1,7 +1,15 @@
+#############################################################################
+# Author: <martin.teichmann@xfel.eu>
+# Created on March 19, 2014
+# Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
+#############################################################################
+
+
 from PyQt4 import uic
-from PyQt4.QtCore import QRegExp, Qt, pyqtSlot
-from PyQt4.QtGui import (QDialog, QIcon, QPixmap, QColorDialog, QValidator,
-                         QPalette, QRegExpValidator, QFrame, QFontDialog)
+from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
+from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QFontDialog, 
+                         QFormLayout, QIcon, QPainter, QPalette, QPen, QPixmap,
+                         QRegExpValidator, QValidator)
 from os import path
 
 class Validator(QValidator):
@@ -28,35 +36,37 @@ class PenDialog(QDialog):
 
         self.pen = pen
         self.brush = brush
+        
         self.set_color()
-        self.opacity.setValue(pen.color().alpha())
-        self.width.setValue(pen.widthF())
-        if pen.style() == Qt.NoPen:
-            self.width.setValue(0)
-        getattr(self, self.linecaps[pen.capStyle()] + 'Cap').setChecked(True)
-        getattr(self, self.linejoins[pen.joinStyle()] + 'Join').setChecked(True)
-        self.miterlimit.setValue(pen.miterLimit())
-        self.dashes.setText(' '.join(str(s)
-                            for s in pen.dashPattern()))
-        self.dashes.setValidator(Validator(self.dashes))
 
-        if brush is None:
-            self.actionBrush.setChecked(True)
-            self.actionBrush.setChecked(False)
+        self.slStrokeOpacity.setValue(pen.color().alpha())
+        
+        if pen.style() == Qt.NoPen:
+            self.sbStrokeWidth.setValue(0)
         else:
-            if brush.style() == Qt.SolidPattern:
-                self.fillopacity.setValue(brush.color().alpha())
-            else:
-                self.fillopacity.setValue(0)
+            self.sbStrokeWidth.setValue(pen.widthF())
+        
+        self.wDashType = PenStyleComboBox()
+        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.wDashType)
+        self.wDashType.setPenStyle(self.pen.style())
+        
+        self.dsbDashOffset.setValue(self.pen.dashOffset())
+        
+        getattr(self, self.linecaps[self.pen.capStyle()] + 'Cap').setChecked(True)
+        getattr(self, self.linejoins[self.pen.joinStyle()] + 'Join').setChecked(True)
+        self.dsbStrokeMiterLimit.setValue(self.pen.miterLimit())
+        
+        self.setBrushWidgets()
+
 
     @pyqtSlot()
-    def on_color_clicked(self):
+    def on_pbStrokeColor_clicked(self):
         self.pen.setColor(QColorDialog.getColor(self.pen.color()))
         self.set_color()
 
 
     @pyqtSlot()
-    def on_fillcolor_clicked(self):
+    def on_pbFillColor_clicked(self):
         self.brush.setColor(QColorDialog.getColor(self.brush.color()))
         self.set_color()
 
@@ -64,93 +74,148 @@ class PenDialog(QDialog):
     def set_color(self):
         p = QPixmap(32, 16)
         p.fill(self.pen.color())
-        self.color.setIcon(QIcon(p))
+        self.pbStrokeColor.setIcon(QIcon(p))
+        
         if self.brush is not None:
             p.fill(self.brush.color())
-            self.fillcolor.setIcon(QIcon(p))
+            self.pbFillColor.setIcon(QIcon(p))
+
+
+    def setBrushWidgets(self):
+        if self.brush is None:
+            # Hide brush related widgets
+            item = self.formLayout.itemAt(8, QFormLayout.LabelRole)
+            item.widget().setVisible(False)
+            item = self.formLayout.itemAt(8, QFormLayout.FieldRole)
+            item.widget().setVisible(False)
+            
+            item = self.formLayout.itemAt(9, QFormLayout.LabelRole)
+            item.widget().setVisible(False)
+            item = self.formLayout.itemAt(9, QFormLayout.FieldRole)
+            item.widget().setVisible(False)
+        else:
+            if self.brush.style() == Qt.SolidPattern:
+                self.slFillOpacity.setValue(self.brush.color().alpha())
+            else:
+                self.slFillOpacity.setValue(0)
 
 
     def exec_(self):
-        QDialog.exec_(self)
-        c = self.pen.color()
-        c.setAlpha(self.opacity.value())
-        self.pen.setColor(c)
-        for k, v in self.linecaps.items():
-            if getattr(self, v + 'Cap').isChecked():
-                self.pen.setCapStyle(k)
-        for k, v in self.linejoins.items():
-            if getattr(self, v + 'Join').isChecked():
-                self.pen.setJoinStyle(k)
-        self.pen.setMiterLimit(self.miterlimit.value())
-        self.pen.setDashPattern([float(s) for s in self.dashes.text().split()])
-        if self.width.value() == 0:
-            self.pen.setStyle(Qt.NoPen)
-        else:
-            self.pen.setWidth(self.width.value())
-        if self.brush is not None:
-            if self.fillopacity.value() == 0:
-                self.brush.setStyle(Qt.NoBrush)
+        result = QDialog.exec_(self)
+        if result == QDialog.Accepted:
+            strokeColor = self.pen.color()
+            strokeColor.setAlpha(self.slStrokeOpacity.value())
+            self.pen.setColor(strokeColor)
+            
+            if self.sbStrokeWidth.value() == 0:
+                self.pen.setStyle(Qt.NoPen)
             else:
-                self.brush.setStyle(Qt.SolidPattern)
-                c = self.brush.color()
-                c.setAlpha(self.fillopacity.value())
-                self.brush.setColor(c)
+                self.pen.setWidth(self.sbStrokeWidth.value())
+            
+            self.pen.setStyle(self.wDashType.penStyle())
+            self.pen.setDashOffset(self.dsbDashOffset.value())
+            
+            for k, v in self.linecaps.items():
+                if getattr(self, v + 'Cap').isChecked():
+                    self.pen.setCapStyle(k)
+            for k, v in self.linejoins.items():
+                if getattr(self, v + 'Join').isChecked():
+                    self.pen.setJoinStyle(k)
+            
+            self.pen.setMiterLimit(self.dsbStrokeMiterLimit.value())
+
+            if self.brush is not None:
+                if self.slFillOpacity.value() == 0:
+                    self.brush.setStyle(Qt.NoBrush)
+                else:
+                    self.brush.setStyle(Qt.SolidPattern)
+                    fillColor = self.brush.color()
+                    fillColor.setAlpha(self.slFillOpacity.value())
+                    self.brush.setColor(fillColor)
+        
+        return result
 
 
 class TextDialog(QDialog):
+
+
     def __init__(self, label):
         QDialog.__init__(self)
         uic.loadUi(path.join(path.dirname(__file__), 'textdialog.ui'), self)
 
         self.label = label
-        self.fore = label.palette().color(QPalette.Foreground)
-        self.back = label.palette().color(QPalette.Background)
-        self.text.setText(label.text())
-        self.set_color()
-        self.background.setChecked(self.label.hasBackground)
-        self.framewidth.setValue(self.label.frameWidth())
-        self.font = self.label.font()
 
+        self.leText.setText(self.label.text())
 
-    @pyqtSlot()
-    def on_textcolor_clicked(self):
-        self.fore = QColorDialog.getColor(self.fore)
-        self.set_color()
-
-
-    @pyqtSlot()
-    def on_backcolor_clicked(self):
-        self.back = QColorDialog.getColor(self.back)
+        self.textFont = self.label.font()
+        self.textColor = self.label.palette().color(QPalette.Foreground)
+        
+        self.cbFrameWidth.toggled.connect(self.onFrameWidthToggled)
+        if self.label.frameWidth() > 0:
+            self.cbFrameWidth.setChecked(True)
+            self.sbFrameWidth.setValue(self.label.lineWidth())
+        
+        self.cbBackground.toggled.connect(self.onBackgroundToggled)
+        self.cbBackground.setChecked(self.label.hasBackground)
+        self.backgroundColor = self.label.palette().color(QPalette.Background)
+        
         self.set_color()
 
 
     @pyqtSlot()
-    def on_font_clicked(self):
-        font, ok = QFontDialog.getFont(self.font, self)
+    def on_pbTextColor_clicked(self):
+        self.textColor = QColorDialog.getColor(self.textColor)
+        self.set_color()
+
+
+    @pyqtSlot()
+    def on_pbBackground_clicked(self):
+        self.backgroundColor = QColorDialog.getColor(self.backgroundColor)
+        self.set_color()
+
+
+    @pyqtSlot()
+    def on_pbFont_clicked(self):
+        font, ok = QFontDialog.getFont(self.textFont, self)
         if ok:
-            self.font = font
+            self.textFont = font
+
+
+    def onFrameWidthToggled(self, checked):
+        self.sbFrameWidth.setEnabled(checked)
+
+
+    def onBackgroundToggled(self, checked):
+        self.pbBackground.setEnabled(checked)
 
 
     def set_color(self):
-        p = QPixmap(32, 16)
-        p.fill(self.fore)
-        self.textcolor.setIcon(QIcon(p))
-        p.fill(self.back)
-        self.backcolor.setIcon(QIcon(p))
+        p = QPixmap(24, 16)
+        p.fill(self.textColor)
+        self.pbTextColor.setIcon(QIcon(p))
+        p.fill(self.backgroundColor)
+        self.pbBackground.setIcon(QIcon(p))
 
 
     def exec_(self):
-        QDialog.exec_(self)
-        ss = [ ]
-        ss.append('qproperty-font: "{}";'.format(self.font.toString()))
-        ss.append("color: {};".format(self.fore.name()))
-        if self.background.isChecked():
-            ss.append("background-color: {};".format(self.back.name()))
-        self.label.hasBackground = self.background.isChecked()
-        if self.framewidth.value() > 0:
-            ss.append("border: {}px;".format(self.framewidth.value()))
-        self.label.setStyleSheet("".join(ss))
-        self.label.setText(self.text.text())
+        result = QDialog.exec_(self)
+        if result == QDialog.Accepted:
+            ss = [ ]
+            ss.append('qproperty-font: "{}";'.format(self.textFont.toString()))
+            ss.append("color: {};".format(self.textColor.name()))
+            if self.cbBackground.isChecked():
+                ss.append("background-color: {};".format(self.backgroundColor.name()))
+            self.label.hasBackground = self.cbBackground.isChecked()
+            
+            if self.cbFrameWidth.isChecked() and self.sbFrameWidth.value() > 0:
+                self.label.setLineWidth(self.sbFrameWidth.value())
+            else:
+                self.label.setLineWidth(0)
+            
+            self.label.setStyleSheet("".join(ss))
+            self.label.setText(self.leText.text())
+        
+        return result
 
 
 class MacroDialog(QDialog):
@@ -160,3 +225,49 @@ class MacroDialog(QDialog):
         v = QRegExpValidator(self)
         v.setRegExp(QRegExp(r"[A-Za-z_][A-Za-z0-9_]*"))
         self.name.setValidator(v)
+
+
+class PenStyleComboBox(QComboBox):
+    styles = [(Qt.SolidLine, "Solid line"),
+              (Qt.DashLine, "Dashed line"),
+              (Qt.DotLine, "Dot line"),
+              (Qt.DashDotLine, "Dash dot line"),
+              (Qt.DashDotDotLine, "Dash dot dot line")]
+
+    def __init__(self, parent=None):
+        super(PenStyleComboBox, self).__init__(parent)
+
+        self.setIconSize(QSize(32, 12))
+        for s in self.styles:
+            style = s[0]
+            name = s[1]
+            self.addItem(self.iconForPen(style), name, style)
+
+
+    def penStyle(self):
+        return self.styles[self.currentIndex()][0]
+
+
+    def setPenStyle(self, style):
+        id = self.findData(style)
+        if id == -1:
+            id = 0
+        self.setCurrentIndex(id)
+
+
+    def iconForPen(self, style):
+        pix = QPixmap(self.iconSize())
+        p = QPainter()
+        pix.fill(Qt.transparent)
+
+        p.begin(pix)
+        pen = QPen(style)
+        pen.setWidth(2)
+        p.setPen(pen)
+        
+        mid = self.iconSize().height() / 2.0
+        p.drawLine(0, mid, self.iconSize().width(), mid)
+        p.end()
+
+        return QIcon(pix)
+
