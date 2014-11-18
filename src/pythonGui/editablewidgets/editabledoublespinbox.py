@@ -61,6 +61,21 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
         self.widget.setCursorPosition(self.lastCursorPos)
 
 
+    def validate_value(self):
+        """
+        This function validates the current value of the widget and returns
+        on sucess the value or in failure 0.
+        """
+        if not self.widget.text():
+            return 0
+        
+        value = self.widget.text()
+        state, _, _ = self.validator.validate(value, 0)
+        if state == QValidator.Invalid or state == QValidator.Intermediate:
+            value = 0
+        return value
+
+
 class DoubleLineEdit(NumberLineEdit):
     alias = "Float Field"
 
@@ -71,9 +86,7 @@ class DoubleLineEdit(NumberLineEdit):
 
     @property
     def value(self):
-        if not self.widget.text():
-            return 0
-        return float(self.widget.text())
+        return float(self.validate_value())
 
 
 class IntValidator(QValidator):
@@ -120,6 +133,4 @@ class IntLineEdit(NumberLineEdit):
 
     @property
     def value(self):
-        if not self.widget.text():
-            return 0
-        return int(self.widget.text())
+        return int(self.validate_value())
