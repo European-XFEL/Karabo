@@ -191,9 +191,13 @@ class Shape(ShapeAction, Loadable):
             if s != "none":
                 v = s.split(",") if "," in s else s.split()
                 pen.setDashPattern([ununit(s) / pen.width() for s in v])
+            
+            style = d.get("stroke-style", Qt.SolidLine)
+            pen.setStyle(int(style))
+            
             pen.setJoinStyle(dict(
                 miter=Qt.SvgMiterJoin, round=Qt.RoundJoin, bevel=Qt.BevelJoin)
-                [d.get("storke-linejoin", "miter")])
+                [d.get("stroke-linejoin", "miter")])
             pen.setMiterLimit(float(d.get("stroke-miterlimit", 4)))
         self.pen = pen
         s = d.get("fill", "black")
@@ -217,6 +221,7 @@ class Shape(ShapeAction, Loadable):
             d["stroke-width"] = str(self.pen.widthF())
             d["stroke-dasharray"] = " ".join(str(x * self.pen.width())
                                              for x in self.pen.dashPattern())
+            d["stroke-style"] = str(self.pen.style())
             d["stroke-linejoin"] = PenDialog.linejoins[self.pen.joinStyle()]
             d["stroke-miterlimit"] = str(self.pen.miterLimit())
         if self.brush.style() == Qt.SolidPattern:
@@ -359,6 +364,14 @@ class Label(QLabel, Loadable):
     hasBackground = False
 
 
+    def __init__(self, text="", parent=None):
+        QLabel.__init__(self, text, parent)
+        Loadable.__init__(self)
+        
+        self.setFrameShape(QFrame.Box)
+        self.setLineWidth(0)
+
+
     def save(self, ele):
         ele.set(ns_karabo + "class", "Label")
         ele.set(ns_karabo + "text", self.text())
@@ -388,7 +401,7 @@ class Label(QLabel, Loadable):
             label.hasBackground = True
         fw = elem.get(ns_karabo + "frameWidth")
         if fw is not None:
-            ss.append("border: {}px;".format(fw))
+            label.setLineWidth(int(fw))
         label.setStyleSheet("".join(ss))
         return proxy
 
@@ -408,11 +421,14 @@ class LabelAction(Action):
 
 
     def mousePressEvent(self, parent, event):
-        p = ProxyWidget(parent.inner)
-        label = Label('', p)
-        p.setWidget(label)
+        label = Label()
         dialog = TextDialog(label)
-        dialog.exec_()
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        p = ProxyWidget(parent.inner)
+        label.setParent(p)
+        p.setWidget(label)
         p.fixed_geometry = QRect(event.pos(), p.sizeHint())
         parent.ilayout.add_item(p)
         parent.set_current_action(None)
