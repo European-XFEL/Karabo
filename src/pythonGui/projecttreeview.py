@@ -37,10 +37,10 @@ class ProjectTreeView(QTreeView):
 
         # Set same mode for each project view
         self.setModel(Manager().projectTopology)
-        self.expandAll()
-        self.model().modelReset.connect(self.expandAll)
+        self.model().signalExpandIndex.connect(self.setExpanded)
         self.setSelectionModel(self.model().selectionModel)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.setDragDropMode(QAbstractItemView.DragDrop)#InternalMove)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)

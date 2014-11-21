@@ -28,9 +28,10 @@ import manager
 from karabo.project import Project
 import karabo
 
-from PyQt4.QtCore import pyqtSignal, QFileInfo, Qt
-from PyQt4.QtGui import (QDialog, QFileDialog, QItemSelectionModel,
-                         QMessageBox, QStandardItem, QStandardItemModel)
+from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
+from PyQt4.QtGui import (QDialog, QFileDialog,
+                         QItemSelectionModel, QMessageBox, QStandardItem,
+                         QStandardItemModel)
 import os.path
 from zipfile import ZipFile
 
@@ -43,6 +44,8 @@ class ProjectModel(QStandardItemModel):
     signalRemoveScene = pyqtSignal(object) # scene
     signalRenameScene = pyqtSignal(object) # scene
     signalAddMacro = pyqtSignal(object)
+
+    signalExpandIndex = pyqtSignal(object, bool)
 
     ITEM_OBJECT = Qt.UserRole
 
@@ -59,6 +62,89 @@ class ProjectModel(QStandardItemModel):
         self.setHorizontalHeaderLabels(["Projects"])
         self.selectionModel = QItemSelectionModel(self, self)
         self.selectionModel.selectionChanged.connect(self.onSelectionChanged)
+
+
+    def flags(self, index):
+        flags = QStandardItemModel.flags(self, index)
+
+        if index.isValid():
+            return flags | Qt.ItemIsDragEnabled | Qt.ItemIsDropEnabled
+        else:
+            return flags | Qt.ItemIsDropEnabled
+
+
+    def mimeData(self, indexes):
+        mimeData = QAbstractItemModel.mimeData(self, indexes)
+        mimeData.setData('sourceType', 'internal')
+        
+        data = ""
+        for index in indexes:
+            text = "{};{};{}\n".format(index.data(), index.row(), index.column())
+            print("mimeData", text)
+            data += text
+        
+        mimeData.setData("data", data)
+        return mimeData
+
+
+    def dropMimeData(self, mimeData, action, row, column, parentIndex):
+        print()
+        print("dropMimeData", row, column, parentIndex, parentIndex.data())
+        
+        if mimeData.hasFormat("data"):
+            data = mimeData.data("data");
+            rowData = data.split("\n")
+            print()
+            for r in rowData:
+                columnData = r.split(";")
+                if len(columnData) < 3:
+                    continue
+                
+                itemName = columnData[0].data().decode("utf-8")
+                itemRow, _ = columnData[1].toInt()
+                itemColumn, _ = columnData[2].toInt()
+                
+                print("=== dropMimeData", itemName, itemRow, itemColumn)
+                
+                droppedItem = self.item(itemRow, itemColumn)
+                print("droppedItem", droppedItem)
+                if droppedItem is not None:
+                    item = QStandardItem(itemName)
+                    
+                    # TODO: recursively take also child items of droppedItem
+                    print()
+                    print("+++ droppedItem", droppedItem.data(Qt.DisplayRole))
+                    if droppedItem.hasChildren():
+                        self.copySubTreeItems(droppedItem, item)
+                    
+                    # Insert item
+                    if parentIndex.isValid():
+                        parentItem = self.itemFromIndex(parentIndex)
+                        parentItem.appendRow(item)
+                    else:
+                        parentItem = self.invisibleRootItem()
+                        self.insertRow(row, item)
+                    
+                    # Remove item
+                    droppedIndex = self.indexFromItem(droppedItem)
+                    ok = self.removeRow(itemRow, droppedIndex.parent())
+                    
+                    self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+        return True
+
+
+    def copySubTreeItems(self, oldItem, newItem):
+        for row in range(oldItem.rowCount()):
+            childItem = oldItem.child(row, oldItem.column())
+            print("childItem", childItem.data(Qt.DisplayRole))
+            
+            # Copy childItem and append to newItem
+            newChildItem = QStandardItem(childItem.data(Qt.DisplayRole))
+            newItem.appendRow(newChildItem)
+            
+            if childItem.hasChildren():
+                self.copySubTreeItems(childItem, newChildItem)
 
 
     def indexInfo(self, index):
@@ -87,7 +173,8 @@ class ProjectModel(QStandardItemModel):
                     config=config)
 
 
-    def updateData(self):
+    # TODO: remove this function!!!
+    def updateData2(self):
         # Get last selected object
         selectedIndexes = self.selectionModel.selectedIndexes()
         if selectedIndexes:
@@ -237,6 +324,66 @@ class ProjectModel(QStandardItemModel):
             self.selectObject(lastSelectionObj)
 
 
+    def addProjectItem(self, project):
+        """
+        This function adds an item representing the project to the model including
+        its subfolder items.
+        """
+        # Add project item to model
+        projectItem = QStandardItem(project.name)
+        projectItem.setData(project, ProjectModel.ITEM_OBJECT)
+        #projectItem.setEditable(False)
+        font = projectItem.font()
+        font.setBold(True)
+        projectItem.setFont(font)
+        projectItem.setIcon(icons.folder)
+        projectItem.setToolTip(project.filename)
+        self.invisibleRootItem().appendRow(projectItem)
+        
+        # Devices
+        childItem = QStandardItem(Project.DEVICES_LABEL)
+        childItem.setData(Category(Project.DEVICES_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.DEVICES_LABEL)
+        projectItem.appendRow(childItem)
+
+        # Scenes
+        childItem = QStandardItem(Project.SCENES_LABEL)
+        childItem.setData(Category(Project.SCENES_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.SCENES_LABEL)
+        projectItem.appendRow(childItem)
+        
+        # Configurations
+        childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
+        childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.CONFIGURATIONS_LABEL)
+        projectItem.appendRow(childItem)
+
+        # Macros
+        childItem = QStandardItem(Project.MACROS_LABEL)
+        childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        projectItem.appendRow(childItem)
+        
+        # Show projectItem expanded
+        self.signalExpandIndex.emit(self.indexFromItem(projectItem), True)
+
+
+    def removeProjectItem(self, project):
+        """
+        This function removes the item representing the project to the model
+        including its subfolder items.
+        """
+        index = self.findIndex(project)
+        self.removeRow(self.itemFromIndex(index).row())
+
+
     def clearParameterPages(self, serverClassIds=[]):
         for project in self.projects:
             for device in project.devices:
@@ -251,7 +398,8 @@ class ProjectModel(QStandardItemModel):
 
     def updateNeeded(self):
         # Update project view and deviceDialog data
-        self.updateData()
+        # TODO: other way
+        #self.updateData()
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
 
@@ -338,11 +486,6 @@ class ProjectModel(QStandardItemModel):
                 break
 
 
-    def removeProject(self, project):
-        index = self.projects.index(project)
-        del self.projects[index]
-
-
     def closeAllProjects(self):
         """
         This function removes all projects and updates the model.
@@ -367,8 +510,8 @@ class ProjectModel(QStandardItemModel):
             self.projectClose(project)
         
         # Clear selection
-        self.selectionModel.clear()
-        self.updateData()
+        #self.selectionModel.clear()
+        #self.updateData()
         return True
 
 
@@ -381,6 +524,9 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(scene)
         
         self.removeProject(project)
+        
+        # Remove item from model
+        self.removeProjectItem(project)
 
 
     def appendProject(self, project):
@@ -391,11 +537,18 @@ class ProjectModel(QStandardItemModel):
         appending project to list.
         """
         # Whenever the project is modified - view must be updated
-        project.signalProjectModified.connect(self.updateData)
+        #project.signalProjectModified.connect(self.updateData)
         project.signalSelectObject.connect(self.selectObject)
         self.signalItemChanged.connect(project.signalDeviceSelected)
         self.projects.append(project)
-        self.updateData()
+        
+        # Add item to model
+        self.addProjectItem(project)
+
+
+    def removeProject(self, project):
+        index = self.projects.index(project)
+        del self.projects[index]
 
 
     def projectNew(self, filename):
@@ -683,6 +836,7 @@ class ProjectModel(QStandardItemModel):
         This slot closes the currently selected projects and updates the model.
         """
         selectedIndexes = self.selectionModel.selectedIndexes()
+        projects = []
         for index in selectedIndexes:
             project = index.data(ProjectModel.ITEM_OBJECT)
             if project.isModified:
@@ -707,10 +861,13 @@ class ProjectModel(QStandardItemModel):
 
             if reply == QMessageBox.No:
                 continue
+            
+            print("projectIndexes", project.name, index)
+            projectIndexes[project] = index
         
+        for project in projects:
             self.projectClose(project)
-        
-        self.updateData()
+        #self.updateData()
 
 
     def onEditDevice(self):
