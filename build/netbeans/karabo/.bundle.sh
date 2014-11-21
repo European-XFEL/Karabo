@@ -156,6 +156,14 @@ fi
 cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/ # <-- karathon.so 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
+# Check if symbolic link "libkarathon.so" exists. If not, create it! 
+if [ ! -L $PYKARABO/libkarathon.so ]; then 
+    cd $PYKARABO/                       # go to python 'site-packages/karabo' directory
+    ln -s karathon.so libkarathon.so    # create symbolic link
+    cd -                                # return back to previous working directory
+fi
+
+
 # deviceServer
 cd ../deviceServer
 cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
