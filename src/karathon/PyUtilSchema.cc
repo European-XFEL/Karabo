@@ -186,7 +186,7 @@ struct ChoiceElementWrap {
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
             node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
             node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         }
         return self;
     }
@@ -214,7 +214,7 @@ struct ChoiceElementWrap {
         node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
         node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
         node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         return self;
     }
 };
@@ -254,7 +254,7 @@ struct ListElementWrap {
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
             node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
             node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         }
         return self;
     }
@@ -282,7 +282,7 @@ struct ListElementWrap {
         node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
         node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, nodeName);
         node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+        node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         return self;
     }
 
@@ -340,7 +340,7 @@ struct InputElementWrap {
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
             node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Input-" + nodeName);
             node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         }
         return self;
     }
@@ -382,7 +382,7 @@ struct OutputElementWrap {
             node.setAttribute(KARABO_SCHEMA_CLASS_ID, nodeName);
             node.setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, "Output-" + nodeName);
             node.setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
-            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+            node.setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
         }
         return self;
     }
