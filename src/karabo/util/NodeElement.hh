@@ -56,7 +56,7 @@ namespace karabo {
         protected:
 
             void beforeAddition() {
-                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, INIT);
+                this->m_node->setAttribute<int>(KARABO_SCHEMA_ACCESS_MODE, WRITE);
                 this->m_node->setAttribute<int>(KARABO_SCHEMA_NODE_TYPE, Schema::NODE);
             }
         };
