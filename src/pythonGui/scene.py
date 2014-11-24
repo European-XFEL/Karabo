@@ -1274,8 +1274,7 @@ class Scene(QSvgWidget):
                         object = self.project.newDevice(dialog.serverId,
                                                         dialog.classId,
                                                         dialog.deviceId,
-                                                        dialog.startupBehaviour,
-                                                        True)
+                                                        dialog.startupBehaviour)
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
@@ -1285,7 +1284,8 @@ class Scene(QSvgWidget):
                     # TODO: overwrite existing device group?
                     if object is None:
                         # Create device group and add to project, if not exists
-                        object = self.project.newDeviceGroup(dialog.serverId,
+                        object = self.project.newDeviceGroup(dialog.deviceGroupName,
+                                                            dialog.serverId,
                                                             dialog.classId,
                                                             dialog.deviceId,
                                                             dialog.startupBehaviour,
@@ -1293,8 +1293,6 @@ class Scene(QSvgWidget):
                                                             dialog.startIndex,
                                                             dialog.endIndex)
 
-                        object.id = dialog.deviceGroupName
-                    
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowGroupItem(object, proxy)
@@ -1307,7 +1305,7 @@ class Scene(QSvgWidget):
                 self.clear_selection()
                 self.ilayout.add_item(proxy)
                 
-                self.project.setModified(True, True)
+                self.project.setModified(True)
                 self.project.signalSelectObject.emit(object)
         event.accept()
         QWidget.dropEvent(self, event)
