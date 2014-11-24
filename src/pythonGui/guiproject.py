@@ -363,8 +363,9 @@ class GuiProject(Project, QObject):
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
 
 
-    def newDeviceGroup(self, serverId, classId, deviceId, ifexists, prefix, start, end):
-        deviceGroup = DeviceGroup()
+    def newDeviceGroup(self, groupId, serverId, classId, deviceId, ifexists,
+                             prefix, start, end):
+        deviceGroup = DeviceGroup(groupId)
         # Set server and class id for descriptor request
         deviceGroup.serverId = serverId
         deviceGroup.classId = classId
