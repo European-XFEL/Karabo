@@ -283,9 +283,8 @@ class ProjectModel(QStandardItemModel):
                               incompatible=icons.deviceIncompatible,
                               ).get(device.status, icons.deviceInstance))
         item.setToolTip("{} <{}>".format(device.id, device.serverId))
-        
-        project = device.project
-        projectItem = self.findItem(project)
+
+        projectItem = self.findItem(device.project)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
@@ -293,7 +292,34 @@ class ProjectModel(QStandardItemModel):
 
 
     def addDeviceGroupItem(self, deviceGroup):
-        print("addDeviceGroupItem", deviceGroup)
+        item = QStandardItem(deviceGroup.id)
+        item.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+        item.setIcon(icons.device_group)
+        item.setToolTip("{}".format(deviceGroup.id))
+
+        # Iterate through device of group
+        for device in deviceGroup.devices:
+            childItem = QStandardItem(device.id)
+            childItem.setData(device, ProjectModel.ITEM_OBJECT)
+            childItem.setEditable(False)
+
+            if device.status != "offline" and device.error:
+                childItem.setIcon(icons.deviceInstanceError)
+            else:
+                childItem.setIcon(dict(error=icons.deviceInstanceError,
+                                      noserver=icons.deviceOfflineNoServer,
+                                      noplugin=icons.deviceOfflineNoPlugin,
+                                      offline=icons.deviceOffline,
+                                      incompatible=icons.deviceIncompatible,
+                                     ).get(device.status, icons.deviceInstance))
+            childItem.setToolTip("{} <{}>".format(device.id, device.serverId))
+            item.appendRow(childItem)
+
+        projectItem = self.findItem(deviceGroup.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
+        parentItem.appendRow(item)
 
 
     def addSceneItem(self, scene):
@@ -872,7 +898,7 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 continue
             
-            projectIndexes[project] = index
+            projects.append(project)
         
         for project in projects:
             self.projectClose(project)
