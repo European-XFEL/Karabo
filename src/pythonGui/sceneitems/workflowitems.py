@@ -234,7 +234,7 @@ class WorkflowItem(Item):
         project = parent.project
         # Hack: to get ProjectModel updated with all loaded devices and make
         # upcoming selectObject signal work
-        project.setModified(True, True)
+        project.setModified(True)
         
         deviceId = elem.get(ns_karabo + "text")
         
@@ -299,7 +299,7 @@ class WorkflowGroupItem(Item):
         project = parent.project
         # Hack: to get ProjectModel updated with all loaded devices and make
         # upcoming selectObject signal work
-        project.setModified(True, True)
+        project.setModified(True)
         
         id = elem.get(ns_karabo + "text")
 
