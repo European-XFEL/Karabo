@@ -28,7 +28,7 @@
               <a:description>Description of my node elem</a:description>
               <a:displayedName>MyNodeElem</a:displayedName>
               <a:requiredAccessLevel>0</a:requiredAccessLevel>
-              <a:accessType>1</a:accessType>
+              <a:accessType>4</a:accessType>
               <a:tags>myNode</a:tags>
             </xs:documentation>
           </xs:annotation>
@@ -79,7 +79,7 @@
               <a:displayedName>shapesAsChoice</a:displayedName>
               <a:requiredAccessLevel>0</a:requiredAccessLevel>
               <a:default>circle</a:default>
-              <a:accessType>1</a:accessType>
+              <a:accessType>4</a:accessType>
             </xs:documentation>
           </xs:annotation>
           <xs:complexType>
@@ -90,7 +90,7 @@
                     <a:description>Description of circle</a:description>
                     <a:displayedName>Circle</a:displayedName>
                     <a:requiredAccessLevel>0</a:requiredAccessLevel>
-                    <a:accessType>1</a:accessType>
+                    <a:accessType>4</a:accessType>
                     <a:tags>shape</a:tags>
                   </xs:documentation>
                 </xs:annotation>
@@ -138,7 +138,7 @@
                           <a:description>Description of NEW NODE of circle</a:description>
                           <a:displayedName>NewNodeOfCircle</a:displayedName>
                           <a:requiredAccessLevel>0</a:requiredAccessLevel>
-                          <a:accessType>1</a:accessType>
+                          <a:accessType>4</a:accessType>
                           <a:tags>shape</a:tags>
                         </xs:documentation>
                       </xs:annotation>
@@ -168,7 +168,7 @@
                     <a:description>Description of rectangle</a:description>
                     <a:displayedName>rectangle</a:displayedName>
                     <a:requiredAccessLevel>0</a:requiredAccessLevel>
-                    <a:accessType>1</a:accessType>
+                    <a:accessType>4</a:accessType>
                     <a:tags>shape</a:tags>
                   </xs:documentation>
                 </xs:annotation>
