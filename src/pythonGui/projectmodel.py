@@ -173,157 +173,6 @@ class ProjectModel(QStandardItemModel):
                     config=config)
 
 
-    # TODO: remove this function!!!
-    def updateData2(self):
-        # Get last selected object
-        selectedIndexes = self.selectionModel.selectedIndexes()
-        if selectedIndexes:
-            lastSelectionObj = selectedIndexes[0].data(ProjectModel.ITEM_OBJECT)
-        else:
-            lastSelectionObj = None
-        
-        self.beginResetModel()
-        if self.hasChildren():
-            self.removeRows(0, self.rowCount())
-
-        rootItem = self.invisibleRootItem()
-        
-        for project in self.projects:
-            # Project names - toplevel items
-            item = QStandardItem(project.name)
-            
-            if project.isModified:
-                # Change color to blue
-                brush = item.foreground()
-                brush.setColor(Qt.blue)
-                item.setForeground(brush)
-                item.setText("*{}".format(project.name))
-
-            item.setData(project, ProjectModel.ITEM_OBJECT)
-            item.setEditable(False)
-            font = item.font()
-            font.setBold(True)
-            item.setFont(font)
-            item.setIcon(icons.folder)
-            item.setToolTip(project.filename)
-            rootItem.appendRow(item)
-            
-            # Devices
-            childItem = QStandardItem(Project.DEVICES_LABEL)
-            childItem.setData(Category(Project.DEVICES_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(icons.folder)
-            childItem.setToolTip(Project.DEVICES_LABEL)
-            item.appendRow(childItem)
-            for deviceObj in project.devices:
-                if isinstance(deviceObj, Device):
-                    leafItem = QStandardItem(deviceObj.id)
-                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
-                    leafItem.setEditable(False)
-
-                    if deviceObj.status != "offline" and deviceObj.error:
-                        leafItem.setIcon(icons.deviceInstanceError)
-                    else:
-                        leafItem.setIcon(dict(error=icons.deviceInstanceError,
-                                              noserver=icons.deviceOfflineNoServer,
-                                              noplugin=icons.deviceOfflineNoPlugin,
-                                              offline=icons.deviceOffline,
-                                              incompatible=icons.deviceIncompatible,
-                                             ).get(deviceObj.status, icons.deviceInstance))
-                    leafItem.setToolTip("{} <{}>".format(deviceObj.id, deviceObj.serverId))
-                    childItem.appendRow(leafItem)
-                else:
-                    # Device groups
-                    leafItem = QStandardItem(deviceObj.id)
-                    leafItem.setData(deviceObj, ProjectModel.ITEM_OBJECT)
-                    leafItem.setEditable(False)
-                    leafItem.setIcon(icons.device_group)
-                    leafItem.setToolTip("{}".format(deviceObj.id))
-                    childItem.appendRow(leafItem)
-                    
-                    # Iterate through device of group
-                    for device in deviceObj.devices:
-                        subLeafItem = QStandardItem(device.id)
-                        subLeafItem.setData(device, ProjectModel.ITEM_OBJECT)
-                        subLeafItem.setEditable(False)
-
-                        if device.status != "offline" and device.error:
-                            subLeafItem.setIcon(icons.deviceInstanceError)
-                        else:
-                            subLeafItem.setIcon(dict(error=icons.deviceInstanceError,
-                                                  noserver=icons.deviceOfflineNoServer,
-                                                  noplugin=icons.deviceOfflineNoPlugin,
-                                                  offline=icons.deviceOffline,
-                                                  incompatible=icons.deviceIncompatible,
-                                                 ).get(device.status, icons.deviceInstance))
-                        subLeafItem.setToolTip("{} <{}>".format(device.id, device.serverId))
-                        leafItem.appendRow(subLeafItem)
-
-            # Scenes
-            childItem = QStandardItem(Project.SCENES_LABEL)
-            childItem.setData(Category(Project.SCENES_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(icons.folder)
-            childItem.setToolTip(Project.SCENES_LABEL)
-            item.appendRow(childItem)
-            for scene in project.scenes:
-                leafItem = QStandardItem(scene.filename)
-                leafItem.setIcon(icons.image)
-                leafItem.setData(scene, ProjectModel.ITEM_OBJECT)
-                leafItem.setEditable(False)
-                leafItem.setToolTip(scene.filename)
-                childItem.appendRow(leafItem)
-
-            # Configurations
-            childItem = QStandardItem(Project.CONFIGURATIONS_LABEL)
-            childItem.setData(Category(Project.CONFIGURATIONS_LABEL), ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(icons.folder)
-            childItem.setToolTip(Project.CONFIGURATIONS_LABEL)
-            item.appendRow(childItem)
-            
-            for deviceId, configList in project.configurations.items():
-                # Add item for device it belongs to
-                leafItem = QStandardItem(deviceId)
-                leafItem.setEditable(False)
-                leafItem.setToolTip(deviceId)
-                childItem.appendRow(leafItem)
-
-                for config in configList:
-                    # Add item with configuration file
-                    subLeafItem = QStandardItem(config.filename)
-                    subLeafItem.setIcon(icons.file)
-                    subLeafItem.setData(config, ProjectModel.ITEM_OBJECT)
-                    subLeafItem.setEditable(False)
-                    subLeafItem.setToolTip(config.filename)
-                    leafItem.appendRow(subLeafItem)
-
-            childItem = QStandardItem(Project.MACROS_LABEL)
-            childItem.setData(Category(Project.MACROS_LABEL),
-                              ProjectModel.ITEM_OBJECT)
-            childItem.setEditable(False)
-            childItem.setIcon(icons.folder)
-            item.appendRow(childItem)
-
-            for m in project.macros.values():
-                leafItem = QStandardItem(m.name)
-                leafItem.setIcon(icons.file)
-                leafItem.setEditable(False)
-                childItem.appendRow(leafItem)
-                leafItem.setData(m, ProjectModel.ITEM_OBJECT)
-
-                for k, v in m.macros.items():
-                    subLeafItem = QStandardItem(k)
-                    subLeafItem.setData(v, ProjectModel.ITEM_OBJECT)
-                    subLeafItem.setEditable(False)
-                    leafItem.appendRow(subLeafItem)
-        self.endResetModel()
-        
-        # Set last selected object
-        if lastSelectionObj is not None:
-            self.selectObject(lastSelectionObj)
-
-
     def addProjectItem(self, project):
         """
         This function adds an item representing the project to the model including
@@ -375,13 +224,110 @@ class ProjectModel(QStandardItemModel):
         self.signalExpandIndex.emit(self.indexFromItem(projectItem), True)
 
 
+    def onProjectModified(self, project):
+        """
+        This function updates the Qt.DisplayRole of the item of the given
+        \project depending on its isModified parameter.
+        """
+        item = self.findItem(project)
+        if project.isModified:
+            # Change color to blue
+            brush = item.foreground()
+            brush.setColor(Qt.blue)
+            item.setForeground(brush)
+            item.setText("*{}".format(project.name))
+        else:
+            # Change color to blue
+            brush = item.foreground()
+            brush.setColor(Qt.black)
+            item.setForeground(brush)
+            item.setText(project.name)
+        
+        font = item.font()
+        font.setBold(True)
+        item.setFont(font)
+
+
     def removeProjectItem(self, project):
         """
-        This function removes the item representing the project to the model
+        This function removes the item representing the \project to the model
         including its subfolder items.
         """
-        index = self.findIndex(project)
-        self.removeRow(self.itemFromIndex(index).row())
+        item = self.findItem(project)
+        self.removeRow(item.row())
+
+
+    def getCategoryItem(self, category, projectItem):
+        """
+        This function returns the model index of the given \category belonging
+        to the given \projectItem.
+        """
+        return self.findItemString(category, projectItem)
+
+
+    def addDeviceItem(self, device):
+        """
+        This function adds the given \device at the right position to the model.
+        """
+        item = QStandardItem(device.id)
+        item.setData(device, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+
+        if device.status != "offline" and device.error:
+            item.setIcon(icons.deviceInstanceError)
+        else:
+            item.setIcon(dict(error=icons.deviceInstanceError,
+                              noserver=icons.deviceOfflineNoServer,
+                              noplugin=icons.deviceOfflineNoPlugin,
+                              offline=icons.deviceOffline,
+                              incompatible=icons.deviceIncompatible,
+                              ).get(device.status, icons.deviceInstance))
+        item.setToolTip("{} <{}>".format(device.id, device.serverId))
+        
+        project = device.project
+        projectItem = self.findItem(project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
+        parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
+    def addDeviceGroupItem(self, deviceGroup):
+        print("addDeviceGroupItem", deviceGroup)
+
+
+    def addSceneItem(self, scene):
+        """
+        This function adds the given \scene at the right position to the model.
+        """
+        item = QStandardItem(scene.filename)
+        item.setIcon(icons.image)
+        item.setData(scene, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+        item.setToolTip(scene.filename)
+        
+        project = scene.project
+        projectItem = self.findItem(project)
+        # Find folder for scenes
+        parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
+        parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
+    def addConfigurationItem(self, configuration):
+        print("addConfigurationItem", configuration)
+
+
+    def addMacroItem(self, macro):
+        print("addMacroItem", macro)
+
+
+    def removeObjectItem(self, object):
+        """
+        This function removes the item representing the \object to the model..
+        """
+        index = self.findIndex(object)
+        self.removeRow(index.row(), index.parent())
 
 
     def clearParameterPages(self, serverClassIds=[]):
@@ -440,6 +386,10 @@ class ProjectModel(QStandardItemModel):
 
 
     def findIndex(self, object):
+        """
+        This function looks recursively through the model and returns the
+        QModelIndex of the given \object.
+        """
         return self._rFindIndex(self.invisibleRootItem(), object)
 
 
@@ -447,12 +397,66 @@ class ProjectModel(QStandardItemModel):
         for i in range(item.rowCount()):
             childItem = item.child(i)
             resultItem = self._rFindIndex(childItem, object)
-            if resultItem:
+            if resultItem is not None:
                 return resultItem
         
         indexObject = item.data(ProjectModel.ITEM_OBJECT)
         if indexObject == object:
             return item.index()
+        
+        return None
+
+
+    def findItem(self, object, startItem=None):
+        """
+        This function looks recursively through the model and returns the
+        QStandardItem of the given \object.
+        
+        If no \startItem is given the recursion starts from the root item.
+        """
+        if startItem is None:
+            startItem = self.invisibleRootItem()
+        
+        return self._rFindItem(startItem, object)
+
+
+    def _rFindItem(self, item, object):
+        for i in range(item.rowCount()):
+            childItem = item.child(i)
+            resultItem = self._rFindItem(childItem, object)
+            if resultItem is not None:
+                return resultItem
+        
+        indexObject = item.data(ProjectModel.ITEM_OBJECT)
+        if indexObject == object:
+            return item
+        
+        return None
+
+
+    def findItemString(self, text, startItem=None):
+        """
+        This function looks recursively through the model and returns the
+        QStandardItem of the given item DisplayRole given as \text.
+        
+        If no \startItem is given the recursion starts from the root item.
+        """
+        if startItem is None:
+            startItem = self.invisibleRootItem()
+        
+        return self._rFindItemString(startItem, text)
+
+
+    def _rFindItemString(self, item, text):
+        for i in range(item.rowCount()):
+            childItem = item.child(i)
+            resultItem = self._rFindItemString(childItem, text)
+            if resultItem is not None:
+                return resultItem
+        
+        indexText = item.data(Qt.DisplayRole)
+        if indexText == text:
+            return item
         
         return None
 
@@ -537,7 +541,15 @@ class ProjectModel(QStandardItemModel):
         appending project to list.
         """
         # Whenever the project is modified - view must be updated
-        #project.signalProjectModified.connect(self.updateData)
+        project.signalProjectModified.connect(self.onProjectModified)
+        project.signalDeviceAdded.connect(self.addDeviceItem)
+        project.signalDeviceGroupAdded.connect(self.addDeviceGroupItem)
+        project.signalSceneAdded.connect(self.addSceneItem)
+        project.signalConfigurationAdded.connect(self.addConfigurationItem)
+        project.signalMacroAdded.connect(self.addMacroItem)
+        
+        project.signalRemoveObject.connect(self.removeObjectItem)
+        
         project.signalSelectObject.connect(self.selectObject)
         self.signalItemChanged.connect(project.signalDeviceSelected)
         self.projects.append(project)
@@ -658,7 +670,7 @@ class ProjectModel(QStandardItemModel):
             if config is not None:
                 device.initConfig = config
 
-            self.updateData()
+            #self.updateData()
         else:
             # Add new device
             device = self.addDevice(project,
@@ -671,7 +683,7 @@ class ProjectModel(QStandardItemModel):
         self.deviceDialog = None
 
 
-    def addDevice(self, project, serverId, classId, deviceId, ifexists, updateNeeded=True):
+    def addDevice(self, project, serverId, classId, deviceId, ifexists):
         """
         Add a device for the given \project with the given data.
         """
@@ -695,7 +707,7 @@ class ProjectModel(QStandardItemModel):
                                            classId, deviceId, ifexists)
                 return device
         
-        device = project.newDevice(serverId, classId, deviceId, ifexists, updateNeeded)
+        device = project.newDevice(serverId, classId, deviceId, ifexists)
         return device
 
 
@@ -717,8 +729,7 @@ class ProjectModel(QStandardItemModel):
         for index in range(dialog.startIndex, dialog.endIndex):
             deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, index)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
-                                       device.classId, deviceId, device.ifexists,
-                                       False)
+                                       device.classId, deviceId, device.ifexists)
             
             if device.descriptor is not None:
                 config = device.toHash()
@@ -727,7 +738,7 @@ class ProjectModel(QStandardItemModel):
             
             newDevice.initConfig = config
         
-        self.updateData()
+        #self.updateData()
         self.selectObject(newDevice)
 
 
@@ -746,7 +757,7 @@ class ProjectModel(QStandardItemModel):
 
             # Send signal to view to update the name as well
             self.signalRenameScene.emit(scene)
-            scene.project.setModified(True, True)
+            scene.project.setModified(True)
 
 
     def _createScene(self, project, sceneName):
@@ -763,7 +774,6 @@ class ProjectModel(QStandardItemModel):
         scene = self._createScene(project, sceneName)
         self.openScene(scene)
 
-        #self.updateData()
         self.selectObject(scene)
         
         return scene
@@ -862,12 +872,10 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 continue
             
-            print("projectIndexes", project.name, index)
             projectIndexes[project] = index
         
         for project in projects:
             self.projectClose(project)
-        #self.updateData()
 
 
     def onEditDevice(self):
@@ -981,8 +989,8 @@ class ProjectModel(QStandardItemModel):
             # Remove data from project
             self.removeObject(obj.project, obj, nbSelected == 1)
         
-        if nbSelected > 1:
-            self.updateData()
+        #if nbSelected > 1:
+        #    self.updateData()
 
 
     def onRemoveConfiguration(self):
@@ -1019,7 +1027,7 @@ class ProjectModel(QStandardItemModel):
             self.removeObject(project, object, False)
         
         # Update needed in the end
-        self.updateData()
+        #self.updateData()
 
 
     def removeObject(self, project, object, showConfirm=True):
@@ -1040,6 +1048,5 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(object)
         
         if showConfirm:
-            self.updateData()
             self.selectObject(project)
         

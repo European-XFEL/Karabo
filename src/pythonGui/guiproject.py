@@ -290,9 +290,18 @@ class GuiProject(Project, QObject):
     Device = Device
     DeviceGroup = DeviceGroup
 
-    signalProjectModified = pyqtSignal()
+    signalProjectModified = pyqtSignal(object)
     signalSelectObject = pyqtSignal(object)
     signalDeviceSelected = pyqtSignal(str, object)
+    
+    signalDeviceAdded = pyqtSignal(object)
+    signalDeviceGroupAdded = pyqtSignal(object)
+    signalSceneAdded = pyqtSignal(object)
+    signalConfigurationAdded = pyqtSignal(str, object)
+    #signalResourceAdded = pytqtSignal()
+    signalMacroAdded = pyqtSignal(object)
+    
+    signalRemoveObject = pyqtSignal(object)
 
     def __init__(self, filename):
         super(GuiProject, self).__init__(filename)
@@ -305,21 +314,21 @@ class GuiProject(Project, QObject):
         self.isModified = False
 
 
-    def setModified(self, isModified, forceEmit=False):
+    def setModified(self, isModified):
         """
         The project was modified and the associated modelview needs to be updated.
         
         isModified - states, whether modification was done
-        forceEmit - states, whether an update of the modelview is necessary
         """
-        if not forceEmit and self.isModified == isModified:
+        if self.isModified == isModified:
             return
         
         self.isModified = isModified
-        self.signalProjectModified.emit()
+        self.signalProjectModified.emit(self)
 
 
     def setupDeviceToProject(self, device):
+        self.signalDeviceAdded.emit(device)
         self.setModified(True)
         # Connect device to project to get configuration changes
         device.signalDeviceModified.connect(self.setModified)
@@ -335,20 +344,20 @@ class GuiProject(Project, QObject):
         self.setupDeviceToProject(device)
 
 
-    def newDevice(self, serverId, classId, deviceId, ifexists, updateNeeded=False):
+    def newDevice(self, serverId, classId, deviceId, ifexists):
         """
         A new device with the given parameters is created, added to the
         project and returned.
         """
         device = Device(serverId, classId, deviceId, ifexists)
         self.addDevice(device)
-        if updateNeeded:
-            self.signalProjectModified.emit()
+        
         return device
 
 
     def addDeviceGroup(self, deviceGroup):
         Project.addDeviceGroup(self, deviceGroup)
+        self.signalDeviceGroupAdded.emit(deviceGroup)
         self.setModified(True)
         for device in deviceGroup.devices:
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
@@ -368,22 +377,26 @@ class GuiProject(Project, QObject):
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             deviceGroup.addDevice(device)
         
-        self.signalProjectModified.emit()
+        self.signalDeviceGroupAdded.emit(deviceGroup)
+        self.setModified(True)
         
         return deviceGroup
 
 
     def addScene(self, scene):
         self.scenes.append(scene)
+        self.signalSceneAdded.emit(scene)
         self.setModified(True)
 
 
     def addConfiguration(self, deviceId, configuration):
         Project.addConfiguration(self, deviceId, configuration)
+        self.signalConfigurationAdded.emit(deviceId, configuration)
         self.setModified(True)
 
 
     def addResource(self, category, data):
+        #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
         return Project.addResource(self, category, data)
 
@@ -394,6 +407,7 @@ class GuiProject(Project, QObject):
         
         Returns \index of the object in the list.
         """
+        self.signalRemoveObject.emit(object)
         if isinstance(object, Configuration):
             index = self.devices.index(object)
             self.devices.pop(index)
@@ -416,6 +430,7 @@ class GuiProject(Project, QObject):
 
         self.macros = {k: Macro(self, k) for k in
                        projectConfig.get(self.MACROS_KEY, [ ])}
+        # TODO: signalMacroAdded.emit()
         with MacroContext(self):
             try:
                 for m in self.macros.values():
