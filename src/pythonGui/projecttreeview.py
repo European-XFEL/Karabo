@@ -219,7 +219,7 @@ class ProjectTreeView(QTreeView):
                 acAddMacro = QAction(text, self)
                 acAddMacro.setStatusTip(text)
                 acAddMacro.setToolTip(text)
-                acAddMacro.triggered.connect(self.model().onNewMacro)
+                acAddMacro.triggered.connect(self.model().onEditMacro)
 
 
                 text = "Load Macro"

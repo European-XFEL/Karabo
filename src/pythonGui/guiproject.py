@@ -301,6 +301,7 @@ class GuiProject(Project, QObject):
     signalConfigurationAdded = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
+    signalMacroChanged = pyqtSignal(object)
     
     signalRemoveObject = pyqtSignal(object)
 
@@ -398,6 +399,12 @@ class GuiProject(Project, QObject):
         self.setModified(True)
 
 
+    def addMacro(self, macro):
+        self.macros[macro.name] = macro
+        self.signalMacroAdded.emit(macro)
+        self.setModified(True)
+
+
     def addResource(self, category, data):
         #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
@@ -431,9 +438,11 @@ class GuiProject(Project, QObject):
             scene.fromXml(data)
             self.addScene(scene)
 
-        self.macros = {k: Macro(self, k) for k in
-                       projectConfig.get(self.MACROS_KEY, [ ])}
-        # TODO: signalMacroAdded.emit()
+
+        for k in projectConfig[self.MACROS_KEY]:
+            macro = Macro(self, k)
+            self.addMacro(macro)
+
         with MacroContext(self):
             try:
                 for m in self.macros.values():
@@ -633,7 +642,8 @@ class Macro(object):
             v.instance = Configuration(k, "macro", v.getSchema())
             v.instance.setDefault()
             v.instance.status = "alive"
-        self.project.signalProjectModified.emit()
+        
+        self.project.signalMacroChanged.emit(self)
 
 
     def load(self):

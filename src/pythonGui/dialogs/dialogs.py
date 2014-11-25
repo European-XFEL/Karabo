@@ -7,9 +7,9 @@
 
 from PyQt4 import uic
 from PyQt4.QtCore import pyqtSlot, QRegExp, Qt, QSize
-from PyQt4.QtGui import (QColorDialog, QComboBox, QDialog, QFontDialog, 
-                         QFormLayout, QIcon, QPainter, QPalette, QPen, QPixmap,
-                         QRegExpValidator, QValidator)
+from PyQt4.QtGui import (QDialogButtonBox, QColorDialog, QComboBox, QDialog,
+                         QFontDialog, QFormLayout, QIcon, QPainter, QPalette,
+                         QPen, QPixmap, QRegExpValidator, QValidator)
 from os import path
 
 class Validator(QValidator):
@@ -219,12 +219,29 @@ class TextDialog(QDialog):
 
 
 class MacroDialog(QDialog):
-    def __init__(self):
+
+
+    def __init__(self, name=""):
         QDialog.__init__(self)
+
         uic.loadUi(path.join(path.dirname(__file__), 'macro.ui'), self)
+        
         v = QRegExpValidator(self)
         v.setRegExp(QRegExp(r"[A-Za-z_][A-Za-z0-9_]*"))
-        self.name.setValidator(v)
+        
+        self.leName.setValidator(v)
+        self.leName.textChanged.connect(self.onChanged)
+        self.leName.setText(name)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+
+
+    @property
+    def name(self):
+        return self.leName.text()
+
+
+    def onChanged(self, text):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
 
 
 class PenStyleComboBox(QComboBox):

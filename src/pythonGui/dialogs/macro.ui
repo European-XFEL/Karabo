@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>386</width>
-    <height>101</height>
+    <width>194</width>
+    <height>97</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,14 +15,14 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="laName">
      <property name="text">
-      <string>Enter Name of Macro:</string>
+      <string>Enter name of macro:</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QLineEdit" name="name"/>
+    <widget class="QLineEdit" name="leName"/>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

@@ -399,20 +399,42 @@ class ProjectModel(QStandardItemModel):
 
 
     def addMacroItem(self, macro):
-        print("addMacroItem", macro)
-        return
+        item = QStandardItem(macro.name)
+        item.setIcon(icons.file)
+        item.setData(macro, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+        item.setToolTip(macro.name)
         
-        leafItem = QStandardItem(m.name)
-        leafItem.setIcon(icons.file)
-        leafItem.setEditable(False)
-        childItem.appendRow(leafItem)
-        leafItem.setData(m, ProjectModel.ITEM_OBJECT)
+        project = macro.project
+        projectItem = self.findItem(project)
+        # Find folder for scenes
+        parentItem = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
+        parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+        
+        self.addMacroSubItems(macro)
 
-        for k, v in m.macros.items():
-            subLeafItem = QStandardItem(k)
-            subLeafItem.setData(v, ProjectModel.ITEM_OBJECT)
-            subLeafItem.setEditable(False)
-            leafItem.appendRow(subLeafItem)
+
+    def addMacroSubItems(self, macro):
+        if not macro.macros:
+            return
+        
+        item = self.findItem(macro)
+        if item is None:
+            return
+ 
+        # Remove possible old rows
+        while item.hasChildren():
+            row = item.rowCount()-1
+            item.removeRow(row)
+        
+        for k, v in macro.macros.items():
+            childItem = QStandardItem(k)
+            childItem.setData(v, ProjectModel.ITEM_OBJECT)
+            childItem.setEditable(False)
+            item.appendRow(childItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
 
     def removeObjectItem(self, object):
@@ -457,6 +479,14 @@ class ProjectModel(QStandardItemModel):
             return None
         
         return scene
+
+
+    def currentMacro(self):
+        macro = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(macro, Macro):
+            return None
+        
+        return macro
 
 
     def currentIndex(self):
@@ -630,6 +660,7 @@ class ProjectModel(QStandardItemModel):
         project.signalSceneAdded.connect(self.addSceneItem)
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
+        project.signalMacroChanged.connect(self.addMacroSubItems)
         
         project.signalRemoveObject.connect(self.removeObjectItem)
         
@@ -873,7 +904,22 @@ class ProjectModel(QStandardItemModel):
 
     def openScene(self, scene):
         self.signalAddScene.emit(scene)
+
+
+    def editMacro(self, macro):
+        if macro is None:
+            dialog = MacroDialog()
+            if dialog.exec_() == QDialog.Rejected:
+                return
+            
+            project = self.currentProject()
+            macro = Macro(project, dialog.name)
+            project.addMacro(macro)
+
+            self.selectObject(macro)
         
+        self.signalAddMacro.emit(macro)
+
 
 ### slots ###
 
@@ -986,15 +1032,8 @@ class ProjectModel(QStandardItemModel):
         self.duplicateScene(self.currentScene())
 
 
-    def onNewMacro(self):
-        dialog = MacroDialog()
-        if dialog.exec_() != dialog.Accepted or not dialog.name.text():
-            return
-
-        project = self.currentProject()
-        macro = Macro(project, dialog.name.text())
-        project.macros[macro.name] = macro
-        self.signalAddMacro.emit(macro)
+    def onEditMacro(self):
+        self.editMacro(self.currentMacro())
 
 
     def onLoadMacro(self):
@@ -1009,12 +1048,6 @@ class ProjectModel(QStandardItemModel):
         self.signalAddMacro.emit(macro)
         with open(fn, "r") as file:
             macro.editor.edit.setPlainText(file.read())
-
-
-    def onEditMacro(self):
-        index = self.selectionModel.currentIndex()
-        macro = index.data(ProjectModel.ITEM_OBJECT)
-        self.signalAddMacro.emit(macro)
 
 
     def onSaveAsScene(self):
