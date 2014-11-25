@@ -400,6 +400,19 @@ class ProjectModel(QStandardItemModel):
 
     def addMacroItem(self, macro):
         print("addMacroItem", macro)
+        return
+        
+        leafItem = QStandardItem(m.name)
+        leafItem.setIcon(icons.file)
+        leafItem.setEditable(False)
+        childItem.appendRow(leafItem)
+        leafItem.setData(m, ProjectModel.ITEM_OBJECT)
+
+        for k, v in m.macros.items():
+            subLeafItem = QStandardItem(k)
+            subLeafItem.setData(v, ProjectModel.ITEM_OBJECT)
+            subLeafItem.setEditable(False)
+            leafItem.appendRow(subLeafItem)
 
 
     def removeObjectItem(self, object):
@@ -1065,11 +1078,21 @@ class ProjectModel(QStandardItemModel):
             if reply == QMessageBox.No:
                 return
 
-        for index in selectedIndexes:
-            deviceId = index.parent().data()
-            object = index.data(ProjectModel.ITEM_OBJECT)
+        while selectedIndexes:
+            index = selectedIndexes.pop()
+            parentIndex = index.parent()
+            deviceId = parentIndex.data()
+            configuration = index.data(ProjectModel.ITEM_OBJECT)
             # Remove data from project
-            object.project.removeConfiguration(deviceId, object)
+            configuration.project.removeConfiguration(deviceId, object)
+            
+            # Update model
+            if self.itemFromIndex(parentIndex).rowCount() == 1:
+                # Also remove deviceId item, if only one configuration is child
+                self.removeRow(parentIndex.row(), parentIndex.parent())
+            else:
+                # Remove index from model
+                self.removeRow(index.row(), parentIndex)
 
 
     def onRemoveDevices(self):
