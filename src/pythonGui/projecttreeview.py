@@ -285,6 +285,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acKillDevice)
             elif selectedType is Macro:
                 acEdit.triggered.connect(self.model().onEditMacro)
+                acDuplicate.triggered.connect(self.model().onDuplicateMacro)
             elif selectedType is Scene:
                 if nbSelected == 1:
                     acEdit.triggered.connect(self.model().onEditScene)
