@@ -295,6 +295,7 @@ class GuiProject(Project, QObject):
     signalDeviceSelected = pyqtSignal(str, object)
     
     signalDeviceAdded = pyqtSignal(object)
+    signalDeviceInserted = pyqtSignal(int, object)
     signalDeviceGroupAdded = pyqtSignal(object)
     signalSceneAdded = pyqtSignal(object)
     signalConfigurationAdded = pyqtSignal(str, object)
@@ -328,7 +329,6 @@ class GuiProject(Project, QObject):
 
 
     def setupDeviceToProject(self, device):
-        self.signalDeviceAdded.emit(device)
         self.setModified(True)
         # Connect device to project to get configuration changes
         device.signalDeviceModified.connect(self.setModified)
@@ -336,11 +336,13 @@ class GuiProject(Project, QObject):
 
     def addDevice(self, device):
         Project.addDevice(self, device)
+        self.signalDeviceAdded.emit(device)
         self.setupDeviceToProject(device)
 
 
     def insertDevice(self, index, device):
         Project.insertDevice(self, index, device)
+        self.signalDeviceInserted.emit(index, device)
         self.setupDeviceToProject(device)
 
 
