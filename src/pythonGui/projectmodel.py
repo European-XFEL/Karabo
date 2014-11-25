@@ -265,9 +265,10 @@ class ProjectModel(QStandardItemModel):
         return self.findItemString(category, projectItem)
 
 
-    def addDeviceItem(self, device):
+    def createDeviceItem(self, device):
         """
-        This function adds the given \device at the right position to the model.
+        This function creates a QStandardItem for the given \device and
+        returns it.
         """
         item = QStandardItem(device.id)
         item.setData(device, ProjectModel.ITEM_OBJECT)
@@ -283,12 +284,33 @@ class ProjectModel(QStandardItemModel):
                               incompatible=icons.deviceIncompatible,
                               ).get(device.status, icons.deviceInstance))
         item.setToolTip("{} <{}>".format(device.id, device.serverId))
+        
+        return item
+
+
+    def addDeviceItem(self, device):
+        """
+        This function adds the given \device at the right position to the model.
+        """
+        item = self.createDeviceItem(device)
 
         projectItem = self.findItem(device.project)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
+    def insertDeviceItem(self, row, device):
+        """
+        This function inserts the given \device at the given \row of the model.
+        """
+        item = self.createDeviceItem(device)
+        
+        projectItem = self.findItem(device.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
 
     def addDeviceGroupItem(self, deviceGroup):
@@ -338,6 +360,15 @@ class ProjectModel(QStandardItemModel):
         parentItem = self.getCategoryItem(Project.SCENES_LABEL, projectItem)
         parentItem.appendRow(item)
         self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
+    def renameScene(self, scene):
+        item = self.findItem(scene)
+        item.setText(scene.filename)
+        scene.project.setModified(True)
+        
+        # Send signal to mainwindow to update the tab text as well
+        self.signalRenameScene.emit(scene)
 
 
     def addConfigurationItem(self, configuration):
@@ -569,6 +600,7 @@ class ProjectModel(QStandardItemModel):
         # Whenever the project is modified - view must be updated
         project.signalProjectModified.connect(self.onProjectModified)
         project.signalDeviceAdded.connect(self.addDeviceItem)
+        project.signalDeviceInserted.connect(self.insertDeviceItem)
         project.signalDeviceGroupAdded.connect(self.addDeviceGroupItem)
         project.signalSceneAdded.connect(self.addSceneItem)
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
@@ -695,8 +727,6 @@ class ProjectModel(QStandardItemModel):
             # Set config, if set
             if config is not None:
                 device.initConfig = config
-
-            #self.updateData()
         else:
             # Add new device
             device = self.addDevice(project,
@@ -781,9 +811,7 @@ class ProjectModel(QStandardItemModel):
             if len(fi.suffix()) < 1:
                 scene.filename = "{}.svg".format(scene.filename)
 
-            # Send signal to view to update the name as well
-            self.signalRenameScene.emit(scene)
-            scene.project.setModified(True)
+            self.renameScene(scene)
 
 
     def _createScene(self, project, sceneName):
