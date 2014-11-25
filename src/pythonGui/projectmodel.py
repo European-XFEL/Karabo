@@ -274,15 +274,7 @@ class ProjectModel(QStandardItemModel):
         item.setData(device, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
 
-        if device.status != "offline" and device.error:
-            item.setIcon(icons.deviceInstanceError)
-        else:
-            item.setIcon(dict(error=icons.deviceInstanceError,
-                              noserver=icons.deviceOfflineNoServer,
-                              noplugin=icons.deviceOfflineNoPlugin,
-                              offline=icons.deviceOffline,
-                              incompatible=icons.deviceIncompatible,
-                              ).get(device.status, icons.deviceInstance))
+        self.updateDeviceIcon(item, device)
         item.setToolTip("{} <{}>".format(device.id, device.serverId))
         
         return item
@@ -326,15 +318,7 @@ class ProjectModel(QStandardItemModel):
             childItem.setData(device, ProjectModel.ITEM_OBJECT)
             childItem.setEditable(False)
 
-            if device.status != "offline" and device.error:
-                childItem.setIcon(icons.deviceInstanceError)
-            else:
-                childItem.setIcon(dict(error=icons.deviceInstanceError,
-                                      noserver=icons.deviceOfflineNoServer,
-                                      noplugin=icons.deviceOfflineNoPlugin,
-                                      offline=icons.deviceOffline,
-                                      incompatible=icons.deviceIncompatible,
-                                     ).get(device.status, icons.deviceInstance))
+            self.updateDeviceIcon(childItem, device)
             childItem.setToolTip("{} <{}>".format(device.id, device.serverId))
             item.appendRow(childItem)
 
@@ -342,6 +326,36 @@ class ProjectModel(QStandardItemModel):
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
+
+
+    def updateDeviceItems(self):
+        """
+        This function updates all device icons of every open project in this model.
+        """
+        for row in range(self.rowCount()):
+            projectItem = self.item(row)
+             # Find folder for devices
+            devicesItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
+            for childRow in range(devicesItem.rowCount()):
+                dItem = devicesItem.child(childRow)
+                object = dItem.data(ProjectModel.ITEM_OBJECT)
+                self.updateDeviceIcon(dItem, object)
+        
+
+    def updateDeviceIcon(self, item, device):
+        """
+        This function updates the icon of the given \item depending on the
+        \device status.
+        """
+        if device.status != "offline" and device.error:
+            item.setIcon(icons.deviceInstanceError)
+        else:
+            item.setIcon(dict(error=icons.deviceInstanceError,
+                              noserver=icons.deviceOfflineNoServer,
+                              noplugin=icons.deviceOfflineNoPlugin,
+                              offline=icons.deviceOffline,
+                              incompatible=icons.deviceIncompatible,
+                              ).get(device.status, icons.deviceInstance))
 
 
     def addSceneItem(self, scene):
@@ -459,8 +473,7 @@ class ProjectModel(QStandardItemModel):
 
     def updateNeeded(self):
         # Update project view and deviceDialog data
-        # TODO: other way
-        print("updateNeeded")
+        self.updateDeviceItems()
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
 
