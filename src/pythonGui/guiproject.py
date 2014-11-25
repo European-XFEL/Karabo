@@ -418,16 +418,18 @@ class GuiProject(Project, QObject):
         Returns \index of the object in the list.
         """
         self.signalRemoveObject.emit(object)
+        self.setModified(True)
         if isinstance(object, Configuration):
             index = self.devices.index(object)
             self.devices.pop(index)
-            self.setModified(True)
             return index
         elif isinstance(object, Scene):
             index = self.scenes.index(object)
             self.scenes.pop(index)
-            self.setModified(True)
             return index
+        elif isinstance(object, Macro):
+            del self.macros[object.name]
+            return -1
 
 
     def parse(self, projectConfig, zf):
