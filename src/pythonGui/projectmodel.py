@@ -371,8 +371,31 @@ class ProjectModel(QStandardItemModel):
         self.signalRenameScene.emit(scene)
 
 
-    def addConfigurationItem(self, configuration):
-        print("addConfigurationItem", configuration)
+    def addConfigurationItem(self, deviceId, configuration):
+        project = configuration.project
+        projectItem = self.findItem(project)
+        # Find folder for configurations
+        parentItem = self.getCategoryItem(Project.CONFIGURATIONS_LABEL, projectItem)
+        
+        # Check, if item for this deviceId already exists
+        item = self.findItemString(deviceId, parentItem)
+        if item is None:
+            # Add item for device it belongs to
+            item = QStandardItem(deviceId)
+            item.setEditable(False)
+            item.setToolTip(deviceId)
+            parentItem.appendRow(item)
+
+        # Add item with configuration file
+        configItem = QStandardItem(configuration.filename)
+        configItem.setIcon(icons.file)
+        configItem.setData(configuration, ProjectModel.ITEM_OBJECT)
+        configItem.setEditable(False)
+        configItem.setToolTip(configuration.filename)
+        item.appendRow(configItem)
+        
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+        self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
 
     def addMacroItem(self, macro):
@@ -402,7 +425,7 @@ class ProjectModel(QStandardItemModel):
     def updateNeeded(self):
         # Update project view and deviceDialog data
         # TODO: other way
-        #self.updateData()
+        print("updateNeeded")
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
 
@@ -447,21 +470,7 @@ class ProjectModel(QStandardItemModel):
         This function looks recursively through the model and returns the
         QModelIndex of the given \object.
         """
-        return self._rFindIndex(self.invisibleRootItem(), object)
-
-
-    def _rFindIndex(self, item, object):
-        for i in range(item.rowCount()):
-            childItem = item.child(i)
-            resultItem = self._rFindIndex(childItem, object)
-            if resultItem is not None:
-                return resultItem
-        
-        indexObject = item.data(ProjectModel.ITEM_OBJECT)
-        if indexObject == object:
-            return item.index()
-        
-        return None
+        return self.findItem(object).index()
 
 
     def findItem(self, object, startItem=None):
@@ -480,6 +489,9 @@ class ProjectModel(QStandardItemModel):
     def _rFindItem(self, item, object):
         for i in range(item.rowCount()):
             childItem = item.child(i)
+            if childItem.data(ProjectModel.ITEM_OBJECT) == object:
+                return childItem
+            
             resultItem = self._rFindItem(childItem, object)
             if resultItem is not None:
                 return resultItem
@@ -507,6 +519,9 @@ class ProjectModel(QStandardItemModel):
     def _rFindItemString(self, item, text):
         for i in range(item.rowCount()):
             childItem = item.child(i)
+            if childItem.data(Qt.DisplayRole) == text:
+                return childItem
+            
             resultItem = self._rFindItemString(childItem, text)
             if resultItem is not None:
                 return resultItem
@@ -569,10 +584,7 @@ class ProjectModel(QStandardItemModel):
                     project.zip()
             
             self.projectClose(project)
-        
-        # Clear selection
-        #self.selectionModel.clear()
-        #self.updateData()
+
         return True
 
 
@@ -794,7 +806,6 @@ class ProjectModel(QStandardItemModel):
             
             newDevice.initConfig = config
         
-        #self.updateData()
         self.selectObject(newDevice)
 
 
@@ -844,7 +855,6 @@ class ProjectModel(QStandardItemModel):
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)
         
-        self.updateData()
         self.selectObject(newScene)
 
 
@@ -1042,9 +1052,6 @@ class ProjectModel(QStandardItemModel):
         for obj in objects:
             # Remove data from project
             self.removeObject(obj.project, obj, nbSelected == 1)
-        
-        #if nbSelected > 1:
-        #    self.updateData()
 
 
     def onRemoveConfiguration(self):
@@ -1064,8 +1071,6 @@ class ProjectModel(QStandardItemModel):
             # Remove data from project
             object.project.removeConfiguration(deviceId, object)
 
-        self.updateData()
-
 
     def onRemoveDevices(self):
         reply = QMessageBox.question(None, 'Remove devices',
@@ -1079,9 +1084,6 @@ class ProjectModel(QStandardItemModel):
         while project.devices:
             object = project.devices[-1]
             self.removeObject(project, object, False)
-        
-        # Update needed in the end
-        #self.updateData()
 
 
     def removeObject(self, project, object, showConfirm=True):
