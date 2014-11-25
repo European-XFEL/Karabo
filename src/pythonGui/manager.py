@@ -341,8 +341,6 @@ class _Manager(QObject):
         project.addConfiguration(conf.id, ProjectConfiguration(project, name,
                                                   Hash(classId, conf.toHash())))
 
-        self.projectTopology.updateData()
-
 
     def handle_log(self, message):
         self.signalLogDataAvailable.emit(message)
