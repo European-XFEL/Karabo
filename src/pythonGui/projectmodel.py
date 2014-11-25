@@ -1037,17 +1037,25 @@ class ProjectModel(QStandardItemModel):
 
 
     def onLoadMacro(self):
-        fn = QFileDialog.getOpenFileName(None, "Load Macro",
-                                         filter="Python Macros (*.py)")
+        fn = QFileDialog.getOpenFileName(None, "Load macro", 
+                                         globals.HIDDEN_KARABO_FOLDER,
+                                         "Python Macros (*.py)")
         if not fn:
             return
+        
         project = self.currentProject()
         name = os.path.basename(fn).split(".")[0]
+        
         macro = Macro(project, name)
-        project.macros[macro.name] = macro
+        project.addMacro(macro)
+        
         self.signalAddMacro.emit(macro)
         with open(fn, "r") as file:
             macro.editor.edit.setPlainText(file.read())
+
+
+    def onDuplicateMacro(self):
+        print("TODO: duplicate macro...")
 
 
     def onSaveAsScene(self):
