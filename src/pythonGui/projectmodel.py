@@ -1066,6 +1066,8 @@ class ProjectModel(QStandardItemModel):
         with open(fn, "r") as file:
             macro.editor.edit.setPlainText(file.read())
 
+        self.selectObject(macro)
+
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")
