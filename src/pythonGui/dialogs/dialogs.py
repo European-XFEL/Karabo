@@ -95,9 +95,10 @@ class PenDialog(QDialog):
             item.widget().setVisible(False)
         else:
             if self.brush.style() == Qt.SolidPattern:
-                self.slFillOpacity.setValue(self.brush.color().alpha())
+                self.gbFill.setChecked(True)
             else:
-                self.slFillOpacity.setValue(0)
+                self.gbFill.setChecked(False)
+            self.slFillOpacity.setValue(self.brush.color().alpha())
 
 
     def exec_(self):
@@ -125,7 +126,7 @@ class PenDialog(QDialog):
             self.pen.setMiterLimit(self.dsbStrokeMiterLimit.value())
 
             if self.brush is not None:
-                if self.slFillOpacity.value() == 0:
+                if not self.gbFill.isChecked():
                     self.brush.setStyle(Qt.NoBrush)
                 else:
                     self.brush.setStyle(Qt.SolidPattern)
