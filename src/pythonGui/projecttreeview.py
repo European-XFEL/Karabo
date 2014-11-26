@@ -37,10 +37,10 @@ class ProjectTreeView(QTreeView):
 
         # Set same mode for each project view
         self.setModel(Manager().projectTopology)
-        self.expandAll()
-        self.model().modelReset.connect(self.expandAll)
+        self.model().signalExpandIndex.connect(self.setExpanded)
         self.setSelectionModel(self.model().selectionModel)
         self.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        #self.setDragDropMode(QAbstractItemView.DragDrop)#InternalMove)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
@@ -219,7 +219,7 @@ class ProjectTreeView(QTreeView):
                 acAddMacro = QAction(text, self)
                 acAddMacro.setStatusTip(text)
                 acAddMacro.setToolTip(text)
-                acAddMacro.triggered.connect(self.model().onNewMacro)
+                acAddMacro.triggered.connect(self.model().onEditMacro)
 
 
                 text = "Load Macro"
@@ -285,6 +285,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acKillDevice)
             elif selectedType is Macro:
                 acEdit.triggered.connect(self.model().onEditMacro)
+                acDuplicate.triggered.connect(self.model().onDuplicateMacro)
             elif selectedType is Scene:
                 if nbSelected == 1:
                     acEdit.triggered.connect(self.model().onEditScene)
