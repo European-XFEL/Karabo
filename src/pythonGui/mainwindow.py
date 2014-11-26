@@ -300,6 +300,7 @@ class MainWindow(QMainWindow):
         customView.signalClosed.connect(self.onCustomViewRemoved)
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
+        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
 
 
     def onRemoveScene(self, scene):
@@ -340,6 +341,7 @@ class MainWindow(QMainWindow):
         macro.editor = macroView
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
+        self.middleTab.setCurrentIndex(self.middleTab.count()-1)
 
 
     def onChangeAccessLevel(self, action):
