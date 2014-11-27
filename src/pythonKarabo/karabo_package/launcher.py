@@ -9,6 +9,8 @@ if __name__ == "__main__":
     _, fn, cls, what = sys.argv
     if what in ("legacy", "schema"):
         sys.karabo_api = 1
+    else:
+        sys.karabo_api = 2
 
 from karabo.hash import BinaryWriter, BinaryParser
 from karabo.eventloop import EventLoop
