@@ -18,8 +18,7 @@ namespace karabo {
         class NoFsm {
         public:
 
-            KARABO_CLASSINFO(NoFsm, "NoFsm", "1.0")
-
+            KARABO_CLASSINFO(NoFsm, "NoFsm", "1.3")
 
             static void expectedParameters(karabo::util::Schema& expected) {
             }
@@ -33,8 +32,6 @@ namespace karabo {
 
             virtual ~NoFsm() {
             }                      
-
-            
             
             void startFsm() {
                 if (!m_initialFunc)
