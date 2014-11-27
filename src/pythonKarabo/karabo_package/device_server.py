@@ -18,6 +18,10 @@ import time
 import inspect
 from importlib import import_module
 from subprocess import Popen, PIPE
+
+if __name__ == "__main__":
+    sys.karabo_api = 2
+
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.plugin_loader import PluginLoader
 from karabo.device import Device, SignalSlotable
