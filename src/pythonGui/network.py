@@ -143,7 +143,7 @@ class _Network(QObject):
             md5 = QCryptographicHash.hash(str(self.password), QCryptographicHash.Md5).toHex()
             if md5 == "39d676ecced45b02da1fb45731790b4c":
                 print("Entering god mode...")
-                globals.GLOBAL_ACCESS_LEVEL = 1000
+                globals.GLOBAL_ACCESS_LEVEL = AccessLevel.GOD
             else:
                 globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 
