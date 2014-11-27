@@ -29,7 +29,7 @@ class NoFsm(base.BaseFsm):
         """Start state machine"""
         self.updateState("Changing...")
         if self.func is None:
-            raise RuntimeError("No initial function defined. Please call 'ini")
+            raise RuntimeError("No initial function defined. Please call 'initialFunc' method in the device constructor")
         self.func()    # call initial function registered in the device constructor
         
     def processEvent(self, event):
