@@ -58,6 +58,13 @@ class Item(QWidget, Loadable):
         raise NotImplementedError("Item.getObject")
 
 
+    def getDevice(self):
+        """
+        The object to the related device (group) is returned.
+        """
+        raise NotImplementedError("Item.getDevice")
+
+
     def mousePressEvent(self, proxy, event):
         self.proxyPos = proxy.pos()
         localPos = proxy.mapFromParent(event.pos())
@@ -210,11 +217,18 @@ class WorkflowItem(Item):
 
     def getObject(self):
         """
-        The object to the related device is returned.
+        The object to the related device (online/offline) is returned.
         """
         if self.device.isOnline():
             return manager.getDevice(self.device.id)
         
+        return self.device
+
+
+    def getDevice(self):
+        """
+        The object to the device is returned.
+        """
         return self.device
 
 
@@ -272,11 +286,18 @@ class WorkflowGroupItem(Item):
 
     def getObject(self):
         """
-        The object to the related device group is returned.
+        The object to the related device group (online/offline) is returned.
         """
         if self.deviceGroup.isOnline() and self.deviceGroup.instance is not None:
             return self.deviceGroup.instance
         
+        return self.deviceGroup
+
+
+    def getDevice(self):
+        """
+        The object to the device group is returned.
+        """
         return self.deviceGroup
 
 
