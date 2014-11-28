@@ -172,15 +172,11 @@ class Device(BaseDevice, BaseConfiguration):
 
 
     def addVisible(self):
-        print()
-        print("Device.addVisible", self)
         realDevice = manager.getDevice(self.id)
         realDevice.addVisible()
 
 
     def removeVisible(self):
-        print()
-        print("Device.removeVisible")
         realDevice = manager.getDevice(self.id)
         realDevice.removeVisible()
 
@@ -288,16 +284,12 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def addVisible(self):
-        print()
-        print("DeviceGroup.addVisible", self.devices)
         for device in self.devices:
             realDevice = manager.getDevice(device.id)
             realDevice.addVisible()
 
 
     def removeVisible(self):
-        print()
-        print("DeviceGroup.removeVisible")
         for device in self.devices:
             device.removeVisible()
 
