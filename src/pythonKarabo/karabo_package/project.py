@@ -184,6 +184,7 @@ class Project(object):
                     deviceGroup.serverId = d.getAttribute("group", "serverId")
                     deviceGroup.classId = d.getAttribute("group", "classId")
                     deviceGroup.initConfig = config
+                    deviceGroup.project = self
                     break # there better be only one!
                 
                 for item in group:
