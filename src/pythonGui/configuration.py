@@ -39,7 +39,7 @@ class BulkNotifications(object):
 
 
 class Configuration(Box):
-    statusChanged = pyqtSignal(object, str, bool)
+    signalStatusChanged = pyqtSignal(object, str, bool)
 
 
     def __init__(self, id, type, descriptor=None):
@@ -100,7 +100,7 @@ class Configuration(Box):
                          'incompatible', 'requested', 'schema', 'alive')
         if value != self._status:
             self._status = value
-        self.statusChanged.emit(self, value, self.error)
+        self.signalStatusChanged.emit(self, value, self.error)
 
 
     def updateStatus(self):
@@ -125,7 +125,7 @@ class Configuration(Box):
             elif self.status not in ("requested", "schema", "alive"):
                 self.status = "online"
             else:
-                self.statusChanged.emit(self, self.status, self.error)
+                self.signalStatusChanged.emit(self, self.status, self.error)
 
 
     def getBox(self, path):
