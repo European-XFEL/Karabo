@@ -7,6 +7,7 @@ import time
 import datetime
 import sys
 import socket
+import re
 from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -140,6 +141,9 @@ class PythonDevice(BaseFsm):
         
         # Initialize Device slots
         self._initDeviceSlots()
+        
+        # Initialize regular expression object
+        self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
     
     @property
     def signalSlotable(self):
@@ -433,6 +437,11 @@ class PythonDevice(BaseFsm):
         self.log.DEBUG("onStateUpdate: {}".format(currentState))
         if self["state"] != currentState:
             self["state"] = currentState
+            if self.errorRegex.match(currentState) is not None:
+                self._ss.updateInstanceInfo(Hash("status", "error"))
+            else:
+                if self._ss.getInstanceInfo()["status"] == "error":
+                    self._ss.updateInstanceInfo(Hash("status", "ok"))
         self._ss.reply(currentState)  # reply new state to interested event initiators
 
     def onStateUpdate(self, currentState):
