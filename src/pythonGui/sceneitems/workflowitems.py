@@ -206,7 +206,7 @@ class WorkflowItem(Item):
         
         self.device = device
         self.displayText = device.id
-
+        
 
     def getDeviceIds(self):
         """
@@ -262,6 +262,9 @@ class WorkflowItem(Item):
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         item.setStyleSheet("".join(ss))
         
+        # If device changes, make sure it gets notified
+        device.addVisible()
+        
         return proxy
 
 
@@ -272,7 +275,7 @@ class WorkflowGroupItem(Item):
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
-
+        
 
     def getDeviceIds(self):
         """
@@ -330,6 +333,9 @@ class WorkflowGroupItem(Item):
         ss = [ ]
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
         item.setStyleSheet("".join(ss))
+        
+        # If devices change, make sure they get notified
+        deviceGroup.addVisible()
         
         return proxy
 
