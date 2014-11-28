@@ -12,7 +12,7 @@ from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.configurator import Configurator
-from karabo.base_fsm import BaseFsm
+from karabo.no_fsm import NoFsm
 
 def isCpuImage(value):
     return (type(value) is CpuImageCHAR or type(value) is CpuImageDOUBLE
@@ -22,7 +22,7 @@ def isCpuImage(value):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
-class PythonDevice(BaseFsm):
+class PythonDevice(NoFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
@@ -136,8 +136,9 @@ class PythonDevice(BaseFsm):
         self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
 
-        # Initialize FSM slots for user defined FSM (polymorphic call) 
-        self.initFsmSlots(self._ss)
+        # Initialize FSM slots if defined
+        if hasattr(self, 'initFsmSlots'):
+            self.initFsmSlots(self._ss)
         
         # Initialize Device slots
         self._initDeviceSlots()
@@ -434,7 +435,7 @@ class PythonDevice(BaseFsm):
         self.fullSchema.copy(self.staticSchema)
         
     def updateState(self, currentState):
-        self.log.DEBUG("onStateUpdate: {}".format(currentState))
+        self.log.DEBUG("updateState: {}".format(currentState))
         if self["state"] != currentState:
             self["state"] = currentState
             if self.errorRegex.match(currentState) is not None:
