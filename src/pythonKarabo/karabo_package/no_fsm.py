@@ -5,22 +5,19 @@
 __author__="Sergey Esenov serguei.essenov@xfel.eu"
 __date__ ="$Nov 26, 2014 3:18:24 PM$"
 
-from karabo.decorators import KARABO_CLASSINFO
-import karabo.base_fsm as base
+from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
+@KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("NoFsm", "1.3")
-class NoFsm(base.BaseFsm):
+class NoFsm(object):
     
     @staticmethod
     def expectedParameters(expected):
         pass
 
     def __init__(self, configuration):
-        super(NoFsm, self).__init__(configuration)
+        super(NoFsm, self).__init__()
         self.func = None
-    
-    def getFsm(self):
-        return None
     
     def startFsm(self):
         """Start state machine"""
