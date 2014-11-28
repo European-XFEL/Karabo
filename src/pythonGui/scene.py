@@ -1007,9 +1007,13 @@ class Scene(QSvgWidget):
     def clean(self):
         """Remove all child widgets"""
         for c in self.inner.children():
-            if isinstance(c, ProxyWidget) and c.component is not None:
-                for b in c.component.boxes:
-                    b.configuration.removeVisible()
+            if isinstance(c, ProxyWidget):
+                if c.component is not None:
+                    for b in c.component.boxes:
+                        b.configuration.removeVisible()
+                
+                if isinstance(c.widget, Item):
+                    c.widget.getDevice().removeVisible()
             #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
@@ -1279,6 +1283,7 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(object, proxy)
+                    object.addVisible()
                 else:
                     object = self.project.getDevice(dialog.deviceGroupName)
                     # TODO: overwrite existing device group?
@@ -1296,6 +1301,7 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowGroupItem(object, proxy)
+                    deviceGroup.addVisible()
                 
                 rect = workflowItem.boundingRect()
                 proxy.setWidget(workflowItem)
