@@ -186,41 +186,44 @@
       <Name>Schema_Test::testOverwriteElement</Name>
     </Test>
     <Test id="62">
-      <Name>TimeClasses_Test::testEpochstamp</Name>
+      <Name>Schema_Test::testMerge</Name>
     </Test>
     <Test id="63">
-      <Name>TimeClasses_Test::testTimePeriod</Name>
+      <Name>TimeClasses_Test::testEpochstamp</Name>
     </Test>
     <Test id="64">
-      <Name>TimeClasses_Test::testTimeDuration</Name>
+      <Name>TimeClasses_Test::testTimePeriod</Name>
     </Test>
     <Test id="65">
-      <Name>TimeClasses_Test::testTimeProfiler</Name>
+      <Name>TimeClasses_Test::testTimeDuration</Name>
     </Test>
     <Test id="66">
-      <Name>Types_Test::testIsPointer</Name>
+      <Name>TimeClasses_Test::testTimeProfiler</Name>
     </Test>
     <Test id="67">
-      <Name>Types_Test::testIsVector</Name>
+      <Name>Types_Test::testIsPointer</Name>
     </Test>
     <Test id="68">
-      <Name>Types_Test::testIsSimple</Name>
+      <Name>Types_Test::testIsVector</Name>
     </Test>
     <Test id="69">
-      <Name>Types_Test::testCategory</Name>
+      <Name>Types_Test::testIsSimple</Name>
     </Test>
     <Test id="70">
-      <Name>Types_Test::testFrom</Name>
+      <Name>Types_Test::testCategory</Name>
     </Test>
     <Test id="71">
-      <Name>Types_Test::testTo</Name>
+      <Name>Types_Test::testFrom</Name>
     </Test>
     <Test id="72">
+      <Name>Types_Test::testTo</Name>
+    </Test>
+    <Test id="73">
       <Name>Types_Test::testConvert</Name>
     </Test>
   </SuccessfulTests>
   <Statistics>
-    <Tests>72</Tests>
+    <Tests>73</Tests>
     <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
     <Failures>0</Failures>
