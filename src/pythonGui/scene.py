@@ -1083,7 +1083,7 @@ class Scene(QSvgWidget):
                 # Check for WorkflowItem...
                 if isinstance(workflowItem, Item):
                     # Send selection signal to connected project
-                    self.signalSceneItemSelected.emit(workflowItem.getObject())
+                    self.signalSceneItemSelected.emit(workflowItem.getDevice())
                     return proxy, workflowItem.mousePressEvent(proxy, event)
         return None, None
 

@@ -339,7 +339,13 @@ class ProjectModel(QStandardItemModel):
             for childRow in range(devicesItem.rowCount()):
                 dItem = devicesItem.child(childRow)
                 object = dItem.data(ProjectModel.ITEM_OBJECT)
-                self.updateDeviceIcon(dItem, object)
+                if isinstance(object, DeviceGroup):
+                    for deviceRow in range(dItem.rowCount()):
+                        dChildItem = dItem.child(deviceRow)
+                        obj = dChildItem.data(ProjectModel.ITEM_OBJECT)
+                        self.updateDeviceIcon(dChildItem, obj)
+                else:
+                    self.updateDeviceIcon(dItem, object)
         
 
     def updateDeviceIcon(self, item, device):
@@ -526,7 +532,11 @@ class ProjectModel(QStandardItemModel):
         This function looks recursively through the model and returns the
         QModelIndex of the given \object.
         """
-        return self.findItem(object).index()
+        item = self.findItem(object)
+        if item is not None:
+            return item.index()
+        
+        return None
 
 
     def findItem(self, object, startItem=None):
@@ -945,28 +955,28 @@ class ProjectModel(QStandardItemModel):
             return
         
         if len(selectedIndexes) > 1:
-            device = None
+            object = None
         else:
             index = selectedIndexes[0]
-            device = index.data(ProjectModel.ITEM_OBJECT)
+            object = index.data(ProjectModel.ITEM_OBJECT)
 
-        if isinstance(device, type) and issubclass(device, karabo.Macro):
-            conf = device.instance
+        if isinstance(object, type) and issubclass(object, karabo.Macro):
+            conf = object.instance
             ctype = "macro"
-        elif isinstance(device, Configuration):
+        elif isinstance(object, Configuration):
             # Check whether device is already online
-            if device.isOnline():
-                if device.type in ("device", "projectClass"):
-                    conf = manager.getDevice(device.id)
-                elif device.type == 'deviceGroupClass':
-                    instance = device.createInstance()
+            if object.isOnline():
+                if object.type in ("device", "projectClass"):
+                    conf = manager.getDevice(object.id)
+                elif object.type == 'deviceGroupClass':
+                    instance = object.createInstance()
 
                     conf = instance
 
                     # Check descriptor only with first selection
                     conf.checkDeviceSchema()
             else:
-                conf = device
+                conf = object
                 # Check descriptor only with first selection
                 conf.checkClassSchema()
             ctype = conf.type
