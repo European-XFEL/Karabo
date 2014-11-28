@@ -1283,7 +1283,6 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(object, proxy)
-                    object.addVisible()
                 else:
                     object = self.project.getDevice(dialog.deviceGroupName)
                     # TODO: overwrite existing device group?
@@ -1301,7 +1300,8 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowGroupItem(object, proxy)
-                    deviceGroup.addVisible()
+                
+                object.addVisible()
                 
                 rect = workflowItem.boundingRect()
                 proxy.setWidget(workflowItem)
