@@ -8,6 +8,7 @@
 import icons
 from registry import Loadable
 from const import ns_svg, ns_karabo
+import sceneitems
 
 from PyQt4.QtCore import pyqtSlot, QRect, QSize
 from PyQt4.QtGui import (QAction, QBoxLayout, QGridLayout, QLabel,
@@ -245,6 +246,9 @@ class FixedLayout(Layout, QLayout):
                         if p.component is not None:
                             for b in p.component.boxes:
                                 b.configuration.removeVisible()
+
+                        if isinstance(p.widget, sceneitems.workflowitems.Item):
+                            p.widget.getDevice().removeVisible()
                     # the following line also deletes the item from
                     # this layout. This is why we don't need to increase i
                     p.setParent(None)
@@ -437,7 +441,7 @@ class ProxyWidget(QWidget):
 
         box = self.component.boxes[0]
         self.setToolTip(box.key())
-        box.configuration.statusChanged.connect(self.showStatus)
+        box.configuration.signalStatusChanged.connect(self.showStatus)
         self.showStatus(None, box.configuration.status, box.configuration.error)
 
         for text, factory in component.factories.items():

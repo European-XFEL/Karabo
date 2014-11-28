@@ -129,7 +129,7 @@ class Device(BaseDevice, BaseConfiguration):
         BaseDevice.__init__(self, serverId, classId, deviceId, ifexists)
 
         actual = manager.getDevice(deviceId)
-        actual.statusChanged.connect(self.onStatusChanged)
+        actual.signalStatusChanged.connect(self.onStatusChanged)
         self.onStatusChanged(actual, actual.status, actual.error)
 
 
@@ -169,6 +169,20 @@ class Device(BaseDevice, BaseConfiguration):
     def isOnline(self):
         return self.status not in (
             "offline", "noplugin", "noserver", "incompatible")
+
+
+    def addVisible(self):
+        print()
+        print("Device.addVisible", self)
+        realDevice = manager.getDevice(self.id)
+        realDevice.addVisible()
+
+
+    def removeVisible(self):
+        print()
+        print("Device.removeVisible")
+        realDevice = manager.getDevice(self.id)
+        realDevice.removeVisible()
 
 
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
@@ -274,14 +288,16 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def addVisible(self):
+        print()
+        print("DeviceGroup.addVisible", self.devices)
         for device in self.devices:
-            oldStatus = device.status
-            device.status = "schema" # Hack to send signal to network
-            device.addVisible()
-            device.status = oldStatus
+            realDevice = manager.getDevice(device.id)
+            realDevice.addVisible()
 
 
     def removeVisible(self):
+        print()
+        print("DeviceGroup.removeVisible")
         for device in self.devices:
             device.removeVisible()
 

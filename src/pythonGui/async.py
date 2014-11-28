@@ -122,7 +122,7 @@ class ClientBase(object):
         if device.status == "alive":
             return DeviceProxy(device.value)
         else:
-            with FutureSlot(device.statusChanged) as fs:
+            with FutureSlot(device.signalStatusChanged) as fs:
                 device.addVisible()
                 try:
                     while device.status != "alive":
@@ -147,7 +147,7 @@ class ClientBase(object):
             self.startDevice("someDeviceName", cls)
         """
         cls = manager.getClass(serverId, classId)
-        with FutureSlot(cls.statusChanged) as fs:
+        with FutureSlot(cls.signalStatusChanged) as fs:
             while cls.status != "schema":
                 yield from fs
         return cls.value

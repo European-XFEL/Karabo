@@ -478,8 +478,11 @@ class ProjectModel(QStandardItemModel):
 
 
     def updateNeeded(self):
-        # Update project view and deviceDialog data
+        # Update project device view 
         self.updateDeviceItems()
+        # Select index again, in case device status changed - show correct page
+        self.selectIndex(self.currentIndex())
+        # Update deviceDialog data
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
 
@@ -512,19 +515,22 @@ class ProjectModel(QStandardItemModel):
         return self.selectionModel.currentIndex()
 
 
+    def selectIndex(self, index):
+        if index.isValid():
+            self.selectionModel.select(index, QItemSelectionModel.Clear)
+            self.selectionModel.select(index, QItemSelectionModel.Select)
+
+
     def selectObject(self, object):
         """
         This function gets an object which can be of type Configuration or Scene
         and selects the corresponding item.
         """
-        index = self.findIndex(object)     
+        index = self.findIndex(object)
         if index is not None and object is not None:
-            self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
+            self.selectIndex(index)
         else:
             self.selectionModel.clear()
-            # TODO: for some reason the selectionChanged signal is not emitted
-            # that's why it is done manually here
-            self.signalSelectionChanged.emit([])
 
 
     def findIndex(self, object):
