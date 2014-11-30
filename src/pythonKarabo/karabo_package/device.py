@@ -129,9 +129,7 @@ class PythonDevice(NoFsm):
         try:
             self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
         except RuntimeError as e:
-            raise RuntimeError(
-                "PythonDevice.__init__: SignalSlotable.create Exception -- " +
-                str(e))
+            raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
         # Setup device logger
         self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
@@ -148,7 +146,7 @@ class PythonDevice(NoFsm):
     
     @property
     def signalSlotable(self):
-        '''Get SignalSlotable object embeded in PythonDevice instance.'''
+        '''Get SignalSlotable object embedded in PythonDevice instance.'''
         return self._ss
     
     def loadLogger(self,input):
@@ -572,6 +570,9 @@ class PythonDevice(NoFsm):
     def getInstanceId(self):
         return self._ss.getInstanceId()
    
+    def registerSlot(self, slotFunc):
+        self._ss.registerSlot(slotFunc)
+        
     '''
     def getCurrentDateTime(self):
         return datetime.datetime(1,1,1).today().isoformat(' ')
