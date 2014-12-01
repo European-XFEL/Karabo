@@ -21,6 +21,7 @@
 namespace karabo {
     namespace io {
 
+        template<typename T>
         class Hdf5Serializer {
         public:
 
@@ -37,9 +38,16 @@ namespace karabo {
             virtual ~Hdf5Serializer() {
             }
 
-            virtual void save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName) = 0;
+            virtual void save(const T& object, hid_t h5file, const std::string& groupName) = 0;
 
-            virtual void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName ) = 0;            
+            virtual void load(T& object, hid_t h5file, const std::string& groupName) = 0;   
+            
+            virtual unsigned long long size(hid_t h5file, const std::string & groupName) = 0;
+            
+            
+            virtual void onCloseFile() {
+                
+            }
 
         private:
             boost::filesystem::path m_filename;

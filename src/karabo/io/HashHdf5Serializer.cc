@@ -21,7 +21,7 @@ namespace karabo {
     namespace io {
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Hdf5Serializer, karabo::io::HashHdf5Serializer)
+        KARABO_REGISTER_FOR_CONFIGURATION(karabo::io::Hdf5Serializer<karabo::util::Hash>, karabo::io::HashHdf5Serializer)
 
 
         ////////////////////////////////////
@@ -64,6 +64,14 @@ namespace karabo {
             KARABO_CHECK_HDF5_STATUS(group);
             serializeHash(group, object);
             KARABO_CHECK_HDF5_STATUS(H5Gclose(group));
+        }
+        
+        unsigned long long HashHdf5Serializer::size(hid_t h5file, const std::string & groupName){
+            H5G_info_t ginfo;
+            hid_t group = H5Gopen(h5file, groupName.c_str(), H5P_DEFAULT);
+            KARABO_CHECK_HDF5_STATUS(H5Gget_info(group, &ginfo));
+            //std::clog << "nobj=" << ginfo.nlinks << std::endl;
+            return ginfo.nlinks;
         }
 
 

@@ -32,7 +32,7 @@
 namespace karabo {
     namespace io {
 
-        class HashHdf5Serializer : public Hdf5Serializer {
+        class HashHdf5Serializer : public Hdf5Serializer<karabo::util::Hash> {
 
         public:
 
@@ -45,6 +45,8 @@ namespace karabo {
             void save(const karabo::util::Hash& object, hid_t h5file, const std::string& groupName);
 
             void load(karabo::util::Hash& object, hid_t h5file, const std::string& groupName);
+            
+            unsigned long long size(hid_t h5file, const std::string & groupName);
 
         private:
 
