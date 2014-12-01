@@ -11,6 +11,7 @@ import widget
 
 from karabo.hash import Hash, XMLParser
 from karabo.hashtypes import Schema_
+from karabo.enums import AccessLevel
 from itertools import count
 
 from os import path
@@ -72,7 +73,7 @@ class Tests(TestCase):
             self.testschema = Schema_("testschema", r.read(fin.read()))
         with open(path.join(self.directory, "configuration.xml"), "r") as fin:
             self.testconfiguration = r.read(fin.read())["ParameterTest"]
-        globals.GLOBAL_ACCESS_LEVEL = 2
+        globals.GLOBAL_ACCESS_LEVEL = AccessLevel.OPERATOR
 
     def excepthook(self, type, value, tb):
         traceback.print_exception(type, value, tb)
@@ -139,6 +140,8 @@ class Tests(TestCase):
         self.assertEqual(
             node.editableComponent.widgetFactory.widget.currentText(),
             "TextFile")
+        cls.dispatchUserChanges(dict(output=dict(
+                        BinaryFile=dict(filename="abc"))))
 
 
     def findIcon(self, a):
@@ -168,7 +171,7 @@ class Tests(TestCase):
     def project(self):
         net.called = [ ]
         Manager().projectTopology.projectOpen(path.join(self.directory,
-                                              "project.krb"))
+                                                        "project.krb"))
         self.assertCalled("onGetDeviceSchema")
 
         root = Manager().projectTopology.invisibleRootItem()
@@ -220,7 +223,7 @@ class Tests(TestCase):
         Manager().handle_deviceSchema("testdevice", self.testschema)
         testdevice = Manager().deviceData["testdevice"]
         Manager().handle_deviceConfiguration("testdevice", self.testconfiguration)
-        self.assertEqual(testdevice.value.targetSpeed.value, 0.5)
+        self.assertEqual(testdevice.value.targetSpeed, 0.5)
         Manager().signalSelectNewNavigationItem.emit("testdevice")
 
         self.getItem("Target Conveyor Speed").setSelected(True)
@@ -239,6 +242,7 @@ class Tests(TestCase):
         self.assertEqual(testdevice.value.targetSpeed, 0.5)
         component = TestWidget.instance.proxy.parent().component
         panel = gui.window.configurationPanel
+        testdevice.dispatchUserChanges(dict(targetSpeed=0.5))
         self.assertIcon(component.acApply.icon(), icons.applyGrey)
         #self.assertFalse(panel.pbApplyAll.isEnabled())
         TestWidget.instance.value = 2.5
