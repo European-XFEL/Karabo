@@ -23,9 +23,12 @@ class QwtWidget(EditableWidget):
 
     def typeChanged(self, box):
         d = box.descriptor
-        self.widget.setRange(
-            max(getattr(d, 'minInc', None), getattr(d, 'minExc', None), 0),
-            max(getattr(d, 'maxInc', None), getattr(d, 'maxExc', None), 100))
+        min, max = box.descriptor.getMinMax()
+        if box.descriptor.minInc is None and box.descriptor.minExc is None:
+            min = 0
+        if box.descriptor.maxInc is None and box.descriptor.maxExc is None:
+            max = 100
+        self.widget.setRange(min, max)
 
 
     @property
@@ -34,7 +37,7 @@ class QwtWidget(EditableWidget):
 
 
     def valueChanged(self, box, value, timestamp=None):
-        with SignalBlocker(self.wiget):
+        with SignalBlocker(self.widget):
             self.widget.setValue(value)
 
 
