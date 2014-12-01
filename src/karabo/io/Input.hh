@@ -34,7 +34,7 @@ namespace karabo {
 
             virtual void read(T& data, size_t idx = 0) = 0;
 
-            virtual size_t size() const = 0;
+            virtual size_t size() = 0;
 
         };
     }

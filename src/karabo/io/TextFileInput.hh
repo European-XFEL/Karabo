@@ -80,7 +80,7 @@ namespace karabo {
                 data = m_sequenceBuffer[idx];
             }
 
-            size_t size() const {
+            size_t size() {
                 return m_sequenceBuffer.size();
             }
 

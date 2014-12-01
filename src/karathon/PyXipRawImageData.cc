@@ -111,6 +111,8 @@ void exportPyXipRawImageData() {
             .def("isBigEndian", &RawImageDataWrap::isBigEndian)
             .def("getHeader", &RawImageDataWrap::getHeaderPy)
             .def("setHeader", &RawImageDataWrap::setHeaderPy, bp::arg("header"))
+            .def("getGeometry", &RawImageDataWrap::getGeometryPy)
+            .def("setGeometry", &RawImageDataWrap::setGeometryPy, bp::arg("geometry"))
             .def("hash", (const Hash & (RawImageData::*)() const) (&RawImageData::hash), bp::return_internal_reference<>())
             .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)
             ;

@@ -92,7 +92,7 @@ namespace karabo {
                 return boost::filesystem::exists(boost::filesystem::path(m_filename));
             }
 
-            size_t size() const {
+            size_t size() {
                 // TODO Work on this
                 return 1;
             }

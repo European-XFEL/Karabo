@@ -18,6 +18,7 @@
 #include "FromNumpy.hh"
 #include "ToNumpy.hh"
 #include "Wrapper.hh"
+#include <karathon/DetectorGeometryWrap.hh>
 
 namespace bp = boost::python;
 
@@ -205,6 +206,16 @@ namespace karathon {
             }
             throw KARABO_PYTHON_EXCEPTION("Python type of the argument in setHeader must be Hash");
         }
+        
+        static bp::object getGeometryPy(const RawImageData& self){
+            return bp::object(DetectorGeometryWrap(self.getGeometry().toHash()));
+        }
+        
+        static void setGeometryPy(RawImageData& self, const bp::object & obj){
+            const DetectorGeometryWrap & g = bp::extract<DetectorGeometryWrap>(obj);
+            self.setGeometry(g.toHash());
+        }
+        
     };
 }
 
