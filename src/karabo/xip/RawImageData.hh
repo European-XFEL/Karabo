@@ -11,6 +11,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/util/ToLiteral.hh>
+#include <karabo/util/DetectorGeometry.hh>
 #include "ImageEnums.hh"
 
 namespace karabo {
@@ -23,6 +24,9 @@ namespace karabo {
             karabo::util::Hash m_hash;
             size_t m_padX;
             size_t m_padY;
+            
+            static karabo::util::Hash m_standardHeader;
+           
 
         public:
 
@@ -61,6 +65,7 @@ namespace karabo {
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
                 setIsBigEndian(isBigEndian);
+                m_hash.set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
             }
 
             /**
@@ -70,7 +75,7 @@ namespace karabo {
              */
             RawImageData(karabo::util::Hash& imageHash, bool copiesHash = true);
 
-            RawImageData(const RawImageData& other);
+            //RawImageData(const RawImageData& other);
 
             virtual ~RawImageData();
 
@@ -86,7 +91,7 @@ namespace karabo {
             }
 
             template <class T>
-            inline void setData(const T* data, const size_t size, const bool copy = true) {
+            inline void setData(const T* data, const size_t size, const bool copy = true, const karabo::xip::ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) {
 
                 size_t byteSize = size * sizeof (T);
 
@@ -108,6 +113,8 @@ namespace karabo {
                 }
 
                 m_hash.set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
+                if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
+                else setChannelSpace(channelSpace);
             }
 
             karabo::util::Dims getDimensions() const;
@@ -137,7 +144,21 @@ namespace karabo {
             karabo::util::Hash getHeader() const;
 
             void setHeader(const karabo::util::Hash& header);
+            
+            karabo::util::DetectorGeometry getGeometry() const;
+            
+            
+                        
+            void setGeometry(karabo::util::DetectorGeometry geometry);
+            
+           
+            
+            std::vector<long> getTileId() const;
 
+            void setTileId(long id);
+            
+            void setTileId(std::vector<long> id);
+            
             const karabo::util::Hash& hash() const;
 
             karabo::util::Hash& hash();
@@ -149,6 +170,11 @@ namespace karabo {
             void toLittleEndian();
 
             void toRGBAPremultiplied();
+            
+            friend std::ostream& operator<<(std::ostream& os, const RawImageData& image) {
+                os<<image.hash();
+                return os;
+            }
 
         private:
 
@@ -157,6 +183,8 @@ namespace karabo {
             void swapEndianess();
 
             void ensureDataOwnership();
+            
+            static void setStandardHeader(RawImageData* caller);
 
             template <class T>
             ChannelSpaceType guessChannelSpace() const {

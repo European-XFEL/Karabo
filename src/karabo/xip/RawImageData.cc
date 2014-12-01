@@ -6,7 +6,10 @@
  */
 
 #include "RawImageData.hh"
+#include "karabo/io/HashXmlSerializer.hh"
+#include "karabo/io/FileTools.hh"
 #include <karabo/util/ByteSwap.hh>
+#include <boost/filesystem/operations.hpp>
 
 using namespace karabo::util;
 
@@ -14,20 +17,29 @@ namespace karabo {
     namespace xip {
 
 
-        RawImageData::RawImageData() : m_hash() {
+        RawImageData::RawImageData()  {
+            setStandardHeader(this);
         }
 
 
         RawImageData::RawImageData(karabo::util::Hash& hash, bool copiesHash) : m_hash(hash) {
+            setStandardHeader(this);
+            if(hash.has("header")){
+                Hash fromHeader = hash.get<Hash>("header");
+                Hash toHeader = this->getHeader();
+                toHeader.merge(fromHeader);
+                this->setHeader(toHeader);
+            }
         }
 
 
-        RawImageData::RawImageData(const RawImageData& other) : m_hash(other.m_hash) {
-        }
+        //RawImageData::RawImageData(const RawImageData& other)  {
+        //    m_hash = other.m_hash;
+        //}
 
 
         RawImageData::~RawImageData() {
-            m_hash.clear();
+            //m_hash.clear();
         }
 
 
@@ -128,7 +140,41 @@ namespace karabo {
 
 
         void RawImageData::setHeader(const karabo::util::Hash& header) {
-            m_hash.set<Hash>("header", header);
+            Hash existingHeader;
+            if(m_hash.has("header")){
+                existingHeader = m_hash.get<Hash>("header");
+            }
+            existingHeader.merge(header);
+            m_hash.set<Hash>("header", existingHeader);
+           
+        }
+        
+        DetectorGeometry RawImageData::getGeometry() const{
+            if (m_hash.has("detectorGeometry")) return DetectorGeometry(m_hash.get<Hash>("detectorGeometry"));
+            return DetectorGeometry();
+        }
+        
+       
+        void RawImageData::setGeometry(DetectorGeometry geometry){
+            m_hash.set<Hash>("detectorGeometry", geometry.toHash());
+            
+        }
+        
+       
+        std::vector<long> RawImageData::getTileId() const {
+            if (m_hash.has("tileId")) return m_hash.get<std::vector<long> >("tileId");
+            return std::vector<long>(1, 0);
+        }
+
+        void RawImageData::setTileId(long id) {
+            m_hash.set<std::vector<long> >("tileId", std::vector<long>(1,id));
+
+        
+        }
+        
+        void RawImageData::setTileId(std::vector<long> id) {
+            m_hash.set<std::vector<long> >("tileId", id);
+
         }
 
 
@@ -215,6 +261,58 @@ namespace karabo {
             if (!dataIsCopy()) {
                 setData(getDataPointer(), getByteSize());
             }
+        }
+        
+        karabo::util::Hash RawImageData::m_standardHeader = karabo::util::Hash();
+        
+        void RawImageData::setStandardHeader(RawImageData* caller){
+            if(m_standardHeader.size() == 0){
+                boost::filesystem::path headerFile =  std::string(getenv("HOME"))+"/.karabo/RawImageHeader.xml";
+                if(boost::filesystem::exists(headerFile)){
+                    
+                    karabo::io::loadFromFile(m_standardHeader, headerFile.string());
+                } else {
+                    
+                    Hash header;
+                    DetectorGeometry geo;
+                    
+                    Hash identifiers;
+                    header.set("geometry", geo.toHash());
+                    identifiers.set("tileIds", std::vector<long long>(1,-1));
+                    identifiers.set("trainIds", std::vector<long long>(1,-1));
+                    identifiers.set("frameIds", std::vector<long long>(1,-1));
+                    identifiers.set("uIds", std::vector<long long>(1,-1));
+                    header.set<unsigned long long>("tileDimensionIs", 2);
+
+                    Hash passport;
+                    passport.set("detector", "NOT_SPECIFIED");
+                    passport.set<long long>("detectorId", -1);
+                    passport.set("operator", "NOT_SPECIFIED");
+                    passport.set("facility", "XFEL.EU");
+                    passport.set("instrument", "NOT_SPECIFIED");
+                    passport.set("dataType", "UNPROCESSED");
+                    header.set("passport", passport);
+
+                    Hash conditions("detector", Hash(), "instrument", Hash(), "beam", Hash());
+                    header.set("initialConditions", conditions);
+
+                    
+
+                    header.set("identifiers", identifiers);
+                    header.set("conditions", karabo::util::Hash());
+                    m_standardHeader = header;
+                }
+            }
+            
+            Hash history;
+            history.set("history", std::vector<std::string>(1, "Dataset created"));
+            karabo::util::Timestamp t;
+            history.set("timestamps", std::vector<std::string>(1, t.toFormattedString()));
+            m_standardHeader.set("history", history);
+            
+            caller->setHeader(m_standardHeader);
+            
+            
         }
 
 

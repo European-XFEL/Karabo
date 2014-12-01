@@ -35,24 +35,32 @@ namespace karabo {
                 return 1;
             }
 
+            File::File(const hid_t & h5file) : m_h5file(h5file), m_managed(true){
+                size_t nameSize = H5Fget_name(h5file, NULL, NULL);
+                char filename[nameSize+1];
+                H5Fget_name(h5file, filename, nameSize+1);
+                m_filename = std::string(filename);
+                
+                
+            }
 
-            File::File(const Hash& input) : m_h5file(-1) {
+            File::File(const Hash& input) : m_h5file(-1), m_managed(false) {
                 m_filename = boost::filesystem::path(input.get<std::string > ("filename"));
             }
 
 
             File::File(const boost::filesystem::path& filename)
-            : m_filename(filename), m_h5file(-1) {
+            : m_filename(filename), m_h5file(-1), m_managed(false) {
             }
 
 
             File::File(const std::string& filename)
-            : m_filename(filename), m_h5file(-1) {
+            : m_filename(filename), m_h5file(-1), m_managed(false) {
             }
 
 
             File::~File() {
-                if (m_h5file > -1) {
+                if (m_h5file > -1 ) {
                     close();
                 }
             }
@@ -185,7 +193,7 @@ namespace karabo {
                     m_openTables.erase(it++);
 
                 }
-                KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
+                if(!m_managed) KARABO_CHECK_HDF5_STATUS(H5Fclose(m_h5file));
                 m_h5file = -1;
                 KARABO_LOG_FRAMEWORK_TRACE_CF << "file " << m_filename.string() << " closed";
             }
@@ -208,8 +216,8 @@ namespace karabo {
             Table::Pointer File::createReadOnlyTablePointer(const std::string & name) {
                 return Table::Pointer(new Table(m_h5file, name));
             }
-
-
+            
+            
             void File::updateTableIndex(const std::string & path) {
 
                 hid_t tables;
