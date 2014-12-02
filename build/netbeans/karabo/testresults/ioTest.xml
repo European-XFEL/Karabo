@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests>
-    <FailedTest id="41">
-      <Name>SchemaXsdSerializer_Test::testTextFileOutputSchema</Name>
-      <FailureType>Assertion</FailureType>
-      <Location>
-        <File>../../../src/karabo/tests/io/SchemaXsdSerializer_Test.cc</File>
-        <Line>238</Line>
-      </Location>
-      <Message>assertion failed
-- Expression: false
-</Message>
-    </FailedTest>
-  </FailedTests>
+  <FailedTests></FailedTests>
   <SuccessfulTests>
     <Test id="1">
       <Name>FileInputOutput_Test::writeTextFile</Name>
@@ -134,11 +122,14 @@
     <Test id="40">
       <Name>SchemaXsdSerializer_Test::testXsdSerialization</Name>
     </Test>
+    <Test id="41">
+      <Name>SchemaXsdSerializer_Test::testTextFileOutputSchema</Name>
+    </Test>
   </SuccessfulTests>
   <Statistics>
     <Tests>41</Tests>
-    <FailuresTotal>1</FailuresTotal>
+    <FailuresTotal>0</FailuresTotal>
     <Errors>0</Errors>
-    <Failures>1</Failures>
+    <Failures>0</Failures>
   </Statistics>
 </TestRun>

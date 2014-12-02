@@ -269,6 +269,7 @@
         <itemPath>../../../src/karabo/util/Base64.hh</itemPath>
         <itemPath>../../../src/karabo/util/ByteSwap.cc</itemPath>
         <itemPath>../../../src/karabo/util/ByteSwap.hh</itemPath>
+        <itemPath>../../../src/karabo/util/DetectorGeometry.hh</itemPath>
         <itemPath>../../../src/karabo/util/Dims.hh</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.cc</itemPath>
         <itemPath>../../../src/karabo/util/PluginLoader.hh</itemPath>
@@ -331,6 +332,8 @@
         <itemPath>../../../src/karabo/xip/RawImageData.hh</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.cc</itemPath>
         <itemPath>../../../src/karabo/xip/RawImageDataBinarySerializer.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageDataHdf5Serializer.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageDataHdf5Serializer.hh</itemPath>
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
         <itemPath>../../../src/karabo/xip/ToChannelSpace.hh</itemPath>
       </logicalFolder>
@@ -1610,6 +1613,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/DetectorGeometry.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Element.hh"
@@ -2018,6 +2026,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3388,6 +3406,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/util/DetectorGeometry.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/util/Dims.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/util/Element.hh"
@@ -3809,6 +3832,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xip/RawImageDataBinarySerializer.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xip/RawImageDataHdf5Serializer.hh"
             ex="false"
             tool="3"
             flavor2="0">
