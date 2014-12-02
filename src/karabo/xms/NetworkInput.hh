@@ -194,7 +194,7 @@ namespace karabo {
                 Memory<T>::read(data, idx, m_channelId, m_activeChunk);
             }
 
-            size_t size() const {
+            size_t size() {
                 return Memory<T>::size(m_channelId, m_activeChunk);
             }
 

@@ -5,45 +5,24 @@ __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$May 10, 2013 2:17:13 PM$"
 
 import threading
-from abc import ABCMeta, abstractmethod
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.fsm import KARABO_FSM_NO_TRANSITION_ACTION
+from karabo.no_fsm import NoFsm
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("BaseFsm", "1.0")
-class BaseFsm(object):
+class BaseFsm(NoFsm):
     
     @staticmethod
-    def expectedParameters(expected):
-        pass
+    def expectedParameters(expected): pass
     
     def __init__(self, configuration):
-        super(BaseFsm, self).__init__()
+        super(BaseFsm, self).__init__(configuration)
         self.fsm = None
         self.processEventLock = threading.RLock()
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
     
-    def getFsm(self):
-        return self.fsm
-    
-    def initFsmSlots(self, sigslot):
-        pass
-    
-    @abstractmethod
-    def exceptionFound(self, shortMessage, detailedMessage):
-        pass
-
-    # TODO Deprecate
-    @abstractmethod
-    def onStateUpdate(self, currentState):
-        pass   
-
-    @abstractmethod
-    def updateState(self, currentState):
-        pass
-    
-    def noStateTransition(self):
-        print("*** No transition exists for the last event ***")
+    def getFsm(self): return self.fsm
     
     def startFsm(self):
         """Start state machine"""
@@ -52,8 +31,7 @@ class BaseFsm(object):
             try:
                 fsm.start()
             except Exception as e:
-                self.exceptionFound("Exception while processing event '{}'".format("Start state machine"), str(e))
-                return
+                raise RuntimeError("startFsm -- Exception: {0}".format(str(e)))
             # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
             state = fsm.get_state()
             if state[0] == '[' and state[len(state)-1] == ']':
@@ -69,8 +47,7 @@ class BaseFsm(object):
                 try:
                     fsm.process_event(event)
                 except Exception as e:
-                    self.errorFound("Exception while processing event '{}'".format(event.__class__.__name__), str(e))
-                    return
+                    raise RuntimeError("processEvent: event = '{0}' -- Exception: {1}".format(event.__class__.__name__, str(e)))
                 state = fsm.get_state()
                 # this is for compatibility with GUI: strip square brackets from state name in case of state machine with regions
                 if state[0] == '[' and state[len(state)-1] == ']':
