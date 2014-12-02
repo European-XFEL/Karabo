@@ -12,7 +12,7 @@ from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.configurator import Configurator
-from karabo.base_fsm import BaseFsm
+from karabo.no_fsm import NoFsm
 
 def isCpuImage(value):
     return (type(value) is CpuImageCHAR or type(value) is CpuImageDOUBLE
@@ -22,7 +22,7 @@ def isCpuImage(value):
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
-class PythonDevice(BaseFsm):
+class PythonDevice(NoFsm):
 
     instanceCountPerDeviceServer = dict()
     instanceCountLock = threading.Lock()
@@ -129,15 +129,14 @@ class PythonDevice(BaseFsm):
         try:
             self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
         except RuntimeError as e:
-            raise RuntimeError(
-                "PythonDevice.__init__: SignalSlotable.create Exception -- " +
-                str(e))
+            raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
         # Setup device logger
         self.loadLogger(configuration)
         self.log = Logger.getLogger(self.deviceid)
 
-        # Initialize FSM slots for user defined FSM (polymorphic call) 
-        self.initFsmSlots(self._ss)
+        # Initialize FSM slots if defined
+        if hasattr(self, 'initFsmSlots'):
+            self.initFsmSlots(self._ss)
         
         # Initialize Device slots
         self._initDeviceSlots()
@@ -147,7 +146,7 @@ class PythonDevice(BaseFsm):
     
     @property
     def signalSlotable(self):
-        '''Get SignalSlotable object embeded in PythonDevice instance.'''
+        '''Get SignalSlotable object embedded in PythonDevice instance.'''
         return self._ss
     
     def loadLogger(self,input):
@@ -434,7 +433,7 @@ class PythonDevice(BaseFsm):
         self.fullSchema.copy(self.staticSchema)
         
     def updateState(self, currentState):
-        self.log.DEBUG("onStateUpdate: {}".format(currentState))
+        self.log.DEBUG("updateState: {}".format(currentState))
         if self["state"] != currentState:
             self["state"] = currentState
             if self.errorRegex.match(currentState) is not None:
@@ -571,6 +570,9 @@ class PythonDevice(BaseFsm):
     def getInstanceId(self):
         return self._ss.getInstanceId()
    
+    def registerSlot(self, slotFunc):
+        self._ss.registerSlot(slotFunc)
+        
     '''
     def getCurrentDateTime(self):
         return datetime.datetime(1,1,1).today().isoformat(' ')

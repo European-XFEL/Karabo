@@ -45,6 +45,8 @@ namespace karabo {
 
             public:
 
+                File(const hid_t & h5file);
+                
                 File(const karabo::util::Hash& input);
 
                 File(const boost::filesystem::path& filename);
@@ -73,6 +75,9 @@ namespace karabo {
                  * \li \c READONLY Readonly mode.
                  */
                 void open(File::AccessMode mode);
+                
+                
+                
 
                 /**
                  * Check if file is open
@@ -134,7 +139,8 @@ namespace karabo {
                 }
 
                 karabo::util::Hash& reportOpenObjects(karabo::util::Hash& hash);
-
+                
+              
             private:
 
                 boost::filesystem::path m_filename;
@@ -153,7 +159,7 @@ namespace karabo {
 
                 void updateTableIndex(const std::string& tablePath);
                 
-                
+                bool m_managed;
 
                 void closeTable(const std::string& uniqueId);
 
