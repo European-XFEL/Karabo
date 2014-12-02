@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="95">
+<configurationDescriptor version="94">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="SourceFiles"
                    displayName="binding specific"
@@ -50,6 +50,7 @@
         <itemPath>../../../src/karathon/PythonMacros.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Tools" projectFiles="true">
+        <itemPath>../../../src/karathon/DetectorGeometryWrap.hh</itemPath>
         <itemPath>../../../src/karathon/DimsWrap.hh</itemPath>
         <itemPath>../../../src/karathon/PyUtilDateTimeString.cc</itemPath>
         <itemPath>../../../src/karathon/PyUtilDims.cc</itemPath>
@@ -177,6 +178,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ConnectionWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DetectorGeometryWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -575,6 +581,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/ConnectionWrap.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karathon/DetectorGeometryWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">

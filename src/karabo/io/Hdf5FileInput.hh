@@ -53,9 +53,11 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("basePath")
                         .description("Set the base path of the data groups within the HDF5 file. It should not end with '/'")
                         .displayedName("H5 base path")
-                        .assignmentOptional().defaultValue(std::string("/0"))
+                        .assignmentOptional().defaultValue(std::string("/"))
                         .reconfigurable()
                         .commit();
+                
+                
 
             }
 
