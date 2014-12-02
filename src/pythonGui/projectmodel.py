@@ -519,6 +519,7 @@ class ProjectModel(QStandardItemModel):
         if index.isValid():
             self.selectionModel.select(index, QItemSelectionModel.Clear)
             self.selectionModel.select(index, QItemSelectionModel.Select)
+            self.selectionModel.setCurrentIndex(index, QItemSelectionModel.ClearAndSelect)
 
 
     def selectObject(self, object):
