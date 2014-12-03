@@ -670,9 +670,6 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveScene.emit(scene)
         
         self.removeProject(project)
-        
-        # Remove item from model
-        self.removeProjectItem(project)
 
 
     def appendProject(self, project):
@@ -703,6 +700,9 @@ class ProjectModel(QStandardItemModel):
 
 
     def removeProject(self, project):
+        # Remove item from model
+        self.removeProjectItem(project)
+        # Remove project from list
         index = self.projects.index(project)
         del self.projects[index]
 
@@ -768,6 +768,7 @@ class ProjectModel(QStandardItemModel):
 
         project.zip(filename)
         project.filename = filename
+        self.onProjectModified(project)
 
 
     def editDevice(self, device=None):
