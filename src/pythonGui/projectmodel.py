@@ -768,6 +768,7 @@ class ProjectModel(QStandardItemModel):
 
         project.zip(filename)
         project.filename = filename
+        self.onProjectModified(project)
 
 
     def editDevice(self, device=None):
