@@ -89,7 +89,7 @@ class ProjectTreeView(QTreeView):
         fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
                              "Karabo Projects (*.krb)", "krb")
 
-        if not fn:
+        if fn:
             self.model().projectNew(fn)
 
 
@@ -110,7 +110,7 @@ class ProjectTreeView(QTreeView):
     def projectSaveAs(self):
         fn = getSaveFileName("Save Project As", globals.KARABO_PROJECT_FOLDER,
                              "Karabo Projects (*.krb)", "krb")
-        if not fn:
+        if fn:
             self.model().projectSaveAs(fn)
 
 
