@@ -251,6 +251,11 @@ class WorkflowItem(Item):
         
         # Get related device from project...
         device = project.getDevice(deviceId)
+        
+        # In case there is a device in the scene but not in the project panel
+        if device is None:
+            return None
+        
         # Trigger selection to get descriptor
         project.signalSelectObject.emit(device)
 
@@ -323,6 +328,11 @@ class WorkflowGroupItem(Item):
 
         # Get related device from project...
         deviceGroup = project.getDevice(id)
+
+        # In case there is a device in the scene but not in the project panel
+        if deviceGroup is None:
+            return None
+        
         # Trigger selection to get descriptor
         project.signalSelectObject.emit(deviceGroup)
         
