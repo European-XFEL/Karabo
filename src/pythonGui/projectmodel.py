@@ -18,7 +18,7 @@ from configuration import Configuration
 import globals
 import icons
 from dialogs.duplicatedialog import DuplicateDialog
-from dialogs.devicedialogs import DeviceDialog
+from dialogs.devicedialogs import DeviceGroupDialog
 from dialogs.scenedialog import SceneDialog
 from dialogs.dialogs import MacroDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
@@ -489,10 +489,18 @@ class ProjectModel(QStandardItemModel):
 
     def currentDevice(self):
         device = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
-        if not isinstance(device, Device):
+        if not isinstance(device, Device) and not isinstance(device, DeviceGroup):
             return None
         
         return device
+
+
+    #def currentDeviceGroup(self):
+    #    deviceGroup = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+    #    if not isinstance(deviceGroup, DeviceGroup):
+    #        return None
+    #    
+    #    return deviceGroup
 
 
     def currentScene(self):
@@ -782,7 +790,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         
         # Show dialog to select plugin
-        self.deviceDialog = DeviceDialog()
+        self.deviceDialog = DeviceGroupDialog()
         if not self.deviceDialog.updateServerTopology(manager.Manager().systemHash, device):
             QMessageBox.warning(None, "No servers available",
             "There are no servers available.<br>Please check, if all servers "
@@ -805,22 +813,44 @@ class ProjectModel(QStandardItemModel):
             # Remove device of project and get index for later insert to keep the
             # order
             index = project.remove(device)
-            device = self.insertDevice(index, project,
-                                       self.deviceDialog.serverId,
-                                       self.deviceDialog.classId,
-                                       self.deviceDialog.deviceId,
-                                       self.deviceDialog.startupBehaviour)
+            
+            if isinstance(device, Device):
+                device = self.insertDevice(index, project,
+                                           self.deviceDialog.serverId,
+                                           self.deviceDialog.classId,
+                                           self.deviceDialog.deviceId,
+                                           self.deviceDialog.startupBehaviour)
+            
+            elif isinstance(device, DeviceGroup):
+                device = self.insertDeviceGroup(index, project,
+                                                self.deviceDialog.deviceGroupName,
+                                                self.deviceDialog.serverId,
+                                                self.deviceDialog.classId,
+                                                self.deviceDialog.startupBehaviour,
+                                                self.deviceDialog.displayPrefix,
+                                                self.deviceDialog.startIndex,
+                                                self.deviceDialog.endIndex)
             
             # Set config, if set
             if config is not None:
                 device.initConfig = config
         else:
-            # Add new device
-            device = self.addDevice(project,
-                                    self.deviceDialog.serverId,
-                                    self.deviceDialog.classId,
-                                    self.deviceDialog.deviceId,
-                                    self.deviceDialog.startupBehaviour)
+            if not self.deviceDialog.deviceGroup:
+                # Add new device
+                device = self.addDevice(project,
+                                        self.deviceDialog.serverId,
+                                        self.deviceDialog.classId,
+                                        self.deviceDialog.deviceId,
+                                        self.deviceDialog.startupBehaviour)
+            else:
+                device = self.addDeviceGroup(project,
+                                             self.deviceDialog.deviceGroupName,
+                                             self.deviceDialog.serverId,
+                                             self.deviceDialog.classId,
+                                             self.deviceDialog.startupBehaviour,
+                                             self.deviceDialog.displayPrefix,
+                                             self.deviceDialog.startIndex,
+                                             self.deviceDialog.endIndex)
         
         self.selectObject(device)
         self.deviceDialog = None
@@ -831,27 +861,53 @@ class ProjectModel(QStandardItemModel):
         Add a device for the given \project with the given data.
         """
         
-        for d in project.devices:
-            if isinstance(d, DeviceGroup):
-                continue
+        device = project.getDevice(deviceId)
+        if device is not None:
+            reply = QMessageBox.question(None, 'Device already exists',
+                "Another device with the same device ID \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(deviceId),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-            if deviceId == d.id:
-                reply = QMessageBox.question(None, 'Device already exists',
-                    "Another device with the same device ID \"<b>{}</b>\" <br> "
-                    "already exists. Do you want to overwrite it?".format(deviceId),
-                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return None
 
-                if reply == QMessageBox.No:
-                    return None
-
-                # Overwrite existing device
-                index = project.remove(d)
-                device = self.insertDevice(index, project, serverId,
-                                           classId, deviceId, ifexists)
-                return device
+            # Overwrite existing device
+            index = project.remove(d)
+            device = self.insertDevice(index, project, serverId,
+                                       classId, deviceId, ifexists)
+            return device
         
         device = project.newDevice(serverId, classId, deviceId, ifexists)
         return device
+
+
+    def addDeviceGroup(self, project, name, serverId, classId,
+                       startupBehaviour, displayPrefix, startIndex,
+                       endIndex):
+        """
+        Add a device group for the given \project with the given data.
+        """
+        
+        deviceGroup = project.getDevice(name)
+        if deviceGroup is not None:
+            reply = QMessageBox.question(None, 'Device group already exists',
+                "Another device group with the same ID \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(name),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing device group
+            index = project.remove(deviceGroup)
+            deviceGroup = self.insertDeviceGroup(index, project, name,
+                                                 serverId, classId, startupBehaviour,
+                                                 displayPrefix, startIndex, endIndex)
+            return deviceGroup
+        
+        deviceGroup = project.newDeviceGroup(name, serverId, classId, startupBehaviour,
+                                             displayPrefix, startIndex, endIndex)
+        return deviceGroup
 
 
     def insertDevice(self, index, project, serverId, classId, deviceId, ifexists):
@@ -864,13 +920,27 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
+    def insertDeviceGroup(self, index, project, name, serverId, classId,
+                          ifexists, displayPrefix, startIndex,
+                          endIndex):
+        """
+        Insert a device group for the given \project with the given data.
+        """
+        deviceGroup = project.createDeviceGroup(name, serverId, classId,
+                                                ifexists, displayPrefix,
+                                                startIndex, endIndex)
+        project.insertDeviceGroup(index, deviceGroup)
+        
+        return deviceGroup
+
+
     def duplicateDevice(self, device):
         dialog = DuplicateDialog(device.id)
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for index in range(dialog.startIndex, dialog.endIndex):
-            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, index)
+        for index in range(dialog.startIndex, dialog.endIndex+1):
+            deviceId = "{}{}".format(dialog.displayPrefix, index)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             
@@ -925,8 +995,8 @@ class ProjectModel(QStandardItemModel):
             return
 
         xml = scene.toXml()
-        for index in range(dialog.startIndex, dialog.endIndex):
-            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, index)
+        for index in range(dialog.startIndex, dialog.endIndex+1):
+            filename = "{}{}".format(dialog.displayPrefix, index)
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)
         

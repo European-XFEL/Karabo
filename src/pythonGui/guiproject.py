@@ -184,9 +184,9 @@ class Device(BaseDevice, BaseConfiguration):
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
-    def __init__(self, id="", type="deviceGroupClass"):
+    def __init__(self, id, serverId, classId, ifexists, type="deviceGroupClass"):
         BaseConfiguration.__init__(self, id, type)
-        BaseDeviceGroup.__init__(self, id)
+        BaseDeviceGroup.__init__(self, serverId, classId, id, ifexists)
         
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
@@ -199,12 +199,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         if self.instance is not None:
             return self.instance
 
-        self.instance = DeviceGroup(self.id, "deviceGroup")
+        self.instance = DeviceGroup(self.id, self.serverId, self.classId, self.ifexists, "deviceGroup")
         self.instance.devices = self.devices
         self.instance.project = self.project
-        
-        self.instance.serverId = self.serverId
-        self.instance.classId = self.classId
 
         return self.instance
 
@@ -305,6 +302,7 @@ class GuiProject(Project, QObject):
     signalDeviceAdded = pyqtSignal(object)
     signalDeviceInserted = pyqtSignal(int, object)
     signalDeviceGroupAdded = pyqtSignal(object)
+    signalDeviceGroupInserted = pyqtSignal(int, object)
     signalSceneAdded = pyqtSignal(object)
     signalConfigurationAdded = pyqtSignal(str, object)
     #signalResourceAdded = pytqtSignal()
@@ -366,25 +364,48 @@ class GuiProject(Project, QObject):
         return device
 
 
-    def addDeviceGroup(self, deviceGroup):
-        Project.addDeviceGroup(self, deviceGroup)
-        self.signalDeviceGroupAdded.emit(deviceGroup)
+    def setupDeviceGroupToProject(self, deviceGroup):
         self.setModified(True)
         for device in deviceGroup.devices:
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
 
 
-    def newDeviceGroup(self, groupId, serverId, classId, deviceId, ifexists,
-                             prefix, start, end):
-        deviceGroup = DeviceGroup(groupId)
-        # Set server and class id for descriptor request
-        deviceGroup.serverId = serverId
-        deviceGroup.classId = classId
-        
+    def addDeviceGroup(self, deviceGroup):
         Project.addDeviceGroup(self, deviceGroup)
+        self.signalDeviceGroupAdded.emit(deviceGroup)
+        self.setupDeviceGroupToProject(deviceGroup)
+
+
+    def insertDeviceGroup(self, index, deviceGroup):
+        Project.insertDeviceGroup(self, index, deviceGroup)
+        self.signalDeviceGroupInserted.emit(index, deviceGroup)
+        self.setupDeviceGroupToProject(deviceGroup)
+
+
+    def newDeviceGroup(self, groupId, serverId, classId, ifexists,
+                             prefix, start, end):
+        """
+        This function creates a new device group with the given parameters,
+        adds it to this project and returns it.
+        """
+        deviceGroup = self.createDeviceGroup(groupId, serverId, classId,
+                                             ifexists, prefix, start, end)
+        Project.addDeviceGroup(self, deviceGroup)
+        return deviceGroup
+
+
+    def createDeviceGroup(self, groupId, serverId, classId, ifexists,
+                          prefix, start, end):
+        """
+        This function only creates a device group with the given parameter and
+        returns it.
         
-        for index in range(start, end):
-            id = "{}{}{}".format(deviceId, prefix, index)
+        It does not yet append it to this project.
+        """
+        deviceGroup = DeviceGroup(groupId, serverId, classId, ifexists)
+        
+        for index in range(start, end+1):
+            id = "{}{}".format(prefix, index)
             device = Device(serverId, classId, id, ifexists)
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             deviceGroup.addDevice(device)
@@ -494,6 +515,14 @@ class GuiProject(Project, QObject):
                 else:
                     group = []
                     for device in deviceObj.devices:
+                        # In case this device of the group was never clicked, there might
+                        # be no configuration set... To prevent this, use configuration
+                        # of device group
+                        if deviceObj.descriptor is None:
+                            device.initConfig = deviceObj.initConfig
+                        else:
+                            device.initConfig = deviceObj.toHash()
+                        # Save configuration to XML file
                         zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                                     device.toXml())
                         group.append(Hash("serverId", device.serverId,
@@ -504,10 +533,10 @@ class GuiProject(Project, QObject):
                     zf.writestr("{}/{}".format(self.DEVICES_KEY, deviceObj.filename),
                                 deviceObj.toXml())
                     deviceGroupHash = Hash("group", group)
-                    deviceGroupHash.setAttribute("group", "id", deviceObj.id)
                     deviceGroupHash.setAttribute("group", "filename", deviceObj.filename)
                     deviceGroupHash.setAttribute("group", "serverId", deviceObj.serverId)
                     deviceGroupHash.setAttribute("group", "classId", deviceObj.classId)
+                    deviceGroupHash.setAttribute("group", "ifexists", deviceObj.ifexists)
                     
                     deviceHash.append(deviceGroupHash)
             projectConfig[self.DEVICES_KEY] = deviceHash
@@ -600,7 +629,18 @@ class GuiProject(Project, QObject):
         """
         This function instantiates the \device.
         """
-        self._instantiateDevice(device)
+        if isinstance(device, Device):
+            self._instantiateDevice(device)
+        elif isinstance(device, DeviceGroup):
+            for gd in device.devices:
+                # In case this device of the group was never clicked, there might
+                # be no configuration set... To prevent this, use configuration
+                # of device group
+                if device.descriptor is None:
+                    gd.initConfig = device.initConfig
+                else:
+                    gd.initConfig = device.toHash()
+                self._instantiateDevice(gd)
 
 
     def instantiateAll(self):
@@ -608,14 +648,22 @@ class GuiProject(Project, QObject):
         This function instantiates all project devices.
         """
         for d in self.devices:
-            self._instantiateDevice(d)
+            self.instantiate(d)
+
+
+    def _shutdownDevice(self, device, showConfirm):
+        manager.Manager().shutdownDevice(device.id, showConfirm)
 
 
     def shutdown(self, device, showConfirm=True):
         """
         This function shuts down \device.
         """
-        manager.Manager().shutdownDevice(device.id, showConfirm)
+        if isinstance(device, Device):
+            self._shutdownDevice(device, showConfirm)
+        elif isinstance(device, DeviceGroup):
+            for gd in device.devices:
+                self._shutdownDevice(gd, False)
 
 
     def shutdownAll(self):
@@ -623,7 +671,7 @@ class GuiProject(Project, QObject):
         This function shuts down all project devices.
         """
         for d in self.devices:
-            manager.Manager().shutdownDevice(d.id, False)
+            self.shutdown(d, False)
 
 
 class Macro(object):

@@ -93,6 +93,11 @@ class Project(object):
         deviceGroup.project = self
 
 
+    def insertDeviceGroup(self, index, deviceGroup):
+        self.devices.insert(index, deviceGroup)
+        deviceGroup.project = self
+
+
     def addConfiguration(self, deviceId, configuration):
         if deviceId in self.configurations:
             self.configurations[deviceId].append(configuration)
@@ -179,10 +184,18 @@ class Project(object):
             if group is not None:
                 filename = d.getAttribute("group", "filename")
                 data = zf.read("{}/{}".format(self.DEVICES_KEY, filename))
+                assert filename.endswith(".xml")
+                filename = filename[:-4]
                 for _, config in XMLParser().read(data).items():
-                    deviceGroup = self.DeviceGroup(d.getAttribute("group", "id"))
-                    deviceGroup.serverId = d.getAttribute("group", "serverId")
-                    deviceGroup.classId = d.getAttribute("group", "classId")
+                    serverId = d.getAttribute("group", "serverId")
+                    classId = d.getAttribute("group", "classId")
+                    # This is currently for backporting
+                    if d.hasAttribute("group", "ifexists"):
+                        ifexists = d.getAttribute("group", "ifexists")
+                    else:
+                        ifexists = "ignore" # Use default
+                    
+                    deviceGroup = self.DeviceGroup(filename, serverId, classId, ifexists)
                     deviceGroup.initConfig = config
                     deviceGroup.project = self
                     break # there better be only one!
@@ -291,6 +304,8 @@ class BaseDevice(object):
 
 
     def __init__(self, serverId, classId, deviceId, ifexists):
+        assert ifexists in ("ignore", "restart")
+        
         self.serverId = serverId
         self.classId = classId
 
@@ -300,27 +315,16 @@ class BaseDevice(object):
         self.project = None
 
 
-class BaseDeviceGroup(object):
+class BaseDeviceGroup(BaseDevice):
     """
-    This class represents a list of devices.
+    This class represents a list of devices and is a device itself.
     """
 
-    def __init__(self, id=""):
-        self.id = id
+    def __init__(self, serverId, classId, id, ifexists):
+        BaseDevice.__init__(self, serverId, classId, id, ifexists)
+
         self.devices = []
-        
         self.project = None
-
-
-    @property
-    def id(self):
-        return self._id
-
-
-    @id.setter
-    def id(self, id):
-        self._id = id
-        self.filename = "{}.xml".format(id)
 
 
     def addDevice(self, device):
