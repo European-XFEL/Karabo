@@ -1295,7 +1295,6 @@ class Scene(QSvgWidget):
                         object = self.project.newDeviceGroup(dialog.deviceGroupName,
                                                              dialog.serverId,
                                                              dialog.classId,
-                                                             dialog.deviceId,
                                                              dialog.startupBehaviour,
                                                              dialog.displayPrefix,
                                                              dialog.startIndex,

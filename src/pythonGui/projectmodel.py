@@ -826,7 +826,6 @@ class ProjectModel(QStandardItemModel):
                                                 self.deviceDialog.deviceGroupName,
                                                 self.deviceDialog.serverId,
                                                 self.deviceDialog.classId,
-                                                self.deviceDialog.deviceId,
                                                 self.deviceDialog.startupBehaviour,
                                                 self.deviceDialog.displayPrefix,
                                                 self.deviceDialog.startIndex,
@@ -848,7 +847,6 @@ class ProjectModel(QStandardItemModel):
                                              self.deviceDialog.deviceGroupName,
                                              self.deviceDialog.serverId,
                                              self.deviceDialog.classId,
-                                             self.deviceDialog.deviceId,
                                              self.deviceDialog.startupBehaviour,
                                              self.deviceDialog.displayPrefix,
                                              self.deviceDialog.startIndex,
@@ -884,7 +882,7 @@ class ProjectModel(QStandardItemModel):
 
 
     def addDeviceGroup(self, project, name, serverId, classId,
-                       deviceId, startupBehaviour, displayPrefix, startIndex,
+                       startupBehaviour, displayPrefix, startIndex,
                        endIndex):
         """
         Add a device group for the given \project with the given data.
@@ -903,13 +901,11 @@ class ProjectModel(QStandardItemModel):
             # Overwrite existing device group
             index = project.remove(deviceGroup)
             deviceGroup = self.insertDeviceGroup(index, project, name,
-                                                 serverId, classId, deviceId,
-                                                 startupBehaviour, displayPrefix,
-                                                 startIndex, endIndex)
+                                                 serverId, classId, startupBehaviour,
+                                                 displayPrefix, startIndex, endIndex)
             return deviceGroup
         
-        deviceGroup = project.newDeviceGroup(name, serverId, classId,
-                                             deviceId, startupBehaviour,
+        deviceGroup = project.newDeviceGroup(name, serverId, classId, startupBehaviour,
                                              displayPrefix, startIndex, endIndex)
         return deviceGroup
 
@@ -925,13 +921,13 @@ class ProjectModel(QStandardItemModel):
 
 
     def insertDeviceGroup(self, index, project, name, serverId, classId,
-                          deviceId, ifexists, displayPrefix, startIndex,
+                          ifexists, displayPrefix, startIndex,
                           endIndex):
         """
         Insert a device group for the given \project with the given data.
         """
         deviceGroup = project.createDeviceGroup(name, serverId, classId,
-                                                deviceId, ifexists, displayPrefix,
+                                                ifexists, displayPrefix,
                                                 startIndex, endIndex)
         project.insertDeviceGroup(index, deviceGroup)
         
@@ -943,8 +939,8 @@ class ProjectModel(QStandardItemModel):
         if dialog.exec_() == QDialog.Rejected:
             return
 
-        for index in range(dialog.startIndex, dialog.endIndex):
-            deviceId = "{}{}{}".format(device.id, dialog.displayPrefix, index)
+        for index in range(dialog.startIndex, dialog.endIndex+1):
+            deviceId = "{}{}".format(dialog.displayPrefix, index)
             newDevice = self.addDevice(self.currentProject(), device.serverId,
                                        device.classId, deviceId, device.ifexists)
             
@@ -999,8 +995,8 @@ class ProjectModel(QStandardItemModel):
             return
 
         xml = scene.toXml()
-        for index in range(dialog.startIndex, dialog.endIndex):
-            filename = "{}{}{}".format(scene.filename[:-4], dialog.displayPrefix, index)
+        for index in range(dialog.startIndex, dialog.endIndex+1):
+            filename = "{}{}".format(dialog.displayPrefix, index)
             newScene = self.addScene(self.currentProject(), filename)
             newScene.fromXml(xml)
         
