@@ -132,16 +132,20 @@ class Tests(TestCase):
         self.assertEqual(node.displayComponent.widget.text(), "42")
 
         node = self.findNode(cls, "output")
-        self.assertEqual(
-            node.editableComponent.widgetFactory.widget.currentText(),
-            "BinaryFile")
+        widget = node.editableComponent.widgetFactory.widget
+        self.assertEqual(widget.currentText(), "BinaryFile")
         cls.dispatchUserChanges(dict(output=dict(
                         TextFile=dict(filename="abc"))))
-        self.assertEqual(
-            node.editableComponent.widgetFactory.widget.currentText(),
-            "TextFile")
+        self.assertEqual(widget.currentText(), "TextFile")
         cls.dispatchUserChanges(dict(output=dict(
                         BinaryFile=dict(filename="abc"))))
+        self.assertEqual(widget.count(), 4)
+        self.assertEqual(widget.itemText(1), "Hdf5File")
+        widget.setCurrentIndex(1)
+        gui.window.navigationPanel.onSelectNewNavigationItem(
+            "testserver.testclass")
+        gui.window.configurationPanel.onInitDevice()
+        widget.setCurrentIndex(0)
 
 
     def findIcon(self, a):
