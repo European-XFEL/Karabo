@@ -17,7 +17,7 @@ import globals
 
 from scene import Scene
 from manager import Manager
-from guiproject import Category, Device, GuiProject, Macro
+from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
@@ -119,18 +119,10 @@ class ProjectTreeView(QTreeView):
         if not index.isValid(): return
 
         object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Device):
+        if isinstance(object, Device) or isinstance(object, DeviceGroup):
             self.model().editDevice(object)
         elif isinstance(object, Scene):
             self.model().openScene(object)
-
-
-    def currentDevice(self):
-        index = self.currentIndex()
-        object = index.data(ProjectModel.ITEM_OBJECT)
-        if isinstance(object, Device):
-            return object
-        return None
 
 
 ### slots ###
@@ -231,7 +223,7 @@ class ProjectTreeView(QTreeView):
 
                 menu.addAction(acAddMacro)
                 menu.addAction(acLoadMacro)
-        elif selectedType in (Device, Scene, Macro):
+        elif selectedType in (Device, DeviceGroup, Scene, Macro):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Remove selected"
@@ -258,7 +250,7 @@ class ProjectTreeView(QTreeView):
             
             menu.addAction(acRemove)
             
-            if selectedType is Device:
+            if selectedType in (Device, DeviceGroup):
                 if nbSelected > 1:
                     text = "Instantiate selected"
                 else:

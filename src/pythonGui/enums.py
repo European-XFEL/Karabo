@@ -7,7 +7,7 @@
 
 """This module contains classes which define different enumerators."""
 
-__all__ = ["NavigationItemTypes", "AccessMode"]
+__all__ = ["NavigationItemTypes"]
 
 class NavigationItemTypes(object):
     UNDEFINED = -1
@@ -15,10 +15,4 @@ class NavigationItemTypes(object):
     SERVER = 1
     CLASS = 2
     DEVICE = 3
-
-
-class CompositionMode(object):
-    UNDEFINED = -1
-    ONLINE = 0
-    OFFLINE = 1
 
