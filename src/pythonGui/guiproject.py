@@ -515,6 +515,14 @@ class GuiProject(Project, QObject):
                 else:
                     group = []
                     for device in deviceObj.devices:
+                        # In case this device of the group was never clicked, there might
+                        # be no configuration set... To prevent this, use configuration
+                        # of device group
+                        if deviceObj.descriptor is None:
+                            device.initConfig = deviceObj.initConfig
+                        else:
+                            device.initConfig = deviceObj.toHash()
+                        # Save configuration to XML file
                         zf.writestr("{}/{}".format(self.DEVICES_KEY, device.filename),
                                     device.toXml())
                         group.append(Hash("serverId", device.serverId,
@@ -625,6 +633,13 @@ class GuiProject(Project, QObject):
             self._instantiateDevice(device)
         elif isinstance(device, DeviceGroup):
             for gd in device.devices:
+                # In case this device of the group was never clicked, there might
+                # be no configuration set... To prevent this, use configuration
+                # of device group
+                if device.descriptor is None:
+                    gd.initConfig = device.initConfig
+                else:
+                    gd.initConfig = device.toHash()
                 self._instantiateDevice(gd)
 
 
@@ -648,7 +663,7 @@ class GuiProject(Project, QObject):
             self._shutdownDevice(device, showConfirm)
         elif isinstance(device, DeviceGroup):
             for gd in device.devices:
-                self._shutdownDevice(gd, showConfirm)
+                self._shutdownDevice(gd, False)
 
 
     def shutdownAll(self):
