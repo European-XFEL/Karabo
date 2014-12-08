@@ -122,14 +122,29 @@ class DuplicateWidget(QWidget):
         return self.leDisplayPrefix.text()
 
 
+    @displayPrefix.setter
+    def displayPrefix(self, text):
+        self.leDisplayPrefix.setText(text)
+
+
     @property
     def startIndex(self):
         return self.sbStartIndex.value()
 
 
+    @startIndex.setter
+    def startIndex(self, index):
+        self.sbStartIndex.setValue(index)
+
+
     @property
     def endIndex(self):
         return self.sbEndIndex.value()
+
+
+    @endIndex.setter
+    def endIndex(self, index):
+        self.sbEndIndex.setValue(index)
 
 
     def onChanged(self):

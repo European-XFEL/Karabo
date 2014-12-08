@@ -84,7 +84,7 @@ class DeviceGroupDialog(QDialog):
     A dialog to setup groups of devices.
     """
 
-    def __init__(self, systemHash, serverId=None, classId=None):
+    def __init__(self, systemHash=None):
         super(DeviceGroupDialog, self).__init__()
 
         self.setWindowTitle("Add device")
@@ -104,13 +104,13 @@ class DeviceGroupDialog(QDialog):
         self.cbDeviceGroup.toggled.connect(self.onShowDuplicateWidget)
         vLayout.addWidget(self.cbDeviceGroup)
         
-        self.gbSelecteGroupName = QGroupBox("Select group name", self)
-        fLayout = QFormLayout(self.gbSelecteGroupName)
+        self.gbSelectedGroupName = QGroupBox("Select group name", self)
+        fLayout = QFormLayout(self.gbSelectedGroupName)
         fLayout.setContentsMargins(5,5,5,5)
         self.leGroupName = QLineEdit("")
         fLayout.addRow("Group name:", self.leGroupName)
-        self.gbSelecteGroupName.setVisible(False)
-        vLayout.addWidget(self.gbSelecteGroupName)
+        self.gbSelectedGroupName.setVisible(False)
+        vLayout.addWidget(self.gbSelectedGroupName)
         
         self.duplicateWidget = DuplicateWidget()
         self.duplicateWidget.signalValidInput.connect(self.onValidDuplicateWidgetInput)
@@ -124,9 +124,6 @@ class DeviceGroupDialog(QDialog):
         vLayout.addWidget(self.buttonBox)
         
         self.updateServerTopology(systemHash)
-        # Select server and plugin
-        self.deviceWidget.serverId = serverId
-        self.deviceWidget.classId = classId
         
         self.w = 0
         self.h = 0
@@ -136,7 +133,32 @@ class DeviceGroupDialog(QDialog):
         """
         This function broadcasts the parameters to the device widget.
         """
-        return self.deviceWidget.updateServerTopology(systemTopology, device)
+        result = self.deviceWidget.updateServerTopology(systemTopology, device)
+        
+        if hasattr(device, "devices"):
+            self.deviceGroup = True
+            self.deviceGroupName = device.id
+
+            prefix = None
+            startIndex = None
+            endIndex = None
+            for d in device.devices:
+                deviceId = d.id
+                prefix = deviceId.rstrip('0123456789')
+                index = deviceId[len(prefix):]
+                if startIndex is None:
+                    startIndex = index
+                endIndex = index
+            
+            if prefix is not None:
+                self.deviceId = prefix
+                self.displayPrefix = prefix
+            if startIndex is not None:
+                self.startIndex = int(startIndex)
+            if endIndex is not None:
+                self.endIndex = int(endIndex)
+        
+        return result
 
 
     @property
@@ -144,14 +166,29 @@ class DeviceGroupDialog(QDialog):
         return self.deviceWidget.deviceId
 
 
+    @deviceId.setter
+    def deviceId(self, deviceId):
+        self.deviceWidget.deviceId = deviceId
+
+
     @property
     def classId(self):
         return self.deviceWidget.classId
 
 
+    @classId.setter
+    def classId(self, classId):
+        self.deviceWidget.classId = classId
+
+        
     @property
     def serverId(self):
         return self.deviceWidget.serverId
+
+
+    @serverId.setter
+    def serverId(self, serverId):
+        self.deviceWidget.serverId = serverId
 
 
     @property
@@ -160,8 +197,13 @@ class DeviceGroupDialog(QDialog):
 
 
     @property
-    def isDeviceGroup(self):
+    def deviceGroup(self):
         return self.cbDeviceGroup.isChecked()
+
+
+    @deviceGroup.setter
+    def deviceGroup(self, check):
+        self.cbDeviceGroup.setChecked(check)
 
 
     @property
@@ -169,9 +211,19 @@ class DeviceGroupDialog(QDialog):
         return self.leGroupName.text()
 
 
+    @deviceGroupName.setter
+    def deviceGroupName(self, text):
+        self.leGroupName.setText(text)
+
+
     @property
     def displayPrefix(self):
         return self.duplicateWidget.displayPrefix
+
+
+    @displayPrefix.setter
+    def displayPrefix(self, text):
+        self.duplicateWidget.displayPrefix = text
 
 
     @property
@@ -179,9 +231,19 @@ class DeviceGroupDialog(QDialog):
         return self.duplicateWidget.startIndex
 
 
+    @startIndex.setter
+    def startIndex(self, index):
+        self.duplicateWidget.startIndex = index
+
+
     @property
     def endIndex(self):
         return self.duplicateWidget.endIndex
+
+
+    @endIndex.setter
+    def endIndex(self, index):
+        self.duplicateWidget.endIndex = index
 
 
     def onValidDeviceId(self, deviceId):
@@ -204,7 +266,7 @@ class DeviceGroupDialog(QDialog):
             self.w = self.width()
             self.h = self.height()
         
-        self.gbSelecteGroupName.setVisible(on)
+        self.gbSelectedGroupName.setVisible(on)
         self.duplicateWidget.setVisible(on)
         
         if not on:
@@ -279,7 +341,7 @@ class DeviceDefinitionWidget(QWidget):
         """
         serverKey = "server"
         if systemTopology is None or not systemTopology.has(serverKey):
-            return
+            return False
         
         serverTopology = systemTopology.get(serverKey)
         
@@ -324,6 +386,11 @@ class DeviceDefinitionWidget(QWidget):
     @property
     def deviceId(self):
         return self.leDeviceId.text()
+
+
+    @deviceId.setter
+    def deviceId(self, text):
+        self.leDeviceId.setText(text)
 
 
     @property

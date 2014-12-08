@@ -1267,9 +1267,13 @@ class Scene(QSvgWidget):
             # Restore cursor for dialog input
             QApplication.restoreOverrideCursor()
             # Open dialog to set up new device (group)
-            dialog = DeviceGroupDialog(manager.Manager().systemHash, serverId, classId)
+            dialog = DeviceGroupDialog(manager.Manager().systemHash)
+            # Set server and class id
+            dialog.serverId = serverId
+            dialog.classId = classId
+            
             if dialog.exec_() == QDialog.Accepted:
-                if not dialog.isDeviceGroup:
+                if not dialog.deviceGroup:
                     object = self.project.getDevice(dialog.deviceId)
                     # TODO: overwrite existing device?
                     if object is None:
@@ -1289,13 +1293,13 @@ class Scene(QSvgWidget):
                     if object is None:
                         # Create device group and add to project, if not exists
                         object = self.project.newDeviceGroup(dialog.deviceGroupName,
-                                                            dialog.serverId,
-                                                            dialog.classId,
-                                                            dialog.deviceId,
-                                                            dialog.startupBehaviour,
-                                                            dialog.displayPrefix,
-                                                            dialog.startIndex,
-                                                            dialog.endIndex)
+                                                             dialog.serverId,
+                                                             dialog.classId,
+                                                             dialog.deviceId,
+                                                             dialog.startupBehaviour,
+                                                             dialog.displayPrefix,
+                                                             dialog.startIndex,
+                                                             dialog.endIndex)
 
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
