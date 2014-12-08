@@ -621,7 +621,11 @@ class GuiProject(Project, QObject):
         """
         This function instantiates the \device.
         """
-        self._instantiateDevice(device)
+        if isinstance(device, Device):
+            self._instantiateDevice(device)
+        elif isinstance(device, DeviceGroup):
+            for gd in device.devices:
+                self._instantiateDevice(gd)
 
 
     def instantiateAll(self):
@@ -629,14 +633,22 @@ class GuiProject(Project, QObject):
         This function instantiates all project devices.
         """
         for d in self.devices:
-            self._instantiateDevice(d)
+            self.instantiate(d)
+
+
+    def _shutdownDevice(self, device, showConfirm):
+        manager.Manager().shutdownDevice(device.id, showConfirm)
 
 
     def shutdown(self, device, showConfirm=True):
         """
         This function shuts down \device.
         """
-        manager.Manager().shutdownDevice(device.id, showConfirm)
+        if isinstance(device, Device):
+            self._shutdownDevice(device, showConfirm)
+        elif isinstance(device, DeviceGroup):
+            for gd in device.devices:
+                self._shutdownDevice(gd, showConfirm)
 
 
     def shutdownAll(self):
@@ -644,7 +656,7 @@ class GuiProject(Project, QObject):
         This function shuts down all project devices.
         """
         for d in self.devices:
-            manager.Manager().shutdownDevice(d.id, False)
+            self.shutdown(d, False)
 
 
 class Macro(object):
