@@ -470,7 +470,7 @@ class GuiProject(Project, QObject):
             self.addScene(scene)
 
 
-        for k in projectConfig[self.MACROS_KEY]:
+        for k in projectConfig.get(self.MACROS_KEY, []):
             macro = Macro(self, k)
             self.addMacro(macro)
 
