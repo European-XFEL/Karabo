@@ -26,7 +26,7 @@ namespace karabo {
 
         ////////////////////////////////////
 
-        HashHdf5Serializer::HashHdf5Serializer(const karabo::util::Hash& input) : Hdf5Serializer(input) {
+        HashHdf5Serializer::HashHdf5Serializer(const karabo::util::Hash& input) : Hdf5Serializer<karabo::util::Hash>(input) {
             m_stringStid = karabo::io::h5::ScalarTypes::getHdf5StandardType<std::string>();
             m_stringNtid = karabo::io::h5::ScalarTypes::getHdf5NativeType<std::string>();
             m_spaceId = H5Screate(H5S_SCALAR);

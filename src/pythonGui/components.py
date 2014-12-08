@@ -422,7 +422,7 @@ class EditableApplyLaterComponent(BaseComponent):
     def onApplyClicked(self):
         network = []
         for b in self.boxes:
-            b.signalUserChanged.emit(b, self.widgetFactory.value)
+            b.signalUserChanged.emit(b, self.widgetFactory.value, None)
             # If this box belongs to a deviceGroup configuration, no need to
             # broadcast to Network
             if b.configuration.type == "macro":
@@ -447,7 +447,7 @@ class EditableApplyLaterComponent(BaseComponent):
             "The attribute couldn't be set in the current state.")
 
 
-    @pyqtSlot(str, object)
+    @pyqtSlot(object, object)
     def onDisplayValueChanged(self, box, value):
         if self.__currentDisplayValue is None:
             self.widgetFactory.valueChanged(box, value)
@@ -457,6 +457,7 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
 
+    @pyqtSlot(object, object)
     def onUserChanged(self, box, value):
         self.widgetFactory.valueChangedSlot(box, value)
         self.updateButtons()
