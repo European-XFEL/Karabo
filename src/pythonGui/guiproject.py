@@ -382,20 +382,19 @@ class GuiProject(Project, QObject):
         self.setupDeviceGroupToProject(deviceGroup)
 
 
-    def newDeviceGroup(self, groupId, serverId, classId, deviceId, ifexists,
+    def newDeviceGroup(self, groupId, serverId, classId, ifexists,
                              prefix, start, end):
         """
         This function creates a new device group with the given parameters,
         adds it to this project and returns it.
         """
         deviceGroup = self.createDeviceGroup(groupId, serverId, classId,
-                                             deviceId, ifexists, prefix, start,
-                                             end)
+                                             ifexists, prefix, start, end)
         Project.addDeviceGroup(self, deviceGroup)
         return deviceGroup
 
 
-    def createDeviceGroup(self, groupId, serverId, classId, deviceId, ifexists,
+    def createDeviceGroup(self, groupId, serverId, classId, ifexists,
                           prefix, start, end):
         """
         This function only creates a device group with the given parameter and
@@ -405,8 +404,8 @@ class GuiProject(Project, QObject):
         """
         deviceGroup = DeviceGroup(groupId, serverId, classId, ifexists)
         
-        for index in range(start, end):
-            id = "{}{}{}".format(deviceId, prefix, index)
+        for index in range(start, end+1):
+            id = "{}{}".format(prefix, index)
             device = Device(serverId, classId, id, ifexists)
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             deviceGroup.addDevice(device)
