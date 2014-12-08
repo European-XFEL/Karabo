@@ -248,11 +248,11 @@ class DeviceGroupDialog(QDialog):
 
     def onValidDeviceId(self, deviceId):
         if self.cbDeviceGroup.isChecked():
-            newIsValid = self.duplicateWidget.endIndex > 0 and len(deviceId) > 0
+            newIsValid = self.endIndex > 0 and len(deviceId) > 0
         else:
             newIsValid = len(deviceId) > 0
         
-        self.duplicateWidget.deviceId = deviceId
+        self.duplicateWidget.displayPrefix = deviceId
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(newIsValid)
 
 

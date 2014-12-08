@@ -78,12 +78,10 @@ class DuplicateWidget(QWidget):
         self.gbSelectPrefix = QGroupBox("Select prefix", self)
         fLayout = QFormLayout(self.gbSelectPrefix)
         fLayout.setContentsMargins(5,5,5,5)
-        self.laDisplayPrefix = QLabel(name)
         
-        self.leDisplayPrefix = QLineEdit()
+        self.leDisplayPrefix = QLineEdit(name)
         self.leDisplayPrefix.textChanged.connect(self.onChanged)
         prefixLayout = QHBoxLayout()
-        prefixLayout.addWidget(self.laDisplayPrefix)
         prefixLayout.addWidget(self.leDisplayPrefix)
         fLayout.addRow("Prefix:", prefixLayout)
         vLayout.addWidget(self.gbSelectPrefix)
@@ -105,16 +103,10 @@ class DuplicateWidget(QWidget):
         self.sbEndIndex.valueChanged.connect(self.onChanged)
         fLayout.addRow("End index:  ", self.sbEndIndex)
         vLayout.addWidget(self.gbSelectEndIndex)
-
-
-    @property
-    def deviceId(self):
-        return self.laDisplayPrefix.text()
-
-
-    @deviceId.setter
-    def deviceId(self, value):
-        self.laDisplayPrefix.setText(value)
+        
+        self.laCountText = QLabel()
+        self.updateCountText()
+        vLayout.addWidget(self.laCountText)
 
 
     @property
@@ -147,12 +139,25 @@ class DuplicateWidget(QWidget):
         self.sbEndIndex.setValue(index)
 
 
+    def updateCountText(self):
+        if self.endIndex > self.startIndex:
+            count = self.endIndex - self.startIndex + 1
+        else:
+            count = 0
+        
+        self.laCountText.setText("You are about to create <b>{}</b> devices".format(count))
+
+
     def onChanged(self):
         """
         Called whenever something changes in the dialog to update the ok-button.
         """
-        isValid = self.sbEndIndex.value() > 0
+        isValid = self.endIndex > self.startIndex
         self.signalValidInput.emit(isValid)
+        
+        if not isValid:
+            self.endIndex = self.startIndex
 
+        self.updateCountText()
 
 
