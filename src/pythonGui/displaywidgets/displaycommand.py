@@ -24,7 +24,7 @@ from const import ns_karabo
 from displaywidgets.icons import Item, SelectionDialog
 from widget import DisplayWidget
 
-from PyQt4.QtCore import QSize
+from PyQt4.QtCore import QSize, pyqtSlot
 from PyQt4.QtGui import QToolButton, QWidget, QAction, QStackedLayout, QIcon
 
 from xml.etree.ElementTree import Element
@@ -87,6 +87,7 @@ class DisplayCommand(DisplayWidget):
                 item.value = box.descriptor.displayedName
 
 
+    @pyqtSlot()
     def update(self):
         for item in self.actions:
             descr = item.box.descriptor

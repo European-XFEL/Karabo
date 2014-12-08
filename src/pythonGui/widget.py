@@ -179,7 +179,6 @@ class EditableWidget(Widget):
 
     def __init__(self, box):
         Widget.__init__(self, box)
-        self.blockValueChanged = False
 
 
     @classmethod
@@ -193,19 +192,6 @@ class EditableWidget(Widget):
 
     def setReadOnly(self, ro):
         assert not ro, "combined Editable and Display widgets: set setReadOnly!"
-
-
-    @pyqtSlot(object, object, object)
-    def valueChangedSlot(self, box, value, timestamp=None):
-        """ avoid having to declare valueChanged a slot in every widget """
-        if self.blockValueChanged:
-            return
-        self.valueChanged(box, value, timestamp)
-        self.blockValueChanged = True
-        try:
-            self.signalEditingFinished.emit(box, value)
-        finally:
-            self.blockValueChanged = False
 
 
     def onEditingFinished(self, value):
