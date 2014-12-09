@@ -44,6 +44,7 @@ class ProjectModel(QStandardItemModel):
     signalRemoveScene = pyqtSignal(object) # scene
     signalRenameScene = pyqtSignal(object) # scene
     signalAddMacro = pyqtSignal(object)
+    signalRemoveMacro = pyqtSignal(object) # macro
 
     signalExpandIndex = pyqtSignal(object, bool)
 
@@ -708,6 +709,9 @@ class ProjectModel(QStandardItemModel):
         for scene in project.scenes:
             self.signalRemoveScene.emit(scene)
         
+        for m in project.macros.values():
+            self.signalRemoveMacro.emit(m)
+        
         self.removeProject(project)
 
 
@@ -1301,6 +1305,9 @@ class ProjectModel(QStandardItemModel):
         
         if isinstance(object, Scene):
             self.signalRemoveScene.emit(object)
+        
+        if isinstance(object, Macro):
+            self.signalRemoveMacro.emit(object)
         
         if showConfirm:
             self.selectObject(project)
