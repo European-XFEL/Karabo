@@ -193,6 +193,7 @@ class MainWindow(QMainWindow):
         self.projectPanel.signalRemoveScene.connect(self.onRemoveScene)
         self.projectPanel.signalRenameScene.connect(self.onRenameScene)
         self.projectPanel.signalAddMacro.connect(self.onAddMacro)
+        self.projectPanel.signalRemoveMacro.connect(self.onRemoveMacro)
         self.projectTab = DockTabWindow("Projects", leftArea)
         self.projectTab.addDockableTab(self.projectPanel, "Projects")
         leftArea.setStretchFactor(1,1)
@@ -342,6 +343,17 @@ class MainWindow(QMainWindow):
         if self.middleTab.count() > 1:
             self.middleTab.updateTabsClosable()
         self.middleTab.setCurrentIndex(self.middleTab.count()-1)
+
+
+    def onRemoveMacro(self, macro):
+        for i in range(self.middleTab.count()):
+            divWidget = self.middleTab.widget(i)
+            if hasattr(divWidget.dockableWidget, "macro"):
+                if divWidget.dockableWidget.macro == macro:
+                    self.middleTab.removeDockableTab(divWidget.dockableWidget)
+                    break
+        
+        self.onCustomViewRemoved()
 
 
     def onChangeAccessLevel(self, action):
