@@ -305,7 +305,11 @@ class ProjectModel(QStandardItemModel):
         parentItem.insertRow(row, item)
 
 
-    def addDeviceGroupItem(self, deviceGroup):
+    def createDeviceGroupItem(self, deviceGroup):
+        """
+        This function creates an item representing the given \deviceGroup and
+        returns it to add it to the model later.
+        """
         item = QStandardItem(deviceGroup.id)
         item.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
@@ -321,11 +325,33 @@ class ProjectModel(QStandardItemModel):
             self.updateDeviceIcon(childItem, device)
             childItem.setToolTip("{} <{}>".format(device.id, device.serverId))
             item.appendRow(childItem)
+        
+        return item
+        
+
+    def addDeviceGroupItem(self, deviceGroup):
+        """
+        This function creates an item representing the given \deviceGroup and
+        adds it to the model.
+        """
+        item = self.createDeviceGroupItem(deviceGroup)
 
         projectItem = self.findItem(deviceGroup.project)
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
+
+
+    def insertDeviceGroupItem(self, row, deviceGroup):
+        """
+        This function inserts the given \deviceGroup at the given \row of the model.
+        """
+        item = self.createDeviceGroupItem(deviceGroup)
+        
+        projectItem = self.findItem(deviceGroup.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
+        parentItem.insertRow(row, item)
 
 
     def updateDeviceItems(self):
@@ -684,6 +710,7 @@ class ProjectModel(QStandardItemModel):
         project.signalDeviceAdded.connect(self.addDeviceItem)
         project.signalDeviceInserted.connect(self.insertDeviceItem)
         project.signalDeviceGroupAdded.connect(self.addDeviceGroupItem)
+        project.signalDeviceGroupInserted.connect(self.insertDeviceGroupItem)
         project.signalSceneAdded.connect(self.addSceneItem)
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
