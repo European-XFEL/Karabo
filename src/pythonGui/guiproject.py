@@ -390,7 +390,8 @@ class GuiProject(Project, QObject):
         """
         deviceGroup = self.createDeviceGroup(groupId, serverId, classId,
                                              ifexists, prefix, start, end)
-        Project.addDeviceGroup(self, deviceGroup)
+        self.addDeviceGroup(deviceGroup)
+        
         return deviceGroup
 
 
