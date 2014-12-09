@@ -457,9 +457,9 @@ class EditableApplyLaterComponent(BaseComponent):
         self.updateButtons()
 
 
-    @pyqtSlot(object, object)
-    def onUserChanged(self, box, value):
-        self.widgetFactory.valueChangedSlot(box, value)
+    @pyqtSlot(object, object, object)
+    def onUserChanged(self, box, value, timestamp=None):
+        self.widgetFactory.valueChangedSlot(box, value, timestamp)
         self.updateButtons()
 
 
