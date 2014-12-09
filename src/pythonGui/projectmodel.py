@@ -340,6 +340,7 @@ class ProjectModel(QStandardItemModel):
         # Find folder for devices
         parentItem = self.getCategoryItem(Project.DEVICES_LABEL, projectItem)
         parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
 
     def insertDeviceGroupItem(self, row, deviceGroup):
