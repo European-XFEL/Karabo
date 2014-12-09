@@ -44,7 +44,7 @@ class Box(QObject):
 
     signalNewDescriptor = pyqtSignal(object)
     signalUpdateComponent = pyqtSignal(object, object, object) # box, value, timestamp
-    signalUserChanged = pyqtSignal(object, object, object) # box, value
+    signalUserChanged = pyqtSignal(object, object, object) # box, value, timestamp
     # the user changed the value, but it is not yet applied, so the value
     # in the box has not yet changed!
     signalHistoricData = pyqtSignal(object, object)
