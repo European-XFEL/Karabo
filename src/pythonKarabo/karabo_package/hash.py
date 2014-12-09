@@ -368,6 +368,15 @@ class Hash(OrderedDict):
     def empty(self):
         return len(self) == 0
 
+    def encode(self, format):
+        writer = {"XML": XMLWriter, "Bin": BinaryWriter}.get(format, format)()
+        return writer.write(self)
+
+    @staticmethod
+    def decode(data, format):
+        reader = {"XML": XMLParser, "Bin": BinaryParser}.get(format, format)()
+        return reader.read(data)
+
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
     REPLACE_ATTRIBUTES = "replace"
