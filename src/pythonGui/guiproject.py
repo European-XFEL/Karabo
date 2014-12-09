@@ -410,9 +410,6 @@ class GuiProject(Project, QObject):
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             deviceGroup.addDevice(device)
         
-        self.signalDeviceGroupAdded.emit(deviceGroup)
-        self.setModified(True)
-        
         return deviceGroup
 
 
