@@ -495,14 +495,6 @@ class ProjectModel(QStandardItemModel):
         return device
 
 
-    #def currentDeviceGroup(self):
-    #    deviceGroup = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
-    #    if not isinstance(deviceGroup, DeviceGroup):
-    #        return None
-    #    
-    #    return deviceGroup
-
-
     def currentScene(self):
         scene = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
         if not isinstance(scene, Scene):
