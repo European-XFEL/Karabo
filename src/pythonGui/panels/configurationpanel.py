@@ -557,15 +557,17 @@ class ConfigurationPanel(QWidget):
             # Waiting page is shown
             self._setParameterEditorIndex(configuration.index)
         
-        if (self.__swParameterEditor.currentIndex() == configuration.index) and \
-           (configuration.descriptor is not None):
-            self.updateButtonsVisibility = (configuration.type == 'class' or \
-                                            configuration.type == 'projectClass')
-        
+        if self.__swParameterEditor.currentIndex() == configuration.index:
+            if configuration.type in ("other", "deviceGroupClass", "deviceGroup", "macro"):
+                self._hideAllButtons()
+            elif configuration.descriptor is not None:
+                self.updateButtonsVisibility = (configuration.type == 'class' or \
+                                                configuration.type == 'projectClass')
+
 
     def onDeviceItemChanged(self, type, configuration):
         # Update buttons
-        if type in ("other", "deviceGroupClass", "deviceGroup") or \
+        if type in ("other", "deviceGroupClass", "deviceGroup", "macro") or \
            (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()
         else:
