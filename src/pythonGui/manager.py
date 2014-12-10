@@ -491,6 +491,8 @@ class _Manager(QObject):
         if device is None or device.descriptor is None:
             return
 
+        print()
+        print("_________ handle_deviceConfiguration", deviceId)
         with BulkNotifications(device):
             device.fromHash(configuration)
         if device.status == "schema":

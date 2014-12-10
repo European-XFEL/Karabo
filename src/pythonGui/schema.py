@@ -115,6 +115,7 @@ class Box(QObject):
         if box.current is not None:
             value = box.current
         
+        print("===", self, box, value, box.current)
         self.set(value, timestamp)
 
 
