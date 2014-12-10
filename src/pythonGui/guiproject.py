@@ -187,7 +187,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
     def __init__(self, id, serverId, classId, ifexists, type="deviceGroupClass"):
         BaseConfiguration.__init__(self, id, type)
         BaseDeviceGroup.__init__(self, serverId, classId, id, ifexists)
-        
+
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
 
@@ -239,7 +239,15 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
                     deviceBox = conf.getBox(childBox.path)
                     if deviceBox is None:
                         continue
-                    childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
+                    
+                    print()
+                    print(deviceBox, deviceBox.value, isinstance(deviceBox.value, Schema))
+                    if not isinstance(deviceBox.value, Schema):
+                        childBox.onUpdateValue(deviceBox, deviceBox.value, None)
+                    
+                    #childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
+                    #childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
+                    deviceBox.signalUpdateComponent.connect(childBox.onUpdateValue)
                 else:
                     # Connect project devices
                     deviceBox = device.getBox(childBox.path)
@@ -252,6 +260,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def checkDeviceSchema(self):
+        """
+        The device schema of an online device group is checked.
+        """
         if self.descriptorRequested is True:
             return
         
@@ -259,17 +270,31 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         for device in self.devices:
             conf = manager.getDevice(device.id)
             
-            conf.signalNewDescriptor.connect(self.onNewDescriptor)
+            conf.signalNewDescriptor.connect(self.onNewDeviceDescriptor)
             if conf.descriptor is not None:
-                self.onNewDescriptor(conf)
+                self.onNewDeviceDescriptor(conf)
             # Do this only for first device - it is expected that the deviceSchema
             # is equal for all group devices
             break
-
+        
         self.descriptorRequested = True
 
 
     def onNewDescriptor(self, conf):
+        """
+        This slot is called whenever a new descriptor for a requested class schema
+        is available which belongs to this device group.
+        """
+        BaseConfiguration.onNewDescriptor(self, conf)
+        # Recursively connect deviceGroupClass boxes to boxes of devices
+        self._connectDevices(self.descriptor, self.boxvalue)
+
+
+    def onNewDeviceDescriptor(self, conf):
+        """
+        This slot is called whenever a new descriptor for a requested device schema
+        is available which belongs to the instance of this device group.
+        """
         BaseConfiguration.onNewDescriptor(self, conf)
         # Recursively connect deviceGroup boxes to boxes of devices
         self._connectDevices(self.descriptor, self.boxvalue)
