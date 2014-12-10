@@ -73,8 +73,8 @@ def excepthook(type, value, traceback):
                                        " " * 300 + "\n"))
     text = "".join(format_exception(type, value, traceback))
     mb.setDetailedText(text)
-    mb.exec_()
+    #mb.exec_()
     try:
         Network().onError(text)
     except Exception:
-        print("could not sent exception to network")
+        print("could not send exception to network")
