@@ -235,6 +235,10 @@ class Descriptor(object):
         v = self.cast(value)
         instance.setValue(self, v)
 
+    def method(self, instance, value):
+        """this is to be called if the value is changed from the outside"""
+        setattr(instance, self.key, value)
+
 
 class Slot(Descriptor):
     def parameters(self):
@@ -320,15 +324,8 @@ class Type(Descriptor, Registry):
         ret["valueType"] = self.hashname()
         return ret
 
-
-    @coroutine
-    def method(self, instance, value):
-        """this is to be called if the value is changed from the outside"""
-        setattr(instance, self.key, value)
-
-
     def __call__(self, method):
-        self.method = coroutine(method)
+        self.method = method
         return self
 
 
