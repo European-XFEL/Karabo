@@ -64,7 +64,7 @@ class ScriptingPanel(QWidget):
         
         # Create IPython widget
         self.console = IPythonWidget(customBanner="Welcome to the embedded ipython console.\n")
-        self.console.executeCommand("from karabo.deviceClient import *\n", True)
+        self.console.executeCommand("from karabo import *\n", True)
         self.console.printText("The karabo device client is available.")       
 
         self.mainLayout.addWidget(self.console)
