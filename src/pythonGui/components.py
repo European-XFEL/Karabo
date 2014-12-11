@@ -425,7 +425,7 @@ class EditableApplyLaterComponent(BaseComponent):
             b.signalUserChanged.emit(b, self.widgetFactory.value, None)
             # If this box belongs to a deviceGroup configuration, no need to
             # broadcast to Network
-            if b.configuration.type == "macro":
+            if b.configuration.type in ("macro", "deviceGroup"):
                 b.set(self.widgetFactory.value)
             elif (b.configuration.type != "deviceGroup" and
                   b.descriptor is not None):
