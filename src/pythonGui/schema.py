@@ -23,7 +23,7 @@ from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from asyncio import async
 from collections import OrderedDict
@@ -102,6 +102,11 @@ class Box(QObject):
         self.initialized = True
         self.timestamp = timestamp
         self.configuration.boxChanged(self, self._value, timestamp)
+        
+    
+    @pyqtSlot(object, object)
+    def slotSet(self, box, value):
+        self.set(value)
 
 
     def onUpdateValue(self, box, value, timestamp):
@@ -115,9 +120,13 @@ class Box(QObject):
         if box.current is not None:
             value = box.current
         
-        print("===", self, box, value, box.current)
+        if not hasattr(self, "set") or isinstance(value, Dummy):
+            print("===", self, type(self.descriptor), box, value)
+            return
+        
+        #print("+++ onUpdateValue", self, box, value)
         self.set(value, timestamp)
-
+        
 
     def hasValue(self):
         return self.initialized
@@ -204,6 +213,15 @@ class Type(hashtypes.Type, metaclass=Monkey):
 
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
+        
+   
+    def copyFrom(self, mybox, otherbox, who):
+        if who(self) and otherbox.hasValue():
+            mybox._set(otherbox.value, None)
+            
+            
+    def connectOtherBox(self, box, other):
+        box.signalUpdateComponent.connect(other.slotSet)
 
 
     def dispatchUserChanges(self, box, hash):
@@ -534,6 +552,27 @@ class Schema(hashtypes.Descriptor):
         box.descriptor = None
 
 
+    def copyFrom(self, mybox, otherbox, who=lambda x: True):
+        """Copy data from otherbox to mybox
+        
+        The value of otherbox is recursively copied into mybox.
+        'who' is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        for k, v in self.dict.items():
+            myChild = getattr(mybox.boxvalue, k, None)
+            otherChild = getattr(otherbox.boxvalue, k, None)
+            myChild.copyFrom(otherChild, who)
+
+    
+    def connectOtherBox(self, box, other):
+        for k, v in self.dict.items():
+            childBox = getattr(box.boxvalue, k, None)
+            otherChildBox = getattr(other.boxvalue, k, None)
+            if childBox is not None and otherChildBox is not None:
+                childBox.connectOtherBox(otherChildBox)
+
+
 class ImageNode(Schema):
     classAlias = "Image View"
 
@@ -652,8 +691,28 @@ class ChoiceOfNodes(Schema):
 
 
     def set(self, box, value, timestamp=None):
-        box.current = value
+        """value is a string with the selected choice"""
+        if isinstance(value, str):
+            box.current = value
+        else:
+            box.current = value.current
         box._set(box.value, timestamp)
+        
+        
+    def _setCurrent(self, mybox, otherbox, value):
+        """value is another choice element to copy from"""
+        self.set(mybox, otherbox.current)
+
+
+    def copyFrom(self, mybox, otherbox, who):
+        Schema.copyFrom(self, mybox, otherbox, who)
+        mybox.current = otherbox.current
+        mybox._set(mybox.value, None)
+
+    
+    def connectOtherBox(self, box, other):
+        Schema.connectOtherBox(self, box, other)
+        box.signalUpdateComponent.connect(other._setCurrent)
 
 
 class ListOfNodes(hashtypes.Descriptor):
