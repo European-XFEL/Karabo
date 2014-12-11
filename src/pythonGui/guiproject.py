@@ -16,6 +16,7 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 from configuration import Configuration
 from scene import Scene
 from schema import Schema
+from karabo.enums import AccessMode
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
@@ -240,14 +241,12 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
                     if deviceBox is None:
                         continue
                     
-                    print()
-                    print(deviceBox, deviceBox.value, isinstance(deviceBox.value, Schema))
-                    if not isinstance(deviceBox.value, Schema):
-                        childBox.onUpdateValue(deviceBox, deviceBox.value, None)
+                    #print("deviceBox", hasattr(deviceBox, "accessMode"))
+                    childBox.onUpdateValue(deviceBox, deviceBox.value, None)
                     
                     #childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
-                    #childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
-                    deviceBox.signalUpdateComponent.connect(childBox.onUpdateValue)
+                    childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
+                    #deviceBox.signalUpdateComponent.connect(childBox.onUpdateValue)
                 else:
                     # Connect project devices
                     deviceBox = device.getBox(childBox.path)
@@ -287,7 +286,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         """
         BaseConfiguration.onNewDescriptor(self, conf)
         # Recursively connect deviceGroupClass boxes to boxes of devices
-        self._connectDevices(self.descriptor, self.boxvalue)
+        for d in self.devices:
+            d.onNewDescriptor(conf)
+            self.connectOtherBox(d)
 
 
     def onNewDeviceDescriptor(self, conf):
@@ -297,7 +298,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         """
         BaseConfiguration.onNewDescriptor(self, conf)
         # Recursively connect deviceGroup boxes to boxes of devices
-        self._connectDevices(self.descriptor, self.boxvalue)
+        for d in self.devices:
+            #d.onNewDescriptor(conf)
+            self.copyFrom(d, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
 
 
     def isOnline(self):
