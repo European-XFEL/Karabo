@@ -263,6 +263,7 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             selectedItems = self.allItems()
         boxes = sum([self.applyItem(item) for item in selectedItems], [ ])
+        # TODO: deviceGroups...
         Network().onReconfigure(boxes)
 
 
