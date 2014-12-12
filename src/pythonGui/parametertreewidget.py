@@ -193,8 +193,8 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def _r_globalAccessLevelChanged(self, item):
-        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL: #or \
-           #(self.conf.type == "deviceGroup" and item.editableComponent is None):
+        if item.requiredAccessLevel > globals.GLOBAL_ACCESS_LEVEL or \
+           (self.conf.type == "deviceGroup" and item.editableComponent is None):
             item.setHidden(True)
         else:
             item.setHidden(False)
@@ -256,8 +256,8 @@ class ParameterTreeWidget(QTreeWidget):
             yield item
 
 
-
     def onApplyAll(self):
+        print("+++ onApplyAll")
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
             selectedItems = self.selectedItems()
