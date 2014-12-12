@@ -236,7 +236,7 @@ class _Manager(QObject):
             classId = indexInfo.get("classId")
             serverId = indexInfo.get("serverId")
 
-            if deviceId is not None:
+            if deviceId is not None and deviceId:
                 return self.deviceData[deviceId], classId
             elif serverId is not None:
                 return self.serverClassData[serverId, classId], classId
