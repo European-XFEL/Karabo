@@ -420,15 +420,21 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
+        print("++++ onApplyClicked")
         network = []
         for b in self.boxes:
             b.signalUserChanged.emit(b, self.widgetFactory.value, None)
-            # If this box belongs to a deviceGroup configuration, no need to
-            # broadcast to Network
-            if b.configuration.type in ("macro", "deviceGroup"):
+            if b.configuration.type == "macro":
                 b.set(self.widgetFactory.value)
-            elif (b.configuration.type != "deviceGroup" and
-                  b.descriptor is not None):
+            elif b.configuration.type ==  "deviceGroup":
+                b.set(self.widgetFactory.value)
+                # Broadcast changes for all devices belonging to this group
+                for d in b.configuration.devices:
+                    deviceBox = d.getBox(b.path)
+                    deviceBox.set(self.widgetFactory.value)
+                    # Send to network per device
+                    Network().onReconfigure([(deviceBox, self.widgetFactory.value)])
+            elif b.descriptor is not None:
                 network.append((b, self.widgetFactory.value))
 
         if network:
