@@ -23,7 +23,7 @@ from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
 
-from PyQt4.QtCore import QObject, pyqtSignal
+from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from asyncio import async
 from collections import OrderedDict
@@ -102,20 +102,11 @@ class Box(QObject):
         self.initialized = True
         self.timestamp = timestamp
         self.configuration.boxChanged(self, self._value, timestamp)
-
-
-    def onUpdateValue(self, box, value, timestamp):
-        """
-        This slot updates not only the components but also the
-        value of the box.
-        """
-        if self.descriptor is None:
-            return
         
-        if box.current is not None:
-            value = box.current
-        
-        self.set(value, timestamp)
+    
+    @pyqtSlot(object, object)
+    def slotSet(self, box, value):
+        self.set(value)
 
 
     def hasValue(self):
@@ -203,6 +194,24 @@ class Type(hashtypes.Type, metaclass=Monkey):
 
     def set(self, box, value, timestamp=None):
         box._set(value, timestamp)
+        
+   
+    def copyFrom(self, box, otherbox, who):
+        """Copy data from \otherbox to \box.
+        
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        if who(self) and otherbox.hasValue():
+            box._set(otherbox.value, None)
+            
+            
+    def connectOtherBox(self, box, other):
+        """
+        The signalUpdateComponent is connected from \box to \other to broadcast
+        value changes.
+        """
+        box.signalUpdateComponent.connect(other.slotSet)
 
 
     def dispatchUserChanges(self, box, hash):
@@ -533,6 +542,32 @@ class Schema(hashtypes.Descriptor):
         box.descriptor = None
 
 
+    def copyFrom(self, box, otherbox, who=lambda x: True):
+        """Copy data from \otherbox to \box.
+        
+        The value of otherbox is recursively copied into box.
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        for k, v in self.dict.items():
+            myChild = getattr(box.boxvalue, k, None)
+            otherChild = getattr(otherbox.boxvalue, k, None)
+            if myChild is not None and otherChild is not None:
+                myChild.copyFrom(otherChild, who)
+
+    
+    def connectOtherBox(self, box, other):
+        """Connect value changes of \box to \other.
+        
+        The signalUpdateComponent is recursively connected from \box to \other.
+        """
+        for k, v in self.dict.items():
+            myChild = getattr(box.boxvalue, k, None)
+            otherChild = getattr(other.boxvalue, k, None)
+            if myChild is not None and otherChild is not None:
+                myChild.connectOtherBox(otherChild)
+
+
 class ImageNode(Schema):
     classAlias = "Image View"
 
@@ -651,8 +686,41 @@ class ChoiceOfNodes(Schema):
 
 
     def set(self, box, value, timestamp=None):
-        box.current = value
+        """The value of this ChoiceElement is set.
+        
+        \value is a string or a Schema with the selected choice
+        """
+        if isinstance(value, str):
+            box.current = value
+        else:
+            box.current = value.current
+        # Go on recursively
         box._set(box.value, timestamp)
+
+        
+    def slotSet(self, box, otherbox, value):
+        """value is another choice element to copy from"""
+        self.set(box, otherbox.current)
+
+
+    def copyFrom(self, box, otherbox, who):
+        """Copy data from \otherbox to \box.
+        
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        Schema.copyFrom(self, box, otherbox, who)
+        box.current = otherbox.current
+        box._set(box.value, None)
+
+    
+    def connectOtherBox(self, box, other):
+        """
+        The signalUpdateComponent is recursively connected from \box to \other
+        to broadcast value changes.
+        """
+        Schema.connectOtherBox(self, box, other)
+        box.signalUpdateComponent.connect(other.slotSet)
 
 
 class ListOfNodes(hashtypes.Descriptor):
