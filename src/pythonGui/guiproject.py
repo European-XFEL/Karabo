@@ -109,6 +109,7 @@ class BaseConfiguration(Configuration):
 
 
     def onNewDescriptor(self, conf):
+        print("BaseConfiguration.onNewDescriptor", conf.id)
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = conf.descriptor
@@ -296,11 +297,17 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         This slot is called whenever a new descriptor for a requested device schema
         is available which belongs to the instance of this device group.
         """
+        print("onNewDeviceDescriptor", self.type)
         BaseConfiguration.onNewDescriptor(self, conf)
         # Recursively connect deviceGroup boxes to boxes of devices
         for d in self.devices:
-            #d.onNewDescriptor(conf)
+            if d.isOnline():
+                print("d.isOnline", self.type, d.id)
+                #d.connectOtherBox(self)
+            else:
+                print("not d.isOnline", self.type, d.id)
             self.copyFrom(d, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
+            
 
 
     def isOnline(self):
