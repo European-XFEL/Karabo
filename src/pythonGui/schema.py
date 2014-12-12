@@ -109,25 +109,6 @@ class Box(QObject):
         self.set(value)
 
 
-    def onUpdateValue(self, box, value, timestamp):
-        """
-        This slot updates not only the components but also the
-        value of the box.
-        """
-        if self.descriptor is None:
-            return
-        
-        if box.current is not None:
-            value = box.current
-        
-        if not hasattr(self, "set") or isinstance(value, Dummy):
-            print("===", self, type(self.descriptor), box, value)
-            return
-        
-        #print("+++ onUpdateValue", self, box, value)
-        self.set(value, timestamp)
-        
-
     def hasValue(self):
         return self.initialized
 
@@ -215,12 +196,21 @@ class Type(hashtypes.Type, metaclass=Monkey):
         box._set(value, timestamp)
         
    
-    def copyFrom(self, mybox, otherbox, who):
+    def copyFrom(self, box, otherbox, who):
+        """Copy data from \otherbox to \box.
+        
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
         if who(self) and otherbox.hasValue():
-            mybox._set(otherbox.value, None)
+            box._set(otherbox.value, None)
             
             
     def connectOtherBox(self, box, other):
+        """
+        The signalUpdateComponent is connected from \box to \other to broadcast
+        value changes.
+        """
         box.signalUpdateComponent.connect(other.slotSet)
 
 
@@ -552,25 +542,30 @@ class Schema(hashtypes.Descriptor):
         box.descriptor = None
 
 
-    def copyFrom(self, mybox, otherbox, who=lambda x: True):
-        """Copy data from otherbox to mybox
+    def copyFrom(self, box, otherbox, who=lambda x: True):
+        """Copy data from \otherbox to \box.
         
-        The value of otherbox is recursively copied into mybox.
-        'who' is a function called on each leaf's descriptor,
+        The value of otherbox is recursively copied into box.
+        \who is a function called on each leaf's descriptor,
         and the value is only copied if this function returns
         something true."""
         for k, v in self.dict.items():
-            myChild = getattr(mybox.boxvalue, k, None)
+            myChild = getattr(box.boxvalue, k, None)
             otherChild = getattr(otherbox.boxvalue, k, None)
-            myChild.copyFrom(otherChild, who)
+            if myChild is not None and otherChild is not None:
+                myChild.copyFrom(otherChild, who)
 
     
     def connectOtherBox(self, box, other):
+        """Connect value changes of \box to \other.
+        
+        The signalUpdateComponent is recursively connected from \box to \other.
+        """
         for k, v in self.dict.items():
-            childBox = getattr(box.boxvalue, k, None)
-            otherChildBox = getattr(other.boxvalue, k, None)
-            if childBox is not None and otherChildBox is not None:
-                childBox.connectOtherBox(otherChildBox)
+            myChild = getattr(box.boxvalue, k, None)
+            otherChild = getattr(other.boxvalue, k, None)
+            if myChild is not None and otherChild is not None:
+                myChild.connectOtherBox(otherChild)
 
 
 class ImageNode(Schema):
@@ -691,28 +686,41 @@ class ChoiceOfNodes(Schema):
 
 
     def set(self, box, value, timestamp=None):
-        """value is a string with the selected choice"""
+        """The value of this ChoiceElement is set.
+        
+        \value is a string or a Schema with the selected choice
+        """
         if isinstance(value, str):
             box.current = value
         else:
             box.current = value.current
+        # Go on recursively
         box._set(box.value, timestamp)
+
         
-        
-    def _setCurrent(self, mybox, otherbox, value):
+    def slotSet(self, box, otherbox, value):
         """value is another choice element to copy from"""
-        self.set(mybox, otherbox.current)
+        self.set(box, otherbox.current)
 
 
-    def copyFrom(self, mybox, otherbox, who):
-        Schema.copyFrom(self, mybox, otherbox, who)
-        mybox.current = otherbox.current
-        mybox._set(mybox.value, None)
+    def copyFrom(self, box, otherbox, who):
+        """Copy data from \otherbox to \box.
+        
+        \who is a function called on each leaf's descriptor,
+        and the value is only copied if this function returns
+        something true."""
+        Schema.copyFrom(self, box, otherbox, who)
+        box.current = otherbox.current
+        box._set(box.value, None)
 
     
     def connectOtherBox(self, box, other):
+        """
+        The signalUpdateComponent is recursively connected from \box to \other
+        to broadcast value changes.
+        """
         Schema.connectOtherBox(self, box, other)
-        box.signalUpdateComponent.connect(other._setCurrent)
+        box.signalUpdateComponent.connect(other.slotSet)
 
 
 class ListOfNodes(hashtypes.Descriptor):

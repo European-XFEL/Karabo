@@ -420,7 +420,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
-        print("++++ onApplyClicked")
         network = []
         for b in self.boxes:
             b.signalUserChanged.emit(b, self.widgetFactory.value, None)
