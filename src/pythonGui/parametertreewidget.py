@@ -256,7 +256,6 @@ class ParameterTreeWidget(QTreeWidget):
             yield item
 
 
-
     def onApplyAll(self):
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
@@ -264,6 +263,7 @@ class ParameterTreeWidget(QTreeWidget):
         else:
             selectedItems = self.allItems()
         boxes = sum([self.applyItem(item) for item in selectedItems], [ ])
+        # TODO: deviceGroups...
         Network().onReconfigure(boxes)
 
 

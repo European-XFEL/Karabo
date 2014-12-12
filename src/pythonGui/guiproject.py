@@ -16,6 +16,7 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 from configuration import Configuration
 from scene import Scene
 from schema import Schema
+from karabo.enums import AccessMode
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
@@ -187,7 +188,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
     def __init__(self, id, serverId, classId, ifexists, type="deviceGroupClass"):
         BaseConfiguration.__init__(self, id, type)
         BaseDeviceGroup.__init__(self, serverId, classId, id, ifexists)
-        
+
         # If all device are online there is another deviceGroup to represent this
         self.instance = None
 
@@ -220,38 +221,10 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
             device.initConfig = self.toHash()
 
 
-    def _connectDevices(self, descriptor, groupBox):
-        """
-        This recursive function connects all boxes of this device group to the
-        corresponding boxes of the various devices.
-        This allows the correct update of all box values once a device group
-        configuration is changed.
-        """
-        for k, v in descriptor.dict.items():
-            childBox = getattr(groupBox, k, None)
-            if childBox is None:
-                continue
-
-            for device in self.devices:
-                if self.isOnline():
-                    # Connect online devices
-                    conf = manager.getDevice(device.id)
-                    deviceBox = conf.getBox(childBox.path)
-                    if deviceBox is None:
-                        continue
-                    childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
-                else:
-                    # Connect project devices
-                    deviceBox = device.getBox(childBox.path)
-                    if deviceBox is None:
-                        continue
-                    childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
-            
-            if isinstance(v, Schema):
-                self._connectDevices(v, childBox.boxvalue)
-
-
     def checkDeviceSchema(self):
+        """
+        The device schema of an online device group is checked.
+        """
         if self.descriptorRequested is True:
             return
         
@@ -259,20 +232,39 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         for device in self.devices:
             conf = manager.getDevice(device.id)
             
-            conf.signalNewDescriptor.connect(self.onNewDescriptor)
+            conf.signalNewDescriptor.connect(self.onNewDeviceDescriptor)
             if conf.descriptor is not None:
-                self.onNewDescriptor(conf)
+                self.onNewDeviceDescriptor(conf)
             # Do this only for first device - it is expected that the deviceSchema
             # is equal for all group devices
             break
-
+        
         self.descriptorRequested = True
 
 
     def onNewDescriptor(self, conf):
+        """
+        This slot is called whenever a new descriptor for a requested class schema
+        is available which belongs to this device group.
+        """
         BaseConfiguration.onNewDescriptor(self, conf)
-        # Recursively connect deviceGroup boxes to boxes of devices
-        self._connectDevices(self.descriptor, self.boxvalue)
+        # Recursively connect deviceGroupClass boxes to boxes of devices
+        for d in self.devices:
+            d.onNewDescriptor(conf)
+            self.connectOtherBox(d)
+
+
+    def onNewDeviceDescriptor(self, conf):
+        """
+        This slot is called whenever a new descriptor for a requested device schema
+        is available which belongs to the instance of this device group.
+        """
+        BaseConfiguration.onNewDescriptor(self, conf)
+        # Recursively copy device boxes to device group
+        for d in self.devices:
+            actual = manager.getDevice(d.id)
+            # Copy from online device
+            self.copyFrom(actual, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
 
 
     def isOnline(self):
