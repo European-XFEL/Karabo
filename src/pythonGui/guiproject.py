@@ -109,7 +109,6 @@ class BaseConfiguration(Configuration):
 
 
     def onNewDescriptor(self, conf):
-        print("BaseConfiguration.onNewDescriptor", conf.id)
         if self.descriptor is not None:
             self.redummy()
         self.descriptor = conf.descriptor
@@ -222,43 +221,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
             device.initConfig = self.toHash()
 
 
-    def _connectDevices(self, descriptor, groupBox):
-        """
-        This recursive function connects all boxes of this device group to the
-        corresponding boxes of the various devices.
-        This allows the correct update of all box values once a device group
-        configuration is changed.
-        """
-        for k, v in descriptor.dict.items():
-            childBox = getattr(groupBox, k, None)
-            if childBox is None:
-                continue
-
-            for device in self.devices:
-                if self.isOnline():
-                    # Connect online devices
-                    conf = manager.getDevice(device.id)
-                    deviceBox = conf.getBox(childBox.path)
-                    if deviceBox is None:
-                        continue
-                    
-                    #print("deviceBox", hasattr(deviceBox, "accessMode"))
-                    childBox.onUpdateValue(deviceBox, deviceBox.value, None)
-                    
-                    #childBox.signalUserChanged.connect(deviceBox.signalUserChanged)
-                    childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
-                    #deviceBox.signalUpdateComponent.connect(childBox.onUpdateValue)
-                else:
-                    # Connect project devices
-                    deviceBox = device.getBox(childBox.path)
-                    if deviceBox is None:
-                        continue
-                    childBox.signalUpdateComponent.connect(deviceBox.onUpdateValue)
-            
-            if isinstance(v, Schema):
-                self._connectDevices(v, childBox.boxvalue)
-
-
     def checkDeviceSchema(self):
         """
         The device schema of an online device group is checked.
@@ -297,17 +259,12 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         This slot is called whenever a new descriptor for a requested device schema
         is available which belongs to the instance of this device group.
         """
-        print("onNewDeviceDescriptor", self.type)
         BaseConfiguration.onNewDescriptor(self, conf)
-        # Recursively connect deviceGroup boxes to boxes of devices
+        # Recursively copy device boxes to device group
         for d in self.devices:
-            if d.isOnline():
-                print("d.isOnline", self.type, d.id)
-                #d.connectOtherBox(self)
-            else:
-                print("not d.isOnline", self.type, d.id)
-            self.copyFrom(d, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
-            
+            actual = manager.getDevice(d.id)
+            # Copy from online device
+            self.copyFrom(actual, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
 
 
     def isOnline(self):

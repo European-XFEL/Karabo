@@ -257,7 +257,6 @@ class ParameterTreeWidget(QTreeWidget):
 
 
     def onApplyAll(self):
-        print("+++ onApplyAll")
         nbSelectedItems = self.nbSelectedApplyEnabledItems()
         if nbSelectedItems > 0:
             selectedItems = self.selectedItems()
