@@ -12,6 +12,7 @@
 #define	KARABO_XMS_NETWORKOUTPUT_HH
 
 #include <boost/asio.hpp>
+#include <boost/shared_ptr.hpp>
 #include <karabo/util.hpp>
 #include <karabo/log.hpp>
 #include <karabo/io.hpp>
@@ -206,7 +207,19 @@ namespace karabo {
                 return karabo::util::Hash("connectionType", "tcp", "hostname", m_hostname, "port", m_ownPort);
             }
 
-            void write(const T& data) {
+            /**
+             * This interface will make an (possibly expensive) copy of your data
+             * @param data
+             */
+            void write(const T& data) {                
+                MemoryType::write(boost::shared_ptr<T>(new T(data)), m_channelId, m_chunkId);
+            }
+            
+            /**
+             * This function will use the data as pointer and does not copy
+             * @param data
+             */
+            void write(const boost::shared_ptr<T>& data) {
                 MemoryType::write(data, m_channelId, m_chunkId);
             }
 
@@ -700,7 +713,8 @@ namespace karabo {
                 // Writing no data signals input to read from memory
                 tcpChannel->write(karabo::util::Hash("channelId", m_channelId, "chunkId", chunkId), std::vector<char>());
 
-                // The input channel will decrement the chunkId usage, as he uses the same memory location
+                // NOTE: The input channel will decrement the chunkId usage, as he uses the same memory location
+                // Having the next line commented is thus correct!!!
                 //unregisterWriterFromChunk(chunkId);
             }
 
