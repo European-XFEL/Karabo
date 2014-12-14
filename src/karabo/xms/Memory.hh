@@ -67,9 +67,10 @@ namespace karabo {
 
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
 
-            static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
-                m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
-            }
+            static void write(const DataPointer& data, const size_t channelIdx, const size_t chunkIdx) {
+                m_cache[channelIdx][chunkIdx].push_back(data);
+            }            
+            
 
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx) {
                 Data& src = m_cache[channelIdx][chunkIdx];
@@ -285,8 +286,8 @@ namespace karabo {
 
             KARABO_CLASSINFO(Memory, "Memory", "1.0")
 
-            static void write(const DataType& data, const size_t channelIdx, const size_t chunkIdx) {
-                m_cache[channelIdx][chunkIdx].push_back(DataPointer(new DataType(data)));
+            static void write(const DataPointer& data, const size_t channelIdx, const size_t chunkIdx) {
+                m_cache[channelIdx][chunkIdx].push_back(data);
             }
 
             static void writeChunk(const Data& chunk, const size_t channelIdx, const size_t chunkIdx) {
