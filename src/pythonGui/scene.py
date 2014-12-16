@@ -308,7 +308,11 @@ class Select(Action):
             if self.resize == 'm':
                 for c in chain(parent.ilayout, parent.ilayout.shapes):
                     if c.selected:
-                        c.translate(event.pos() - self.moving_pos)
+                        trans = event.pos() - self.moving_pos
+                        c.translate(trans)
+                        
+                        if isinstance(c.widget, Item):
+                            c.widget.updateConnectionsNeeded(trans)
                 self.moving_pos = event.pos()
                 event.accept()
                 parent.setModified()
