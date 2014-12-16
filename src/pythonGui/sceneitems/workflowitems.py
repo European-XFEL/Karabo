@@ -14,7 +14,7 @@ from registry import Loadable
 from schema import Dummy
 import scene
 
-from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
+from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
                          QPainter, QPainterPath, QPolygonF, QWidget)
 
@@ -97,7 +97,7 @@ class Item(QWidget, Loadable):
         painter.setBrush(QColor(224,240,255)) # light blue
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         painter.drawText(rect, Qt.AlignCenter, self.displayText)
-        
+
         self.paintInputChannels(painter)
         self.paintOutputChannels(painter)
 
@@ -197,6 +197,14 @@ class Item(QWidget, Loadable):
             rect = self.boundingRect()
             pos = self.parent().fixed_geometry.topLeft()
             self.parent().fixed_geometry = QRect(pos, QSize(rect.width(), rect.height()))
+
+
+    def updateConnectionsNeeded(self, transPos):
+        for input in self.input_channels:
+            input.updateConnectionsNeeded(transPos)
+        
+        for output in self.output_channels:
+            output.updateConnectionsNeeded(transPos)
 
 
 class WorkflowItem(Item):
@@ -351,6 +359,7 @@ class WorkflowGroupItem(Item):
 
 
 class WorkflowChannel(QWidget):
+    signalUpdateConnections = pyqtSignal(object)
     
     BINARY_FILE = "BinaryFile"
     HDF5_FILE = "Hdf5File"
@@ -399,6 +408,10 @@ class WorkflowChannel(QWidget):
             self._drawTriangleShape(self.painterPath, self.end_pos)
         
         painter.drawPath(self.painterPath)
+        
+    
+    def updateConnectionsNeeded(self, transPos):
+        self.signalUpdateConnections.emit(transPos)
 
 
     def _drawCircleShape(self, painterPath, point):
@@ -487,10 +500,6 @@ class WorkflowConnection(QWidget, Loadable):
     def __init__(self, parent, start_channel=None):
         super(WorkflowConnection, self).__init__(parent)
         
-        self._init(start_channel)
-
-
-    def _init(self, start_channel):
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
         self.end_channel = None
@@ -506,6 +515,10 @@ class WorkflowConnection(QWidget, Loadable):
         
         self.end_pos = self.start_pos
         self.curve = None
+        
+        self.proxy = None
+        self.actual_start_pos = None
+        #self.actual_end = None
 
 
     def mouseMoveEvent(self, event):
@@ -552,17 +565,42 @@ class WorkflowConnection(QWidget, Loadable):
             self.end_pos.setX(ex - sx)
             self.end_pos.setY(ey - sy)
         
-        proxy = ProxyWidget(parent.inner)
-        proxy.setWidget(self)
-        rect = self.curve.boundingRect()
-        proxy.fixed_geometry = QRect(int(rect.x()), int(rect.y()), 
-                                     int(rect.width()), int(rect.height()))
-        proxy.show()
-        parent.ilayout.add_item(proxy)
+        self.proxy = ProxyWidget(parent.inner)
+        self.proxy.setWidget(self)
+        self._updateProxyGeometry()
+        self.proxy.show()
+        parent.ilayout.add_item(self.proxy)
         parent.setModified()
         
         # Reconfigure
         self.reconfigureInputChannel()
+        
+        self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
+        self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
+
+
+    def _updateProxyGeometry(self):
+        rect = self.curve.boundingRect()
+        if not hasattr(self.proxy, "fixed_geometry"):
+            self.actual_start_pos = QPoint(rect.x(), rect.y())
+        
+        #print("##", self.actual_start_pos, rect.width(), rect.height())
+        self.proxy.fixed_geometry = QRect(self.actual_start_pos.x(),
+                                          self.actual_start_pos.y(),
+                                          rect.width(), rect.height())
+
+
+    def onStartChannelChanged(self, transPos):
+        self.start_pos = self.start_pos + transPos
+        self.actual_start_pos = self.actual_start_pos + transPos
+        self.update()
+        #self._updateProxyGeometry()
+
+
+    def onEndChannelChanged(self, transPos):
+        self.end_pos = self.end_pos + transPos
+        self.update()
+        #self._updateProxyGeometry()
 
 
     def draw(self, painter):
@@ -581,6 +619,10 @@ class WorkflowConnection(QWidget, Loadable):
         self.curve = QPainterPath(self.start_pos)
         self.curve.cubicTo(c1, c2, self.end_pos)
         painter.drawPath(self.curve)
+        #print()
+        #print("DRAW", self.curve.boundingRect())
+        #print("start, end", self.start_pos, self.end_pos)
+        #print()
 
 
     def paintEvent(self, event):
@@ -642,8 +684,8 @@ class WorkflowConnection(QWidget, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
-        connection = WorkflowConnection(proxy)
+        self.proxy = ProxyWidget(layout.parentWidget())
+        connection = WorkflowConnection(self.proxy)
         connection.start_channel_type = elem.get(ns_karabo + "start_channel_type")
         
         start_x = int(elem.get(ns_karabo + "start_x"))
@@ -654,8 +696,8 @@ class WorkflowConnection(QWidget, Loadable):
         end_y = int(elem.get(ns_karabo + "end_y"))
         connection.end_pos = QPoint(end_x, end_y)
         
-        proxy.setWidget(connection)
-        layout.loadPosition(elem, proxy)
+        self.proxy.setWidget(connection)
+        layout.loadPosition(elem, self.proxy)
         
-        return proxy
+        return self.proxy
 
