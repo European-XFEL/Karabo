@@ -171,23 +171,6 @@ class Device(SignalSlotable):
             return self._stateDependentSchema[state]
 
 
-    @coroutine
-    def slotKillDevice(self):
-        senderid = self.serverId # getSenderInfo("slotKillDevice").getInstanceIdOfSender()
-        if senderid == self.serverId:
-            self.log.INFO("Device is going down as instructed by server")
-            self.preDestruction()
-            self.stopEventLoop()
-        else:
-            self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
-            self._ss.call(self.serverId, "slotDeviceGone", self.deviceId)
-            self.stopEventLoop()
-
-
-    def preDestruction(self):
-        pass
-
-
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("PythonDevice", "1.0")
 class PythonDevice(Device):
