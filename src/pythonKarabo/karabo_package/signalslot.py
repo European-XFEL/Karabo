@@ -224,6 +224,12 @@ class SignalSlotable(Configurable):
         self._tasks.add(task)
         task.add_done_callback(lambda task: self._tasks.remove(task))
 
+    @coroutine
+    def slotKillDevice(self):
+        self.log.INFO("Device is going down as instructed")
+        for t in self._tasks:
+            t.cancel()
+
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
         self._ss.call("call", {device: [target]}, reply, args)
