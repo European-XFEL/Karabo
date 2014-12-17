@@ -227,7 +227,8 @@ class Descriptor(object):
             return self
         else:
             if self not in instance.__dict__:
-                raise AttributeError
+                raise AttributeError(
+                    "attribute '{}' has not been set".format(self.key))
             return instance.__dict__[self]
 
 
