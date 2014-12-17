@@ -23,6 +23,7 @@ from karabo.registry import Registry
 from karabo.eventloop import EventLoop
 from karabo.launcher import getClassSchema_async, sameThread, legacy
 
+
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Device", "1.0")
 class Device(SignalSlotable):

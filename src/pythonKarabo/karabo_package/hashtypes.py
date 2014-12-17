@@ -692,7 +692,6 @@ class Schema(Hash):
         writer = karabo.hash.BinaryWriter()
         h = writer.write(data.hash)
         s = data.name.encode('utf8')
-        print(len(h), len(s))
         file.writeFormat('I', len(h) + len(s) + 1)
         file.writeFormat('B', len(s))
         file.file.write(s)
