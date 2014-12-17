@@ -29,7 +29,7 @@ from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
 from karabo.hashtypes import Schema, String, Int32
 from karabo import hashtypes
 from karabo.runner import Runner
-from karabo.schema import Validator
+from karabo.schema import Validator, Node
 from karabo.logger import Logger
 from karabo.signalslot import (ConnectionType, Signal, replySlot)
 from karabo.enums import AccessLevel, AccessMode, Assignment
@@ -67,6 +67,10 @@ class DeviceServer(SignalSlotable):
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
 
+    log = Node(Logger,
+               description="Logging settings",
+               displayedName="Logger",
+               requiredAccessLevel=AccessLevel.EXPERT)
 
     instanceCountPerDeviceServer = { }
 
@@ -105,7 +109,7 @@ class DeviceServer(SignalSlotable):
         self.pid = os.getpid()
         self.seqnum = 0
 
-
+        # legacy devices need the following information
         self.loggerConfiguration = Hash(
             "categories", [Hash("Category", Hash(
                 "name", "karabo", "additivity", False,
@@ -125,9 +129,11 @@ class DeviceServer(SignalSlotable):
                     "Pattern", Hash("format",
                                     "%d{%F %H:%M:%S} | %p | %c | %m"))))])
 
+        self.log.setBroker(self._ss)
+        self.logger = self.log.logger
+
 
     def run(self):
-        self.log = Logger.getLogger(self.serverId)
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
         self._registerAndConnectSignalsAndSlots()
