@@ -48,6 +48,14 @@ class Broker:
         m.properties = p
         self.producer.send(m, 1, 4, 1000)
 
+    def log(self, message):
+        p = openmq.Properties()
+        p["target"] = "log"
+        m = openmq.TextMessage()
+        m.data = message
+        m.properties = p
+        self.producer.send(m, 1, 4, 1000)
+
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 

@@ -70,6 +70,11 @@ class Device(SignalSlotable):
         requiredAccessLevel=AccessLevel.EXPERT,
         accessMode=AccessMode.READONLY)
 
+    log = Node(Logger,
+               description="Logging settings",
+               displayedName="Logger",
+               requiredAccessLevel=AccessLevel.EXPERT)
+
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
     signalSchemaUpdated = Signal(hashtypes.Schema(), hashtypes.String())
 
@@ -88,8 +93,8 @@ class Device(SignalSlotable):
         self.validatorIntern   = Validator(injectDefaults=False)
         self.validatorExtern   = Validator(injectDefaults=False)
 
-        # Setup device logger
-        self.log = Logger.getLogger(self.deviceId)
+        self.log.setBroker(self._ss)
+        self.logger = self.log.logger
 
         self.classId = type(self).__name__
 
@@ -184,18 +189,12 @@ class PythonDevice(Device):
         accessMode=AccessMode.READONLY, defaultValue=0)
 
 
-    Logger = Node(Logger,
-                  description="Logging settings",
-                  displayedName="Logger",
-                  requiredAccessLevel=AccessLevel.EXPERT)
-
     launch = classmethod(legacy)
 
     def __init__(self, configuration):
         if configuration is None:
             raise ValueError("Configuration must be Hash object, not None")
         #print "PythonDevice constructor: Input configuration after being validated is ...\n", configuration
-        self.loadLogger(configuration)
         super(PythonDevice, self).__init__(configuration)
         self.parameters = configuration
         self.parameters["serverId"] = self.serverId
@@ -217,11 +216,6 @@ class PythonDevice(Device):
     def signalSlotable(self):
         '''Get SignalSlotable object embeded in PythonDevice instance.'''
         return self._ss
-    
-    def loadLogger(self,input):
-        config = input["Logger"]
-        Logger.configure(config)
-
 
     def run(self):
         super().run()
