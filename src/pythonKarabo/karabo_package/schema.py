@@ -2,7 +2,8 @@
 import karabo.hash
 from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.hashtypes import Descriptor, Schema_ as Schema  # this is not nice
+from karabo.hashtypes import (Descriptor, Schema_ as Schema,  # this is not nice
+                              Attribute)
 from karabo.registry import Registry
 
 from asyncio import coroutine
@@ -49,7 +50,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         cls.xsd = cls.getClassSchema()
         cls._subclasses = []
         for b in cls.__bases__:
-            if isinstance(b, Configurable):
+            if issubclass(b, Configurable):
                 b._subclasses.append(cls)
 
     @classmethod
@@ -100,6 +101,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
 
 class Node(Descriptor):
+    defaultValue = karabo.hash.Hash()
+
     def __init__(self, cls, **kwargs):
         self.cls = cls
         Descriptor.__init__(self, **kwargs)
@@ -125,6 +128,8 @@ class Node(Descriptor):
 
 
 class ChoiceOfNodes(Node):
+    defaultValue = Attribute()
+
     def parameters(self):
         ret = super(ChoiceOfNodes, self).parameters()
         ret["nodeType"] = 2
@@ -154,6 +159,8 @@ class ChoiceOfNodes(Node):
 
 
 class ListOfNodes(Node):
+    defaultValue = Attribute()
+
     def parameters(self):
         ret = super(ListOfNodes, self).parameters()
         ret["nodeType"] = 3
@@ -170,7 +177,7 @@ class ListOfNodes(Node):
         for k, v in value.items():
             for c in self.cls._subclasses:
                 if c.__name__ == k:
-                    l.append(c(value))
+                    l.append(c(value, instance, self.key))
                     break
         instance.setValue(self, l)
 
@@ -182,7 +189,7 @@ class ListOfNodes(Node):
             for k in t._allattrs:
                 r[k] = getattr(t, k).asHash(getattr(v, k))
             l.append(r)
-        return karabo.hash.Hash(t.__name__, l)
+        return karabo.hash.Hash(self.key, l)
 
 
 class Validator(object):
