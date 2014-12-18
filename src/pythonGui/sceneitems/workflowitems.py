@@ -16,7 +16,7 @@ import scene
 
 from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
-                         QPainter, QPainterPath, QPolygonF, QWidget)
+                         QPainter, QPainterPath, QPen, QPolygonF, QWidget)
 
 import math
 
@@ -32,6 +32,7 @@ class Item(QWidget, Loadable):
     def __init__(self, parent):
         super(Item, self).__init__(parent)
         
+        self.pen = QPen()
         self.font = QFont()
         self.displayText = ""
         
@@ -88,6 +89,7 @@ class Item(QWidget, Loadable):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(self.pen)
         
         #fm = QFontMetrics(painter.font())
         #textWidth = fm.width(self.displayText)
@@ -116,6 +118,7 @@ class Item(QWidget, Loadable):
             painter.save()
             start_point = QPoint(-rect.width()/2, y)
             painter.translate(start_point)
+            painter.setPen(QPen())
             input.draw(painter)
             input.transform = painter.transform()
             painter.restore()
@@ -288,6 +291,8 @@ class WorkflowGroupItem(Item):
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
+        
+        self.pen.setWidth(2)
         
 
     def getDeviceIds(self):
@@ -539,7 +544,7 @@ class WorkflowConnection(QWidget, Loadable):
         # Overwrite end position with exact channel position
         self.end_pos = self.end_channel.mappedPos()
         
-        if self.start_pos.x() > self.end_pos.x():
+        if self._inputChannelBox() is None:
             tmp = self.start_pos
             self.start_pos = self.end_pos
             self.end_pos = tmp
@@ -587,16 +592,14 @@ class WorkflowConnection(QWidget, Loadable):
 
             self.topLeft.setX(sx)
             self.topLeft.setY(ey)
-        elif sy < ey:
-            self.start_pos.setX(0)
-            self.start_pos.setY(0)
+        else:
+            if sy < ey:
+                self.start_pos.setX(0)
+                self.start_pos.setY(0)
 
-            self.end_pos.setX(ex - sx)
-            self.end_pos.setY(ey - sy)
+                self.end_pos.setX(ex - sx)
+                self.end_pos.setY(ey - sy)
             
-            self.topLeft.setX(sx)
-            self.topLeft.setY(sy)
-        else: # sy == ey
             self.topLeft.setX(sx)
             self.topLeft.setY(sy)
 
@@ -623,8 +626,6 @@ class WorkflowConnection(QWidget, Loadable):
 
 
     def draw(self, painter):
-        #painter.setPen(self.pen)
-
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
@@ -661,6 +662,9 @@ class WorkflowConnection(QWidget, Loadable):
         # reconfigured
         inputBox = self.end_channel.box
         path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
+        
+        if not inputBox.configuration.hasBox(path):
+            return None
         return inputBox.configuration.getBox(path)
 
 
