@@ -129,6 +129,7 @@ class Layout(Loadable):
 
 
     def setGeometry(self, rect):
+        "only to be used by Qt, don't use directly!"
         super(Layout, self).setGeometry(rect)
         if self.shape_geometry is None:
             if self.fixed_geometry is None:

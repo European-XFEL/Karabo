@@ -106,6 +106,8 @@ class Box(QObject):
     
     @pyqtSlot(object, object)
     def slotSet(self, box, value):
+        if box.current is not None:
+            value = box.current
         self.set(value)
 
 
