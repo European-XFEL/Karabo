@@ -366,13 +366,13 @@ class WorkflowChannel(QWidget):
     NETWORK = "Network"
     TEXT_FILE = "TextFile"
 
-    def __init__(self, channel_type, box, parent):
-        super(WorkflowChannel, self).__init__(parent)
+    def __init__(self, channel_type, box, item):
+        super(WorkflowChannel, self).__init__(item)
         
         assert channel_type in (Item.INPUT, Item.OUTPUT)
         self.channel_type = channel_type
         self.box = box
-        self.box.signalUpdateComponent.connect(parent.update)
+        self.box.signalUpdateComponent.connect(item.update)
         
         self.painterPath = None
         
@@ -578,9 +578,6 @@ class WorkflowConnection(QWidget, Loadable):
         ex = self.global_end.x()
         ey = self.global_end.y()
         
-        print("start", self.global_start, self.start_pos)
-        print("end", self.global_end, self.end_pos)
-        
         if sy > ey:
             self.start_pos.setX(0)
             self.start_pos.setY(sy - ey)
@@ -602,34 +599,23 @@ class WorkflowConnection(QWidget, Loadable):
         else: # sy == ey
             self.topLeft.setX(sx)
             self.topLeft.setY(sy)
-        
-        print("topLeft", self.topLeft)
-        print("#start", self.global_start, self.start_pos)
-        print("#end", self.global_end, self.end_pos)
 
 
     def _updateProxyGeometry(self):
         rect = self.curve.boundingRect()
         rect = QRect(self.topLeft.x(), self.topLeft.y(),
                      rect.width(), rect.height())
-        print("$$$$ updateRect", rect)
         self.proxy.set_geometry(rect)
 
 
     def onStartChannelChanged(self, scene, transPos):
-        print()
-        print("onStartChannelChanged", self.topLeft, transPos)
         self.global_start = self.global_start + transPos
         self._checkStartEnd()
         self._updateProxyGeometry()
         scene.ilayout.update()
-        print()
 
 
     def onEndChannelChanged(self, scene, transPos):
-        #self.topLeft = self.topLeft + transPos
-        print()
-        print("onEndChannelChanged", self.global_end)
         self.global_end = self.global_end + transPos
         self._checkStartEnd()
         self._updateProxyGeometry()
@@ -670,20 +656,21 @@ class WorkflowConnection(QWidget, Loadable):
         return abs(self.end_pos.y() - self.start_pos.y())
 
 
+    def _inputChannelBox(self):
+        # Get input channel box ("connectedOutputChannels") which is going to be
+        # reconfigured
+        inputBox = self.end_channel.box
+        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
+        return inputBox.configuration.getBox(path)
+
+
     def reconfigureInputChannel(self):
         """
         This function is called once a connection is completed and start/end channels
         are set. Then the box of the input channel needs to be notified about
         the connection to the output channel.
         """
-        # Get input channel box ("connectedOutputChannels") which is going to be
-        # reconfigured
-        inputBox = self.end_channel.box
-        value = inputBox.value
-        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
-        inputChannelBox = inputBox.configuration.getBox(path)
-        value = inputChannelBox.value
-        
+        inputChannelBox = self._inputChannelBox()
         # Get data from output channel
         outputBox = self.start_channel.box
         # Get all deviceIds of the outputChannel
@@ -693,10 +680,33 @@ class WorkflowConnection(QWidget, Loadable):
             output = "{}:{}".format(id, '.'.join(outputBox.path))
             connectedOutputChannels.append(output)
         
+        value = inputChannelBox.value
         if isinstance(value, Dummy):
             value = connectedOutputChannels
         else:
             value.extend(connectedOutputChannels)
+
+        # Update box configuration
+        inputChannelBox.set(value, None)
+
+
+    def removeConnectedOutputChannel(self):
+        """
+        This function is called once this connection is about to be removed and
+        the connected output channels of the input channel needs to be updated.
+        """
+        if self.start_channel is None and self.end_channel is None:
+            return
+        
+        inputChannelBox = self._inputChannelBox()
+        # Get data from output channel
+        outputBox = self.start_channel.box
+        # Get all deviceIds of the outputChannel
+        deviceIds = self.start_channel.getDeviceIds()
+        value = inputChannelBox.value
+        for id in deviceIds:
+            output = "{}:{}".format(id, '.'.join(outputBox.path))
+            value.remove(output)
 
         # Update box configuration
         inputChannelBox.set(value, None)
