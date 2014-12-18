@@ -129,6 +129,7 @@ class Layout(Loadable):
 
 
     def setGeometry(self, rect):
+        "only to be used by Qt, don't use directly!"
         super(Layout, self).setGeometry(rect)
         if self.shape_geometry is None:
             if self.fixed_geometry is None:
@@ -519,6 +520,7 @@ class ProxyWidget(QWidget):
 
 
     def set_geometry(self, rect):
+        print("ProxyWidget.set_geometry", rect)
         self.fixed_geometry = rect
 
 

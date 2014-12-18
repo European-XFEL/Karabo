@@ -288,6 +288,10 @@ class Select(Action):
         if not event.buttons():
             item = parent.ilayout.itemAtPosition(event.pos())
             self.resize = ""
+            # No moving nor resizing of WorkflowConnections
+            if isinstance(item, ProxyWidget) and isinstance(item.widget, WorkflowConnection):
+                parent.unsetCursor()
+                return
             if item is not None and item.selected:
                 g = item.geometry()
                 p = event.pos()
@@ -311,8 +315,9 @@ class Select(Action):
                         trans = event.pos() - self.moving_pos
                         c.translate(trans)
                         
-                        if isinstance(c.widget, Item):
-                            c.widget.updateConnectionsNeeded(trans)
+                        # Update WorkflowConnections, if Item moves
+                        if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                            c.widget.updateConnectionsNeeded(parent, trans)
                 self.moving_pos = event.pos()
                 event.accept()
                 parent.setModified()
