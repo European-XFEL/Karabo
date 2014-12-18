@@ -135,6 +135,13 @@ class Configuration(Box):
         return box
 
 
+    def hasBox(self, path):
+        for p in path:
+            if hasattr(self.boxvalue, p):
+                return True
+        return False
+
+
     def boxChanged(self, box, value, timestamp):
         if self.bulk_changes:
             self.bulk_list[box] = value, timestamp
