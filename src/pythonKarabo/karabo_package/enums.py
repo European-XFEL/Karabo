@@ -35,7 +35,24 @@ class Assignment(Enum):
     MANDATORY = 1
     INTERNAL = 2
 
-class MetricPrefix(Enum):
+
+class ArchivePolicy(Enum):
+    EVERY_EVENT = 0
+    EVERY_100MS = 1
+    EVERY_1S = 2
+    EVERY_5S = 3
+    EVERY_10S = 4
+    EVERY_1MIN = 5
+    EVERY_10MIN = 6
+    NO_ARCHIVING = 7
+
+
+class NumberedEnum(Enum):
+    def __init__(self, value):
+        self.number = len(type(self).__members__)
+
+
+class MetricPrefix(NumberedEnum):
     """ This are all the defined prefixes in the SI system """
     YOTTA = "Y"
     ZETTA = "Z"
@@ -60,7 +77,7 @@ class MetricPrefix(Enum):
     YOCTO = "y"
 
 
-class Unit(Enum):
+class Unit(NumberedEnum):
     """ A fair collections of units from the SI system """
     NUMBER = "#"
     COUNT = "#"

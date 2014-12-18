@@ -109,11 +109,12 @@ class Configurator(object):
                 print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
                 raise
 
-        h = schema.hash
-        for k in Derived._allattrs:
-            v = getattr(Derived, k)
-            h[k] = Hash()
-            h[k, ...] = v.parameters()
+        if hasattr(Derived, "_allattrs"):
+            h = schema.hash
+            for k in Derived._allattrs:
+                v = getattr(Derived, k)
+                h[k] = Hash()
+                h[k, ...] = v.parameters()
         return schema
     
     

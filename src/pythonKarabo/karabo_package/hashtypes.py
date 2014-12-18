@@ -587,7 +587,7 @@ class VectorString(Vector, String):
 
     @staticmethod
     def fromstring(s):
-        return StringList(s.split(','))
+        return StringList(ss.strip() for ss in s.split(','))
 
 
     @classmethod
@@ -701,6 +701,12 @@ class Schema(Hash):
     @classmethod
     def toString(cls, data):
         return data.name + ":" + data.hash.encode("XML").decode("utf8")
+
+    @classmethod
+    def fromstring(cls, s):
+        name, xml = s.split(":", 1)
+        return Schema_(name, karabo.hash.Hash.decode(xml, "XML"))
+
 
 class Schema_(Special):
     hashtype = Schema
