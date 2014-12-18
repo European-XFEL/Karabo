@@ -833,7 +833,7 @@ class Paste(SimpleAction):
 
 
 class Delete(SimpleAction):
-    text = "Delete"
+    text = "Remove"
     icon = icons.delete
     shortcut = QKeySequence.Delete
 
@@ -844,13 +844,19 @@ class Delete(SimpleAction):
         if not selected and not selectedShapes:
             return
         
-        if QMessageBox.question(self.parent, "Really delete?",
-                                "Do you really want to delete the items?",
-                                QMessageBox.Yes | QMessageBox.No
-                               ) == QMessageBox.Yes:
-            self.parent.ilayout.delete_selected()
-            self.parent.update()
-            self.parent.setModified()
+        if QMessageBox.question(self.parent, "Really remove?",
+                            "Do you really want to remove the items?",
+                            QMessageBox.Yes | QMessageBox.No) == QMessageBox.No:
+            return
+            
+        # Check if workflow connection is removed
+        for s in selected:
+            if isinstance(s.widget, WorkflowConnection):
+                s.widget.removeConnectedOutputChannel()
+
+        self.parent.ilayout.delete_selected()
+        self.parent.update()
+        self.parent.setModified()
 
 Separator()
 
@@ -1023,6 +1029,8 @@ class Scene(QSvgWidget):
                 
                 if isinstance(c.widget, Item):
                     c.widget.getDevice().removeVisible()
+                if isinstance(c.widget, WorkflowConnection):
+                    c.widget.removeConnectedOutputChannel()
             #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
