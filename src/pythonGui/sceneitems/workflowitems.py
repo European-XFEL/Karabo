@@ -520,7 +520,7 @@ class WorkflowConnection(QWidget, Loadable):
         self.global_start = None
         self.global_end = None
         
-        self.proxy = None
+        self.proxy = parent
         # Top left position of proxy in global coordinates
         self.topLeft = QPoint()
 
@@ -713,8 +713,8 @@ class WorkflowConnection(QWidget, Loadable):
 
     @staticmethod
     def load(elem, layout):
-        self.proxy = ProxyWidget(layout.parentWidget())
-        connection = WorkflowConnection(self.proxy)
+        proxy = ProxyWidget(layout.parentWidget())
+        connection = WorkflowConnection(proxy)
         connection.start_channel_type = elem.get(ns_karabo + "start_channel_type")
         
         start_x = int(elem.get(ns_karabo + "start_x"))
@@ -725,8 +725,8 @@ class WorkflowConnection(QWidget, Loadable):
         end_y = int(elem.get(ns_karabo + "end_y"))
         connection.end_pos = QPoint(end_x, end_y)
         
-        self.proxy.setWidget(connection)
-        layout.loadPosition(elem, self.proxy)
-        
-        return self.proxy
+        proxy.setWidget(connection)
+        layout.loadPosition(elem, proxy)
+
+        return proxy
 

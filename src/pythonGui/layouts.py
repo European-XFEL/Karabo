@@ -520,7 +520,6 @@ class ProxyWidget(QWidget):
 
 
     def set_geometry(self, rect):
-        print("ProxyWidget.set_geometry", rect)
         self.fixed_geometry = rect
 
 
