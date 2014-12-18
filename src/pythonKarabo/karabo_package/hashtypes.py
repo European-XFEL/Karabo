@@ -78,11 +78,18 @@ class Simple(object):
 
     def cast(self, other):
         if self.enum is not None:
-            return super().cast(other)
+            ret = super().cast(other)
         elif isinstance(other, self.numpy):
-            return other
+            ret = other
         else:
-            return self.numpy(other)
+            ret = self.numpy(other)
+        if (self.minExc is not None and ret <= self.minExc or
+                self.minInc is not None and ret < self.minInc or
+                self.maxExc is not None and ret >= self.maxExc or
+                self.maxInc is not None and ret > self.maxInc):
+            raise ValueError("value {} of {} not in allowed range".
+                             format(ret, self.key))
+        return ret
 
 
 class Integer(Simple, Enumable):

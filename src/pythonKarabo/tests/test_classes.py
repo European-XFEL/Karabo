@@ -16,8 +16,8 @@ class Classes_Test(unittest.TestCase):
             f = ht.Float(displayedName="hallo", defaultValue=7.3)
 
         a = A()
-        a.i = 3
-        self.assertEqual(a.i, 3)
+        a.i = 8
+        self.assertEqual(a.i, 8)
         def setter():
             a.i = "b"
         self.assertRaises(ValueError, setter)
@@ -73,6 +73,34 @@ class Classes_Test(unittest.TestCase):
         o = Outer()
         o.inner.f = 3
         self.assertCalled("inner.f", 3)
+
+    def test_limits(self):
+        class Limit(Configurable):
+            il = ht.Int32(minExc=3)
+            ill = ht.Int32(minInc=3)
+            ih = ht.Int32(maxExc=7)
+            ihh = ht.Int32(maxInc=7)
+            ihl = ht.Int32(minInc=3, maxExc=7)
+
+            fhl = ht.Float(minInc=3, maxExc=7)
+
+        l = Limit()
+        l.ill = 3
+        l.il = 5
+        l.ih = 6
+        l.ihh = 7
+        l.ihl = 5
+        l.fhl = 5
+        def setter(n, v):
+            setattr(l, n, v)
+        self.assertRaises(ValueError, setter, "il", 3)
+        self.assertRaises(ValueError, setter, "ill", 2)
+        self.assertRaises(ValueError, setter, "ih", 7)
+        self.assertRaises(ValueError, setter, "ihh", 9)
+        self.assertRaises(ValueError, setter, "ihl", 2)
+        self.assertRaises(ValueError, setter, "ihl", 7)
+        self.assertRaises(ValueError, setter, "fhl", 2)
+        self.assertRaises(ValueError, setter, "fhl", 7)
 
 
 if __name__ == "__main__":
