@@ -94,7 +94,8 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         self.__dict__[key] = value
 
     def setChildValue(self, key, value):
-        self._parent.setChildValue(self._key + "." + key, value)
+        if self._parent is not None:
+            self._parent.setChildValue(self._key + "." + key, value)
 
     def run(self):  # endpoint for multiple inheritance
         self.running = True
