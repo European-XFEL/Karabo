@@ -288,6 +288,10 @@ class Select(Action):
         if not event.buttons():
             item = parent.ilayout.itemAtPosition(event.pos())
             self.resize = ""
+            # No moving nor resizing of WorkflowConnections
+            if isinstance(item, ProxyWidget) and isinstance(item.widget, WorkflowConnection):
+                parent.unsetCursor()
+                return
             if item is not None and item.selected:
                 g = item.geometry()
                 p = event.pos()
@@ -308,7 +312,12 @@ class Select(Action):
             if self.resize == 'm':
                 for c in chain(parent.ilayout, parent.ilayout.shapes):
                     if c.selected:
-                        c.translate(event.pos() - self.moving_pos)
+                        trans = event.pos() - self.moving_pos
+                        c.translate(trans)
+                        
+                        # Update WorkflowConnections, if Item moves
+                        if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                            c.widget.updateConnectionsNeeded(parent, trans)
                 self.moving_pos = event.pos()
                 event.accept()
                 parent.setModified()
@@ -824,7 +833,7 @@ class Paste(SimpleAction):
 
 
 class Delete(SimpleAction):
-    text = "Delete"
+    text = "Remove"
     icon = icons.delete
     shortcut = QKeySequence.Delete
 
@@ -835,13 +844,19 @@ class Delete(SimpleAction):
         if not selected and not selectedShapes:
             return
         
-        if QMessageBox.question(self.parent, "Really delete?",
-                                "Do you really want to delete the items?",
-                                QMessageBox.Yes | QMessageBox.No
-                               ) == QMessageBox.Yes:
-            self.parent.ilayout.delete_selected()
-            self.parent.update()
-            self.parent.setModified()
+        if QMessageBox.question(self.parent, "Really remove?",
+                            "Do you really want to remove the items?",
+                            QMessageBox.Yes | QMessageBox.No) == QMessageBox.No:
+            return
+            
+        # Check if workflow connection is removed
+        for s in selected:
+            if isinstance(s.widget, WorkflowConnection):
+                s.widget.removeConnectedOutputChannel()
+
+        self.parent.ilayout.delete_selected()
+        self.parent.update()
+        self.parent.setModified()
 
 Separator()
 
@@ -1014,6 +1029,8 @@ class Scene(QSvgWidget):
                 
                 if isinstance(c.widget, Item):
                     c.widget.getDevice().removeVisible()
+                if isinstance(c.widget, WorkflowConnection):
+                    c.widget.removeConnectedOutputChannel()
             #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)

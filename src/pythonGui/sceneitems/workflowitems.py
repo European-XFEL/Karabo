@@ -14,9 +14,9 @@ from registry import Loadable
 from schema import Dummy
 import scene
 
-from PyQt4.QtCore import (QPoint, QPointF, QRect, QSize, Qt)
+from PyQt4.QtCore import (pyqtSignal, QPoint, QPointF, QRect, QSize, Qt)
 from PyQt4.QtGui import (QBrush, QColor, QFont, QFontMetricsF,
-                         QPainter, QPainterPath, QPolygonF, QWidget)
+                         QPainter, QPainterPath, QPen, QPolygonF, QWidget)
 
 import math
 
@@ -32,6 +32,7 @@ class Item(QWidget, Loadable):
     def __init__(self, parent):
         super(Item, self).__init__(parent)
         
+        self.pen = QPen()
         self.font = QFont()
         self.displayText = ""
         
@@ -88,6 +89,7 @@ class Item(QWidget, Loadable):
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(self.pen)
         
         #fm = QFontMetrics(painter.font())
         #textWidth = fm.width(self.displayText)
@@ -97,7 +99,7 @@ class Item(QWidget, Loadable):
         painter.setBrush(QColor(224,240,255)) # light blue
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         painter.drawText(rect, Qt.AlignCenter, self.displayText)
-        
+
         self.paintInputChannels(painter)
         self.paintOutputChannels(painter)
 
@@ -116,6 +118,7 @@ class Item(QWidget, Loadable):
             painter.save()
             start_point = QPoint(-rect.width()/2, y)
             painter.translate(start_point)
+            painter.setPen(QPen())
             input.draw(painter)
             input.transform = painter.transform()
             painter.restore()
@@ -197,6 +200,14 @@ class Item(QWidget, Loadable):
             rect = self.boundingRect()
             pos = self.parent().fixed_geometry.topLeft()
             self.parent().fixed_geometry = QRect(pos, QSize(rect.width(), rect.height()))
+
+
+    def updateConnectionsNeeded(self, scene, transPos):
+        for input in self.input_channels:
+            input.updateConnectionsNeeded(scene, transPos)
+        
+        for output in self.output_channels:
+            output.updateConnectionsNeeded(scene, transPos)
 
 
 class WorkflowItem(Item):
@@ -281,6 +292,8 @@ class WorkflowGroupItem(Item):
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
         
+        self.pen.setWidth(2)
+        
 
     def getDeviceIds(self):
         """
@@ -351,19 +364,20 @@ class WorkflowGroupItem(Item):
 
 
 class WorkflowChannel(QWidget):
+    signalUpdateConnections = pyqtSignal(object, object) # scene, translationPoint
     
     BINARY_FILE = "BinaryFile"
     HDF5_FILE = "Hdf5File"
     NETWORK = "Network"
     TEXT_FILE = "TextFile"
 
-    def __init__(self, channel_type, box, parent):
-        super(WorkflowChannel, self).__init__(parent)
+    def __init__(self, channel_type, box, item):
+        super(WorkflowChannel, self).__init__(item)
         
         assert channel_type in (Item.INPUT, Item.OUTPUT)
         self.channel_type = channel_type
         self.box = box
-        self.box.signalUpdateComponent.connect(parent.update)
+        self.box.signalUpdateComponent.connect(item.update)
         
         self.painterPath = None
         
@@ -399,6 +413,10 @@ class WorkflowChannel(QWidget):
             self._drawTriangleShape(self.painterPath, self.end_pos)
         
         painter.drawPath(self.painterPath)
+        
+    
+    def updateConnectionsNeeded(self, scene, transPos):
+        self.signalUpdateConnections.emit(scene, transPos)
 
 
     def _drawCircleShape(self, painterPath, point):
@@ -487,10 +505,6 @@ class WorkflowConnection(QWidget, Loadable):
     def __init__(self, parent, start_channel=None):
         super(WorkflowConnection, self).__init__(parent)
         
-        self._init(start_channel)
-
-
-    def _init(self, start_channel):
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
         self.end_channel = None
@@ -506,6 +520,14 @@ class WorkflowConnection(QWidget, Loadable):
         
         self.end_pos = self.start_pos
         self.curve = None
+        
+        # Global start/end positions
+        self.global_start = None
+        self.global_end = None
+        
+        self.proxy = parent
+        # Top left position of proxy in global coordinates
+        self.topLeft = QPoint()
 
 
     def mouseMoveEvent(self, event):
@@ -522,7 +544,7 @@ class WorkflowConnection(QWidget, Loadable):
         # Overwrite end position with exact channel position
         self.end_pos = self.end_channel.mappedPos()
         
-        if self.start_pos.x() > self.end_pos.x():
+        if self._inputChannelBox() is None:
             tmp = self.start_pos
             self.start_pos = self.end_pos
             self.end_pos = tmp
@@ -533,11 +555,33 @@ class WorkflowConnection(QWidget, Loadable):
             
             self.start_channel_type = self.start_channel.channel_type
        
-        sx = self.start_pos.x()
-        sy = self.start_pos.y()
+        self.global_start = QPoint(self.start_pos)
+        self.global_end = QPoint(self.end_pos)
+        self._checkStartEnd()
         
-        ex = self.end_pos.x()
-        ey = self.end_pos.y()
+        self.proxy = ProxyWidget(parent.inner)
+        self.proxy.setWidget(self)
+        self._updateProxyGeometry()
+        self.proxy.show()
+        parent.ilayout.add_item(self.proxy)
+        parent.setModified()
+        
+        # Reconfigure
+        self.reconfigureInputChannel()
+        
+        self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
+        self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
+
+
+    def _checkStartEnd(self):
+        """
+        
+        """
+        sx = self.global_start.x()
+        sy = self.global_start.y()
+        
+        ex = self.global_end.x()
+        ey = self.global_end.y()
         
         if sy > ey:
             self.start_pos.setX(0)
@@ -545,29 +589,43 @@ class WorkflowConnection(QWidget, Loadable):
 
             self.end_pos.setX(ex - sx)
             self.end_pos.setY(0)
-        else:
-            self.start_pos.setX(0)
-            self.start_pos.setY(0)
 
-            self.end_pos.setX(ex - sx)
-            self.end_pos.setY(ey - sy)
-        
-        proxy = ProxyWidget(parent.inner)
-        proxy.setWidget(self)
+            self.topLeft.setX(sx)
+            self.topLeft.setY(ey)
+        else:
+            if sy < ey:
+                self.start_pos.setX(0)
+                self.start_pos.setY(0)
+
+                self.end_pos.setX(ex - sx)
+                self.end_pos.setY(ey - sy)
+            
+            self.topLeft.setX(sx)
+            self.topLeft.setY(sy)
+
+
+    def _updateProxyGeometry(self):
         rect = self.curve.boundingRect()
-        proxy.fixed_geometry = QRect(int(rect.x()), int(rect.y()), 
-                                     int(rect.width()), int(rect.height()))
-        proxy.show()
-        parent.ilayout.add_item(proxy)
-        parent.setModified()
-        
-        # Reconfigure
-        self.reconfigureInputChannel()
+        rect = QRect(self.topLeft.x(), self.topLeft.y(),
+                     rect.width(), rect.height())
+        self.proxy.set_geometry(rect)
+
+
+    def onStartChannelChanged(self, scene, transPos):
+        self.global_start = self.global_start + transPos
+        self._checkStartEnd()
+        self._updateProxyGeometry()
+        scene.ilayout.update()
+
+
+    def onEndChannelChanged(self, scene, transPos):
+        self.global_end = self.global_end + transPos
+        self._checkStartEnd()
+        self._updateProxyGeometry()
+        scene.ilayout.update()
 
 
     def draw(self, painter):
-        #painter.setPen(self.pen)
-
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
         
@@ -599,20 +657,24 @@ class WorkflowConnection(QWidget, Loadable):
         return abs(self.end_pos.y() - self.start_pos.y())
 
 
+    def _inputChannelBox(self):
+        # Get input channel box ("connectedOutputChannels") which is going to be
+        # reconfigured
+        inputBox = self.end_channel.box
+        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
+        
+        if not inputBox.configuration.hasBox(path):
+            return None
+        return inputBox.configuration.getBox(path)
+
+
     def reconfigureInputChannel(self):
         """
         This function is called once a connection is completed and start/end channels
         are set. Then the box of the input channel needs to be notified about
         the connection to the output channel.
         """
-        # Get input channel box ("connectedOutputChannels") which is going to be
-        # reconfigured
-        inputBox = self.end_channel.box
-        value = inputBox.value
-        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
-        inputChannelBox = inputBox.configuration.getBox(path)
-        value = inputChannelBox.value
-        
+        inputChannelBox = self._inputChannelBox()
         # Get data from output channel
         outputBox = self.start_channel.box
         # Get all deviceIds of the outputChannel
@@ -622,10 +684,33 @@ class WorkflowConnection(QWidget, Loadable):
             output = "{}:{}".format(id, '.'.join(outputBox.path))
             connectedOutputChannels.append(output)
         
+        value = inputChannelBox.value
         if isinstance(value, Dummy):
             value = connectedOutputChannels
         else:
             value.extend(connectedOutputChannels)
+
+        # Update box configuration
+        inputChannelBox.set(value, None)
+
+
+    def removeConnectedOutputChannel(self):
+        """
+        This function is called once this connection is about to be removed and
+        the connected output channels of the input channel needs to be updated.
+        """
+        if self.start_channel is None and self.end_channel is None:
+            return
+        
+        inputChannelBox = self._inputChannelBox()
+        # Get data from output channel
+        outputBox = self.start_channel.box
+        # Get all deviceIds of the outputChannel
+        deviceIds = self.start_channel.getDeviceIds()
+        value = inputChannelBox.value
+        for id in deviceIds:
+            output = "{}:{}".format(id, '.'.join(outputBox.path))
+            value.remove(output)
 
         # Update box configuration
         inputChannelBox.set(value, None)
@@ -656,6 +741,6 @@ class WorkflowConnection(QWidget, Loadable):
         
         proxy.setWidget(connection)
         layout.loadPosition(elem, proxy)
-        
+
         return proxy
 
