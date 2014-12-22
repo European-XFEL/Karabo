@@ -36,7 +36,7 @@ namespace karabo {
    
                 
         RawImageDataHdf5Serializer::RawImageDataHdf5Serializer(const karabo::util::Hash& input) : 
-            Hdf5Serializer<karabo::xip::RawImageData>(input), m_basePath(""), m_datasetId(0), m_hashSerializer(input),
+            karabo::io::Hdf5Serializer<karabo::xip::RawImageData>(input), m_basePath(""), m_datasetId(0), m_hashSerializer(input),
             m_hashXmlSerializer(karabo::util::Hash("indentation", -1, "writeDataTypes", true, "readDataTypes", true, "insertXmlNamespace", false, "xmlns", "http://xfel.eu/config", "prefix", "KRB_")),
             m_h5structureRead(false), m_structureRead(false){
                
