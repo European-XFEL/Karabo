@@ -83,14 +83,6 @@ class DeviceServer(object):
                     .expertAccess()
                     .commit()
                     ,
-            PATH_ELEMENT(expected).key("plugin3Directory")
-                    .displayedName("Python 3 Plugin Directory")
-                    .description("Directory to search and put python 3 plugins")
-                    .assignmentOptional().defaultValue("plugins3")
-                    .isDirectory()
-                    .expertAccess()
-                    .commit()
-                    ,
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
@@ -296,8 +288,7 @@ class DeviceServer(object):
         self.connectionParameters = copy.copy(input['connection.' + self.connectionType])
         self.pluginLoader = PluginLoader.create(
             "PythonPluginLoader",
-            Hash("pluginDirectory", input['pluginDirectory'],
-                 "plugin3Directory", input['plugin3Directory']))
+            Hash("pluginDirectory", input['pluginDirectory']))
         self.loadLogger(input)
         self.pid = os.getpid()
         self.seqnum = 0
