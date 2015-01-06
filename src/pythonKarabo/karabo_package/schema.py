@@ -19,10 +19,37 @@ class MetaConfigurable(type(Registry)):
 
 
 class Configurable(Registry, metaclass=MetaConfigurable):
+    """The base class for everything that has Karabo attributes.
+
+    A class with Karabo attributes inherits from this class.
+    The attributes are then defined as follows:
+
+    ::
+        from karabo import Configurable, Integer, String
+
+        class Spam(Configurable):
+            ham = Integer()
+            eggs = String()
+    """
     _subclasses = []
     schema = None
 
     def __init__(self, configuration={}, parent=None, key=None):
+        """initialize this object with the configuration
+
+        The configuration is dict or a Hash which contains the
+        initial values to be used for the Karabo attributes.
+        Default values of attributes are handled here.
+
+        parent is the Configurable object this object belongs to,
+        and key is the name of the attribute used in this object.
+        They are None for top-layer objects.
+
+        Top-layer objects like Devices are always called with one
+        parameter (configuration) only, so if you are inheriting from
+        this class you only need to have parent and key as a parameter
+        if your class should be usable as a component in another class.
+        """
         self._parent = parent
         self._key = key
         for k in self._allattrs:
@@ -74,6 +101,9 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         return cls.getClassSchema(rules)
 
     def __dir__(self):
+        """Return all attributes of this object.
+
+        This is mostly for tab-expansion in IPython."""
         return list(self._allattrs)
 
     @classmethod
@@ -102,6 +132,18 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
 
 class Node(Descriptor):
+    """Compose configurable classes into each other
+
+    with a Node you can use a Configurable object in another one as an
+    attribute.
+
+    ::
+
+        from karabo import Configurable, Node
+
+        class Outer(Configurable):
+            inner = Node(Inner)
+    """
     defaultValue = karabo.hash.Hash()
 
     def __init__(self, cls, **kwargs):

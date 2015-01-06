@@ -109,6 +109,21 @@ class Client(object):
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO('SignalSlotable', '1.0')
 class SignalSlotable(Configurable):
+    """The base class for all objects connected to the broker
+
+    This contains everything to talk to the internet, especially
+    the handling of signals and slots, but also heartbeats.
+
+    Every coroutine is automatically a slot and can be called from the
+    outside. Signals must be declared as follows:
+
+    ::
+
+        from karabo import String, Integer
+        from karabo.signalslotable import SignalSlotable, Signal
+
+        class Spam(SignalSlotable):
+            signalHam = Signal(String(), Integer())"""
     signalHeartbeat = Signal(hashtypes.String(), hashtypes.Int32(),
                              hashtypes.Hash())
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
@@ -220,6 +235,11 @@ class SignalSlotable(Configurable):
         super().run()
 
     def async(self, coro):
+        """start a coroutine asynchronously
+
+        Use this to execute a coroutine in the background. The coroutine
+        is registered with this object so it will be stopped once this
+        object is stopped. """
         task = async(coro, loop=self._ss.loop)
         self._tasks.add(task)
         task.add_done_callback(lambda task: self._tasks.remove(task))
