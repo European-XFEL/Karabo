@@ -313,7 +313,7 @@
   assignment="KRB_INT32:0" defaultValue="KRB_FLOAT:0.8"
   description="KRB_STRING:Configures the speed of the conveyor belt"
   displayedName="KRB_STRING:Target Conveyor Speed"
-  leafType="KRB_INT32:0" maxInc="KRB_FLOAT:1.0"
+  leafType="KRB_INT32:0" maxInc="KRB_FLOAT:10.0"
   minInc="KRB_FLOAT:0.1" nodeType="KRB_INT32:0"
   requiredAccessLevel="KRB_INT32:1" unitEnum="KRB_INT32:41"
   unitName="KRB_STRING:meter_per_second"
