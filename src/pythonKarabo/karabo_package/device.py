@@ -27,6 +27,7 @@ from karabo.launcher import getClassSchema_async, sameThread, legacy
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("Device", "1.0")
 class Device(SignalSlotable):
+    """This is the base class for all devices."""
     visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
