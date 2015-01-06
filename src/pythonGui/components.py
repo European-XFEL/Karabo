@@ -476,10 +476,10 @@ class EditableApplyLaterComponent(BaseComponent):
 
         EPSILON = 1e-4
         value = self.__currentDisplayValue
-        if value is None:
-            return
 
-        if (isinstance(value, (numbers.Complex, numpy.inexact))
+        if value is None:
+            isEqualEditable = False
+        elif (isinstance(value, (numbers.Complex, numpy.inexact))
                 and not isinstance(value, numbers.Integral)):
             diff = abs(value - self.widgetFactory.value)
             isEqualEditable = diff < EPSILON
