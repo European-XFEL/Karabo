@@ -358,6 +358,9 @@ class Select(Action):
             for c in parent.ilayout:
                 if rect.contains(c.geometry()):
                     c.selected = True
+            for s in parent.ilayout.shapes:
+                if rect.contains(s.geometry()):
+                    s.selected = True
             self.selection_start = None
             event.accept()
             parent.update()
