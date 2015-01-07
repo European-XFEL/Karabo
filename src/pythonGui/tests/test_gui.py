@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-import util # assure sip api is set first
+import gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QDropEvent, QWidget
 import icons
@@ -58,7 +58,6 @@ class TestWidget(widget.EditableWidget, widget.DisplayWidget):
 
 network.network = Network()
 net = network.network
-import gui
 
 
 class Tests(TestCase):
