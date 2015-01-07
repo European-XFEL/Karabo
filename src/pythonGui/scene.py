@@ -310,6 +310,8 @@ class Select(Action):
             parent.setCursor(self.cursors[self.resize])
         else:
             if self.resize == 'm':
+                if event.pos().x() < 0 or event.pos().y() < 0:
+                    return
                 for c in chain(parent.ilayout, parent.ilayout.shapes):
                     if c.selected:
                         trans = event.pos() - self.moving_pos
