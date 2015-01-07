@@ -44,7 +44,7 @@ class BaseComponent(Loadable, QObject):
         box.signalNewDescriptor.connect(self.widgetFactory.typeChangedSlot)
         self.widgetFactory.setParent(self)
         if box.descriptor is not None:
-            self.widgetFactory.typeChanged(box)
+            self.widgetFactory.typeChangedSlot(box)
 
 
     def save(self, e):

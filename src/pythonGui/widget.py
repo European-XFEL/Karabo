@@ -24,6 +24,8 @@ from PyQt4.QtGui import QLabel, QPixmap
 from registry import Registry
 import os.path
 
+import gui
+
 
 class Widget(Registry, QObject):
     """ This is the parent class for all widget factories in the GUI """
@@ -82,6 +84,19 @@ class Widget(Registry, QObject):
         element """
 
 
+    @pyqtSlot(object, object, object)
+    @pyqtSlot()
+    def updateStateSlot(self, box=None, value=None, ts=None):
+        self.updateState()
+
+    def updateState(self):
+        """This sets the widget to be enabled or disabled, depending on
+        whether the user is allowed to make changes. It simply calls
+        setEnabled on the widget. Overwrite this method if that's not
+        how it works for your widget."""
+        self.widget.setEnabled(self.boxes[0].isAccessible())
+
+
     def valueChanged(self, box, value, timestamp=None):
         """ notify the widget about a new value
 
@@ -106,6 +121,7 @@ class Widget(Registry, QObject):
     def typeChangedSlot(self, box):
         # avoid having to declare typeChanged a slot in every widget
         self.typeChanged(box)
+        self.updateState()
 
 
     @property
@@ -179,6 +195,9 @@ class EditableWidget(Widget):
 
     def __init__(self, box):
         Widget.__init__(self, box)
+        box.configuration.boxvalue.state.signalUpdateComponent.connect(
+            self.updateStateSlot)
+        gui.window.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
 
     @classmethod
