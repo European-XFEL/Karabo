@@ -85,9 +85,9 @@ namespace karabo {
 
                 VECTOR_STRING_ELEMENT(expected).key("connectedOutputChannels")
                         .displayedName("Connected Output Channels")
-                        .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>@<channelName>)")
+                        .description("Defines the inter-device connectivity for p-2-p data transfer (use format: <instanceId>:<channelName>)")
                         .assignmentOptional().noDefaultValue()
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 STRING_ELEMENT(expected).key("dataDistribution")
@@ -95,7 +95,7 @@ namespace karabo {
                         .description("The way data is fetched from the connected output channels (shared/copy)")
                         .options("copy,shared")
                         .assignmentOptional().defaultValue("copy")
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 STRING_ELEMENT(expected).key("onSlowness")
@@ -103,14 +103,14 @@ namespace karabo {
                         .description("Policy for what to do if this input is too slow for the fed data rate (only used in copy mode)")
                         .options("drop,throw,wait,queue")
                         .assignmentOptional().defaultValue("wait")
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 UINT32_ELEMENT(expected).key("minData")
                         .displayedName("Minimum number input packets")
                         .description("The number of elements to be read before any computation is started (0 = all, -1 = none/any)")
                         .assignmentOptional().defaultValue(1)
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 BOOL_ELEMENT(expected).key("keepDataUntilNew")
@@ -118,14 +118,14 @@ namespace karabo {
                         .description("If true, keeps data until new data from an connected output is provided. "
                         "If new data is available the previous chunk is automatically deleted and the new one is made available for reading")
                         .assignmentOptional().defaultValue(false)
-                        .reconfigurable()
+                        .init()
                         .commit();
 
                 BOOL_ELEMENT(expected).key("respondToEndOfStream")
                         .displayedName("Respond to end-of-stream")
                         .description("Determines whether this input should forward a end-of-stream event to its parent device.")
                         .assignmentOptional().defaultValue(true)
-                        .reconfigurable()
+                        .init()
                         .commit();
 
 
