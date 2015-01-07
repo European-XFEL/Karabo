@@ -18,6 +18,7 @@ from karabo.timestamp import Timestamp
 
 from components import (ChoiceComponent, EditableApplyLaterComponent,
                         EditableNoApplyComponent)
+import globals
 
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
@@ -116,12 +117,22 @@ class Box(QObject):
 
 
     def isAllowed(self):
-        """return whether the value is allowed in the current state """
+        """return whether the user may change the value, based on
+        device's state"""
 
         return (self.descriptor is None or
                 self.descriptor.allowedStates is None or
                 self.configuration.value.state in
                     self.descriptor.allowedStates)
+
+
+    def isAccessible(self):
+        """return whether the user may change the value, based on
+        the current access level"""
+
+        return (self.descriptor is None or
+                globals.GLOBAL_ACCESS_LEVEL >=
+                    self.descriptor.requiredAccessLevel)
 
 
     def getPropertyHistory(self, t0, t1, maxNumData):
