@@ -184,7 +184,7 @@ namespace karabo {
                 INT32_ELEMENT(expected).key("nThreads")
                         .displayedName("Number of threads")
                         .description("Defines the number of threads that can be used to work on incoming events")
-                        .assignmentOptional().defaultValue(2)
+                        .assignmentOptional().defaultValue(1)
                         .minInc(1)
                         .adminAccess()
                         .commit();
@@ -236,6 +236,9 @@ namespace karabo {
 
                 // Initialize Device slots
                 this->initDeviceSlots();
+                
+                // Register guard for slot calls
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
             }
 
             virtual ~Device() {
@@ -748,6 +751,19 @@ namespace karabo {
                 SLOT0(slotGetConfiguration)
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
+            }
+            
+            bool slotCallGuard(const std::string& slotName) {
+                if (m_fullSchema.has(slotName)) {
+                    const std::vector<std::string>& allowedStates = m_fullSchema.getAllowedStates(slotName);
+                    if (!allowedStates.empty()) {
+                        //std::cout << "Validating slot" << std::endl;
+                        const std::string& currentState = get<std::string > ("state");                        
+                        return std::find(allowedStates.begin(), allowedStates.end(), currentState) != allowedStates.end();
+                    }
+                    return true;
+                }
+                return true;                
             }
 
             void slotGetConfiguration() {
