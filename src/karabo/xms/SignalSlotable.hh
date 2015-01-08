@@ -79,6 +79,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNotAvailableHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceAvailableAgainHandler;
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
+            typedef boost::function<bool (const std::string& /*slotFunction*/) > SlotCallGuardHandler;
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
@@ -175,8 +176,7 @@ namespace karabo {
             // Handlers
             InstanceNotAvailableHandler m_instanceNotAvailableHandler;
             InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
-
-            //boost::thread m_eventLoopThread;
+            SlotCallGuardHandler m_slotCallGuardHandler;
 
         public:
 
@@ -329,6 +329,8 @@ namespace karabo {
             void registerInstanceAvailableAgainHandler(const InstanceAvailableAgainHandler& instanceAvailableAgainCallback);
             
             void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
+            
+            void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
@@ -914,7 +916,7 @@ namespace karabo {
             void killTimer(const std::string& id);
             
         protected: // Functions
-
+            
             void startEmittingHeartbeats(const int heartbeatInterval);
 
             void stopEmittingHearbeats();
