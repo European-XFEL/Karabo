@@ -349,6 +349,13 @@ namespace karabo {
 
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
+                                    
+                                    // Place a guard for executing this slot here
+                                    if (m_slotCallGuardHandler && !m_slotCallGuardHandler(slotFunction)) {
+                                        std::cout << "Rejected global slot: " << slotFunction << std::endl;
+                                        continue;
+                                    }
+                                    
                                     //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
                                     SlotInstancePointer slot = getGlobalSlot(slotFunction);
                                     if (slot) {
@@ -365,6 +372,13 @@ namespace karabo {
 
                                 BOOST_FOREACH(string slotFunction, slotFunctions) {
                                     //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";
+                                                                        
+                                     // Place a guard for executing this slot here
+                                    if (m_slotCallGuardHandler && !m_slotCallGuardHandler(slotFunction)) {
+                                        std::cout << "Rejected local slot: " << slotFunction << std::endl;
+                                        continue;
+                                    }
+                                                                        
                                     SlotInstancePointer slot = getLocalSlot(slotFunction);
                                     if (slot) {
                                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
@@ -789,6 +803,11 @@ namespace karabo {
         void SignalSlotable::registerInstanceAvailableAgainHandler(const InstanceAvailableAgainHandler & instanceAvailableAgainCallback) {
             m_instanceAvailableAgainHandler = instanceAvailableAgainCallback;
         }
+        
+        void SignalSlotable::registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler) {
+            m_slotCallGuardHandler = slotCallGuardHandler;
+        }
+
 
 
         void SignalSlotable::instanceNotAvailable(const std::string & instanceId) {
@@ -1808,6 +1827,6 @@ namespace karabo {
                 }
             }
             if (found) handler(shared_from_this(), id);
-        }
+        }        
     }
 }
