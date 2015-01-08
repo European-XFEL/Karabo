@@ -564,6 +564,7 @@ class WorkflowConnection(QWidget, Loadable):
         self._updateProxyGeometry()
         self.proxy.show()
         parent.ilayout.add_item(self.proxy)
+        self.proxy.lower()
         parent.setModified()
         
         # Reconfigure
@@ -741,6 +742,7 @@ class WorkflowConnection(QWidget, Loadable):
         
         proxy.setWidget(connection)
         layout.loadPosition(elem, proxy)
+        proxy.lower()
 
         return proxy
 
