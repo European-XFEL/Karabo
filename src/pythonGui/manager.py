@@ -33,6 +33,8 @@ from util import getSaveFileName
 from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
+import os.path
+
 
 class _Manager(QObject):
     # signals
@@ -52,6 +54,9 @@ class _Manager(QObject):
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
+        
+        # Check GUI version
+        self._checkVersion()
         
         # Initiate database connection
         self.sqlDatabase = SqlDatabase()
@@ -74,6 +79,26 @@ class _Manager(QObject):
 
         # Sets all parameters to start configuration
         self.reset()
+
+
+    def _checkVersion(self):
+        """
+        This function checks the current version of the GUI and save its value
+        to the global variable GUI_VERSION.
+        """
+        filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
+        try:
+            with open(filePath, 'r') as file:
+                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
+        except IOError as e:
+            print(e)
+            globals.GUI_VERSION = ""
+
+        try:
+            with open(karaboVersionPath, 'r') as file:
+                globals.GUI_VERSION = file.readline()
+        except IOError:
+            globals.GUI_VERSION = ""
 
 
     # Sets all parameters to start configuration

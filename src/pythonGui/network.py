@@ -18,7 +18,8 @@ from dialogs.logindialog import LoginDialog
 from struct import pack
 
 from PyQt4.QtNetwork import QAbstractSocket, QTcpSocket
-from PyQt4.QtCore import pyqtSignal, QByteArray, QCryptographicHash, QObject
+from PyQt4.QtCore import (pyqtSignal, QByteArray, QCoreApplication,
+                          QCryptographicHash, QObject)
 from PyQt4.QtGui import QDialog, QMessageBox
 from karabo.authenticator import Authenticator
 from karabo.hash import Hash, BinaryParser, BinaryWriter
@@ -424,6 +425,9 @@ class _Network(QObject):
         loginInfo.set("password", password)
         loginInfo.set("provider", provider)
         loginInfo.set("sessionToken", sessionToken)
+        loginInfo.set("host", socket.gethostname())
+        loginInfo.set("pid", QCoreApplication.applicationPid())
+        loginInfo.set("version", globals.GUI_VERSION)
         self._tcpWriteHash(loginInfo)
 
 
