@@ -46,8 +46,6 @@ class MainWindow(QMainWindow):
         if not os.path.exists(globals.KARABO_PROJECT_FOLDER):
             os.mkdir(globals.KARABO_PROJECT_FOLDER)
 
-        self.karaboVersion = self._getVersion()
-
         self._setupActions()
         self._setupMenuBar()
         self._setupToolBar()
@@ -55,28 +53,11 @@ class MainWindow(QMainWindow):
         
         self._setupPanels()
 
-        self.setWindowTitle("European XFEL - Karabo GUI " + self.karaboVersion)
+        self.setWindowTitle("European XFEL - Karabo GUI " + globals.GUI_VERSION)
         self.resize(1200, 800)
 
 
 ### initializations ###
-    def _getVersion(self):
-        filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
-        
-        try:
-            with open(filePath, 'r') as file:
-                karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError as e:
-            print(e)
-            return ""
-
-        try:
-            with open(karaboVersionPath, 'r') as file:
-                return file.readline()
-        except IOError:
-            return ""
-
-
     def _setupActions(self):
         text = "Change access level"
         self.tbAccessLevel = QToolButton(self)
