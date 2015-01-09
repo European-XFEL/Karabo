@@ -88,7 +88,10 @@ echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 #echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
 # change sipconfig.py
 #
-cd $installDir/karabo-$VERSION/extern/lib/python2.7/site-packages
+# find site-packages directory using installed python
+sitePackagesDir=`$installDir/karabo-$VERSION/extern/bin/python -c "import site; print(site.getsitepackages()[0])"`
+cd $sitePackagesDir
+#cd $installDir/karabo-$VERSION/extern/lib/python2.7/site-packages
 sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/bin'," sipconfig.py
 sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/site-packages'," sipconfig.py
 sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/share/sip'," sipconfig.py
