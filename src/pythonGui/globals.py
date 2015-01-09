@@ -11,6 +11,7 @@ from sys import platform
 # TODO Karabo will support an global access level and an excpetion list which is deviceId specific
 # This requires a function like in SignalSlotable: getAccessLevel(deviceId) in the end
 
+GUI_VERSION = ""
 
 GLOBAL_ACCESS_LEVEL = AccessLevel.OBSERVER
 #KARABO_DEFAULT_ACCESS_LEVEL = AccessLevel.OBSERVER  # Inside XFEL
