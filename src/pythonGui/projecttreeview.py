@@ -1,4 +1,3 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 4, 2014
@@ -15,8 +14,10 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
+from dialogs.projectsavedialog import ProjectSaveDialog
 from scene import Scene
 from manager import Manager
+from network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
@@ -24,8 +25,8 @@ from util import getSaveFileName
 from karabo.project import Project, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QFileDialog, 
-                         QMenu, QMessageBox, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
+                         QFileDialog, QMenu, QMessageBox, QTreeView)
 import os.path
 
 
@@ -44,6 +45,8 @@ class ProjectTreeView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        
+        self.saveDialog = None
 
 
     def currentIndex(self):
@@ -86,6 +89,19 @@ class ProjectTreeView(QTreeView):
 
 
     def projectNew(self):
+        self.saveDialog = ProjectSaveDialog()
+        # Get all available projects in cloud
+        Network().onGetAvailableProjects()
+        if self.saveDialog.exec_() == QDialog.Rejected:
+            self.saveDialog = None
+            return
+        
+        filename = self.saveDialog.filename
+        print("projectNew", filename)
+        
+        self.saveDialog = None
+        return
+    
         fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
                              "Karabo Projects (*.krb)", "krb")
 
@@ -335,3 +351,9 @@ class ProjectTreeView(QTreeView):
             device = index.data(ProjectModel.ITEM_OBJECT)
             device.project.shutdown(device, nbSelected == 1)
 
+
+    def onAvailableProjects(self, projects):
+        if self.saveDialog is None:
+            return
+        
+        self.saveDialog.setAvailableCloudProjects(projects)
