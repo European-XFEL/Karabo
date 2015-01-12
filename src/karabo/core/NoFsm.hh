@@ -34,9 +34,7 @@ namespace karabo {
             }                      
             
             void startFsm() {
-                if (!m_initialFunc)
-                    throw KARABO_PARAMETER_EXCEPTION("No initial function defined. Please call 'initialFunc' function in the constructor");
-                m_initialFunc();
+                if (m_initialFunc) m_initialFunc();
             }
 
             void registerInitialFunction(const boost::function<void()>& func) {
