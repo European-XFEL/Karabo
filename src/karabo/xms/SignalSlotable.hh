@@ -877,7 +877,10 @@ namespace karabo {
             template <class OutputType>
             boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const karabo::io::AbstractOutput::Pointer&) >& onOutputPossibleHandler = boost::function<void (const karabo::io::AbstractOutput::Pointer&) >()) {
                 using namespace karabo::util;
-                karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
+		Hash copy;
+		copy += input;
+		copy.get<Hash>(name).begin()->getValue<Hash>().eraseFound("schema");
+                karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, copy);
                 channel->setInstanceId(m_instanceId);
                 channel->setOutputHandlerType("c++");
                 if (!onOutputPossibleHandler.empty()) {
