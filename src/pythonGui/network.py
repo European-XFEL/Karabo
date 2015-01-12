@@ -395,6 +395,14 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
+    def onSubscribeToOutput(self, box, subscribe):
+        h = Hash("type", "subscribeNetwork")
+        h["channelName"] = (box.configuration.id + ":" +
+                            ".".join(box.path[:-1]))
+        h["subscribe"] = subscribe
+        self._tcpWriteHash(h)
+
+
     def onError(self, error):
         h = Hash("type", "error", "traceback", error)
         self._tcpWriteHash(h)
