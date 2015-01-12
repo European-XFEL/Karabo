@@ -21,8 +21,7 @@
 #include <karabo/xip/RawImageData.hh>
 #include "coredll.hh"
 
-#include "FsmMacros.hh"
-#include "BaseFsm.hh"
+#include "NoFsm.hh"
 #include "DeviceClient.hh"
 
 /**
@@ -60,7 +59,7 @@ namespace karabo {
         /**
          * The Device class.
          */
-        template <class FSM = BaseFsm>
+        template <class FSM = NoFsm>
         class Device : public BaseDevice, public FSM {
             karabo::util::Validator m_validatorIntern;
             karabo::util::Validator m_validatorExtern;
