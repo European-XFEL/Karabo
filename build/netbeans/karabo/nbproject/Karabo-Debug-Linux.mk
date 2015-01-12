@@ -35,13 +35,13 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/163556830/ComputeDevice.o \
 	${OBJECTDIR}/_ext/163556830/DataLogger.o \
 	${OBJECTDIR}/_ext/163556830/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
 	${OBJECTDIR}/_ext/163556830/DeviceServer.o \
 	${OBJECTDIR}/_ext/163556830/FileDataLogger.o \
 	${OBJECTDIR}/_ext/163556830/GuiServerDevice.o \
+	${OBJECTDIR}/_ext/163556830/ProjectManager.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
@@ -186,11 +186,6 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJE
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
-${OBJECTDIR}/_ext/163556830/ComputeDevice.o: ../../../src/karabo/core/ComputeDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc
-
 ${OBJECTDIR}/_ext/163556830/DataLogger.o: ../../../src/karabo/core/DataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
@@ -220,6 +215,11 @@ ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o: ../../../src/karabo/core/GuiServe
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ../../../src/karabo/core/GuiServerDevice.cc
+
+${OBJECTDIR}/_ext/163556830/ProjectManager.o: ../../../src/karabo/core/ProjectManager.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ProjectManager.o ../../../src/karabo/core/ProjectManager.cpp
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o: ../../../src/karabo/io/BinaryFileInput.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -983,19 +983,6 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
 
-${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o: ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ../../../src/karabo/core/ComputeDevice.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o ../../../src/karabo/core/ComputeDevice.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/163556830/ComputeDevice.o ${OBJECTDIR}/_ext/163556830/ComputeDevice_nomain.o;\
-	fi
-
 ${OBJECTDIR}/_ext/163556830/DataLogger_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLogger.o ../../../src/karabo/core/DataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
 	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLogger.o`; \
@@ -1072,6 +1059,19 @@ ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o: ${OBJECTDIR}/_ext/16355683
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o ../../../src/karabo/core/GuiServerDevice.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/163556830/GuiServerDevice.o ${OBJECTDIR}/_ext/163556830/GuiServerDevice_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/163556830/ProjectManager_nomain.o: ${OBJECTDIR}/_ext/163556830/ProjectManager.o ../../../src/karabo/core/ProjectManager.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/ProjectManager.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/ProjectManager_nomain.o ../../../src/karabo/core/ProjectManager.cpp;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/ProjectManager.o ${OBJECTDIR}/_ext/163556830/ProjectManager_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/BinaryFileInput_nomain.o: ${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o ../../../src/karabo/io/BinaryFileInput.cc 

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="94">
+<configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="f7" displayName="core" projectFiles="true">
       <logicalFolder name="f2" displayName="Devices" projectFiles="true">
-        <itemPath>../../../src/karabo/core/ComputeDevice.cc</itemPath>
-        <itemPath>../../../src/karabo/core/ComputeDevice.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLogger.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLogger.hh</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
@@ -14,6 +12,8 @@
         <itemPath>../../../src/karabo/core/FileDataLogger.hh</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
+        <itemPath>../../../src/karabo/core/ProjectManager.cpp</itemPath>
+        <itemPath>../../../src/karabo/core/ProjectManager.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="Patterns" projectFiles="true">
         <itemPath>../../../src/karabo/core/Worker.hh</itemPath>
@@ -519,16 +519,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/ComputeDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ComputeDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/DataLogger.cc"
             ex="false"
             tool="1"
@@ -599,6 +589,16 @@
       <item path="../../../src/karabo/core/NoFsm.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ProjectManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ProjectManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2303,16 +2303,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/core/ComputeDevice.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/ComputeDevice.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/core/DataLogger.cc"
             ex="false"
             tool="1"
@@ -2383,6 +2373,16 @@
       <item path="../../../src/karabo/core/NoFsm.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ProjectManager.cpp"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/ProjectManager.hh"
             ex="false"
             tool="3"
             flavor2="0">
