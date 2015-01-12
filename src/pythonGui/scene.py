@@ -1030,7 +1030,7 @@ class Scene(QSvgWidget):
             if isinstance(c, ProxyWidget):
                 if c.component is not None:
                     for b in c.component.boxes:
-                        b.configuration.removeVisible()
+                        b.removeVisible()
                 
                 if isinstance(c.widget, Item):
                     c.widget.getDevice().removeVisible()
@@ -1253,7 +1253,7 @@ class Scene(QSvgWidget):
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
-                    realbox.configuration.addVisible()
+                    realbox.addVisible()
 
                     unit = (box.descriptor.metricPrefixSymbol +
                             box.descriptor.unitSymbol)
@@ -1271,7 +1271,7 @@ class Scene(QSvgWidget):
                     editableComponent = EditableApplyLaterComponent(
                         box.descriptor.classAlias, realbox, proxy)
 
-                    realbox.configuration.addVisible()
+                    realbox.addVisible()
                     proxy.setComponent(editableComponent)
                     proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)
