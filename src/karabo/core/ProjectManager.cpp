@@ -22,7 +22,11 @@ namespace karabo {
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the project files should be placed")
-                    .assignmentMandatory()
+                    .assignmentOptional().defaultValue("projects")
+                    .commit();
+            
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("Karabo_ProjectManager")
                     .commit();
 
             // Do not archive the archivers (would lead to infinite recursion)
@@ -46,10 +50,10 @@ namespace karabo {
 
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
+            SLOT0(slotGetAvailableProjects)
             SLOT1(slotLoadProject, Hash)
             SLOT1(slotSaveProject, Hash)
             SLOT1(slotCloseProject, Hash)
-
         }
 
 
@@ -65,7 +69,25 @@ namespace karabo {
 
         }
 
+        
+        void ProjectManager::slotGetAvailableProjects() {
+            KARABO_LOG_DEBUG << "slotGetAvailableProjects";
+            
+            std::vector<std::string> projects;
+            // Check project directory for all projects
+            boost::filesystem::path directory(get<string> ("directory"));
+            boost::filesystem::directory_iterator end_iter;
+            for(boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter)
+            {
+                KARABO_LOG_DEBUG << iter->path().filename();
+                projects.push_back(iter->path().filename().string());
+            }
+            
+            Hash answer("availableProjects", projects);
+            reply(answer);
+        }
 
+        
         void ProjectManager::slotLoadProject(const karabo::util::Hash& hash) {
             KARABO_LOG_DEBUG << "slotLoadProject";
             
@@ -75,21 +97,17 @@ namespace karabo {
             std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");            
             karabo::io::loadFromFile(buffer, get<string>("directory") + "/" + projectName);
             reply(answer);
-            
         }
 
 
         void ProjectManager::slotSaveProject(const karabo::util::Hash& hash) {
             KARABO_LOG_DEBUG << "slotSaveProject";
-            
-            
         }
 
 
         void ProjectManager::slotCloseProject(const karabo::util::Hash& hash) {
             KARABO_LOG_DEBUG << "slotCloseProject";
         }
-
 
     }
 }

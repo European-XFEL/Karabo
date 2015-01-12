@@ -51,6 +51,8 @@ class _Manager(QObject):
 
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
+    
+    signalAvailableProjects = pyqtSignal(object) # list of projects
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
@@ -525,6 +527,10 @@ class _Manager(QObject):
     def handle_propertyHistory(self, deviceId, property, data):
         box = self.deviceData[deviceId].getBox(property.split("."))
         box.signalHistoricData.emit(box, data)
+
+
+    def handle_availableProjects(self, availableProjects):
+        self.signalAvailableProjects.emit(availableProjects)
 
 
     def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
