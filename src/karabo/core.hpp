@@ -12,7 +12,6 @@
 #define	KARABO_CORE_CORE_HH
 
 #include "core/Device.hh"
-#include "core/ComputeDevice.hh"
 #include "core/DeviceClient.hh"
 #include "core/OkErrorFsm.hh"
 #include "core/StartStopFsm.hh"
