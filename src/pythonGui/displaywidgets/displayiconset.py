@@ -103,8 +103,8 @@ class DisplayIconset(DisplayWidget):
             element_factory=Element))
         parser.feed(self.project.getURL(self.url))
         self.xml = ElementTree.ElementTree(parser.close())
-        if self.boxes[0].hasValue():
-            self.valueChanged(None, self.boxes[0].value)
+        self.valueChanged(None, self.boxes[0].value if self.boxes[0].hasValue()
+                          else "")
 
     def valueChanged(self, box, value, timestamp=None):
         self.xml.getroot().set(">filter", value)
