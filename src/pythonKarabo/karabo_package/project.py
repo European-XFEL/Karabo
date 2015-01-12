@@ -140,6 +140,9 @@ class Project(object):
         if u.scheme == "project":
             with ZipFile(self.filename, mode="r") as zf:
                 return zf.read(u.path)
+        elif u.scheme == "": # for old projects, delete later
+            with open(url, mode="r") as fin:
+                return fin.read()
         else:
             return urllib.request.urlopen(url).read()
 
