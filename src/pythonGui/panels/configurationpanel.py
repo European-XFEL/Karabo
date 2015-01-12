@@ -26,6 +26,8 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
                          QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
                          QWidget)
 
+import os.path
+
 class ConfigurationPanel(QWidget):
     ##########################################
     # Dockable widget class used in DivWidget
@@ -86,7 +88,7 @@ class ConfigurationPanel(QWidget):
         waitWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         waitWidget.setAutoFillBackground(True)
         waitWidget.setBackgroundRole(QPalette.Base)
-        movie = QMovie(":wait")
+        movie = QMovie(os.path.join("icons", "wait"))
         waitWidget.setMovie(movie)
         movie.start()
         self.__swParameterEditor.addWidget(waitWidget)
