@@ -246,7 +246,7 @@ class FixedLayout(Layout, QLayout):
                     else:
                         if p.component is not None:
                             for b in p.component.boxes:
-                                b.configuration.removeVisible()
+                                b.removeVisible()
 
                         if isinstance(p.widget, sceneitems.workflowitems.Item):
                             p.widget.getDevice().removeVisible()
@@ -530,6 +530,6 @@ class ProxyWidget(QWidget):
         for item in source.selectedItems():
             if (self.component is not None and
                     self.component.addBox(item.box)):
-                item.box.configuration.addVisible()
+                item.box.addVisible()
                 event.accept()
 
