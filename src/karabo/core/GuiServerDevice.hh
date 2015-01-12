@@ -92,18 +92,24 @@ namespace karabo {
 
             void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
+            void slotPropertyHistory(const karabo::util::Hash& info);
+            
+            void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
+            
+            void slotAvailableProjects(const karabo::util::Hash& info);
+            
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
             void slotProjectLoaded(const karabo::util::Hash& info);
             
             void onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectSaved(const karabo::util::Hash& hash);
+            void slotProjectSaved(const karabo::util::Hash& info);
             
             void onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
-
+            void slotProjectClosed(const karabo::util::Hash& info);
+            
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
             void sendSystemTopology(karabo::net::Channel::Pointer channel);

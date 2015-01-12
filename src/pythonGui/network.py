@@ -395,6 +395,11 @@ class _Network(QObject):
         h.set("maxNumData", maxNumData)
         self._tcpWriteHash(h)
 
+    
+    def onGetAvailableProjects(self):
+        h = Hash("type", "getAvailableProjects")
+        self._tcpWriteHash(h)
+
 
     def onError(self, error):
         h = Hash("type", "error", "traceback", error)

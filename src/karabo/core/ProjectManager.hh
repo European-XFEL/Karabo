@@ -31,6 +31,8 @@ namespace karabo {
             
             void initialize();
             
+            void slotGetAvailableProjects();
+            
             void slotLoadProject(const karabo::util::Hash& hash);
             
             void slotSaveProject(const karabo::util::Hash& hash);

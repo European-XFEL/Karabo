@@ -164,14 +164,20 @@ namespace karabo {
                 DataLoggerIndex idx = findNearestLoggerIndex(deviceId, from);
                 if (idx.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
-                    reply(result);
+                    Hash answer("deviceId", deviceId);
+                    answer.set("property", property);
+                    answer.set("data", result);
+                    reply(answer);
                     return;
                 }
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
                     KARABO_LOG_WARN << "File \"karaboHistory/" << deviceId << ".last\" not found. No data will be sent...";
-                    reply(result);
+                    Hash answer("deviceId", deviceId);
+                    answer.set("property", property);
+                    answer.set("data", result);
+                    reply(answer);
                     return;
                 }
 
@@ -252,10 +258,15 @@ namespace karabo {
                     result.swap(reduced);
                 }
 
-                reply(result);
+                Hash answer("deviceId", deviceId);
+                answer.set("property", property);
+                answer.set("data", result);
+                KARABO_LOG_FRAMEWORK_DEBUG << "++++ Send answer ++++ ";
+                KARABO_LOG_FRAMEWORK_DEBUG << answer;
+                reply(answer);
 
-                std::string senderId = getSenderInfo("slotGetPropertyHistory")->getInstanceIdOfSender();
-                call(senderId, "slotPropertyHistory", deviceId, property, result);
+                //std::string senderId = getSenderInfo("slotGetPropertyHistory")->getInstanceIdOfSender();
+                //call(senderId, "slotPropertyHistory", deviceId, property, result);
 
                 //emit("signalPropertyHistory", deviceId, property, result);
 
