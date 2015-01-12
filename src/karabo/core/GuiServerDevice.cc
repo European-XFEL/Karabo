@@ -139,7 +139,7 @@ namespace karabo {
 
         void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances
+            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances            
         }
 
 
@@ -174,7 +174,13 @@ namespace karabo {
                         onGetPropertyHistory(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
-                    }
+                    } else if (type == "loadProject") {
+                        onLoadProject(channel, info);
+                    } else if (type == "saveProject") {
+                        onSaveProject(channel, info);
+                    } else if (type == "closeProject") {
+                        onCloseProject(channel, info);
+                    }                    
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
                 }
@@ -412,6 +418,49 @@ namespace karabo {
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
             }
+        }
+        
+        void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";                
+                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectAvailable", args);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
+            }
+        }
+        
+        void GuiServerDevice::slotProjectLoaded(const karabo::util::Hash& info) {            
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectLoaded";
+                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotProjectLoaded: " << e.userFriendlyMsg();
+            }                      
+        }
+
+        
+        void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
+                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
+            }            
+        }
+        
+        void GuiServerDevice::slotProjectSaved(const karabo::util::Hash& hash) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectSaved";
+                
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotProjectSaved(): " << e.userFriendlyMsg();
+            }           
+        }
+
+        
+        
+        void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+
         }
 
 
