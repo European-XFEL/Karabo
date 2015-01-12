@@ -402,6 +402,18 @@ class Object(object):
         self.__box__.removeVisible()
 
 
+class NetworkObject(Object, QObject):
+    """An object that gets its data via a network output"""
+    def __init__(self, box):
+        QObject.__init__(self)
+        Object.__init__(self, box)
+        box.visibilityChanged.connect(self.onVisibilityChanged)
+
+    @pyqtSlot(bool)
+    def onVisibilityChanged(self, visible):
+        Network().onSubscribeToOutput(self.__box__, visible)
+
+
 class Dummy(object):
     """this class represents a not-yet-loaded value.
     it seems to contain all possible attributes, as we don't know yet
@@ -423,7 +435,7 @@ class Schema(hashtypes.Descriptor):
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
-        self = dict(Image=ImageNode, Slot=SlotNode).get(
+        self = dict(Image=ImageNode, Slot=SlotNode, Network=OutputNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
@@ -605,6 +617,15 @@ class ImageNode(Schema):
         item = ImageTreeWidgetItem(box, treeWidget, parent)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
+
+
+class OutputNode(Schema):
+    classAlias = "Network output"
+
+    def getClass(self):
+        if self.cls is None:
+            self.cls = type(str(self.name), (NetworkObject,), self.dict)
+        return self.cls
 
 
 class Slot(Object):
