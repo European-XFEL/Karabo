@@ -208,7 +208,13 @@ class Hash(OrderedDict):
 
     def __init__(self, *args):
         if len(args) == 1:
-            OrderedDict.__init__(self, args[0])
+            if isinstance(args[0], Hash):
+                OrderedDict.__init__(self)
+                for k, v, a in args[0].iterall():
+                    self[k] = v
+                    self[k, ...] = dict(a)
+            else:
+                OrderedDict.__init__(self, args[0])
         else:
             OrderedDict.__init__(self)
             for k, v in zip(args[::2], args[1::2]):
