@@ -686,6 +686,9 @@ class Schema(Hash):
         file.file.write(s)
         file.file.write(h)
 
+    @classmethod
+    def toString(cls, data):
+        return data.name + ":" + data.hash.encode("XML").decode("utf8")
 
 class Schema_(Special):
     hashtype = Schema
