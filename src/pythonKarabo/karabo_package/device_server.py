@@ -280,7 +280,6 @@ class DeviceServer(SignalSlotable):
                 print('device "{}" claimed to have gone but did not'.
                       format(id))
 
-    @replySlot("slotClassSchema")
     @coroutine
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
