@@ -90,8 +90,9 @@ class ProjectTreeView(QTreeView):
 
     def projectNew(self):
         self.saveDialog = ProjectSaveDialog()
-        # Get all available projects in cloud
+        # Request all available projects in cloud
         Network().onGetAvailableProjects()
+        
         if self.saveDialog.exec_() == QDialog.Rejected:
             self.saveDialog = None
             return
@@ -356,4 +357,5 @@ class ProjectTreeView(QTreeView):
         if self.saveDialog is None:
             return
         
-        self.saveDialog.setAvailableCloudProjects(projects)
+        self.saveDialog.fillCloudProjects(projects)
+

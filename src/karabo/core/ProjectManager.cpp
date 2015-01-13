@@ -77,14 +77,11 @@ namespace karabo {
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
             boost::filesystem::directory_iterator end_iter;
-            for(boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter)
-            {
-                KARABO_LOG_DEBUG << iter->path().filename();
+            for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
                 projects.push_back(iter->path().filename().string());
             }
             
-            Hash answer("availableProjects", projects);
-            reply(answer);
+            reply(projects);
         }
 
         
