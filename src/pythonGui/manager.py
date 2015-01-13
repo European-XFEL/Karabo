@@ -533,6 +533,18 @@ class _Manager(QObject):
         self.signalAvailableProjects.emit(availableProjects)
 
 
+    def handle_projectLoaded(self, user, name, buffer):
+        print("handle_projectLoaded", user, name)
+
+
+    def handle_projectSaved(self, user, name):
+        print("handle_projectSaved", user, name)
+
+
+    def handle_projectClosed(self, user, name):
+        print("handle_projectClosed", user, name)
+
+
     def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
         timestamp = datetime.now()
         # TODO: better format for timestamp and timestamp generation in karabo
