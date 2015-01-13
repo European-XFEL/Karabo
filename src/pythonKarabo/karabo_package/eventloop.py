@@ -7,6 +7,7 @@ from asyncio import (coroutine, Future, get_event_loop, set_event_loop,
                      SelectorEventLoop, Task)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
+import getpass
 from itertools import chain
 import sys
 
@@ -16,7 +17,8 @@ class Broker:
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
-        self.destination = openmq.Destination(self.session, "teichman", 1)
+        self.destination = openmq.Destination(self.session,
+                                              getpass.getuser(), 1)
         self.producer = openmq.Producer(self.session, self.destination)
         self.deviceId = deviceId
         self.classId = classId
