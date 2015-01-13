@@ -5,7 +5,10 @@
 #############################################################################
 
 
+__all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
+
 import globals
+import network
 
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
@@ -15,12 +18,15 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
 import os.path
 
 
-class ProjectSaveDialog(QDialog):
+class ProjectDialog(QDialog):
 
 
     def __init__(self):
         QDialog.__init__(self)
-        uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectsavedialog.ui'), self)
+        uic.loadUi(os.path.join(os.path.dirname(__file__), 'projectdialog.ui'), self)
+        
+        # Request all available projects in cloud
+        network.Network().onGetAvailableProjects()
         
         self.lwProjects.currentItemChanged.connect(self.onCloudProjectChanged)
         
@@ -46,7 +52,6 @@ class ProjectSaveDialog(QDialog):
 
         self.leFilename.textChanged.connect(self.onChanged)
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        self.buttonBox.accepted.connect(self.onAccepted)
 
 
     @property
@@ -67,7 +72,26 @@ class ProjectSaveDialog(QDialog):
             self.leFilename.setEnabled(True)
 
 
-    def onAccepted(self):
+    def onChanged(self, text):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
+
+
+    def onCloudProjectChanged(self, item): # previousItem
+        self.leFilename.setText(item.text())
+
+
+class ProjectSaveDialog(ProjectDialog):
+
+
+    def __init__(self):
+        ProjectDialog.__init__(self)
+        
+        self.setWindowTitle("Save project")
+        self.buttonBox.button(QDialogButtonBox.Ok).setText("Save")
+        self.buttonBox.accepted.connect(self.onSaved)
+
+
+    def onSaved(self):
         # Check if filename is already existing
         if self.cbSaveTo.currentIndex() == 0:
             for i in range(self.lwProjects.count()):
@@ -87,10 +111,15 @@ class ProjectSaveDialog(QDialog):
         self.accept()
 
 
-    def onChanged(self, text):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(len(text) > 0)
+class ProjectLoadDialog(ProjectDialog):
 
 
-    def onCloudProjectChanged(self, item): # previousItem
-        self.leFilename.setText(item.text())
+    def __init__(self):
+        ProjectDialog.__init__(self)
+        
+        self.setWindowTitle("Load project")
+        self.buttonBox.button(QDialogButtonBox.Ok).setText("Open")
+        self.buttonBox.accepted.connect(self.accept)
+        
+        self.leFilename.setReadOnly(True)
 

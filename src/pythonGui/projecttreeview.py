@@ -14,7 +14,7 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
-from dialogs.projectsavedialog import ProjectSaveDialog
+from dialogs.projectdialog import ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
 from network import Network
@@ -46,7 +46,7 @@ class ProjectTreeView(QTreeView):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
         
-        self.saveDialog = None
+        self.projectDialog = None
 
 
     def currentIndex(self):
@@ -89,18 +89,16 @@ class ProjectTreeView(QTreeView):
 
 
     def projectNew(self):
-        self.saveDialog = ProjectSaveDialog()
-        # Request all available projects in cloud
-        Network().onGetAvailableProjects()
+        self.projectDialog = ProjectSaveDialog()
         
-        if self.saveDialog.exec_() == QDialog.Rejected:
-            self.saveDialog = None
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
             return
         
-        filename = self.saveDialog.filename
-        print("projectNew", filename)
-        
-        self.saveDialog = None
+        # TODO: Create project krb file and ship content
+        Network().onSaveProject(self.projectDialog.filename)#, content)
+
+        self.projectDialog = None
         return
     
         fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
@@ -111,6 +109,15 @@ class ProjectTreeView(QTreeView):
 
 
     def projectOpen(self):
+        self.projectDialog = ProjectLoadDialog()
+        
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
+            return
+        
+        Network().onLoadProject(self.projectDialog.filename)
+        return
+    
         filename = QFileDialog.getOpenFileName(
             None, "Open project", globals.KARABO_PROJECT_FOLDER,
             "Karabo Projects (*.krb)")
@@ -354,8 +361,8 @@ class ProjectTreeView(QTreeView):
 
 
     def onAvailableProjects(self, projects):
-        if self.saveDialog is None:
+        if self.projectDialog is None:
             return
         
-        self.saveDialog.fillCloudProjects(projects)
+        self.projectDialog.fillCloudProjects(projects)
 

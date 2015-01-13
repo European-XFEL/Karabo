@@ -401,6 +401,27 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
+    def onSaveProject(self, filename): #, content
+        h = Hash("type", "saveProject")
+        h.set("user", self.username)
+        h.set("name", filename)
+        self._tcpWriteHash(h)
+
+
+    def onLoadProject(self, filename):
+        h = Hash("type", "loadProject")
+        h.set("user", self.username)
+        h.set("name", filename)
+        self._tcpWriteHash(h)
+
+
+    def onCloseProject(self, filename):
+        h = Hash("type", "closeProject")
+        h.set("user", self.username)
+        h.set("name", filename)
+        self._tcpWriteHash(h)
+
+
     def onError(self, error):
         h = Hash("type", "error", "traceback", error)
         self._tcpWriteHash(h)

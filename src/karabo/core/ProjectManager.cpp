@@ -51,9 +51,9 @@ namespace karabo {
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
             SLOT0(slotGetAvailableProjects)
-            SLOT1(slotLoadProject, Hash)
-            SLOT1(slotSaveProject, Hash)
-            SLOT1(slotCloseProject, Hash)
+            SLOT2(slotLoadProject, string /*username*/, string /*projectName*/)
+            SLOT2(slotSaveProject, string /*username*/, string /*projectName*/)
+            SLOT2(slotCloseProject, string /*username*/, string /*projectName*/)
         }
 
 
@@ -85,24 +85,27 @@ namespace karabo {
         }
 
         
-        void ProjectManager::slotLoadProject(const karabo::util::Hash& hash) {
+        void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject";
+
+            Hash answer("user", userName);
+            answer.set("name", projectName);
             
-            string projectName = hash.get<string>("projectName");
-                        
-            Hash answer(hash);
             std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");            
             karabo::io::loadFromFile(buffer, get<string>("directory") + "/" + projectName);
+            
             reply(answer);
         }
 
 
-        void ProjectManager::slotSaveProject(const karabo::util::Hash& hash) {
+        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotSaveProject";
+            
+            //reply(userName, projectName, success);
         }
 
 
-        void ProjectManager::slotCloseProject(const karabo::util::Hash& hash) {
+        void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject";
         }
 

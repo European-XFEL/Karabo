@@ -58,6 +58,9 @@ namespace karabo {
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
             SLOT1(slotAvailableProjects, vector<string> /*projects*/)
+            SLOT1(slotProjectSaved, Hash /*data*/)
+            SLOT1(slotProjectLoaded, Hash /*data*/)
+            SLOT1(slotProjectClosed, Hash /*data*/)
 
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
@@ -479,7 +482,11 @@ namespace karabo {
         void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectLoaded", args);
+                
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectLoaded", userName, projectName);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
             }
@@ -488,6 +495,17 @@ namespace karabo {
         void GuiServerDevice::slotProjectLoaded(const karabo::util::Hash& info) {         
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectLoaded";
+                
+                Hash h(info);
+                h.set("type", "projectLoaded");
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectLoaded: " << e.userFriendlyMsg();
             }
@@ -497,7 +515,11 @@ namespace karabo {
         void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
-                //requestNoWait("Karabo_ProjectManager", "slotSaveProject", "", "slotProjectSaved", args);
+
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                requestNoWait("Karabo_ProjectManager", "slotSaveProject", "", "slotProjectSaved", userName, projectName);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onSaveProject(): " << e.userFriendlyMsg();
             }
@@ -507,7 +529,7 @@ namespace karabo {
         void GuiServerDevice::slotProjectSaved(const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectSaved";
-                
+
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectSaved(): " << e.userFriendlyMsg();
             }           
@@ -517,7 +539,11 @@ namespace karabo {
         void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onCloseProject";
-                //requestNoWait("Karabo_ProjectManager", "slotCloseProject", "", "slotProjectClosed", args);
+
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                requestNoWait("Karabo_ProjectManager", "slotCloseProject", "", "slotProjectClosed", userName, projectName);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onCloseProject(): " << e.userFriendlyMsg();
             }        
