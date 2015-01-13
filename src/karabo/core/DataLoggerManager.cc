@@ -258,12 +258,8 @@ namespace karabo {
                     result.swap(reduced);
                 }
 
-                Hash answer("deviceId", deviceId);
-                answer.set("property", property);
-                answer.set("data", result);
                 KARABO_LOG_FRAMEWORK_DEBUG << "++++ Send answer ++++ ";
-                KARABO_LOG_FRAMEWORK_DEBUG << answer;
-                reply(answer);
+                reply(deviceId, property, result);
 
                 //std::string senderId = getSenderInfo("slotGetPropertyHistory")->getInstanceIdOfSender();
                 //call(senderId, "slotPropertyHistory", deviceId, property, result);

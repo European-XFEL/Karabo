@@ -56,8 +56,8 @@ namespace karabo {
         GuiServerDevice::GuiServerDevice(const Hash& input) : Device<OkErrorFsm>(input) {
            
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            SLOT1(slotPropertyHistory, Hash /**/)//string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
-            SLOT1(slotAvailableProjects, Hash /**/)
+            SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
+            SLOT1(slotAvailableProjects, vector<string> /*projects*/)
 
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
@@ -419,22 +419,22 @@ namespace karabo {
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
                 //call("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, property, args);
                 requestNoWait("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", "", "slotPropertyHistory", deviceId, property, args);
+                //requestNoWait("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", "", "slotPropertyHistory", deviceId, property, 
+                ///        boost::bind(&GuiServerDevice::slotPropertyHistory, this, channel, _1));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
             }
         }
         
-        void GuiServerDevice::slotPropertyHistory(const karabo::util::Hash& info) {
-        //const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+        //map<string, boost::function>
+        
+        //void GuiServerDevice::slotPropertyHistory(Channel::Pointer channel) {
+        void GuiServerDevice::slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting property history";
 
-                //Hash h("type", "propertyHistory", "deviceId", deviceId,
-                //       "property", property, "data", data);
-                
-                Hash h(info);
-                h.set("type", "propertyHistory");
-                string deviceId = info.get<string> ("deviceId");
+                Hash h("type", "propertyHistory", "deviceId", deviceId,
+                       "property", property, "data", data);
                 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs (which is shit here, but the current solution...)
@@ -457,13 +457,12 @@ namespace karabo {
             }
         }
         
-        void GuiServerDevice::slotAvailableProjects(const karabo::util::Hash& info) {
+        void GuiServerDevice::slotAvailableProjects(const std::vector<std::string>& projects) {
             // TODO: the channel which was requesting this, needs to be here as a parameter as well
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting available projects";
 
-                Hash h(info);
-                h.set("type", "availableProjects");
+                Hash h("type", "availableProjects", "availableProjects", projects);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs (which is shit here, but the current solution...)
