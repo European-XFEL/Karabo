@@ -157,7 +157,6 @@ class Device(SignalSlotable):
         return True, ""
 
 
-    @replySlot("slotSchemaUpdated")
     @coroutine
     def slotGetSchema(self, onlyCurrentState):
         if onlyCurrentState:
