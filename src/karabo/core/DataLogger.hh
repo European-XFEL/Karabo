@@ -40,6 +40,7 @@ namespace karabo {
             bool m_pendingLogin;
 
             long m_startPosition;
+            boost::thread m_flushThread;
 
         public:
 
@@ -81,7 +82,7 @@ namespace karabo {
 
             int incrementLastIndex(const std::string& deviceId);
             
-            void flushHandler(karabo::xms::SignalSlotable::Pointer p, const std::string& flushId);
+            void flushThread();
         };
     }
 }
