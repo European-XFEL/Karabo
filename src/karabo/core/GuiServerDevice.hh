@@ -92,11 +92,11 @@ namespace karabo {
 
             void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotPropertyHistory(const karabo::util::Hash& info);
+            void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
             
             void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
             
-            void slotAvailableProjects(const karabo::util::Hash& info);
+            void slotAvailableProjects(const std::vector<std::string>& projects);
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
