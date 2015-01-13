@@ -113,6 +113,11 @@ namespace karabo {
                 string filename = get<string>("directory") + "/" + m_deviceToBeLogged + "_configuration_" + toString(m_lastIndex) + ".txt";
                 string indexname = get<string>("directory") + "/" + m_deviceToBeLogged + "_index.txt";
                 if (wasValidUpToNow) {
+                    // stop and join "flush" thread if it is running...
+                    if (m_flushThread.joinable()) {
+                        m_flushThread.interrupt();
+                        m_flushThread.join();
+                    }
                     if (m_configStream.is_open()) {
                         m_configStream << m_lastDataTimestamp.toIso8601Ext() << "|" << fixed << m_lastDataTimestamp.toTimestamp()
                                 << "|" << m_lastDataTimestamp.getSeconds() << "|" << m_lastDataTimestamp.getFractionalSeconds()
@@ -152,9 +157,8 @@ namespace karabo {
                     }
                 }
                 m_pendingLogin = true;
-                int millis = get<int>("flushInterval") * 1000;
-                string timerId("flush-to-disk");
-                startTimer(millis, boost::bind(&DataLogger::flushHandler, this, boost::static_pointer_cast<SignalSlotable>(shared_from_this()), timerId), timerId);
+                // start "flush" thread ...
+                m_flushThread = boost::thread(boost::bind(&DataLogger::flushThread, this));
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_LOGIC_EXCEPTION("Problems tagging " + m_deviceToBeLogged + " to be discontinued"));
             }
@@ -226,14 +230,27 @@ namespace karabo {
             }
         }
 
-        void DataLogger::flushHandler(karabo::xms::SignalSlotable::Pointer pointer, const std::string& id) {
-            if (m_configStream.is_open()) {
-                m_configStream.flush();
+        void DataLogger::flushThread() {
+            //------------------------------------------------- make this thread sensible to external interrupts
+            boost::this_thread::interruption_enabled(); // enable interruption +
+            boost::this_thread::interruption_requested(); // request interruption = we need both!
+            try {
+                // iterate until interruption
+                while (true) {
+                    {
+                        boost::this_thread::disable_interruption di; // disable interruption in this block
+                        if (m_configStream.is_open()) {
+                            m_configStream.flush();
+                        }
+                    }
+                    // here the interruption enabled again
+                    int millis = get<int>("flushInterval") * 1000;
+                    boost::this_thread::sleep(boost::posix_time::milliseconds(millis));
+                }
+            } catch (const boost::thread_interrupted&) {
             }
-            int millis = get<int>("flushInterval") * 1000;
-            startTimer(millis, boost::bind(&DataLogger::flushHandler, this, pointer, id), id);
         }
-        
+
         void DataLogger::slotSchemaUpdated(const karabo::util::Schema& schema, const std::string& deviceId) {
             KARABO_LOG_FRAMEWORK_DEBUG << "slotSchemaUpdated: Schema for " << deviceId << " arrived...";
             m_currentSchema = schema;
