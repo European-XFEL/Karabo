@@ -96,29 +96,35 @@ class ProjectTreeView(QTreeView):
         self.projectDialog = ProjectSaveDialog()
         if self.projectDialog.exec_() == QDialog.Rejected:
             self.projectDialog = None
-            return (None, None)
+            return (None, None, None)
         
-        return self.projectDialog.filename, self.projectDialog.location
+        projectName = self.projectDialog.filename
+        filePath = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        
+        return filePath, projectName, self.projectDialog.location
+
+
+    def projectSaveToCloud(self, filepath, projectName):
+        # Read new project bytes
+        with open(filepath, 'rb') as input:
+            data = input.read()
+        input.close()
+        # Send save project to cloud request to network
+        Network().onSaveProject(projectName, data)
+        
+        self.projectDialog = None
 
 
     def projectNew(self):
-        projectName, location = self.getProjectSaveName()
-        if (projectName is None) and (location is None):
+        filePath, projectName, location = self.getProjectSaveName()
+        if (filePath is None) and (projectName is None) and (location is None):
             return
         
-        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
         # Create project
-        self.model().projectNew(filename)
+        self.model().projectNew(filePath)
         
         if location == ProjectDialog.CLOUD:
-            # Read new project bytes
-            with open(filename, 'rb') as input:
-                data = input.read()
-            input.close()
-            # Send save project to cloud request to network
-            Network().onSaveProject(projectName, data)
-
-        self.projectDialog = None
+            self.projectSaveToCloud(filePath, projectName)
 
 
     def projectOpen(self):
@@ -135,14 +141,19 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSave(self):
+        # TODO: save to cloud, if necessary
         self.model().projectSave()
 
 
     def projectSaveAs(self):
-        fn = getSaveFileName("Save Project As", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
-        if fn:
-            self.model().projectSaveAs(fn)
+        filePath, projectName, location = self.getProjectSaveName()
+        if (projectName is None) and (location is None):
+            return
+
+        self.model().projectSaveAs(filePath)
+        
+        if location == ProjectDialog.CLOUD:
+            self.projectSaveToCloud(filePath, projectName)
 
 
     def mouseDoubleClickEvent(self, event):
