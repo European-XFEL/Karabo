@@ -12,7 +12,6 @@
 __all__ = ["MainWindow"]
 
 import os.path
-from sys import platform
 import icons
 
 from docktabwindow import DockTabWindow

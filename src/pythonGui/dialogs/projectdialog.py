@@ -13,13 +13,15 @@ import network
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
-                         QMessageBox, QMovie, QPalette)
+                         QItemSelectionModel, QMessageBox, QMovie, QPalette)
 
 import os.path
 
 
 class ProjectDialog(QDialog):
 
+    CLOUD = 0
+    LOCAL = 1
 
     def __init__(self):
         QDialog.__init__(self)
@@ -31,8 +33,13 @@ class ProjectDialog(QDialog):
         self.lwProjects.currentItemChanged.connect(self.onCloudProjectChanged)
         
         self.fileSystemModel = QFileSystemModel(self)
+        self.fileSystemModel.setNameFilters(["*.krb"])
         self.fileSystemModel.setRootPath(QDir.homePath())
         self.twLocal.setModel(self.fileSystemModel)
+        
+        self.selectionModel = QItemSelectionModel(self.fileSystemModel, self)
+        self.selectionModel.currentChanged.connect(self.onLocalProjectChanged)
+        self.twLocal.setSelectionModel(self.selectionModel)
         
         rootDir = os.path.join(QDir.homePath(), globals.HIDDEN_KARABO_FOLDER)
         index = self.fileSystemModel.index(rootDir)
@@ -66,6 +73,22 @@ class ProjectDialog(QDialog):
             return f
 
 
+    @property
+    def filepath(self):
+        """
+        This property describes the filepath including the project suffix.
+        """
+        if self.location == ProjectDialog.CLOUD:
+            return self.filename
+        elif self.location == ProjectDialog.LOCAL:
+            return self.fileSystemModel.filePath(self.twLocal.currentIndex())
+
+
+    @property
+    def location(self):
+        return self.cbSaveTo.currentIndex()
+
+
     def fillCloudProjects(self, projects):
         if self.lwProjects.count() > 0:
             self.lwProjects.clear()
@@ -73,10 +96,11 @@ class ProjectDialog(QDialog):
         # Fill all projects from cloud into table view
         self.lwProjects.addItems(projects)
         if self.swSaveTo.currentIndex() == 2:
-            self.swSaveTo.setCurrentIndex(0)
+            self.swSaveTo.setCurrentIndex(ProjectDialog.CLOUD)
         
         if not self.leFilename.isEnabled():
             self.leFilename.setEnabled(True)
+            self.leFilename.setFocus(Qt.OtherFocusReason)
 
 
     def onChanged(self, text):
@@ -85,6 +109,14 @@ class ProjectDialog(QDialog):
 
     def onCloudProjectChanged(self, item): # previousItem
         self.leFilename.setText(item.text())
+
+
+    def onLocalProjectChanged(self, current): # previous
+        if self.fileSystemModel.isDir(current):
+            self.leFilename.setText("")
+            return
+        
+        self.leFilename.setText(current.data())
 
 
 class ProjectSaveDialog(ProjectDialog):
