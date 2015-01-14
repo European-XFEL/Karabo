@@ -95,17 +95,20 @@ class ProjectTreeView(QTreeView):
             self.projectDialog = None
             return
         
-        # TODO: Create project krb file and ship content
-        Network().onSaveProject(self.projectDialog.filename)#, content)
+        projectName = self.projectDialog.filename
+        
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        # Create project
+        project = self.model().projectNew(filename)
+        
+        # Read new project bytes
+        with open(filename, 'rb') as input:
+            data = input.read()
+        input.close()
+        
+        Network().onSaveProject(projectName, data)
 
         self.projectDialog = None
-        return
-    
-        fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
-
-        if fn:
-            self.model().projectNew(fn)
 
 
     def projectOpen(self):
@@ -116,15 +119,6 @@ class ProjectTreeView(QTreeView):
             return
         
         Network().onLoadProject(self.projectDialog.filename)
-        return
-    
-        filename = QFileDialog.getOpenFileName(
-            None, "Open project", globals.KARABO_PROJECT_FOLDER,
-            "Karabo Projects (*.krb)")
-
-        if len(filename) < 1:
-            return
-        self.model().projectOpen(filename)
 
 
     def projectSave(self):
@@ -365,4 +359,25 @@ class ProjectTreeView(QTreeView):
             return
         
         self.projectDialog.fillCloudProjects(projects)
+
+
+    def onProjectLoaded(self, name, data):
+        print("onProjectLoaded", name)
+        # Write cloud project to local file system
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, name)
+        with open(filename, "wb") as out:
+            out.write(data)
+        out.close()
+        
+        self.model().projectOpen(filename)
+
+
+    def onProjectSaved(self, name, success):
+        print("onProjectSaved", name, success)
+        # TODO: show message that saving did not work
+
+
+    def onProjectClosed(self, name, success):
+        print("onProjectClosed", name, success)
+        # TODO: show message that closing did not work
 

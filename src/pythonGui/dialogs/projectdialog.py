@@ -56,7 +56,14 @@ class ProjectDialog(QDialog):
 
     @property
     def filename(self):
-        return self.leFilename.text()
+        """
+        This property describes the filename including the project suffix.
+        """
+        f = self.leFilename.text()
+        if not f.endswith(".krb"):
+            return "{}.krb".format(f)
+        else:
+            return f
 
 
     def fillCloudProjects(self, projects):
