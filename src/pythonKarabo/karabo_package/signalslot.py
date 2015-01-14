@@ -208,7 +208,7 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def consume(self):
-        self._ss.consumer = openmq.Consumer(
+        consumer = openmq.Consumer(
             self._ss.session, self._ss.destination,
             "slotInstanceIds LIKE '%|{}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(
@@ -219,7 +219,7 @@ class SignalSlotable(Configurable):
             while True:
                 try:
                     message = yield from get_event_loop().run_in_executor(
-                        None, self._ss.consumer.receiveMessage, 1000)
+                        None, consumer.receiveMessage, 1000)
                 except openmq.Error as e:
                     if e.status != 2103:  # timeout
                         raise
