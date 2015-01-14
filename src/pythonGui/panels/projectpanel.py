@@ -56,6 +56,9 @@ class ProjectPanel(QWidget):
         self.twProject.model().signalSelectionChanged.connect(self.onSelectionChanged)
         # Connect signal to get project available
         manager.Manager().signalAvailableProjects.connect(self.twProject.onAvailableProjects)
+        manager.Manager().signalProjectLoaded.connect(self.twProject.onProjectLoaded)
+        manager.Manager().signalProjectSaved.connect(self.twProject.onProjectSaved)
+        manager.Manager().signalProjectClosed.connect(self.twProject.onProjectClosed)
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)

@@ -24,6 +24,7 @@ from dialogs.dialogs import MacroDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
+import network
 
 from karabo.project import Project
 import karabo
@@ -713,6 +714,7 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveMacro.emit(m)
         
         self.removeProject(project)
+        network.Network().onCloseProject(project.basename)
 
 
     def appendProject(self, project):

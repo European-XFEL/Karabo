@@ -52,7 +52,7 @@ namespace karabo {
 
             SLOT0(slotGetAvailableProjects)
             SLOT2(slotLoadProject, string /*username*/, string /*projectName*/)
-            SLOT2(slotSaveProject, string /*username*/, string /*projectName*/)
+            SLOT3(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
             SLOT2(slotCloseProject, string /*username*/, string /*projectName*/)
         }
 
@@ -88,25 +88,31 @@ namespace karabo {
         void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject";
 
-            Hash answer("user", userName);
-            answer.set("name", projectName);
+            //Hash answer("name", projectName);
+            //std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");
             
-            std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");            
-            karabo::io::loadFromFile(buffer, get<string>("directory") + "/" + projectName);
+            std::vector<char> data;
+            karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
             
-            reply(answer);
+            reply(projectName, data);
         }
 
 
-        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName) {
-            KARABO_LOG_DEBUG << "slotSaveProject";
+        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const vector<char>& data) {
+            KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
-            //reply(userName, projectName, success);
+            bool success = karabo::io::saveToFile(data, get<string>("directory") + "/" + projectName);
+            KARABO_LOG_DEBUG << "success " << success;
+            
+            reply(projectName, success);
         }
 
 
         void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject";
+            
+            bool success = True;
+            reply(projectName, success);
         }
 
     }

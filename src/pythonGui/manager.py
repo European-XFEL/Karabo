@@ -53,6 +53,10 @@ class _Manager(QObject):
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
     signalAvailableProjects = pyqtSignal(object) # list of projects
+    signalProjectLoaded = pyqtSignal(str, object) # projectName, data
+    signalProjectSaved = pyqtSignal(str, bool) # projectName, success
+    signalProjectClosed = pyqtSignal(str, bool) # projectName, success
+
 
     def __init__(self, *args, **kwargs):
         super(_Manager, self).__init__()
@@ -533,16 +537,18 @@ class _Manager(QObject):
         self.signalAvailableProjects.emit(availableProjects)
 
 
-    def handle_projectLoaded(self, user, name, buffer):
-        print("handle_projectLoaded", user, name)
+    def handle_projectLoaded(self, name, buffer):
+        self.signalProjectLoaded.emit(name, buffer)
+            
+
+    def handle_projectSaved(self, name, success):
+        print("handle_projectSaved", name, success)
+        self.signalProjectSaved.emit(name, success)
 
 
-    def handle_projectSaved(self, user, name):
-        print("handle_projectSaved", user, name)
-
-
-    def handle_projectClosed(self, user, name):
-        print("handle_projectClosed", user, name)
+    def handle_projectClosed(self, name, success):
+        print("handle_projectClosed", name, success)
+        self.signalProjectClosed.emit(name, success)
 
 
     def handle_notification(self, deviceId, messageType, shortMsg, detailedMsg):
