@@ -58,9 +58,9 @@ namespace karabo {
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
             SLOT1(slotAvailableProjects, vector<string> /*projects*/)
-            SLOT1(slotProjectSaved, Hash /*data*/)
-            SLOT1(slotProjectLoaded, Hash /*data*/)
-            SLOT1(slotProjectClosed, Hash /*data*/)
+            SLOT2(slotProjectSaved, string /*projectName*/, bool /*success*/)
+            SLOT2(slotProjectLoaded, string /*projectName*/, vector<char> /*data*/)
+            SLOT2(slotProjectClosed, string /*projectName*/, bool /*success*/)
 
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
@@ -492,12 +492,13 @@ namespace karabo {
             }
         }
         
-        void GuiServerDevice::slotProjectLoaded(const karabo::util::Hash& info) {         
+        void GuiServerDevice::slotProjectLoaded(const std::string& projectName, const std::vector<char>& data) {         
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectLoaded";
                 
-                Hash h(info);
-                h.set("type", "projectLoaded");
+                Hash h("type", "projectLoaded");
+                h.set("name", projectName);
+                h.set("buffer", data);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 // Broadcast to all GUIs (which is shit here, but the current solution...)
@@ -518,18 +519,30 @@ namespace karabo {
 
                 string userName = info.get<string > ("user");
                 string projectName = info.get<string > ("name");
+                vector<char> data = info.get<vector<char> > ("data");
                 
-                requestNoWait("Karabo_ProjectManager", "slotSaveProject", "", "slotProjectSaved", userName, projectName);
+                requestNoWait("Karabo_ProjectManager", "slotSaveProject", "", "slotProjectSaved", userName, projectName, data);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onSaveProject(): " << e.userFriendlyMsg();
             }
         }
 
         
-        void GuiServerDevice::slotProjectSaved(const karabo::util::Hash& info) {
+        void GuiServerDevice::slotProjectSaved(const std::string& projectName, bool success) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectSaved";
 
+                Hash h("type", "projectSaved");
+                h.set("name", projectName);
+                h.set("success", success);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectSaved(): " << e.userFriendlyMsg();
             }           
@@ -549,10 +562,21 @@ namespace karabo {
             }        
         }
         
-        void GuiServerDevice::slotProjectClosed(const karabo::util::Hash& info) {
+        
+        void GuiServerDevice::slotProjectClosed(const std::string& projectName, bool success) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectClosed";
-                
+                Hash h("type", "projectClosed");
+                h.set("name", projectName);
+                h.set("success", success);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectClosed(): " << e.userFriendlyMsg();
             }     

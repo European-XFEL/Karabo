@@ -100,15 +100,15 @@ namespace karabo {
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectLoaded(const karabo::util::Hash& info);
+            void slotProjectLoaded(const std::string& projectName, const std::vector<char>& data);
             
             void onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectSaved(const karabo::util::Hash& info);
+            void slotProjectSaved(const std::string& projectName, bool success);
             
             void onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectClosed(const karabo::util::Hash& info);
+            void slotProjectClosed(const std::string& projectName, bool success);
             
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
