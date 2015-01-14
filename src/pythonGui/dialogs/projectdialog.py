@@ -132,7 +132,7 @@ class ProjectSaveDialog(ProjectDialog):
 
     def onSaved(self):
         # Check if filename is already existing
-        if self.cbSaveTo.currentIndex() == 0:
+        if self.cbSaveTo.currentIndex() == ProjectDialog.CLOUD:
             for i in range(self.lwProjects.count()):
                 item = self.lwProjects.item(i)
                 if item.text() == self.filename:
@@ -141,11 +141,23 @@ class ProjectSaveDialog(ProjectDialog):
                         "Another project with the same name <br> \"<b>{}</b>\""
                         "already exists.<br><br>Do you want to overwrite it?".format(self.filename),
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
+                    if reply == QMessageBox.No:
+                        return
                     break
-        elif self.cbSaveTo.currentIndex() == 1:
-            fi = self.fileSystemModel.fileInfo(self.twLocal.currentIndex())
-            print("absolutePath", fi.absolutePath())
+        elif self.cbSaveTo.currentIndex() == ProjectDialog.LOCAL:
+            if self.fileSystemModel.isDir(self.twLocal.currentIndex()):
+                fi = self.fileSystemModel.fileInfo(self.twLocal.currentIndex())
+            else:
+                fi = self.fileSystemModel.fileInfo(self.twLocal.currentIndex().parent())
+
+            dir = QDir(fi.absoluteFilePath())
+            if dir.exists(self.filename):
+                reply = QMessageBox.question(None, 'Project already exists',
+                    "Another project with the same name <br> \"<b>{}</b>\""
+                    "already exists.<br><br>Do you want to overwrite it?".format(self.filename),
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.No:
+                    return
         
         self.accept()
 

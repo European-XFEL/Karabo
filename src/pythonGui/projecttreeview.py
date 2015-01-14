@@ -88,25 +88,35 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
-    def projectNew(self):
+    def getProjectSaveName(self):
+        """
+        Returns a tuple containing the project name and the location (e.g. CLOUD,
+        LOCAL).
+        """
         self.projectDialog = ProjectSaveDialog()
-        
         if self.projectDialog.exec_() == QDialog.Rejected:
             self.projectDialog = None
-            return
+            return (None, None)
         
-        projectName = self.projectDialog.filename
+        return self.projectDialog.filename, self.projectDialog.location
+
+
+    def projectNew(self):
+        projectName, location = self.getProjectSaveName()
+        if (projectName is None) and (location is None):
+            return
         
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
         # Create project
         self.model().projectNew(filename)
         
-        # Read new project bytes
-        with open(filename, 'rb') as input:
-            data = input.read()
-        input.close()
-        
-        Network().onSaveProject(projectName, data)
+        if location == ProjectDialog.CLOUD:
+            # Read new project bytes
+            with open(filename, 'rb') as input:
+                data = input.read()
+            input.close()
+            # Send save project to cloud request to network
+            Network().onSaveProject(projectName, data)
 
         self.projectDialog = None
 
