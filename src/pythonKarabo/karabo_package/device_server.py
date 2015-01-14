@@ -31,7 +31,7 @@ from karabo import hashtypes
 from karabo.runner import Runner
 from karabo.schema import Validator, Node
 from karabo.logger import Logger
-from karabo.signalslot import (ConnectionType, Signal, replySlot)
+from karabo.signalslot import (ConnectionType, Signal, replySlot, parallel)
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
 
@@ -186,7 +186,7 @@ class DeviceServer(SignalSlotable):
     def endErrorAction(self):
         pass
 
-    @coroutine
+    @parallel
     def slotStartDevice(self, hash):
         config = Hash()
 
@@ -256,7 +256,7 @@ class DeviceServer(SignalSlotable):
             "visibilities", [c.visibility.defaultValue.value
                              for c in Device.subclasses.values()]))
 
-    @coroutine
+    @parallel
     def slotKillServer(self):
         if self.deviceInstanceMap:
             self._ss.emit("call", {k: ["slotKillDevice"]
@@ -270,7 +270,7 @@ class DeviceServer(SignalSlotable):
                       self.serverId)
 
 
-    @coroutine
+    @parallel
     def slotDeviceGone(self, id):
         gone = self.deviceInstanceMap.pop(id, None)
         if gone is not None:
@@ -280,7 +280,7 @@ class DeviceServer(SignalSlotable):
                 print('device "{}" claimed to have gone but did not'.
                       format(id))
 
-    @coroutine
+    @parallel
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
         return (yield from cls.getClassSchema_async()), classid, self.serverId

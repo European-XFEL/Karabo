@@ -272,7 +272,17 @@ class Slot(Descriptor):
 
 
     def __call__(self, method):
-        self.method = coroutine(method).__get__
+        method = coroutine(method)
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            if self.exclusive_task is not None:
+                return
+            self.exclusive_task = self.async(method(self, *args, **kwargs))
+            try:
+                yield from self.exclusive_task
+            finally:
+                self.exclusive_task = None
+        self.method = coroutine(wrapper).__get__
         return self
 
 

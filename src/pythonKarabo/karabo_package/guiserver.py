@@ -5,9 +5,9 @@ from asyncio import (coroutine, start_server, get_event_loop,
                      IncompleteReadError)
 from functools import wraps
 
-from karabo import Device, Integer, Assignment
+from karabo import Device, Integer, Assignment, openmq
+from karabo.async import parallel
 from karabo.hash import Hash
-from karabo import openmq
 from karabo.p2p import Channel
 
 
@@ -15,7 +15,7 @@ def parallel(f):
     f = coroutine(f)
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        self.async(f(self, *args, **kwargs))
+        return self.async(f(self, *args, **kwargs))
     return wrapper
 
 
@@ -162,7 +162,6 @@ class GuiServer(Device):
                 for c in self.channels:
                     self.respond(c, "log", message=message.data)
 
-    @coroutine
     def slotInstanceNew(self, instanceId, info):
         entry = self.updateSystemTopology(instanceId, info)
         for c in self.channels:
@@ -175,13 +174,11 @@ class GuiServer(Device):
         if deviceId in self.deviceChannels:
             self.registerDevice(deviceId)
 
-    @coroutine
     def slotInstanceUpdated(self, instanceId, info):
         entry = self.updateSystemTopology(instanceId, info)
         for c in self.channels:
             self.respond(c, "instanceUpdated", topologyEntry=entry)
 
-    @coroutine
     def slotInstanceGone(self, instanceId, info):
         type = info["type"]
         for c in self.channels:
@@ -189,13 +186,11 @@ class GuiServer(Device):
                          instanceType=type)
         self.systemTopology[type].pop(instanceId, None)
 
-    @coroutine
     def slotChanged(self, configuration, deviceId):
         for c in self.deviceChannels.get(deviceId, []):
             self.respond(c, "deviceConfiguration", deviceId=deviceId,
                          configuration=configuration)
 
-    @coroutine
     def slotPingAnswer(self, deviceId, info):
         self.updateSystemTopology(deviceId, info)
 
