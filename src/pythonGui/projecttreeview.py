@@ -362,7 +362,6 @@ class ProjectTreeView(QTreeView):
 
 
     def onProjectLoaded(self, name, data):
-        print("onProjectLoaded", name)
         # Write cloud project to local file system
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, name)
         with open(filename, "wb") as out:

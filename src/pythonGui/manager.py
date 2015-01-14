@@ -542,12 +542,10 @@ class _Manager(QObject):
             
 
     def handle_projectSaved(self, name, success):
-        print("handle_projectSaved", name, success)
         self.signalProjectSaved.emit(name, success)
 
 
     def handle_projectClosed(self, name, success):
-        print("handle_projectClosed", name, success)
         self.signalProjectClosed.emit(name, success)
 
 
