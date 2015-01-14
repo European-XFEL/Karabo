@@ -879,8 +879,8 @@ namespace karabo {
                 using namespace karabo::util;
 		Hash copy;
 		copy += input;
-		copy.get<Hash>(name).begin()->getValue<Hash>().eraseFound("schema");
-                karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, copy);
+		copy.get<Hash>(name).eraseFound("schema");
+                karabo::io::AbstractOutput::Pointer channel = OutputType::createNode(name, "Network", copy);
                 channel->setInstanceId(m_instanceId);
                 channel->setOutputHandlerType("c++");
                 if (!onOutputPossibleHandler.empty()) {
