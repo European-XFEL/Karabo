@@ -10,9 +10,18 @@ from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
 from asyncio import async, coroutine, Future, get_event_loop, sleep
+from functools import wraps
 from itertools import count
 import sys
 import time
+
+
+def parallel(f):
+    f = coroutine(f)
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        return self.async(f(self, *args, **kwargs))
+    return wrapper
 
 
 class Signal(object):
@@ -224,7 +233,7 @@ class SignalSlotable(Configurable):
                     if e.status != 2103:  # timeout
                         raise
                 else:
-                    self.async(self.handleMessage(message))
+                    self.handleMessage(message)
         finally:
             self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -242,7 +251,8 @@ class SignalSlotable(Configurable):
         object is stopped. """
         task = async(coro, loop=self._ss.loop)
         self._tasks.add(task)
-        task.add_done_callback(lambda task: self._tasks.remove(task))
+        task.add_done_callback(self._tasks.remove)
+        return task
 
     @coroutine
     def slotKillDevice(self):
@@ -257,7 +267,6 @@ class SignalSlotable(Configurable):
         self.__repliers[reply] = future
         return future
 
-    @coroutine
     def handleMessage(self, message):
         parser = BinaryParser()
         try:
@@ -284,15 +293,6 @@ class SignalSlotable(Configurable):
             "utf8").split('||')
         slots = {k: v.split(",") for k, v in (s.split(":") for s in slots)}
 
-        try:
-            replyTo = message.properties['replyTo']
-        except openmq.Error:
-            replyTo = None
-        try:
-            replyInstanceIds = message.properties['replyInstanceIds']
-        except openmq.Error:
-            replyInstanceIds = None
-
         sender = message.properties['signalInstanceId']
 
         try:
@@ -300,24 +300,41 @@ class SignalSlotable(Configurable):
                      ] + [getattr(self, s) for s in slots.get("*", [])
                           if hasattr(self, s)]
             for slot in slots:
-                reply = yield from slot(*params)
-                if not isinstance(reply, tuple):
-                    reply = reply,
-                if hasattr(slot, "replySlot"):
-                    self._ss.emit(
-                        'call', {message.properties['signalInstanceId'].
-                                 decode("utf8"): [slot.replySlot]}, *reply)
-                if replyTo is not None and reply != (None,):
-                    self._ss.reply(replyTo,
-                                   message.properties['signalInstanceId'],
-                                   *reply)
-                if replyInstanceIds is not None:
-                    self._ss.replyNoWait(replyInstanceIds,
-                                         message.properties['replyFunctions'],
-                                         *reply)
+                r = slot(*params)
+                if iscoroutine(r):
+                    def f():
+                        self._reply(message, slot, yield from r)
+                    self.async(f)
+                else:
+                    self._reply(message, slot, r)
         except Exception as e:
             sys.excepthook(*sys.exc_info())
             print("Slot={}".format(slots))
+
+    def _reply(self, message, slot, reply)
+        if not isinstance(reply, tuple):
+            reply = reply,
+        if hasattr(slot, "replySlot"):
+            self._ss.emit(
+                'call', {message.properties['signalInstanceId'].
+                         decode("utf8"): [slot.replySlot]}, *reply)
+        if reply != (None,):
+            try:
+                replyTo = message.properties['replyTo']
+            except openmq.Error:
+                pass
+            else:
+                self._ss.reply(replyTo,
+                               message.properties['signalInstanceId'],
+                               *reply)
+        try:
+            replyInstanceIds = message.properties['replyInstanceIds']
+        except openmq.Error:
+            pass
+        else:
+            self._ss.replyNoWait(replyInstanceIds,
+                                 message.properties['replyFunctions'],
+                                 *reply)
 
     def stopEventLoop(self):
         get_event_loop().stop()

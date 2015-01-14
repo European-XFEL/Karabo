@@ -173,7 +173,6 @@ class EventLoop(SelectorEventLoop):
         o.onChanged(hash)
         return o
 
-    @coroutine
     def getValueFuture(self, device, attr):
         return device._futures.setdefault(attr, Future(loop=self))
 

@@ -15,7 +15,8 @@ from karabo.hash import BinaryParser, Hash, HashMergePolicy
 from karabo.hashtypes import Bool, Int32, UInt32, String, Type
 from karabo.logger import Logger
 from karabo.schema import Configurable, Schema, Validator, Node
-from karabo.signalslot import SignalSlotable, Signal, ConnectionType, replySlot
+from karabo.signalslot import (SignalSlotable, Signal, ConnectionType,
+                               replySlot, parallel)
 from karabo.timestamp import Timestamp
 from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
@@ -134,7 +135,6 @@ class Device(SignalSlotable):
 
 
     @replySlot("slotChanged")
-    @coroutine
     def slotGetConfiguration(self):
         r = Hash()
         for k in self._allattrs:
@@ -144,7 +144,6 @@ class Device(SignalSlotable):
         return r, self.deviceId
 
 
-    @coroutine
     def slotReconfigure(self, reconfiguration):
         if reconfiguration.empty():
             return
@@ -157,7 +156,6 @@ class Device(SignalSlotable):
         return True, ""
 
 
-    @coroutine
     def slotGetSchema(self, onlyCurrentState):
         if onlyCurrentState:
             currentState = self.state
@@ -447,14 +445,13 @@ class PythonDevice(Device):
 
 
     @replySlot("slotChanged")
-    @coroutine
+    @parallel
     def slotGetConfiguration(self):
         r = Hash(self.parameters)
         r.merge((yield from super().slotGetConfiguration())[0])
         return r, self.deviceId
 
 
-    @coroutine
     def slotReconfigure(self, reconfiguration):
         try:
             self.preReconfigure(reconfiguration)
@@ -475,7 +472,6 @@ class PythonDevice(Device):
             return False, str(e)
 
 
-    @coroutine
     def slotPingAnswer(self, instanceId, info):
         if self._client is None:
             return
@@ -484,13 +480,11 @@ class PythonDevice(Device):
     slotInstanceNew = slotPingAnswer
 
 
-    @coroutine
     def slotHeartbeat(self, instanceId, interval, info):
         if self._client is not None:
             self._client.addInstance(instanceId, info, interval)
 
 
-    @coroutine
     def slotInstanceGone(self, instanceId, info):
         if self._client is not None:
             self._client.removeInstance(instanceId)
