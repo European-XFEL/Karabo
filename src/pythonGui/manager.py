@@ -512,7 +512,7 @@ class _Manager(QObject):
     def handle_networkData(self, name, data):
         deviceId, property = name.split(":")
         self.deviceData[deviceId].getBox(
-            property.split(".")).boxvalue.Network.boxvalue.schema.fromHash(data)
+            property.split(".")).boxvalue.schema.fromHash(data)
 
 
 def getDevice(deviceId):

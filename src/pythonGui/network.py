@@ -398,7 +398,7 @@ class _Network(QObject):
     def onSubscribeToOutput(self, box, subscribe):
         h = Hash("type", "subscribeNetwork")
         h["channelName"] = (box.configuration.id + ":" +
-                            ".".join(box.path[:-1]))
+                            ".".join(box.path))
         h["subscribe"] = subscribe
         self._tcpWriteHash(h)
 
