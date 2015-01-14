@@ -104,13 +104,7 @@ class ProjectPanel(QWidget):
         standardToolBar.addAction(self.acProjectSaveAs)
 
 
-    def setupDefaultProject(self):
-        self.twProject.setupDefaultProject()
-        self.enableToolBar(True)
-
-
     def closeAllProjects(self):
-        self.enableToolBar(False)
         return self.twProject.closeAllProjects()
 
 
