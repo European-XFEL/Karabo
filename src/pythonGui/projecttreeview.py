@@ -14,7 +14,7 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
-from dialogs.projectdialog import ProjectSaveDialog, ProjectLoadDialog
+from dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
 from network import Network
@@ -99,7 +99,7 @@ class ProjectTreeView(QTreeView):
         
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
         # Create project
-        project = self.model().projectNew(filename)
+        self.model().projectNew(filename)
         
         # Read new project bytes
         with open(filename, 'rb') as input:
@@ -118,7 +118,10 @@ class ProjectTreeView(QTreeView):
             self.projectDialog = None
             return
         
-        Network().onLoadProject(self.projectDialog.filename)
+        if self.projectDialog.location == ProjectDialog.CLOUD:
+            Network().onLoadProject(self.projectDialog.filename)
+        elif self.projectDialog.location == ProjectDialog.LOCAL:
+            self.model().projectOpen(self.projectDialog.filepath)
 
 
     def projectSave(self):
