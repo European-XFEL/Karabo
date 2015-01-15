@@ -299,10 +299,7 @@ class WorkflowGroupItem(Item):
         """
         A list of all related deviceIds is returned.
         """
-        deviceIds = []
-        for device in self.deviceGroup.devices:
-            deviceIds.append(device.id)
-        return deviceIds
+        return [device.id for device in self.deviceGroup.devices]
 
 
     def getObject(self):
@@ -365,11 +362,6 @@ class WorkflowGroupItem(Item):
 
 class WorkflowChannel(QWidget):
     signalUpdateConnections = pyqtSignal(object, object) # scene, translationPoint
-    
-    BINARY_FILE = "BinaryFile"
-    HDF5_FILE = "Hdf5File"
-    NETWORK = "Network"
-    TEXT_FILE = "TextFile"
 
     def __init__(self, channel_type, box, item):
         super(WorkflowChannel, self).__init__(item)
@@ -401,16 +393,7 @@ class WorkflowChannel(QWidget):
         painter.drawLine(self.start_pos, self.end_pos)
         
         self.painterPath = QPainterPath()
-        if self.box.current == WorkflowChannel.BINARY_FILE:
-            self._drawTriangleShape(self.painterPath, self.end_pos)
-        elif self.box.current == WorkflowChannel.HDF5_FILE:
-            self._drawRectShape(self.painterPath, QPoint(self.end_pos.x() - Item.WIDTH, self.end_pos.y()))
-        elif self.box.current == WorkflowChannel.NETWORK:
-            self._drawCircleShape(self.painterPath, self.end_pos)
-        elif self.box.current == WorkflowChannel.TEXT_FILE:
-            self._drawDiamondShape(self.painterPath, QPoint(self.end_pos.x() + Item.WIDTH, self.end_pos.y()))
-        else:
-            self._drawTriangleShape(self.painterPath, self.end_pos)
+        self._drawCircleShape(self.painterPath, self.end_pos)
         
         painter.drawPath(self.painterPath)
         
@@ -489,10 +472,6 @@ class WorkflowChannel(QWidget):
         return rect.contains(pos)
 
 
-    def allowConnection(self):
-        return self.box.current == WorkflowChannel.NETWORK
-
-
     def mappedPos(self):
         point = self.transform.map(self.end_pos)
         point += self.parent().proxyPos
@@ -544,15 +523,11 @@ class WorkflowConnection(QWidget, Loadable):
         # Overwrite end position with exact channel position
         self.end_pos = self.end_channel.mappedPos()
         
-        if self._inputChannelBox() is None:
-            tmp = self.start_pos
-            self.start_pos = self.end_pos
-            self.end_pos = tmp
-            
-            tmp_channel = self.start_channel
-            self.start_channel = self.end_channel
-            self.end_channel = tmp_channel
-            
+        if not hasattr(self.end_channel.box.value, "connectedOutputChannels"):
+            self.start_pos, self.end_pos = self.end_pos, self.start_pos
+            self.start_channel, self.end_channel = (
+                self.end_channel, self.start_channel)
+
             self.start_channel_type = self.start_channel.channel_type
        
         self.global_start = QPoint(self.start_pos)
@@ -657,41 +632,22 @@ class WorkflowConnection(QWidget, Loadable):
         return abs(self.end_pos.y() - self.start_pos.y())
 
 
-    def _inputChannelBox(self):
-        # Get input channel box ("connectedOutputChannels") which is going to be
-        # reconfigured
-        inputBox = self.end_channel.box
-        path = inputBox.path + (inputBox.current, 'connectedOutputChannels',)
-        
-        if not inputBox.configuration.hasBox(path):
-            return None
-        return inputBox.configuration.getBox(path)
-
-
     def reconfigureInputChannel(self):
         """
         This function is called once a connection is completed and start/end channels
         are set. Then the box of the input channel needs to be notified about
         the connection to the output channel.
         """
-        inputChannelBox = self._inputChannelBox()
-        # Get data from output channel
-        outputBox = self.start_channel.box
-        # Get all deviceIds of the outputChannel
         deviceIds = self.start_channel.getDeviceIds()
-        connectedOutputChannels = []
-        for id in deviceIds:
-            output = "{}:{}".format(id, '.'.join(outputBox.path))
-            connectedOutputChannels.append(output)
-        
-        value = inputChannelBox.value
-        if isinstance(value, Dummy):
-            value = connectedOutputChannels
-        else:
-            value.extend(connectedOutputChannels)
 
-        # Update box configuration
-        inputChannelBox.set(value, None)
+        endBox = self.end_channel.box
+        path = ".".join(self.start_channel.box.path)
+        if not endBox.boxvalue.connectedOutputChannels.hasValue():
+            endBox.value.connectedOutputChannels = []
+
+        endBox.value.connectedOutputChannels.extend(
+             "{}:{}".format(id, path) for id in deviceIds)
+        endBox.boxvalue.connectedOutputChannels.update()
 
 
     def removeConnectedOutputChannel(self):
@@ -701,19 +657,13 @@ class WorkflowConnection(QWidget, Loadable):
         """
         if self.start_channel is None and self.end_channel is None:
             return
-        
-        inputChannelBox = self._inputChannelBox()
-        # Get data from output channel
-        outputBox = self.start_channel.box
-        # Get all deviceIds of the outputChannel
-        deviceIds = self.start_channel.getDeviceIds()
-        value = inputChannelBox.value
-        for id in deviceIds:
-            output = "{}:{}".format(id, '.'.join(outputBox.path))
-            value.remove(output)
 
-        # Update box configuration
-        inputChannelBox.set(value, None)
+        path = ".".join(self.start_channel.box.path)
+        paths = {"{}:{}".format(id, path)
+                 for id in self.start_channel.getDeviceIds()}
+        inputChannel = self.end_channel.box.value
+        inputChannel.connectedOutputChannels = [
+            c for c in inputChannel.connectedOutputChannels if c not in paths]
 
 
     def save(self, ele):

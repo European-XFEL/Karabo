@@ -1120,7 +1120,7 @@ class Scene(QSvgWidget):
             
         if event.button() == Qt.LeftButton:
             proxy, channel = self.workflowChannelHit(event)
-            if channel is not None and channel.allowConnection():
+            if channel is not None:
                 proxy.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
@@ -1158,7 +1158,7 @@ class Scene(QSvgWidget):
     def mouseReleaseEvent(self, event):
         if self.workflow_connection is not None:
             _, channel = self.workflowChannelHit(event)
-            if channel is not None and channel.allowConnection():
+            if channel is not None:
                 self.workflow_connection.mouseReleaseEvent(self, channel)
             else:
                 self.update()
