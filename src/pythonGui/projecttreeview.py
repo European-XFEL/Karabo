@@ -90,8 +90,8 @@ class ProjectTreeView(QTreeView):
 
     def getProjectSaveName(self):
         """
-        Returns a tuple containing the project name and the location (e.g. CLOUD,
-        LOCAL).
+        Returns a tuple containing the filepath, project name and the location
+        (e.g. CLOUD, LOCAL).
         """
         self.projectDialog = ProjectSaveDialog()
         if self.projectDialog.exec_() == QDialog.Rejected:
