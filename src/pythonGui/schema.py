@@ -106,10 +106,16 @@ class Box(QObject):
         they can take care that the values actually make sense """
         self._value = self.descriptor.cast(value)
         self.initialized = True
+        self.update(timestamp)
+
+
+    def update(self, timestamp=None):
+        """ Call this method if you changed the value of this box
+        without setting it, like changing elements of a list """
         self.timestamp = timestamp
         self.configuration.boxChanged(self, self._value, timestamp)
-        
-    
+
+
     @pyqtSlot(object, object)
     def slotSet(self, box, value):
         if box.current is not None:
