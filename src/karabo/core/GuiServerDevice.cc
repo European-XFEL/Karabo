@@ -425,7 +425,7 @@ namespace karabo {
 		NetworkMap::iterator iter;
 		boost::mutex::scoped_lock lock(m_networkMutex);
 
-		for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); iter++) {
+		for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
 		    if (name == iter->second.name) {
 			if (subscribe) {
 			    NetworkConnection nc;
@@ -440,6 +440,10 @@ namespace karabo {
 			    }
 			}
 		    }
+		}
+
+		if (!subscribe) {
+		    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << name;
 		}
 
 		Hash h;
@@ -711,6 +715,17 @@ namespace karabo {
                 // Remove channel as such
                 m_channels.erase(it);
             }
+
+	    {
+		boost::mutex::scoped_lock lock(m_networkMutex);
+
+		NetworkMap::iterator iter = m_networkConnections.begin();
+		while (iter != m_networkConnections.end()) {
+		    if (iter->second.channel == channel) {
+			m_networkConnections.erase(iter++);
+		    } else ++iter;
+		}
+	    }
         }
     }
 }
