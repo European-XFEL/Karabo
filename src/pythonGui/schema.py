@@ -49,17 +49,22 @@ class Box(QObject):
     # the user changed the value, but it is not yet applied, so the value
     # in the box has not yet changed!
     signalHistoricData = pyqtSignal(object, object)
+    visibilityChanged = pyqtSignal(bool)
 
-    def __init__(self, path, descriptor, configuration):
-        QObject.__init__(self)
+    def __init__(self, path, descriptor, parent):
+        super().__init__(parent)
         # Path as tuple
         self.path = path
-        self.configuration = configuration
+        if parent is not None:
+            self.configuration = parent.configuration
+        else:
+            self.configuration = self
         self.timestamp = None
         self._value = Dummy()
         self.initialized = False
         self.descriptor = descriptor
         self.current = None # Support for choice of nodes
+        self.visible = 0
 
 
     def key(self):
@@ -101,10 +106,16 @@ class Box(QObject):
         they can take care that the values actually make sense """
         self._value = self.descriptor.cast(value)
         self.initialized = True
+        self.update(timestamp)
+
+
+    def update(self, timestamp=None):
+        """ Call this method if you changed the value of this box
+        without setting it, like changing elements of a list """
         self.timestamp = timestamp
         self.configuration.boxChanged(self, self._value, timestamp)
-        
-    
+
+
     @pyqtSlot(object, object)
     def slotSet(self, box, value):
         if box.current is not None:
@@ -151,6 +162,19 @@ class Box(QObject):
         r.__dict__["__box__"] = self
         return r
 
+    def addVisible(self):
+        self.visible += 1
+        self.parent().addVisible()
+        if self.visible == 1:
+            self.visibilityChanged.emit(True)
+
+
+    def removeVisible(self):
+        self.visible -= 1
+        self.parent().removeVisible()
+        if self.visible == 0:
+            self.visibilityChanged.emit(False)
+
 
 class _BoxValue(object):
     def __getattr__(self, attr):
@@ -158,8 +182,7 @@ class _BoxValue(object):
             return self.__box__.value.__dict__[attr]
         except KeyError:
             if isinstance(self.__box__.value, Dummy):
-                r = Box(self.__box__.path + (str(attr),), None,
-                        self.__box__.configuration)
+                r = Box(self.__box__.path + (str(attr),), None, self.__box__)
                 self.__box__.value.__dict__[attr] = r
                 return r
             else:
@@ -370,19 +393,31 @@ class Object(object):
             if isinstance(v, hashtypes.Descriptor):
                 b = getattr(box.boxvalue, k, None)
                 if b is None:
-                    b = Box(box.path + (k,), v, box.configuration)
+                    b = Box(box.path + (k,), v, box)
                 else:
                     b.descriptor = v
                 self.__dict__[k] = b
 
 
     def __enter__(self):
-        self.__box__.configuration.addVisible()
+        self.__box__.addVisible()
         return self
 
 
     def __exit__(self, a, b, c):
-        self.__box__.configuration.removeVisible()
+        self.__box__.removeVisible()
+
+
+class NetworkObject(Object, QObject):
+    """An object that gets its data via a network output"""
+    def __init__(self, box):
+        QObject.__init__(self)
+        Object.__init__(self, box)
+        box.visibilityChanged.connect(self.onVisibilityChanged)
+
+    @pyqtSlot(bool)
+    def onVisibilityChanged(self, visible):
+        Network().onSubscribeToOutput(self.__box__, visible)
 
 
 class Dummy(object):
@@ -406,7 +441,7 @@ class Schema(hashtypes.Descriptor):
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
-        self = dict(Image=ImageNode, Slot=SlotNode).get(
+        self = dict(Image=ImageNode, Slot=SlotNode, Output=OutputNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key
         self.parseAttrs(self, attrs, parent)
@@ -588,6 +623,15 @@ class ImageNode(Schema):
         item = ImageTreeWidgetItem(box, treeWidget, parent)
         item.enabled = not isClass
         self.completeItem(treeWidget, item, box, isClass)
+
+
+class OutputNode(Schema):
+    classAlias = "Network output"
+
+    def getClass(self):
+        if self.cls is None:
+            self.cls = type(str(self.name), (NetworkObject,), self.dict)
+        return self.cls
 
 
 class Slot(Object):

@@ -48,11 +48,10 @@ class Configuration(Box):
         'projectClass' or 'device'.
         """
 
-        super(Configuration, self).__init__((), descriptor, self)
+        super().__init__((), descriptor, None)
         assert type in ('class', 'projectClass', 'device', 'macro', 'deviceGroupClass', 'deviceGroup')
         self.type = type
         self.id = id
-        self.visible = 0
         self._status = "offline"
         self.error = False
         self.parameterEditor = None

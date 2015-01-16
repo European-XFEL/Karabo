@@ -1030,7 +1030,7 @@ class Scene(QSvgWidget):
             if isinstance(c, ProxyWidget):
                 if c.component is not None:
                     for b in c.component.boxes:
-                        b.configuration.removeVisible()
+                        b.removeVisible()
                 
                 if isinstance(c.widget, Item):
                     c.widget.getDevice().removeVisible()
@@ -1120,7 +1120,7 @@ class Scene(QSvgWidget):
             
         if event.button() == Qt.LeftButton:
             proxy, channel = self.workflowChannelHit(event)
-            if channel is not None and channel.allowConnection():
+            if channel is not None:
                 proxy.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
@@ -1158,7 +1158,7 @@ class Scene(QSvgWidget):
     def mouseReleaseEvent(self, event):
         if self.workflow_connection is not None:
             _, channel = self.workflowChannelHit(event)
-            if channel is not None and channel.allowConnection():
+            if channel is not None:
                 self.workflow_connection.mouseReleaseEvent(self, channel)
             else:
                 self.update()
@@ -1253,7 +1253,7 @@ class Scene(QSvgWidget):
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
-                    realbox.configuration.addVisible()
+                    realbox.addVisible()
 
                     unit = (box.descriptor.metricPrefixSymbol +
                             box.descriptor.unitSymbol)
@@ -1271,7 +1271,7 @@ class Scene(QSvgWidget):
                     editableComponent = EditableApplyLaterComponent(
                         box.descriptor.classAlias, realbox, proxy)
 
-                    realbox.configuration.addVisible()
+                    realbox.addVisible()
                     proxy.setComponent(editableComponent)
                     proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)

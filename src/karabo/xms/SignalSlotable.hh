@@ -863,7 +863,7 @@ namespace karabo {
                     const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
                     const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
                 using namespace karabo::util;
-                karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
+                karabo::io::AbstractInput::Pointer channel = InputType::createNode(name, "Network", input);
                 channel->setInstanceId(m_instanceId);
                 channel->setInputHandlerType("c++", std::string(typeid (InputType).name()));
                 if (!onInputAvailableHandler.empty()) {
@@ -879,7 +879,10 @@ namespace karabo {
             template <class OutputType>
             boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const karabo::io::AbstractOutput::Pointer&) >& onOutputPossibleHandler = boost::function<void (const karabo::io::AbstractOutput::Pointer&) >()) {
                 using namespace karabo::util;
-                karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
+		Hash copy;
+		copy += input;
+		copy.get<Hash>(name).eraseFound("schema");
+                karabo::io::AbstractOutput::Pointer channel = OutputType::createNode(name, "Network", copy);
                 channel->setInstanceId(m_instanceId);
                 channel->setOutputHandlerType("c++");
                 if (!onOutputPossibleHandler.empty()) {
