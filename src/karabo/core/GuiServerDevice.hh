@@ -25,6 +25,13 @@ namespace karabo {
 
         class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
 
+	    struct NetworkConnection {
+		std::string name;
+	        karabo::net::Channel::Pointer channel;
+	    };
+
+	    typedef std::multimap<karabo::io::Input<karabo::util::Hash>::Pointer, NetworkConnection> NetworkMap;
+
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
 
@@ -32,12 +39,13 @@ namespace karabo {
             std::map<karabo::net::Channel::Pointer, std::set<std::string> > m_channels;
             mutable boost::mutex m_channelMutex;
             mutable boost::mutex m_monitoredDevicesMutex;
+            mutable boost::mutex m_networkMutex;
 
             karabo::net::BrokerConnection::Pointer m_loggerConnection;
             karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
             std::map<std::string, int> m_monitoredDevices;
-
+	    NetworkMap m_networkConnections;
 
             karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
             karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
@@ -91,6 +99,10 @@ namespace karabo {
             void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            void onSubscribeNetwork(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+	    void onNetworkData(const karabo::io::Input<karabo::util::Hash>::Pointer &input);
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             

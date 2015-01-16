@@ -78,7 +78,7 @@ class BaseComponent(Loadable, QObject):
         for b in boxes[1:]:
             component.addBox(b)
         for b in boxes:
-            b.configuration.addVisible()
+            b.addVisible()
         component.widgetFactory.load(elem)
         elem.clear()
         return component

@@ -543,6 +543,11 @@ class _Manager(QObject):
         self.signalNotificationAvailable.emit(timestamp, messageType, shortMsg,
                                               detailedMsg, deviceId)
 
+    def handle_networkData(self, name, data):
+        deviceId, property = name.split(":")
+        self.deviceData[deviceId].getBox(
+            property.split(".")).boxvalue.schema.fromHash(data)
+
 
 def getDevice(deviceId):
     c = manager.deviceData.get(deviceId)
