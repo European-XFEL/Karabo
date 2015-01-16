@@ -336,10 +336,8 @@ namespace karathon {
             return bp::object(d);
         }
 
-        void proxyTimerHandler(boost::shared_ptr<SignalSlotable> ss, const std::string& id) {
+        void proxyTimerHandler(const std::string& id) {
             bool found = false;
-            boost::shared_ptr<SignalSlotableWrap> ssw = boost::dynamic_pointer_cast<SignalSlotableWrap>(ss);
-            if (!ssw) return;
             ScopedGILAcquire gil;
             bp::object handler;
             {
@@ -351,7 +349,7 @@ namespace karathon {
                 m_timerHandlersPy.erase(it); // <--- unregister handler
             }
             if (found)
-                handler(bp::object(ssw), id); // <--- call python handler (inside it may register itself again :)
+                handler(id); // <--- call python handler (inside it may register itself again :)
         }
 
         void startTimerPy(int millis, const bp::object& timerHandler, const std::string& id) {
@@ -359,7 +357,7 @@ namespace karathon {
                 boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
                 m_timerHandlersPy[id] = timerHandler;
             }
-            startTimer(millis, boost::bind(&SignalSlotableWrap::proxyTimerHandler, this, boost::static_pointer_cast<SignalSlotable>(shared_from_this()), id), id);
+            startTimer(millis, boost::bind(&SignalSlotableWrap::proxyTimerHandler, this, id), id);
         }
 
         void killTimerPy(const std::string& id) {
