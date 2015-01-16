@@ -58,6 +58,7 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            set<int>("nThreads", 5);
         }
 
         DataLoggerManager::~DataLoggerManager() {
