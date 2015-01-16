@@ -202,6 +202,9 @@ namespace karabo {
 
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
+                
+                m_brokerLatency = 10000LL;
+                m_processingLatency = 15000LL;
 
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
