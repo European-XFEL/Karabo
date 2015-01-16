@@ -178,11 +178,15 @@ namespace karabo {
             InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
             SlotCallGuardHandler m_slotCallGuardHandler;
 
+            // Thresholds for warnings that messages are traveling slow (signal -> broker -> slot)
+            long long m_brokerLatency;
+            long long m_processingLatency;
+
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
 
-            typedef boost::function<void (SignalSlotable::Pointer, const std::string&)> ExpireHandler;
+            typedef boost::function<void (const std::string&)> ExpireHandler;
             
             /**
              * Slots may be of two different types:
@@ -918,6 +922,11 @@ namespace karabo {
 
             void killTimer(const std::string& id);
             
+            void setThresholds(const long long& brokerThreshold, const long long& processingThreshold) {
+                m_brokerLatency = brokerThreshold <= 0?  10000LL : brokerThreshold;
+                m_processingLatency = processingThreshold <= 0? 15000LL : processingThreshold;
+            }
+            
         protected: // Functions
             
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1074,8 +1083,14 @@ namespace karabo {
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
           
-            void asyncTimerHandler(karabo::net::BrokerChannel::Pointer p, const std::string& id);
+            void asyncTimerHandler(const std::string& id);
 
+            long long getEpochMillis() {
+                timespec ts;
+                clock_gettime(CLOCK_REALTIME, &ts);
+                long long milliseconds = ts.tv_sec * 1000 + ts.tv_nsec / 1000000L;
+                return milliseconds;
+            }
             
         private:
             mutable boost::mutex m_timerMutex;
