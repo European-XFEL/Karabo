@@ -2,6 +2,16 @@ from distutils.core import setup
 
 import os
 
+# Work around mbcs bug in distutils.
+# http://bugs.python.org/issue10945
+import codecs
+try:
+    codecs.lookup('mbcs')
+except LookupError:
+    ascii = codecs.lookup('ascii')
+    func = lambda name, enc=ascii: {True: enc}.get(name=='mbcs')
+    codecs.register(func)
+
 
 def getVersion():
     try:
@@ -15,14 +25,11 @@ setup(name="KaraboGUI",
     version=getVersion(),
     description="The GUI of the Karabo framework",
     author="Kerstin Weger, Burkhard Heisen, Martin Teichmann",
-    packages=["suds", "karabo", "karaboGui", "karaboGui.dialogs",
+    packages=["karabo", "karaboGui", "karaboGui.dialogs",
               "karaboGui.icons", "karaboGui.treewidgetitems",
               "karaboGui.displaywidgets", "karaboGui.editablewidgets",
-              "karaboGui.panels", "karaboGui.vacuumwidgets",
-              "suds.xsd", "suds.umx", "suds.sax", "suds.bindings",
-              "suds.mx", "suds.transport"],
-    package_dir=dict(suds="../../extern/resources/suds/suds-jurko-0.6/suds",
-                     karabo="../../src/pythonKarabo/karabo_package",
+              "karaboGui.panels", "karaboGui.vacuumwidgets", "karaboGui.sceneitems"],
+    package_dir=dict(karabo="../../src/pythonKarabo/karabo_package",
                      karaboGui="../../src/pythonGui"),
     scripts=['scripts/win_post_install.py'],
     package_data = {"karaboGui.icons": ["*.*"],
