@@ -34,6 +34,7 @@ from PyQt4.QtCore import (pyqtSignal, QFileInfo, QObject)
 from PyQt4.QtGui import (QDialog, QFileDialog, QMessageBox)
 
 import os.path
+from sys import platform
 
 
 class _Manager(QObject):
@@ -86,18 +87,26 @@ class _Manager(QObject):
         This function checks the current version of the GUI and save its value
         to the global variable GUI_VERSION.
         """
+        if platform.startswith("win"):
+            # TODO: hardcoded version needs to be updated - find better solution
+            # for Windows
+            globals.GUI_VERSION = "1.2.7"
+            return
+        
         filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
+        karaboVersionPath = ""
         try:
             with open(filePath, 'r') as file:
                 karaboVersionPath = os.path.join(file.readline().rstrip(), "VERSION")
-        except IOError as e:
-            print(e)
+        except IOError:
+            print("Path does not exists: ", filePath)
             globals.GUI_VERSION = ""
 
         try:
             with open(karaboVersionPath, 'r') as file:
                 globals.GUI_VERSION = file.readline()
         except IOError:
+            print("Can not open: ", karaboVersionPath)
             globals.GUI_VERSION = ""
 
 
