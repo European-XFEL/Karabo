@@ -172,6 +172,8 @@ namespace karabo {
                         onStopMonitoringDevice(channel, info);
                     } else if (type == "getPropertyHistory") {
                         onGetPropertyHistory(channel, info);
+		    } else if (type == "subscribeNetwork") {
+			onSubscribeNetwork(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
                     } else if (type == "loadProject") {
@@ -464,6 +466,81 @@ namespace karabo {
         }
 
 
+	void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
+	    try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork";
+                string name = info.get<string>("channelName");
+		bool subscribe = info.get<bool>("subscribe");
+		NetworkMap::iterator iter;
+		boost::mutex::scoped_lock lock(m_networkMutex);
+
+		for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
+		    if (name == iter->second.name) {
+			if (subscribe) {
+			    NetworkConnection nc;
+			    nc.name = name;
+			    nc.channel = channel;
+			    m_networkConnections.insert(NetworkMap::value_type(iter->first, nc));
+			    return;
+			} else {
+			    if (iter->second.channel == channel) {
+				m_networkConnections.erase(iter);
+				return;
+			    }
+			}
+		    }
+		}
+
+		if (!subscribe) {
+		    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << name;
+		}
+
+		Hash h;
+		vector<string> v(1);
+		v[0] = name;
+		h.set("connectedOutputChannels", v);
+		Input<Hash>::Pointer input = Input<Hash>::create("Network", h);
+		input->setInstanceId(m_instanceId);
+		input->setInputHandlerType("C++", string(typeid(Input<Hash>).name()));
+		boost::function<void (const Input<Hash>::Pointer&)> handler = boost::bind(&GuiServerDevice::onNetworkData, this, _1);
+		input->registerIOEventHandler(handler);
+		h = input->getConnectedOutputChannels()[0];
+		bool channelExists;
+		request(h.get<string>("instanceId"), "slotGetOutputChannelInformation", h.get<string>("channelId"), static_cast<int>(getpid())).timeout(1000).receive(channelExists, h);
+		if (channelExists) {
+		    input->connect(h);
+		} else {
+		    throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + name + "\"");
+		}
+		NetworkConnection nc;
+		nc.name = name;
+		nc.channel = channel;
+		m_networkConnections.insert(NetworkMap::value_type(input, nc));
+	    } catch (const Exception &e) {
+                KARABO_LOG_ERROR << "Problem in onSubscribeNetwork(): " << e.userFriendlyMsg();
+	    }
+	}
+
+
+	void GuiServerDevice::onNetworkData(const Input<Hash>::Pointer &input) {
+	    try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData";
+		Hash data;
+		input->read(data);
+
+		boost::mutex::scoped_lock lock(m_networkMutex);
+		pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
+		for (; range.first != range.second; range.first++) {
+                    Hash h("type", "networkData", "name", range.first->second.name, "data", data);
+		    range.first->second.channel->write(h);
+		}
+		input->update();
+	    } catch (const Exception &e) {
+		KARABO_LOG_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
+	    }
+	}
+
+
         void GuiServerDevice::slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
@@ -687,6 +764,17 @@ namespace karabo {
                 // Remove channel as such
                 m_channels.erase(it);
             }
+
+	    {
+		boost::mutex::scoped_lock lock(m_networkMutex);
+
+		NetworkMap::iterator iter = m_networkConnections.begin();
+		while (iter != m_networkConnections.end()) {
+		    if (iter->second.channel == channel) {
+			m_networkConnections.erase(iter++);
+		    } else ++iter;
+		}
+	    }
         }
     }
 }
