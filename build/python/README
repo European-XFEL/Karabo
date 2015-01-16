@@ -8,7 +8,7 @@ A folder called "dist" is created which contains the executable for Windows.
 
 
 We assume that python with all required packages, like PyQt4, guidata, guiqwt, numpy, etc., is already installed on the Windows machine.
-You can use Python(x,y) (https://code.google.com/p/pythonxy/wiki/Downloads) or WinPython (http://winpython.sourceforge.net/).
+You can use Python(x,y) (https://code.google.com/p/pythonxy/wiki/Downloads) or WinPython (http://winpython.github.io/).
 Currently only WinPython exists for Python 3.4
 Additionally, you need to install two modules: Quamash 0.4.1 (https://pypi.python.org/packages/source/Q/Quamash/Quamash-0.4.1.tar.gz) and
 suds-jurko 0.6 (https://pypi.python.org/packages/source/s/suds-jurko/suds-jurko-0.6.zip) in Python(x,y) or WinPython using their package managers.
