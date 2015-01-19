@@ -8,10 +8,18 @@ from collections import deque
 #======================================= Fsm Macros
 NOOP = lambda: None
 GNOOP = lambda: True
-class Event(object): pass
-def x_ini(self, a): self.x = a
-def x_get(self): return self.x
-def event_instance(x, a): return type(str(x), (Event,), {'__init__':x_ini, 'payload':x_get})(a)
+
+class Event(object):
+    def __init__(self, a):
+        self.x = a
+
+    def payload(self):
+        return self.x
+
+
+def event_instance(x, a):
+    return type(str(x), (Event,), { })(a)
+
 
 # global dicts
 _events_ = ['none']
@@ -21,127 +29,113 @@ _actions_ = {'none':(NOOP, ())}
 _guards_ = {'none':(GNOOP, ())}
 _machines_ = {'none':None}
 _state_periodic_actions_ = {'none':(-1, -1, NOOP)}
+
 # events
-def KARABO_FSM_EVENT0(self, event_name, method_name):
-    def inner(self):
-        self.processEvent(event_instance(event_name, ()))
-    inner.__doc__ = "Drive state machine by processing an event without payload"
+def KARABO_FSM_EVENT(self, event_name, method_name):
+    def inner(self, *args):
+        """Drive state machine by processing an event"""
+        self.processEvent(event_instance(event_name, args))
     inner.__name__ = str(method_name)
     setattr(self.__class__, inner.__name__, inner)
     _events_.append(event_name)
 
-def KARABO_FSM_EVENT1(self, event_name, method_name):
-    def inner(self, a1):
-        self.processEvent(event_instance(event_name, (a1,)))
-    inner.__doc__ = "Drive state machine by processing an event with one parameter"
-    inner.__name__ = method_name
-    setattr(self.__class__, inner.__name__, inner)
-    _events_.append(event_name)
+KARABO_FSM_EVENT0 = KARABO_FSM_EVENT1 = KARABO_FSM_EVENT2 = \
+    KARABO_FSM_EVENT3 = KARABO_FSM_EVENT4 = KARABO_FSM_EVENT
 
-def KARABO_FSM_EVENT2(self, event_name, method_name):
-    def inner(self, a1, a2):
-        self.processEvent(event_instance(event_name, (a1,a2,)))
-    inner.__doc__ = "Drive state machine by processing an event with two parameters"
-    inner.__name__ = method_name
-    setattr(self.__class__, inner.__name__, inner)
-    _events_.append(event_name)
 
-def KARABO_FSM_EVENT3(self, event_name, method_name):
-    def inner(self, a1, a2, a3):
-        self.processEvent(event_instance(event_name, (a1,a2,a3,)))
-    inner.__doc__ = "Drive state machine by processing an event with three parameters"
-    inner.__name__ = method_name
-    setattr(self.__class__, inner.__name__, inner)
-    _events_.append(event_name)
-
-def KARABO_FSM_EVENT4(self, event_name, method_name):
-    def inner(self, a1, a2, a3, a4):
-        self.processEvent(event_instance(event_name, (a1,a2,a3,a4,)))
-    inner.__doc__ = "Drive state machine by processing an event with four parameters"
-    inner.__name__ = method_name
-    setattr(self.__class__, inner.__name__, inner)
-    _events_.append(event_name)
-
-    
 # states
-def KARABO_FSM_STATE(name):                                       _states_[name] = (NOOP, NOOP, '')
-def KARABO_FSM_STATE_A(name, target_action):                      _states_[name] = (NOOP, NOOP, target_action)
-def KARABO_FSM_STATE_E(name, on_entry):                           _states_[name] = (on_entry, NOOP, '')
-def KARABO_FSM_STATE_AE(name, target_action, on_entry):           _states_[name] = (on_entry, NOOP, target_action)
-def KARABO_FSM_STATE_EE(name, on_entry, on_exit):                 _states_[name] = (on_entry, on_exit, '')
-def KARABO_FSM_STATE_AEE(name, target_action, on_entry, on_exit): _states_[name] = (on_entry, on_exit, target_action)
+def KARABO_FSM_STATE(name, target_action='', on_entry=NOOP, on_exit=NOOP):
+    _states_[name] = (on_entry, on_exit, target_action)
 
-def KARABO_FSM_INTERRUPT_STATE(name, event):
-    _states_[name] = (NOOP, NOOP, '')
+
+def KARABO_FSM_STATE_E(name, on_entry):
+    _states_[name] = (on_entry, NOOP, '')
+
+
+def KARABO_FSM_STATE_EE(name, on_entry, on_exit):
+    _states_[name] = (on_entry, on_exit, '')
+
+
+KARABO_FSM_STATE_AEE = KARABO_FSM_STATE_AE = KARABO_FSM_STATE_A = \
+    KARABO_FSM_STATE
+
+
+def KARABO_FSM_INTERRUPT_STATE(name, event, target_action='',
+                               on_entry=NOOP, on_exit=NOOP):
+    _states_[name] = (on_entry, on_exit, target_action)
     _interrupts_[name] = event
-    
-def KARABO_FSM_INTERRUPT_STATE_A(name, event, target_action):
-    _states_[name] = (NOOP, NOOP, target_action)
-    _interrupts_[name] = event
-    
+
+
 def KARABO_FSM_INTERRUPT_STATE_E(name, event, on_entry):
     _states_[name] = (on_entry, NOOP, '')
     _interrupts_[name] = event
 
-def KARABO_FSM_INTERRUPT_STATE_AE(name, event, target_action, on_entry):
-    _states_[name] = (on_entry, NOOP, target_action)
-    _interrupts_[name] = event
 
 def KARABO_FSM_INTERRUPT_STATE_EE(name, event, on_entry, on_exit):
     _states_[name] = (on_entry, on_exit, '')
     _interrupts_[name] = event
-    
-def KARABO_FSM_INTERRUPT_STATE_AEE(name, event, target_action, on_entry, on_exit):
-    _states_[name] = (on_entry, on_exit, target_action)
-    _interrupts_[name] = event
-    
+
+
+KARABO_FSM_INTERRUPT_STATE_AEE = KARABO_FSM_INTERRUPT_STATE_AE = \
+    KARABO_FSM_INTERRUPT_STATE_A = KARABO_FSM_INTERRUPT_STATE
+
+
 # actions
 # associate Action class with action function
 
-def KARABO_FSM_ACTION0(name, f):                 _actions_[name] = (f, ())
-def KARABO_FSM_ACTION1(name, f, a1):             _actions_[name] = (f, (a1,))
-def KARABO_FSM_ACTION2(name, f, a1, a2):         _actions_[name] = (f, (a1, a2))   
-def KARABO_FSM_ACTION3(name, f, a1, a2, a3):     _actions_[name] = (f, (a1, a2, a3))
-def KARABO_FSM_ACTION4(name, f, a1, a2, a3, a4): _actions_[name] = (f, (a1, a2, a3, a4))
-  
-def KARABO_FSM_NO_TRANSITION_ACTION(f):          _actions_["NoTransition"] = (f, ())
-    
+def KARABO_FSM_ACTION(name, f, *args):
+    _actions_[name] = (f, args)
+
+
+KARABO_FSM_ACTION0 = KARABO_FSM_ACTION1 = KARABO_FSM_ACTION2 = \
+    KARABO_FSM_ACTION3 = KARABO_FSM_ACTION4 = KARABO_FSM_ACTION
+
+
+def KARABO_FSM_NO_TRANSITION_ACTION(f):
+    _actions_["NoTransition"] = (f, ())
+
+
 # guards
 
-def KARABO_FSM_GUARD0(name, f):                 _guards_[name] = (f, ())
-def KARABO_FSM_GUARD1(name, f, a1):             _guards_[name] = (f, (a1,))
-def KARABO_FSM_GUARD2(name, f, a1, a2):         _guards_[name] = (f, (a1, a2))
-def KARABO_FSM_GUARD3(name, f, a1, a2, a3):     _guards_[name] = (f, (a1, a2, a3))
-def KARABO_FSM_GUARD4(name, f, a1, a2, a3, a4): _guards_[name] = (f, (a1, a2, a3, a4))
+def KARABO_FSM_GUARD(name, f, *args):
+    _guards_[name] = (f, args)
+
+
+KARABO_FSM_GUARD0 = KARABO_FSM_GUARD1 = KARABO_FSM_GUARD2 = \
+    KARABO_FSM_GUARD3 = KARABO_FSM_GUARD4 = KARABO_FSM_GUARD
+
 
 # in state periodic actions
 
-def KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, f): _state_periodic_actions_[name] = (timeout, repetition, f)
+def KARABO_FSM_PERIODIC_ACTION(name, timeout, repetition, f):
+    _state_periodic_actions_[name] = (timeout, repetition, f)
+
 
 # machines
 
-def KARABO_FSM_STATE_MACHINE(name, stt, initial):
-    _machines_[name] = (stt, initial, NOOP, NOOP, '')
-
-def KARABO_FSM_STATE_MACHINE_A(name, stt, initial, target_action):
-    _machines_[name] = (stt, initial, NOOP, NOOP, target_action)
 
 def KARABO_FSM_STATE_MACHINE_E(name, stt, initial, on_entry):
     _machines_[name] = (stt, initial, on_entry, NOOP, '')
 
-def KARABO_FSM_STATE_MACHINE_AE(name, stt, initial, target_action, on_entry):
-    _machines_[name] = (stt, initial, on_entry, NOOP, target_action)
 
 def KARABO_FSM_STATE_MACHINE_EE(name, stt, initial, on_entry, on_exit):
     _machines_[name] = (stt, initial, on_entry, on_exit, '')
-       
-def KARABO_FSM_STATE_MACHINE_AEE(name, stt, initial, target_action, on_entry, on_exit):
+
+
+def KARABO_FSM_STATE_MACHINE(name, stt, initial, target_action='',
+                             on_entry=NOOP, on_exit=NOOP):
     _machines_[name] = (stt, initial, on_entry, on_exit, target_action)
-       
+
+
+KARABO_FSM_STATE_MACHINE_AEE = KARABO_FSM_STATE_MACHINE_AE = \
+    KARABO_FSM_STATE_MACHINE_A = KARABO_FSM_STATE_MACHINE
+
+
 def KARABO_FSM_CREATE_MACHINE(name):
     (_stt, _initial, _on_entry, _on_exit, _in_state) = _machines_[name]
-    cls = type(str(name), (StateMachine,), {})
-    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit, in_state = _in_state)
+    cls = type(str(name), (StateMachine,), { })
+    return cls(None, _stt, _initial, on_entry=_on_entry, on_exit=_on_exit,
+               in_state = _in_state)
 
 #======================================== Worker
 class Worker(threading.Thread):
@@ -318,13 +312,13 @@ class State(dict):
         
         gf, ga = _guard                     # function and tuple of arguments
         # compare number and type of parameters between event args (ea) and guard args (ga)
-        try:
-            if sum([type(ea[i]) == ga[i] for i in range(len(ga))]) != len(ga):
-                raise TypeError('Type mismatch between event payload and '
-                                'guard required parameters')
-        except IndexError:
-            raise SyntaxError('Event payload has less parameters ({}) than '
-                              'required by guard ({})'.format(len(ea), len(ga)))
+        if len(ea) < len(ga):
+            raise SyntaxError('Event payload has less parameters ("%r") '
+                              'than required by guard ("%r")' %
+                              (len(ea), len(ga)))
+        if not all(isinstance(e, g) for e, g in zip(ea, ga)):
+            raise TypeError('Type mismatch between event payload and '
+                            'guard required parameters')
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
@@ -333,14 +327,13 @@ class State(dict):
         
         # unpack action
         af, aa = _action                    # action function and tuple of action arguments
-        try:
-            if sum([type(ea[i]) == aa[i] for i in range(len(aa))]) != len(aa):
-                raise TypeError("Type mismatch between event payload and "
-                                "transition action required parameters")
-        except IndexError:
-            raise SyntaxError("Event payload has less parameters ({}) than "
-                              "required by transition action ({})".
-                              format(len(ea), len(aa)))
+        if len(ea) < len(aa):
+            raise SyntaxError("Event payload has less parameters (%r) than "
+                              "required by transition action (%r)" %
+                              (len(ea), len(aa)))
+        if not all(isinstance(e, a) for e, a in zip(ea, aa)):
+            raise TypeError("Type mismatch between event payload "
+                            "and transition action required parameters")
         af(*ea[:len(aa)])                   # call transition action
         
         if _target == "none":
@@ -368,11 +361,11 @@ class StateMachine(State):
         self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
-        if type(initial) is tuple:
+        if isinstance(initial, tuple):
             for sname in initial:
                 self._setup(sname)
                 self.initial_state.append(self.stt[sname])
-        elif type(initial) is str:
+        elif isinstance(initial, str):
             self._setup(initial)
             self.initial_state.append(self.stt[initial])
         else:
@@ -380,7 +373,7 @@ class StateMachine(State):
                 "Unsupported type {} for representing initial state. "
                 "Required str or tuple of str".format(type(initial)))
 
-        if len(self.initial_state) == 0:
+        if not self.initial_state:
             raise KeyError('Initial state not set.')
         
         self.current_state = list()
@@ -459,40 +452,30 @@ class StateMachine(State):
 
     def process_event(self, o):
         # check if the object (instance of Event subclass) was created by "event_instance" call
-        is_hit = False
         if not isinstance(o, Event):
             raise TypeError(
                 'The parameter is not an instance of the "Event" subclass')
         for s in self.current_state:
             if not s.interrupt is None and s.interrupt != o.__class__.__name__:
                 return False
-        for i in range(len(self.current_state)):
-            if o in self.current_state[i]:
-                self.current_state[i] = self.current_state[i][o]  # transition
-                is_hit = True
-                return is_hit
+        for i, cs in enumerate(self.current_state):
+            if o in cs:
+                self.current_state[i] = cs[o]  # transition
+                return True
         for current in self.current_state:
-            if current.ismachine:
-                is_hit = current.process_event(o)
-                if is_hit:
-                    return True
-        if not is_hit and self.fsm is None:
+            if current.ismachine and current.process_event(o):
+                return True
+        if self.fsm is None:
             self.no_transition()
-        return is_hit
-    
+        return False
+
     def get_state(self):
-        f = lambda x: x.__class__.__name__ + "." + x.get_state() if x.ismachine else x.__class__.__name__ 
-        result = [ f(self.current_state[i]) for i in range(len(self.current_state)) ]
+        result = [x.__class__.__name__ + "." + x.get_state()
+                  if x.ismachine else x.__class__.__name__
+                  for x in self.current_state]
         if len(result) == 1:
             return str(result[0])
-        ret = '['
-        for x in result:
-            if ret == '[':
-                ret += x
-            else:
-                ret += ':' + x
-        ret += ']'
-        return ret
-    
+        return '[' + ':'.join(x) + ']'
+
     def get_state_object(self):
         return self.currentStateObject
