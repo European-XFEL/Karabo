@@ -102,6 +102,7 @@ namespace karabo {
                     if (its != tags.end()) {
                         //clog << "take element " << inputNode.getKey() << ", tag found: " << t[i] << endl;
                         result.set(path, inputNode);
+                        result.setAttributes(path, inputNode.getAttributes());
                         return true;
                     } else {
                         //clog << "tag " << t[i] << " not requested for: " << inputNode.getKey() << endl;
