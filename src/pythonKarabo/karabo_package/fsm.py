@@ -8,10 +8,18 @@ from collections import deque
 #======================================= Fsm Macros
 NOOP = lambda: None
 GNOOP = lambda: True
-class Event(object): pass
-def x_ini(self, a): self.x = a
-def x_get(self): return self.x
-def event_instance(x, a): return type(str(x), (Event,), {'__init__':x_ini, 'payload':x_get})(a)
+
+class Event(object):
+    def __init__(self, a):
+        self.x = a
+
+    def payload(self):
+        return self.x
+
+
+def event_instance(x, a):
+    return type(str(x), (Event,), { })(a)
+
 
 # global dicts
 _events_ = ['none']
@@ -318,13 +326,13 @@ class State(dict):
         
         gf, ga = _guard                     # function and tuple of arguments
         # compare number and type of parameters between event args (ea) and guard args (ga)
-        try:
-            if sum([type(ea[i]) == ga[i] for i in range(len(ga))]) != len(ga):
-                raise TypeError('Type mismatch between event payload and '
-                                'guard required parameters')
-        except IndexError:
-            raise SyntaxError('Event payload has less parameters ({}) than '
-                              'required by guard ({})'.format(len(ea), len(ga)))
+        if len(ea) < len(ga):
+            raise SyntaxError('Event payload has less parameters ("%r") '
+                              'than required by guard ("%r")' %
+                              (len(ea), len(ga)))
+        if not all(isinstance(e, g) for e, g in zip(ea, ga)):
+            raise TypeError('Type mismatch between event payload and '
+                            'guard required parameters')
         if not gf(*ea[:len(ga)]):           # check guard
             return self
         
@@ -333,14 +341,13 @@ class State(dict):
         
         # unpack action
         af, aa = _action                    # action function and tuple of action arguments
-        try:
-            if sum([type(ea[i]) == aa[i] for i in range(len(aa))]) != len(aa):
-                raise TypeError("Type mismatch between event payload and "
-                                "transition action required parameters")
-        except IndexError:
-            raise SyntaxError("Event payload has less parameters ({}) than "
-                              "required by transition action ({})".
-                              format(len(ea), len(aa)))
+        if len(ea) < len(aa):
+            raise SyntaxError("Event payload has less parameters (%r) than "
+                              "required by transition action (%r)" %
+                              (len(ea), len(aa)))
+        if not all(isinstance(e, a) for e, a in zip(ea, aa)):
+            raise TypeError("Type mismatch between event payload "
+                            "and transition action required parameters")
         af(*ea[:len(aa)])                   # call transition action
         
         if _target == "none":
@@ -368,11 +375,11 @@ class StateMachine(State):
         self.currentStateObject=None
         self.stt = dict()
         self.initial_state = list()
-        if type(initial) is tuple:
+        if isinstance(initial, tuple):
             for sname in initial:
                 self._setup(sname)
                 self.initial_state.append(self.stt[sname])
-        elif type(initial) is str:
+        elif isinstance(initial, str):
             self._setup(initial)
             self.initial_state.append(self.stt[initial])
         else:
@@ -380,7 +387,7 @@ class StateMachine(State):
                 "Unsupported type {} for representing initial state. "
                 "Required str or tuple of str".format(type(initial)))
 
-        if len(self.initial_state) == 0:
+        if not self.initial_state:
             raise KeyError('Initial state not set.')
         
         self.current_state = list()
@@ -459,40 +466,30 @@ class StateMachine(State):
 
     def process_event(self, o):
         # check if the object (instance of Event subclass) was created by "event_instance" call
-        is_hit = False
         if not isinstance(o, Event):
             raise TypeError(
                 'The parameter is not an instance of the "Event" subclass')
         for s in self.current_state:
             if not s.interrupt is None and s.interrupt != o.__class__.__name__:
                 return False
-        for i in range(len(self.current_state)):
-            if o in self.current_state[i]:
-                self.current_state[i] = self.current_state[i][o]  # transition
-                is_hit = True
-                return is_hit
+        for i, cs in enumerate(self.current_state):
+            if o in cs:
+                self.current_state[i] = cs[o]  # transition
+                return True
         for current in self.current_state:
-            if current.ismachine:
-                is_hit = current.process_event(o)
-                if is_hit:
-                    return True
-        if not is_hit and self.fsm is None:
+            if current.ismachine and current.process_event(o):
+                return True
+        if self.fsm is None:
             self.no_transition()
-        return is_hit
-    
+        return False
+
     def get_state(self):
-        f = lambda x: x.__class__.__name__ + "." + x.get_state() if x.ismachine else x.__class__.__name__ 
-        result = [ f(self.current_state[i]) for i in range(len(self.current_state)) ]
+        result = [x.__class__.__name__ + "." + x.get_state()
+                  if x.ismachine else x.__class__.__name__
+                  for x in self.current_state]
         if len(result) == 1:
             return str(result[0])
-        ret = '['
-        for x in result:
-            if ret == '[':
-                ret += x
-            else:
-                ret += ':' + x
-        ret += ']'
-        return ret
-    
+        return '[' + ':'.join(x) + ']'
+
     def get_state_object(self):
         return self.currentStateObject
