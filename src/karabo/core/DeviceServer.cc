@@ -205,6 +205,9 @@ namespace karabo {
 
         DeviceServer::DeviceServer(const karabo::util::Hash& config) : m_log(0) {
 
+            m_brokerLatency = 10000LL;
+            m_processingLatency = 15000LL;
+
             string serverIdFileName("serverId.xml");
 
             // Set serverId

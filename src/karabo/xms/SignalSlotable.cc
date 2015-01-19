@@ -49,7 +49,7 @@ namespace karabo {
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                 const std::string& brokerType,
-                const karabo::util::Hash& brokerConfiguration) : m_brokerLatency(10LL), m_processingLatency(15LL) {
+                const karabo::util::Hash& brokerConfiguration) {
 
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
