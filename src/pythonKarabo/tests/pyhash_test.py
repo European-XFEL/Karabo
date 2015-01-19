@@ -1,5 +1,7 @@
 import unittest
-from karabo.hash import Hash, XMLWriter, XMLParser, BinaryWriter, BinaryParser
+from karabo.hash import (Hash, XMLWriter, XMLParser, BinaryWriter,
+                         BinaryParser)
+from karabo.hashtypes import Schema_ as Schema
 import numpy
 from numpy.testing import assert_equal
 
@@ -117,6 +119,12 @@ class Hash_TestCase(unittest.TestCase):
         self.assertEqual(attrs["attr2"], 43)
 
 
+    def test_copy(self):
+        h = self.create_hash()
+        c = Hash(h)
+        self.check_hash(c)
+
+
     def create_hash(self):
         h = Hash()
         h["bool"] = True
@@ -132,12 +140,16 @@ class Hash_TestCase(unittest.TestCase):
         h["hash", "int"] = 3
         h["string", "chars"] = b"blub"
         h["chars", "string"] = "laber"
+        h["schema"] = Schema("blub", Hash(h))
         return h
 
 
-    def check_hash(self, h):
-        self.assertEqual(list(h.keys()), ["bool", "int", "string", "chars",
-                                    "vector", "emptyvector", "hash"])
+    def check_hash(self, h, forschema=True):
+        keys = ["bool", "int", "string", "chars", "vector", "emptyvector",
+                "hash"]
+        if forschema:
+            keys.append("schema")
+        self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
         self.assertEqual(h["string"], "bla")
@@ -156,6 +168,9 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(h["string", "chars"], bytes))
         self.assertEqual(h["chars", "string"], "laber")
         self.assertTrue(isinstance(h["chars", "string"], str))
+        if forschema:
+            self.assertEqual(h["schema"].name, "blub")
+            self.check_hash(h["schema"].hash, False)
 
 
     def test_xml(self):

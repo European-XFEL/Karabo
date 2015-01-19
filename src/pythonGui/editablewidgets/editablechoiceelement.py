@@ -23,7 +23,7 @@ __all__ = ["EditableChoiceElement"]
 
 from widget import EditableWidget
 from karabo.hash import Hash
-from schema import Schema
+from schema import Schema, Descriptor
 from util import SignalBlocker
 
 from PyQt4.QtCore import QEvent
@@ -52,10 +52,13 @@ class EditableChoiceElement(EditableWidget):
         return False
 
 
+    def typeChange(self, box):
+        for k, v in box.descriptor.dict.items():
+            if isinstance(v, Descriptor):
+                self.widget.addItem(v.displayedName)
+
     def addItem(self, itemToBeAdded):
-        with SignalBlocker(self.widget):
-            self.widget.addItem(itemToBeAdded.text(0))
-            self.childItemList.append(itemToBeAdded)
+        self.childItemList.append(itemToBeAdded)
 
 
     @property
