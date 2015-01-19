@@ -106,6 +106,9 @@ namespace karabo {
             boost::mutex m_waitMutex;
             boost::condition_variable m_hasNewEvent;
 
+            boost::mutex m_waitHeartbeatMutex;
+            boost::condition_variable m_hasNewHeartbeat;
+
             typedef std::pair<karabo::util::Hash::Pointer /*header*/, karabo::util::Hash::Pointer /*body*/> Event;
             struct CompareEventPriority {
                 bool operator()(const Event& lhs, const Event& rhs) const {
@@ -117,6 +120,11 @@ namespace karabo {
             boost::mutex m_eventQueueMutex;
             bool m_runEventLoop;
             boost::thread_group m_eventLoopThreads;
+
+            std::deque<Event> m_heartbeatQueue;
+            boost::mutex m_heartbeatQueueMutex;
+            bool m_runHeartbeatLoop;
+            boost::thread_group m_heartbeatLoopThreads;
 
             bool m_isPingable;
 
@@ -947,6 +955,12 @@ namespace karabo {
 
             void processEvents();
 
+            bool heartbeatQueueIsEmpty();
+
+            bool tryToPopHeartbeat(Event& event);
+
+            void processHeartbeats();
+
             /**
              * Parses out the instanceId part of signalId or slotId
              * @param signalOrSlotId
@@ -983,6 +997,8 @@ namespace karabo {
         private: // Functions
 
             void _runEventLoop();
+
+            void _runHeartbeatLoop();
 
             void sanifyInstanceId(std::string& instanceId) const;
 
