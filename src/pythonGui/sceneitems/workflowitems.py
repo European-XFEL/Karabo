@@ -24,7 +24,7 @@ import math
 class Item(QWidget, Loadable):
 
     WIDTH = 5
-    CHANNEL_LENGTH = 45
+    CHANNEL_LENGTH = 20
     INPUT = "Input"
     OUTPUT = "Output"
     
@@ -645,9 +645,11 @@ class WorkflowConnection(QWidget, Loadable):
         path = ".".join(self.start_channel.box.path)
         if not endBox.boxvalue.connectedOutputChannels.hasValue():
             endBox.value.connectedOutputChannels = []
-
+            
         endBox.value.connectedOutputChannels.extend(
-             "{}:{}".format(id, path) for id in deviceIds)
+             "{}:{}".format(id, path) for id in deviceIds \
+             if "{}:{}".format(id, path) not in endBox.value.connectedOutputChannels)
+
         endBox.boxvalue.connectedOutputChannels.update()
 
 
