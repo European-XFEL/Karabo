@@ -104,7 +104,7 @@ class _Manager(QObject):
 
         try:
             with open(karaboVersionPath, 'r') as file:
-                globals.GUI_VERSION = file.readline()
+                globals.GUI_VERSION = file.readline().rstrip()
         except IOError:
             print("Can not open: ", karaboVersionPath)
             globals.GUI_VERSION = ""
