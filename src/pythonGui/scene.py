@@ -1097,6 +1097,16 @@ class Scene(QSvgWidget):
             c.selected = False
 
 
+    def getOutputChannelItem(self, output):
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                item = c.widget
+                for channel in item.output_channels:
+                    if channel.box.key() == output:
+                        return channel
+        return None
+
+
     def workflowChannelHit(self, event):
         """
         Returns ProxyWidget and corresponding WorkflowItem, if there are any at
@@ -1308,7 +1318,7 @@ class Scene(QSvgWidget):
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowItem(object, proxy)
+                    workflowItem = WorkflowItem(object, self, proxy)
                 else:
                     object = self.project.getDevice(dialog.deviceGroupName)
                     # TODO: overwrite existing device group?
@@ -1324,7 +1334,7 @@ class Scene(QSvgWidget):
 
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowGroupItem(object, proxy)
+                    workflowItem = WorkflowGroupItem(object, self, proxy)
                 
                 object.addVisible()
                 
