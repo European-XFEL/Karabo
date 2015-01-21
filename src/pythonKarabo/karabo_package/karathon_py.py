@@ -5,19 +5,25 @@ This is really weird, why should everything be defined in karabo.device?
 So now karabo.device star-imports this module, which does the old stuff. """
 
 from karabo.enums import MetricPrefix, Unit, EncodingType
-from karabo.decorators import KARABO_CLASSINFO
 from karabo.hash import Hash
 from karabo.hashtypes import Type
 from karabo.schema import *
-from karabo.base_fsm import BaseFsm
 import karabo.schema
 
 from enum import Enum
 
-__all__ = ["MetricPrefix", "Unit", "EncodingType", "KARABO_CLASSINFO",
+__all__ = ["MetricPrefix", "Unit", "EncodingType", "Hash", "Validator",
            "Schema", "PATH_ELEMENT", "NODE_ELEMENT", "SLOT_ELEMENT",
            "IMAGE_ELEMENT", "OVERWRITE_ELEMENT", "CHOICE_ELEMENT",
-           "LIST_ELEMENT", "RawImageData", "BaseFsm"]
+           "LIST_ELEMENT", "RawImageData", "AccessType", "AssemblyRules",
+           "READ", "WRITE", "INIT"]
+
+
+AccessType = int
+AssemblyRules = int
+READ = 1
+WRITE = 2
+INIT = 4
 
 
 def publish(enum):
