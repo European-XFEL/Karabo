@@ -200,6 +200,9 @@ class FixedLayout(Layout, QLayout):
         for c in self:
             if not selected or c.selected:
                 ee = c.element()
+                if ee is None:
+                    # Could be none, in case no save function is implemented
+                    continue
                 if self.entire == c:
                     ee.set('entire', 'True')
                 e.append(ee)
@@ -501,6 +504,10 @@ class ProxyWidget(QWidget):
                     event.globalPos(), None, self)
 
     def element(self):
+        # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
+        if not hasattr(self.widget, "save"):
+            return None
+        
         g = self.geometry()
         d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
         if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
