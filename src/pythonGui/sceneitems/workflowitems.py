@@ -29,8 +29,8 @@ class Item(QWidget, Loadable):
     OUTPUT = "Output"
     
 
-    def __init__(self, parent):
-        super(Item, self).__init__(parent)
+    def __init__(self, scene, proxy):
+        super(Item, self).__init__(proxy)
         
         self.pen = QPen()
         self.font = QFont()
@@ -42,7 +42,10 @@ class Item(QWidget, Loadable):
         self.descriptor = None
         
         # Position of ProxyWidget for later transformation when drawing connections
-        self.proxyPos = None
+        self.proxyPos = proxy.pos()
+        
+        self.scene = scene
+        self.connectionsChecked = False
 
 
     def getDeviceIds(self):
@@ -84,8 +87,6 @@ class Item(QWidget, Loadable):
 
 
     def paintEvent(self, event):
-        self.checkChannels(self.getObject())
-
         painter = QPainter()
         painter.begin(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -100,8 +101,10 @@ class Item(QWidget, Loadable):
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         painter.drawText(rect, Qt.AlignCenter, self.displayText)
 
+        self.checkChannels(self.getObject())
         self.paintInputChannels(painter)
         self.paintOutputChannels(painter)
+        self.checkConnections()
 
         painter.end()
 
@@ -119,8 +122,8 @@ class Item(QWidget, Loadable):
             start_point = QPoint(-rect.width()/2, y)
             painter.translate(start_point)
             painter.setPen(QPen())
-            input.draw(painter)
             input.transform = painter.transform()
+            input.draw(painter)
             painter.restore()
 
 
@@ -136,8 +139,8 @@ class Item(QWidget, Loadable):
             painter.save()
             start_point = QPoint(rect.width()/2, y)
             painter.translate(start_point)
-            output.draw(painter)
             output.transform = painter.transform()
+            output.draw(painter)
             painter.restore()
 
 
@@ -198,8 +201,37 @@ class Item(QWidget, Loadable):
             
             # Update geometry of proxy to new channels
             rect = self.boundingRect()
-            pos = self.parent().fixed_geometry.topLeft()
-            self.parent().fixed_geometry = QRect(pos, QSize(rect.width(), rect.height()))
+            pos = self.parent().geometry().topLeft()
+            self.parent().set_geometry(QRect(pos, QSize(rect.width(), rect.height())))
+            
+            # Set the proxyPos for later calculation (workflow connections)
+            self.proxyPos = self.parent().pos()
+                
+
+    def checkConnections(self):
+        if len(self.input_channels) < 1 or self.connectionsChecked:
+            return
+        
+        for input in self.input_channels:
+            path = input.box.path + ('connectedOutputChannels',)
+            if not input.box.configuration.hasBox(path):
+                return
+
+            connectedOutputs = input.box.configuration.getBox(path).value
+            if isinstance(connectedOutputs, Dummy):
+                return
+
+            for output in connectedOutputs:
+                output = output.replace(":" ,".")
+                start_channel = self.scene.getOutputChannelItem(output)
+                if start_channel is None:
+                    continue
+                
+                wc = WorkflowConnection(None, start_channel)
+                wc.updateValues(self.scene, input)
+                wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+                
+        self.connectionsChecked = True
 
 
     def updateConnectionsNeeded(self, scene, transPos):
@@ -212,8 +244,8 @@ class Item(QWidget, Loadable):
 
 class WorkflowItem(Item):
 
-    def __init__(self, device, parent):
-        super(WorkflowItem, self).__init__(parent)
+    def __init__(self, device, scene, proxy):
+        super(WorkflowItem, self).__init__(scene, proxy)
         
         self.device = device
         self.displayText = device.id
@@ -271,7 +303,7 @@ class WorkflowItem(Item):
         project.signalSelectObject.emit(device)
 
         proxy = ProxyWidget(layout.parentWidget())
-        item = WorkflowItem(device, proxy)
+        item = WorkflowItem(device, parent, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
         ss = [ ]
@@ -286,8 +318,8 @@ class WorkflowItem(Item):
 
 class WorkflowGroupItem(Item):
 
-    def __init__(self, deviceGroup, parent):
-        super(WorkflowGroupItem, self).__init__(parent)
+    def __init__(self, deviceGroup, scene, proxy):
+        super(WorkflowGroupItem, self).__init__(scene, proxy)
         
         self.deviceGroup = deviceGroup
         self.displayText = deviceGroup.id
@@ -331,7 +363,7 @@ class WorkflowGroupItem(Item):
         parent = layout.parent()
         while not isinstance(parent, scene.Scene):
             parent = parent.parent()
-        
+
         project = parent.project
         
         id = elem.get(ns_karabo + "text")
@@ -347,7 +379,7 @@ class WorkflowGroupItem(Item):
         project.signalSelectObject.emit(deviceGroup)
         
         proxy = ProxyWidget(layout.parentWidget())
-        item = WorkflowGroupItem(deviceGroup, proxy)
+        item = WorkflowGroupItem(deviceGroup, parent, proxy)
         proxy.setWidget(item)
         layout.loadPosition(elem, proxy)
         ss = [ ]
@@ -363,13 +395,13 @@ class WorkflowGroupItem(Item):
 class WorkflowChannel(QWidget):
     signalUpdateConnections = pyqtSignal(object, object) # scene, translationPoint
 
-    def __init__(self, channel_type, box, item):
-        super(WorkflowChannel, self).__init__(item)
+    def __init__(self, channel_type, box, parent):
+        super(WorkflowChannel, self).__init__(parent)
         
         assert channel_type in (Item.INPUT, Item.OUTPUT)
         self.channel_type = channel_type
         self.box = box
-        self.box.signalUpdateComponent.connect(item.update)
+        self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
         
@@ -478,33 +510,29 @@ class WorkflowChannel(QWidget):
         return point
 
 
-class WorkflowConnection(QWidget, Loadable):
+class WorkflowConnection(QWidget):
 
 
-    def __init__(self, parent, start_channel=None):
-        super(WorkflowConnection, self).__init__(parent)
+    def __init__(self, proxy, start_channel):
+        super(WorkflowConnection, self).__init__(proxy)
         
         # Describe the in/output channels this connection belongs to
         self.start_channel = start_channel
         self.end_channel = None
         
-        if self.start_channel is None:
-            self.start_channel_type = ""
-            self.start_pos = QPoint()
-        else:
-            # Save the channel type - in the end the only channel parameter
-            # necessary to draw this connection
-            self.start_channel_type = self.start_channel.channel_type
-            self.start_pos = self.start_channel.mappedPos()
+        # Save the channel type - in the end the only channel parameter
+        # necessary to draw this connection
+        self.start_channel_type = self.start_channel.channel_type
+        self.start_pos = self.start_channel.mappedPos()
         
         self.end_pos = self.start_pos
-        self.curve = None
+        self.curve = QPainterPath(self.start_pos)
         
         # Global start/end positions
         self.global_start = None
         self.global_end = None
         
-        self.proxy = parent
+        self.proxy = proxy
         # Top left position of proxy in global coordinates
         self.topLeft = QPoint()
 
@@ -519,34 +547,11 @@ class WorkflowConnection(QWidget, Loadable):
             parent.update()
             return
         
-        self.end_channel = end_channel
-        # Overwrite end position with exact channel position
-        self.end_pos = self.end_channel.mappedPos()
-        
-        if not hasattr(self.end_channel.box.value, "connectedOutputChannels"):
-            self.start_pos, self.end_pos = self.end_pos, self.start_pos
-            self.start_channel, self.end_channel = (
-                self.end_channel, self.start_channel)
-
-            self.start_channel_type = self.start_channel.channel_type
-       
-        self.global_start = QPoint(self.start_pos)
-        self.global_end = QPoint(self.end_pos)
-        self._checkStartEnd()
-        
-        self.proxy = ProxyWidget(parent.inner)
-        self.proxy.setWidget(self)
-        self._updateProxyGeometry()
-        self.proxy.show()
-        parent.ilayout.add_item(self.proxy)
-        self.proxy.lower()
-        parent.setModified()
+        self.updateValues(parent, end_channel)
         
         # Reconfigure
         self.reconfigureInputChannel()
-        
-        self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
-        self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
+        parent.setModified()
 
 
     def _checkStartEnd(self):
@@ -585,6 +590,34 @@ class WorkflowConnection(QWidget, Loadable):
         rect = QRect(self.topLeft.x(), self.topLeft.y(),
                      rect.width(), rect.height())
         self.proxy.set_geometry(rect)
+
+
+    def updateValues(self, parent, end_channel):
+        self.end_channel = end_channel
+        # Overwrite end position with exact channel position
+        self.end_pos = self.end_channel.mappedPos()
+        
+        if not hasattr(self.end_channel.box.value, "connectedOutputChannels"):
+            self.start_pos, self.end_pos = self.end_pos, self.start_pos
+            self.start_channel, self.end_channel = (
+                self.end_channel, self.start_channel)
+
+            self.start_channel_type = self.start_channel.channel_type
+       
+        self.global_start = QPoint(self.start_pos)
+        self.global_end = QPoint(self.end_pos)
+        self._checkStartEnd()
+        
+        if self.proxy is None:
+            self.proxy = ProxyWidget(parent.inner)
+            self.proxy.setWidget(self)
+            self._updateProxyGeometry()
+            self.proxy.show()
+            parent.ilayout.add_item(self.proxy)
+            self.proxy.lower()
+
+            self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
+            self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
 
 
     def onStartChannelChanged(self, scene, transPos):
@@ -646,9 +679,9 @@ class WorkflowConnection(QWidget, Loadable):
         if not endBox.boxvalue.connectedOutputChannels.hasValue():
             endBox.value.connectedOutputChannels = []
             
-        endBox.value.connectedOutputChannels.extend(
-             "{}:{}".format(id, path) for id in deviceIds \
-             if "{}:{}".format(id, path) not in endBox.value.connectedOutputChannels)
+        endBox.value.connectedOutputChannels.extend(s for s in (
+                            "{}:{}".format(id, path) for id in deviceIds)
+                            if s not in endBox.value.connectedOutputChannels)
 
         endBox.boxvalue.connectedOutputChannels.update()
 
@@ -667,34 +700,4 @@ class WorkflowConnection(QWidget, Loadable):
         inputChannel = self.end_channel.box.value
         inputChannel.connectedOutputChannels = [
             c for c in inputChannel.connectedOutputChannels if c not in paths]
-
-
-    def save(self, ele):
-        ele.set(ns_karabo + "class", "WorkflowConnection")
-        ele.set(ns_karabo + "start_channel_type", self.start_channel_type)
-        ele.set(ns_karabo + "start_x", str(self.start_pos.x()))
-        ele.set(ns_karabo + "start_y", str(self.start_pos.y()))
-        ele.set(ns_karabo + "end_x", str(self.end_pos.x()))
-        ele.set(ns_karabo + "end_y", str(self.end_pos.y()))
-
-
-    @staticmethod
-    def load(elem, layout):
-        proxy = ProxyWidget(layout.parentWidget())
-        connection = WorkflowConnection(proxy)
-        connection.start_channel_type = elem.get(ns_karabo + "start_channel_type")
-        
-        start_x = int(elem.get(ns_karabo + "start_x"))
-        start_y = int(elem.get(ns_karabo + "start_y"))
-        connection.start_pos = QPoint(start_x, start_y)
-        
-        end_x = int(elem.get(ns_karabo + "end_x"))
-        end_y = int(elem.get(ns_karabo + "end_y"))
-        connection.end_pos = QPoint(end_x, end_y)
-        
-        proxy.setWidget(connection)
-        layout.loadPosition(elem, proxy)
-        proxy.lower()
-
-        return proxy
 
