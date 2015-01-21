@@ -672,7 +672,7 @@ class Schema(Hash):
         file.pos += size
         ret = super(Schema, cls).read(file)
         assert file.pos - op == l, 'failed: {} {} {}'.format(file.pos, op, l)
-        return Schema_(name, ret)
+        return Schema_(name, hash=ret)
 
 
     @classmethod
@@ -694,7 +694,7 @@ class Schema_(Special):
     hashtype = Schema
 
 
-    def __init__(self, name=None, hash=None, rules=None):
+    def __init__(self, name=None, rules=None, hash=None):
         self.name = name
         if hash is None:
             self.hash = karabo.hash.Hash()

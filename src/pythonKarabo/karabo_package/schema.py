@@ -50,7 +50,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
 
     @classmethod
     def getClassSchema(cls, rules=None):
-        schema = karabo.schema.Schema(cls.__name__, rules)
+        schema = karabo.schema.Schema(cls.__name__, hash=rules)
         for c in cls.__mro__[::-1]:
             if hasattr(c, "expectedParameters"):
                 c.expectedParameters(schema)
