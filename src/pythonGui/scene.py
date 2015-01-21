@@ -1097,6 +1097,16 @@ class Scene(QSvgWidget):
             c.selected = False
 
 
+    def getOutputChannelItem(self, output):
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                item = c.widget
+                for channel in item.output_channels:
+                    if channel.box.key() == output:
+                        return channel
+        return None
+
+
     def workflowChannelHit(self, event):
         """
         Returns ProxyWidget and corresponding WorkflowItem, if there are any at
@@ -1124,7 +1134,7 @@ class Scene(QSvgWidget):
                 proxy.selected = False
                 # Create workflow connection item in scene - only for allowed
                 # connection type (Network)
-                self.workflow_connection = WorkflowConnection(self, channel)
+                self.workflow_connection = WorkflowConnection(proxy, channel)
                 QWidget.mousePressEvent(self, event)
                 return
             self.current_action.mousePressEvent(self, event)
@@ -1159,6 +1169,7 @@ class Scene(QSvgWidget):
         if self.workflow_connection is not None:
             _, channel = self.workflowChannelHit(event)
             if channel is not None:
+                self.workflow_connection.proxy = None
                 self.workflow_connection.mouseReleaseEvent(self, channel)
             else:
                 self.update()
@@ -1277,7 +1288,7 @@ class Scene(QSvgWidget):
                     layout.addWidget(proxy)
                     proxy.show()
 
-                layout.fixed_geometry = QRect(event.pos(), layout.sizeHint())
+                layout.set_geometry(QRect(event.pos(), layout.sizeHint()))
                 self.ilayout.add_item(layout)
                 layout.selected = True
             self.project.setModified(True)
@@ -1308,7 +1319,7 @@ class Scene(QSvgWidget):
 
                     # Create scene item associated with device
                     proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowItem(object, proxy)
+                    workflowItem = WorkflowItem(object, self, proxy)
                 else:
                     object = self.project.getDevice(dialog.deviceGroupName)
                     # TODO: overwrite existing device group?
@@ -1324,13 +1335,13 @@ class Scene(QSvgWidget):
 
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
-                    workflowItem = WorkflowGroupItem(object, proxy)
+                    workflowItem = WorkflowGroupItem(object, self, proxy)
                 
                 object.addVisible()
                 
                 rect = workflowItem.boundingRect()
                 proxy.setWidget(workflowItem)
-                proxy.fixed_geometry = QRect(event.pos(), QSize(rect.width(), rect.height()))
+                proxy.set_geometry(QRect(event.pos(), QSize(rect.width(), rect.height())))
                 proxy.show()
                 
                 self.clear_selection()
