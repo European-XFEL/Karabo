@@ -5,6 +5,8 @@ from karabo.hashtypes import Schema_ as Schema
 import numpy
 from numpy.testing import assert_equal
 
+from karabo.karathon import BinarySerializerHash
+
 class Hash_TestCase(unittest.TestCase):
 
     def test_constructors(self):
@@ -140,15 +142,16 @@ class Hash_TestCase(unittest.TestCase):
         h["hash", "int"] = 3
         h["string", "chars"] = b"blub"
         h["chars", "string"] = "laber"
-        h["schema"] = Schema("blub", Hash(h))
+        sh = Hash()
+        sh["a"] = Hash()
+        sh["a", "nodeType"] = 0
+        h["schema"] = Schema("blub", hash=sh)
         return h
 
 
-    def check_hash(self, h, forschema=True):
+    def check_hash(self, h):
         keys = ["bool", "int", "string", "chars", "vector", "emptyvector",
-                "hash"]
-        if forschema:
-            keys.append("schema")
+                "hash", "schema"]
         self.assertEqual(list(h.keys()), keys)
         self.assertTrue(h["bool"] is True)
         self.assertEqual(h["int"], 4)
@@ -168,9 +171,10 @@ class Hash_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(h["string", "chars"], bytes))
         self.assertEqual(h["chars", "string"], "laber")
         self.assertTrue(isinstance(h["chars", "string"], str))
-        if forschema:
-            self.assertEqual(h["schema"].name, "blub")
-            self.check_hash(h["schema"].hash, False)
+        self.assertEqual(h["schema"].name, "blub")
+        sh = h["schema"].hash
+        self.assertFalse(sh["a"].keys())
+        self.assertEqual(sh["a", "nodeType"], 0)
 
 
     def test_xml(self):
@@ -189,6 +193,16 @@ class Hash_TestCase(unittest.TestCase):
         r = BinaryParser()
         s = w.write(self.create_hash())
         self.check_hash(r.read(s))
+
+
+    def test_cpp(self):
+        w = BinaryWriter()
+        r = BinaryParser()
+        s = w.write(self.create_hash())
+        ser = BinarySerializerHash.create("Bin")
+        h = ser.load(s)
+        ret = Hash.decode(ser.save(h), "Bin")
+        self.check_hash(ret)
 
 
 if __name__ == '__main__':
