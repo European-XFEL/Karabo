@@ -270,7 +270,7 @@ class WorkflowItem(Item):
 
     def getDevice(self):
         """
-        The object to the device is returned.
+        The object to the project device is returned.
         """
         return self.device
 
@@ -346,7 +346,7 @@ class WorkflowGroupItem(Item):
 
     def getDevice(self):
         """
-        The object to the device group is returned.
+        The object to the project device group is returned.
         """
         return self.deviceGroup
 

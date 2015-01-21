@@ -801,7 +801,7 @@ class Cut(SimpleAction):
 
     def run(self):
         QApplication.clipboard().setMimeData(self.parent.mimeData())
-        self.parent.ilayout.delete_selected()
+        self.parent.ilayout.remove_selected()
         self.parent.update()
         self.parent.setModified()
 
@@ -859,7 +859,7 @@ class Delete(SimpleAction):
             if isinstance(s.widget, WorkflowConnection):
                 s.widget.removeConnectedOutputChannel()
 
-        self.parent.ilayout.delete_selected()
+        self.parent.ilayout.remove_selected()
         self.parent.update()
         self.parent.setModified()
 
@@ -1095,6 +1095,14 @@ class Scene(QSvgWidget):
             s.selected = False
         for c in self.ilayout:
             c.selected = False
+
+
+    def removeItemByObject(self, object):
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                if c.widget.getDevice() == object:
+                    self.ilayout.remove_item(c)
+                    break
 
 
     def getWorkflowProxyWidget(self, id):
