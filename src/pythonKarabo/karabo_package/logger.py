@@ -1,34 +1,90 @@
+from bisect import bisect
+import logging
+import time
 
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.enums import Assignment
-from karabo.hashtypes import String
-from karabo.schema import Configurable
+from karabo.hash import Hash
+from karabo.hashtypes import String, StringList
+from karabo.schema import Configurable, ListOfNodes
 
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO('Logger', '1.0')
+class _Filter(logging.Filter):
+    def filter(self, *args, **kwargs):
+        return self.parent.filter(*args, **kwargs)
+
+
+class Filter(Configurable):
+    def __init__(self, config, parent, key):
+        super().__init__(config, parent, key)
+        self.filter = _Filter()
+        self.filter.parent = self
+
+
+class Handler(Configurable):
+    filters = ListOfNodes(Filter,
+                          description="Filters for this handler",
+                          displayedName="Filters",
+                          defaultValue=StringList())
+
+    def __init__(self, config, parent, key):
+        super().__init__(config, parent, key)
+        self.handler = _Handler()
+        self.handler.parent = self
+        for f in self.filters:
+            self.handler.addFilter(f.filter)
+
+
+class _Handler(logging.Handler):
+    def emit(self, *args, **kwargs):
+        return self.parent.emit(*args, **kwargs)
+
+
+class NetworkHandler(Handler):
+    def __init__(self, config, parent, key):
+        super().__init__(config, parent, key)
+        self.parent = parent
+
+    def emit(self, record):
+        self.parent.broker.log("{} | {} | {} | {}#".format(
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created)),
+            ["DEBUG", "INFO", "WARN", "ERROR"][
+                bisect([20, 30, 40], record.levelno)],
+            self.parent.broker.deviceId,
+            record.getMessage()))
+
+
 class Logger(Configurable):
-    priority = String(description="Default Priority",
-                      displayedName="Priority",
-                      options="DEBUG INFO WARN ERROR",
-                      assignment=Assignment.OPTIONAL, defaultValue="INFO")
+    handlers = ListOfNodes(
+        Handler,
+        description="Handlers for logging",
+        displayedName="Handlers",
+        defaultValue=["NetworkHandler"])
 
-    @staticmethod
-    def configure(config):
-        pass
+    filters = ListOfNodes(
+        Filter,
+        description="Global filters for logging",
+        displayedName="Filters", defaultValue=StringList())
 
-    @staticmethod
-    def getLogger(id):
-        return Logger()
+    def setBroker(self, broker):
+        self.logger = logging.getLogger(broker.deviceId)
+        self.broker = broker
+        for h in self.handlers:
+            self.logger.addHandler(h.handler)
+        for f in self.filters:
+            self.logger.addFilter(f.filter)
 
     def INFO(self, what):
-        print('INFO:', what)
-
-    def ERROR(self, what):
-        print('ERROR:', what)
-
-    def DEBUG(self, what):
-        print('DEBUG:', what)
+        """ legacy """
+        self.logger.info(what)
 
     def WARN(self, what):
-        print('WARN:', what)
+        """ legacy """
+        self.logger.warning(what)
+
+    def DEBUG(self, what):
+        """ legacy """
+        self.logger.debug(what)
+
+    def ERROR(self, what):
+        """ legacy """
+        self.logger.error(what)

@@ -361,13 +361,21 @@ class Hash(OrderedDict):
         ret = [ ]
         for k, v in self.items():
             if isinstance(v, Hash):
-                ret.extend([k + '.' + kk for kk in v.paths()])
-            else:
-                ret.append(k)
+                ret.extend(k + '.' + kk for kk in v.paths())
+            ret.append(k)
         return ret
 
     def empty(self):
         return len(self) == 0
+
+    def encode(self, format):
+        writer = {"XML": XMLWriter, "Bin": BinaryWriter}.get(format, format)()
+        return writer.write(self)
+
+    @staticmethod
+    def decode(data, format):
+        reader = {"XML": XMLParser, "Bin": BinaryParser}.get(format, format)()
+        return reader.read(data)
 
 class HashMergePolicy:
     MERGE_ATTRIBUTES = "merge"
