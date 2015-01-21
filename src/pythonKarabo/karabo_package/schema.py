@@ -17,7 +17,7 @@ class MetaConfigurable(type(Registry)):
 
 
 class Configurable(Registry, metaclass=MetaConfigurable):
-    _subclasses = []
+    _subclasses = { }
 
     def __init__(self, configuration={}):
         for k in self._allattrs:
@@ -43,10 +43,11 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         cls._allattrs = set.union(*(set(c._attrs) for c in cls.__mro__
                                     if hasattr(c, "_attrs")))
         cls.xsd = cls.getClassSchema()
-        cls._subclasses = []
+        cls._subclasses = { }
         for b in cls.__bases__:
             if isinstance(b, Configurable):
-                b._subclasses.append(cls)
+                assert name not in b._subclasses  # is that necessary?
+                b._subclasses[name] = cls
 
     @classmethod
     def getClassSchema(cls, rules=None):
@@ -118,15 +119,14 @@ class ChoiceOfNodes(Node):
 
     def subschema(self):
         h = karabo.hash.Hash()
-        for c in self.cls._subclasses:
-            h[c.__name__] = c.getClassSchema().hash
+        for k, v in self.cls._subclasses.items():
+            h[k] = v.getClassSchema().hash
+            h[k, "nodeType"] = 1
+        return h
 
     def __set__(self, instance, value):
         for k, v in value.items():
-            for c in self.cls._subclasses:
-                if c.__name__ == k:
-                    instance.setValue(self, c(value))
-                    break
+            instance.setValue(self, self.cls._subclasses[k](v))
             break  # there should be only one entry
 
     def asHash(self, instance):
@@ -147,17 +147,19 @@ class ListOfNodes(Node):
 
     def subschema(self):
         h = karabo.hash.Hash()
-        for c in self.cls._subclasses:
-            h[c.__name__] = c.getClassSchema().hash
+        for k, v in self.cls._subclasses.items():
+            h[k] = v.getClassSchema().hash
+            h[k, "nodeType"] = 1
         return h
 
     def __set__(self, instance, value):
-        l = []
-        for k, v in value.items():
-            for c in self.cls._subclasses:
-                if c.__name__ == k:
-                    l.append(c(value))
-                    break
+        if isinstance(value, karabo.hash.Hash):
+            l = [self.cls._subclasses[k](v, instance, self.key)
+                 for k, v in value.items()]
+        else:
+            l = [self.cls._subclasses[k](karabo.hash.Hash(),
+                    instance, self.key)
+                 for k in value]
         instance.setValue(self, l)
 
     def asHash(self, instance):
