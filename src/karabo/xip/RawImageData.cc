@@ -583,6 +583,13 @@ namespace karabo {
             }
 
         }
+        
+        const RawImageData& RawImageData::write(const std::string& filename, const bool enableAppendMode) const {
+            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);
+            karabo::io::Output<RawImageData >::Pointer out = karabo::io::Output<RawImageData >::create(h);
+            out->write(*this);
+            return *this;
+        }
 
     }
 }
