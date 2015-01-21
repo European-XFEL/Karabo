@@ -677,10 +677,15 @@ class Schema(Hash):
 
     @classmethod
     def write(cls, file, data):
+        for p in data.hash.paths():
+            if data.hash[p, "nodeType"] == 0:
+                assert not data.hash[p], "no proper leaf: {}".format(p)
+            else:
+                assert isinstance(data.hash[p], karabo.hash.Hash), \
+                    "no proper node: {}".format(p)
         writer = karabo.hash.BinaryWriter()
         h = writer.write(data.hash)
         s = data.name.encode('utf8')
-        print(len(h), len(s))
         file.writeFormat('I', len(h) + len(s) + 1)
         file.writeFormat('B', len(s))
         file.file.write(s)
