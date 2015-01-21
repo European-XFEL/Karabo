@@ -1309,6 +1309,11 @@ class ProjectModel(QStandardItemModel):
         if isinstance(object, Macro):
             self.signalRemoveMacro.emit(object)
         
+        if isinstance(object, Configuration):
+            for s in project.scenes:
+                # Remove all related workflow devices of project scenes
+                s.removeItemByObject(object)
+        
         if showConfirm:
             self.selectObject(project)
         
