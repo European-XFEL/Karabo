@@ -186,6 +186,53 @@ class FixedLayout(Layout, QLayout):
         self[len(self):len(self)] = [item]
 
 
+    def remove_item(self, item):
+        """
+        The given \item is removed from the layout.
+        """
+        i = 0
+        while i < len(self):
+            c = self[i]
+            if c == item:
+                self.clear_layout(c)
+                break
+            i += 1
+
+
+    def remove_selected(self):
+        """
+        All selected items are removed from the layout.
+        """
+        i = 0
+        while i < len(self):
+            if self[i].selected:
+                self.clear_layout(self[i])
+            else:
+                i += 1
+        self.shapes = [s for s in self.shapes if not s.selected]
+
+
+    def clear_layout(self, layoutItem):
+        """
+        The given \layoutItem is removed.
+        """
+        stack = [layoutItem]
+        while stack:
+            p = stack.pop()
+            if isinstance(p, Layout):
+                stack.extend(p)
+            else:
+                if p.component is not None:
+                    for b in p.component.boxes:
+                        b.removeVisible()
+
+                if isinstance(p.widget, sceneitems.workflowitems.Item):
+                    p.widget.getDevice().removeVisible()
+            # the following line also deletes the item from
+            # this layout. This is why we don't need to increase i
+            p.setParent(None)
+
+
     def loadPosition(self, element, item):
         self.add_item(item)
         if element.get(ns_karabo + 'entire') is not None:
@@ -235,30 +282,6 @@ class FixedLayout(Layout, QLayout):
         if ret is None:
             return
         c.fixed_geometry = QRect(c.fixed_geometry.topLeft(), c.sizeHint())
-
-
-    def delete_selected(self):
-        i = 0
-        while i < len(self):
-            if self[i].selected:
-                stack = [self[i]]
-                while stack:
-                    p = stack.pop()
-                    if isinstance(p, Layout):
-                        stack.extend(p)
-                    else:
-                        if p.component is not None:
-                            for b in p.component.boxes:
-                                b.removeVisible()
-
-                        if isinstance(p.widget, sceneitems.workflowitems.Item):
-                            p.widget.getDevice().removeVisible()
-                    # the following line also deletes the item from
-                    # this layout. This is why we don't need to increase i
-                    p.setParent(None)
-            else:
-                i += 1
-        self.shapes = [s for s in self.shapes if not s.selected]
 
 
     def geometry(self):
