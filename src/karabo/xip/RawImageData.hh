@@ -16,8 +16,12 @@
 
 namespace karabo {
     namespace xip {
+        
+        class RawImageFileWriter;
 
         class RawImageData {
+            
+            friend class RawImageFileWriter;
 
         protected:
 
@@ -170,6 +174,8 @@ namespace karabo {
             void toLittleEndian();
 
             void toRGBAPremultiplied();
+            
+            const RawImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
             
             friend std::ostream& operator<<(std::ostream& os, const RawImageData& image) {
                 os<<image.hash();
