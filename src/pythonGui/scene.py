@@ -1097,6 +1097,20 @@ class Scene(QSvgWidget):
             c.selected = False
 
 
+    def getWorkflowProxyWidget(self, id):
+        """
+        This function checks whether a workflow item with the given \id exists
+        in the scene. If that it the case the proxyWidget is returned, else None.
+        """
+        for c in self.inner.children():
+            if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
+                item = c.widget
+                if item.displayText == id:
+                    return c
+        
+        return None
+
+
     def getOutputChannelItem(self, output):
         for c in self.inner.children():
             if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
@@ -1307,6 +1321,12 @@ class Scene(QSvgWidget):
             
             if dialog.exec_() == QDialog.Accepted:
                 if not dialog.deviceGroup:
+                    # Check whether the item already exists
+                    widget = self.getWorkflowProxyWidget(dialog.deviceId)
+                    if widget is not None:
+                        widget.selected = True
+                        return
+
                     object = self.project.getDevice(dialog.deviceId)
                     # TODO: overwrite existing device?
                     if object is None:
@@ -1321,6 +1341,12 @@ class Scene(QSvgWidget):
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowItem(object, self, proxy)
                 else:
+                    # Check whether the item already exists
+                    widget = self.getWorkflowProxyWidget(dialog.deviceGroupName)
+                    if widget is not None:
+                        widget.selected = True
+                        return
+                    
                     object = self.project.getDevice(dialog.deviceGroupName)
                     # TODO: overwrite existing device group?
                     if object is None:
