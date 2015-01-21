@@ -701,7 +701,3 @@ class WorkflowConnection(QWidget):
         inputChannel.connectedOutputChannels = [
             c for c in inputChannel.connectedOutputChannels if c not in paths]
 
-
-    def save(self, ele):
-        print("WorkflowConnection.save")
-
