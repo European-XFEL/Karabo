@@ -78,11 +78,18 @@ class Simple(object):
 
     def cast(self, other):
         if self.enum is not None:
-            return super().cast(other)
+            ret = super().cast(other)
         elif isinstance(other, self.numpy):
-            return other
+            ret = other
         else:
-            return self.numpy(other)
+            ret = self.numpy(other)
+        if (self.minExc is not None and ret <= self.minExc or
+                self.minInc is not None and ret < self.minInc or
+                self.maxExc is not None and ret >= self.maxExc or
+                self.maxInc is not None and ret > self.maxInc):
+            raise ValueError("value {} of {} not in allowed range".
+                             format(ret, self.key))
+        return ret
 
 
 class Integer(Simple, Enumable):
@@ -227,13 +234,18 @@ class Descriptor(object):
             return self
         else:
             if self not in instance.__dict__:
-                raise AttributeError
+                raise AttributeError(
+                    "attribute '{}' has not been set".format(self.key))
             return instance.__dict__[self]
 
 
     def __set__(self, instance, value):
         v = self.cast(value)
         instance.setValue(self, v)
+
+    def method(self, instance, value):
+        """this is to be called if the value is changed from the outside"""
+        setattr(instance, self.key, value)
 
 
 class Slot(Descriptor):
@@ -256,11 +268,11 @@ class Slot(Descriptor):
         if instance is None:
             return self
         else:
-            return self.method.__get__(instance, owner)
+            return self.method(instance, owner)
 
 
     def __call__(self, method):
-        self.method = coroutine(method)
+        self.method = coroutine(method).__get__
         return self
 
 
@@ -277,6 +289,10 @@ class Type(Descriptor, Registry):
 
     options = Attribute()
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.options is not None:
+            self.options = [self.cast(o) for o in self.options]
 
     @classmethod
     def hashname(cls):
@@ -315,6 +331,10 @@ class Type(Descriptor, Registry):
         ret["nodeType"] = 0
         ret["valueType"] = self.hashname()
         return ret
+
+    def __call__(self, method):
+        self.method = method
+        return self
 
 
 class Bool(Type):
@@ -574,7 +594,7 @@ class VectorString(Vector, String):
 
     @staticmethod
     def fromstring(s):
-        return StringList(s.split(','))
+        return StringList(ss.strip() for ss in s.split(','))
 
 
     @classmethod
@@ -695,6 +715,12 @@ class Schema(Hash):
     def toString(cls, data):
         return data.name + ":" + data.hash.encode("XML").decode("utf8")
 
+    @classmethod
+    def fromstring(cls, s):
+        name, xml = s.split(":", 1)
+        return Schema_(name, hash=karabo.hash.Hash.decode(xml, "XML"))
+
+
 class Schema_(Special):
     hashtype = Schema
 
@@ -711,6 +737,24 @@ class Schema_(Special):
     def copy(self, other):
         self.hash = karabo.hash.Hash()
         self.hash.merge(other.hash)
+
+    def keyHasAlias(self, key):
+        return "alias" in self.hash[key, ...]
+
+    def getAliasAsString(self, key):
+        return self.hash[key, "alias"]
+
+    def getKeyFromAlias(self, alias):
+        for k in self.hash.paths():
+            if alias == self.hash[k, ...].get("alias", None):
+                return k
+
+    def getValueType(self, key):
+        return Type.fromname[self.hash[key, "valueType"]]
+
+
+    def __repr__(self):
+        return "Schema('{}', {})".format(self.name, self.hash)
 
 
 class None_(Type):

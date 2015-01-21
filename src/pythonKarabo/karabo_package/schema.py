@@ -2,9 +2,11 @@
 import karabo.hash
 from karabo import hashtypes
 from karabo.enums import AccessLevel, AccessMode, Assignment
-from karabo.hashtypes import Descriptor, Schema_ as Schema  # this is not nice
+from karabo.hashtypes import (Descriptor, Schema_ as Schema,  # this is not nice
+                              Attribute)
 from karabo.registry import Registry
 
+from asyncio import coroutine
 from enum import Enum
 from functools import partial
 from collections import OrderedDict
@@ -17,20 +19,50 @@ class MetaConfigurable(type(Registry)):
 
 
 class Configurable(Registry, metaclass=MetaConfigurable):
-    _subclasses = { }
+    """The base class for everything that has Karabo attributes.
 
-    def __init__(self, configuration={}):
+    A class with Karabo attributes inherits from this class.
+    The attributes are then defined as follows:
+
+    ::
+        from karabo import Configurable, Integer, String
+
+        class Spam(Configurable):
+            ham = Integer()
+            eggs = String()
+    """
+    _subclasses = { }
+    schema = None
+
+    def __init__(self, configuration={}, parent=None, key=None):
+        """initialize this object with the configuration
+
+        The configuration is dict or a Hash which contains the
+        initial values to be used for the Karabo attributes.
+        Default values of attributes are handled here.
+
+        parent is the Configurable object this object belongs to,
+        and key is the name of the attribute used in this object.
+        They are None for top-layer objects.
+
+        Top-layer objects like Devices are always called with one
+        parameter (configuration) only, so if you are inheriting from
+        this class you only need to have parent and key as a parameter
+        if your class should be usable as a component in another class.
+        """
+        self._parent = parent
+        self._key = key
         for k in self._allattrs:
             t = getattr(type(self), k)
             if k in configuration:
                 v = configuration[k]
                 if t.enum is not None:
                     v = t.enum(v)
-                setattr(self, k, v)
+                t.method(self, v)
                 del configuration[k]
             else:
                 if t.defaultValue is not None:
-                    setattr(self, k, t.defaultValue)
+                    t.method(self, t.defaultValue)
 
     @classmethod
     def register(cls, name, dict):
@@ -45,7 +77,7 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         cls.xsd = cls.getClassSchema()
         cls._subclasses = { }
         for b in cls.__bases__:
-            if isinstance(b, Configurable):
+            if issubclass(b, Configurable):
                 assert name not in b._subclasses  # is that necessary?
                 b._subclasses[name] = cls
 
@@ -64,7 +96,15 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                         for k, v in v.parameters().items()}
         return schema
 
+    @classmethod
+    @coroutine
+    def getClassSchema_async(cls, rules=None):
+        return cls.getClassSchema(rules)
+
     def __dir__(self):
+        """Return all attributes of this object.
+
+        This is mostly for tab-expansion in IPython."""
         return list(self._allattrs)
 
     @classmethod
@@ -80,13 +120,33 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         return ListOfNodes(cls, **kwargs)
 
     def setValue(self, key, value):
+        if self._parent is not None:
+            self._parent.setChildValue(self._key + "." + key.key, value)
         self.__dict__[key] = value
+
+    def setChildValue(self, key, value):
+        if self._parent is not None:
+            self._parent.setChildValue(self._key + "." + key, value)
 
     def run(self):  # endpoint for multiple inheritance
         self.running = True
 
 
 class Node(Descriptor):
+    """Compose configurable classes into each other
+
+    with a Node you can use a Configurable object in another one as an
+    attribute.
+
+    ::
+
+        from karabo import Configurable, Node
+
+        class Outer(Configurable):
+            inner = Node(Inner)
+    """
+    defaultValue = karabo.hash.Hash()
+
     def __init__(self, cls, **kwargs):
         self.cls = cls
         Descriptor.__init__(self, **kwargs)
@@ -100,7 +160,7 @@ class Node(Descriptor):
         return self.cls.getClassSchema().hash
 
     def __set__(self, instance, value):
-        instance.setValue(self, self.cls(value))
+        instance.setValue(self, self.cls(value, instance, self.key))
 
     def asHash(self, instance):
         r = karabo.hash.Hash()
@@ -112,6 +172,8 @@ class Node(Descriptor):
 
 
 class ChoiceOfNodes(Node):
+    defaultValue = Attribute()
+
     def parameters(self):
         ret = super(ChoiceOfNodes, self).parameters()
         ret["nodeType"] = 2
@@ -140,6 +202,8 @@ class ChoiceOfNodes(Node):
 
 
 class ListOfNodes(Node):
+    defaultValue = Attribute()
+
     def parameters(self):
         ret = super(ListOfNodes, self).parameters()
         ret["nodeType"] = 3
@@ -170,7 +234,7 @@ class ListOfNodes(Node):
             for k in t._allattrs:
                 r[k] = getattr(t, k).asHash(getattr(v, k))
             l.append(r)
-        return karabo.hash.Hash(t.__name__, l)
+        return karabo.hash.Hash(self.key, l)
 
 
 class Validator(object):

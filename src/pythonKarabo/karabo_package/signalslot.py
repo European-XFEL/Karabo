@@ -5,6 +5,7 @@ from karabo.hash import BinaryParser, Hash
 from karabo.hashtypes import String, Int32, Type, Slot
 from karabo.enums import AccessLevel, Assignment, AccessMode
 from karabo.schema import Schema, Configurable
+from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
@@ -61,20 +62,22 @@ class BoundSignal(object):
     def __init__(self, device, name, signal):
         self.device = device
         self.name = name
-        self.connected = []
+        self.connected = {}
         self.args = signal.args
 
     def connect(self, target, slot, dunno):
-        self.connected.append((target, slot, dunno))
+        self.connected.setdefault(target, set()).add(slot)
 
     def disconnect(self, target, slot):
-        self.connected = [(t, s, d) for t, s, d in self.connected
-                          if t != target or s != slot]
+        s = self.connected.get(target, None)
+        if s is not None:
+            s.discard(slot)
+            if not s:
+                del self.connected[target]
 
     def __call__(self, *args):
         args = [d.cast(v) for d, v in zip(self.args, args)]
-        self.device._ss.emit(self.name, [s for t, s, d in self.connected],
-                             [t for t, s, d in self.connected], *args)
+        self.device._ss.emit(self.name, self.connected, *args)
 
 
 class Client(object):
@@ -99,13 +102,28 @@ class Client(object):
             f.set_result(hash)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", ["slotReconfigure"], [self.deviceId],
+        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO('SignalSlotable', '1.0')
 class SignalSlotable(Configurable):
+    """The base class for all objects connected to the broker
+
+    This contains everything to talk to the internet, especially
+    the handling of signals and slots, but also heartbeats.
+
+    Every coroutine is automatically a slot and can be called from the
+    outside. Signals must be declared as follows:
+
+    ::
+
+        from karabo import String, Integer
+        from karabo.signalslotable import SignalSlotable, Signal
+
+        class Spam(SignalSlotable):
+            signalHam = Signal(String(), Integer())"""
     signalHeartbeat = Signal(hashtypes.String(), hashtypes.Int32(),
                              hashtypes.Hash())
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
@@ -145,6 +163,7 @@ class SignalSlotable(Configurable):
         self.__schemaFutures = {}
         self.__devices = {}
         self.__repliers = {}
+        self._tasks = set()
 
     @coroutine
     def slotPing(self, instanceId, replyIfMe, track=None):
@@ -152,7 +171,8 @@ class SignalSlotable(Configurable):
             if instanceId == self.deviceId:
                 return self.info
         else:
-            self._ss.emit("call", ["slotPingAnswer"], self.deviceId, self.info)
+            self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
+                          self.deviceId, self.info)
         if track and instanceId != self.deviceId:
             self.signalHeartbeat.connect(instanceId, "slotHeartbeat", None)
 
@@ -168,6 +188,17 @@ class SignalSlotable(Configurable):
     def slotDisconnectFromSlot(self, *args):
         print("SDFS", args)
 
+
+    @coroutine
+    def slotGetOutputChannelInformation(self, ioChannelId, processId):
+        ch = getattr(self, ioChannelId, None)
+        if isinstance(ch, NetworkOutput):
+            ret = ch.getInformation()
+            ret["memoryLocation"] = "remote"
+            return True, ret
+        else:
+            return False, Hash()
+
     @coroutine
     def heartbeats(self):
         while True:
@@ -177,30 +208,51 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def consume(self):
-        self._ss.consumer = openmq.Consumer(
+        consumer = openmq.Consumer(
             self._ss.session, self._ss.destination,
-            "slotInstanceId LIKE '%|{}|%' OR replyFrom LIKE '{}-%'"
-            "OR slotInstanceId LIKE '%|*|%'".format(
+            "slotInstanceIds LIKE '%|{}|%' "
+            "OR slotInstanceIds LIKE '%|*|%'".format(
                 self.deviceId, self.deviceId), False)
-        self._ss.emit('call', ['slotInstanceNew'], ['*'],
+        self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         try:
-            while self.running:
-                async(self.handleMessage(
-                    (yield from get_event_loop().run_in_executor(
-                        None, self._ss.consumer.receiveMessage))))
+            while True:
+                try:
+                    message = yield from get_event_loop().run_in_executor(
+                        None, consumer.receiveMessage, 1000)
+                except openmq.Error as e:
+                    if e.status != 2103:  # timeout
+                        raise
+                else:
+                    self.async(self.handleMessage(message))
         finally:
-            self._ss.emit('call', ['slotInstanceGone'], ['*'],
+            self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
     def run(self):
-        async(self.heartbeats())
-        async(self.consume())
+        self.async(self.heartbeats())
+        self.async(self.consume())
         super().run()
 
-    def call(self, slot, target, *args):
+    def async(self, coro):
+        """start a coroutine asynchronously
+
+        Use this to execute a coroutine in the background. The coroutine
+        is registered with this object so it will be stopped once this
+        object is stopped. """
+        task = async(coro, loop=self._ss.loop)
+        self._tasks.add(task)
+        task.add_done_callback(lambda task: self._tasks.remove(task))
+
+    @coroutine
+    def slotKillDevice(self):
+        self.log.INFO("Device is going down as instructed")
+        for t in self._tasks:
+            t.cancel()
+
+    def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
-        self._ss.call("call", [slot], [target], reply, args)
+        self._ss.call("call", {device: [target]}, reply, args)
         future = Future(loop=self._ss.loop)
         self.__repliers[reply] = future
         return future
@@ -228,39 +280,47 @@ class SignalSlotable(Configurable):
                 f.set_result(params)
             return
 
-        slots = message.properties['slotFunction']
-        #for k in message.properties:
-        #    print k, message.properties[k]
+        slots = (message.properties['slotFunctions'][1:-1]).decode(
+            "utf8").split('||')
+        slots = {k: v.split(",") for k, v in (s.split(":") for s in slots)}
+
         try:
             replyTo = message.properties['replyTo']
         except openmq.Error:
             replyTo = None
+        try:
+            replyInstanceIds = message.properties['replyInstanceIds']
+        except openmq.Error:
+            replyInstanceIds = None
 
         sender = message.properties['signalInstanceId']
-        for s in slots[1:-1].split(b'||'):
-            try:
-                slot = getattr(self, s.decode("utf8"), None)
-                if slot is None:
-                    if ("|{}|".format(self.deviceId).encode("ascii") in
-                            message.properties['slotInstanceId']):
-                        raise AttributeError
-                    else:
-                        return
+
+        try:
+            slots = [getattr(self, s) for s in slots.get(self.deviceId, [])
+                     ] + [getattr(self, s) for s in slots.get("*", [])
+                          if hasattr(self, s)]
+            for slot in slots:
                 reply = yield from slot(*params)
                 if not isinstance(reply, tuple):
                     reply = reply,
                 if hasattr(slot, "replySlot"):
-                    self._ss.emit('call', [slot.replySlot],
-                                  [message.properties['signalInstanceId']],
-                                  *reply)
-                if replyTo is not None:
-                    self._ss.reply(replyTo, *reply)
-            except Exception as e:
-                sys.excepthook(*sys.exc_info())
-                print("Slot={}".format(s.decode("utf8")))
+                    self._ss.emit(
+                        'call', {message.properties['signalInstanceId'].
+                                 decode("utf8"): [slot.replySlot]}, *reply)
+                if replyTo is not None and reply != (None,):
+                    self._ss.reply(replyTo,
+                                   message.properties['signalInstanceId'],
+                                   *reply)
+                if replyInstanceIds is not None:
+                    self._ss.replyNoWait(replyInstanceIds,
+                                         message.properties['replyFunctions'],
+                                         *reply)
+        except Exception as e:
+            sys.excepthook(*sys.exc_info())
+            print("Slot={}".format(slots))
 
     def stopEventLoop(self):
-        self.running = False
+        get_event_loop().stop()
 
     @coroutine
     def slotConnectToSignal(self, signal, target, slot, dunno):
@@ -278,13 +338,17 @@ class SignalSlotable(Configurable):
 
     def updateInstanceInfo(self, info):
         self.info.merge(info)
-        self._ss.emit('call', ['slotInstanceUpdated'], ['*'],
+        self._ss.emit('call', {'*': ['slotInstanceUpdated']},
                       self.deviceId, self.info)
 
     def setValue(self, attr, value):
         self.__dict__[attr] = value
         if self.notify_changes:
             self.signalChanged(Hash(attr.key, value), self.deviceId)
+
+    def setChildValue(self, key, value):
+        if self.notify_changes:
+            self.signalChanged(Hash(key, value), self.deviceId)
 
     @coroutine
     def slotSchemaUpdated(self, schema, deviceId):
@@ -307,7 +371,7 @@ class SignalSlotable(Configurable):
         if ret is not None:
             return ret
 
-        self._ss.emit("call", ["slotGetSchema"], [deviceId], False)
+        self._ss.emit("call", {deviceId: ["slotGetSchema"]}, False)
         schema = yield from self.__schemaFutures.setdefault(
             deviceId, Future(loop=self._ss.loop))
 
@@ -320,11 +384,11 @@ class SignalSlotable(Configurable):
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
                 s = Slot()
                 s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", [name], [self.deviceId])
+                    "call", {self.deviceId: [name]})
                 dict[k] = s
         cls = type(schema.name, (Client,), dict)
 
-        self._ss.emit("call", ["slotGetConfiguration"], [deviceId])
+        self._ss.emit("call", {deviceId: "slotGetConfiguration"})
         self._ss.connect(deviceId, "signalChanged", self.slotChanged)
         ret = cls(self)
         self.__devices[deviceId] = ret

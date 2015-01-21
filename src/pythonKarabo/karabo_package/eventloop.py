@@ -7,6 +7,7 @@ from asyncio import (coroutine, Future, get_event_loop, set_event_loop,
                      SelectorEventLoop, Task)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
+import getpass
 from itertools import chain
 import sys
 
@@ -16,24 +17,28 @@ class Broker:
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
-        self.destination = openmq.Destination(self.session, "teichman", 1)
+        self.destination = openmq.Destination(self.session,
+                                              getpass.getuser(), 1)
         self.producer = openmq.Producer(self.session, self.destination)
         self.deviceId = deviceId
         self.classId = classId
 
-    def call(self, signal, slots, targets, reply, args):
+    def call(self, signal, targets, reply, args):
         hash = Hash()
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
         p = openmq.Properties()
         p['signalFunction'] = signal
         p['signalInstanceId'] = self.deviceId
-        p['slotFunction'] = (b'|' + b'||'.join(
-            s if isinstance(s, bytes) else s.encode("utf8")
-            for s in slots) + b'|') if slots else b'__none__'
-        p['slotInstanceId'] = (b'|' + b'||'.join(
-            t if isinstance(t, bytes) else t.encode("utf8")
-            for t in targets) + b'|') if targets else b'__none__'
+        if targets:
+            p['slotInstanceIds'] = ('|' + '||'.join(t for t in targets) + '|'
+                                   ).encode("utf8")
+            p['slotFunctions'] = ('|' + '||'.join(
+                "{}:{}".format(k, ",".join(v)) for k, v in targets.items()) +
+                '|').encode("utf8")
+        else:
+            p['slotInstanceIds'] = b'__none__'
+            p['slotFunctions'] = b'__none__'
         if reply is not None:
             p['replyTo'] = reply
         p['hostname'] = "exflpcx18981"
@@ -45,15 +50,26 @@ class Broker:
         m.properties = p
         self.producer.send(m, 1, 4, 1000)
 
-    def emit(self, signal, slots, targets, *args):
-        self.call(signal, slots, targets, None, args)
+    def log(self, message):
+        p = openmq.Properties()
+        p["target"] = "log"
+        m = openmq.TextMessage()
+        m.data = message
+        m.properties = p
+        self.producer.send(m, 1, 4, 1000)
 
-    def reply(self, whom, *args):
+    def emit(self, signal, targets, *args):
+        self.call(signal, targets, None, args)
+
+    def reply(self, replyTo, whom, *args):
         hash = Hash()
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
         p = openmq.Properties()
-        p['replyFrom'] = whom
+        p['replyFrom'] = replyTo
+        p['signalInstanceId'] = self.deviceId
+        p['signalFunction'] = "__reply__"
+        p['slotInstanceIds'] = b'|' + whom + b'|'
         p['__format'] = 'Bin'
         writer = BinaryWriter()
         m = openmq.BytesMessage()
@@ -61,9 +77,29 @@ class Broker:
         m.properties = p
         self.producer.send(m, 1, 4, 1000)
 
+    def replyNoWait(self, replyInstanceIds, replyFunctions, *args):
+        hash = Hash()
+        for i, a in enumerate(args):
+            hash['a{}'.format(i + 1)] = a
+        p = openmq.Properties()
+        p['signalInstanceId'] = self.deviceId
+        p['signalFunction'] = "__replyNoWait__"
+        p['slotInstanceIds'] = replyInstanceIds
+        p['slotFunctions'] = replyFunctions
+        p['__format'] = 'Bin'
+        writer = BinaryWriter()
+        m = openmq.BytesMessage()
+        m.data = writer.write(hash)
+        m.properties = p
+        self.producer.send(m, 1, 9, 1000)
+
     def connect(self, deviceId, signal, slot):
-        self.emit("call", ["slotConnectToSignal"], [deviceId], signal,
+        self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
                   slot.__self__.deviceId, slot.__name__, 0)
+
+    def disconnect(self, deviceId, signal, slot):
+        self.emit("call", {deviceId: ["slotDisconnectFromSignal"]}, signal,
+                  slot.__self__.deviceId, slot.__name__)
 
     def registerSlot(self, x):
         """ legacy code. slots don't need to be registered """
@@ -80,7 +116,7 @@ class Client(object):
                     f.set_result(v)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", ["slotReconfigure"], [self.deviceId],
+        self._device._ss.emit("call", {deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
 
@@ -110,10 +146,10 @@ class EventLoop(SelectorEventLoop):
     @coroutine
     def get_device(self, deviceId):
         f = self.device.slotSchemaUpdated[self.deviceId]
-        self.device._ss.emit("call", ["slotGetSchema"], [self.deviceId], False)
+        self.device._ss.emit("call", {self.deviceId: ["slotGetSchema"]}, False)
         schema = yield from f
         f = self.device.slotChanged[self.deviceId]
-        self.device._ss.emit("call", ["slotGetConfiguration"], [self.deviceId])
+        self.device._ss.emit("call", {self.deviceId: ["slotGetConfiguration"]})
         self.device._ss.connect(self.deviceId, "signalChanged",
                                 self.device.slotChanged)
         hash = yield from f
@@ -127,7 +163,7 @@ class EventLoop(SelectorEventLoop):
             elif a["nodeType"] == 1 and a["displayType"] == "Slot":
                 s = Slot()
                 s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", [name], [self.deviceId])
+                    "call", {self.deviceId: [name]})
                 dict[k] = s
         cls = type(self.schema.name.encode("ascii"), (Client,), dict)
         o = cls()
