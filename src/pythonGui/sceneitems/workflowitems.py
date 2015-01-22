@@ -511,6 +511,10 @@ class WorkflowChannel(QWidget):
 
 
 class WorkflowConnection(QWidget):
+    
+    # Data distribution type
+    COPY = "copy"
+    SHARED = "shared"
 
 
     def __init__(self, proxy, start_channel):
@@ -535,6 +539,8 @@ class WorkflowConnection(QWidget):
         self.proxy = proxy
         # Top left position of proxy in global coordinates
         self.topLeft = QPoint()
+        
+        self.dataDistribution = None
 
 
     def mouseMoveEvent(self, event):
@@ -618,6 +624,11 @@ class WorkflowConnection(QWidget):
 
             self.start_channel.signalUpdateConnections.connect(self.onStartChannelChanged)
             self.end_channel.signalUpdateConnections.connect(self.onEndChannelChanged)
+            
+            if hasattr(self.end_channel.box.value, "dataDistribution"):
+                dataDistribution = self.end_channel.box.boxvalue.dataDistribution
+                self.dataDistribution = dataDistribution.value
+                dataDistribution.signalUpdateComponent.connect(self.onDataDistributionChanged)
 
 
     def onStartChannelChanged(self, scene, transPos):
@@ -634,6 +645,11 @@ class WorkflowConnection(QWidget):
         scene.ilayout.update()
 
 
+    def onDataDistributionChanged(self, _, value):
+        self.dataDistribution = value
+        self.update()
+
+
     def draw(self, painter):
         length = math.sqrt(self.curveWidth()**2 + self.curveHeight()**2)
         delta = length/3
@@ -644,6 +660,9 @@ class WorkflowConnection(QWidget):
         elif self.start_channel_type == Item.INPUT:
             c1 = QPoint(self.start_pos.x() - delta, self.start_pos.y())
             c2 = QPoint(self.end_pos.x() + delta, self.end_pos.y())
+        
+        if self.dataDistribution == WorkflowConnection.SHARED:
+            painter.setPen(QPen(Qt.DashLine))
         
         self.curve = QPainterPath(self.start_pos)
         self.curve.cubicTo(c1, c2, self.end_pos)
