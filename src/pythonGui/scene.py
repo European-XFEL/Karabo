@@ -1098,9 +1098,14 @@ class Scene(QSvgWidget):
 
 
     def removeItemByObject(self, object):
+        """
+        This function removes the associated workflow/~group item of the given
+        \object from this scene.
+        """
         for c in self.inner.children():
             if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
                 if c.widget.getDevice() == object:
+                    c.widget.clear()
                     self.ilayout.remove_item(c)
                     break
 

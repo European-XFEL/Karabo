@@ -48,6 +48,17 @@ class Item(QWidget, Loadable):
         self.connectionsChecked = False
 
 
+    def clear(self):
+        """
+        All channels are cleaned.
+        """
+        for input in self.input_channels:
+            input.clear()
+        
+        for output in self.output_channels:
+            output.clear()
+
+
     def getDeviceIds(self):
         """
         A list of all related deviceIds is returned.
@@ -401,7 +412,6 @@ class WorkflowChannel(QWidget):
         assert channel_type in (Item.INPUT, Item.OUTPUT)
         self.channel_type = channel_type
         self.box = box
-        self.box.signalUpdateComponent.connect(parent.update)
         
         self.painterPath = None
         
@@ -413,6 +423,18 @@ class WorkflowChannel(QWidget):
 
         # Matrix of painter to draw this channel
         self.transform = None
+        
+        self.workflow_connections = []
+
+
+    def clear(self):
+        """
+        All associated workflow connections are removed.
+        """
+        i = len(self.workflow_connections)
+        while self.workflow_connections:
+            i -= 1
+            self.removeWorkflowConnection(self.workflow_connections[i])
 
 
     def getDeviceIds(self):
@@ -508,6 +530,26 @@ class WorkflowChannel(QWidget):
         point = self.transform.map(self.end_pos)
         point += self.parent().proxyPos
         return point
+
+
+    def appendWorkflowConnection(self, wc):
+        """
+        The given workflow connection object \wc is added to this channels'
+        workflow connection list.
+        """
+        self.workflow_connections.append(wc)
+
+
+    def removeWorkflowConnection(self, wc):
+        """
+        The given workflow connection object \wc is removed from this channels'
+        workflow connection list.
+        Furthermore the associated ProxyWidget is removed from the scene as well.
+        """
+        self.parent().scene.ilayout.remove_item(wc.proxy)
+        
+        index = self.workflow_connections.index(wc)
+        self.workflow_connections.pop(index)
 
 
 class WorkflowConnection(QWidget):
@@ -630,6 +672,11 @@ class WorkflowConnection(QWidget):
                 self.dataDistribution = dataDistribution.value
                 dataDistribution.signalUpdateComponent.connect(self.onDataDistributionChanged)
 
+            connectedOutputs = self.end_channel.box.boxvalue.connectedOutputChannels
+            connectedOutputs.signalUpdateComponent.connect(self.onConnectedOutputChannelsChanged)
+            
+            self.end_channel.appendWorkflowConnection(self)
+
 
     def onStartChannelChanged(self, scene, transPos):
         self.global_start = self.global_start + transPos
@@ -648,6 +695,12 @@ class WorkflowConnection(QWidget):
     def onDataDistributionChanged(self, _, value):
         self.dataDistribution = value
         self.update()
+
+
+    def onConnectedOutputChannelsChanged(self, box, value):
+        if not value:
+            # Remove connection
+            self.end_channel.removeWorkflowConnection(self)
 
 
     def draw(self, painter):
