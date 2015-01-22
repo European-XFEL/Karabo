@@ -179,6 +179,7 @@ namespace karabo {
             SlotCallGuardHandler m_slotCallGuardHandler;
 
             // Thresholds for warnings that messages are traveling slow (signal -> broker -> slot)
+            SignalSlotable* m_itself;
             long long m_brokerLatency;
             long long m_processingLatency;
 
@@ -927,6 +928,8 @@ namespace karabo {
                 m_processingLatency = processingThreshold <= 0? 15000LL : processingThreshold;
             }
             
+            virtual void updateLatencies();
+
         protected: // Functions
             
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -985,7 +988,7 @@ namespace karabo {
             }
 
             void registerReply(const karabo::util::Hash& reply);
-
+            
         private: // Functions
 
             void _runEventLoop();

@@ -194,7 +194,21 @@ namespace karabo {
                         .readOnly()
                         .initialValue("Ok")
                         .commit();
-
+                
+                INT64_ELEMENT(expected).key("brokerLatency")
+                        .displayedName("Broker latency")
+                        .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
+                        .readOnly().initialValue(0)
+                        .warnHigh(10000LL)
+                        .commit();
+                
+                INT64_ELEMENT(expected).key("processingLatency")
+                        .displayedName("Processing latency")
+                        .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
+                        .readOnly().initialValue(0)
+                        .warnHigh(10000LL)
+                        .commit();
+                        
                 FSM::expectedParameters(expected);
             }
 
@@ -203,8 +217,7 @@ namespace karabo {
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
                 
-                m_brokerLatency = 10000LL;
-                m_processingLatency = 15000LL;
+                m_itself = this;     // switch on the updates of latencies using "updateLatencies()" of this class
 
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
@@ -861,6 +874,11 @@ namespace karabo {
                     KARABO_LOG_DEBUG << "Schema was already cached";
                 }
                 return it->second;
+            }
+            
+            void updateLatencies() {
+                karabo::util::Hash h("brokerLatency", m_brokerLatency, "processingLatency", m_processingLatency);
+                this->set(h, karabo::util::Timestamp());
             }
         };
     }
