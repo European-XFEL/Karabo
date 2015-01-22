@@ -36,21 +36,18 @@ namespace karabo {
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
 
 
-        SignalSlotable::SignalSlotable() {
+        SignalSlotable::SignalSlotable() : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId,
-                const BrokerConnection::Pointer& connection) {
-
-            init(instanceId, connection);
+                const BrokerConnection::Pointer& connection) : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                 const std::string& brokerType,
-                const karabo::util::Hash& brokerConfiguration) {
-
+                const karabo::util::Hash& brokerConfiguration) : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -111,8 +108,10 @@ namespace karabo {
         void SignalSlotable::injectEvent(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
             long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
-            if (latency > m_brokerLatency) {
-                KARABO_LOG_FRAMEWORK_WARN << "Event latency at \"injection\" time is high (> " << m_brokerLatency/1000 << " secs) : " << latency/1000 << "." << latency%1000 << " secs";
+            if (m_brokerLatency == 0LL)
+                m_brokerLatency = latency;
+            else {
+                m_brokerLatency = (m_brokerLatency + latency)/2;
             }
 
             // Check whether this message is a reply
@@ -300,8 +299,10 @@ namespace karabo {
                 const Hash& body = *(event.second);
 
                 long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
-                if (latency > m_processingLatency) {
-                    KARABO_LOG_FRAMEWORK_WARN << "Event latency at \"processing\" time is high (> " << m_processingLatency/1000L << " secs) : " << latency/1000L << "." << latency % 1000L << " secs";
+                if (m_processingLatency == 0) {
+                    m_processingLatency = latency;
+                } else {
+                    m_processingLatency = (m_processingLatency + latency)/2;
                 }
 
 
@@ -1513,6 +1514,9 @@ namespace karabo {
                             cleanSignalsAndStopTracking(it->getKey());
                         }
                     }
+                    
+                    if (m_itself)
+                        m_itself->updateLatencies();
 
                     // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
                     boost::this_thread::sleep(boost::posix_time::seconds(3));
@@ -1737,5 +1741,7 @@ namespace karabo {
             }
             if (found) handler(id);
         }
+        
+        void SignalSlotable::updateLatencies() {KARABO_LOG_FRAMEWORK_INFO << "SignalSloatble::updateLatencies()";}
     }
 }
