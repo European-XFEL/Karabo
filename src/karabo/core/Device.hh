@@ -191,22 +191,42 @@ namespace karabo {
                 STRING_ELEMENT(expected).key("state")
                         .displayedName("State")
                         .description("The current state the device is in")
-                        .readOnly()
-                        .initialValue("Ok")
+                        .readOnly().initialValue("Ok")
+                        .commit();
+                
+                BOOL_ELEMENT(expected).key("trafficJam")
+                        .displayedName("Traffic jam for messages")
+                        .description("Flag denoting traffic jam for messages traveling via broker")
+                        .readOnly().initialValue(false)
                         .commit();
                 
                 INT64_ELEMENT(expected).key("brokerLatency")
-                        .displayedName("Broker latency")
+                        .displayedName("Broker latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
+                        .expertAccess()
                         .readOnly().initialValue(0)
-                        .warnHigh(10000LL)
+                        //.warnHigh(10000LL)
                         .commit();
                 
                 INT64_ELEMENT(expected).key("processingLatency")
-                        .displayedName("Processing latency")
+                        .displayedName("Processing latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
                         .readOnly().initialValue(0)
-                        .warnHigh(10000LL)
+                        //.warnHigh(10000LL)
+                        .commit();
+                
+                INT64_ELEMENT(expected).key("latencyUpper")
+                        .displayedName("Latency upper limit")
+                        .description("Message latency above that the \"Traffic jam\" flag will be set.")
+                        .assignmentOptional().defaultValue(10000LL)
+                        .adminAccess()
+                        .commit();
+                        
+                INT64_ELEMENT(expected).key("latencyLower")
+                        .displayedName("Latency lower limit")
+                        .description("Message latency below that the \"Traffic jam\" flag will be unset.")
+                        .assignmentOptional().defaultValue(5000LL)
+                        .adminAccess()
                         .commit();
                         
                 FSM::expectedParameters(expected);
@@ -877,7 +897,21 @@ namespace karabo {
             }
             
             void updateLatencies() {
+                bool jamFlag = this->get<bool>("trafficJam");
+                long long latencyUpper = this->get<long long>("latencyUpper");
+                long long latencyLower = this->get<long long>("latencyLower");
+                
                 karabo::util::Hash h("brokerLatency", m_brokerLatency, "processingLatency", m_processingLatency);
+
+                if (jamFlag) {
+                    if (m_processingLatency < latencyLower)
+                        h.set("trafficJam", false);
+                } else {
+                    if (m_processingLatency > latencyUpper) {
+                        h.set("trafficJam", true);
+                        KARABO_LOG_WARN << "Processing latency " << m_processingLatency << " are higher than established limit : " << latencyUpper;
+                    }
+                }
                 this->set(h, karabo::util::Timestamp());
             }
         };
