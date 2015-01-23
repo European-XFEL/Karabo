@@ -1742,6 +1742,7 @@ namespace karabo {
             if (found) handler(id);
         }
         
-        void SignalSlotable::updateLatencies() {KARABO_LOG_FRAMEWORK_INFO << "SignalSloatble::updateLatencies()";}
+        void SignalSlotable::updateLatencies() {
+        }
     }
 }
