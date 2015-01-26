@@ -315,7 +315,7 @@ def main(args):
     validated = v.validate(DeviceServer.getSchema("DeviceServer"), h)
     server = DeviceServer(validated["DeviceServer"])
     if server:
-        server.run()
+        async(server.run_async())
         try:
             loop.run_forever()
         finally:

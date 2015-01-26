@@ -9,8 +9,10 @@ from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
-from asyncio import async, coroutine, Future, get_event_loop, sleep, wait
+from asyncio import (async, coroutine, Future, get_event_loop, sleep,
+                     TimeoutError, wait, wait_for)
 from itertools import count
+import random
 import sys
 import time
 
@@ -187,12 +189,13 @@ class SignalSlotable(Configurable):
         self.__schemaFutures = {}
         self.__devices = {}
         self.__repliers = {}
+        self.__randPing = 0
         self._tasks = set()
 
     @slot
-    def slotPing(self, instanceId, replyIfMe, track=None):
-        if replyIfMe:
-            if instanceId == self.deviceId:
+    def slotPing(self, instanceId, rand, track=None):
+        if rand:
+            if instanceId == self.deviceId and self.__randPing != rand:
                 return self.info
         else:
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
@@ -237,8 +240,6 @@ class SignalSlotable(Configurable):
             "slotInstanceIds LIKE '%|{}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(
                 self.deviceId, self.deviceId), False)
-        self._ss.emit('call', {'*': ['slotInstanceNew']},
-                      self.deviceId, self.info)
         try:
             while True:
                 try:
@@ -253,10 +254,22 @@ class SignalSlotable(Configurable):
             self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
 
-    def run(self):
-        self.async(self.heartbeats())
+    @coroutine
+    def run_async(self):
         self.async(self.consume())
-        super().run()
+        try:
+            self.__randPing = random.randint(1, 0x7fffffff)
+            yield from wait_for(
+                self.call("*", "slotPing", self.deviceId,
+                          self.__randPing, False), timeout=3)
+            yield from self.slotKillDevice()
+            return
+        except TimeoutError:
+            pass
+        self.run()
+        self._ss.emit('call', {'*': ['slotInstanceNew']},
+                      self.deviceId, self.info)
+        self.async(self.heartbeats())
 
     def async(self, coro):
         """start a coroutine asynchronously
