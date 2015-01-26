@@ -19,6 +19,8 @@ using namespace karabo::log;
 
 
 int main(int argc, char** argv) {
+    srand(time(0) + getpid());
+
     try {
         DeviceServer::Pointer deviceServer;
         

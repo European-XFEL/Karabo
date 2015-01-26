@@ -126,7 +126,7 @@ namespace karabo {
             bool m_runHeartbeatLoop;
             boost::thread_group m_heartbeatLoopThreads;
 
-            bool m_isPingable;
+            int m_randPing;
 
             // Reply/Request related
             Replies m_replies;
@@ -1008,7 +1008,7 @@ namespace karabo {
 
             void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance);
+            void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
