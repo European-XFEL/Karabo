@@ -305,6 +305,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
             typedef boost::function<bool (const std::string& /*slotFunction*/, std::string& /*errorMessage*/) > SlotCallGuardHandler;
+            typedef boost::function<void ()> UpdateLatenciesHandler;
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
@@ -406,9 +407,9 @@ namespace karabo {
             InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
             SlotCallGuardHandler m_slotCallGuardHandler;
             ExceptionHandler m_exceptionHandler;
-
+            UpdateLatenciesHandler m_updateLatencies;
+            
             // Thresholds for warnings that messages are traveling slow (signal -> broker -> slot)
-            SignalSlotable* m_itself;
             long long m_brokerLatency;
             long long m_processingLatency;
 
@@ -597,6 +598,8 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
 
             void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
+            
+            void registerUpdateLatenciesHandler(const UpdateLatenciesHandler& updateLatenciesHandler);
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
@@ -1176,8 +1179,6 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 m_brokerLatency = brokerThreshold <= 0 ? 10000LL : brokerThreshold;
                 m_processingLatency = processingThreshold <= 0 ? 15000LL : processingThreshold;
             }
-
-            virtual void updateLatencies();
 
         protected: // Functions
 
