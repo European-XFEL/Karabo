@@ -47,7 +47,7 @@ void exportPyIoH5File();
 void exportPyWebAuthenticator();
 
 // xms
-void exportPyXmsRequestor();
+//void exportPyXmsRequestor();
 void exportPyXmsSignalSlotable();
 void exportPyXmsSlotElement();
 
@@ -142,7 +142,7 @@ BOOST_PYTHON_MODULE(karathon) {
     exportPyWebAuthenticator();
     
     // xms       
-    exportPyXmsRequestor();
+    //exportPyXmsRequestor();
     exportPyXmsSignalSlotable();
     exportPyXmsSlotElement();
     

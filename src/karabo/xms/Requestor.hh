@@ -33,10 +33,8 @@ namespace karabo {
             
             std::string m_replyId;
             bool m_isRequested;
-            bool m_isReceived;           
-            
+            bool m_isReceived;                       
             int m_timeout;
-
             static boost::uuids::random_generator m_uuidGenerator;
 
         public:
@@ -78,6 +76,30 @@ namespace karabo {
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                 return *this;
             }
+            
+            void receive(const boost::function<void () >& replyCallback) {
+                m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            }
+            
+            template <class A1>
+            void receive(const boost::function<void (const A1&) >& replyCallback) {
+                m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            }
+            
+            template <class A1, class A2>
+            void receive(const boost::function<void (const A1&, const A2&) >& replyCallback) {
+                m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            }
+            
+            template <class A1, class A2, class A3>
+            void receive(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback) {
+                m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            }
+            
+            template <class A1, class A2, class A3, class A4>
+            void receive(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback) {
+                m_signalSlotable->registerSlot(replyCallback, m_replyId);
+            }                                                          
             
             Requestor& requestNoWait(
             const std::string& requestSlotInstanceId, 
@@ -129,10 +151,11 @@ namespace karabo {
                 return *this;
             }
 
-            Requestor& receive() {
+            void receive() {
                 try {
                     karabo::util::Hash::Pointer header, body;                  
                     receiveResponse(header, body);
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));                    
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
                 } catch (const karabo::util::CastException&) {
@@ -140,14 +163,14 @@ namespace karabo {
                 } catch (const karabo::util::NetworkException&) {
                     KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
-                return *this;
             }
 
             template <class A1>
-            Requestor& receive(A1& a1) {
+            void receive(A1& a1) {
                 try {                   
                     karabo::util::Hash::Pointer header, body;
                     receiveResponse(header, body);
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error")); 
                     a1 = body->get<A1 > ("a1");
                 } catch (const karabo::util::TimeoutException&) {
                     KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
@@ -156,14 +179,14 @@ namespace karabo {
                 } catch (const karabo::util::NetworkException&) {
                     KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
-                return *this;
             }
 
             template <class A1, class A2>
-            Requestor& receive(A1& a1, A2& a2) {
+            void receive(A1& a1, A2& a2) {
                 try {                    
                     karabo::util::Hash::Pointer body, header;
                     receiveResponse(header, body);
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                 } catch (const karabo::util::TimeoutException&) {
@@ -173,14 +196,14 @@ namespace karabo {
                 } catch (const karabo::util::NetworkException&) {
                     KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
-                return *this;
             }
 
             template <class A1, class A2, class A3>
-            Requestor& receive(A1& a1, A2& a2, A3& a3) {
+            void receive(A1& a1, A2& a2, A3& a3) {
                 try {
                     karabo::util::Hash::Pointer body, header;
                     receiveResponse(header, body);
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                     a3 = body->get<A3 > ("a3");
@@ -191,14 +214,14 @@ namespace karabo {
                 } catch (const karabo::util::NetworkException&) {
                     KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
-                return *this;
             }
 
             template <class A1, class A2, class A3, class A4>
-            Requestor& receive(A1& a1, A2& a2, A3& a3, A4& a4) {
+            void receive(A1& a1, A2& a2, A3& a3, A4& a4) {
                 try {
                     karabo::util::Hash::Pointer body, header;
                     receiveResponse(header, body);
+                    if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
                     a1 = body->get<A1 > ("a1");
                     a2 = body->get<A2 > ("a2");
                     a3 = body->get<A3 > ("a3");
@@ -210,7 +233,6 @@ namespace karabo {
                 } catch (const karabo::util::NetworkException&) {
                     KARABO_RETHROW_AS(KARABO_NETWORK_EXCEPTION("Could not send request"));
                 }
-                return *this;
             }
 
             Requestor& timeout(const int& milliseconds);

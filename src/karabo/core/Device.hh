@@ -35,7 +35,7 @@ namespace karabo {
 #define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
 #define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
 #define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
-#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR 
+#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
 #define KARABO_NO_SERVER "__none__"
 
@@ -54,7 +54,7 @@ namespace karabo {
             // Can be removed, if sending current configuration after instantiation by server is deprecated
             virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
-        };
+        };               
 
         /**
          * The Device class.
@@ -69,12 +69,14 @@ namespace karabo {
             std::string m_classId;
             std::string m_serverId;
             std::string m_deviceId;
+            
+            int m_nThreads;
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             mutable boost::mutex m_stateDependendSchemaMutex;
 
             mutable boost::mutex m_objectStateChangeMutex;
-            
+
             // Regular expression for error detection in state word
             boost::regex m_errorRegex;
 
@@ -179,7 +181,7 @@ namespace karabo {
                         .assignmentOptional().defaultValue(120)
                         .adminAccess()
                         .commit();
-                
+
                 INT32_ELEMENT(expected).key("nThreads")
                         .displayedName("Number of threads")
                         .description("Defines the number of threads that can be used to work on incoming events")
@@ -233,6 +235,9 @@ namespace karabo {
             }
 
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase) {
+                
+                // By default every device runs in a single threaded context
+                m_nThreads = 1;
 
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
@@ -271,9 +276,12 @@ namespace karabo {
 
                 // Initialize Device slots
                 this->initDeviceSlots();
-                
+
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
+                
+                // Register exception handler
+                this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
             }
 
             virtual ~Device() {
@@ -292,6 +300,15 @@ namespace karabo {
                     m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
                 }
                 return *(m_deviceClient);
+            }
+            
+            /**
+             * Sets the number of threads that will be used for processing all slots of this device
+             * For every slot that is blocking until it gets unblocked
+             * through a different slot and additional thread is needed.
+             */
+            void setNumberOfThreads(int nThreads) {
+                m_nThreads = nThreads;
             }
 
             /**
@@ -614,7 +631,7 @@ namespace karabo {
             virtual void updateState(const std::string& currentState) { // private
                 KARABO_LOG_FRAMEWORK_DEBUG << "onStateUpdate: " << currentState;
                 if (get<std::string>("state") != currentState) {
-                    set("state", currentState);                    
+                    set("state", currentState);
                     if (boost::regex_match(currentState, m_errorRegex)) {
                         updateInstanceInfo(karabo::util::Hash("status", "error"));
                     } else {
@@ -637,15 +654,18 @@ namespace karabo {
              * @param shortMessage short error message
              * @param detailedMessage detailed error message
              */
-            void exceptionFound(const std::string& shortMessage, const std::string& detailedMessage) const {
-                KARABO_LOG_ERROR << shortMessage;
-                emit("signalNotification", std::string("EXCEPTION"), shortMessage, detailedMessage, m_deviceId);
+            KARABO_DEPRECATED void exceptionFound(const std::string& shortMessage, const std::string& detailedMessage) const {
+                KARABO_LOG_ERROR << detailedMessage;
+            }
+            
+            void exceptionFound(const karabo::util::Exception& e) {
+                KARABO_LOG_ERROR << e;
             }
 
             //void notify("ERROR", const std::string& shortMessage, const std::string& detailedMessage)
 
             // This function will polymorphically be called by the FSM template
-
+            // TODO Make it private
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
                 boost::regex re(".*\\d+(.+Event).*");
@@ -661,9 +681,8 @@ namespace karabo {
             }
 
             // Use execute instead to trigger your error event
-
             KARABO_DEPRECATED virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
-                this->exceptionFound(shortMessage, detailedMessage);
+                KARABO_LOG_ERROR << detailedMessage;
             }
 
             void execute(const std::string& command) const {
@@ -705,7 +724,7 @@ namespace karabo {
 
             /**
              * This function will typically be called by the DeviceServer (or directly within the startDevice application).
-             * The call to run is blocking and afterwards communication should happen only via call-back hooks of the state-machine
+             * The call to run is blocking and afterwards communication should happen only via call-backs
              */
             void run() {
 
@@ -724,8 +743,8 @@ namespace karabo {
                 instanceInfo.set("host", boost::asio::ip::host_name());
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
-                
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, this->get<int>("nThreads")));
+
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, m_nThreads));
 
                 // Give the broker communication some time to come up
                 //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
@@ -787,18 +806,25 @@ namespace karabo {
                 SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
                 SLOT0(slotKillDevice)
             }
-            
-            bool slotCallGuard(const std::string& slotName) {
+
+            bool slotCallGuard(const std::string& slotName, std::string& errorMessage) {
                 if (m_fullSchema.has(slotName)) {
                     const std::vector<std::string>& allowedStates = m_fullSchema.getAllowedStates(slotName);
                     if (!allowedStates.empty()) {
                         //std::cout << "Validating slot" << std::endl;
                         const std::string& currentState = get<std::string > ("state");                        
-                        return std::find(allowedStates.begin(), allowedStates.end(), currentState) != allowedStates.end();
+                        if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
+                            std::ostringstream msg;
+                            msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " 
+                                    << "\"" << currentState << "\" of " << "\"" << m_deviceId << "\"" 
+                                    << "Allowed commands are: " << karabo::util::toString(allowedStates);
+                            errorMessage = msg.str();
+                            return false;
+                        }
                     }
                     return true;
                 }
-                return true;                
+                return true;
             }
 
             void slotGetConfiguration() {
@@ -806,8 +832,8 @@ namespace karabo {
                 //call(senderId, "slotChanged", m_parameters, m_deviceId);
                 reply(m_parameters, m_deviceId);
             }
-            
-             void slotGetSchema(bool onlyCurrentState) {
+
+            void slotGetSchema(bool onlyCurrentState) {
 
                 //std::string senderId = this->getSenderInfo("slotGetSchema")->getInstanceIdOfSender();
 
@@ -839,7 +865,7 @@ namespace karabo {
                         applyReconfiguration(validated);
                     }
                 } catch (const karabo::util::Exception& e) {
-                    this->exceptionFound(e.userFriendlyMsg(), e.detailedMsg());
+                    this->exceptionFound(e);
                     reply(false, e.userFriendlyMsg());
                     return;
                 }
@@ -865,7 +891,7 @@ namespace karabo {
                 KARABO_LOG_DEBUG << "After user interaction:\n" << reconfiguration;
                 emit("signalChanged", reconfiguration, getInstanceId());
                 this->postReconfigure();
-            }           
+            }
 
             void slotKillDevice() {
                 // It is important to know who gave us the kill signal
@@ -917,7 +943,5 @@ namespace karabo {
         };
     }
 }
-
-//KARABO_REGISTER_FACTORY_BASE_HH(karabo::core::Device, TEMPLATE_CORE, DECLSPEC_CORE)
 
 #endif

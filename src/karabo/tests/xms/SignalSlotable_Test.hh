@@ -24,13 +24,13 @@ public:
     SignalSlotDemo(const std::string& instanceId, const karabo::net::BrokerConnection::Pointer connection) : 
     karabo::xms::SignalSlotable(instanceId, connection), m_messageCount(0), m_allOk(true) {
 
-        SIGNAL1("signalA", std::string);
+        KARABO_SIGNAL("signalA", std::string);
 
-        SLOT1(slotA, std::string);
+        KARABO_SLOT(slotA, std::string);
 
-        SLOT2(slotB, int, karabo::util::Hash);
+        KARABO_SLOT(slotB, int, karabo::util::Hash);
         
-        SLOT1(slotC, int);
+        KARABO_SLOT(slotC, int);
 
     }
 
@@ -68,6 +68,10 @@ public:
     
     bool wasOk() {
         return ((m_messageCount == 4) && m_allOk);
+    }
+    
+    void myCallBack(const std::string& someData, int number) {
+        std::clog << "Got called with: " << someData << " and " << number << std::endl;
     }
 
 

@@ -9,8 +9,6 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
-
-#include "Requestor.hh"
 #include "SignalSlotable.hh"
 
 using namespace std;
