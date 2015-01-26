@@ -113,19 +113,19 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable() : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
+        SignalSlotable::SignalSlotable() : m_brokerLatency(0LL), m_processingLatency(0LL) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId,
-                const BrokerConnection::Pointer& connection) : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
+                const BrokerConnection::Pointer& connection) : m_brokerLatency(0LL), m_processingLatency(0LL) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                 const std::string& brokerType,
-                const karabo::util::Hash& brokerConfiguration) : m_itself(NULL), m_brokerLatency(0LL), m_processingLatency(0LL) {
+                const karabo::util::Hash& brokerConfiguration) : m_brokerLatency(0LL), m_processingLatency(0LL) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -188,12 +188,7 @@ namespace karabo {
 
         void SignalSlotable::injectEvent(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
-            long long latency = getEpochMillis() - header->get<long long>("MQTimestamp");
-            if (m_brokerLatency == 0LL)
-                m_brokerLatency = latency;
-            else {
-                m_brokerLatency = (m_brokerLatency + latency) / 2;
-            }
+            m_brokerLatency = getEpochMillis() - header->get<long long>("MQTimestamp");
 
             // Check whether this message is a reply
             if (header->has("replyFrom")) {
@@ -405,14 +400,7 @@ namespace karabo {
                  */
                 const Hash& header = *(event.first);
                 const Hash& body = *(event.second);
-
-                long long latency = getEpochMillis() - header.get<long long>("MQTimestamp");
-                if (m_processingLatency == 0) {
-                    m_processingLatency = latency;
-                } else {
-                    m_processingLatency = (m_processingLatency + latency) / 2;
-                }
-
+                m_processingLatency = getEpochMillis() - header.get<long long>("MQTimestamp");
 
                 /* The header of each event (message) 
                  * should contain all slotFunctions that must be a called
@@ -1684,8 +1672,7 @@ namespace karabo {
                     }
 
                     // TODO Why not using this-> ????
-                    if (m_itself)
-                        m_itself->updateLatencies();
+                    if (m_updateLatencies) m_updateLatencies();
 
                     // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
                     boost::this_thread::sleep(boost::posix_time::seconds(3));
@@ -1910,7 +1897,8 @@ namespace karabo {
             if (found) handler(id);
         }
         
-        void SignalSlotable::updateLatencies() {
+        void SignalSlotable::registerUpdateLatenciesHandler(const UpdateLatenciesHandler& updateLatenciesHandler) {
+            m_updateLatencies = updateLatenciesHandler;
         }
     }
 }
