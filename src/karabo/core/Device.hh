@@ -242,8 +242,6 @@ namespace karabo {
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
                 
-                m_itself = this;     // switch on the updates of latencies using "updateLatencies()" of this class
-
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
@@ -282,6 +280,9 @@ namespace karabo {
                 
                 // Register exception handler
                 this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
+                
+                // Register updateLatencies handler
+                this->registerUpdateLatenciesHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this));
             }
 
             virtual ~Device() {
