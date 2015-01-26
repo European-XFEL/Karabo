@@ -232,7 +232,7 @@ namespace karabo {
 
             void setTimeoutSyncRead(int milliseconds);
 
-            void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
+            //void waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id);
 
             void setErrorHandler(const BrokerErrorHandler& handler);
 
