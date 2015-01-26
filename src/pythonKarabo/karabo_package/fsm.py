@@ -475,7 +475,7 @@ class StateMachine(State):
                   for x in self.current_state]
         if len(result) == 1:
             return str(result[0])
-        return '[' + ':'.join(x) + ']'
+        return '[' + ':'.join(result) + ']'
 
     def get_state_object(self):
         return self.currentStateObject
