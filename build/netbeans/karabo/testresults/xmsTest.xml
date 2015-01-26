@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests></FailedTests>
-  <SuccessfulTests>
-    <Test id="1">
+  <FailedTests>
+    <FailedTest id="1">
       <Name>SignalSlotable_Test::testMethod</Name>
-    </Test>
-  </SuccessfulTests>
+      <FailureType>Assertion</FailureType>
+      <Location>
+        <File>../../../src/karabo/tests/xms/SignalSlotable_Test.cc</File>
+        <Line>82</Line>
+      </Location>
+      <Message>assertion failed
+- Expression: ssDemo.wasOk() == true
+</Message>
+    </FailedTest>
+  </FailedTests>
+  <SuccessfulTests></SuccessfulTests>
   <Statistics>
     <Tests>1</Tests>
-    <FailuresTotal>0</FailuresTotal>
+    <FailuresTotal>1</FailuresTotal>
     <Errors>0</Errors>
-    <Failures>0</Failures>
+    <Failures>1</Failures>
   </Statistics>
 </TestRun>

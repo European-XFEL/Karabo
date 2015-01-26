@@ -34,7 +34,7 @@ namespace karathon {
         karabo::xms::Requestor(signalSlotable) {
         }
 
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction) {
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction) {
             {
                 ScopedGILRelease nogil;
                 sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash());
@@ -42,26 +42,26 @@ namespace karathon {
             return *this;
         }
 
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const bp::object& a1) {            
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const bp::object& a1) {            
             sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1));
             //registerRequest();
             return *this;
         }
 
         template <class A1, class A2>
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2) {
             sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2));            
             return *this;
         }
 
         template <class A1, class A2, class A3>
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3) {
             sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3));
             return *this;
         }
 
         template <class A1, class A2, class A3, class A4>
-        RequestorWrap& callPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
+        RequestorWrap& requestPy(const std::string& slotInstanceId, const std::string& slotFunction, const A1& a1, const A2& a2, const A3& a3, const A4& a4) {
             sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));          
             return *this;
         }

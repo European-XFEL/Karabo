@@ -64,6 +64,12 @@ EXTERN_DIR ?= $(CND_BASEDIR)/../../../extern
 EXTERN_DISTDIR = $(EXTERN_DIR)/$(CND_PLATFORM_$(CONF))
 export PKG_CONFIG_PATH=.
 
+# Sphinx documentation related
+#SPHINXOPTS    =
+#SPHINXBUILD   = ../extern/GNU-Linux-x86/bin/sphinx-build
+#PAPER         =
+#BUILDDIR      = .build
+
 # build
 build: .build-post
 
@@ -109,7 +115,7 @@ build: .build-post
 	@$(CP) $(CND_BASEDIR)/../../../src/karabo/*.hpp $(KARABO)/include/karabo
 
 # Force extern re-build
-.PHONY: extern package cmd
+.PHONY: extern package 
 extern:
 	@mkdir -p $(KARABO)
 	@./.installExtern.sh $(EXTERN_DIR) $(EXTERN_DISTDIR) $(GUIOPT) $(WHAT)

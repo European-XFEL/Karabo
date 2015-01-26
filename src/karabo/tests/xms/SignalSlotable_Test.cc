@@ -44,7 +44,7 @@ void SignalSlotable_Test::testMethod() {
 
         try {
 
-            connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
+            connection = BrokerConnection::create("Jms", Hash("serializationType", "text", "hostname", "localhost"));
 
         } catch (const Exception& e) {
             clog << "Could not establish connection to broker, skipping SignalSlotable_Test" << endl;
@@ -69,6 +69,9 @@ void SignalSlotable_Test::testMethod() {
             CPPUNIT_ASSERT(false == true);
         }
         CPPUNIT_ASSERT(reply == 2);
+        
+        string someData("myPrivateStuff");
+        ssDemo.request("SignalSlotDemo", "slotC", 1).receiveAsync<int>(boost::bind(&SignalSlotDemo::myCallBack, &ssDemo, someData, _1));
             
         ssDemo.call("SignalSlotDemo", "slotC", 1);
                 
@@ -79,6 +82,5 @@ void SignalSlotable_Test::testMethod() {
         CPPUNIT_ASSERT(ssDemo.wasOk() == true);
     } catch (const karabo::util::Exception& e) {
         cout << e;
-    }
+    }        
 }
-
