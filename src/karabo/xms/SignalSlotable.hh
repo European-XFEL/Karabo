@@ -344,7 +344,7 @@ namespace karabo {
             bool m_runEventLoop;
             boost::thread_group m_eventLoopThreads;
 
-            bool m_isPingable;
+            int m_randPing;
 
             // Reply/Request related
             Replies m_replies;
@@ -1255,7 +1255,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             void slotInstanceGone(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance);
+            void slotPing(const std::string& instanceId, int rand, bool trackPingedInstance);
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 

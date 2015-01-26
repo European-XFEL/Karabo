@@ -165,8 +165,8 @@ namespace karabo {
 
             Hash instanceInfo;
             try {
-                // Disable answers by own slotPing
-                request("*", "slotPing", instanceId, true, false).timeout(100).receive(instanceInfo);
+		m_randPing = rand() + 1;
+                request("*", "slotPing", instanceId, m_randPing, false).timeout(100).receive(instanceInfo);
                 //cout << "isValidInstanceId got answer: " << instanceInfo << endl;
             } catch (const karabo::util::TimeoutException&) {
                 Exception::clearTrace();
@@ -243,8 +243,6 @@ namespace karabo {
         void SignalSlotable::runEventLoop(int heartbeatInterval, const karabo::util::Hash& instanceInfo, int nThreads) {
 
             // This prevents this instance from answering to any ping request                        
-            m_isPingable = false;
-
             m_instanceInfo = instanceInfo;
 
             m_runEventLoop = true;
@@ -270,7 +268,6 @@ namespace karabo {
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
-            m_isPingable = true;
 
             m_eventLoopThreads.join_all(); // Join all event dispatching threads
 
@@ -558,7 +555,7 @@ namespace karabo {
             SIGNAL1("signalGotPinged", string /*instanceId*/)
 
             // Global ping listener
-            GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, bool /*replyIfSame*/, bool /*trackPingedInstance*/)
+            GLOBAL_SLOT3(slotPing, string /*callersInstanceId*/, int /*replyIfSame*/, bool /*trackPingedInstance*/)
 
             // Global instance new notification
             GLOBAL_SLOT2(slotInstanceNew, string /*instanceId*/, Hash /*instanceInfo*/)
@@ -711,7 +708,7 @@ namespace karabo {
 
         const std::vector<std::pair<std::string, karabo::util::Hash> >& SignalSlotable::getAvailableInstances(bool activateTracking) {
             m_availableInstances.clear();
-            call("*", "slotPing", m_instanceId, false, activateTracking);
+            call("*", "slotPing", m_instanceId, 0, activateTracking);
             // The function slotPingAnswer will be called by all instances available now
             // Lets wait a fair amount of time - huaaah this is bad isn't it :-(
             boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
@@ -745,7 +742,8 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-                this->request("*", "slotPing", instanceId, true, false).timeout(200).receive(instanceInfo);
+		m_randPing = rand() + 1;
+                this->request("*", "slotPing", instanceId, m_randPing, false).timeout(200).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 return std::make_pair(false, hostname);
             }
@@ -753,19 +751,11 @@ namespace karabo {
             return std::make_pair(true, hostname);
         }
 
+        void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool trackPingedInstance) {
 
-        void SignalSlotable::slotPing(const std::string& instanceId, bool replyIfInstanceIdIsDuplicated, bool trackPingedInstance) {
-
-            if (!m_isPingable) {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Ignoring ping requests";
-                return;
-            }
-
-
-            if (replyIfInstanceIdIsDuplicated) {
-                //cout << "Got asked whether I (\"" << m_instanceId << "\") am called \"" << instanceId << "\"" << endl;
-                if (instanceId == m_instanceId) {
-                    //cout << "Answering: Yes!" << endl;
+            if (rand) {
+		if (rand == m_randPing) cout << "ignoring" << rand << instanceId;
+                if (instanceId == m_instanceId && rand != m_randPing) {
                     reply(m_instanceInfo);
                 }
             } else {
