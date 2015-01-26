@@ -40,6 +40,8 @@ namespace karabo {
             void registerInitialFunction(const boost::function<void()>& func) {
                 m_initialFunc = func;
             }
+            
+            #define KARABO_INITIAL_FUNCTION(function) this->registerInitialFunction(boost::bind(&Self::function, this));
 
         private:
 
