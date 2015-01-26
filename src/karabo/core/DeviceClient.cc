@@ -169,24 +169,26 @@ namespace karabo {
         void DeviceClient::onInstanceAvailableAgain(const std::string& instanceId, const Hash& instanceInfo) {
             KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
 
-            try {
-                string path = prepareTopologyPath(instanceId, instanceInfo);
-                bool hasInstance = existsInRuntimeSystemDescription(path);
-
-                if (hasInstance) {
-                    // Should never happen
-                    KARABO_LOG_FRAMEWORK_ERROR << "Instance \"" << instanceId << "\" silently appeared, which never died before.";
-                } else {
-                    KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
-                    Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
-                    mergeIntoRuntimeSystemDescription(entry);
-                    if (m_instanceNewHandler) m_instanceNewHandler(entry);
-                }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceAvailableAgain(): " << e;
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceAvailableAgain()";
-            }
+            slotInstanceNew(instanceId, instanceInfo);
+            
+//            try {
+//                string path = prepareTopologyPath(instanceId, instanceInfo);
+//                bool hasInstance = existsInRuntimeSystemDescription(path);
+//
+//                if (hasInstance) {
+//                    // Should never happen
+//                    KARABO_LOG_FRAMEWORK_ERROR << "Instance \"" << instanceId << "\" silently appeared, which never died before.";
+//                } else {
+//                    KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
+//                    Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+//                    mergeIntoRuntimeSystemDescription(entry);
+//                    if (m_instanceNewHandler) m_instanceNewHandler(entry);
+//                }
+//            } catch (const Exception& e) {
+//                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceAvailableAgain(): " << e;
+//            } catch (...) {
+//                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceAvailableAgain()";
+//            }
         }
 
 
@@ -225,6 +227,7 @@ namespace karabo {
 
 
         void DeviceClient::onInstanceNotAvailable(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
+            KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceBone was called";
             slotInstanceGone(instanceId, instanceInfo);
         }
 
