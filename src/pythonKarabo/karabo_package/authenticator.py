@@ -11,7 +11,7 @@ class Authenticator(object):
 
     def __init__(self, username, password, provider, currentIpAddress,
                  brokerHostname, brokerPortNumber, brokerTopic):
-        self.client = Client(self.url)
+        self.client = Client(self.url, timeout = 5)
         self.username = username
         self.password = password
         self.provider = provider
