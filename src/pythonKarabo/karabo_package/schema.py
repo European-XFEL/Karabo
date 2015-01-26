@@ -58,11 +58,11 @@ class Configurable(Registry, metaclass=MetaConfigurable):
                 v = configuration[k]
                 if t.enum is not None:
                     v = t.enum(v)
-                t.method(self, v)
+                t.setter(self, v)
                 del configuration[k]
             else:
                 if t.defaultValue is not None:
-                    t.method(self, t.defaultValue)
+                    t.setter(self, t.defaultValue)
 
     @classmethod
     def register(cls, name, dict):

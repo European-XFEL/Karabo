@@ -243,9 +243,13 @@ class Descriptor(object):
         v = self.cast(value)
         instance.setValue(self, v)
 
-    def method(self, instance, value):
+    def setter(self, instance, value):
         """this is to be called if the value is changed from the outside"""
         setattr(instance, self.key, value)
+
+    @coroutine
+    def setter_async(self, instance, value):
+        self.setter(instance, value)
 
 
 class Slot(Descriptor):
@@ -268,11 +272,28 @@ class Slot(Descriptor):
         if instance is None:
             return self
         else:
-            return self.method(instance, owner)
+            def inner(device):
+                return self.method(device)
+            inner.slot = self.inner
+            return inner.__get__(instance, owner)
 
+    def inner(self, device, message, args):
+        if device.currenttask is not None:
+            print("not running", self.key)
+            return
+        device.currenttask = device.async(self.method(device))
+        def deleter(task):
+            device.currenttask = None
+        device.currenttask.add_done_callback(deleter)
+
+    def method(self, device):
+        return self.themethod(device)
+
+    def setter(self, instance, value):
+        pass  # nothing to set in a slot
 
     def __call__(self, method):
-        self.method = coroutine(method).__get__
+        self.themethod = coroutine(method)
         return self
 
 
@@ -333,7 +354,7 @@ class Type(Descriptor, Registry):
         return ret
 
     def __call__(self, method):
-        self.method = method
+        self.setter = method
         return self
 
 

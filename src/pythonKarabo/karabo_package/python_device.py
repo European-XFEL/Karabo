@@ -1,7 +1,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 30, 2012 9:03:51 PM$"
 
-from asyncio import async, coroutine, Future, sleep, TimeoutError
+from asyncio import async, coroutine, Future, sleep, TimeoutError, wait
 import threading
 import os
 import time
@@ -101,7 +101,7 @@ class Device(SignalSlotable):
 
         self.classId = type(self).__name__
 
-        self.exclusive = None
+        self.currenttask = None
 
     @classmethod
     def register(cls, name, dict):
@@ -136,24 +136,26 @@ class Device(SignalSlotable):
 
     @replySlot("slotChanged")
     def slotGetConfiguration(self):
+        return self.configurationAsHash(), self.deviceId
+
+
+    def configurationAsHash(self):
         r = Hash()
         for k in self._allattrs:
             a = getattr(self, k, None)
             if a is not None:
                 r[k] = getattr(type(self), k).asHash(a)
-        return r, self.deviceId
+        return r
 
 
     @coslot
     def slotReconfigure(self, reconfiguration):
-        if reconfiguration.empty():
-            return
-        self.log.DEBUG("After user interaction:\n{}".format(reconfiguration))
-        for k, v in reconfiguration.items():
-            t = getattr(type(self), k)
-            if isinstance(t, Type):
-                t.method(self, t.cast(v))
-        self.signalChanged(reconfiguration, self.deviceId)
+        yield from wait(
+            [t.setter_async(self, t.cast(v)) for t, v in (
+                (getattr(type(self), k), v) for k, v in reconfiguration.items())
+             if isinstance(t, Type)])
+
+        self.signalChanged(self.configurationAsHash(), self.deviceId)
         return True, ""
 
 
