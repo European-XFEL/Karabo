@@ -929,7 +929,7 @@ namespace karabo {
                 long long latencyLower = this->get<long long>("latencyLower");
                 
                 karabo::util::Hash h("brokerLatency", m_brokerLatency, "processingLatency", m_processingLatency);
-
+                
                 if (jamFlag) {
                     if (m_processingLatency < latencyLower)
                         h.set("trafficJam", false);
