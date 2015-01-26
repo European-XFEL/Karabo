@@ -10,6 +10,7 @@
  */
 
 #include <snappy.h>
+#include <karabo/log.hpp>
 #include "JmsBrokerConnection.hh"
 #include "JmsBrokerChannel.hh"
 #include "JmsBrokerIOService.hh"
@@ -402,10 +403,9 @@ namespace karabo {
                 } while (!m_isStopped && ((!messageReceived && m_ioService->isRunning()) || m_ioService->isWorking()));
 
             } catch (const Exception& e) {
-                cout << e;
-                Exception::memorize();
+                KARABO_LOG_FRAMEWORK_DEBUG << "An exception during JMS broker message reception occurred: \n" << e;
             } catch (...) {
-                Exception::memorize();
+                KARABO_LOG_FRAMEWORK_DEBUG << "An unknown exception during JMS broker message reception occurred";
             }
         }
 
@@ -978,9 +978,9 @@ namespace karabo {
         }
 
 
-        void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
-            m_ioService->registerWaitChannel(this, handler, milliseconds, id);
-        }
+//        void JmsBrokerChannel::waitAsync(int milliseconds, const WaitHandler& handler, const std::string& id) {
+//            m_ioService->registerWaitChannel(this, handler, milliseconds, id);
+//        }
 
 
         void JmsBrokerChannel::deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id) {
