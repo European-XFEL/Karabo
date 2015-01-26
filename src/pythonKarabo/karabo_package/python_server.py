@@ -188,6 +188,14 @@ class DeviceServer(SignalSlotable):
     def endErrorAction(self):
         pass
 
+    @coroutine
+    def launch(self, cls, config):
+        try:
+            yield from cls.launch(config)
+        except Exception as e:
+            traceback.print_exc()
+            self.log.WARN("could not start device {}".format(cls))
+
     @slot
     def slotStartDevice(self, hash):
         config = Hash()
@@ -202,7 +210,7 @@ class DeviceServer(SignalSlotable):
         try:
             pluginDir = self.pluginLoader.pluginDirectory
             cls = Device.subclasses[classid]
-            self.deviceInstanceMap[deviceid] = yield from cls.launch(config)
+            self.deviceInstanceMap[deviceid] = async(self.launch(cls, config))
             return (True, deviceid)
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".
@@ -264,8 +272,8 @@ class DeviceServer(SignalSlotable):
         if self.deviceInstanceMap:
             self._ss.emit("call", {k: ["slotKillDevice"]
                                    for k in self.deviceInstanceMap})
-            done, pending = yield from wait(
-                [v.wait() for v in self.deviceInstanceMap.values()], timeout=10)
+            done, pending = yield from wait(self.deviceInstanceMap.values(),
+                                            timeout=10)
             if pending:
                 print("some devices could not be killed")
         self.stopEventLoop()
@@ -278,7 +286,7 @@ class DeviceServer(SignalSlotable):
         gone = self.deviceInstanceMap.pop(id, None)
         if gone is not None:
             try:
-                yield from wait_for(gone.wait(), 10)
+                yield from wait_for(gone, 10)
             except TimeoutError:
                 print('device "{}" claimed to have gone but did not'.
                       format(id))
