@@ -9,7 +9,7 @@ from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
-from asyncio import async, coroutine, Future, get_event_loop, sleep
+from asyncio import async, coroutine, Future, get_event_loop, sleep, wait
 from itertools import count
 import sys
 import time
@@ -38,14 +38,38 @@ class Device(Registry):
         #globalDevice.slotNewClassAvailable('bla', name, cls.schematize())
 
 
-def replySlot(slot):
-    """ using this decorator you can define a reply slot, everything the
-    slot returns is not only sent as a normal reply, but also emitted as
-    a signal to the defined slot, back to the sender. """
-    def f(g):
-        g.replySlot = slot
-        return g
+def slot(f):
+    def inner(device, message, args):
+        device.reply(message, f(device, *args))
+    f.slot = inner
     return f
+
+
+def coslot(f):
+    f = coroutine(f)
+
+    @coroutine
+    def inner(device, message, args):
+        device.reply(message, (yield from f(device, *args)))
+
+    def outer(device, message, args):
+        device.async(inner(device, message, args))
+
+    f.slot = outer
+    return f
+
+
+def replySlot(name):
+    def outer(f):
+        def inner(device, message, args):
+            ret = f(device, *args)
+            device.reply(message, ret)
+            device._ss.emit("call", {
+                message.properties["signalInstanceId"].decode("utf8"):
+                name}, *ret)
+        f.slot = inner
+        return f
+    return outer
 
 
 class DeviceServer(Device):
@@ -165,7 +189,7 @@ class SignalSlotable(Configurable):
         self.__repliers = {}
         self._tasks = set()
 
-    @coroutine
+    @slot
     def slotPing(self, instanceId, replyIfMe, track=None):
         if replyIfMe:
             if instanceId == self.deviceId:
@@ -176,20 +200,20 @@ class SignalSlotable(Configurable):
         if track and instanceId != self.deviceId:
             self.signalHeartbeat.connect(instanceId, "slotHeartbeat", None)
 
-    @coroutine
+    @slot
     def slotHeartbeat(self, networkId, heartbeatInterval, info):
         pass
 
-    @coroutine
+    @slot
     def slotStopTrackingExistenceOfConnection(self, *args):
         print('receivet stopTracking...', args)
 
-    @coroutine
+    @slot
     def slotDisconnectFromSlot(self, *args):
         print("SDFS", args)
 
 
-    @coroutine
+    @slot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
         ch = getattr(self, ioChannelId, None)
         if isinstance(ch, NetworkOutput):
@@ -224,7 +248,7 @@ class SignalSlotable(Configurable):
                     if e.status != 2103:  # timeout
                         raise
                 else:
-                    self.async(self.handleMessage(message))
+                    self.handleMessage(message)
         finally:
             self._ss.emit('call', {'*': ['slotInstanceGone']},
                           self.deviceId, self.info)
@@ -242,13 +266,16 @@ class SignalSlotable(Configurable):
         object is stopped. """
         task = async(coro, loop=self._ss.loop)
         self._tasks.add(task)
-        task.add_done_callback(lambda task: self._tasks.remove(task))
+        task.add_done_callback(self._tasks.remove)
+        return task
 
-    @coroutine
+    @coslot
     def slotKillDevice(self):
         self.log.INFO("Device is going down as instructed")
         for t in self._tasks:
             t.cancel()
+        yield from wait(self._tasks)
+        return True
 
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
@@ -257,7 +284,6 @@ class SignalSlotable(Configurable):
         self.__repliers[reply] = future
         return future
 
-    @coroutine
     def handleMessage(self, message):
         parser = BinaryParser()
         try:
@@ -285,49 +311,49 @@ class SignalSlotable(Configurable):
         slots = {k: v.split(",") for k, v in (s.split(":") for s in slots)}
 
         try:
-            replyTo = message.properties['replyTo']
-        except openmq.Error:
-            replyTo = None
-        try:
-            replyInstanceIds = message.properties['replyInstanceIds']
-        except openmq.Error:
-            replyInstanceIds = None
-
-        sender = message.properties['signalInstanceId']
-
-        try:
             slots = [getattr(self, s) for s in slots.get(self.deviceId, [])
                      ] + [getattr(self, s) for s in slots.get("*", [])
                           if hasattr(self, s)]
             for slot in slots:
-                reply = yield from slot(*params)
-                if not isinstance(reply, tuple):
-                    reply = reply,
-                if hasattr(slot, "replySlot"):
-                    self._ss.emit(
-                        'call', {message.properties['signalInstanceId'].
-                                 decode("utf8"): [slot.replySlot]}, *reply)
-                if replyTo is not None and reply != (None,):
-                    self._ss.reply(replyTo,
-                                   message.properties['signalInstanceId'],
-                                   *reply)
-                if replyInstanceIds is not None:
-                    self._ss.replyNoWait(replyInstanceIds,
-                                         message.properties['replyFunctions'],
-                                         *reply)
+                slot.slot(self, message, params)
         except Exception as e:
             sys.excepthook(*sys.exc_info())
             print("Slot={}".format(slots))
 
+    def reply(self, message, reply):
+        sender = message.properties['signalInstanceId']
+
+        if not isinstance(reply, tuple):
+            reply = reply,
+        if hasattr(slot, "replySlot"):
+            self._ss.emit('call', {sender.decode("utf8"):
+                                   [slot.replySlot]}, *reply)
+        if reply != (None,):
+            try:
+                replyTo = message.properties['replyTo']
+            except openmq.Error:
+                pass
+            else:
+                self._ss.reply(replyTo, sender, *reply)
+
+        try:
+            replyInstanceIds = message.properties['replyInstanceIds']
+        except openmq.Error:
+            pass
+        else:
+            self._ss.replyNoWait(replyInstanceIds,
+                                 message.properties['replyFunctions'],
+                                 *reply)
+
     def stopEventLoop(self):
         get_event_loop().stop()
 
-    @coroutine
+    @slot
     def slotConnectToSignal(self, signal, target, slot, dunno):
         getattr(self, signal).connect(target, slot, dunno)
         return True
 
-    @coroutine
+    @slot
     def slotDisconnectFromSignal(self, signal, target, slot):
         getattr(self, signal).disconnect(target, slot)
         return True
@@ -350,13 +376,13 @@ class SignalSlotable(Configurable):
         if self.notify_changes:
             self.signalChanged(Hash(key, value), self.deviceId)
 
-    @coroutine
+    @slot
     def slotSchemaUpdated(self, schema, deviceId):
         future = self.__schemaFutures.pop(deviceId, None)
         if future is not None:
             future.set_result(schema)
 
-    @coroutine
+    @slot
     def slotChanged(self, configuration, deviceId):
         d = self.__devices.get(deviceId)
         if d is not None:

@@ -4,7 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Jul 26, 2012 10:06:25 AM$"
 
-from asyncio import (coroutine, get_event_loop, set_event_loop, sleep,
+from asyncio import (async, coroutine, get_event_loop, set_event_loop, sleep,
                      create_subprocess_exec, wait, wait_for)
 import os
 import os.path
@@ -32,7 +32,7 @@ from karabo.hashtypes import Schema, String, Int32
 from karabo import hashtypes
 from karabo.schema import Validator, Node
 from karabo.logger import Logger
-from karabo.signalslot import (ConnectionType, Signal, replySlot)
+from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
 
@@ -188,7 +188,7 @@ class DeviceServer(SignalSlotable):
     def endErrorAction(self):
         pass
 
-    @coroutine
+    @slot
     def slotStartDevice(self, hash):
         config = Hash()
 
@@ -259,7 +259,7 @@ class DeviceServer(SignalSlotable):
             "visibilities", numpy.array([c.visibility.defaultValue.value
                              for c in Device.subclasses.values()])))
 
-    @coroutine
+    @coslot
     def slotKillServer(self):
         if self.deviceInstanceMap:
             self._ss.emit("call", {k: ["slotKillDevice"]
@@ -273,7 +273,7 @@ class DeviceServer(SignalSlotable):
                       self.serverId)
 
 
-    @coroutine
+    @coslot
     def slotDeviceGone(self, id):
         gone = self.deviceInstanceMap.pop(id, None)
         if gone is not None:
@@ -283,7 +283,7 @@ class DeviceServer(SignalSlotable):
                 print('device "{}" claimed to have gone but did not'.
                       format(id))
 
-    @coroutine
+    @coslot
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
         ret = (yield from cls.getClassSchema_async()), classid, self.serverId
