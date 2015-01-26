@@ -222,7 +222,7 @@ if __name__ == "__main__":
     set_event_loop(loop)
 
     d = GuiServer({"_deviceId_": "GuiServer"})
-    d.run()
+    async(d.run_async())
     try:
         loop.run_forever()
     finally:
