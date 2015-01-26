@@ -4,12 +4,16 @@ Welcome to Karabo's documentation!
 Contents:
 
 .. toctree::
-   cli
-   macros
-   widget
-   devices
-   properties
-   api
+   fundamentals
+   guiHowto
+   cliHowto
+   macro
+   cppDevice
+   pythonDevice
+   runHowto
+   cppFrameworkApi
+   pythonFrameworkApi
+   
    :maxdepth: 2
 
 
