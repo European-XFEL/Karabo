@@ -294,11 +294,7 @@ class DeviceServer(SignalSlotable):
     @coslot
     def slotGetClassSchema(self, classid):
         cls = Device.subclasses[classid]
-        ret = (yield from cls.getClassSchema_async()), classid, self.serverId
-        with open("/home/teichman/hilf.dat", "wb") as fout:
-            h = Hash("a", ret[0])
-            fout.write(h.encode("Bin"))
-        return ret
+        return (yield from cls.getClassSchema_async()), classid, self.serverId
 
     def _generateDefaultDeviceInstanceId(self, devClassId):
         cnt = self.instanceCountPerDeviceServer.setdefault(self.serverId, 0)
