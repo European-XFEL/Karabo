@@ -28,7 +28,6 @@ namespace karabo {
         class SignalSlotable;
 
         class Slot {
-            
             friend class SignalSlotable;
 
             std::string m_instanceIdOfSender;
@@ -126,13 +125,14 @@ namespace karabo {
                     }
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
-                    karabo::util::Exception::addToTrace(e);
-                    KARABO_LOG_FRAMEWORK_ERROR << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!");
                     invalidateSenderInformation();
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
                 } catch (const karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                    invalidateSenderInformation();
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
+                    invalidateSenderInformation();
+                    KARABO_RETHROW;
                 }
             }
 
@@ -165,21 +165,23 @@ namespace karabo {
 
                 try {
                     extractSenderInformation(header);
-                    const A1& a1 = body.get<A1>("a1");
-                    const A2& a2 = body.get<A2>("a2");
+                        const A1& a1 = body.get<A1>("a1");
+                        const A2& a2 = body.get<A2>("a2");
                     for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                         m_slotHandlers[i](a1, a2);
-                    }
+                    }                    
                     invalidateSenderInformation();
                 } catch (const karabo::util::CastException& e) {
-                    karabo::util::Exception::addToTrace(e);
-                    std::cout << KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!") << std::endl;
                     invalidateSenderInformation();
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
                 } catch (const karabo::util::Exception& e) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An exception was thrown in slot \"" << m_slotFunction << "\": " << e;
+                    invalidateSenderInformation();
+                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
                 } catch (...) {
-                    KARABO_LOG_FRAMEWORK_ERROR << "An unknown exception was thrown in slot \"" << m_slotFunction << "\"";
+                    invalidateSenderInformation();
+                    KARABO_RETHROW;
                 }
+
             }
 
             std::vector<SlotHandler> m_slotHandlers;

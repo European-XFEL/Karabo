@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="94">
+<configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="SourceFiles"
                    displayName="binding specific"
@@ -74,9 +74,7 @@
       <itemPath>../../../src/karathon/ToNumpy.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
-      <itemPath>../../../src/karathon/PyXmsRequestor.cc</itemPath>
       <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
-      <itemPath>../../../src/karathon/RequestorWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SignalSlotableWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
@@ -343,16 +341,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyXmsRequestor.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
             ex="false"
             tool="1"
@@ -409,11 +397,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/RawImageDataWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/RequestorWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -745,16 +728,6 @@
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karathon/PyXmsRequestor.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-        <ccTool>
-          <preprocessorList>
-            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
-          </preprocessorList>
-        </ccTool>
-      </item>
       <item path="../../../src/karathon/PyXmsSignalSlotable.cc"
             ex="false"
             tool="1"
@@ -811,11 +784,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karathon/RawImageDataWrap.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karathon/RequestorWrap.hh"
             ex="false"
             tool="3"
             flavor2="0">

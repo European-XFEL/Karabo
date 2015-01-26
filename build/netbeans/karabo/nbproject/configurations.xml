@@ -351,8 +351,6 @@
       <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkOutput.hh</itemPath>
-      <itemPath>../../../src/karabo/xms/Requestor.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/Requestor.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Signal.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Signal.hh</itemPath>
       <itemPath>../../../src/karabo/xms/SignalSlotable.cc</itemPath>
@@ -2099,16 +2097,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/NetworkOutput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/Requestor.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/Requestor.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3925,16 +3913,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/NetworkOutput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/Requestor.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/xms/Requestor.hh"
             ex="false"
             tool="3"
             flavor2="0">
