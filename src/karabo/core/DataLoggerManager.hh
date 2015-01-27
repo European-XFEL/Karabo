@@ -76,7 +76,8 @@ namespace karabo {
         private: // Data
             std::vector<std::string> m_serverList;
             size_t m_serverIndex;
-            std::map<std::string, std::string> m_serverMap;
+            karabo::util::Hash m_serverMap;
+            bool m_saved;
         };
     }
 }
