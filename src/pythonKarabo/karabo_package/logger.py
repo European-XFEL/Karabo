@@ -32,6 +32,7 @@ class Handler(Configurable):
         self.handler.parent = self
         for f in self.filters:
             self.handler.addFilter(f.filter)
+        self.parent = parent
 
 
 class _Handler(logging.Handler):
@@ -40,10 +41,6 @@ class _Handler(logging.Handler):
 
 
 class NetworkHandler(Handler):
-    def __init__(self, config, parent, key):
-        super().__init__(config, parent, key)
-        self.parent = parent
-
     def emit(self, record):
         self.parent.broker.log("{} | {} | {} | {}#".format(
             time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(record.created)),
@@ -53,12 +50,19 @@ class NetworkHandler(Handler):
             record.getMessage()))
 
 
+class PrintHandler(Handler):
+    def emit(self, record):
+        print("---------- Logger start -----------")
+        print(self.handler.format(record))
+        print("---------- Logger end -----------")
+
+
 class Logger(Configurable):
     handlers = ListOfNodes(
         Handler,
         description="Handlers for logging",
         displayedName="Handlers",
-        defaultValue=["NetworkHandler"])
+        defaultValue=["NetworkHandler", "PrintHandler"])
 
     filters = ListOfNodes(
         Filter,
