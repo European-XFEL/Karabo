@@ -11,7 +11,6 @@ from karabo.registry import Registry
 
 from asyncio import (async, coroutine, Future, get_event_loop, sleep,
                      TimeoutError, wait, wait_for)
-from itertools import count
 import random
 import sys
 import time
@@ -188,7 +187,6 @@ class SignalSlotable(Configurable):
 
         self.__schemaFutures = {}
         self.__devices = {}
-        self.__repliers = {}
         self.__randPing = 0
         self._tasks = set()
 
@@ -234,29 +232,8 @@ class SignalSlotable(Configurable):
             yield from sleep(self.heartbeatInterval)
 
     @coroutine
-    def consume(self):
-        consumer = openmq.Consumer(
-            self._ss.session, self._ss.destination,
-            "slotInstanceIds LIKE '%|{}|%' "
-            "OR slotInstanceIds LIKE '%|*|%'".format(
-                self.deviceId, self.deviceId), False)
-        try:
-            while True:
-                try:
-                    message = yield from get_event_loop().run_in_executor(
-                        None, consumer.receiveMessage, 1000)
-                except openmq.Error as e:
-                    if e.status != 2103:  # timeout
-                        raise
-                else:
-                    self.handleMessage(message)
-        finally:
-            self._ss.emit('call', {'*': ['slotInstanceGone']},
-                          self.deviceId, self.info)
-
-    @coroutine
     def run_async(self):
-        self.async(self.consume())
+        self.async(self._ss.consume(self))
         try:
             self.__randPing = random.randint(1, 0x7fffffff)
             yield from wait_for(
@@ -294,44 +271,8 @@ class SignalSlotable(Configurable):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
         self._ss.call("call", {device: [target]}, reply, args)
         future = Future(loop=self._ss.loop)
-        self.__repliers[reply] = future
+        self._ss.repliers[reply] = future
         return future
-
-    def handleMessage(self, message):
-        parser = BinaryParser()
-        try:
-            hash = parser.read(message.data)
-        except:
-            hash = Hash()
-        params = []
-        for i in count(1):
-            try:
-                params.append(hash['a{}'.format(i)])
-            except KeyError:
-                break
-        try:
-            replyFrom = message.properties['replyFrom'].decode("ascii")
-        except openmq.Error:
-            pass
-        else:
-            f = self.__repliers.get(replyFrom)
-            if f is not None:
-                f.set_result(params)
-            return
-
-        slots = (message.properties['slotFunctions'][1:-1]).decode(
-            "utf8").split('||')
-        slots = {k: v.split(",") for k, v in (s.split(":") for s in slots)}
-
-        try:
-            slots = [getattr(self, s) for s in slots.get(self.deviceId, [])
-                     ] + [getattr(self, s) for s in slots.get("*", [])
-                          if hasattr(self, s)]
-            for slot in slots:
-                slot.slot(self, message, params)
-        except Exception as e:
-            sys.excepthook(*sys.exc_info())
-            print("Slot={}".format(slots))
 
     def stopEventLoop(self):
         get_event_loop().stop()

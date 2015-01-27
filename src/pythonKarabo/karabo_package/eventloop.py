@@ -8,7 +8,7 @@ from asyncio import (coroutine, Future, get_event_loop, set_event_loop,
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
-from itertools import chain
+from itertools import count
 import sys
 
 
@@ -22,6 +22,7 @@ class Broker:
         self.producer = openmq.Producer(self.session, self.destination)
         self.deviceId = deviceId
         self.classId = classId
+        self.repliers = {}
 
     def send(self, p, args):
         hash = Hash()
@@ -103,6 +104,67 @@ class Broker:
     def registerSlot(self, x):
         """ legacy code. slots don't need to be registered """
         return
+
+    @coroutine
+    def consume(self, device):
+        consumer = openmq.Consumer(
+            self.session, self.destination,
+            "slotInstanceIds LIKE '%|{0.deviceId}|%' "
+            "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+        try:
+            while True:
+                try:
+                    message = yield from get_event_loop().run_in_executor(
+                        None, consumer.receiveMessage, 1000)
+                except openmq.Error as e:
+                    if e.status == 2103:  # timeout
+                        continue
+                    else:
+                        raise
+                try:
+                    slots, params = self.decodeMessage(message)
+                except:
+                    device.logger.exception("malformated message")
+                    continue
+                try:
+                    slots = [getattr(device, s)
+                             for s in slots.get(self.deviceId, [])] + \
+                            [getattr(device, s) for s in slots.get("*", [])
+                             if hasattr(device, s)]
+                except AttributeError:
+                    device.logger.exception("slot does not exist")
+                    continue
+                try:
+                    for slot in slots:
+                        slot.slot(device, message, params)
+                except:
+                    device.logger.exception('error in slot "%s"', slot)
+        finally:
+            self.emit('call', {'*': ['slotInstanceGone']},
+                      self.deviceId, device.info)
+
+    def decodeMessage(self, message):
+        hash = Hash.decode(message.data, "Bin")
+        params = []
+        for i in count(1):
+            try:
+                params.append(hash['a{}'.format(i)])
+            except KeyError:
+                break
+        try:
+            replyFrom = message.properties['replyFrom'].decode("ascii")
+        except openmq.Error:
+            pass
+        else:
+            f = self.repliers.get(replyFrom)
+            if f is not None:
+                f.set_result(params)
+            return {}, None
+
+        slots = (message.properties['slotFunctions'][1:-1]).decode(
+            "utf8").split('||')
+        return {k: v.split(",") for k, v in (s.split(":") for s in slots)}, \
+                params
 
 
 class Client(object):
