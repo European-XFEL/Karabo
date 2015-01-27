@@ -43,6 +43,15 @@ namespace karabo {
                     .assignmentOptional().defaultValue(100)
                     .commit();
 
+            std::vector<std::string> emptyVec;
+
+            VECTOR_STRING_ELEMENT(expected).key("serverList")
+                    .displayedName("Server list")
+                    .description("List of device server IDs where the DataLogger instance run. The load balancing is round-robin.")
+                    .init()
+                    .assignmentOptional().defaultValue(emptyVec)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
                     .commit();
@@ -59,6 +68,8 @@ namespace karabo {
 
         DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
             set<int>("nThreads", 10);
+            m_serverList = input.get<vector<string> >("serverList");
+            m_serverIndex = 0;
         }
 
         DataLoggerManager::~DataLoggerManager() {
@@ -70,9 +81,16 @@ namespace karabo {
             remote().registerInstanceNewMonitor(boost::bind(&DataLoggerManager::instanceNewHandler, this, _1));
             remote().registerInstanceGoneMonitor(boost::bind(&DataLoggerManager::instanceGoneHandler, this, _1, _2));
 
-            // Prepare backend to persist data (later we should use brokerhost/brokerport/brokertopic)
-            if (!boost::filesystem::exists("karaboHistory")) {
-                boost::filesystem::create_directory("karaboHistory");
+            // Check if the local server where DataLoggerManager is running is in the server list
+            {
+                bool takenIntoAccount = false;
+                for (vector<string>::iterator ii = m_serverList.begin(); ii != m_serverList.end(); ii++) {
+                    if (*ii == getServerId()) {
+                        takenIntoAccount = true;
+                        break;
+                    }
+                }
+                if (!takenIntoAccount) m_serverList.push_back(getServerId());
             }
 
             // Get all current instances in the system
@@ -89,13 +107,17 @@ namespace karabo {
                         // Check if deviceId is known in the world
                         string loggerId = DATALOGGER_PREFIX + deviceId;
                         {
+                            m_serverIndex %= m_serverList.size();
+                            string serverId = m_serverList[m_serverIndex++];
+                            m_serverMap[loggerId] = serverId;
+
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
                             config.set("DataLogger.directory", "karaboHistory");
                             config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
                             config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                            remote().instantiateNoWait(getServerId(), config);
+                            remote().instantiateNoWait(serverId, config);
                         }
                     }
                 }
@@ -120,13 +142,17 @@ namespace karabo {
                         // Check whether according logger device exists (it should not) and instantiate
                         string loggerId = DATALOGGER_PREFIX + deviceId;
                         {
+                            m_serverIndex %= m_serverList.size();
+                            string serverId = m_serverList[m_serverIndex++];
+                            m_serverMap[loggerId] = serverId;
+
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
                             config.set("DataLogger.directory", "karaboHistory");
                             config.set("DataLogger.maximumFileSize", get<int>("maximumFileSize"));
                             config.set("DataLogger.flushInterval", get<int>("flushInterval"));
-                            remote().instantiateNoWait(getServerId(), config);
+                            remote().instantiateNoWait(serverId, config);
                         }
                     }
                 }
@@ -139,6 +165,7 @@ namespace karabo {
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
                 string loggerId = DATALOGGER_PREFIX + instanceId;
+                m_serverMap.erase(loggerId);
                 this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                 remote().killDeviceNoWait(loggerId);
             } catch (const Exception& e) {
@@ -155,10 +182,10 @@ namespace karabo {
                 Epochstamp from;
                 if (params.has("from")) from = Epochstamp(params.get<string>("from"));
                 Epochstamp to;
-                if (params.has("to"))   to = Epochstamp(params.get<string>("to"));
+                if (params.has("to")) to = Epochstamp(params.get<string>("to"));
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
-                
+
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
                 KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.toIso8601Ext();
 
@@ -183,7 +210,7 @@ namespace karabo {
                         << ", user: " << idx.m_user
                         << ", fileindex: " << idx.m_fileindex
                         << ", lastindex: " << lastFileIndex;
-                                        
+
                 Epochstamp epochstamp(0, 0);
                 long position = idx.m_position;
 
