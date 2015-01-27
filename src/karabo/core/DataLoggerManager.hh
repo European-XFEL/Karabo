@@ -12,6 +12,7 @@
 
 #include <boost/filesystem.hpp>
 #include <map>
+#include <vector>
 #include "Device.hh"
 #include "OkErrorFsm.hh"
 
@@ -73,7 +74,9 @@ namespace karabo {
             int getFileIndex(const std::string& deviceId);
 
         private: // Data
-
+            std::vector<std::string> m_serverList;
+            size_t m_serverIndex;
+            std::map<std::string, std::string> m_serverMap;
         };
     }
 }
