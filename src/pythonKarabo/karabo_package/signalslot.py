@@ -42,7 +42,7 @@ class Device(Registry):
 
 def slot(f):
     def inner(device, message, args):
-        device.reply(message, f(device, *args))
+        device._ss.reply(message, f(device, *args))
     f.slot = inner
     return f
 
@@ -52,7 +52,7 @@ def coslot(f):
 
     @coroutine
     def inner(device, message, args):
-        device.reply(message, (yield from f(device, *args)))
+        device._ss.reply(message, (yield from f(device, *args)))
 
     def outer(device, message, args):
         device.async(inner(device, message, args))
@@ -65,10 +65,10 @@ def replySlot(name):
     def outer(f):
         def inner(device, message, args):
             ret = f(device, *args)
-            device.reply(message, ret)
+            device._ss.reply(message, ret)
             device._ss.emit("call", {
-                message.properties["signalInstanceId"].decode("utf8"):
-                name}, *ret)
+                message.properties["signalInstanceId"].decode("utf8"): [name]},
+                *ret)
         f.slot = inner
         return f
     return outer
@@ -332,31 +332,6 @@ class SignalSlotable(Configurable):
         except Exception as e:
             sys.excepthook(*sys.exc_info())
             print("Slot={}".format(slots))
-
-    def reply(self, message, reply):
-        sender = message.properties['signalInstanceId']
-
-        if not isinstance(reply, tuple):
-            reply = reply,
-        if hasattr(slot, "replySlot"):
-            self._ss.emit('call', {sender.decode("utf8"):
-                                   [slot.replySlot]}, *reply)
-        if reply != (None,):
-            try:
-                replyTo = message.properties['replyTo']
-            except openmq.Error:
-                pass
-            else:
-                self._ss.reply(replyTo, sender, *reply)
-
-        try:
-            replyInstanceIds = message.properties['replyInstanceIds']
-        except openmq.Error:
-            pass
-        else:
-            self._ss.replyNoWait(replyInstanceIds,
-                                 message.properties['replyFunctions'],
-                                 *reply)
 
     def stopEventLoop(self):
         get_event_loop().stop()
