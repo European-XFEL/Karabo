@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
-from karabo import openmq, hashtypes
+from karabo import hashtypes
 from karabo.hash import BinaryParser, Hash
 from karabo.hashtypes import String, Int32, Type, Slot
 from karabo.enums import AccessLevel, Assignment, AccessMode
@@ -106,9 +106,10 @@ class BoundSignal(object):
 
 
 class Client(object):
-    def __init__(self, device):
+    def __init__(self, device, deviceId):
         self._device = device
         self._futures = {}
+        self._deviceId = deviceId
 
     @classmethod
     def __dir__(cls):
@@ -129,6 +130,21 @@ class Client(object):
     def setValue(self, attr, value):
         self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
+
+    def __enter__(self):
+        self._device._ss.connect(self._deviceId, "signalChanged",
+                                 self._device.slotChanged)
+        return self
+
+    def __exit__(self, a, b, c):
+        self._device._ss.disconnect(self._deviceId, "signalChanged",
+                                    self._device.slotChanged)
+
+    def __iter__(self):
+        conf, _ = yield from self._device.call(self._deviceId,
+                                               "slotGetConfiguration")
+        self.onChanged(conf)
+        return self
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -185,7 +201,6 @@ class SignalSlotable(Configurable):
         self.notify_changes = True
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
 
-        self.__schemaFutures = {}
         self.__devices = {}
         self.__randPing = 0
         self._tasks = set()
@@ -212,7 +227,6 @@ class SignalSlotable(Configurable):
     @slot
     def slotDisconnectFromSlot(self, *args):
         print("SDFS", args)
-
 
     @slot
     def slotGetOutputChannelInformation(self, ioChannelId, processId):
@@ -307,9 +321,7 @@ class SignalSlotable(Configurable):
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
-        future = self.__schemaFutures.pop(deviceId, None)
-        if future is not None:
-            future.set_result(schema)
+        print("slot schema updated called:", deviceId)
 
     @slot
     def slotChanged(self, configuration, deviceId):
@@ -324,11 +336,10 @@ class SignalSlotable(Configurable):
     def getDevice(self, deviceId):
         ret = self.__devices.get(deviceId)
         if ret is not None:
+            yield from ret
             return ret
 
-        self._ss.emit("call", {deviceId: ["slotGetSchema"]}, False)
-        schema = yield from self.__schemaFutures.setdefault(
-            deviceId, Future(loop=self._ss.loop))
+        schema, _ = yield from self.call(deviceId, "slotGetSchema", False)
 
         dict = {}
         for k, v, a in schema.hash.iterall():
@@ -341,11 +352,9 @@ class SignalSlotable(Configurable):
                 s.method = lambda self, name=k: self._device._ss.emit(
                     "call", {self.deviceId: [name]})
                 dict[k] = s
-        cls = type(schema.name, (Client,), dict)
+        Cls = type(schema.name, (Client,), dict)
 
-        self._ss.emit("call", {deviceId: "slotGetConfiguration"})
-        self._ss.connect(deviceId, "signalChanged", self.slotChanged)
-        ret = cls(self)
+        ret = Cls(self, deviceId)
         self.__devices[deviceId] = ret
-        yield from ret._futures.setdefault(None, Future(loop=self._ss.loop))
+        yield from ret
         return ret
