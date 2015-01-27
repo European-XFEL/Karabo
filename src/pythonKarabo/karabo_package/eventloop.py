@@ -23,16 +23,23 @@ class Broker:
         self.deviceId = deviceId
         self.classId = classId
 
-    def call(self, signal, targets, reply, args):
+    def send(self, p, args):
         hash = Hash()
         for i, a in enumerate(args):
             hash['a{}'.format(i + 1)] = a
+        m = openmq.BytesMessage()
+        m.data = hash.encode("Bin")
+        p['signalInstanceId'] = self.deviceId
+        p['__format'] = 'Bin'
+        m.properties = p
+        self.producer.send(m, 1, 4, 1000)
+
+    def call(self, signal, targets, reply, args):
         p = openmq.Properties()
         p['signalFunction'] = signal
-        p['signalInstanceId'] = self.deviceId
         if targets:
             p['slotInstanceIds'] = ('|' + '||'.join(t for t in targets) + '|'
-                                   ).encode("utf8")
+                                    ).encode("utf8")
             p['slotFunctions'] = ('|' + '||'.join(
                 "{}:{}".format(k, ",".join(v)) for k, v in targets.items()) +
                 '|').encode("utf8")
@@ -43,12 +50,7 @@ class Broker:
             p['replyTo'] = reply
         p['hostname'] = "exflpcx18981"
         p['classId'] = self.classId
-        p['__format'] = 'Bin'
-        writer = BinaryWriter()
-        m = openmq.BytesMessage()
-        m.data = writer.write(hash)
-        m.properties = p
-        self.producer.send(m, 1, 4, 1000)
+        self.send(p, args)
 
     def log(self, message):
         p = openmq.Properties()
@@ -61,37 +63,34 @@ class Broker:
     def emit(self, signal, targets, *args):
         self.call(signal, targets, None, args)
 
-    def reply(self, replyTo, whom, *args):
-        hash = Hash()
-        for i, a in enumerate(args):
-            hash['a{}'.format(i + 1)] = a
-        p = openmq.Properties()
-        p['replyFrom'] = replyTo
-        p['signalInstanceId'] = self.deviceId
-        p['signalFunction'] = "__reply__"
-        p['slotInstanceIds'] = b'|' + whom + b'|'
-        p['__format'] = 'Bin'
-        writer = BinaryWriter()
-        m = openmq.BytesMessage()
-        m.data = writer.write(hash)
-        m.properties = p
-        self.producer.send(m, 1, 4, 1000)
+    def reply(self, message, reply):
+        sender = message.properties['signalInstanceId']
 
-    def replyNoWait(self, replyInstanceIds, replyFunctions, *args):
-        hash = Hash()
-        for i, a in enumerate(args):
-            hash['a{}'.format(i + 1)] = a
-        p = openmq.Properties()
-        p['signalInstanceId'] = self.deviceId
-        p['signalFunction'] = "__replyNoWait__"
-        p['slotInstanceIds'] = replyInstanceIds
-        p['slotFunctions'] = replyFunctions
-        p['__format'] = 'Bin'
-        writer = BinaryWriter()
-        m = openmq.BytesMessage()
-        m.data = writer.write(hash)
-        m.properties = p
-        self.producer.send(m, 1, 9, 1000)
+        if not isinstance(reply, tuple):
+            reply = reply,
+
+        if reply != (None,):
+            try:
+                replyTo = message.properties['replyTo']
+            except openmq.Error:
+                pass
+            else:
+                p = openmq.Properties()
+                p['replyFrom'] = replyTo
+                p['signalFunction'] = "__reply__"
+                p['slotInstanceIds'] = b'|' + sender + b'|'
+                self.send(p, reply)
+
+        try:
+            replyInstanceIds = message.properties['replyInstanceIds']
+        except openmq.Error:
+            pass
+        else:
+            p = openmq.Properties()
+            p['signalFunction'] = "__replyNoWait__"
+            p['slotInstanceIds'] = replyInstanceIds
+            p['slotFunctions'] = message.properties['replyFunctions']
+            self.send(p, reply)
 
     def connect(self, deviceId, signal, slot):
         self.emit("call", {deviceId: ["slotConnectToSignal"]}, signal,
