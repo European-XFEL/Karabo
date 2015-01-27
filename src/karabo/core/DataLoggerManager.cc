@@ -67,9 +67,15 @@ namespace karabo {
         }
 
         DataLoggerManager::DataLoggerManager(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
+            string filename = "servermap.xml";
             set<int>("nThreads", 10);
             m_serverList = input.get<vector<string> >("serverList");
             m_serverIndex = 0;
+            m_saved = false;
+            m_serverMap.clear();
+            if (boost::filesystem::exists(filename)) {
+                karabo::io::loadFromFile(m_serverMap, filename);
+            }
         }
 
         DataLoggerManager::~DataLoggerManager() {
@@ -107,10 +113,15 @@ namespace karabo {
                         // Check if deviceId is known in the world
                         string loggerId = DATALOGGER_PREFIX + deviceId;
                         {
-                            m_serverIndex %= m_serverList.size();
-                            string serverId = m_serverList[m_serverIndex++];
-                            m_serverMap[loggerId] = serverId;
-
+                            string serverId;
+                            if (m_serverMap.has(loggerId)) {
+                                serverId = m_serverMap.get<string>(loggerId);
+                            } else {
+                                m_serverIndex %= m_serverList.size();
+                                serverId = m_serverList[m_serverIndex++];
+                                m_serverMap.set(loggerId, serverId);
+                                m_saved = false;
+                            }
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
                             config.set("DataLogger.deviceToBeLogged", deviceId);
@@ -142,9 +153,15 @@ namespace karabo {
                         // Check whether according logger device exists (it should not) and instantiate
                         string loggerId = DATALOGGER_PREFIX + deviceId;
                         {
-                            m_serverIndex %= m_serverList.size();
-                            string serverId = m_serverList[m_serverIndex++];
-                            m_serverMap[loggerId] = serverId;
+                            string serverId;
+                            if (m_serverMap.has(loggerId)) {
+                                serverId = m_serverMap.get<string>(loggerId);
+                            } else {
+                                m_serverIndex %= m_serverList.size();
+                                serverId = m_serverList[m_serverIndex++];
+                                m_serverMap.set(loggerId, serverId);
+                                m_saved = false;
+                            }
 
                             Hash config;
                             config.set("DataLogger.deviceId", loggerId);
@@ -165,9 +182,13 @@ namespace karabo {
         void DataLoggerManager::instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo) {
             try {
                 string loggerId = DATALOGGER_PREFIX + instanceId;
-                m_serverMap.erase(loggerId);
                 this->call(loggerId, "slotTagDeviceToBeDiscontinued", true, 'D');
                 remote().killDeviceNoWait(loggerId);
+                if (!m_saved) {
+                    string filename = "servermap.xml";
+                    karabo::io::saveToFile(m_serverMap, filename);
+                    m_saved = true;
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
