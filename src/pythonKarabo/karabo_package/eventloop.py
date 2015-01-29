@@ -250,3 +250,4 @@ class EventLoop(SelectorEventLoop):
         while self._ready:
             self._run_once()
         self.connection.close()
+        super().close()
