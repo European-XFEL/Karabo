@@ -55,5 +55,24 @@ namespace karabo {
             m_instanceIdOfSender = "";
             m_sessionTokenOfSender = "";
         }
+
+
+        void Slot::callRegisteredSlotFunctions(const Hash &header, const Hash &body) {
+	    try {
+                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
+                extractSenderInformation(header);
+                doCallRegisteredSlotFunctions(body);
+                invalidateSenderInformation();
+            } catch (const karabo::util::CastException& e) {
+                invalidateSenderInformation();
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
+            } catch (const karabo::util::Exception& e) {
+                invalidateSenderInformation();
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
+            } catch (...) {
+                invalidateSenderInformation();
+                KARABO_RETHROW;
+            }
+        }
     }
 }
