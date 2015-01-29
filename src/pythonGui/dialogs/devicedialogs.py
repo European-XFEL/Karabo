@@ -108,6 +108,7 @@ class DeviceGroupDialog(QDialog):
         fLayout = QFormLayout(self.gbSelectedGroupName)
         fLayout.setContentsMargins(5,5,5,5)
         self.leGroupName = QLineEdit("")
+        self.leGroupName.textChanged.connect(self.onValidDeviceId)
         fLayout.addRow("Group name:", self.leGroupName)
         self.gbSelectedGroupName.setVisible(False)
         vLayout.addWidget(self.gbSelectedGroupName)
@@ -246,18 +247,22 @@ class DeviceGroupDialog(QDialog):
         self.duplicateWidget.endIndex = index
 
 
-    def onValidDeviceId(self, deviceId):
+    def validInputs(self):
         if self.cbDeviceGroup.isChecked():
-            newIsValid = self.endIndex > 0 and len(deviceId) > 0
+            return self.duplicateWidget.nbDevices() > 0 and \
+                   len(self.deviceWidget.deviceId) > 0 \
+                   and len(self.deviceGroupName) > 0
         else:
-            newIsValid = len(deviceId) > 0
-        
-        self.duplicateWidget.displayPrefix = deviceId
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(newIsValid)
+            return len(self.deviceWidget.deviceId) > 0
+
+
+    def onValidDeviceId(self):
+        self.duplicateWidget.displayPrefix = self.deviceWidget.deviceId
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(self.validInputs())
 
 
     def onValidDuplicateWidgetInput(self, isValid):
-        newIsValid = len(self.deviceWidget.deviceId) > 0 and isValid
+        newIsValid = self.validInputs() and isValid
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(newIsValid)
 
 
@@ -273,7 +278,7 @@ class DeviceGroupDialog(QDialog):
             self.setMaximumSize(self.w, self.h)
         
         # Update ok-button
-        self.onValidDeviceId(self.deviceWidget.deviceId)
+        self.onValidDeviceId()
 
 
 class DeviceDefinitionWidget(QWidget):
