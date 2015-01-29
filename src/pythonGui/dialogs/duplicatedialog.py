@@ -139,13 +139,15 @@ class DuplicateWidget(QWidget):
         self.sbEndIndex.setValue(index)
 
 
-    def updateCountText(self):
+    def nbDevices(self):
         if self.endIndex > self.startIndex:
-            count = self.endIndex - self.startIndex + 1
+            return self.endIndex - self.startIndex + 1
         else:
-            count = 0
-        
-        self.laCountText.setText("You are about to create <b>{}</b> devices".format(count))
+            return 0
+
+
+    def updateCountText(self):
+        self.laCountText.setText("You are about to create <b>{}</b> devices".format(self.nbDevices()))
 
 
     def onChanged(self):
