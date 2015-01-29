@@ -47,240 +47,128 @@ namespace karabo {
 
         protected:
 
+            Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {
+            }
+
             std::string m_slotFunction;
 
             mutable boost::mutex m_callRegisteredSlotFunctionsMutex;
-
-            Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {
-            }
 
             void extractSenderInformation(const karabo::util::Hash& header);
 
             void invalidateSenderInformation();
 
-            virtual void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) = 0;
+            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body);
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) = 0;
         };
 
-        class Slot0 : public Slot {
-            typedef boost::function<void () > SlotHandler;
+	template <class Handler>
+	class SlotN : public Slot {
+	    typedef typename boost::function<Handler> SlotHandler;
 
+	protected:
+	    SlotN(const std::string& slotFunction) : Slot(slotFunction) {
+            }
+
+        public:
+            void registerSlotFunction(const SlotHandler& slotHandler) {
+                m_slotHandlers.push_back(slotHandler);
+            }
+
+            typename std::vector<SlotHandler> m_slotHandlers;
+	};
+
+        class Slot0 : public SlotN<void ()> {
         public:
 
             KARABO_CLASSINFO(Slot0, "Slot0", "1.0")
 
-            Slot0(const std::string& slotFunction) : Slot(slotFunction) {
-            }
+            Slot0(const std::string& slotFunction) : SlotN<void ()> (slotFunction) { }
 
-            virtual ~Slot0() {
-            }
+        protected:
 
-            void registerSlotFunction(const SlotHandler& slotHandler) {
-                m_slotHandlers.push_back(slotHandler);
-            }
-
-        private:
-
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-                // This mutex protects against concurrent runs of the same slot function
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-                extractSenderInformation(header);
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
                 for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
                     m_slotHandlers[i]();
                 }
-                invalidateSenderInformation();
             }
-
-            std::vector<SlotHandler> m_slotHandlers;
         };
 
         template <class A1>
-        class Slot1 : public Slot {
-            typedef boost::function<void (const A1&) > SlotHandler;
-
+        class Slot1 : public SlotN<void (const A1&)> {
         public:
 
             KARABO_CLASSINFO(Slot1, "Slot1", "1.0")
 
-            Slot1(const std::string& slotFunction) : Slot(slotFunction) {
-            }
-
-            virtual ~Slot1() {
-            }
-
-            void registerSlotFunction(const SlotHandler& slotHandler) {
-                m_slotHandlers.push_back(slotHandler);
-            }
+            Slot1(const std::string& slotFunction) : SlotN<void (const A1&)> (slotFunction) { }
 
         private:
 
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-
-                try {
-                    extractSenderInformation(header);
-                    const A1& a1 = body.get<A1>("a1");
-                    for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
-                        m_slotHandlers[i](a1);
-                    }
-                    invalidateSenderInformation();
-                } catch (const karabo::util::CastException& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
-                } catch (const karabo::util::Exception& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
-                } catch (...) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW;
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+                const A1& a1 = body.get<A1>("a1");
+                for (size_t i = 0; i < this->m_slotHandlers.size(); ++i) {
+                    this->m_slotHandlers[i](a1);
                 }
             }
-
-            std::vector<SlotHandler> m_slotHandlers;
         };
 
         template <class A1, class A2>
-        class Slot2 : public Slot {
-            typedef boost::function<void (const A1&, const A2&) > SlotHandler;
-
+        class Slot2 : public SlotN<void (const A1&, const A2&)> {
         public:
 
             KARABO_CLASSINFO(Slot2, "Slot2", "1.0")
 
-            Slot2(const std::string& slotFunction) : Slot(slotFunction) {
-            }
-
-            virtual ~Slot2() {
-            }
-
-            void registerSlotFunction(const SlotHandler& slotHandler) {
-                m_slotHandlers.push_back(slotHandler);
-            }
+            Slot2(const std::string& slotFunction) : SlotN<void (const A1&, const A2&)> (slotFunction) { }
 
         private:
 
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-
-                try {
-                    extractSenderInformation(header);
-                        const A1& a1 = body.get<A1>("a1");
-                        const A2& a2 = body.get<A2>("a2");
-                    for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
-                        m_slotHandlers[i](a1, a2);
-                    }                    
-                    invalidateSenderInformation();
-                } catch (const karabo::util::CastException& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible argument (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
-                } catch (const karabo::util::Exception& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
-                } catch (...) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW;
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+                const A1& a1 = body.get<A1>("a1");
+                const A2& a2 = body.get<A2>("a2");
+                for (size_t i = 0; i < this->m_slotHandlers.size(); ++i) {
+                    this->m_slotHandlers[i](a1, a2);
                 }
-
             }
-
-            std::vector<SlotHandler> m_slotHandlers;
         };
 
         template <class A1, class A2, class A3>
-        class Slot3 : public Slot {
-            typedef boost::function<void (const A1&, const A2&, const A3&) > SlotHandler;
-
+        class Slot3 : public SlotN<void (const A1&, const A2&, const A3&)> {
         public:
 
             KARABO_CLASSINFO(Slot3, "Slot3", "1.0")
 
-            Slot3(const std::string& slotFunction) : Slot(slotFunction) {
-            }
-
-            virtual ~Slot3() {
-            }
-
-            void registerSlotFunction(const SlotHandler& slotHandler) {
-                m_slotHandlers.push_back(slotHandler);
-            }
-
+            Slot3(const std::string& slotFunction) : SlotN<void (const A1&, const A2&, const A3&)> (slotFunction) { }
         private:
 
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-
-                try {
-                    extractSenderInformation(header);
-                    const A1& a1 = body.get<A1 > ("a1");
-                    const A2& a2 = body.get<A2 > ("a2");
-                    const A3& a3 = body.get<A3 > ("a3");
-                    for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
-                        m_slotHandlers[i](a1, a2, a3);
-                    }
-                    invalidateSenderInformation();
-                } catch (const karabo::util::CastException& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
-                } catch (const karabo::util::Exception& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
-                } catch (...) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An unknown exception was thrown in slot \"" + m_slotFunction + "\""));
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+                const A1& a1 = body.get<A1 > ("a1");
+                const A2& a2 = body.get<A2 > ("a2");
+                const A3& a3 = body.get<A3 > ("a3");
+                for (size_t i = 0; i < this->m_slotHandlers.size(); ++i) {
+                    this->m_slotHandlers[i](a1, a2, a3);
                 }
             }
-
-            std::vector<SlotHandler> m_slotHandlers;
         };
 
         template <class A1, class A2, class A3, class A4>
-        class Slot4 : public Slot {
-            typedef boost::function<void (const A1&, const A2&, const A3&, const A4&) > SlotHandler;
+        class Slot4 : public SlotN<void (const A1&, const A2&, const A3&, const A4&)> {
 
         public:
 
             KARABO_CLASSINFO(Slot4, "Slot4", "1.0")
 
-            Slot4(const std::string& slotFunction) : Slot(slotFunction) {
-            }
-
-            virtual ~Slot4() {
-            }
-
-            void registerSlotFunction(const SlotHandler& slotHandler) {
-                m_slotHandlers.push_back(slotHandler);
-            }
-
+            Slot4(const std::string& slotFunction) : SlotN<void (const A1&, const A2&, const A3&, const A4&)> (slotFunction) { }
         private:
 
-            void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
-
-                boost::mutex::scoped_lock lock(m_callRegisteredSlotFunctionsMutex);
-
-                try {
-                    extractSenderInformation(header);
-                    const A1& a1 = body.get<A1 > ("a1");
-                    const A2& a2 = body.get<A2 > ("a2");
-                    const A3& a3 = body.get<A3 > ("a3");
-                    const A4& a4 = body.get<A4 > ("a4");
-                    for (size_t i = 0; i < m_slotHandlers.size(); ++i) {
-                        m_slotHandlers[i](a1, a2, a3, a4);
-                    }
-                    invalidateSenderInformation();
-                } catch (const karabo::util::CastException& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Received incompatible arguments (see above) for slot \"" + m_slotFunction + "\". Check your connection!"));
-                } catch (const karabo::util::Exception& e) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An exception was thrown in slot \"" + m_slotFunction + "\""));
-                } catch (...) {
-                    invalidateSenderInformation();
-                    KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("An unknown exception was thrown in slot \"" + m_slotFunction + "\""));
+            virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+                const A1& a1 = body.get<A1 > ("a1");
+                const A2& a2 = body.get<A2 > ("a2");
+                const A3& a3 = body.get<A3 > ("a3");
+                const A4& a4 = body.get<A4 > ("a4");
+                for (size_t i = 0; i < this->m_slotHandlers.size(); ++i) {
+                    this->m_slotHandlers[i](a1, a2, a3, a4);
                 }
             }
-            std::vector<SlotHandler> m_slotHandlers;
         };
 
     }
