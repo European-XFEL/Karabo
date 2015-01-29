@@ -47,36 +47,26 @@ namespace karathon {
 
     private: // function
 
-        void callRegisteredSlotFunctions(const karabo::util::Hash& header, const karabo::util::Hash& body) {
+        void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
 
-            extractSenderInformation(header);
-            
-            try {
+            ScopedGILAcquire gil;
 
-                ScopedGILAcquire gil;
-                
-                size_t arity = body.size();
-                switch (arity) {
-                    case 4:
-                        if (callFunction4(body)) break;
-                    case 3:
-                        if (callFunction3(body)) break;
-                    case 2:
-                        if (callFunction2(body)) break;
-                    case 1:
-                        if (callFunction1(body)) break;
-                    case 0:
-                        if (callFunction0(body)) break;
-                        throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
-                    default:
-                        throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
-                }
-
-            } catch (const karabo::util::Exception& e) {
-                std::cout << e.userFriendlyMsg();
-                invalidateSenderInformation();
+            size_t arity = body.size();
+            switch (arity) {
+                case 4:
+                    if (callFunction4(body)) break;
+                case 3:
+                    if (callFunction3(body)) break;
+                case 2:
+                    if (callFunction2(body)) break;
+                case 1:
+                    if (callFunction1(body)) break;
+                case 0:
+                    if (callFunction0(body)) break;
+                    throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
+                default:
+                    throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
             }
-            invalidateSenderInformation();
         }
 
         bool callFunction0(const karabo::util::Hash& body) {
