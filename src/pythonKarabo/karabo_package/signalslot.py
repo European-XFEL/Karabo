@@ -115,7 +115,7 @@ class Client(object):
     def __dir__(cls):
         return dir(cls)
 
-    def onChanged(self, hash):
+    def _onChanged(self, hash):
         for k, v, a in hash.iterall():
             d = getattr(type(self), k, None)
             if d is not None:
@@ -131,6 +131,19 @@ class Client(object):
         self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
+    @coroutine
+    def set(self, **kwargs):
+        h = Hash()
+        for k, v in kwargs.items():
+            h[k] = v
+        yield from self._device.call(self.deviceId, "slotReconfigure", h)
+
+    def setNoWait(self, **kwargs):
+        h = Hash()
+        for k, v in kwargs.items():
+            h[k] = v
+        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]}, h)
+
     def __enter__(self):
         self._device._ss.connect(self._deviceId, "signalChanged",
                                  self._device.slotChanged)
@@ -143,7 +156,7 @@ class Client(object):
     def __iter__(self):
         conf, _ = yield from self._device.call(self._deviceId,
                                                "slotGetConfiguration")
-        self.onChanged(conf)
+        self._onChanged(conf)
         return self
 
 
@@ -327,7 +340,7 @@ class SignalSlotable(Configurable):
     def slotChanged(self, configuration, deviceId):
         d = self.__devices.get(deviceId)
         if d is not None:
-            d.onChanged(configuration)
+            d._onChanged(configuration)
         loop = get_event_loop()
         loop.changedFuture.set_result(None)
         loop.changedFuture = Future()
