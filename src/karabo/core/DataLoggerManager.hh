@@ -26,24 +26,6 @@ namespace karabo {
      */
     namespace core {
 
-        struct DataLoggerIndex {
-            std::string m_event;
-            karabo::util::Epochstamp m_epoch;
-            unsigned long long m_train;
-            long m_position;
-            std::string m_user;
-            int m_fileindex;
-
-            DataLoggerIndex()
-            : m_event()
-            , m_epoch(0, 0)
-            , m_train(0)
-            , m_position(-1)
-            , m_user(".")
-            , m_fileindex(-1) {
-            }
-        };
-
         class DataLoggerManager : public karabo::core::Device<karabo::core::OkErrorFsm> {
         public:
 
@@ -63,20 +45,12 @@ namespace karabo {
 
             void instanceGoneHandler(const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-            void slotGetPropertyHistory(const std::string& deviceId, const std::string& property, const karabo::util::Hash& params);
-
-            void slotGetConfigurationFromPast(const std::string& deviceId, const std::string& timepoint);
-
-            DataLoggerIndex findLoggerIndexTimepoint(const std::string& deviceId, const std::string& timepoint);
-
-            DataLoggerIndex findNearestLoggerIndex(const std::string& deviceId, const karabo::util::Epochstamp& timepoint);
-
-            int getFileIndex(const std::string& deviceId);
-
+            void slotGetLoggerMap();
+            
         private: // Data
             std::vector<std::string> m_serverList;
             size_t m_serverIndex;
-            karabo::util::Hash m_serverMap;
+            karabo::util::Hash m_loggerMap;
             bool m_saved;
         };
     }

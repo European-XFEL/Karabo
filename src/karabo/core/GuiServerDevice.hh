@@ -52,6 +52,8 @@ namespace karabo {
 
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::const_iterator ConstChannelIterator;
             typedef std::map< karabo::net::Channel::Pointer, std::set<std::string> >::iterator ChannelIterator;
+            
+            karabo::util::Hash m_loggerMap;
 
         public:
 
@@ -114,7 +116,7 @@ namespace karabo {
             
             void onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
+            void propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
@@ -135,6 +137,8 @@ namespace karabo {
             void logHandler(karabo::net::BrokerChannel::Pointer channel, const karabo::util::Hash::Pointer& header, const std::string& logMessage);
 
             void slotNotification(const std::string& type, const std::string& shortMessage, const std::string& detailedMessage, const std::string& deviceId);
+            
+            void slotLoggerMap(const karabo::util::Hash& loggerMap);
             
         };
     }
