@@ -356,6 +356,12 @@ class SignalSlotable(Configurable):
         loop.changedFuture = Future()
 
     @coroutine
+    def waitUntil(self, condition):
+        loop = get_event_loop()
+        while not condition():
+            yield from loop.changedFuture
+
+    @coroutine
     def getDevice(self, deviceId):
         ret = self.__devices.get(deviceId)
         if ret is not None:
