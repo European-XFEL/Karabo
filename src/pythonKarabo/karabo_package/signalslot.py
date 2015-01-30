@@ -110,6 +110,7 @@ class Proxy(object):
         self._device = device
         self._futures = {}
         self._deviceId = deviceId
+        self._used = 0
 
     @classmethod
     def __dir__(cls):
@@ -145,13 +146,22 @@ class Proxy(object):
         self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]}, h)
 
     def __enter__(self):
-        self._device._ss.connect(self._deviceId, "signalChanged",
-                                 self._device.slotChanged)
+        self._used += 1
+        if self._used == 1:
+            self._device._ss.connect(self._deviceId, "signalChanged",
+                                     self._device.slotChanged)
         return self
 
     def __exit__(self, a, b, c):
-        self._device._ss.disconnect(self._deviceId, "signalChanged",
-                                    self._device.slotChanged)
+        self._used -= 1
+        if self._used == 0:
+            self._device._ss.disconnect(self._deviceId, "signalChanged",
+                                        self._device.slotChanged)
+
+    def __del__(self):
+        if self._used > 0:
+            self._used = 1
+            self.__exit__(None, None, None)
 
     def __iter__(self):
         conf, _ = yield from self._device.call(self._deviceId,
