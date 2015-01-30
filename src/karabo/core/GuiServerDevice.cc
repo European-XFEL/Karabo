@@ -15,6 +15,9 @@ using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xip;
 
+#define DATALOGGER_PREFIX "DataLogger-"
+#define DATALOGREADER_PREFIX "DataLogReader-"
+
 namespace karabo {
     namespace core {
 
@@ -56,8 +59,9 @@ namespace karabo {
         GuiServerDevice::GuiServerDevice(const Hash& input) : Device<OkErrorFsm>(input) {
            
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
-
+            //SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
+            KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
+                    
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
             config.set("type", "server");
@@ -92,6 +96,9 @@ namespace karabo {
                 remote().registerSchemaUpdatedMonitor(boost::bind(&karabo::core::GuiServerDevice::schemaUpdatedHandler, this, _1, _2));
                 remote().registerClassSchemaMonitor(boost::bind(&karabo::core::GuiServerDevice::classSchemaHandler, this, _1, _2, _3));
 
+                connect("Karabo_DataLoggerManager_0", "signalLoggerMap", "", "slotLoggerMap");
+                requestNoWait("Karabo_DataLoggerManager_0", "slotGetLoggerMap", "", "slotLoggerMap");
+                
                 // Connect the history slot
                 //connect("Karabo_FileDataLogger_0", "signalPropertyHistory", "", "slotPropertyHistory");
 
@@ -416,7 +423,14 @@ namespace karabo {
                 if (info.has("maxNumData")) maxNumData = info.getAs<int>("maxNumData");
 
                 Hash args("from", t0, "to", t1, "maxNumData", maxNumData);
-                call("Karabo_DataLoggerManager_0", "slotGetPropertyHistory", deviceId, property, args);
+                
+                string loggerId = DATALOGGER_PREFIX + deviceId;
+                if (m_loggerMap.has(loggerId)) {
+                    string readerId = DATALOGREADER_PREFIX + m_loggerMap.get<string>(loggerId);
+                    //call(readerId, "slotGetPropertyHistory", deviceId, property, args);
+                    request(readerId, "slotGetPropertyHistory", deviceId, property, args)
+                        .receiveAsync<string, string, vector<Hash> >(boost::bind(&karabo::core::GuiServerDevice::propertyHistory, this, channel, _1, _2, _3));
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetPropertyHistory(): " << e.userFriendlyMsg();
             }
@@ -541,21 +555,17 @@ namespace karabo {
 	}
 
 
-        void GuiServerDevice::slotPropertyHistory(const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+        void GuiServerDevice::propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
             try {
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting property history";
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history";
 
                 Hash h("type", "propertyHistory", "deviceId", deviceId,
                        "property", property, "data", data);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                // Broadcast to all GUIs (which is shit here, but the current solution...)
-                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-                    if (it->second.find(deviceId) != it->second.end()) {
-                        it->first->write(h);
-                    }
-                }
+                channel->write(h);  // send back to requestor
+                
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotPropertyHistory " << e.userFriendlyMsg();
             }
@@ -775,6 +785,11 @@ namespace karabo {
 		    } else ++iter;
 		}
 	    }
+        }
+        
+        
+        void GuiServerDevice::slotLoggerMap(const karabo::util::Hash& loggerMap) {
+            m_loggerMap = loggerMap;
         }
     }
 }
