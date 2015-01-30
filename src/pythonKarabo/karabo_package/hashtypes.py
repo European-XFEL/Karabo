@@ -281,7 +281,7 @@ class Slot(Descriptor):
         if device.currenttask is not None:
             print("not running", self.key)
             return
-        device.currenttask = device.async(self.method(device))
+        device.currenttask = device.executeSlot(self.method)
         def deleter(task):
             device.currenttask = None
         device.currenttask.add_done_callback(deleter)
@@ -293,7 +293,7 @@ class Slot(Descriptor):
         pass  # nothing to set in a slot
 
     def __call__(self, method):
-        self.themethod = coroutine(method)
+        self.themethod = method
         return self
 
 
