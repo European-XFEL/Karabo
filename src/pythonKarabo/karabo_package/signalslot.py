@@ -105,7 +105,7 @@ class BoundSignal(object):
         self.device._ss.emit(self.name, self.connected, *args)
 
 
-class Client(object):
+class Proxy(object):
     def __init__(self, device, deviceId):
         self._device = device
         self._futures = {}
@@ -365,7 +365,7 @@ class SignalSlotable(Configurable):
                 s.method = lambda self, name=k: self._device._ss.emit(
                     "call", {self.deviceId: [name]})
                 dict[k] = s
-        Cls = type(schema.name, (Client,), dict)
+        Cls = type(schema.name, (Proxy,), dict)
 
         ret = Cls(self, deviceId)
         self.__devices[deviceId] = ret
