@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/163556830/DataLogReader.o \
 	${OBJECTDIR}/_ext/163556830/DataLogger.o \
 	${OBJECTDIR}/_ext/163556830/DataLoggerManager.o \
 	${OBJECTDIR}/_ext/163556830/DeviceClient.o \
@@ -185,6 +186,11 @@ LDLIBSOPTIONS=-L${KARABO}/extern/lib -Wl,-rpath,\$$ORIGIN/../extern/lib `pkg-con
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/lib/libkarabo.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/_ext/163556830/DataLogReader.o: ../../../src/karabo/core/DataLogReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLogReader.o ../../../src/karabo/core/DataLogReader.cc
 
 ${OBJECTDIR}/_ext/163556830/DataLogger.o: ../../../src/karabo/core/DataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
@@ -988,6 +994,19 @@ ${TESTDIR}/_ext/936508045/xmsTestRunner.o: ../../../src/karabo/tests/xms/xmsTest
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936508045/xmsTestRunner.o ../../../src/karabo/tests/xms/xmsTestRunner.cc
 
+
+${OBJECTDIR}/_ext/163556830/DataLogReader_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLogReader.o ../../../src/karabo/core/DataLogReader.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/163556830/DataLogReader.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/163556830/DataLogReader_nomain.o ../../../src/karabo/core/DataLogReader.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/163556830/DataLogReader.o ${OBJECTDIR}/_ext/163556830/DataLogReader_nomain.o;\
+	fi
 
 ${OBJECTDIR}/_ext/163556830/DataLogger_nomain.o: ${OBJECTDIR}/_ext/163556830/DataLogger.o ../../../src/karabo/core/DataLogger.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/163556830
