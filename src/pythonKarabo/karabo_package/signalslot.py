@@ -9,8 +9,8 @@ from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
-from asyncio import (async, coroutine, Future, get_event_loop, sleep,
-                     TimeoutError, wait, wait_for)
+from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
+                     sleep, TimeoutError, wait, wait_for)
 import random
 import sys
 import time
@@ -296,6 +296,14 @@ class SignalSlotable(Configurable):
         task.add_done_callback(self._tasks.remove)
         return task
 
+    def executeSlot(self, slot):
+        coro = slot(self)
+        if iscoroutine(coro):
+            return self.async(coro)
+        ret = Future()
+        ret.set_result(coro)
+        return ret
+
     @coslot
     def slotKillDevice(self):
         self.log.INFO("Device is going down as instructed")
@@ -362,7 +370,7 @@ class SignalSlotable(Configurable):
             yield from loop.changedFuture
 
     @coroutine
-    def getDevice(self, deviceId):
+    def getDevice(self, deviceId, *, Base=Proxy):
         ret = self.__devices.get(deviceId)
         if ret is not None:
             yield from ret
@@ -381,7 +389,7 @@ class SignalSlotable(Configurable):
                 s.method = lambda self, name=k: self._device._ss.emit(
                     "call", {self.deviceId: [name]})
                 dict[k] = s
-        Cls = type(schema.name, (Proxy,), dict)
+        Cls = type(schema.name, (Base,), dict)
 
         ret = Cls(self, deviceId)
         self.__devices[deviceId] = ret
