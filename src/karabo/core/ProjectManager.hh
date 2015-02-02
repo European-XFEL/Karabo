@@ -31,11 +31,13 @@ namespace karabo {
             
             void initialize();
             
-            void slotLoadProject(const karabo::util::Hash& hash);
+            void slotGetAvailableProjects();
             
-            void slotSaveProject(const karabo::util::Hash& hash);
+            void slotLoadProject(const std::string& userName, const std::string& projectName);
             
-            void slotCloseProject(const karabo::util::Hash& hash);            
+            void slotSaveProject(const std::string& userName, const std::string& projectName, const std::vector<char>& data);
+            
+            void slotCloseProject(const std::string& userName, const std::string& projectName);            
             
 
         };

@@ -61,7 +61,12 @@ namespace karabo {
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
             //SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-                    
+
+            SLOT1(slotAvailableProjects, vector<string> /*projects*/)
+            SLOT2(slotProjectSaved, string /*projectName*/, bool /*success*/)
+            SLOT2(slotProjectLoaded, string /*projectName*/, vector<char> /*data*/)
+            SLOT2(slotProjectClosed, string /*projectName*/, bool /*success*/)
+
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
             config.set("type", "server");
@@ -146,7 +151,7 @@ namespace karabo {
 
         void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances            
+            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances
         }
 
 
@@ -179,17 +184,17 @@ namespace karabo {
                         onStopMonitoringDevice(channel, info);
                     } else if (type == "getPropertyHistory") {
                         onGetPropertyHistory(channel, info);
-		    } else if (type == "subscribeNetwork") {
-			onSubscribeNetwork(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
+                    } else if (type == "getAvailableProjects") {
+                        onGetAvailableProjects(channel);
                     } else if (type == "loadProject") {
                         onLoadProject(channel, info);
                     } else if (type == "saveProject") {
                         onSaveProject(channel, info);
                     } else if (type == "closeProject") {
                         onCloseProject(channel, info);
-                    }                    
+                    }
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
                 }
@@ -437,37 +442,69 @@ namespace karabo {
         }
         
         void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";                
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectAvailable", args);
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";
+                
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectLoaded", userName, projectName);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
             }
         }
         
-        void GuiServerDevice::slotProjectLoaded(const karabo::util::Hash& info) {            
+        void GuiServerDevice::slotProjectLoaded(const std::string& projectName, const std::vector<char>& data) {         
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectLoaded";
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
+                
+                Hash h("type", "projectLoaded");
+                h.set("name", projectName);
+                h.set("buffer", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectLoaded: " << e.userFriendlyMsg();
-            }                      
+            }
         }
 
         
         void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-             try {
+            try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
+
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                vector<char> data = info.get<vector<char> > ("data");
+                
+                requestNoWait("Karabo_ProjectManager", "slotSaveProject", "", "slotProjectSaved", userName, projectName, data);
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
-            }            
+                KARABO_LOG_ERROR << "Problem in onSaveProject(): " << e.userFriendlyMsg();
+            }
         }
+
         
-        void GuiServerDevice::slotProjectSaved(const karabo::util::Hash& hash) {
+        void GuiServerDevice::slotProjectSaved(const std::string& projectName, bool success) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectSaved";
-                
+
+                Hash h("type", "projectSaved");
+                h.set("name", projectName);
+                h.set("success", success);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in slotProjectSaved(): " << e.userFriendlyMsg();
             }           
@@ -476,7 +513,36 @@ namespace karabo {
         
         
         void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onCloseProject";
 
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                requestNoWait("Karabo_ProjectManager", "slotCloseProject", "", "slotProjectClosed", userName, projectName);
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onCloseProject(): " << e.userFriendlyMsg();
+            }        
+        }
+
+
+        void GuiServerDevice::slotProjectClosed(const std::string& projectName, bool success) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectClosed";
+                Hash h("type", "projectClosed");
+                h.set("name", projectName);
+                h.set("success", success);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                // Broadcast to all GUIs (which is shit here, but the current solution...)
+                for (ConstChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
+                    //if (it->second.find(deviceId) != it->second.end()) {
+                     it->first->write(h);
+                    //}
+                }
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in slotProjectClosed(): " << e.userFriendlyMsg();
+            }     
         }
 
 

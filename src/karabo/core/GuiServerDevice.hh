@@ -45,7 +45,7 @@ namespace karabo {
             karabo::net::BrokerIOService::Pointer m_loggerIoService;
             karabo::net::BrokerChannel::Pointer m_loggerChannel;
             std::map<std::string, int> m_monitoredDevices;
-	    NetworkMap m_networkConnections;
+            NetworkMap m_networkConnections;
 
             karabo::net::BrokerConnection::Pointer m_guiDebugConnection;
             karabo::net::BrokerChannel::Pointer m_guiDebugChannel;
@@ -104,17 +104,23 @@ namespace karabo {
 
             void onSubscribeNetwork(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-	    void onNetworkData(const karabo::io::Input<karabo::util::Hash>::Pointer &input);
+            void onNetworkData(const karabo::io::Input<karabo::util::Hash>::Pointer &input);
+            
+            void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
+            
+            void slotAvailableProjects(const std::vector<std::string>& projects);
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectLoaded(const karabo::util::Hash& info);
+            void slotProjectLoaded(const std::string& projectName, const std::vector<char>& data);
             
             void onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void slotProjectSaved(const karabo::util::Hash& hash);
+            void slotProjectSaved(const std::string& projectName, bool success);
             
             void onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            
+            void slotProjectClosed(const std::string& projectName, bool success);
             
             void propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
