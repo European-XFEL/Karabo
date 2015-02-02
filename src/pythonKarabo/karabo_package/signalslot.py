@@ -132,19 +132,6 @@ class Proxy(object):
         self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
-    @coroutine
-    def set(self, **kwargs):
-        h = Hash()
-        for k, v in kwargs.items():
-            h[k] = v
-        yield from self._device.call(self.deviceId, "slotReconfigure", h)
-
-    def setNoWait(self, **kwargs):
-        h = Hash()
-        for k, v in kwargs.items():
-            h[k] = v
-        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]}, h)
-
     def __enter__(self):
         self._used += 1
         if self._used == 1:
@@ -395,3 +382,20 @@ class SignalSlotable(Configurable):
         self.__devices[deviceId] = ret
         yield from ret
         return ret
+
+    @coroutine
+    def set(self, device, **kwargs):
+        if isinstance(device, Proxy):
+            device = device._deviceId
+        h = Hash()
+        for k, v in kwargs.items():
+            h[k] = v
+        yield from self.call(device, "slotReconfigure", h)
+
+    def setNoWait(self, device, **kwargs):
+        if isinstance(device, Proxy):
+            device = device._deviceId
+        h = Hash()
+        for k, v in kwargs.items():
+            h[k] = v
+        self._ss.emit("call", {device: ["slotReconfigure"]}, h)

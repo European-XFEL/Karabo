@@ -1,20 +1,18 @@
-from asyncio import async, get_event_loop, TimeoutError
+from asyncio import async, get_event_loop, set_event_loop, TimeoutError
 import threading
 
+from karabo import KaraboError
 from karabo.hash import Hash
 from karabo.signalslot import Proxy, SignalSlotable
 
 
 class MacroProxy(Proxy):
-    def set(self, timeout=-1, **kwargs):
-        return self._device._sync(Proxy.set(self, **kwargs), timeout=timeout)
-
-    def update(self, timeout=-1):
-        return self._device._sync(self.__iter__(), timeout=timeout)
-
     def setValue(self, attr, value):
-        self._device._sync(self._device.call(self.deviceId, "slotReconfigure",
-                                             Hash(attr.key, value)))
+        ok, msg = self._device._sync(
+            self._device.call(self.deviceId, "slotReconfigure",
+            Hash(attr.key, value)))
+        if not ok:
+            raise KaraboError(msg)
 
 
 class Macro(SignalSlotable):
@@ -40,6 +38,13 @@ class Macro(SignalSlotable):
     def getDevice(self, deviceId):
         return self._sync(SignalSlotable.getDevice(self, deviceId,
                                                    Base=MacroProxy))
+
+    def set(self, device, *, timeout=-1, **kwargs):
+        return self._sync(SignalSlotable.set(self, device, **kwargs),
+                          timeout=timeout)
+
+    def update(self, device, timeout=-1):
+        return self._sync(device.__iter__(), timeout=timeout)
 
     def waitUntil(self, condition, timeout=-1):
         return self._sync(SignalSlotable.waitUntil(self, condition),

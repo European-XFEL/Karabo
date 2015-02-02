@@ -103,12 +103,12 @@ class Local(Device):
     @Slot()
     def setwait(self):
         d = yield from self.getDevice("remote")
-        yield from d.set(value=200, counter=300)
+        yield from self.set(d, value=200, counter=300)
 
     @Slot()
     def setnowait(self):
         d = yield from self.getDevice("remote")
-        d.setNoWait(value=200, counter=300)
+        self.setNoWait(d, value=200, counter=300)
 
     @Slot()
     def waituntil(self):
