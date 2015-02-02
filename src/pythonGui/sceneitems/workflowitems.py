@@ -220,29 +220,7 @@ class Item(QWidget, Loadable):
                 
 
     def checkConnections(self):
-        if len(self.input_channels) < 1 or self.connectionsChecked:
-            return
-        
-        for input in self.input_channels:
-            path = input.box.path + ('connectedOutputChannels',)
-            if not input.box.configuration.hasBox(path):
-                return
-
-            connectedOutputs = input.box.configuration.getBox(path).value
-            if isinstance(connectedOutputs, Dummy):
-                return
-
-            for output in connectedOutputs:
-                output = output.replace(":" ,".")
-                start_channel = self.scene.getOutputChannelItem(output)
-                if start_channel is None:
-                    continue
-                
-                wc = WorkflowConnection(None, start_channel)
-                wc.updateValues(self.scene, input)
-                wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
-                
-        self.connectionsChecked = True
+        raise NotImplementedError("Item.checkConnections")
 
 
     def updateConnectionsNeeded(self, scene, transPos):
@@ -284,6 +262,32 @@ class WorkflowItem(Item):
         The object to the project device is returned.
         """
         return self.device
+
+
+    def checkConnections(self):
+        if len(self.input_channels) < 1 or self.connectionsChecked:
+            return
+        
+        for input in self.input_channels:
+            path = input.box.path + ('connectedOutputChannels',)
+            if not input.box.configuration.hasBox(path):
+                return
+
+            connectedOutputs = input.box.configuration.getBox(path).value
+            if isinstance(connectedOutputs, Dummy):
+                return
+
+            for output in connectedOutputs:
+                output = output.replace(":" ,".")
+                start_channel = self.scene.getOutputChannelItem([output])
+                if start_channel is None:
+                    continue
+                
+                wc = WorkflowConnection(None, start_channel)
+                wc.updateValues(self.scene, input)
+                wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+                
+        self.connectionsChecked = True
 
 
     def save(self, ele):
@@ -360,6 +364,32 @@ class WorkflowGroupItem(Item):
         The object to the project device group is returned.
         """
         return self.deviceGroup
+
+
+    def checkConnections(self):
+        if len(self.input_channels) < 1 or self.connectionsChecked:
+            return
+        
+        for input in self.input_channels:
+            path = input.box.path + ('connectedOutputChannels',)
+            if not input.box.configuration.hasBox(path):
+                return
+
+            connectedOutputs = input.box.configuration.getBox(path).value
+            if isinstance(connectedOutputs, Dummy):
+                return
+
+
+            output = [o.replace(":" ,".") for o in connectedOutputs]
+            start_channel = self.scene.getOutputChannelItem(output)
+            if start_channel is None:
+                continue
+            
+            wc = WorkflowConnection(None, start_channel)
+            wc.updateValues(self.scene, input)
+            wc.proxy.set_geometry(QRect(wc.topLeft, QSize(wc.curveWidth(), wc.curveHeight())))
+                
+        self.connectionsChecked = True
 
 
     def save(self, ele):
@@ -548,8 +578,9 @@ class WorkflowChannel(QWidget):
         """
         self.parent().scene.ilayout.remove_item(wc.proxy)
         
-        index = self.workflow_connections.index(wc)
-        self.workflow_connections.pop(index)
+        if wc in self.workflow_connections:
+            index = self.workflow_connections.index(wc)
+            self.workflow_connections.pop(index)
 
 
 class WorkflowConnection(QWidget):

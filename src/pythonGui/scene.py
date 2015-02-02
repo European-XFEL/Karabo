@@ -1124,13 +1124,36 @@ class Scene(QSvgWidget):
         return None
 
 
-    def getOutputChannelItem(self, output):
+    def getOutputChannelItem(self, outputKeys):
+        """
+        Get the channel which match the given list of \outputKeys.
+        """
         for c in self.inner.children():
             if isinstance(c, ProxyWidget) and isinstance(c.widget, Item):
                 item = c.widget
-                for channel in item.output_channels:
-                    if channel.box.key() == output:
-                        return channel
+                
+                # TODO: this is working for now but needs some better solution
+                # due to the costs...
+                if isinstance(item, WorkflowGroupItem):
+                    deviceGroup = item.getObject()
+                    for channel in item.output_channels:
+                        for d in deviceGroup.devices:
+                            for k in list(d.descriptor.dict.keys()):
+                                box = getattr(d.boxvalue, k, None)
+                                if box is None:
+                                    continue
+
+                                displayType = box.descriptor.displayType
+                                if displayType is None or displayType != Item.OUTPUT:
+                                    continue
+
+                                if box.key() in outputKeys:
+                                    if box.key().endswith(channel.box.key().split(".")[1]):
+                                        return channel
+                else:
+                    for channel in item.output_channels:
+                        if channel.box.key() in outputKeys:
+                            return channel
         return None
 
 
@@ -1196,7 +1219,7 @@ class Scene(QSvgWidget):
         if self.workflow_connection is not None:
             _, channel = self.workflowChannelHit(event)
             if channel is not None:
-                self.workflow_connection.proxy = None
+                #self.workflow_connection.proxy = None
                 self.workflow_connection.mouseReleaseEvent(self, channel)
             else:
                 self.update()
