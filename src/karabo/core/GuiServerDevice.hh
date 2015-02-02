@@ -25,12 +25,12 @@ namespace karabo {
 
         class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
 
-	    struct NetworkConnection {
-		std::string name;
-	        karabo::net::Channel::Pointer channel;
+        struct NetworkConnection {
+            std::string name;
+            karabo::net::Channel::Pointer channel;
 	    };
 
-	    typedef std::multimap<karabo::io::Input<karabo::util::Hash>::Pointer, NetworkConnection> NetworkMap;
+        typedef std::multimap<karabo::io::Input<karabo::util::Hash>::Pointer, NetworkConnection> NetworkMap;
 
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
@@ -101,6 +101,8 @@ namespace karabo {
             void onGetDeviceSchema(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
             void onGetPropertyHistory(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+  
+            void propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
             void onSubscribeNetwork(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
@@ -121,8 +123,6 @@ namespace karabo {
             void onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
             void slotProjectClosed(const std::string& projectName, bool success);
-            
-            void propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data);
 
             void registerConnect(const karabo::net::Channel::Pointer& channel);
             
