@@ -326,8 +326,6 @@ namespace karabo {
             if (!boost::filesystem::exists(boost::filesystem::path(indexpath))) return nearest;
             ifstream ifs(indexpath.c_str());
 
-            string tail;
-
             while (ifs >> event >> timestampAsIso8061 >> timestampAsDouble >> seconds >> fraction) {
                 // read the rest of the line (upto '\n')
                 string line;
@@ -337,27 +335,16 @@ namespace karabo {
                     return nearest;
                 }
                 Epochstamp epochstamp(seconds, fraction);
-                if (epochstamp > target) {
-                    if (tail.empty()) {
-                        //there is no record before target timepoint, hence, use this one
-                        nearest.m_event = event;
-                        nearest.m_epoch = epochstamp;
-                        stringstream ss(line);
-                        ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
-                    } else {
-                        // there is record before target timepoint, hence, use previous one
-                        stringstream ss(tail);
-                        ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
-                    }
-                    break;
-                } else {
-                    // store selected event
+                if (epochstamp <= target || nearest.m_fileindex == -1) {  
+                    //in case of time point before target time or there is no record before target time point, hence, use this one
                     nearest.m_event = event;
                     nearest.m_epoch = epochstamp;
-                    tail = line;
-                    stringstream ss(tail);
+                    stringstream ss(line);
                     ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                 }
+                // Stop loop if greater than target time point
+                if (epochstamp > target)
+                    break;
             }
             ifs.close();
             return nearest;
