@@ -252,9 +252,10 @@ namespace karabo {
 
                 m_visibility = 5;
                 m_scanPlugins = false;
-                m_autoStart.resize(2);
+                m_autoStart.resize(3);
                 m_autoStart[0] = Hash("GuiServerDevice.deviceId", "Karabo_GuiServer_0");
                 m_autoStart[1] = Hash("DataLoggerManager.deviceId", "Karabo_DataLoggerManager_0");
+                m_autoStart[2] = Hash("ProjectManager.deviceId", "Karabo_ProjectManager");
             }
 
             m_connectionConfiguration = config.get<Hash>("connection");
