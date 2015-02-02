@@ -72,14 +72,14 @@ namespace karabo {
                 DataLoggerIndex idx = findNearestLoggerIndex(deviceId, from);
                 if (idx.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
-                    reply(result);
+                    reply(deviceId, property, result);
                     return;
                 }
 
                 int lastFileIndex = getFileIndex(deviceId);
                 if (lastFileIndex < 0) {
                     KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << ".last\" not found. No data will be sent...";
-                    reply(result);
+                    reply(deviceId, property, result);
                     return;
                 }
 
@@ -331,7 +331,8 @@ namespace karabo {
                 string line;
                 if (!getline(ifs, line)) {
                     ifs.close();
-                    throw KARABO_IO_EXCEPTION("Premature EOF while reading index file \"" + indexpath + "\"");
+                    KARABO_LOG_WARN << "Premature EOF while reading index file \"" << indexpath + "\" in findNearestLoggerIndex";
+                    return nearest;
                 }
                 Epochstamp epochstamp(seconds, fraction);
                 if (epochstamp > target) {
