@@ -22,7 +22,11 @@ namespace karabo {
             PATH_ELEMENT(expected).key("directory")
                     .displayedName("Directory")
                     .description("The directory where the project files should be placed")
-                    .assignmentMandatory()
+                    .assignmentOptional().defaultValue("projects")
+                    .commit();
+            
+            OVERWRITE_ELEMENT(expected).key("deviceId")
+                    .setNewDefaultValue("Karabo_ProjectManager")
                     .commit();
 
             // Do not archive the archivers (would lead to infinite recursion)
@@ -46,10 +50,10 @@ namespace karabo {
 
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
-            SLOT1(slotLoadProject, Hash)
-            SLOT1(slotSaveProject, Hash)
-            SLOT1(slotCloseProject, Hash)
-
+            SLOT0(slotGetAvailableProjects)
+            SLOT2(slotLoadProject, string /*username*/, string /*projectName*/)
+            SLOT3(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
+            SLOT2(slotCloseProject, string /*username*/, string /*projectName*/)
         }
 
 
@@ -65,31 +69,51 @@ namespace karabo {
 
         }
 
+        
+        void ProjectManager::slotGetAvailableProjects() {
+            KARABO_LOG_DEBUG << "slotGetAvailableProjects";
+            
+            std::vector<std::string> projects;
+            // Check project directory for all projects
+            boost::filesystem::path directory(get<string> ("directory"));
+            boost::filesystem::directory_iterator end_iter;
+            for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
+                projects.push_back(iter->path().filename().string());
+            }
+            
+            reply(projects);
+        }
 
-        void ProjectManager::slotLoadProject(const karabo::util::Hash& hash) {
+        
+        void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject";
+
+            //Hash answer("name", projectName);
+            //std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");
             
-            string projectName = hash.get<string>("projectName");
-                        
-            Hash answer(hash);
-            std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");            
-            karabo::io::loadFromFile(buffer, get<string>("directory") + "/" + projectName);
-            reply(answer);
+            std::vector<char> data;
+            karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
             
+            reply(projectName, data);
         }
 
 
-        void ProjectManager::slotSaveProject(const karabo::util::Hash& hash) {
-            KARABO_LOG_DEBUG << "slotSaveProject";
+        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const vector<char>& data) {
+            KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
+            bool success = karabo::io::saveToFile(data, get<string>("directory") + "/" + projectName);
+            KARABO_LOG_DEBUG << "success " << success;
             
+            reply(projectName, success);
         }
 
 
-        void ProjectManager::slotCloseProject(const karabo::util::Hash& hash) {
+        void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject";
+            
+            bool success = True;
+            reply(projectName, success);
         }
-
 
     }
 }
