@@ -810,8 +810,8 @@ class ProjectModel(QStandardItemModel):
         if project is None:
             project = self.currentProject()
 
-        project.zip(filename)
         project.filename = filename
+        project.zip()
         self.onProjectModified(project)
 
 

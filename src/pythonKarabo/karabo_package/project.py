@@ -61,11 +61,26 @@ class Project(object):
 
     @property
     def name(self):
+        """
+        This function returns the name of the project excluding the suffix.
+        """
         r = os.path.basename(self.filename)
         if r.endswith(".krb"):
             return r[:-4]
         else:
             return r
+
+
+    @property
+    def basename(self):
+        """
+        This function returns the name of the project including the suffix.
+        """
+        b = os.path.basename(self.filename)
+        if not b.endswith(".krb"):
+            return "{}.krb".format(b)
+        else:
+            return b
 
 
     def addDevice(self, device):

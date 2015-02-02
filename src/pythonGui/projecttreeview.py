@@ -1,4 +1,3 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 4, 2014
@@ -15,8 +14,10 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
+from dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
+from network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
@@ -24,8 +25,8 @@ from util import getSaveFileName
 from karabo.project import Project, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QFileDialog, 
-                         QMenu, QMessageBox, QTreeView)
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
+                         QFileDialog, QMenu, QMessageBox, QTreeView)
 import os.path
 
 
@@ -44,6 +45,8 @@ class ProjectTreeView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        
+        self.projectDialog = None
 
 
     def currentIndex(self):
@@ -85,33 +88,72 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
-    def projectNew(self):
-        fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
+    def getProjectSaveName(self):
+        """
+        Returns a tuple containing the filepath, project name and the location
+        (e.g. CLOUD, LOCAL).
+        """
+        self.projectDialog = ProjectSaveDialog()
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
+            return (None, None, None)
+        
+        projectName = self.projectDialog.filename
+        filePath = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        
+        return filePath, projectName, self.projectDialog.location
 
-        if fn:
-            self.model().projectNew(fn)
+
+    def projectSaveToCloud(self, filepath, projectName):
+        # Read new project bytes
+        with open(filepath, 'rb') as input:
+            data = input.read()
+        input.close()
+        # Send save project to cloud request to network
+        Network().onSaveProject(projectName, data)
+        
+        self.projectDialog = None
+
+
+    def projectNew(self):
+        filePath, projectName, location = self.getProjectSaveName()
+        if (filePath is None) and (projectName is None) and (location is None):
+            return
+        
+        # Create project
+        self.model().projectNew(filePath)
+        
+        if location == ProjectDialog.CLOUD:
+            self.projectSaveToCloud(filePath, projectName)
 
 
     def projectOpen(self):
-        filename = QFileDialog.getOpenFileName(
-            None, "Open project", globals.KARABO_PROJECT_FOLDER,
-            "Karabo Projects (*.krb)")
-
-        if len(filename) < 1:
+        self.projectDialog = ProjectLoadDialog()
+        
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
             return
-        self.model().projectOpen(filename)
+        
+        if self.projectDialog.location == ProjectDialog.CLOUD:
+            Network().onLoadProject(self.projectDialog.filename)
+        elif self.projectDialog.location == ProjectDialog.LOCAL:
+            self.model().projectOpen(self.projectDialog.filepath)
 
 
     def projectSave(self):
+        # TODO: save to cloud, if necessary
         self.model().projectSave()
 
 
     def projectSaveAs(self):
-        fn = getSaveFileName("Save Project As", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
-        if fn:
-            self.model().projectSaveAs(fn)
+        filePath, projectName, location = self.getProjectSaveName()
+        if (projectName is None) and (location is None):
+            return
+
+        self.model().projectSaveAs(filePath)
+        
+        if location == ProjectDialog.CLOUD:
+            self.projectSaveToCloud(filePath, projectName)
 
 
     def mouseDoubleClickEvent(self, event):
@@ -334,4 +376,31 @@ class ProjectTreeView(QTreeView):
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
             device.project.shutdown(device, nbSelected == 1)
+
+
+    def onAvailableProjects(self, projects):
+        if self.projectDialog is None:
+            return
+        
+        self.projectDialog.fillCloudProjects(projects)
+
+
+    def onProjectLoaded(self, name, data):
+        # Write cloud project to local file system
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, name)
+        with open(filename, "wb") as out:
+            out.write(data)
+        out.close()
+        
+        self.model().projectOpen(filename)
+
+
+    def onProjectSaved(self, name, success):
+        print("onProjectSaved", name, success)
+        # TODO: show message that saving did not work
+
+
+    def onProjectClosed(self, name, success):
+        print("onProjectClosed", name, success)
+        # TODO: show message that closing did not work
 
