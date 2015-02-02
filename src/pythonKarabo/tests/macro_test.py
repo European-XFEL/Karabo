@@ -68,7 +68,7 @@ class Local(Macro):
         time.sleep(0.3)
         self.f1 = d.counter
         time.sleep(0.3)
-        with d.update():
+        with self.update(d):
             self.f2 = d.counter
         time.sleep(1)
         self.f3 = d.counter
@@ -101,12 +101,12 @@ class Local(Macro):
     @Slot()
     def setwait(self):
         d = self.getDevice("remote")
-        d.set(value=200, counter=300)
+        self.set(d, value=200, counter=300)
 
     @Slot()
     def setnowait(self):
         d = self.getDevice("remote")
-        d.setNoWait(value=200, counter=300)
+        self.setNoWait(d, value=200, counter=300)
 
     @Slot()
     def waituntil(self):
