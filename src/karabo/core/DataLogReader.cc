@@ -65,20 +65,22 @@ namespace karabo {
                 if (params.has("to")) to = Epochstamp(params.get<string>("to"));
                 unsigned int maxNumData = 0;
                 if (params.has("maxNumData")) maxNumData = params.getAs<int>("maxNumData");
+                
+                int lastFileIndex = getFileIndex(deviceId);
+                if (lastFileIndex < 0) {
+                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << ".last\" not found. No data will be sent...";
+                    reply(deviceId, property, result);
+                    return;
+                }
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "From (UTC): " << from.toIso8601Ext();
                 KARABO_LOG_FRAMEWORK_DEBUG << "To (UTC):   " << to.toIso8601Ext();
 
                 DataLoggerIndex idx = findNearestLoggerIndex(deviceId, from);
+                KARABO_LOG_FRAMEWORK_DEBUG << "Event: \"" << idx.m_event << "\", epoch: " << idx.m_epoch.toIso8601Ext()
+                        << ", pos: " << idx.m_position << ", fileindex: " << idx.m_fileindex;
                 if (idx.m_fileindex == -1) {
                     KARABO_LOG_WARN << "Requested time point \"" << params.get<string>("from") << "\" for device configuration is earlier than anything logged";
-                    reply(deviceId, property, result);
-                    return;
-                }
-
-                int lastFileIndex = getFileIndex(deviceId);
-                if (lastFileIndex < 0) {
-                    KARABO_LOG_WARN << "File \"" << get<string>("directory") << "/" << deviceId << ".last\" not found. No data will be sent...";
                     reply(deviceId, property, result);
                     return;
                 }
@@ -353,6 +355,8 @@ namespace karabo {
                     nearest.m_event = event;
                     nearest.m_epoch = epochstamp;
                     tail = line;
+                    stringstream ss(tail);
+                    ss >> nearest.m_train >> nearest.m_position >> nearest.m_user >> nearest.m_fileindex;
                 }
             }
             ifs.close();
