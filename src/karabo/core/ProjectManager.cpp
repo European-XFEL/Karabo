@@ -50,10 +50,10 @@ namespace karabo {
 
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
-            SLOT0(slotGetAvailableProjects)
-            SLOT2(slotLoadProject, string /*username*/, string /*projectName*/)
-            SLOT3(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
-            SLOT2(slotCloseProject, string /*username*/, string /*projectName*/)
+            KARABO_SLOT(slotGetAvailableProjects)
+            KARABO_SLOT(slotLoadProject, string /*username*/, string /*projectName*/)
+            KARABO_SLOT(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
+            KARABO_SLOT(slotCloseProject, string /*username*/, string /*projectName*/)
         }
 
 
@@ -102,7 +102,6 @@ namespace karabo {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
             bool success = karabo::io::saveToFile(data, get<string>("directory") + "/" + projectName);
-            KARABO_LOG_DEBUG << "success " << success;
             
             reply(projectName, success);
         }
