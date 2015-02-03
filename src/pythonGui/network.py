@@ -351,12 +351,8 @@ class _Network(QObject):
         h.set("deviceId", box.configuration.id)
         h.set("command", box.path[-1])
 
-        if args is not None:
-            i = 0
-            for arg in args:
-                i = i+1
-                argName = "a{}".format(i)
-                h.set(argName, arg)
+        for i, arg in enumerate(args):
+            h.set("a{}".format(i + 1), arg)
 
         self._tcpWriteHash(h)
 
