@@ -3,7 +3,8 @@ import threading
 
 from karabo import KaraboError
 from karabo.hash import Hash
-from karabo.signalslot import Proxy, SignalSlotable
+from karabo.signalslot import Proxy
+from karabo.python_device import Device
 
 
 class MacroProxy(Proxy):
@@ -15,7 +16,19 @@ class MacroProxy(Proxy):
             raise KaraboError(msg)
 
 
-class Macro(SignalSlotable):
+class Macro(Device):
+    subclasses = []
+
+    @classmethod
+    def register(cls, name, dict):
+        Macro._subclasses = {}
+        super().register(name, dict)
+        Macro.subclasses.append(cls)
+
+    def initInfo(self):
+        super().initInfo()
+        self.info["classId"] = "Macro"
+
     def run(self):
         super().run()
         self._loop = get_event_loop()

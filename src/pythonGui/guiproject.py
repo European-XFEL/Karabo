@@ -22,6 +22,7 @@ from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
 import karabo
 import manager
+from network import network
 
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
@@ -664,7 +665,9 @@ class Macro(object):
 
 
     def run(self):
-        pass
+        h = Hash("code", self.editor.edit.toPlainText())
+        network.onInitDevice("macroServer", "MetaMacro", "Macro-{}-{}".format(
+            self.project.name, self.name), h)
 
 
     def load(self):
