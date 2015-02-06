@@ -1,15 +1,15 @@
 import karabo
 karabo.api_version = 2
 
-from asyncio import (coroutine, start_server, get_event_loop,
+from asyncio import (async, coroutine, start_server, get_event_loop,
                      IncompleteReadError)
 from functools import wraps
 
 from karabo.python_device import Device
 from karabo import Integer, Assignment, openmq
-from karabo.async import parallel
 from karabo.hash import Hash
 from karabo.p2p import Channel
+from karabo.signalslot import slot
 
 
 def parallel(f):
@@ -40,7 +40,7 @@ class GuiServer(Device):
 
     @coroutine
     def run_server(self):
-        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, False, False)
+        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
         yield from start_server(self.connect_client, port=int(self.port))
 
     @coroutine
@@ -131,6 +131,7 @@ class GuiServer(Device):
                           "from", t0, "to", t1, "maxNumData", maxNumData))
         self.histories[deviceId, property] = channel
 
+    @slot
     def slotPropertyHistory(self, deviceId, property, data):
         channel = self.histories.pop((deviceId, property), None)
         if channel is None:
@@ -138,10 +139,12 @@ class GuiServer(Device):
         self.respond(channel, "propertyHistory", deviceId=deviceId,
                      property=property, data=data)
 
+    @slot
     def slotSchemaUpdated(self, schema, deviceId):
         for c in self.channels:
             self.respond(c, "deviceSchema", deviceId=deviceId, schema=schema)
 
+    @slot
     def slotNotification(self, type, shortMessage, detailedMessage, deviceId):
         for c in self.channels:
             self.respond(c, "notification", deviceId=deviceId,
@@ -163,6 +166,7 @@ class GuiServer(Device):
                 for c in self.channels:
                     self.respond(c, "log", message=message.data)
 
+    @slot
     def slotInstanceNew(self, instanceId, info):
         entry = self.updateSystemTopology(instanceId, info)
         for c in self.channels:
@@ -175,11 +179,13 @@ class GuiServer(Device):
         if deviceId in self.deviceChannels:
             self.registerDevice(deviceId)
 
+    @slot
     def slotInstanceUpdated(self, instanceId, info):
         entry = self.updateSystemTopology(instanceId, info)
         for c in self.channels:
             self.respond(c, "instanceUpdated", topologyEntry=entry)
 
+    @slot
     def slotInstanceGone(self, instanceId, info):
         type = info["type"]
         for c in self.channels:
@@ -187,11 +193,13 @@ class GuiServer(Device):
                          instanceType=type)
         self.systemTopology[type].pop(instanceId, None)
 
+    @slot
     def slotChanged(self, configuration, deviceId):
         for c in self.deviceChannels.get(deviceId, []):
             self.respond(c, "deviceConfiguration", deviceId=deviceId,
                          configuration=configuration)
 
+    @slot
     def slotPingAnswer(self, deviceId, info):
         self.updateSystemTopology(deviceId, info)
 
