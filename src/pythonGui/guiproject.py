@@ -22,7 +22,6 @@ from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
 import karabo
 import manager
-from finders import MacroContext
 
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
@@ -464,14 +463,6 @@ class GuiProject(Project, QObject):
             macro = Macro(self, k)
             self.addMacro(macro)
 
-        with MacroContext(self):
-            try:
-                for m in self.macros.values():
-                    m.run()
-            except Exception as e:
-                QMessageBox.warning(None, "Macro Error",
-                        "error excuting macro {}:\n{}".format(m.name, e))
-
         self.setModified(False)
 
 
@@ -668,50 +659,17 @@ class Macro(object):
     def __init__(self, project, name):
         self.project = project
         self.name = name
-        self.module = None
-        self.macros = { }
+        self.macros = {}
         self.editor = None
 
 
     def run(self):
-        try:
-            if self.module is None:
-                self.module = import_module("macros." + self.name)
-            else:
-                self.module = reload(self.module)
-        except:
-            self.module = None
-            raise
-        self.macros = {k: v for k, v in self.module.__dict__.items()
-                       if isinstance(v, type) and
-                          issubclass(v, karabo.Macro) and
-                          v is not karabo.Macro}
-        for k, v in self.macros.items():
-            v.instance = Configuration(k, "macro", v.getSchema())
-            v.instance.setDefault()
-            v.instance.status = "alive"
-        
-        self.project.signalMacroChanged.emit(self)
+        pass
 
 
     def load(self):
         with ZipFile(self.project.filename, "r") as zf:
             return zf.read("macros/{}.py".format(self.name)).decode("utf8")
-
-
-    def exec_module(self, module):
-        fn = "macros/{}.py".format(self.name)
-        if self.editor is None:
-            with ZipFile(self.project.filename, "r") as zf:
-                try:
-                    code = marshal.loads(zf.read(cache_from_source(fn)))
-                except (KeyError, EOFError, ValueError, TypeError):
-                    exec(compile(zf.read(fn), fn, "exec"), module.__dict__)
-                else:
-                    exec(code, module.__dict__)
-        else:
-            exec(compile(self.editor.edit.toPlainText(), fn, "exec"),
-                 module.__dict__)
 
 
 class Category(object):
