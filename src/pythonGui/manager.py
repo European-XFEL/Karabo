@@ -53,7 +53,7 @@ class _Manager(QObject):
     signalLogDataAvailable = pyqtSignal(str) # logData
     signalNotificationAvailable = pyqtSignal(str, str, str, str, str) # timestam, type, shortMessage, detailedMessage, deviceId
     
-    signalAvailableProjects = pyqtSignal(object) # list of projects
+    signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object) # projectName, data
     signalProjectSaved = pyqtSignal(str, bool) # projectName, success
     signalProjectClosed = pyqtSignal(str, bool) # projectName, success
