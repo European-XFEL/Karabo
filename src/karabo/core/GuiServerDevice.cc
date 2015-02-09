@@ -533,17 +533,17 @@ namespace karabo {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onGetAvailableProjects";
                 
                 request("Karabo_ProjectManager", "slotGetAvailableProjects")
-                   .receiveAsync<vector<string> >(boost::bind(&karabo::core::GuiServerDevice::availableProjects, this, channel, _1));
+                   .receiveAsync<karabo::util::Hash >(boost::bind(&karabo::core::GuiServerDevice::availableProjects, this, channel, _1));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onGetAvailableProjects(): " << e.userFriendlyMsg();
             }
         }
 
         
-        void GuiServerDevice::availableProjects(karabo::net::Channel::Pointer channel, const std::vector<std::string>& projects) {
+        void GuiServerDevice::availableProjects(karabo::net::Channel::Pointer channel, const karabo::util::Hash& projects) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting available projects";
-
+                KARABO_LOG_FRAMEWORK_DEBUG << projects;
                 Hash h("type", "availableProjects", "availableProjects", projects);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);

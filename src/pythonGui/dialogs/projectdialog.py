@@ -13,7 +13,8 @@ import network
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
-                         QItemSelectionModel, QMessageBox, QMovie, QPalette)
+                         QItemSelectionModel, QMessageBox, QMovie, QPalette,
+                         QTreeWidgetItem)
 
 import os.path
 
@@ -30,7 +31,7 @@ class ProjectDialog(QDialog):
         # Request all available projects in cloud
         network.Network().onGetAvailableProjects()
         
-        self.lwProjects.currentItemChanged.connect(self.onCloudProjectChanged)
+        self.twProjects.currentItemChanged.connect(self.onCloudProjectChanged)
         
         self.fileSystemModel = QFileSystemModel(self)
         self.fileSystemModel.setNameFilters(["*.krb"])
@@ -90,11 +91,24 @@ class ProjectDialog(QDialog):
 
 
     def fillCloudProjects(self, projects):
-        if self.lwProjects.count() > 0:
-            self.lwProjects.clear()
+        if self.twProjects.topLevelItemCount() > 0:
+            self.twProjects.clear()
         
+        print(projects)
+        print()
+ 
         # Fill all projects from cloud into table view
-        self.lwProjects.addItems(projects)
+        #self.twProjects.addItems(projects)
+        for k in projects.keys():
+            item = QTreeWidgetItem(self.twProjects)
+            item.setText(0, k)
+            item.setText(1, projects.getAttribute(k, "checked-out"))
+            item.setText(2, projects.getAttribute(k, "checked-out-by"))
+            item.setText(3, projects.getAttribute(k, "author"))
+            #item.setText(4, projects.getAttribute(k, "last-modified"))
+            #item.setText(5, projects.getAttribute(k, "creation-date"))
+            self.twProjects.addTopLevelItem(item)
+        
         if self.swSaveTo.currentIndex() == 2:
             self.swSaveTo.setCurrentIndex(ProjectDialog.CLOUD)
         
@@ -108,7 +122,7 @@ class ProjectDialog(QDialog):
 
 
     def onCloudProjectChanged(self, item): # previousItem
-        self.leFilename.setText(item.text())
+        self.leFilename.setText(item.text(0))
 
 
     def onLocalProjectChanged(self, current): # previous
@@ -133,8 +147,8 @@ class ProjectSaveDialog(ProjectDialog):
     def onSaved(self):
         # Check if filename is already existing
         if self.cbSaveTo.currentIndex() == ProjectDialog.CLOUD:
-            for i in range(self.lwProjects.count()):
-                item = self.lwProjects.item(i)
+            for i in range(self.twProjects.count()):
+                item = self.twProjects.item(i)
                 if item.text() == self.filename:
                     # Project already exists
                     reply = QMessageBox.question(None, 'Project already exists',
