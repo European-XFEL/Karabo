@@ -73,12 +73,50 @@ namespace karabo {
         void ProjectManager::slotGetAvailableProjects() {
             KARABO_LOG_DEBUG << "slotGetAvailableProjects";
             
-            std::vector<std::string> projects;
+            //std::vector<std::string> projects;
+            // Hash to store all project names and meta data as attributes
+            karabo::util::Hash projects;
+            
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
             boost::filesystem::directory_iterator end_iter;
             for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
-                projects.push_back(iter->path().filename().string());
+                std::string path = iter->path().relative_path().string();
+                // Get meta-data from project file
+                ifstream projectFile(path.c_str(), ios::in | ios::binary);
+                if (projectFile.is_open()) {
+                    std::string path = iter->path().stem().string();
+                    projects.set(path, Hash());
+                    
+                    KARABO_LOG_DEBUG << "Opened project file " << path << "\n";
+                    
+                    std::string s;
+                    while (std::getline(projectFile, s)) {
+                        if (s.empty()) break;
+
+                        vector<string> tokens;
+                        boost::split(tokens, s, boost::is_any_of(" "));
+                        std::string property = tokens[0];
+                        
+                        if (property == "version") {
+                            projects.setAttribute(path, property, tokens[1]);
+                        } else if (property == "author") {
+                            projects.setAttribute(path, property, tokens[1]);
+                        } else if (property == "creation-date") {
+                            projects.setAttribute(path, property, 0);
+                        } else if (property == "last-modified") {
+                            projects.setAttribute(path, property, 0);
+                        } else if (property == "checked-out") {
+                            projects.setAttribute(path, property, tokens[1]);
+                        } else if (property == "checked-out-by") {
+                            projects.setAttribute(path, property, tokens[1]);
+                        }
+                    }
+                    
+                    projectFile.close();
+                } else {
+                    KARABO_LOG_DEBUG << "Not able to open project file " << path;
+                }
             }
             
             reply(projects);

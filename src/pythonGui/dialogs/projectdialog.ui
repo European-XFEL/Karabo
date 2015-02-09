@@ -47,7 +47,38 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QListWidget" name="lwProjects"/>
+        <widget class="QTreeWidget" name="twProjects">
+         <column>
+          <property name="text">
+           <string>Project</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Checked out</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Checked out by</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Author</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Last modified</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Creation date</string>
+          </property>
+         </column>
+        </widget>
        </item>
       </layout>
      </widget>

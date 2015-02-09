@@ -10,6 +10,7 @@
 #ifndef KARABO_CORE_GUISERVERDEVICE_HH
 #define	KARABO_CORE_GUISERVERDEVICE_HH
 
+#include <karabo/core/ProjectManager.hh>
 #include <karabo/net/Channel.hh>
 #include <karabo/net/Connection.hh>
 
@@ -110,7 +111,7 @@ namespace karabo {
             
             void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
             
-            void availableProjects(karabo::net::Channel::Pointer channel, const std::vector<std::string>& projects);
+            void availableProjects(karabo::net::Channel::Pointer channel, const karabo::util::Hash& projects);
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
