@@ -71,21 +71,12 @@ first step, we need to connect to a device. This is done as follows:
 
     @Slot()
     def some_function(self):
-        device = self.getDevice("some_device")
+        with self.getDevice("some_device") as device:
+	    print(device.speed)
 
 we just left out the class definition, probably you got that.
  
-Once you have the device (which you can understand like a handle or remote control for the real device sitting somewhere), you can get and set its values and execute its commands:
-
-::
-
-   device.set(someProperty = 7)
-   device.execute(start)
-   print(device.get(someProperty)
-
-The code above introduces three new functions `set`, `get`, and `execute` for setting/getting properties and executing commands, respectively. 
-
-You can write the above code even shorter by treating the device like a regular local python object:
+Once you have the device (which you can understand like a proxy or remote control for the real device sitting somewhere), you can get and set its values and execute its commands:
 
 ::
 
@@ -93,6 +84,25 @@ You can write the above code even shorter by treating the device like a regular 
     device.start() # as if you had pushed the start button
     print(device.someProperty)
 
+
+
+You can write the above code differntly shorter by treating the device like a regular local python object:
+
+::
+
+   self.set(device, "someProperty", 7)
+   self.execute(device, "start")
+   print(self.get(device, "someProperty")
+
+
+The code above introduces three new functions `set`, `get`, and `execute` for setting/getting properties and executing commands, respectively. 
+
+::
+
+   self.set("some_device", "someProperty", 7)
+   self.execute("some_device", "start")
+   print(self.get("some_device", "someProperty")
+    
 
 Depending on the use case it may sometimes be more convenient to address everything using only strings, in this case you can write the above code as follows:
 
@@ -116,12 +126,14 @@ Fortunately, Karabo takes care about this and you can be sure that if a macro op
 
 ::
 
+    # This is already advanced
+
     @Slot()
     def some_function(self):
-        device = self.getDevice("some_device", 3) # Timeout after 3s
-	device.set(someProperty = 7, 4) # Timeout after 4s
-	device.execute(start, 5) # Timeout after 5s
-	print(device.get(someProperty, 6) # Timeout after 6s
+        with self.getDevice("some_device", timeout=3) as device:  # Timeout after 3s
+	    self.set(device, "someProperty", 7, timeout=4)  # Timeout after 4s
+	    device.start(timeout=5)  # Timeout after 5s
+	print(self.get(device, "someProperty", timeout=6) # Timeout after 6s
 
 Or if you are using strings for addressing:
 
@@ -129,9 +141,9 @@ Or if you are using strings for addressing:
 
    @Slot()
    def some_function(self):
-       self.set("some_device", "someProperty", 7, 3)
-       self.execute("some_device", "start", 4)
-       print(self.get("some_device", "someProperty", 5))
+       self.set("some_device", "someProperty", 7, timeout=3)
+       self.execute("some_device", "start", timeout=4)
+       print(self.get("some_device", "someProperty", timeout=5))
 
 *TODO: Show some examples for possible exceptions*
 
@@ -144,12 +156,13 @@ Whilst most of the time the blocking, sequencing like behaviour of dealing with 
 
    @Slot()
    def some_function(self):
-       dev1 = self.getDevice("some_device1")
-       dev2 = self.getDevice("some_device2")
-       dev3 = self.getDevice("some_device3")
-       dev1.executeNoWait(configure)
-       dev2.executeNoWait(configure)
-       dev3.executeNoWait(configure)
+       with \ 
+               self.getDevice("some_device1") as dev1, \
+               self.getDevice("some_device2") as dev2, \
+               self.getDevice("some_device3") as dev3:
+           dev1.executeNoWait('configure')
+	   dev2.executeNoWait('configure')
+           dev3.executeNoWait('configure')
 
 Or shorter by writing:
 
@@ -157,9 +170,9 @@ Or shorter by writing:
 
    @Slot()
    def some_function(self):
-       devices = self.getDevices("some_device*")
-       for device in devices:
-           device.configure(Exec.noWait)
+       devices = self.getDevices()
+           for device in devices:
+               self.execute(device, "configure", wait=False)
 
 *TODO: Decide about naming: ``Exec.sync`` vs. ``Exec.async`` and ``executeNoWait`` vs. ``executeAsync``*
 
@@ -174,10 +187,13 @@ Waiting for things to happen is quite simple, you can do it like this:
    
    @Slot()
    def some_function(self):
-       motor = self.getDevice("some_motor")
-       motor.targetPosition = 10
-       motor.move()
-       waitUntil(lambda: motor.state == "Stopped", 10)
+       with self.getDevice("some_motor") as motor:
+           motor.targetPosition = 10
+           motor.move()
+	   try:
+	       self.waitUntil(lambda: motor.state == "Stopped", timeout=10)
+	   except TimeoutError as e:
+	       self.log.error("Motor did not reach intended state but is in {}".format(motor.state))
 
 If you want to wait until a property has changed (i.e. has been updated) you can do it like here:
 
