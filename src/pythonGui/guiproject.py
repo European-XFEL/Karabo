@@ -116,11 +116,6 @@ class BaseConfiguration(Configuration):
         manager.Manager().onShowConfiguration(self)
 
 
-    def isOnline(self):
-        raise NotImplementedError("BaseConfiguration.isOnline")
-
-
-
 class Device(BaseDevice, BaseConfiguration):
     signalDeviceModified = pyqtSignal(bool)
     signalDeviceNeedsUpdate = pyqtSignal(object)
@@ -167,11 +162,6 @@ class Device(BaseDevice, BaseConfiguration):
         self.signalDeviceNeedsUpdate.emit(self)
 
 
-    def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
-
-
     def addVisible(self):
         realDevice = manager.getDevice(self.id)
         realDevice.addVisible()
@@ -180,6 +170,10 @@ class Device(BaseDevice, BaseConfiguration):
     def removeVisible(self):
         realDevice = manager.getDevice(self.id)
         realDevice.removeVisible()
+
+
+    def shutdown(self):
+        self.project.shutdown(self)
 
 
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
@@ -665,7 +659,9 @@ class Macro(object):
 
 
     def run(self):
-        h = Hash("code", self.editor.edit.toPlainText())
+        h = Hash("code", self.editor.edit.toPlainText(),
+                 "project", self.project.name,
+                 "module", self.name)
         network.onInitDevice("macroServer", "MetaMacro", "Macro-{}-{}".format(
             self.project.name, self.name), h)
 

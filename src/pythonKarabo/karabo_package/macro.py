@@ -1,7 +1,7 @@
 from asyncio import async, get_event_loop, set_event_loop, TimeoutError
 import threading
 
-from karabo import KaraboError
+from karabo import KaraboError, String
 from karabo.hash import Hash
 from karabo.signalslot import Proxy
 from karabo.python_device import Device
@@ -19,6 +19,14 @@ class MacroProxy(Proxy):
 class Macro(Device):
     subclasses = []
 
+    project = String(
+        displayedName="Project",
+        description="The name of the project this macro belongs to")
+
+    module = String(
+        displayedName="Module",
+        description="The name of the module in the project")
+
     @classmethod
     def register(cls, name, dict):
         Macro._subclasses = {}
@@ -27,7 +35,9 @@ class Macro(Device):
 
     def initInfo(self):
         super().initInfo()
-        self.info["classId"] = "Macro"
+        self.info["type"] = "macro"
+        self.info["project"] = self.project
+        self.info["module"] = self.module
 
     def run(self):
         super().run()
