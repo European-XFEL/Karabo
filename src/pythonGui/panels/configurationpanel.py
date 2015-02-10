@@ -485,11 +485,7 @@ class ConfigurationPanel(QWidget):
             index = configuration.index
             if configuration.index is None:
                 configuration.index = self._createNewParameterPage(configuration)
-                if configuration.type != "macro":
-                    index = 1
-                else:
-                    index = configuration.index
-            # Show waiting page
+                index = 1  # Show waiting page
             self._setParameterEditorIndex(index)
         
         if configuration not in (None, self.prevConfiguration) and \
@@ -560,16 +556,16 @@ class ConfigurationPanel(QWidget):
             self._setParameterEditorIndex(configuration.index)
         
         if self.__swParameterEditor.currentIndex() == configuration.index:
-            if configuration.type in ("other", "deviceGroupClass", "deviceGroup", "macro"):
+            if configuration.type in ("other", "deviceGroupClass", "deviceGroup"):
                 self._hideAllButtons()
             elif configuration.descriptor is not None:
-                self.updateButtonsVisibility = (configuration.type == 'class' or \
-                                                configuration.type == 'projectClass')
+                self.updateButtonsVisibility = \
+                    configuration.type in ('class', 'projectClass')
 
 
     def onDeviceItemChanged(self, type, configuration):
         # Update buttons
-        if type in ("other", "deviceGroupClass", "deviceGroup", "macro") or \
+        if type in ("other", "deviceGroupClass", "deviceGroup") or \
            (configuration is not None and configuration.descriptor is None):
             self._hideAllButtons()
         else:
@@ -672,10 +668,7 @@ class ConfigurationPanel(QWidget):
 
     def onKillInstance(self):
         # Check whether an index of the Navigation or ProjectPanel is selected
-        if self.twNavigation.currentIndex().isValid():
-            self.twNavigation.onKillInstance()
-        elif self.twProject.currentIndex().isValid():
-            self.twProject.onKillDevice()
+        self.prevConfiguration.shutdown()
 
 
     def onInitDevice(self):

@@ -14,7 +14,6 @@ import icons
 from network import Network
 from toolbar import ToolBar
 from util import getSaveFileName
-from finders import MacroContext
 
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
 from PyQt4.QtGui import (QWidget, QTextEdit, QHBoxLayout, QMessageBox)
@@ -58,8 +57,7 @@ class MacroPanel(QWidget):
 
     def onRun(self):
         try:
-            with MacroContext(self.macro.project):
-                self.macro.run()
+            self.macro.run()
         except SyntaxError as e:
             if e.filename[7:-3] == self.macro.name:
                 c = self.edit.textCursor()

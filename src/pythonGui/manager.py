@@ -442,7 +442,7 @@ class _Manager(QObject):
     def handle_instanceGone(self, instanceId, instanceType):
         """ Remove instanceId from central hash and update """
         
-        if instanceType == "device":
+        if instanceType in ("device", "macro"):
             device = self.deviceData.get(instanceId)
             if device is not None:
                 device.status = "offline"
@@ -456,7 +456,7 @@ class _Manager(QObject):
             self.systemTopology.eraseDevice(instanceId)
 
             # Remove device from systemHash
-            path = "device." + instanceId
+            path = instanceType + "." + instanceId
             if self.systemHash is not None and path in self.systemHash:
                 del self.systemHash[path]
         elif instanceType == "server":

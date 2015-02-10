@@ -3,8 +3,15 @@ __date__ ="$Jul 11, 2013 5:20:23 PM$"
 
 
 import karabo.hash
-from karabo.hashtypes import String, Int32, Slot
+from karabo.hashtypes import (String, Int32 as Integer, Slot, Double as Float,
+                              Bool)
 from karabo.async import waitUntil
 from asyncio import sleep
+from karabo.enums import *
 
-__all__ = ["String", "Int32", "Slot", "waitUntil", "sleep"]
+api_version = 1
+
+__all__ = []  # don't allow star-import
+
+class KaraboError(Exception):
+    pass

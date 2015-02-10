@@ -4,6 +4,7 @@
 __author__="Sergey Esenov <serguei.essenov at xfel.eu>"
 __date__ ="$Apr 11, 2013 4:20:13 PM$"
 
+from karabo import api_version
 from karabo.karathon import Hash, Schema, AssemblyRules, AccessType, READ, WRITE, INIT, Validator
 
 class Configurator(object):
@@ -99,6 +100,12 @@ class Configurator(object):
                     theClass.expectedParameters(schema) # fill schema in order from base to derived
             except AttributeError as e:
                 print("Exception while adding expected parameters for class %r: %r" % (theClass.__name__, e))
+        if api_version == 2:
+            h = schema.hash
+            for k in Derived._allattrs:
+                v = getattr(Derived, k)
+                h[k] = Hash()
+                h[k, ...] = v.parameters()
         return schema
     
     

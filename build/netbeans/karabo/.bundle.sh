@@ -114,7 +114,7 @@ if [ "$OS" = "Darwin" ]; then
 
     cd $DISTDIR/$CONF/$PLATFORM/lib
     # Python needs to see bindings as .so, even on MacOSX
-    ln -sf karathon.dylib karathon.so
+    ln -sf karathon.dylib karathon_bin.so
     #install_name_tool -add_rpath "$PACKAGEDIR/lib" karathon.so
     #install_name_tool -add_rpath "$PACKAGEDIR/extern/lib" karathon.so
     cd -
@@ -153,13 +153,13 @@ else
     # TODO: Some files from 'bin' are still not converted: pyuic4
 fi
 
-cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/ # <-- karathon.so 
+cp -rf $DISTDIR/$CONF/$PLATFORM/lib/karathon.so $PYKARABO/karathon_bin.so # <-- karathon.so 
 cp -rf $DISTDIR/$CONF/$PLATFORM/include $PACKAGEDIR/
 
 # Check if symbolic link "libkarathon.so" exists. If not, create it! 
 if [ ! -L $PYKARABO/libkarathon.so ]; then 
     cd $PYKARABO/                       # go to python 'site-packages/karabo' directory
-    ln -s karathon.so libkarathon.so    # create symbolic link
+    ln -s karathon_bin.so libkarathon.so    # create symbolic link
     cd -                                # return back to previous working directory
 fi
 
