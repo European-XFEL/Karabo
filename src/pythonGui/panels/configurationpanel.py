@@ -559,8 +559,8 @@ class ConfigurationPanel(QWidget):
             if configuration.type in ("other", "deviceGroupClass", "deviceGroup"):
                 self._hideAllButtons()
             elif configuration.descriptor is not None:
-                self.updateButtonsVisibility = (configuration.type == 'class' or \
-                                                configuration.type == 'projectClass')
+                self.updateButtonsVisibility = \
+                    configuration.type in ('class', 'projectClass')
 
 
     def onDeviceItemChanged(self, type, configuration):

@@ -262,8 +262,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def isOnline(self):
-        return not [d for d in self.devices \
-             if d.status in ("offline", "noplugin", "noserver", "incompatible")]
+        return all(d.isOnline() for d in self.devices)
 
 
     def addVisible(self):
