@@ -658,7 +658,11 @@ class Macro(object):
 
 
     def run(self):
-        h = Hash("code", self.editor.edit.toPlainText(),
+        if self.editor is None:
+            code = self.load()
+        else:
+            code = self.editor.edit.toPlainText()
+        h = Hash("code", code,
                  "project", self.project.name,
                  "module", self.name)
         network.onInitDevice("macroServer", "MetaMacro", "Macro-{}-{}".format(

@@ -1188,6 +1188,10 @@ class ProjectModel(QStandardItemModel):
         self.duplicateScene(self.currentScene())
 
 
+    def onRunMacro(self):
+        self.currentMacro().run()
+
+
     def onEditMacro(self):
         self.editMacro(self.currentMacro())
 
