@@ -102,6 +102,15 @@ class Configuration(Box):
         self.signalStatusChanged.emit(self, value, self.error)
 
 
+    def isOnline(self):
+        return self.status not in ("offline", "noplugin", "noserver",
+                                   "incompatible")
+
+
+    def checkClassSchema(self):
+        pass
+
+
     def updateStatus(self):
         """ determine the status from the system topology """
         if manager.Manager().systemHash is None:
@@ -110,21 +119,24 @@ class Configuration(Box):
 
         try:
             attrs = manager.Manager().systemHash["device"][self.id, ...]
-        except KeyError as e:
-            self.error = False
-            self.status = "offline"
+        except KeyError:
+            try:
+                attrs = manager.Manager().systemHash["macro"][self.id, ...]
+            except KeyError:
+                self.error = False
+                self.status = "offline"
+                return
+        self.classId = attrs.get("classId")
+        self.serverId = attrs.get("serverId")
+        error = attrs.get("status") == "error"
+        self.error = error
+        if self.status == "offline" and self.visible > 0:
+            Network().onGetDeviceSchema(self.id)
+            self.status = "requested"
+        elif self.status not in ("requested", "schema", "alive"):
+            self.status = "online"
         else:
-            self.classId = attrs.get("classId")
-            self.serverId = attrs.get("serverId")
-            error = attrs.get("status") == "error"
-            self.error = error
-            if self.status == "offline" and self.visible > 0:
-                Network().onGetDeviceSchema(self.id)
-                self.status = "requested"
-            elif self.status not in ("requested", "schema", "alive"):
-                self.status = "online"
-            else:
-                self.signalStatusChanged.emit(self, self.status, self.error)
+            self.signalStatusChanged.emit(self, self.status, self.error)
 
 
     def getBox(self, path):
@@ -178,3 +190,7 @@ class Configuration(Box):
 
     def refresh(self):
         Network().onGetDeviceConfiguration(self)
+
+
+    def shutdown(self):
+        manager.Manager().shutdownDevice(self.id)

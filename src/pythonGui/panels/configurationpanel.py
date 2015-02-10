@@ -668,10 +668,7 @@ class ConfigurationPanel(QWidget):
 
     def onKillInstance(self):
         # Check whether an index of the Navigation or ProjectPanel is selected
-        if self.twNavigation.currentIndex().isValid():
-            self.twNavigation.onKillInstance()
-        elif self.twProject.currentIndex().isValid():
-            self.twProject.onKillDevice()
+        self.prevConfiguration.shutdown()
 
 
     def onInitDevice(self):
