@@ -78,11 +78,18 @@ class Simple(object):
 
     def cast(self, other):
         if self.enum is not None:
-            return super().cast(other)
+            ret = super().cast(other)
         elif isinstance(other, self.numpy):
-            return other
+            ret = other
         else:
-            return self.numpy(other)
+            ret = self.numpy(other)
+        if (self.minExc is not None and ret <= self.minExc or
+                self.minInc is not None and ret < self.minInc or
+                self.maxExc is not None and ret >= self.maxExc or
+                self.maxInc is not None and ret > self.maxInc):
+            raise ValueError("value {} of {} not in allowed range".
+                             format(ret, self.key))
+        return ret
 
 
 class Integer(Simple, Enumable):
@@ -227,13 +234,22 @@ class Descriptor(object):
             return self
         else:
             if self not in instance.__dict__:
-                raise AttributeError
+                raise AttributeError(
+                    "attribute '{}' has not been set".format(self.key))
             return instance.__dict__[self]
 
 
     def __set__(self, instance, value):
         v = self.cast(value)
         instance.setValue(self, v)
+
+    def setter(self, instance, value):
+        """this is to be called if the value is changed from the outside"""
+        setattr(instance, self.key, value)
+
+    @coroutine
+    def setter_async(self, instance, value):
+        self.setter(instance, value)
 
 
 class Slot(Descriptor):
@@ -256,11 +272,28 @@ class Slot(Descriptor):
         if instance is None:
             return self
         else:
-            return self.method.__get__(instance, owner)
+            def inner(device):
+                return self.method(device)
+            inner.slot = self.inner
+            return inner.__get__(instance, owner)
 
+    def inner(self, device, message, args):
+        if device.currenttask is not None:
+            print("not running", self.key)
+            return
+        device.currenttask = device.executeSlot(self.method)
+        def deleter(task):
+            device.currenttask = None
+        device.currenttask.add_done_callback(deleter)
+
+    def method(self, device):
+        return self.themethod(device)
+
+    def setter(self, instance, value):
+        pass  # nothing to set in a slot
 
     def __call__(self, method):
-        self.method = coroutine(method)
+        self.themethod = method
         return self
 
 
@@ -277,6 +310,10 @@ class Type(Descriptor, Registry):
 
     options = Attribute()
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if self.options is not None:
+            self.options = [self.cast(o) for o in self.options]
 
     @classmethod
     def hashname(cls):
@@ -315,6 +352,10 @@ class Type(Descriptor, Registry):
         ret["nodeType"] = 0
         ret["valueType"] = self.hashname()
         return ret
+
+    def __call__(self, method):
+        self.setter = method
+        return self
 
 
 class Bool(Type):
@@ -574,7 +615,7 @@ class VectorString(Vector, String):
 
     @staticmethod
     def fromstring(s):
-        return StringList(s.split(','))
+        return StringList(ss.strip() for ss in s.split(','))
 
 
     @classmethod
@@ -672,15 +713,20 @@ class Schema(Hash):
         file.pos += size
         ret = super(Schema, cls).read(file)
         assert file.pos - op == l, 'failed: {} {} {}'.format(file.pos, op, l)
-        return Schema_(name, ret)
+        return Schema_(name, hash=ret)
 
 
     @classmethod
     def write(cls, file, data):
+        for p in data.hash.paths():
+            if data.hash[p, "nodeType"] == 0:
+                assert not data.hash[p], "no proper leaf: {}".format(p)
+            else:
+                assert isinstance(data.hash[p], karabo.hash.Hash), \
+                    "no proper node: {}".format(p)
         writer = karabo.hash.BinaryWriter()
         h = writer.write(data.hash)
         s = data.name.encode('utf8')
-        print(len(h), len(s))
         file.writeFormat('I', len(h) + len(s) + 1)
         file.writeFormat('B', len(s))
         file.file.write(s)
@@ -690,11 +736,17 @@ class Schema(Hash):
     def toString(cls, data):
         return data.name + ":" + data.hash.encode("XML").decode("utf8")
 
+    @classmethod
+    def fromstring(cls, s):
+        name, xml = s.split(":", 1)
+        return Schema_(name, hash=karabo.hash.Hash.decode(xml, "XML"))
+
+
 class Schema_(Special):
     hashtype = Schema
 
 
-    def __init__(self, name=None, hash=None, rules=None):
+    def __init__(self, name=None, rules=None, hash=None):
         self.name = name
         if hash is None:
             self.hash = karabo.hash.Hash()
@@ -706,6 +758,24 @@ class Schema_(Special):
     def copy(self, other):
         self.hash = karabo.hash.Hash()
         self.hash.merge(other.hash)
+
+    def keyHasAlias(self, key):
+        return "alias" in self.hash[key, ...]
+
+    def getAliasAsString(self, key):
+        return self.hash[key, "alias"]
+
+    def getKeyFromAlias(self, alias):
+        for k in self.hash.paths():
+            if alias == self.hash[k, ...].get("alias", None):
+                return k
+
+    def getValueType(self, key):
+        return Type.fromname[self.hash[key, "valueType"]]
+
+
+    def __repr__(self):
+        return "Schema('{}', {})".format(self.name, self.hash)
 
 
 class None_(Type):

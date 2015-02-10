@@ -25,6 +25,7 @@ from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
 
+from karabo.hash import Hash
 from karabo.project import Project
 import karabo
 
@@ -375,7 +376,28 @@ class ProjectModel(QStandardItemModel):
                         self.updateDeviceIcon(dChildItem, obj)
                 else:
                     self.updateDeviceIcon(dItem, object)
-        
+
+
+    def updateMacros(self):
+        macros = {}
+        hash = manager.Manager().systemHash.get("macro", Hash())
+        for k, v, a in hash.iterall():
+            macros.setdefault((a["project"], a["module"]), []).append(k)
+
+        for row in range(self.rowCount()):
+            projectItem = self.item(row)
+            project = projectItem.data(ProjectModel.ITEM_OBJECT)
+            item = self.getCategoryItem(Project.MACROS_LABEL, projectItem)
+            for r in range(item.rowCount()):
+                module = item.child(r)
+                ml = macros.get((project.name, module.text()), [])
+                module.removeRows(0, module.rowCount())
+                for k in ml:
+                    childItem = QStandardItem(hash[k, "classId"])
+                    childItem.setData(manager.getDevice(k),
+                                      ProjectModel.ITEM_OBJECT)
+                    childItem.setEditable(False)
+                    module.appendRow(childItem)
 
     def updateDeviceIcon(self, item, device):
         """
@@ -525,7 +547,7 @@ class ProjectModel(QStandardItemModel):
         # Update deviceDialog data
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
-
+        self.updateMacros()
 
     def currentDevice(self):
         device = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
@@ -1074,10 +1096,7 @@ class ProjectModel(QStandardItemModel):
             index = selectedIndexes[0]
             object = index.data(ProjectModel.ITEM_OBJECT)
 
-        if isinstance(object, type) and issubclass(object, karabo.Macro):
-            conf = object.instance
-            ctype = "macro"
-        elif isinstance(object, Configuration):
+        if isinstance(object, Configuration):
             # Check whether device is already online
             if object.isOnline():
                 if object.type in ("device", "projectClass"):
@@ -1167,6 +1186,10 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateScene(self):
         self.duplicateScene(self.currentScene())
+
+
+    def onRunMacro(self):
+        self.currentMacro().run()
 
 
     def onEditMacro(self):
