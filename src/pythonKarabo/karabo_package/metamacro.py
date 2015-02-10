@@ -7,6 +7,8 @@ from karabo.macro import Macro
 
 class MetaMacro(Device):
     code = String()
+    project = String()
+    module = String()
 
     def __init__(self, configuration):
         super().__init__(configuration)
@@ -17,7 +19,8 @@ class MetaMacro(Device):
 
     @coroutine
     def run_async(self):
-        p = dict(_serverId_=self.serverId)
+        p = dict(_serverId_=self.serverId, project=self.project,
+                 module=self.module)
         objs = []
         for c in self.classes:
             p["_deviceId_"] ="{}-{}".format(self.deviceId, c.__name__)
