@@ -22,7 +22,7 @@ from karabo.hashtypes import StringList
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
 import karabo
 import manager
-from finders import MacroContext
+from network import network
 
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
@@ -116,11 +116,6 @@ class BaseConfiguration(Configuration):
         manager.Manager().onShowConfiguration(self)
 
 
-    def isOnline(self):
-        raise NotImplementedError("BaseConfiguration.isOnline")
-
-
-
 class Device(BaseDevice, BaseConfiguration):
     signalDeviceModified = pyqtSignal(bool)
     signalDeviceNeedsUpdate = pyqtSignal(object)
@@ -167,11 +162,6 @@ class Device(BaseDevice, BaseConfiguration):
         self.signalDeviceNeedsUpdate.emit(self)
 
 
-    def isOnline(self):
-        return self.status not in (
-            "offline", "noplugin", "noserver", "incompatible")
-
-
     def addVisible(self):
         realDevice = manager.getDevice(self.id)
         realDevice.addVisible()
@@ -180,6 +170,10 @@ class Device(BaseDevice, BaseConfiguration):
     def removeVisible(self):
         realDevice = manager.getDevice(self.id)
         realDevice.removeVisible()
+
+
+    def shutdown(self):
+        self.project.shutdown(self)
 
 
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
@@ -268,8 +262,7 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def isOnline(self):
-        return not [d for d in self.devices \
-             if d.status in ("offline", "noplugin", "noserver", "incompatible")]
+        return all(d.isOnline() for d in self.devices)
 
 
     def addVisible(self):
@@ -463,14 +456,6 @@ class GuiProject(Project, QObject):
         for k in projectConfig.get(self.MACROS_KEY, []):
             macro = Macro(self, k)
             self.addMacro(macro)
-
-        with MacroContext(self):
-            try:
-                for m in self.macros.values():
-                    m.run()
-            except Exception as e:
-                QMessageBox.warning(None, "Macro Error",
-                        "error excuting macro {}:\n{}".format(m.name, e))
 
         self.setModified(False)
 
@@ -668,50 +653,25 @@ class Macro(object):
     def __init__(self, project, name):
         self.project = project
         self.name = name
-        self.module = None
-        self.macros = { }
+        self.macros = {}
         self.editor = None
 
 
     def run(self):
-        try:
-            if self.module is None:
-                self.module = import_module("macros." + self.name)
-            else:
-                self.module = reload(self.module)
-        except:
-            self.module = None
-            raise
-        self.macros = {k: v for k, v in self.module.__dict__.items()
-                       if isinstance(v, type) and
-                          issubclass(v, karabo.Macro) and
-                          v is not karabo.Macro}
-        for k, v in self.macros.items():
-            v.instance = Configuration(k, "macro", v.getSchema())
-            v.instance.setDefault()
-            v.instance.status = "alive"
-        
-        self.project.signalMacroChanged.emit(self)
+        if self.editor is None:
+            code = self.load()
+        else:
+            code = self.editor.edit.toPlainText()
+        h = Hash("code", code,
+                 "project", self.project.name,
+                 "module", self.name)
+        network.onInitDevice("macroServer", "MetaMacro", "Macro-{}-{}".format(
+            self.project.name, self.name), h)
 
 
     def load(self):
         with ZipFile(self.project.filename, "r") as zf:
             return zf.read("macros/{}.py".format(self.name)).decode("utf8")
-
-
-    def exec_module(self, module):
-        fn = "macros/{}.py".format(self.name)
-        if self.editor is None:
-            with ZipFile(self.project.filename, "r") as zf:
-                try:
-                    code = marshal.loads(zf.read(cache_from_source(fn)))
-                except (KeyError, EOFError, ValueError, TypeError):
-                    exec(compile(zf.read(fn), fn, "exec"), module.__dict__)
-                else:
-                    exec(code, module.__dict__)
-        else:
-            exec(compile(self.editor.edit.toPlainText(), fn, "exec"),
-                 module.__dict__)
 
 
 class Category(object):
