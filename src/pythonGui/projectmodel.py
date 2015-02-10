@@ -1074,10 +1074,7 @@ class ProjectModel(QStandardItemModel):
             index = selectedIndexes[0]
             object = index.data(ProjectModel.ITEM_OBJECT)
 
-        if isinstance(object, type) and issubclass(object, karabo.Macro):
-            conf = object.instance
-            ctype = "macro"
-        elif isinstance(object, Configuration):
+        if isinstance(object, Configuration):
             # Check whether device is already online
             if object.isOnline():
                 if object.type in ("device", "projectClass"):
