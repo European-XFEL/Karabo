@@ -99,20 +99,25 @@ class ProjectTreeView(QTreeView):
             return (None, None, None)
         
         projectName = self.projectDialog.filename
-        filePath = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        filePath = globals.KARABO_PROJECT_FOLDER
         
         return filePath, projectName, self.projectDialog.location
 
 
-    def projectSaveToCloud(self, filepath, projectName):
+    def projectDataBytes(self, fileName):
+        """
+        This function returns the bytes of the file with the given \fileName,
+        else None is returned.
+        """
         # Read new project bytes
-        with open(filepath, 'rb') as input:
+        data = None
+        with open(fileName, 'rb') as input:
             data = input.read()
-        input.close()
-        # Send save project to cloud request to network
-        Network().onSaveProject(projectName, data)
         
+        input.close()
         self.projectDialog = None
+        
+        return data
 
 
     def projectNew(self):
@@ -120,11 +125,14 @@ class ProjectTreeView(QTreeView):
         if (filePath is None) and (projectName is None) and (location is None):
             return
         
+        fileName = os.path.join(filePath, projectName)
         # Create project
-        self.model().projectNew(filePath)
+        self.model().projectNew(fileName)
         
         if location == ProjectDialog.CLOUD:
-            self.projectSaveToCloud(filePath, projectName)
+            data = self.projectDataBytes(fileName)
+            # Send save project to cloud request to network
+            Network().onNewProject(projectName, data)
 
 
     def projectOpen(self):
@@ -147,13 +155,16 @@ class ProjectTreeView(QTreeView):
 
     def projectSaveAs(self):
         filePath, projectName, location = self.getProjectSaveName()
-        if (projectName is None) and (location is None):
+        if (filePath is None) and (projectName is None) and (location is None):
             return
 
-        self.model().projectSaveAs(filePath)
+        fileName = os.path.join(filePath, projectName)
+        self.model().projectSaveAs(fileName)
         
         if location == ProjectDialog.CLOUD:
-            self.projectSaveToCloud(filePath, projectName)
+            data = self.projectDataBytes(fileName)
+            # Send save project to cloud request to network
+            Network().onSaveProject(projectName, data)
 
 
     def mouseDoubleClickEvent(self, event):

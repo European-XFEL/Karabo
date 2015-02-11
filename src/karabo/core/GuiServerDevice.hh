@@ -113,6 +113,10 @@ namespace karabo {
             
             void availableProjects(karabo::net::Channel::Pointer channel, const karabo::util::Hash& projects);
             
+            void onNewProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            
+            void projectNew(karabo::net::Channel::Pointer channel, const std::string& projectName, bool success);
+            
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
             void projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName, const std::vector<char>& data);
