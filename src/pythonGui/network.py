@@ -401,6 +401,14 @@ class _Network(QObject):
         self._tcpWriteHash(h)
 
 
+    def onNewProject(self, fileName, data):
+        h = Hash("type", "newProject")
+        h.set("author", self.username)
+        h.set("name", fileName)
+        h.set("data", data)
+        self._tcpWriteHash(h)
+
+
     def onSaveProject(self, filename, data):
         h = Hash("type", "saveProject")
         h.set("user", self.username)

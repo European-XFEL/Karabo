@@ -546,6 +546,11 @@ class _Manager(QObject):
         self.signalAvailableProjects.emit(availableProjects)
 
 
+    def handle_projectNew(self, name, success):
+        print("projectNew", name, success)
+        #self.signalProjectNew.emit(name, success)
+
+
     def handle_projectLoaded(self, name, buffer):
         self.signalProjectLoaded.emit(name, buffer)
             

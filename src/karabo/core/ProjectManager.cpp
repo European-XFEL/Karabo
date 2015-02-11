@@ -7,6 +7,7 @@
 
 #include <karabo/karabo.hpp>
 #include "ProjectManager.hh"
+#include <stdio.h>
 
 namespace karabo {
     namespace core {
@@ -51,6 +52,7 @@ namespace karabo {
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
             KARABO_SLOT(slotGetAvailableProjects)
+            KARABO_SLOT(slotNewProject, Hash /*info*/)
             KARABO_SLOT(slotLoadProject, string /*username*/, string /*projectName*/)
             KARABO_SLOT(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
             KARABO_SLOT(slotCloseProject, string /*username*/, string /*projectName*/)
@@ -76,6 +78,7 @@ namespace karabo {
             //std::vector<std::string> projects;
             // Hash to store all project names and meta data as attributes
             karabo::util::Hash projects;
+            TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
             
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
@@ -88,31 +91,22 @@ namespace karabo {
                     std::string path = iter->path().stem().string();
                     projects.set(path, Hash());
                     
-                    KARABO_LOG_DEBUG << "Opened project file " << path << "\n";
+                    KARABO_LOG_DEBUG << "Opened project file " << path;
                     
-                    std::string s;
-                    while (std::getline(projectFile, s)) {
-                        if (s.empty()) break;
-
-                        vector<string> tokens;
-                        boost::split(tokens, s, boost::is_any_of(" "));
-                        std::string property = tokens[0];
-                        
-                        if (property == "version") {
-                            projects.setAttribute(path, property, tokens[1]);
-                        } else if (property == "author") {
-                            projects.setAttribute(path, property, tokens[1]);
-                        } else if (property == "creation-date") {
-                            projects.setAttribute(path, property, 0);
-                        } else if (property == "last-modified") {
-                            projects.setAttribute(path, property, 0);
-                        } else if (property == "checked-out") {
-                            projects.setAttribute(path, property, tokens[1]);
-                        } else if (property == "checked-out-by") {
-                            projects.setAttribute(path, property, tokens[1]);
-                        }
+                    std::string headerString;
+                    std::string line;
+                    while (std::getline(projectFile, line)) {
+                        if (*line.c_str() == char(26)) break;
+                        headerString.append(line);
                     }
                     
+                    KARABO_LOG_DEBUG << "Project meta data...";
+                    KARABO_LOG_DEBUG << headerString;
+                    
+                    Hash p;
+                    serializer->load(p, headerString);
+                    projects.set(path, p);
+
                     projectFile.close();
                 } else {
                     KARABO_LOG_DEBUG << "Not able to open project file " << path;
@@ -121,7 +115,43 @@ namespace karabo {
             
             reply(projects);
         }
+        
+        void ProjectManager::slotNewProject(const karabo::util::Hash& info) {
+            KARABO_LOG_DEBUG << "slotNewProject";
+            
+            string author = info.get<string > ("author");
+            string projectName = info.get<string > ("name");
+            vector<char> data = info.get<vector<char> > ("data");
+            //bool checkedOut = info.get<bool >("checkedOut");
+            //string checkedOutBy = info.get<string > ("checkedOutBy");
+            
+            Hash metaData;
+            metaData.set("version", "1.3.0");
+            metaData.set("author", author);
+            
+            karabo::util::Epochstamp epoch;
+            double timestamp = epoch.toTimestamp();
+            metaData.set("creationDate", timestamp);
+            metaData.set("lastModified", timestamp);
+            metaData.set("checkedOut", true);
+            metaData.set("checkedOutBy", author);
+            
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
+            string hashXml;
+            ts->save(metaData, hashXml);
+                        
+            string filename = get<string>("directory") + "/" + projectName;
+            std::ofstream file(filename.c_str(), std::ios::binary);
+            std::ostream& result1 = file.write(hashXml.c_str(), hashXml.size());
+            // Add end-of-file character to differentiate between header and binary content
+            file << char(26);
+            file << "\n";
+            std::ostream& result2 = file.write(const_cast<const char*> (&data[0]), data.size());
+            file.close();
 
+            reply(projectName, result1.good() && result2.good());
+        }
+        
         
         void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject";
