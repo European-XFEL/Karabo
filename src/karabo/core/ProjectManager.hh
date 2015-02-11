@@ -42,6 +42,8 @@ namespace karabo {
             
             void slotGetAvailableProjects();
             
+            void slotNewProject(const karabo::util::Hash& info);
+            
             void slotLoadProject(const std::string& userName, const std::string& projectName);
             
             void slotSaveProject(const std::string& userName, const std::string& projectName, const std::vector<char>& data);

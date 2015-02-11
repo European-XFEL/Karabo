@@ -8,7 +8,10 @@
 __all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
 
 import globals
+import icons
 import network
+
+from karabo.timestamp import Timestamp
 
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
@@ -17,6 +20,7 @@ from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
                          QTreeWidgetItem)
 
 import os.path
+import datetime
 
 
 class ProjectDialog(QDialog):
@@ -93,20 +97,25 @@ class ProjectDialog(QDialog):
     def fillCloudProjects(self, projects):
         if self.twProjects.topLevelItemCount() > 0:
             self.twProjects.clear()
-        
-        print(projects)
-        print()
  
-        # Fill all projects from cloud into table view
-        #self.twProjects.addItems(projects)
+        # Fill all projects from cloud into the view
         for k in projects.keys():
             item = QTreeWidgetItem(self.twProjects)
+            item.setIcon(0, icons.folder)
             item.setText(0, k)
-            item.setText(1, projects.getAttribute(k, "checked-out"))
-            item.setText(2, projects.getAttribute(k, "checked-out-by"))
-            item.setText(3, projects.getAttribute(k, "author"))
-            #item.setText(4, projects.getAttribute(k, "last-modified"))
-            #item.setText(5, projects.getAttribute(k, "creation-date"))
+            
+            checkedOut = projects.get("{}.checkedOut".format(k))
+            item.setText(1, "True" if checkedOut else "False")
+            item.setText(2, str(projects.get("{}.checkedOutBy".format(k))))
+            item.setText(3, str(projects.get("{}.author".format(k))))
+            
+            lastModified = projects.get("{}.lastModified".format(k))
+            lastModified = str(datetime.datetime.fromtimestamp(lastModified))
+            item.setText(4, lastModified)
+            
+            creationDate = projects.get("{}.creationDate".format(k))
+            creationDate = str(datetime.datetime.fromtimestamp(creationDate))
+            item.setText(5, creationDate)
             self.twProjects.addTopLevelItem(item)
         
         if self.swSaveTo.currentIndex() == 2:
@@ -147,9 +156,9 @@ class ProjectSaveDialog(ProjectDialog):
     def onSaved(self):
         # Check if filename is already existing
         if self.cbSaveTo.currentIndex() == ProjectDialog.CLOUD:
-            for i in range(self.twProjects.count()):
-                item = self.twProjects.item(i)
-                if item.text() == self.filename:
+            for i in range(self.twProjects.topLevelItemCount()):
+                item = self.twProjects.topLevelItem(i)
+                if item.text(0) == self.filename:
                     # Project already exists
                     reply = QMessageBox.question(None, 'Project already exists',
                         "Another project with the same name <br> \"<b>{}</b>\""
