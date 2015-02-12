@@ -11,8 +11,6 @@ import globals
 import icons
 import network
 
-from karabo.timestamp import Timestamp
-
 from PyQt4 import uic
 from PyQt4.QtCore import (QDir, Qt)
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QFileSystemModel,
@@ -72,10 +70,10 @@ class ProjectDialog(QDialog):
         This property describes the filename including the project suffix.
         """
         f = self.leFilename.text()
-        if not f.endswith(".krb"):
-            return "{}.krb".format(f)
-        else:
-            return f
+        splitted = f.split(".")
+        if len(splitted) > 1:
+            f = splitted[0]
+        return "{}.krb".format(f)
 
 
     @property
@@ -98,15 +96,20 @@ class ProjectDialog(QDialog):
         if self.twProjects.topLevelItemCount() > 0:
             self.twProjects.clear()
  
+        print(projects)
+ 
         # Fill all projects from cloud into the view
         for k in projects.keys():
+            checkedOut = projects.get("{}.checkedOut".format(k))
+            
             item = QTreeWidgetItem(self.twProjects)
-            item.setIcon(0, icons.folder)
+            item.setData(0, Qt.UserRole, checkedOut)
+            item.setIcon(0, icons.lock if checkedOut else icons.folder)
             item.setText(0, k)
             
-            checkedOut = projects.get("{}.checkedOut".format(k))
             item.setText(1, "True" if checkedOut else "False")
             item.setText(2, str(projects.get("{}.checkedOutBy".format(k))))
+            item.setData(0, Qt.UserRole, checkedOut)
             item.setText(3, str(projects.get("{}.author".format(k))))
             
             lastModified = projects.get("{}.lastModified".format(k))
@@ -159,9 +162,18 @@ class ProjectSaveDialog(ProjectDialog):
             for i in range(self.twProjects.topLevelItemCount()):
                 item = self.twProjects.topLevelItem(i)
                 if item.text(0) == self.filename:
+                    checkedOut = item.data(0, Qt.UserRole)
+                    if checkedOut:
+                        # Project is locked
+                        QMessageBox.warning(None, 'Project already checked out',
+                            "Another project with the same name \"<b>{}</b>\"<br>"
+                            "is already checked out by the user \"<b>{}</b>\".<br><br>"
+                            "Please, choose another name for the project."
+                            .format(self.filename, item.text(2)))
+                        return
                     # Project already exists
                     reply = QMessageBox.question(None, 'Project already exists',
-                        "Another project with the same name <br> \"<b>{}</b>\""
+                        "Another project with the same name <br> \"<b>{}</b>\" "
                         "already exists.<br><br>Do you want to overwrite it?".format(self.filename),
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if reply == QMessageBox.No:

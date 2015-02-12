@@ -425,6 +425,7 @@ class _Network(QObject):
 
 
     def onCloseProject(self, filename):
+        print("onCloseProject", filename, self.username)
         h = Hash("type", "closeProject")
         h.set("user", self.username)
         h.set("name", filename)
