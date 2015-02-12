@@ -20,11 +20,14 @@ namespace karabo {
             std::string m_author;
             karabo::util::Epochstamp m_creationEpoch;
             karabo::util::Epochstamp m_lastModifiedEpoch;
-            bool m_checkedOut;
-            std::string m_checkedOutBy;
+            bool m_locked;
+            std::string m_LockedBy;
         };
 
         class ProjectManager : public karabo::core::Device<> {
+            
+            std::map<std::string, std::vector > m_projectUsers;
+            std::map<std::string, ProjectMetaData > m_projectMetaData;
             
         public:
             

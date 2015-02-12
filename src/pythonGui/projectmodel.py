@@ -24,8 +24,9 @@ from dialogs.dialogs import MacroDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
+import network
 
-from karabo.project import Project
+from karabo.project import Project, ProjectAccess
 import karabo
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
@@ -186,7 +187,10 @@ class ProjectModel(QStandardItemModel):
         font = projectItem.font()
         font.setBold(True)
         projectItem.setFont(font)
-        projectItem.setIcon(icons.folder)
+        projectItem.setIcon({ProjectAccess.LOCAL: icons.folder, \
+                             ProjectAccess.CLOUD: icons.folder, \
+                             ProjectAccess.CLOUD_READONLY: icons.lock} \
+                             .get(project.access, icons.folder))
         projectItem.setToolTip(project.filename)
         self.invisibleRootItem().appendRow(projectItem)
         
@@ -713,6 +717,7 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveMacro.emit(m)
         
         self.removeProject(project)
+        network.Network().onCloseProject(project.name)
 
 
     def appendProject(self, project):
@@ -751,11 +756,12 @@ class ProjectModel(QStandardItemModel):
         del self.projects[index]
 
 
-    def projectNew(self, filename):
+    def projectNew(self, filename, access):
         """ Create and return a new project and add it to the model """
         self.closeExistentProject(filename)
         
         project = GuiProject(filename)
+        project.access = access
         project.zip()
         self.appendProject(project)
         self.selectObject(project)

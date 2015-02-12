@@ -22,11 +22,11 @@ from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
-from karabo.project import Project, ProjectConfiguration
+from karabo.project import Project, ProjectAccess, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
-                         QFileDialog, QMenu, QMessageBox, QTreeView)
+                         QMenu, QMessageBox, QTreeView)
 import os.path
 
 
@@ -100,8 +100,9 @@ class ProjectTreeView(QTreeView):
         
         projectName = self.projectDialog.filename
         filePath = globals.KARABO_PROJECT_FOLDER
+        location = self.projectDialog.location
         
-        return filePath, projectName, self.projectDialog.location
+        return filePath, projectName, location
 
 
     def projectDataBytes(self, fileName):
@@ -126,8 +127,11 @@ class ProjectTreeView(QTreeView):
             return
         
         fileName = os.path.join(filePath, projectName)
-        # Create project
-        self.model().projectNew(fileName)
+        
+        # Save project to local file system
+        self.model().projectNew(fileName, \
+                        ProjectAccess.LOCAL if location == ProjectDialog.LOCAL \
+                                            else ProjectAccess.CLOUD)
         
         if location == ProjectDialog.CLOUD:
             data = self.projectDataBytes(fileName)
@@ -412,6 +416,6 @@ class ProjectTreeView(QTreeView):
 
 
     def onProjectClosed(self, name, success):
-        print("onProjectClosed", name, success)
+        print("Answer received: onProjectClosed", name, success)
         # TODO: show message that closing did not work
 

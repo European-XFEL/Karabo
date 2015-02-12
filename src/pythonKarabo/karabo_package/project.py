@@ -15,12 +15,19 @@ __all__ = ["Project", "ProjectConfiguration", "BaseDevice", "BaseDeviceGroup"]
 
 from karabo.hash import XMLParser, XMLWriter
 
+from enum import Enum
 import hashlib
 import os.path
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
+
+class ProjectAccess(Enum):
+    """ These states describes the access to a project. """
+    LOCAL = 0 # read and write access
+    CLOUD = 1 # read and write access
+    CLOUD_READONLY = 2 # readonly access
 
 
 class Project(object):
@@ -49,6 +56,7 @@ class Project(object):
         self.version = 1
         self.filename = filename
         self.uuid = str(uuid4())
+        self.access = None # LOCAL, CLOUD, CLOUD_READONLY
 
         # List of devices
         self.devices = []
