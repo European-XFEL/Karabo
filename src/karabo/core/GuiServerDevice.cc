@@ -570,7 +570,7 @@ namespace karabo {
         
         void GuiServerDevice::projectNew(karabo::net::Channel::Pointer channel, const std::string& projectName, bool success) {
             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "projectNew " << projectName << " " << success;
+                KARABO_LOG_FRAMEWORK_DEBUG << "projectNew " << projectName;
 
                 Hash h("type", "projectNew");
                 h.set("name", projectName);
