@@ -71,6 +71,27 @@ namespace karabo {
 
         }
 
+
+        bool ProjectManager::saveProject(const std::string& projectName, const karabo::util::Hash& metaData, const std::vector<char>& data) {
+            KARABO_LOG_DEBUG << "### saveProject";
+            KARABO_LOG_DEBUG << metaData << "\n\n";
+            
+            karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
+            string hashXml;
+            ts->save(metaData, hashXml);
+            
+            string filename = get<string>("directory") + "/" + projectName;
+            std::ofstream file(filename.c_str(), std::ios::binary);
+            std::ostream& result1 = file.write(hashXml.c_str(), hashXml.size());
+            // Add end-of-file character to differentiate between header and binary content
+            file << char(26);
+            file << "\n";
+            std::ostream& result2 = file.write(const_cast<const char*> (&data[0]), data.size());
+            file.close();
+            
+            return result1.good() && result2.good();
+        }
+
         
         void ProjectManager::slotGetAvailableProjects() {
             KARABO_LOG_DEBUG << "slotGetAvailableProjects";
@@ -99,7 +120,7 @@ namespace karabo {
                         headerString.append(line);
                     }
                     
-                    KARABO_LOG_DEBUG << "Project meta data...";
+                    KARABO_LOG_DEBUG << "Project meta data\n";
                     KARABO_LOG_DEBUG << headerString;
                     
                     Hash p;
@@ -108,9 +129,6 @@ namespace karabo {
                     
                     // Save meta data to datastructure
                     m_projectMetaData[path] = p;
-                    KARABO_LOG_DEBUG << "===== Add meta data for " << path;
-                    KARABO_LOG_DEBUG << p << "\n";
-                    KARABO_LOG_DEBUG << m_projectMetaData[path] << "\n";
                     
                     projectFile.close();
                 } else {
@@ -139,23 +157,9 @@ namespace karabo {
             metaData.set("checkedOut", true);
             metaData.set("checkedOutBy", author);
             
-            karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
-            string hashXml;
-            ts->save(metaData, hashXml);
-            
-            KARABO_LOG_DEBUG << hashXml << "\n";
             m_projectMetaData[projectName] = metaData;
             
-            string filename = get<string>("directory") + "/" + projectName;
-            std::ofstream file(filename.c_str(), std::ios::binary);
-            std::ostream& result1 = file.write(hashXml.c_str(), hashXml.size());
-            // Add end-of-file character to differentiate between header and binary content
-            file << char(26);
-            file << "\n";
-            std::ostream& result2 = file.write(const_cast<const char*> (&data[0]), data.size());
-            file.close();
-
-            reply(projectName, result1.good() && result2.good());
+            reply(projectName, saveProject(projectName, metaData, data));
         }
         
         
@@ -166,12 +170,26 @@ namespace karabo {
             karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
             
             string key = projectName.substr(0, projectName.length()-4);
-            reply(projectName, m_projectMetaData[key], data);
+            Hash &metaData = m_projectMetaData[key];
+            reply(projectName, metaData, data);
+            
+            // Update meta data, if this is the first time this project is loaded
+            if (!metaData.get<bool >("checkedOut")) {
+                metaData.set("checkedOut", true);
+                metaData.set("checkedOutBy", userName);
+                
+                // TODO: remove old header from data...
+                
+                // Update header data of project file
+                saveProject(projectName, metaData, data);
+            }
         }
 
 
         void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const vector<char>& data) {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
+            
+            // TODO: save including meta data header...
             
             bool success = karabo::io::saveToFile(data, get<string>("directory") + "/" + projectName);
             
@@ -180,16 +198,28 @@ namespace karabo {
 
 
         void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
-            KARABO_LOG_DEBUG << "slotCloseProject";
+            KARABO_LOG_DEBUG << "slotCloseProject " << projectName;
             
+            string key = projectName.substr(0, projectName.length()-4);
+            Hash &metaData = m_projectMetaData[key];
             
-            // Use datastructure to check whether this user has checkedOut this
-            // very same project and 
-            
-            // Need to open project file to check header and maybe change
-            // checkedOut/checkedOutBy
+            KARABO_LOG_DEBUG << metaData;
             
             bool success = True;
+            if (userName == metaData.get<string >("checkedOutBy")) {
+                metaData.set("checkedOut", false);
+                metaData.set("checkedOutBy", "");
+            
+                // Save meta data changes to project file (TODO: can be enhanced by
+                // only changing the first specific bytes of the file)
+                std::vector<char> data;
+                karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
+
+                // TODO: remove old header from data...
+                
+                success = saveProject(projectName, metaData, data);
+            }
+                        
             reply(projectName, success);
         }
 

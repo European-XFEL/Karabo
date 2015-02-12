@@ -717,7 +717,7 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveMacro.emit(m)
         
         self.removeProject(project)
-        network.Network().onCloseProject(project.name)
+        network.Network().onCloseProject(project.basename)
 
 
     def appendProject(self, project):
