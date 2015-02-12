@@ -15,19 +15,10 @@ namespace karabo {
 
     namespace core {
 
-        struct ProjectMetaData {
-            std::string m_version;
-            std::string m_author;
-            karabo::util::Epochstamp m_creationEpoch;
-            karabo::util::Epochstamp m_lastModifiedEpoch;
-            bool m_locked;
-            std::string m_LockedBy;
-        };
-
         class ProjectManager : public karabo::core::Device<> {
             
-            std::map<std::string, std::vector > m_projectUsers;
-            std::map<std::string, ProjectMetaData > m_projectMetaData;
+            //std::map<std::string, std::vector > m_projectUsers;
+            std::map<std::string, karabo::util::Hash > m_projectMetaData;
             
         public:
             
