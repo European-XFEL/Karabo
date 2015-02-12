@@ -119,7 +119,7 @@ namespace karabo {
             
             void onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             
-            void projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName, const std::vector<char>& data);
+            void projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName, const karabo::util::Hash& metaData, const std::vector<char>& data);
             
             void onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
             

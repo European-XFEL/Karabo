@@ -592,18 +592,20 @@ namespace karabo {
                 string projectName = info.get<string > ("name");
                 
                 request("Karabo_ProjectManager", "slotLoadProject", userName, projectName)
-                   .receiveAsync<string, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectLoaded, this, channel, _1, _2));
+                   .receiveAsync<string, Hash, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectLoaded, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
             }
         }
         
-        void GuiServerDevice::projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName, const std::vector<char>& data) {         
+        void GuiServerDevice::projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName,
+                                            const karabo::util::Hash& metaData, const std::vector<char>& data) {         
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectLoaded";
                 
                 Hash h("type", "projectLoaded");
                 h.set("name", projectName);
+                h.set("metaData", metaData);
                 h.set("buffer", data);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);

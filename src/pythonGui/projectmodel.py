@@ -768,7 +768,7 @@ class ProjectModel(QStandardItemModel):
         return project
 
 
-    def projectOpen(self, filename):
+    def projectOpen(self, filename, access):
         """
         This function opens a project file, creates a new project, adds it to
         the project list and updates the view.
@@ -776,6 +776,7 @@ class ProjectModel(QStandardItemModel):
         self.closeExistentProject(filename)
         
         project = GuiProject(filename)
+        project.access = access
         try:
             # Already append project to get setup signals
             self.appendProject(project)

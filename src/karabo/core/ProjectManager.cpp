@@ -105,7 +105,13 @@ namespace karabo {
                     Hash p;
                     ts->load(p, headerString);
                     projects.set(path, p);
-
+                    
+                    // Save meta data to datastructure
+                    m_projectMetaData[path] = p;
+                    KARABO_LOG_DEBUG << "===== Add meta data for " << path;
+                    KARABO_LOG_DEBUG << p << "\n";
+                    KARABO_LOG_DEBUG << m_projectMetaData[path] << "\n";
+                    
                     projectFile.close();
                 } else {
                     KARABO_LOG_DEBUG << "Not able to open project file " << path;
@@ -121,8 +127,6 @@ namespace karabo {
             string author = info.get<string > ("author");
             string projectName = info.get<string > ("name");
             vector<char> data = info.get<vector<char> > ("data");
-            //bool checkedOut = info.get<bool >("checkedOut");
-            //string checkedOutBy = info.get<string > ("checkedOutBy");
             
             Hash metaData;
             metaData.set("version", "1.3.0");
@@ -139,7 +143,8 @@ namespace karabo {
             string hashXml;
             ts->save(metaData, hashXml);
             
-            KARABO_LOG_DEBUG << hashXml;
+            KARABO_LOG_DEBUG << hashXml << "\n";
+            m_projectMetaData[projectName] = metaData;
             
             string filename = get<string>("directory") + "/" + projectName;
             std::ofstream file(filename.c_str(), std::ios::binary);
@@ -156,14 +161,12 @@ namespace karabo {
         
         void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject";
-
-            //Hash answer("name", projectName);
-            //std::vector<char>& buffer = answer.bindReference<std::vector<char> >("buffer");
             
             std::vector<char> data;
             karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
             
-            reply(projectName, data);
+            string key = projectName.substr(0, projectName.length()-4);
+            reply(projectName, m_projectMetaData[key], data);
         }
 
 

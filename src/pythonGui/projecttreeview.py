@@ -149,7 +149,8 @@ class ProjectTreeView(QTreeView):
         if self.projectDialog.location == ProjectDialog.CLOUD:
             Network().onLoadProject(self.projectDialog.filename)
         elif self.projectDialog.location == ProjectDialog.LOCAL:
-            self.model().projectOpen(self.projectDialog.filepath)
+            self.model().projectOpen(self.projectDialog.filepath, \
+                                     ProjectAccess.LOCAL)
 
 
     def projectSave(self):
@@ -400,14 +401,16 @@ class ProjectTreeView(QTreeView):
         self.projectDialog.fillCloudProjects(projects)
 
 
-    def onProjectLoaded(self, name, data):
+    def onProjectLoaded(self, name, metaData, data):
         # Write cloud project to local file system
         filename = os.path.join(globals.KARABO_PROJECT_FOLDER, name)
         with open(filename, "wb") as out:
             out.write(data)
         out.close()
         
-        self.model().projectOpen(filename)
+        checkedOut = metaData.get("checkedOut")
+        self.model().projectOpen(filename, ProjectAccess.CLOUD_READONLY \
+                                         if checkedOut else ProjectAccess.CLOUD)
 
 
     def onProjectSaved(self, name, success):
