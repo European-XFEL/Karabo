@@ -75,10 +75,9 @@ namespace karabo {
         void ProjectManager::slotGetAvailableProjects() {
             KARABO_LOG_DEBUG << "slotGetAvailableProjects";
             
-            //std::vector<std::string> projects;
             // Hash to store all project names and meta data as attributes
             karabo::util::Hash projects;
-            TextSerializer<Hash>::Pointer serializer = TextSerializer<Hash>::create("Xml");
+            TextSerializer<Hash>::Pointer ts = TextSerializer<Hash>::create("Xml");
             
             // Check project directory for all projects
             boost::filesystem::path directory(get<string> ("directory"));
@@ -104,7 +103,7 @@ namespace karabo {
                     KARABO_LOG_DEBUG << headerString;
                     
                     Hash p;
-                    serializer->load(p, headerString);
+                    ts->load(p, headerString);
                     projects.set(path, p);
 
                     projectFile.close();
@@ -139,7 +138,9 @@ namespace karabo {
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
             string hashXml;
             ts->save(metaData, hashXml);
-                        
+            
+            KARABO_LOG_DEBUG << hashXml;
+            
             string filename = get<string>("directory") + "/" + projectName;
             std::ofstream file(filename.c_str(), std::ios::binary);
             std::ostream& result1 = file.write(hashXml.c_str(), hashXml.size());
@@ -177,6 +178,13 @@ namespace karabo {
 
         void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject";
+            
+            
+            // Use datastructure to check whether this user has checkedOut this
+            // very same project and 
+            
+            // Need to open project file to check header and maybe change
+            // checkedOut/checkedOutBy
             
             bool success = True;
             reply(projectName, success);
