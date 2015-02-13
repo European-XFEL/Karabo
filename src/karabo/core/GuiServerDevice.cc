@@ -560,7 +560,11 @@ namespace karabo {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNewProject";
                 
-                request("Karabo_ProjectManager", "slotNewProject", info)
+                string author = info.get<string > ("author");
+                string projectName = info.get<string > ("name");
+                vector<char> data = info.get<vector<char> > ("data");
+                
+                request("Karabo_ProjectManager", "slotNewProject", author, projectName, data)
                    .receiveAsync<string, bool >(boost::bind(&karabo::core::GuiServerDevice::projectNew, this, channel, _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onNewProject(): " << e.userFriendlyMsg();
@@ -619,16 +623,10 @@ namespace karabo {
         void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
-
+                
                 string userName = info.get<string > ("user");
                 string projectName = info.get<string > ("name");
                 vector<char> data = info.get<vector<char> > ("data");
-                
-                //h.set("author", self.username)
-                //h.set("name", filename)
-                //h.set("data", data)
-                //h.set("checkedOut", True)
-                //h.set("checkedOutBy", self.username)
                 
                 request("Karabo_ProjectManager", "slotSaveProject", userName, projectName, data)
                    .receiveAsync<string, bool >(boost::bind(&karabo::core::GuiServerDevice::projectSaved, this, channel, _1, _2));

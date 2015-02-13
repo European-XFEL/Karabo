@@ -19,7 +19,7 @@ from karabo.hashtypes import Slot, String
 from asyncio import AbstractEventLoop, Handle, Transport, Future, coroutine
 from collections import OrderedDict
 from quamash import QEventLoop
-from PyQt4.QtGui import QApplication, QMessageBox
+from PyQt4.QtGui import QApplication
 from PyQt4.QtCore import QTimer, pyqtSlot
 import sys
 
