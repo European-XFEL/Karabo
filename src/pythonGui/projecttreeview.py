@@ -154,8 +154,30 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSave(self):
-        # TODO: save to cloud, if necessary
-        self.model().projectSave()
+        project = self.model().currentProject()
+        if project.access == ProjectAccess.CLOUD:
+            msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
+                       "The project \"<b>{}</b>\" has been checked out.<br>"
+                       "Do you want to check it in again or save it locally?".format(project.name))
+
+            btnCheckIn = msgBox.addButton("Check in", QMessageBox.YesRole)
+            btnLocally = msgBox.addButton("Save locally", QMessageBox.NoRole)
+            btnAbort = msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            
+            msgBox.exec_()
+            resultBtn = msgBox.clickedButton()
+            if resultBtn == btnCheckIn:
+                self.model().projectSave()
+                data = self.projectDataBytes(project.filename)
+                # Send save project to cloud request to network
+                Network().onSaveProject(project.basename, data)
+            if resultBtn == btnLocally:
+                self.model().projectSave()
+            elif resultBtn == btnAbort:
+                return
+        elif project.access == ProjectAccess.CLOUD_READONLY:
+            print("Project was saved locally.")
+        
 
 
     def projectSaveAs(self):
@@ -169,7 +191,8 @@ class ProjectTreeView(QTreeView):
         if location == ProjectDialog.CLOUD:
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
-            Network().onSaveProject(projectName, data)
+            Network().onNewProject(projectName, data)
+            # TODO: close old project
 
 
     def mouseDoubleClickEvent(self, event):

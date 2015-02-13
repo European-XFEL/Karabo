@@ -552,7 +552,6 @@ class _Manager(QObject):
 
 
     def handle_projectLoaded(self, name, metaData, buffer):
-        print("handle_projectLoaded", name)
         self.signalProjectLoaded.emit(name, metaData, buffer)
             
 

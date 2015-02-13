@@ -52,7 +52,7 @@ namespace karabo {
             registerInitialFunction(boost::bind(&karabo::core::ProjectManager::initialize, this));
 
             KARABO_SLOT(slotGetAvailableProjects)
-            KARABO_SLOT(slotNewProject, Hash /*info*/)
+            KARABO_SLOT(slotNewProject, string /*author*/, string /*projectname*/, vector<char> /*data*/)
             KARABO_SLOT(slotLoadProject, string /*username*/, string /*projectName*/)
             KARABO_SLOT(slotSaveProject, string /*username*/, string /*projectName*/, vector<char> /*data*/)
             KARABO_SLOT(slotCloseProject, string /*username*/, string /*projectName*/)
@@ -178,12 +178,8 @@ namespace karabo {
             reply(projects);
         }
         
-        void ProjectManager::slotNewProject(const karabo::util::Hash& info) {
-            KARABO_LOG_DEBUG << "slotNewProject";
-            
-            string author = info.get<string > ("author");
-            string projectName = info.get<string > ("name");
-            vector<char> data = info.get<vector<char> > ("data");
+        void ProjectManager::slotNewProject(const std::string& author, const std::string& projectName, const std::vector<char>& data) {
+            KARABO_LOG_DEBUG << "slotNewProject " << projectName;
             
             Hash metaData;
             metaData.set("version", "1.3.0");
@@ -196,7 +192,8 @@ namespace karabo {
             metaData.set("checkedOut", true);
             metaData.set("checkedOutBy", author);
             
-            m_projectMetaData[projectName] = metaData;
+            string key = projectName.substr(0, projectName.length()-4);
+            m_projectMetaData[key] = metaData;
             
             reply(projectName, saveProject(projectName, metaData, data));
         }
@@ -216,22 +213,25 @@ namespace karabo {
             if (!metaData.get<bool >("checkedOut")) {
                 metaData.set("checkedOut", true);
                 metaData.set("checkedOutBy", userName);
-
+                
                 // Update project file with new meta data
-                //updateProjectFile(projectName, metaData);
+                updateProjectFile(projectName, metaData);
             }
         }
 
 
-        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const vector<char>& data) {
+        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const std::vector<char>& data) {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
-            // TODO: save including meta data header...
-            //updateProjectFile(data);
+            // Update meta data and save project
+            string key = projectName.substr(0, projectName.length()-4);
+            Hash &metaData = m_projectMetaData[key];
             
-            bool success = karabo::io::saveToFile(data, get<string>("directory") + "/" + projectName);
+            karabo::util::Epochstamp epoch;
+            double timestamp = epoch.toTimestamp();
+            metaData.set("lastModified", timestamp);
             
-            reply(projectName, success);
+            reply(projectName, saveProject(projectName, metaData, data));
         }
 
 
