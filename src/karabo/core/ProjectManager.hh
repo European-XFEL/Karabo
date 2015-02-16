@@ -17,7 +17,7 @@ namespace karabo {
 
         class ProjectManager : public karabo::core::Device<> {
             
-            //std::map<std::string, std::vector > m_projectUsers;
+            // {key: projectName.krb, value: metaData}
             std::map<std::string, karabo::util::Hash > m_projectMetaData;
             
         public:
