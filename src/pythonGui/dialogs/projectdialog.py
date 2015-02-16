@@ -96,8 +96,6 @@ class ProjectDialog(QDialog):
         if self.twProjects.topLevelItemCount() > 0:
             self.twProjects.clear()
  
-        print(projects)
- 
         # Fill all projects from cloud into the view
         for k in projects.keys():
             checkedOut = projects.get("{}.checkedOut".format(k))
@@ -155,6 +153,8 @@ class ProjectSaveDialog(ProjectDialog):
         self.buttonBox.button(QDialogButtonBox.Ok).setText("Save")
         self.buttonBox.accepted.connect(self.onSaved)
 
+        self.twProjects.itemDoubleClicked.connect(self.onSaved)
+
 
     def onSaved(self):
         # Check if filename is already existing
@@ -208,4 +208,6 @@ class ProjectLoadDialog(ProjectDialog):
         self.buttonBox.accepted.connect(self.accept)
         
         self.leFilename.setReadOnly(True)
+        
+        self.twProjects.itemDoubleClicked.connect(self.accept)
 
