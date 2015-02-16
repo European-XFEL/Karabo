@@ -251,6 +251,10 @@ class ProjectModel(QStandardItemModel):
         font = item.font()
         font.setBold(True)
         item.setFont(font)
+        item.setIcon({ProjectAccess.LOCAL: icons.folder, \
+                      ProjectAccess.CLOUD: icons.folder, \
+                      ProjectAccess.CLOUD_READONLY: icons.lock} \
+                        .get(project.access, icons.folder))
 
 
     def removeProjectItem(self, project):
