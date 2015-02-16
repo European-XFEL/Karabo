@@ -721,7 +721,9 @@ class ProjectModel(QStandardItemModel):
             self.signalRemoveMacro.emit(m)
         
         self.removeProject(project)
-        network.Network().onCloseProject(project.basename)
+        
+        if project.access == ProjectAccess.CLOUD:
+            network.Network().onCloseProject(project.basename)
 
 
     def appendProject(self, project):
@@ -810,6 +812,8 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
         
         project.zip()
+        
+        return project
 
 
     def projectSaveAs(self, filename, project=None):
@@ -824,6 +828,8 @@ class ProjectModel(QStandardItemModel):
         project.filename = filename
         project.zip()
         self.onProjectModified(project)
+        
+        return project
 
 
     def editDevice(self, device=None):

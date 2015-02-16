@@ -205,14 +205,20 @@ class ProjectTreeView(QTreeView):
         if (filePath is None) and (projectName is None) and (location is None):
             return
 
+        # Get old project name
+        oldProject = self.model().currentProject()
+        oldProjectAccess = oldProject.access
+        if oldProjectAccess in (ProjectAccess.CLOUD, ProjectAccess.CLOUD_READONLY):
+            Network().onCloseProject(oldProject.basename)
+
         fileName = os.path.join(filePath, projectName)
-        self.model().projectSaveAs(fileName)
+        project = self.model().projectSaveAs(fileName)
         
         if location == ProjectDialog.CLOUD:
+            project.access = ProjectAccess.CLOUD
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
             Network().onNewProject(projectName, data)
-            # TODO: close old project
 
 
     def mouseDoubleClickEvent(self, event):
@@ -461,7 +467,8 @@ class ProjectTreeView(QTreeView):
             text = "Project <b>{}</b> saved successfully.".format(name)
         else:
             text = "Project <b>{}</b> could not be saved properly.".format(name)
-        MessageBox.showInformation(text, "Project saved")
+        #MessageBox.showInformation(text, "Project saved")
+        print(text)
 
 
     def onProjectClosed(self, name, success):
@@ -469,5 +476,6 @@ class ProjectTreeView(QTreeView):
             text = "Project <b>{}</b> closed successfully.".format(name)
         else:
             text = "Project <b>{}</b> could not be closed properly.".format(name)
-        MessageBox.showInformation(text, "Project closed")
+        #MessageBox.showInformation(text, "Project closed")
+        print(text)
 
