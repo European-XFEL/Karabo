@@ -23,27 +23,27 @@ class MessageBox(QObject):
 
 
     @staticmethod
-    def showAlarm(text, title=None):
-        QMessageBox.critical(None, "Alarm", text)
+    def showAlarm(text, title="Alarm"):
+        QMessageBox.critical(None, title, text)
 
 
     @staticmethod
-    def showError(text, title=None):
-        QMessageBox.critical(None, "Error", text)
+    def showError(text, title="Error"):
+        QMessageBox.critical(None, title, text)
 
 
     @staticmethod
-    def showInformation(text, title=None):
-        QMessageBox.information(None, "Information", text)
+    def showInformation(text, title="Information"):
+        QMessageBox.information(None, title, text)
 
 
     @staticmethod
-    def showQuestion(question, title=None):
-        result = QMessageBox.question(None, "Question", question, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+    def showQuestion(question, title="Question"):
+        result = QMessageBox.question(None, title, question, QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
         return result
 
 
     @staticmethod
-    def showWarning(text, title=None):
-        QMessageBox.warning(None, "Warning", text)
+    def showWarning(text, title="Warning"):
+        QMessageBox.warning(None, title, text)
 
