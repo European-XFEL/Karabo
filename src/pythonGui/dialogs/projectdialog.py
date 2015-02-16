@@ -154,6 +154,7 @@ class ProjectSaveDialog(ProjectDialog):
         self.buttonBox.accepted.connect(self.onSaved)
 
         self.twProjects.itemDoubleClicked.connect(self.onSaved)
+        self.twLocal.doubleClicked.connect(self.onSaved)
 
 
     def onSaved(self):
@@ -210,4 +211,5 @@ class ProjectLoadDialog(ProjectDialog):
         self.leFilename.setReadOnly(True)
         
         self.twProjects.itemDoubleClicked.connect(self.accept)
+        self.twLocal.doubleClicked.connect(self.accept)
 
