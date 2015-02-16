@@ -158,7 +158,7 @@ class ProjectTreeView(QTreeView):
         project = self.model().currentProject()
         if project.access == ProjectAccess.CLOUD:
             msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
-                       "The project \"<b>{}</b>\" has been checked out.<br>"
+                       "The project \"<b>{}</b>\" has been checked out.<br><br>"
                        "Do you want to check it in again or save it locally?".format(project.name))
 
             btnCheckIn = msgBox.addButton("Check in", QMessageBox.YesRole)
@@ -177,8 +177,27 @@ class ProjectTreeView(QTreeView):
             elif resultBtn == btnAbort:
                 return
         elif project.access == ProjectAccess.CLOUD_READONLY:
-            print("Project was saved locally.")
-        
+            msgBox = QMessageBox(QMessageBox.Question, "Save project", 
+                       "The project \"<b>{}</b>\" has been loaded as read only.<br><br>"
+                       "Do you want to check it in using a different name<br>"
+                       "or save it locally?".format(project.name))
+
+            btnCheckIn = msgBox.addButton("Check in", QMessageBox.YesRole)
+            btnLocally = msgBox.addButton("Save locally", QMessageBox.NoRole)
+            btnAbort = msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            
+            msgBox.exec_()
+            resultBtn = msgBox.clickedButton()
+            if resultBtn == btnCheckIn:
+                project.access = ProjectAccess.CLOUD
+                self.projectSaveAs()
+            if resultBtn == btnLocally:
+                project.access = ProjectAccess.LOCAL
+                self.model().projectSave()
+            elif resultBtn == btnAbort:
+                return
+        elif project.access == ProjectAccess.LOCAL:
+            self.model().projectSave()
 
 
     def projectSaveAs(self):
