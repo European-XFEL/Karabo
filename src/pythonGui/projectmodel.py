@@ -776,7 +776,6 @@ class ProjectModel(QStandardItemModel):
         self.closeExistentProject(filename)
         
         project = GuiProject(filename)
-        print("projectOpen", filename, access)
         project.access = access
         try:
             # Already append project to get setup signals
