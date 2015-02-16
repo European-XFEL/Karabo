@@ -112,9 +112,6 @@ namespace karabo {
         
 
         bool ProjectManager::saveProject(const std::string& projectName, const karabo::util::Hash& metaData, const std::vector<char>& data) {
-            KARABO_LOG_DEBUG << "saveProject";
-            KARABO_LOG_DEBUG << metaData << "\n\n";
-            
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
             string hashXml;
             ts->save(metaData, hashXml);
@@ -143,9 +140,9 @@ namespace karabo {
             boost::filesystem::path directory(get<string> ("directory"));
             boost::filesystem::directory_iterator end_iter;
             for (boost::filesystem::directory_iterator iter(directory); iter != end_iter; ++iter) {
-                std::string path = iter->path().relative_path().string();
+                std::string relativePath = iter->path().relative_path().string();
                 // Get meta-data from project file
-                ifstream projectFile(path.c_str(), ios::in | ios::binary);
+                ifstream projectFile(relativePath.c_str(), ios::in | ios::binary);
                 if (projectFile.is_open()) {
                     std::string path = iter->path().stem().string();
                     projects.set(path, Hash());
@@ -166,12 +163,13 @@ namespace karabo {
                     ts->load(p, headerString);
                     projects.set(path, p);
                     
+                    std::string projectName = iter->path().filename().string();
                     // Save meta data to datastructure
-                    m_projectMetaData[path] = p;
+                    m_projectMetaData[projectName] = p;
                     
                     projectFile.close();
                 } else {
-                    KARABO_LOG_DEBUG << "Not able to open project file " << path;
+                    KARABO_LOG_DEBUG << "Not able to open project file " << relativePath;
                 }
             }
             
@@ -192,21 +190,20 @@ namespace karabo {
             metaData.set("checkedOut", true);
             metaData.set("checkedOutBy", author);
             
-            string key = projectName.substr(0, projectName.length()-4);
-            m_projectMetaData[key] = metaData;
+            //string key = projectName.substr(0, projectName.length()-4);
+            m_projectMetaData[projectName] = metaData;
             
             reply(projectName, saveProject(projectName, metaData, data));
         }
         
         
         void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
-            KARABO_LOG_DEBUG << "slotLoadProject";
+            KARABO_LOG_DEBUG << "slotLoadProject " << projectName;
             
             std::vector<char> data;
             karabo::io::loadFromFile(data, get<string>("directory") + "/" + projectName);
             
-            string key = projectName.substr(0, projectName.length()-4);
-            Hash &metaData = m_projectMetaData[key];
+            Hash &metaData = m_projectMetaData[projectName];
             reply(projectName, metaData, data);
             
             // Update meta data, if this is the first time this project is loaded
@@ -224,8 +221,7 @@ namespace karabo {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
             // Update meta data and save project
-            string key = projectName.substr(0, projectName.length()-4);
-            Hash &metaData = m_projectMetaData[key];
+            Hash &metaData = m_projectMetaData[projectName];
             
             karabo::util::Epochstamp epoch;
             double timestamp = epoch.toTimestamp();
@@ -236,11 +232,9 @@ namespace karabo {
 
 
         void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
-            KARABO_LOG_DEBUG << "slotCloseProject " << projectName;
+            KARABO_LOG_DEBUG << "slotCloseProject " << userName << " " << projectName;
             
-            string key = projectName.substr(0, projectName.length()-4);
-            Hash &metaData = m_projectMetaData[key];
-            
+            Hash &metaData = m_projectMetaData[projectName];
             KARABO_LOG_DEBUG << metaData;
             
             bool success = True;
