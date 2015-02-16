@@ -17,6 +17,7 @@ import globals
 from dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
+from messagebox import MessageBox
 from network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
@@ -437,11 +438,17 @@ class ProjectTreeView(QTreeView):
 
 
     def onProjectSaved(self, name, success):
-        print("onProjectSaved", name, success)
-        # TODO: show message that saving did not work
+        if success:
+            text = "Project <b>{}</b> saved successfully.".format(name)
+        else:
+            text = "Project <b>{}</b> could not be saved properly.".format(name)
+        MessageBox.showInformation(text, "Project saved")
 
 
     def onProjectClosed(self, name, success):
-        print("Answer received: onProjectClosed", name, success)
-        # TODO: show message that closing did not work
+        if success:
+            text = "Project <b>{}</b> closed successfully.".format(name)
+        else:
+            text = "Project <b>{}</b> could not be closed properly.".format(name)
+        MessageBox.showInformation(text, "Project closed")
 
