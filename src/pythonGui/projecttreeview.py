@@ -155,7 +155,15 @@ class ProjectTreeView(QTreeView):
 
 
     def projectSave(self):
+        """
+        The current project is saved to either the CLOUD or LOCALLY.
+        \return True, if project saved successfully, else False
+        """
         project = self.model().currentProject()
+        # Only save, if modifications where made
+        if not project.isModified:
+            return False
+        
         if project.access == ProjectAccess.CLOUD:
             msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
                        "The project \"<b>{}</b>\" has been checked out.<br><br>"
@@ -175,7 +183,7 @@ class ProjectTreeView(QTreeView):
             if resultBtn == btnLocally:
                 self.model().projectSave()
             elif resultBtn == btnAbort:
-                return
+                return False
         elif project.access == ProjectAccess.CLOUD_READONLY:
             msgBox = QMessageBox(QMessageBox.Question, "Save project", 
                        "The project \"<b>{}</b>\" has been loaded as read only.<br><br>"
@@ -195,9 +203,11 @@ class ProjectTreeView(QTreeView):
                 project.access = ProjectAccess.LOCAL
                 self.model().projectSave()
             elif resultBtn == btnAbort:
-                return
+                return False
         elif project.access == ProjectAccess.LOCAL:
             self.model().projectSave()
+        
+        return True
 
 
     def projectSaveAs(self):
@@ -259,7 +269,7 @@ class ProjectTreeView(QTreeView):
             acCloseProject = QAction(text, self)
             acCloseProject.setStatusTip(text)
             acCloseProject.setToolTip(text)
-            acCloseProject.triggered.connect(self.model().onCloseProject)
+            acCloseProject.triggered.connect(self.onCloseProject)
 
             menu.addAction(acCloseProject)
         elif selectedType is Category:
@@ -441,6 +451,32 @@ class ProjectTreeView(QTreeView):
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
             device.project.shutdown(device, nbSelected == 1)
+
+
+    def onCloseProject(self):
+        """
+        This slot closes the currently selected projects and updates the model.
+        """
+        selectedIndexes = self.selectedIndexes()
+        projects = []
+        for index in selectedIndexes:
+            project = index.data(ProjectModel.ITEM_OBJECT)
+            if project.isModified:
+                success = self.projectSave()
+                if not success:
+                    continue
+            else:
+                reply = QMessageBox.question(None, 'Close project',
+                    "Do you really want to close the project \"<b>{}</b>\"?"
+                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.No:
+                    continue
+            
+            projects.append(project)
+        
+        for project in projects:
+            self.model().projectClose(project)
 
 
     def onAvailableProjects(self, projects):
