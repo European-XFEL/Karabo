@@ -1118,43 +1118,6 @@ class ProjectModel(QStandardItemModel):
         self.signalItemChanged.emit(ctype, conf)
 
 
-    def onCloseProject(self):
-        """
-        This slot closes the currently selected projects and updates the model.
-        """
-        selectedIndexes = self.selectionModel.selectedIndexes()
-        projects = []
-        for index in selectedIndexes:
-            project = index.data(ProjectModel.ITEM_OBJECT)
-            if project.isModified:
-                msgBox = QMessageBox()
-                msgBox.setWindowTitle("Save changes before closing")
-                msgBox.setText("Do you want to save your project \"<b>{}</b>\" "
-                               "before closing?".format(project.name))
-                msgBox.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | 
-                                          QMessageBox.Cancel)
-                msgBox.setDefaultButton(QMessageBox.Save)
-
-                reply = msgBox.exec_()
-                if reply == QMessageBox.Cancel:
-                    continue
-
-                if reply == QMessageBox.Save:
-                    project.zip()
-            else:
-                reply = QMessageBox.question(None, 'Close project',
-                    "Do you really want to close the project \"<b>{}</b>\"?"
-                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-            if reply == QMessageBox.No:
-                continue
-            
-            projects.append(project)
-        
-        for project in projects:
-            self.projectClose(project)
-
-
     def onEditDevice(self):
         self.editDevice(self.currentDevice())
 

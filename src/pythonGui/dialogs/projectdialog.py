@@ -105,7 +105,7 @@ class ProjectDialog(QDialog):
             item.setIcon(0, icons.lock if checkedOut else icons.folder)
             item.setText(0, k)
             
-            item.setText(1, "True" if checkedOut else "False")
+            item.setText(1, "Yes" if checkedOut else "No")
             item.setText(2, str(projects.get("{}.checkedOutBy".format(k))))
             item.setData(0, Qt.UserRole, checkedOut)
             item.setText(3, str(projects.get("{}.author".format(k))))
