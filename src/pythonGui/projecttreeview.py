@@ -231,6 +231,14 @@ class ProjectTreeView(QTreeView):
             Network().onNewProject(projectName, data)
 
 
+    def writeProjectData(self, projectName, data):
+        # Write cloud project to local file system
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        with open(filename, "wb") as out:
+            out.write(data)
+        out.close()
+
+
     def mouseDoubleClickEvent(self, event):
         index = self.currentIndex()
         if not index.isValid(): return
@@ -488,19 +496,18 @@ class ProjectTreeView(QTreeView):
 
     def onProjectLoaded(self, name, metaData, data):
         # Write cloud project to local file system
-        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, name)
-        with open(filename, "wb") as out:
-            out.write(data)
-        out.close()
+        self.writeProjectData(name, data)
         
         checkedOut = metaData.get("checkedOut")
         self.model().projectOpen(filename, ProjectAccess.CLOUD_READONLY \
                                          if checkedOut else ProjectAccess.CLOUD)
 
 
-    def onProjectSaved(self, name, success):
+    def onProjectSaved(self, name, success, data):
         if success:
             text = "Project <b>{}</b> saved successfully.".format(name)
+            # Write cloud project to local file system
+            self.writeProjectData(name, data)
         else:
             text = "Project <b>{}</b> could not be saved properly.".format(name)
         #MessageBox.showInformation(text, "Project saved")

@@ -55,7 +55,7 @@ class _Manager(QObject):
     
     signalAvailableProjects = pyqtSignal(object) # hash of projects and attributes
     signalProjectLoaded = pyqtSignal(str, object, object) # projectName, metaData, data
-    signalProjectSaved = pyqtSignal(str, bool) # projectName, success
+    signalProjectSaved = pyqtSignal(str, bool, object) # projectName, success, object
     signalProjectClosed = pyqtSignal(str, bool) # projectName, success
 
 
@@ -546,16 +546,16 @@ class _Manager(QObject):
         self.signalAvailableProjects.emit(availableProjects)
 
 
-    def handle_projectNew(self, name, success):
-        self.signalProjectSaved.emit(name, success)
+    def handle_projectNew(self, name, success, data):
+        self.signalProjectSaved.emit(name, success, data)
 
 
     def handle_projectLoaded(self, name, metaData, buffer):
         self.signalProjectLoaded.emit(name, metaData, buffer)
             
 
-    def handle_projectSaved(self, name, success):
-        self.signalProjectSaved.emit(name, success)
+    def handle_projectSaved(self, name, success, data):
+        self.signalProjectSaved.emit(name, success, data)
 
 
     def handle_projectClosed(self, name, success):
