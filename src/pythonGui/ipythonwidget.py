@@ -74,42 +74,48 @@ class IPythonWidget(RichIPythonWidget):
 
 
 class Channel(channels.InProcessChannel):
-    def __init__(self, client):
-        super().__init__(client)
-        self.client = client
-
     def is_alive(self):
         return self.client.alive
+
+    def receive(self, box, value, timestamp):
+        if value != self.last:
+            self.last = value
+            self.call_handlers_later(pickle.loads(value))
 
 
 class IOPubChannel(kernel_mixins.QtIOPubChannelMixin,
                    channels.InProcessIOPubChannel, Channel):
     def __init__(self, client):
         super().__init__(client)
+        self.last = None
         self.client.device.boxvalue.iopub.signalUpdateComponent.connect(
             self.receive)
-
-    def receive(self, box, value, timestamp):
-        self.call_handlers_later(pickle.loads(value))
 
 
 class ShellChannel(kernel_mixins.QtShellChannelMixin,
                    channels.InProcessShellChannel, Channel):
     def __init__(self, client):
         super().__init__(client)
+        self.last = None
         self.client.device.boxvalue.shell.signalUpdateComponent.connect(
             self.receive)
 
     def _dispatch_to_kernel(self, msg):
         self.client.device.value.shell = pickle.dumps(msg)
 
-    def receive(self, box, value, timestamp):
-        self.call_handlers_later(pickle.loads(value))
-
 
 class StdInChannel(kernel_mixins.QtStdInChannelMixin,
                    channels.InProcessStdInChannel, Channel):
-    pass
+    def __init__(self, client):
+        super().__init__(client)
+        self.last = None
+        self.client.device.boxvalue.stdin.signalUpdateComponent.connect(
+            self.receive)
+
+    def input(self, string):
+        content = dict(value=string)
+        msg = self.client.session.msg('input_reply', content)
+        self.client.device.value.stdin = pickle.dumps(msg)
 
 
 class HBChannel(kernel_mixins.QtHBChannelMixin,

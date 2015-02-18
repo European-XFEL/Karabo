@@ -47,7 +47,7 @@ class IPythonKernel(Device):
 
     @VectorChar()
     def stdin(self, msg):
-        self.client.iopub_channel._queue_send(pickle.loads(msg))
+        self.client.stdin_channel._queue_send(pickle.loads(msg))
 
     def run(self):
         super().run()
