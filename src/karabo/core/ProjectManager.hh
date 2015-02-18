@@ -36,7 +36,8 @@ namespace karabo {
             
             bool updateProjectFile(const std::string& projectName, karabo::util::Hash& metaData);
             
-            bool saveProject(const std::string& projectName, const karabo::util::Hash& metaData, const std::vector<char>& data);
+            bool saveProject(const std::string& projectName, const karabo::util::Hash& metaData,
+                             const std::vector<char>& data, std::vector<char>& newData);
             
             void slotGetAvailableProjects();
             

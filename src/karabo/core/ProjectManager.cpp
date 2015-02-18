@@ -71,7 +71,14 @@ namespace karabo {
 
         }
 
+        /**
+         The project file with the given \projectName is updated.
 
+        \param[in] projectName Name of the project.
+        \param[in] metaData    Hash including the new meta data of the project.
+         
+        \return \true, if updating successful, otherwise \false.
+        */
         bool ProjectManager::updateProjectFile(const std::string& projectName, karabo::util::Hash& metaData) {
             KARABO_LOG_DEBUG << "updateProjectFile " << projectName;
             
@@ -105,24 +112,48 @@ namespace karabo {
                 
                 projectFile.close();
                 
-                return saveProject(projectName, metaData, data);
+                vector<char> newData;
+                return saveProject(projectName, metaData, data, newData);
             }
             return false;
         }
-        
 
-        bool ProjectManager::saveProject(const std::string& projectName, const karabo::util::Hash& metaData, const std::vector<char>& data) {
+
+        /**
+        A project including meta and binary data is written to the directory.
+
+        \param[in] projectName Name of the project.
+        \param[in] metaData    Hash including the meta data of the project.
+        \param[in] data        Vector of char including the binary data of the project.
+        \param[in,out] newData Vector of char is filled with concated data.
+        
+        \return \true, if saving successful, otherwise \false.
+        */
+        bool ProjectManager::saveProject(const std::string& projectName,
+                                         const karabo::util::Hash& metaData,
+                                         const std::vector<char>& data,
+                                         std::vector<char>& newData) {
             karabo::io::TextSerializer<karabo::util::Hash>::Pointer ts = karabo::io::TextSerializer<Hash>::create("Xml");
             string hashXml;
             ts->save(metaData, hashXml);
             
+            // Write data into project file
             string filename = get<string>("directory") + "/" + projectName;
-            std::ofstream file(filename.c_str(), std::ios::binary);
+            std::fstream file(filename.c_str(), ios::out | ios::binary);
             std::ostream& result1 = file.write(hashXml.c_str(), hashXml.size());
             // Add end-of-file character to differentiate between header and binary content
             file << char(26);
             file << "\n";
             std::ostream& result2 = file.write(const_cast<const char*> (&data[0]), data.size());
+            file.close();
+            
+            // Read data into newData
+            file.open(filename.c_str(), ios::in | ios::binary);
+            std::stringstream os;
+            os << file.rdbuf();
+            os.seekg(0);
+            newData.resize(os.rdbuf()->in_avail());
+            os.read(&newData[0], newData.size());
             file.close();
             
             return result1.good() && result2.good();
@@ -187,13 +218,20 @@ namespace karabo {
             double timestamp = epoch.toTimestamp();
             metaData.set("creationDate", timestamp);
             metaData.set("lastModified", timestamp);
-            metaData.set("checkedOut", true);
+            // checkedOut needs to be false to be send back to the author
+            metaData.set("checkedOut", false);
             metaData.set("checkedOutBy", author);
             
-            //string key = projectName.substr(0, projectName.length()-4);
+            // Store and send back to author
+            vector<char> newData;
+            bool success = saveProject(projectName, metaData, data, newData);
+            reply(projectName, success, newData);
+            
+            // Set true to finally store for others
+            metaData.set("checkedOut", true);
             m_projectMetaData[projectName] = metaData;
             
-            reply(projectName, saveProject(projectName, metaData, data));
+            saveProject(projectName, metaData, data, newData);
         }
         
         
@@ -227,7 +265,9 @@ namespace karabo {
             double timestamp = epoch.toTimestamp();
             metaData.set("lastModified", timestamp);
             
-            reply(projectName, saveProject(projectName, metaData, data));
+            vector<char> newData;
+            bool success = saveProject(projectName, metaData, data, newData);
+            reply(projectName, success, newData);
         }
 
 
