@@ -25,14 +25,10 @@ import manager
 from network import network
 
 class IPythonWidget(RichIPythonWidget):
-
-    """
-    A convenience class for a live IPython console widget.
-    """
-    def __init__(self,customBanner=None, *args, **kwargs):
-        if customBanner is not None:
-            self.banner = customBanner
-        super(IPythonWidget, self).__init__(*args,**kwargs)
+    def __init__(self, banner=None, *args, **kwargs):
+        if banner is not None:
+            self.banner = banner
+        super().__init__(*args, local_kernel=True, **kwargs)
 
         self.kernel_manager = Manager()
         self.kernel_manager.start_kernel()
@@ -40,37 +36,9 @@ class IPythonWidget(RichIPythonWidget):
         self.kernel_client.start_channels()
         self.exit_requested.connect(self.stop)
 
-
     def stop(self):
         self.kernel_client.stop_channels()
         self.kernel_manager.shutdown_kernel()
-        guisupport.get_app_qt4().exit()
-
-
-    def pushVariables(self,variableDict):
-        """ Given a dictionary containing name / value pairs, push those variables to the IPython console widget """
-        self.kernel_manager.kernel.shell.push(variableDict)
-
-
-    def clearConsole(self):
-        """
-        The terminal gets cleared.
-        """
-        self._control.clear()
-
-
-    def printText(self, text):
-        """
-        The given \text is printed.
-        """
-        self._append_plain_text(text)
-
-
-    def executeCommand(self, command, inFrame=False):
-        """
-        The given \command is executed in the frame of the console or not.
-        """
-        self._execute(command, inFrame)
 
 
 class Channel(channels.InProcessChannel):
@@ -124,9 +92,12 @@ class HBChannel(kernel_mixins.QtHBChannelMixin,
 
 
 class Manager(kernel_mixins.QtKernelManagerMixin):
-    def start_kernel(self, **kwargs):
+    def start_kernel(self):
         self.name = "CLI-{}-{}".format(socket.gethostname(), os.getpid())
         network.onInitDevice("macroServer", "IPythonKernel", self.name, Hash())
+
+    def shutdown_kernel(self):
+        network.onKillDevice(self.name)
 
     def client(self):
         return Client(self.name)
@@ -155,6 +126,6 @@ class Client(InProcessKernelClient, util.SuperQObject,
         if self.alive:
             self.started_channels.emit()
 
-
     def start_channels(self):
+        # magic: skip InProcessKernelClient, does stuff we don't want
         super(InProcessKernelClient, self).start_channels(self)

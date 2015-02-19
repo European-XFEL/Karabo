@@ -86,9 +86,8 @@ class _Network(QObject):
         """
         Disconnect from server.
         """
-        self.endServerConnection()
-        # Update MainWindow toolbar
         self.signalServerConnectionChanged.emit(False)
+        self.endServerConnection()
 
 
     def startServerConnection(self, username, password, provider, hostname, port):
