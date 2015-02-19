@@ -89,18 +89,18 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
-    def getProjectSaveName(self):
+    def getProjectSaveName(self, title="Save project", action="Save"):
         """
         Returns a tuple containing the filepath, project name and the location
         (e.g. CLOUD, LOCAL).
         """
-        self.projectDialog = ProjectSaveDialog()
+        self.projectDialog = ProjectSaveDialog(title, action)
         if self.projectDialog.exec_() == QDialog.Rejected:
             self.projectDialog = None
             return (None, None, None)
         
         projectName = self.projectDialog.filename
-        filePath = globals.KARABO_PROJECT_FOLDER
+        filePath = self.projectDialog.filepath
         location = self.projectDialog.location
         
         return filePath, projectName, location
@@ -123,18 +123,16 @@ class ProjectTreeView(QTreeView):
 
 
     def projectNew(self):
-        filePath, projectName, location = self.getProjectSaveName()
+        filePath, projectName, location = self.getProjectSaveName("New project", "New")
         if (filePath is None) and (projectName is None) and (location is None):
             return
         
         fileName = os.path.join(filePath, projectName)
         
         # Save project to local file system
-        self.model().projectNew(fileName, \
-                        ProjectAccess.LOCAL if location == ProjectDialog.LOCAL \
-                                            else ProjectAccess.CLOUD)
+        self.model().projectNew(fileName, location)
         
-        if location == ProjectDialog.CLOUD:
+        if location == ProjectAccess.CLOUD:
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
             Network().onNewProject(projectName, data)
@@ -147,11 +145,11 @@ class ProjectTreeView(QTreeView):
             self.projectDialog = None
             return
         
-        if self.projectDialog.location == ProjectDialog.CLOUD:
+        if self.projectDialog.location == ProjectAccess.CLOUD:
             Network().onLoadProject(self.projectDialog.filename)
-        elif self.projectDialog.location == ProjectDialog.LOCAL:
+        elif self.projectDialog.location == ProjectAccess.LOCAL:
             self.model().projectOpen(self.projectDialog.filepath, \
-                                     ProjectAccess.LOCAL)
+                                     self.projectDialog.location)
 
 
     def projectSave(self):
@@ -181,7 +179,7 @@ class ProjectTreeView(QTreeView):
                 # Send save project to cloud request to network
                 Network().onSaveProject(project.basename, data)
             if resultBtn == btnLocally:
-                self.model().projectSave()
+                self.projectSaveAs()
             elif resultBtn == btnAbort:
                 return False
         elif project.access == ProjectAccess.CLOUD_READONLY:
@@ -201,7 +199,7 @@ class ProjectTreeView(QTreeView):
                 self.projectSaveAs()
             if resultBtn == btnLocally:
                 project.access = ProjectAccess.LOCAL
-                self.model().projectSave()
+                self.projectSaveAs()
             elif resultBtn == btnAbort:
                 return False
         elif project.access == ProjectAccess.LOCAL:
@@ -218,14 +216,13 @@ class ProjectTreeView(QTreeView):
         # Get old project name
         oldProject = self.model().currentProject()
         oldProjectAccess = oldProject.access
-        if oldProjectAccess in (ProjectAccess.CLOUD, ProjectAccess.CLOUD_READONLY):
+        if oldProjectAccess == ProjectAccess.CLOUD:
             Network().onCloseProject(oldProject.basename)
 
         fileName = os.path.join(filePath, projectName)
-        project = self.model().projectSaveAs(fileName)
+        self.model().projectSaveAs(fileName, location)
         
-        if location == ProjectDialog.CLOUD:
-            project.access = ProjectAccess.CLOUD
+        if location == ProjectAccess.CLOUD:
             data = self.projectDataBytes(fileName)
             # Send save project to cloud request to network
             Network().onNewProject(projectName, data)
@@ -233,10 +230,12 @@ class ProjectTreeView(QTreeView):
 
     def writeProjectData(self, projectName, data):
         # Write cloud project to local file system
-        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, projectName)
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, Network().username, projectName)
         with open(filename, "wb") as out:
             out.write(data)
         out.close()
+        
+        return filename
 
 
     def mouseDoubleClickEvent(self, event):
@@ -495,8 +494,8 @@ class ProjectTreeView(QTreeView):
 
 
     def onProjectLoaded(self, name, metaData, data):
-        # Write cloud project to local file system
-        self.writeProjectData(name, data)
+        # Write cloud project to local file system (WARN: overwrites existing file)
+        filename = self.writeProjectData(name, data)
         
         checkedOut = metaData.get("checkedOut")
         self.model().projectOpen(filename, ProjectAccess.CLOUD_READONLY \
@@ -505,20 +504,20 @@ class ProjectTreeView(QTreeView):
 
     def onProjectSaved(self, name, success, data):
         if success:
-            text = "Project <b>{}</b> saved successfully.".format(name)
+            text = "Project {} saved successfully.".format(name)
             # Write cloud project to local file system
             self.writeProjectData(name, data)
         else:
-            text = "Project <b>{}</b> could not be saved properly.".format(name)
+            text = "Project {} could not be saved properly.".format(name)
         #MessageBox.showInformation(text, "Project saved")
-        print(text)
 
 
-    def onProjectClosed(self, name, success):
+    def onProjectClosed(self, name, success, data):
         if success:
-            text = "Project <b>{}</b> closed successfully.".format(name)
+            text = "Project {} closed successfully.".format(name)
+            # Write cloud project to local file system
+            self.writeProjectData(name, data)
         else:
-            text = "Project <b>{}</b> could not be closed properly.".format(name)
+            text = "Project {} could not be closed properly.".format(name)
         #MessageBox.showInformation(text, "Project closed")
-        print(text)
 

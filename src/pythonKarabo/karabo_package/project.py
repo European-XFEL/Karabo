@@ -25,8 +25,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 class ProjectAccess(Enum):
     """ These states describes the access to a project. """
-    LOCAL = 0 # read and write access
-    CLOUD = 1 # read and write access
+    CLOUD = 0 # read and write access
+    LOCAL = 1 # read and write access
     CLOUD_READONLY = 2 # readonly access
 
 
@@ -56,7 +56,7 @@ class Project(object):
         self.version = 1
         self.filename = filename
         self.uuid = str(uuid4())
-        self.access = None # LOCAL, CLOUD, CLOUD_READONLY
+        self.access = ProjectAccess.LOCAL # LOCAL, CLOUD, CLOUD_READONLY
 
         # List of devices
         self.devices = []

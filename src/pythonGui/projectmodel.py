@@ -188,7 +188,7 @@ class ProjectModel(QStandardItemModel):
         font.setBold(True)
         projectItem.setFont(font)
         projectItem.setIcon({ProjectAccess.LOCAL: icons.folder, \
-                             ProjectAccess.CLOUD: icons.folder, \
+                             ProjectAccess.CLOUD: icons.folderCloud, \
                              ProjectAccess.CLOUD_READONLY: icons.lock} \
                              .get(project.access, icons.folder))
         projectItem.setToolTip(project.filename)
@@ -252,7 +252,7 @@ class ProjectModel(QStandardItemModel):
         font.setBold(True)
         item.setFont(font)
         item.setIcon({ProjectAccess.LOCAL: icons.folder, \
-                      ProjectAccess.CLOUD: icons.folder, \
+                      ProjectAccess.CLOUD: icons.folderCloud, \
                       ProjectAccess.CLOUD_READONLY: icons.lock} \
                         .get(project.access, icons.folder))
 
@@ -816,7 +816,7 @@ class ProjectModel(QStandardItemModel):
         return project
 
 
-    def projectSaveAs(self, filename, project=None):
+    def projectSaveAs(self, filename, access, project=None):
         """
         This function saves the \project into the file \filename.
 
@@ -826,6 +826,7 @@ class ProjectModel(QStandardItemModel):
             project = self.currentProject()
 
         project.filename = filename
+        project.access = access
         project.zip()
         self.onProjectModified(project)
         
