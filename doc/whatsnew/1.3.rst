@@ -1,0 +1,7 @@
+****************************
+  What's New in Karabo 1.3
+****************************
+
+This chapter explains the new features in Karabo 1.3. The final release of 
+Karabo 1.3 is scheduled for March 2015. 
+
