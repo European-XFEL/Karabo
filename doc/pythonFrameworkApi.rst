@@ -1,4 +1,0 @@
-Karabo Framework API - Python
-=============================
-
-
