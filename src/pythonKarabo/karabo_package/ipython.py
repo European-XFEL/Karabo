@@ -6,6 +6,7 @@ from IPython.kernel import channels
 
 from karabo.python_device import Device
 from karabo.hashtypes import VectorChar
+from karabo.signalslot import coslot
 
 
 class ChannelMixin(object):
@@ -58,3 +59,9 @@ class IPythonKernel(Device):
         self.client.iopub_channel.device = self
         self.client.stdin_channel.device = self
         self.client.start_channels()
+
+    @coslot
+    def slotKillDevice(self):
+        yield from self._ss.loop.run_in_executor(None,
+                                                 self.manager.shutdown_kernel)
+        yield from super().slotKillDevice()
