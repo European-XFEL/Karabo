@@ -3,7 +3,7 @@ import threading
 
 from karabo import KaraboError, String
 from karabo.hash import Hash
-from karabo.signalslot import Proxy
+from karabo.signalslot import Proxy, SignalSlotable
 from karabo.python_device import Device
 
 
