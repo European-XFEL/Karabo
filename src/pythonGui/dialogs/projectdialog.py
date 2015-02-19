@@ -9,6 +9,8 @@ __all__ = ["ProjectSaveDialog", "ProjectLoadDialog"]
 
 import globals
 import icons
+from karabo.project import ProjectAccess
+from messagebox import MessageBox
 import network
 
 from PyQt4 import uic
@@ -23,8 +25,6 @@ import datetime
 
 class ProjectDialog(QDialog):
 
-    CLOUD = 0
-    LOCAL = 1
 
     def __init__(self):
         QDialog.__init__(self)
@@ -77,19 +77,18 @@ class ProjectDialog(QDialog):
 
 
     @property
-    def filepath(self):
-        """
-        This property describes the filepath including the project suffix.
-        """
-        if self.location == ProjectDialog.CLOUD:
-            return self.filename
-        elif self.location == ProjectDialog.LOCAL:
-            return self.fileSystemModel.filePath(self.twLocal.currentIndex())
+    def basename(self):
+        f = self.leFilename.text()
+        splitted = f.split(".")
+        print("splitted", splitted)
+        return splitted[0]
 
 
     @property
     def location(self):
-        return self.cbSaveTo.currentIndex()
+        return ProjectAccess.LOCAL \
+               if self.cbSaveTo.currentIndex() == ProjectAccess.LOCAL.value \
+               else ProjectAccess.CLOUD
 
 
     def fillCloudProjects(self, projects):
@@ -120,7 +119,7 @@ class ProjectDialog(QDialog):
             self.twProjects.addTopLevelItem(item)
         
         if self.swSaveTo.currentIndex() == 2:
-            self.swSaveTo.setCurrentIndex(ProjectDialog.CLOUD)
+            self.swSaveTo.setCurrentIndex(ProjectAccess.CLOUD.value)
         
         if not self.leFilename.isEnabled():
             self.leFilename.setEnabled(True)
@@ -146,24 +145,44 @@ class ProjectDialog(QDialog):
 class ProjectSaveDialog(ProjectDialog):
 
 
-    def __init__(self):
+    def __init__(self, title="Save project", btnText="Save"):
         ProjectDialog.__init__(self)
         
-        self.setWindowTitle("Save project")
-        self.buttonBox.button(QDialogButtonBox.Ok).setText("Save")
+        self.setWindowTitle(title)
+        self.buttonBox.button(QDialogButtonBox.Ok).setText(btnText)
         self.buttonBox.accepted.connect(self.onSaved)
 
         self.twProjects.itemDoubleClicked.connect(self.onSaved)
         self.twLocal.doubleClicked.connect(self.onSaved)
 
 
+    @property
+    def filepath(self):
+        """
+        This property describes the filepath including the project suffix.
+        """
+        if self.location == ProjectAccess.CLOUD:
+            path = os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            return path
+        elif self.location == ProjectAccess.LOCAL:
+            currentIndex = self.twLocal.currentIndex()
+            if self.fileSystemModel.isDir(currentIndex):
+                return self.fileSystemModel.filePath(currentIndex)
+            else:
+                return self.fileSystemModel.filePath(currentIndex.parent())
+
+
     def onSaved(self):
         # Check if filename is already existing
-        if self.cbSaveTo.currentIndex() == ProjectDialog.CLOUD:
+        if self.cbSaveTo.currentIndex() == ProjectAccess.CLOUD.value:
             for i in range(self.twProjects.topLevelItemCount()):
                 item = self.twProjects.topLevelItem(i)
-                if item.text(0) == self.filename:
+                print("onSaved", item.text(0), self.basename)
+                if item.text(0) == self.basename:
                     checkedOut = item.data(0, Qt.UserRole)
+                    print('checkedOut', checkedOut)
                     if checkedOut:
                         # Project is locked
                         QMessageBox.warning(None, 'Project already checked out',
@@ -180,7 +199,11 @@ class ProjectSaveDialog(ProjectDialog):
                     if reply == QMessageBox.No:
                         return
                     break
-        elif self.cbSaveTo.currentIndex() == ProjectDialog.LOCAL:
+        elif self.cbSaveTo.currentIndex() == ProjectAccess.LOCAL.value:
+            if not self.leFilename.text():
+                MessageBox.showInformation("Please set a project name.")
+                return
+            
             if self.fileSystemModel.isDir(self.twLocal.currentIndex()):
                 fi = self.fileSystemModel.fileInfo(self.twLocal.currentIndex())
             else:
@@ -212,4 +235,18 @@ class ProjectLoadDialog(ProjectDialog):
         
         self.twProjects.itemDoubleClicked.connect(self.accept)
         self.twLocal.doubleClicked.connect(self.accept)
+
+
+    @property
+    def filepath(self):
+        """
+        This property describes the filepath including the project suffix.
+        """
+        if self.location == ProjectAccess.CLOUD:
+            path = os.path.join(globals.KARABO_PROJECT_FOLDER, network.Network().username)
+            if not os.path.exists(path):
+                os.mkdir(path)
+            return path
+        elif self.location == ProjectAccess.LOCAL:
+            return self.fileSystemModel.filePath(self.twLocal.currentIndex())
 

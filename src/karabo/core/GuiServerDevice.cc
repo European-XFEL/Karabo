@@ -668,19 +668,23 @@ namespace karabo {
                 string projectName = info.get<string > ("name");
                 
                 request("Karabo_ProjectManager", "slotCloseProject", userName, projectName)
-                   .receiveAsync<string, bool >(boost::bind(&karabo::core::GuiServerDevice::projectClosed, this, channel, _1, _2));
+                   .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectClosed, this, channel, _1, _2, _3));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onCloseProject(): " << e.userFriendlyMsg();
             }        
         }
 
 
-        void GuiServerDevice::projectClosed(karabo::net::Channel::Pointer channel, const std::string& projectName, bool success) {
+        void GuiServerDevice::projectClosed(karabo::net::Channel::Pointer channel,
+                                            const std::string& projectName,
+                                            bool success,
+                                            const std::vector<char>& data) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "projectClosed " << projectName;
                 Hash h("type", "projectClosed");
                 h.set("name", projectName);
                 h.set("success", success);
+                h.set("data", data);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
                 channel->write(h); // send back to requestor
