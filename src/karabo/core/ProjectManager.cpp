@@ -76,10 +76,13 @@ namespace karabo {
 
         \param[in] projectName Name of the project.
         \param[in] metaData    Hash including the new meta data of the project.
+        \param[in,out] newData Vector of char is filled with concated data.
          
         \return \true, if updating successful, otherwise \false.
         */
-        bool ProjectManager::updateProjectFile(const std::string& projectName, karabo::util::Hash& metaData) {
+        bool ProjectManager::updateProjectFile(const std::string& projectName,
+                                               karabo::util::Hash& metaData,
+                                               std::vector<char>& newData) {
             KARABO_LOG_DEBUG << "updateProjectFile " << projectName;
             
             string filename = get<string>("directory") + "/" + projectName;
@@ -112,7 +115,6 @@ namespace karabo {
                 
                 projectFile.close();
                 
-                vector<char> newData;
                 return saveProject(projectName, metaData, data, newData);
             }
             return false;
@@ -159,7 +161,11 @@ namespace karabo {
             return result1.good() && result2.good();
         }
 
-        
+        /**
+         This registered slot parses the project directory and answers back to
+         the registered callback function (availableProjects) in the
+         GuiServerDevice sending a Hash with all project (meta) data.
+        */
         void ProjectManager::slotGetAvailableProjects() {
             KARABO_LOG_DEBUG << "slotGetAvailableProjects";
             
@@ -207,7 +213,21 @@ namespace karabo {
             reply(projects);
         }
         
-        void ProjectManager::slotNewProject(const std::string& author, const std::string& projectName, const std::vector<char>& data) {
+
+        /**
+         This registered slot creates the meta data for the new project and
+         stores the project including meta data and binary data in one file to
+         the project directory.
+         The new binary data of the project is send back to the registered
+         callback function (projectNew) GuiServerDevice.
+         
+         \param[in] author      Author of the project.
+         \param[in] projectName Name of the project.
+         \param[in] data        Binary data of the project.
+        */
+        void ProjectManager::slotNewProject(const std::string& author,
+                                            const std::string& projectName,
+                                            const std::vector<char>& data) {
             KARABO_LOG_DEBUG << "slotNewProject " << projectName;
             
             Hash metaData;
@@ -220,22 +240,32 @@ namespace karabo {
             metaData.set("lastModified", timestamp);
             // checkedOut needs to be false to be send back to the author
             metaData.set("checkedOut", false);
-            metaData.set("checkedOutBy", author);
+            metaData.set("checkedOutBy", "");
             
             // Store and send back to author
             vector<char> newData;
             bool success = saveProject(projectName, metaData, data, newData);
             reply(projectName, success, newData);
             
-            // Set true to finally store for others
+            // Set true to finally store the project for others
             metaData.set("checkedOut", true);
+            metaData.set("checkedOutBy", author);
             m_projectMetaData[projectName] = metaData;
             
             saveProject(projectName, metaData, data, newData);
         }
-        
-        
-        void ProjectManager::slotLoadProject(const std::string& userName, const std::string& projectName) {
+
+
+        /**
+         This registered slot loads the requested project from the project directory
+         and sends it back to the registered callback function (projectLoaded)
+         in the GuiServerDevice.
+         
+         \param[in] userName    User who loads the project.
+         \param[in] projectName Name of the project.
+        */
+        void ProjectManager::slotLoadProject(const std::string& userName,
+                                             const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotLoadProject " << projectName;
             
             std::vector<char> data;
@@ -250,16 +280,31 @@ namespace karabo {
                 metaData.set("checkedOutBy", userName);
                 
                 // Update project file with new meta data
-                updateProjectFile(projectName, metaData);
+                vector<char> newData;
+                updateProjectFile(projectName, metaData, newData);
             }
         }
 
-
-        void ProjectManager::slotSaveProject(const std::string& userName, const std::string& projectName, const std::vector<char>& data) {
+        /**
+         This registered slot saves the requested project to the project directory
+         and sends back to the registered callback function (projectSaved)
+         in the GuiServerDevice.
+         
+         \param[in] userName    User who loads the project.
+         \param[in] projectName Name of the project.
+         \param[in] data        Binary data of the project.
+        */
+        void ProjectManager::slotSaveProject(const std::string& userName,
+                                             const std::string& projectName,
+                                             const std::vector<char>& data) {
             KARABO_LOG_DEBUG << "slotSaveProject " << userName << " " << projectName;
             
             // Update meta data and save project
             Hash &metaData = m_projectMetaData[projectName];
+            
+            if (userName == metaData.get<string >("checkedOutBy") && metaData.get<bool >("checkedOut")) {
+                metaData.set("checkedOut", false);
+            }
             
             karabo::util::Epochstamp epoch;
             double timestamp = epoch.toTimestamp();
@@ -268,25 +313,37 @@ namespace karabo {
             vector<char> newData;
             bool success = saveProject(projectName, metaData, data, newData);
             reply(projectName, success, newData);
+            
+            metaData.set("checkedOut", true);
+            // Update project file with new meta data
+            saveProject(projectName, metaData, data, newData);
         }
 
 
-        void ProjectManager::slotCloseProject(const std::string& userName, const std::string& projectName) {
+        /**
+         This registered slot changes the meta data of the project to the project
+         directory and sends the changes back to the registered callback function
+         (projectClosed) in the GuiServerDevice.
+         
+         \param[in] userName    User who loads the project.
+         \param[in] projectName Name of the project.
+        */
+        void ProjectManager::slotCloseProject(const std::string& userName,
+                                              const std::string& projectName) {
             KARABO_LOG_DEBUG << "slotCloseProject " << userName << " " << projectName;
             
             Hash &metaData = m_projectMetaData[projectName];
             KARABO_LOG_DEBUG << metaData;
             
-            bool success = True;
-            if (userName == metaData.get<string >("checkedOutBy")) {
-                metaData.set("checkedOut", false);
-                metaData.set("checkedOutBy", "");
+            if (userName != metaData.get<string >("checkedOutBy")) return;
+            
+            metaData.set("checkedOut", false);
+            metaData.set("checkedOutBy", "");
 
-                // Update project file with new meta data
-                success = updateProjectFile(projectName, metaData);
-            }
-                        
-            reply(projectName, success);
+            vector<char> newData;
+            // Update project file with new meta data
+            bool success = updateProjectFile(projectName, metaData, newData);
+            reply(projectName, success, newData);
         }
 
     }
