@@ -15,12 +15,19 @@ __all__ = ["Project", "ProjectConfiguration", "BaseDevice", "BaseDeviceGroup"]
 
 from karabo.hash import XMLParser, XMLWriter
 
+from enum import Enum
 import hashlib
 import os.path
 import urllib.request, urllib.error, urllib.parse
 import urllib.parse
 from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
+
+class ProjectAccess(Enum):
+    """ These states describes the access to a project. """
+    CLOUD = 0 # read and write access
+    LOCAL = 1 # read and write access
+    CLOUD_READONLY = 2 # readonly access
 
 
 class Project(object):
@@ -49,6 +56,7 @@ class Project(object):
         self.version = 1
         self.filename = filename
         self.uuid = str(uuid4())
+        self.access = ProjectAccess.LOCAL # LOCAL, CLOUD, CLOUD_READONLY
 
         # List of devices
         self.devices = []
@@ -61,11 +69,26 @@ class Project(object):
 
     @property
     def name(self):
+        """
+        This function returns the name of the project excluding the suffix.
+        """
         r = os.path.basename(self.filename)
         if r.endswith(".krb"):
             return r[:-4]
         else:
             return r
+
+
+    @property
+    def basename(self):
+        """
+        This function returns the name of the project including the suffix.
+        """
+        b = os.path.basename(self.filename)
+        if not b.endswith(".krb"):
+            return "{}.krb".format(b)
+        else:
+            return b
 
 
     def addDevice(self, device):
