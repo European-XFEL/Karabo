@@ -1,4 +1,3 @@
-
 #############################################################################
 # Author: <kerstin.weger@xfel.eu>
 # Created on February 4, 2014
@@ -15,16 +14,19 @@ __all__ = ["ProjectTreeView"]
 
 import globals
 
+from dialogs.projectdialog import ProjectDialog, ProjectSaveDialog, ProjectLoadDialog
 from scene import Scene
 from manager import Manager
+from messagebox import MessageBox
+from network import Network
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from projectmodel import ProjectModel
 from util import getSaveFileName
 
-from karabo.project import Project, ProjectConfiguration
+from karabo.project import Project, ProjectAccess, ProjectConfiguration
 
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QFileDialog, 
+from PyQt4.QtGui import (QAbstractItemView, QAction, QCursor, QDialog,
                          QMenu, QMessageBox, QTreeView)
 import os.path
 
@@ -44,6 +46,8 @@ class ProjectTreeView(QTreeView):
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.onCustomContextMenuRequested)
+        
+        self.projectDialog = None
 
 
     def currentIndex(self):
@@ -85,33 +89,156 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
-    def projectNew(self):
-        fn = getSaveFileName("New Project", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
+    def getProjectSaveName(self, saveTo=ProjectAccess.CLOUD, title="Save project", action="Save"):
+        """
+        Returns a tuple containing the filepath, project name and the location
+        (e.g. CLOUD, LOCAL).
+        """
+        self.projectDialog = ProjectSaveDialog(saveTo, title, action)
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
+            return (None, None, None)
+        
+        projectName = self.projectDialog.filename
+        filePath = self.projectDialog.filepath
+        location = self.projectDialog.location
+        
+        return filePath, projectName, location
 
-        if fn:
-            self.model().projectNew(fn)
+
+    def projectDataBytes(self, fileName):
+        """
+        This function returns the bytes of the file with the given \fileName,
+        else None is returned.
+        """
+        # Read new project bytes
+        data = None
+        with open(fileName, 'rb') as input:
+            data = input.read()
+        
+        input.close()
+        self.projectDialog = None
+        
+        return data
+
+
+    def projectNew(self):
+        filePath, projectName, location = self.getProjectSaveName(title="New project", action="New")
+        if (filePath is None) and (projectName is None) and (location is None):
+            return
+        
+        fileName = os.path.join(filePath, projectName)
+        
+        # Save project to local file system
+        self.model().projectNew(fileName, location)
+        
+        if location == ProjectAccess.CLOUD:
+            data = self.projectDataBytes(fileName)
+            # Send save project to cloud request to network
+            Network().onNewProject(projectName, data)
 
 
     def projectOpen(self):
-        filename = QFileDialog.getOpenFileName(
-            None, "Open project", globals.KARABO_PROJECT_FOLDER,
-            "Karabo Projects (*.krb)")
-
-        if len(filename) < 1:
+        self.projectDialog = ProjectLoadDialog()
+        
+        if self.projectDialog.exec_() == QDialog.Rejected:
+            self.projectDialog = None
             return
-        self.model().projectOpen(filename)
+        
+        if self.projectDialog.location == ProjectAccess.CLOUD:
+            Network().onLoadProject(self.projectDialog.filename)
+        elif self.projectDialog.location == ProjectAccess.LOCAL:
+            self.model().projectOpen(self.projectDialog.filepath, \
+                                     self.projectDialog.location)
 
 
     def projectSave(self):
-        self.model().projectSave()
+        """
+        The current project is saved to either the CLOUD or LOCALLY.
+        \return True, if project saved successfully, else False
+        """
+        project = self.model().currentProject()
+        # Only save, if modifications where made
+        if not project.isModified:
+            return False
+        
+        if project.access == ProjectAccess.CLOUD:
+            msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
+                       "The project \"<b>{}</b>\" has been checked out.<br><br>"
+                       "Do you want to check it in again or save it locally?".format(project.name))
+
+            btnCheckIn = msgBox.addButton("Check in", QMessageBox.YesRole)
+            btnLocally = msgBox.addButton("Save locally", QMessageBox.NoRole)
+            btnAbort = msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            
+            msgBox.exec_()
+            resultBtn = msgBox.clickedButton()
+            if resultBtn == btnCheckIn:
+                self.model().projectSave()
+                data = self.projectDataBytes(project.filename)
+                # Send save project to cloud request to network
+                Network().onSaveProject(project.basename, data)
+            if resultBtn == btnLocally:
+                project.access = ProjectAccess.LOCAL
+                self.projectSaveAs(project.access)
+            elif resultBtn == btnAbort:
+                return False
+        elif project.access == ProjectAccess.CLOUD_READONLY:
+            msgBox = QMessageBox(QMessageBox.Question, "Save project", 
+                       "The project \"<b>{}</b>\" has been loaded as read only.<br><br>"
+                       "Do you want to check it in using a different name<br>"
+                       "or save it locally?".format(project.name))
+
+            btnCheckIn = msgBox.addButton("Check in", QMessageBox.YesRole)
+            btnLocally = msgBox.addButton("Save locally", QMessageBox.NoRole)
+            btnAbort = msgBox.addButton("Cancel", QMessageBox.RejectRole)
+            
+            msgBox.exec_()
+            resultBtn = msgBox.clickedButton()
+            if resultBtn == btnCheckIn:
+                project.access = ProjectAccess.CLOUD
+                self.projectSaveAs()
+            if resultBtn == btnLocally:
+                project.access = ProjectAccess.LOCAL
+                self.projectSaveAs(project.access)
+            elif resultBtn == btnAbort:
+                return False
+        elif project.access == ProjectAccess.LOCAL:
+            self.model().projectSave()
+        
+        return True
 
 
-    def projectSaveAs(self):
-        fn = getSaveFileName("Save Project As", globals.KARABO_PROJECT_FOLDER,
-                             "Karabo Projects (*.krb)", "krb")
-        if fn:
-            self.model().projectSaveAs(fn)
+    def projectSaveAs(self, saveTo=ProjectAccess.CLOUD):
+        filePath, projectName, location = self.getProjectSaveName(saveTo=saveTo)
+        if (filePath is None) and (projectName is None) and (location is None):
+            return
+
+        # Get old project name
+        oldProject = self.model().currentProject()
+        oldProjectAccess = oldProject.access
+        # Only checking back in project on server by closing it when new project
+        # is saved to cloud as well
+        if oldProjectAccess == ProjectAccess.CLOUD and location == ProjectAccess.CLOUD:
+            Network().onCloseProject(oldProject.basename)
+
+        fileName = os.path.join(filePath, projectName)
+        self.model().projectSaveAs(fileName, location)
+        
+        if location == ProjectAccess.CLOUD:
+            data = self.projectDataBytes(fileName)
+            # Send save project to cloud request to network
+            Network().onNewProject(projectName, data)
+
+
+    def writeProjectData(self, projectName, data):
+        # Write cloud project to local file system
+        filename = os.path.join(globals.KARABO_PROJECT_FOLDER, Network().username, projectName)
+        with open(filename, "wb") as out:
+            out.write(data)
+        out.close()
+        
+        return filename
 
 
     def mouseDoubleClickEvent(self, event):
@@ -152,7 +279,7 @@ class ProjectTreeView(QTreeView):
             acCloseProject = QAction(text, self)
             acCloseProject.setStatusTip(text)
             acCloseProject.setToolTip(text)
-            acCloseProject.triggered.connect(self.model().onCloseProject)
+            acCloseProject.triggered.connect(self.onCloseProject)
 
             menu.addAction(acCloseProject)
         elif selectedType is Category:
@@ -334,4 +461,66 @@ class ProjectTreeView(QTreeView):
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
             device.project.shutdown(device, nbSelected == 1)
+
+
+    def onCloseProject(self):
+        """
+        This slot closes the currently selected projects and updates the model.
+        """
+        selectedIndexes = self.selectedIndexes()
+        projects = []
+        for index in selectedIndexes:
+            project = index.data(ProjectModel.ITEM_OBJECT)
+            if project.isModified:
+                success = self.projectSave()
+                if not success:
+                    continue
+            else:
+                reply = QMessageBox.question(None, 'Close project',
+                    "Do you really want to close the project \"<b>{}</b>\"?"
+                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.No:
+                    continue
+            
+            projects.append(project)
+        
+        for project in projects:
+            self.model().projectClose(project)
+
+
+    def onAvailableProjects(self, projects):
+        if self.projectDialog is None:
+            return
+        
+        self.projectDialog.fillCloudProjects(projects)
+
+
+    def onProjectLoaded(self, name, metaData, data):
+        # Write cloud project to local file system (WARN: overwrites existing file)
+        filename = self.writeProjectData(name, data)
+        
+        checkedOut = metaData.get("checkedOut")
+        self.model().projectOpen(filename, ProjectAccess.CLOUD_READONLY \
+                                         if checkedOut else ProjectAccess.CLOUD)
+
+
+    def onProjectSaved(self, name, success, data):
+        if success:
+            text = "Project {} saved successfully.".format(name)
+            # Write cloud project to local file system
+            self.writeProjectData(name, data)
+        else:
+            text = "Project {} could not be saved properly.".format(name)
+        #MessageBox.showInformation(text, "Project saved")
+
+
+    def onProjectClosed(self, name, success, data):
+        if success:
+            text = "Project {} closed successfully.".format(name)
+            # Write cloud project to local file system
+            self.writeProjectData(name, data)
+        else:
+            text = "Project {} could not be closed properly.".format(name)
+        #MessageBox.showInformation(text, "Project closed")
 
