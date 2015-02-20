@@ -59,9 +59,8 @@ namespace karabo {
         GuiServerDevice::GuiServerDevice(const Hash& input) : Device<OkErrorFsm>(input) {
            
             GLOBAL_SLOT4(slotNotification, string /*type*/, string /*shortMsg*/, string /*detailedMsg*/, string /*deviceId*/)
-            //SLOT3(slotPropertyHistory, string /*deviceId*/, string /*property*/, vector<Hash> /*data*/)
             KARABO_SLOT(slotLoggerMap, Hash /*loggerMap*/)
-                    
+
             Hash config;
             config.set("port", input.get<unsigned int>("port"));
             config.set("type", "server");
@@ -146,7 +145,7 @@ namespace karabo {
 
         void GuiServerDevice::registerConnect(const karabo::net::Channel::Pointer & channel) {
             boost::mutex::scoped_lock lock(m_channelMutex);
-            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances            
+            m_channels[channel] = std::set<std::string > (); // maps channel to visible instances
         }
 
 
@@ -183,13 +182,17 @@ namespace karabo {
 			onSubscribeNetwork(channel, info);
                     } else if (type == "error") {
                         onGuiError(info);
+                    } else if (type == "getAvailableProjects") {
+                        onGetAvailableProjects(channel);
+                    } else if (type == "newProject") {
+                        onNewProject(channel, info);
                     } else if (type == "loadProject") {
                         onLoadProject(channel, info);
                     } else if (type == "saveProject") {
                         onSaveProject(channel, info);
                     } else if (type == "closeProject") {
                         onCloseProject(channel, info);
-                    }                    
+                    }
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
                 }
@@ -436,50 +439,22 @@ namespace karabo {
             }
         }
         
-        void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";                
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectAvailable", args);
+        void GuiServerDevice::propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+            try {
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history";
+
+                Hash h("type", "propertyHistory", "deviceId", deviceId,
+                       "property", property, "data", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h);  // send back to requestor
+                
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in propertyHistory " << e.userFriendlyMsg();
             }
         }
         
-        void GuiServerDevice::slotProjectLoaded(const karabo::util::Hash& info) {            
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectLoaded";
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in slotProjectLoaded: " << e.userFriendlyMsg();
-            }                      
-        }
-
-        
-        void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-             try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
-                //requestNoWait("Karabo_ProjectManager", "slotLoadProject", "", "slotProjectSaved", args);
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
-            }            
-        }
-        
-        void GuiServerDevice::slotProjectSaved(const karabo::util::Hash& hash) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "slotProjectSaved";
-                
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in slotProjectSaved(): " << e.userFriendlyMsg();
-            }           
-        }
-
-        
-        
-        void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
-
-        }
-
-
 	void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
 	    try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork";
@@ -553,22 +528,169 @@ namespace karabo {
 		KARABO_LOG_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
 	    }
 	}
-
-
-        void GuiServerDevice::propertyHistory(karabo::net::Channel::Pointer channel, const std::string& deviceId, const std::string& property, const std::vector<karabo::util::Hash>& data) {
+        
+        
+        void GuiServerDevice::onGetAvailableProjects(karabo::net::Channel::Pointer channel) {
             try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onGetAvailableProjects";
+                
+                request("Karabo_ProjectManager", "slotGetAvailableProjects")
+                   .receiveAsync<karabo::util::Hash >(boost::bind(&karabo::core::GuiServerDevice::availableProjects, this, channel, _1));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onGetAvailableProjects(): " << e.userFriendlyMsg();
+            }
+        }
 
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting property history";
-
-                Hash h("type", "propertyHistory", "deviceId", deviceId,
-                       "property", property, "data", data);
+        
+        void GuiServerDevice::availableProjects(karabo::net::Channel::Pointer channel, const karabo::util::Hash& projects) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "Broadcasting available projects";
+                KARABO_LOG_FRAMEWORK_DEBUG << projects;
+                Hash h("type", "availableProjects", "availableProjects", projects);
 
                 boost::mutex::scoped_lock lock(m_channelMutex);
-                channel->write(h);  // send back to requestor
-                
+                channel->write(h); // send back to requestor
             } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in slotPropertyHistory " << e.userFriendlyMsg();
+                KARABO_LOG_ERROR << "Problem in availableProjects " << e.userFriendlyMsg();
             }
+        }
+        
+        
+        void GuiServerDevice::onNewProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onNewProject";
+                
+                string author = info.get<string > ("author");
+                string projectName = info.get<string > ("name");
+                vector<char> data = info.get<vector<char> > ("data");
+                
+                request("Karabo_ProjectManager", "slotNewProject", author, projectName, data)
+                   .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectNew, this, channel, _1, _2, _3));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onNewProject(): " << e.userFriendlyMsg();
+            }
+        }
+        
+        
+        void GuiServerDevice::projectNew(karabo::net::Channel::Pointer channel,
+                                         const std::string& projectName,
+                                         bool success,
+                                         const std::vector<char>& data) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "projectNew " << projectName;
+
+                Hash h("type", "projectNew");
+                h.set("name", projectName);
+                h.set("success", success);
+                h.set("data", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h); // send back to requestor
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in projectNew(): " << e.userFriendlyMsg();
+            }  
+        }
+        
+        
+        void GuiServerDevice::onLoadProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onLoadProject";
+                
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                request("Karabo_ProjectManager", "slotLoadProject", userName, projectName)
+                   .receiveAsync<string, Hash, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectLoaded, this, channel, _1, _2, _3));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onLoadProject(): " << e.userFriendlyMsg();
+            }
+        }
+        
+        void GuiServerDevice::projectLoaded(karabo::net::Channel::Pointer channel, const std::string& projectName,
+                                            const karabo::util::Hash& metaData, const std::vector<char>& data) {         
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "projectLoaded";
+                
+                Hash h("type", "projectLoaded");
+                h.set("name", projectName);
+                h.set("metaData", metaData);
+                h.set("buffer", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h); // send back to requestor
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in projectLoaded: " << e.userFriendlyMsg();
+            }
+        }
+
+        
+        void GuiServerDevice::onSaveProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onSaveProject";
+                
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                vector<char> data = info.get<vector<char> > ("data");
+                
+                request("Karabo_ProjectManager", "slotSaveProject", userName, projectName, data)
+                   .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectSaved, this, channel, _1, _2, _3));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onSaveProject(): " << e.userFriendlyMsg();
+            }
+        }
+
+        
+        void GuiServerDevice::projectSaved(karabo::net::Channel::Pointer channel,
+                                           const std::string& projectName,
+                                           bool success,
+                                           const std::vector<char>& data) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "projectSaved " << projectName;
+
+                Hash h("type", "projectSaved");
+                h.set("name", projectName);
+                h.set("success", success);
+                h.set("data", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h); // send back to requestor
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in projectSaved(): " << e.userFriendlyMsg();
+            }            
+        }
+
+        
+        void GuiServerDevice::onCloseProject(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "onCloseProject";
+
+                string userName = info.get<string > ("user");
+                string projectName = info.get<string > ("name");
+                
+                request("Karabo_ProjectManager", "slotCloseProject", userName, projectName)
+                   .receiveAsync<string, bool, vector<char> >(boost::bind(&karabo::core::GuiServerDevice::projectClosed, this, channel, _1, _2, _3));
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in onCloseProject(): " << e.userFriendlyMsg();
+            }        
+        }
+
+
+        void GuiServerDevice::projectClosed(karabo::net::Channel::Pointer channel,
+                                            const std::string& projectName,
+                                            bool success,
+                                            const std::vector<char>& data) {
+            try {
+                KARABO_LOG_FRAMEWORK_DEBUG << "projectClosed " << projectName;
+                Hash h("type", "projectClosed");
+                h.set("name", projectName);
+                h.set("success", success);
+                h.set("data", data);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h); // send back to requestor
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in projectClosed(): " << e.userFriendlyMsg();
+            }     
         }
 
 
