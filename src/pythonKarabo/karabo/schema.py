@@ -78,7 +78,6 @@ class Configurable(Registry, metaclass=MetaConfigurable):
         cls._subclasses = { }
         for b in cls.__bases__:
             if issubclass(b, Configurable):
-                assert name not in b._subclasses  # is that necessary?
                 b._subclasses[name] = cls
 
     @classmethod
