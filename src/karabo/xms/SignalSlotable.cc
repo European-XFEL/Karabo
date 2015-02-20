@@ -113,7 +113,7 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable() : m_brokerLatency(0LL), m_processingLatency(0LL) {
+        SignalSlotable::SignalSlotable() : m_brokerLatency(0LL), m_processingLatency(0LL), m_randPing(rand() + 2) {
         }
 
 
@@ -165,7 +165,6 @@ namespace karabo {
 
             Hash instanceInfo;
             try {
-		m_randPing = rand() + 1;
                 request("*", "slotPing", instanceId, m_randPing, false).timeout(100).receive(instanceInfo);
                 //cout << "isValidInstanceId got answer: " << instanceInfo << endl;
             } catch (const karabo::util::TimeoutException&) {
@@ -267,6 +266,7 @@ namespace karabo {
             }
 
             KARABO_LOG_FRAMEWORK_INFO << "Instance starts up with id: " << m_instanceId;
+            m_randPing = 0;
             call("*", "slotInstanceNew", m_instanceId, m_instanceInfo);
 
             m_eventLoopThreads.join_all(); // Join all event dispatching threads
@@ -742,8 +742,7 @@ namespace karabo {
             string hostname;
             Hash instanceInfo;
             try {
-		m_randPing = rand() + 1;
-                this->request("*", "slotPing", instanceId, m_randPing, false).timeout(200).receive(instanceInfo);
+                this->request("*", "slotPing", instanceId, 1, false).timeout(200).receive(instanceInfo);
             } catch (const karabo::util::TimeoutException&) {
                 return std::make_pair(false, hostname);
             }
@@ -754,12 +753,10 @@ namespace karabo {
         void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool trackPingedInstance) {
 
             if (rand) {
-		if (rand == m_randPing) cout << "ignoring" << rand << instanceId;
                 if (instanceId == m_instanceId && rand != m_randPing) {
                     reply(m_instanceInfo);
                 }
-            } else {
-                //cout << "Got pinged from " << instanceId << endl;
+            } else if (!m_randPing) {
                 call(instanceId, "slotPingAnswer", m_instanceId, m_instanceInfo);
             }
 
