@@ -179,9 +179,9 @@ class ProjectSaveDialog(ProjectDialog):
                 item = self.twProjects.topLevelItem(i)
                 if item.text(0) == self.basename:
                     checkedOut = item.data(0, Qt.UserRole)
-                    print('checkedOut', checkedOut)
-                    if checkedOut:
-                        # Project is locked
+                    checkedOutBy = item.text(2)
+                    if checkedOut and (checkedOutBy != network.Network().username):
+                        # Project is locked - can be overwritten by same user
                         QMessageBox.warning(None, 'Project already checked out',
                             "Another project with the same name \"<b>{}</b>\"<br>"
                             "is already checked out by the user \"<b>{}</b>\".<br><br>"
