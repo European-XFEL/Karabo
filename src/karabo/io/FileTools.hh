@@ -60,12 +60,10 @@ namespace karabo {
             }
         }
 
-        inline bool saveToFile(const std::vector<char>& buffer, const std::string& filename) {
+        inline void saveToFile(const std::vector<char>& buffer, const std::string& filename) {
             std::ofstream file(filename.c_str(), std::ios::binary);
-            std::ostream& result = file.write(const_cast<const char*> (&buffer[0]), buffer.size());
+            file.write(const_cast<const char*> (&buffer[0]), buffer.size());
             file.close();
-            
-            return result.good();
         }
 
         inline void loadFromFile(std::vector<char>& buffer, const std::string& filename) {
