@@ -176,7 +176,7 @@ cp -rf $DISTDIR/$CONF/$PLATFORM/bin $PACKAGEDIR/
 cd ../pythonKarabo
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo_package/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
+cp -rf $DISTDIR/$OS/lib/pythonKarabo/karabo/. $PYKARABO/  	# <-- 'karabo' package: __init__.py, ...                      
 
 # pythonGui
 if [ $BUNDLE_OPTION = "NoGui" ]; then
