@@ -89,12 +89,12 @@ class ProjectTreeView(QTreeView):
         return self.model().closeAllProjects()
 
 
-    def getProjectSaveName(self, title="Save project", action="Save"):
+    def getProjectSaveName(self, saveTo=ProjectAccess.CLOUD, title="Save project", action="Save"):
         """
         Returns a tuple containing the filepath, project name and the location
         (e.g. CLOUD, LOCAL).
         """
-        self.projectDialog = ProjectSaveDialog(title, action)
+        self.projectDialog = ProjectSaveDialog(saveTo, title, action)
         if self.projectDialog.exec_() == QDialog.Rejected:
             self.projectDialog = None
             return (None, None, None)
@@ -123,7 +123,7 @@ class ProjectTreeView(QTreeView):
 
 
     def projectNew(self):
-        filePath, projectName, location = self.getProjectSaveName("New project", "New")
+        filePath, projectName, location = self.getProjectSaveName(title="New project", action="New")
         if (filePath is None) and (projectName is None) and (location is None):
             return
         
@@ -179,7 +179,8 @@ class ProjectTreeView(QTreeView):
                 # Send save project to cloud request to network
                 Network().onSaveProject(project.basename, data)
             if resultBtn == btnLocally:
-                self.projectSaveAs()
+                project.access = ProjectAccess.LOCAL
+                self.projectSaveAs(project.access)
             elif resultBtn == btnAbort:
                 return False
         elif project.access == ProjectAccess.CLOUD_READONLY:
@@ -199,7 +200,7 @@ class ProjectTreeView(QTreeView):
                 self.projectSaveAs()
             if resultBtn == btnLocally:
                 project.access = ProjectAccess.LOCAL
-                self.projectSaveAs()
+                self.projectSaveAs(project.access)
             elif resultBtn == btnAbort:
                 return False
         elif project.access == ProjectAccess.LOCAL:
@@ -208,8 +209,8 @@ class ProjectTreeView(QTreeView):
         return True
 
 
-    def projectSaveAs(self):
-        filePath, projectName, location = self.getProjectSaveName()
+    def projectSaveAs(self, saveTo=ProjectAccess.CLOUD):
+        filePath, projectName, location = self.getProjectSaveName(saveTo=saveTo)
         if (filePath is None) and (projectName is None) and (location is None):
             return
 

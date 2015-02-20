@@ -69,18 +69,13 @@ class ProjectDialog(QDialog):
         """
         This property describes the filename including the project suffix.
         """
-        f = self.leFilename.text()
-        splitted = f.split(".")
-        if len(splitted) > 1:
-            f = splitted[0]
-        return "{}.krb".format(f)
+        return "{}.krb".format(self.basename)
 
 
     @property
     def basename(self):
         f = self.leFilename.text()
         splitted = f.split(".")
-        print("splitted", splitted)
         return splitted[0]
 
 
@@ -145,8 +140,13 @@ class ProjectDialog(QDialog):
 class ProjectSaveDialog(ProjectDialog):
 
 
-    def __init__(self, title="Save project", btnText="Save"):
+    def __init__(self, saveTo=ProjectAccess.CLOUD, title="Save project", btnText="Save"):
         ProjectDialog.__init__(self)
+        
+        print("saveTo", saveTo)
+        if saveTo == ProjectAccess.LOCAL:
+            print("set cbSaveto")
+            self.cbSaveTo.setCurrentIndex(ProjectAccess.LOCAL.value)
         
         self.setWindowTitle(title)
         self.buttonBox.button(QDialogButtonBox.Ok).setText(btnText)
@@ -179,7 +179,6 @@ class ProjectSaveDialog(ProjectDialog):
         if self.cbSaveTo.currentIndex() == ProjectAccess.CLOUD.value:
             for i in range(self.twProjects.topLevelItemCount()):
                 item = self.twProjects.topLevelItem(i)
-                print("onSaved", item.text(0), self.basename)
                 if item.text(0) == self.basename:
                     checkedOut = item.data(0, Qt.UserRole)
                     print('checkedOut', checkedOut)
