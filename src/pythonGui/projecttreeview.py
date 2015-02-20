@@ -217,7 +217,9 @@ class ProjectTreeView(QTreeView):
         # Get old project name
         oldProject = self.model().currentProject()
         oldProjectAccess = oldProject.access
-        if oldProjectAccess == ProjectAccess.CLOUD:
+        # Only checking back in project on server by closing it when new project
+        # is saved to cloud as well
+        if oldProjectAccess == ProjectAccess.CLOUD and location == ProjectAccess.CLOUD:
             Network().onCloseProject(oldProject.basename)
 
         fileName = os.path.join(filePath, projectName)
