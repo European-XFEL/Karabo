@@ -212,15 +212,22 @@ class SignalSlotable(Configurable):
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
 
         self.__devices = {}
-        self.__randPing = 0
+        self.__randPing = random.randint(2, 0x7fffffff)
         self._tasks = set()
 
     @slot
     def slotPing(self, instanceId, rand, track=None):
+        """return our info to show that we are here"""
+        # during startup, we ping possible other instances with our name,
+        # no response means that we are alone. To avoid that we respond
+        # ourselves, we set self.__randPing to a random value and pass it
+        # as the parameter rand, so that we now we pinged ourselves.
+        # Once we know we are alone, self.__randPing is set to 0 meaning
+        # that we start responding to other pings.
         if rand:
             if instanceId == self.deviceId and self.__randPing != rand:
                 return self.info
-        else:
+        elif self.__randPing == 0:
             self._ss.emit("call", {instanceId: ["slotPingAnswer"]},
                           self.deviceId, self.info)
         if track and instanceId != self.deviceId:
@@ -259,7 +266,6 @@ class SignalSlotable(Configurable):
     def run_async(self):
         self.async(self._ss.consume(self))
         try:
-            self.__randPing = random.randint(1, 0x7fffffff)
             yield from wait_for(
                 self.call("*", "slotPing", self.deviceId,
                           self.__randPing, False), timeout=3)
@@ -268,6 +274,7 @@ class SignalSlotable(Configurable):
         except TimeoutError:
             pass
         self.run()
+        self.__randPing = 0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
         self.async(self.heartbeats())
