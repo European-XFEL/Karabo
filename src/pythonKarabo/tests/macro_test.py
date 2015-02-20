@@ -199,8 +199,8 @@ def setUpModule():
     loop = EventLoop()
     set_event_loop(loop)
 
-    local = Local({"_deviceId_": "local"})
-    remote = Remote({"_deviceId_": "remote"})
+    local = Local(dict(_deviceId_="local", project="test", module="test"))
+    remote = Remote(dict(_deviceId_="remote"))
     loop.run_until_complete(gather(local.run_async(), remote.run_async()))
 
 
