@@ -37,6 +37,7 @@ from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
 
 import karabo.metamacro  # add a default Device MetaMacro
+import karabo.ipython
 
 
 @KARABO_CONFIGURATION_BASE_CLASS

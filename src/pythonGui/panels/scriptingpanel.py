@@ -11,29 +11,13 @@
 
 __all__ = ["ScriptingPanel"]
 
-import atexit
-
 from ipythonwidget import IPythonWidget
+from network import network
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
 class ScriptingPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-
-
     def __init__(self):
         super(ScriptingPanel, self).__init__()
         
@@ -61,13 +45,19 @@ class ScriptingPanel(QWidget):
     def onStartIPython(self, isChecked):
         if self.console:
             self.mainLayout.removeWidget(self.console)
-        
-        # Create IPython widget
-        self.console = IPythonWidget(customBanner="Welcome to the embedded ipython console.\n")
-        self.console.executeCommand("from karabo import *\n", True)
-        self.console.printText("The karabo device client is available.")       
-
+        self.console = IPythonWidget(
+            banner="Welcome to the embedded ipython console.\n")
         self.mainLayout.addWidget(self.console)
+        network.signalServerConnectionChanged.connect(self.console.stop)
+        network.signalServerConnectionChanged.connect(self.stopIPython)
+        self.console.exit_requested.connect(self.stopIPython)
+
+
+    def stopIPython(self):
+        if self.console:
+            self.mainLayout.removeWidget(self.console)
+            self.console.setParent(None)
+            self.console = None
 
 
     # virtual function
