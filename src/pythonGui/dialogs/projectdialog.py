@@ -143,9 +143,7 @@ class ProjectSaveDialog(ProjectDialog):
     def __init__(self, saveTo=ProjectAccess.CLOUD, title="Save project", btnText="Save"):
         ProjectDialog.__init__(self)
         
-        print("saveTo", saveTo)
         if saveTo == ProjectAccess.LOCAL:
-            print("set cbSaveto")
             self.cbSaveTo.setCurrentIndex(ProjectAccess.LOCAL.value)
         
         self.setWindowTitle(title)
