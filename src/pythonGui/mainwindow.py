@@ -12,7 +12,6 @@
 __all__ = ["MainWindow"]
 
 import os.path
-from sys import platform
 import icons
 
 from docktabwindow import DockTabWindow
@@ -182,7 +181,7 @@ class MainWindow(QMainWindow):
         middleArea = QSplitter(Qt.Vertical, mainSplitter)
         self.middleTab = DockTabWindow("Custom view", middleArea)
         self.placeholderPanel = None
-        self._showStartUpPage(True)
+        self._showStartUpPage(False)
         middleArea.setStretchFactor(0, 6)
 
         self.loggingPanel = LoggingPanel()
@@ -211,23 +210,24 @@ class MainWindow(QMainWindow):
         self.signalQuitApplication.emit()
 
 
-    def _showStartUpPage(self, show, loadDefaultProject=True):
-        if show:
-            # Close all projects
-            # If this was successful, you can be sure that _showStartUpPage
-            # was already called - no need to do it again ;)
-            projectsToClose = self.projectPanel.closeAllProjects()
-            # if no projects available to close, placeholderPanel was not yet set
-            if not projectsToClose and self.placeholderPanel is None:
-                # Add startup page
-                self._createPlaceholderPanel()
-        else:
-            # Remove startup page
-            self.middleTab.removeDockableTab(self.placeholderPanel)
-            self.placeholderPanel = None
-            if loadDefaultProject:
-                # Setup default project
-                self.projectPanel.setupDefaultProject()
+    def _showStartUpPage(self, enableProjectPanel):
+        # Close all projects
+        # If this was successful, you can be sure that this function
+        # was already called - no need to do it again ;)
+        projectsToClose = self.projectPanel.closeAllProjects()
+        # if no projects available to close, placeholderPanel was not yet set
+        if not projectsToClose and self.placeholderPanel is None:
+            # Add startup page
+            self._createPlaceholderPanel()
+
+        # Enable or disable toolbar of project panel
+        self.projectPanel.enableToolBar(enableProjectPanel)
+
+
+    def _hideStartUpPage(self):
+        # Remove startup page
+        self.middleTab.removeDockableTab(self.placeholderPanel)
+        self.placeholderPanel = None
 
 
     def _createPlaceholderPanel(self):
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
     def onAddScene(self, scene):
         if self.middleTab.count() == 1 and self.placeholderPanel is not None:
             # Remove start up page
-            self._showStartUpPage(False, False)
+            self._hideStartUpPage()
         
         # Check whether scene is already open
         for i in range(self.middleTab.count()):
@@ -363,9 +363,9 @@ class MainWindow(QMainWindow):
         self.acServerConnect.blockSignals(False)
         
         self.tbAccessLevel.setEnabled(isConnected)
-
+        
         # Adapt middle panel
-        self._showStartUpPage(not isConnected)
+        self._showStartUpPage(isConnected)
 
 
     def onUpdateAccessLevel(self):
