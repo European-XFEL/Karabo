@@ -12,7 +12,7 @@ from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo import Slot, Integer
 
-def async_test(f):
+def async_tst(f):
     @wraps(f)
     def wrapper(self):
         loop.run_until_complete(loop.run_in_executor(None, f, self))
@@ -124,21 +124,21 @@ class Local(Macro):
 
 
 class Tests(TestCase):
-    @async_test
+    @async_tst
     def test_execute(self):
         remote.done = False
         local.letitdo()
         time.sleep(0.1)
         self.assertTrue(remote.done)
 
-    @async_test
+    @async_tst
     def test_change(self):
         remote.value = 7
         local.letitchange()
         time.sleep(0.1)
         self.assertEqual(remote.value, 3)
 
-    @async_test
+    @async_tst
     def test_disconnect(self):
         local.disconnect()
         self.assertEqual(local.f1, -1)
@@ -147,7 +147,7 @@ class Tests(TestCase):
         self.assertEqual(local.f4, 29)
 
 
-    @async_test
+    @async_tst
     def test_set(self):
         remote.value = 7
         local.letset()
@@ -156,26 +156,26 @@ class Tests(TestCase):
         self.assertEqual(local.f3, 6)
 
 
-    @async_test
+    @async_tst
     def test_generic(self):
         remote.value = 7
         local.dogeneric()
         time.sleep(0.1)
         self.assertEqual(remote.value, 22)
 
-    @async_test
+    @async_tst
     def test_other(self):
         local.other()
         time.sleep(0.1)
         self.assertEqual(remote.value, 102)
 
-    @async_test
+    @async_tst
     def test_setwait(self):
         local.setwait()
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
-    @async_test
+    @async_tst
     def test_setnowait(self):
         remote.value = 0
         remote.counter = 0
@@ -186,7 +186,7 @@ class Tests(TestCase):
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
-    @async_test
+    @async_tst
     def test_waituntil(self):
         local.waituntil()
         self.assertEqual(local.f1, 0)
