@@ -160,7 +160,7 @@ class ProjectTreeView(QTreeView):
         project = self.model().currentProject()
         # Only save, if modifications where made
         if not project.isModified:
-            return False
+            return
         
         if project.access == ProjectAccess.CLOUD:
             msgBox = QMessageBox(QMessageBox.Question, "Check in project", 
@@ -182,7 +182,7 @@ class ProjectTreeView(QTreeView):
                 project.access = ProjectAccess.LOCAL
                 self.projectSaveAs(project.access)
             elif resultBtn == btnAbort:
-                return False
+                return
         elif project.access == ProjectAccess.CLOUD_READONLY:
             msgBox = QMessageBox(QMessageBox.Question, "Save project", 
                        "The project \"<b>{}</b>\" has been loaded as read only.<br><br>"
@@ -202,11 +202,9 @@ class ProjectTreeView(QTreeView):
                 project.access = ProjectAccess.LOCAL
                 self.projectSaveAs(project.access)
             elif resultBtn == btnAbort:
-                return False
+                return
         elif project.access == ProjectAccess.LOCAL:
             self.model().projectSave()
-        
-        return True
 
 
     def projectSaveAs(self, saveTo=ProjectAccess.CLOUD):
@@ -471,18 +469,17 @@ class ProjectTreeView(QTreeView):
         projects = []
         for index in selectedIndexes:
             project = index.data(ProjectModel.ITEM_OBJECT)
-            if project.isModified:
-                success = self.projectSave()
-                if not success:
-                    continue
-            else:
-                reply = QMessageBox.question(None, 'Close project',
-                    "Do you really want to close the project \"<b>{}</b>\"?"
-                    .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
-                if reply == QMessageBox.No:
-                    continue
+            reply = QMessageBox.question(None, 'Close project',
+                "Do you really want to close the project \"<b>{}</b>\"?"
+                .format(project.name), QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                continue
             
+            if project.isModified:
+                self.projectSave()
+
             projects.append(project)
         
         for project in projects:
