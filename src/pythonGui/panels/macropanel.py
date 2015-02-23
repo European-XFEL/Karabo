@@ -11,23 +11,22 @@ __all__ = ["MacroPanel"]
 
 
 import icons
-from network import Network
+from manager import getDevice
 from toolbar import ToolBar
 from util import getSaveFileName
 
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
-from PyQt4.QtGui import (QWidget, QTextEdit, QHBoxLayout, QMessageBox)
+from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QHBoxLayout, QMessageBox,
+                         QSplitter, QTextCursor)
 
 from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
-class MacroPanel(QWidget):
+class MacroPanel(QSplitter):
     signalSave = pyqtSignal(str, str)
 
 
     def __init__(self, macro):
-        super(MacroPanel, self).__init__()
-        layout = QHBoxLayout(self)
-        self.setLayout(layout)
+        QSplitter.__init__(self, Qt.Vertical)
         self.edit = QTextEdit(self)
         self.edit.installEventFilter(self)
         self.edit.setAcceptRichText(False)
@@ -37,9 +36,16 @@ class MacroPanel(QWidget):
         except KeyError:
             pass
         PygmentsHighlighter(self.edit.document())
-        layout.addWidget(self.edit)
+        self.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
+        self.console = QPlainTextEdit(self)
+        self.console.setReadOnly(True)
+        self.console.setStyleSheet("font-family: monospace")
+        self.addWidget(self.console)
         self.macro = macro
+        self.already_connected = set()
+        for k in macro.instances:
+            self.connect(k)
 
 
     def setupToolBars(self, tb, parent):
@@ -53,6 +59,18 @@ class MacroPanel(QWidget):
                 self.edit.textCursor().insertText("    ")
                 return True
         return False
+
+
+    def connect(self, macro):
+        if macro not in self.already_connected:
+            getDevice(macro).boxvalue.printno.signalUpdateComponent.connect(
+                self.appendConsole)
+            self.already_connected.add(macro)
+
+
+    def appendConsole(self, box, value, ts):
+        self.console.moveCursor(QTextCursor.End)
+        self.console.insertPlainText(box.configuration.value.print)
 
 
     def onRun(self):

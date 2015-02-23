@@ -1,8 +1,9 @@
 from asyncio import async, get_event_loop, set_event_loop, TimeoutError
 import threading
 
-from karabo import KaraboError, String
+from karabo import KaraboError, String, Integer
 from karabo.hash import Hash
+from karabo.output import threadData
 from karabo.signalslot import Proxy, SignalSlotable
 from karabo.python_device import Device
 
@@ -27,6 +28,15 @@ class Macro(Device):
         displayedName="Module",
         description="The name of the module in the project")
 
+    print = String(
+        displayedName="Printed output",
+        description="The output printed to the console")
+
+    printno = Integer(
+        displayedName="Number of prints",
+        description="The number of prints issued so far",
+        defaultValue=0)
+
     @classmethod
     def register(cls, name, dict):
         Macro._subclasses = {}
@@ -39,14 +49,10 @@ class Macro(Device):
         self.info["project"] = self.project
         self.info["module"] = self.module
 
-    def run(self):
-        super().run()
-        self._loop = get_event_loop()
-
     def _sync(self, coro, timeout=-1):
         lock = threading.Lock()
         lock.acquire()
-        future = async(coro, loop=self._loop)
+        future = self.async(coro)
         future.add_done_callback(lambda _: lock.release())
         lock.acquire(timeout=timeout)
         if future.done():
@@ -55,8 +61,15 @@ class Macro(Device):
             future.cancel()
             raise TimeoutError
 
+    def _executeSlot(self, slot):
+        threadData.instance = self
+        try:
+            slot(self)
+        finally:
+            threadData.instance = None
+
     def executeSlot(self, slot):
-        return self._loop.run_in_executor(None, slot, self)
+        return get_event_loop().run_in_executor(None, self._executeSlot, slot)
 
     def getDevice(self, deviceId):
         return self._sync(SignalSlotable.getDevice(self, deviceId,
@@ -72,3 +85,7 @@ class Macro(Device):
     def waitUntil(self, condition, timeout=-1):
         return self._sync(SignalSlotable.waitUntil(self, condition),
                           timeout=timeout)
+
+    def printToConsole(self, data):
+        self.print = data
+        self.printno += 1

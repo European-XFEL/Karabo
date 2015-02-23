@@ -35,6 +35,7 @@ from karabo.logger import Logger
 from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
+from karabo.output import StdOut
 
 import karabo.metamacro  # add a default Device MetaMacro
 import karabo.ipython
@@ -150,6 +151,7 @@ class DeviceServer(SignalSlotable):
         super().run()
         self.notifyNewDeviceAction()
         self.async(self.scanPlugins())
+        sys.stdout = StdOut(sys.stdout)
 
 
     def _generateDefaultServerId(self):
