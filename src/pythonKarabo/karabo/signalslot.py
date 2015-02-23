@@ -300,7 +300,6 @@ class SignalSlotable(Configurable):
 
     @coslot
     def slotKillDevice(self):
-        self.log.INFO("Device is going down as instructed")
         for t in self._tasks:
             t.cancel()
         yield from wait(self._tasks)
