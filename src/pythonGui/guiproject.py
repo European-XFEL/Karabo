@@ -655,6 +655,8 @@ class Macro(object):
         self.name = name
         self.macros = {}
         self.editor = None
+        self.instanceId = "Macro-{}-{}".format(self.project.name, self.name)
+        self.instances = []
 
 
     def run(self):
@@ -665,8 +667,7 @@ class Macro(object):
         h = Hash("code", code,
                  "project", self.project.name,
                  "module", self.name)
-        network.onInitDevice("macroServer", "MetaMacro", "Macro-{}-{}".format(
-            self.project.name, self.name), h)
+        network.onInitDevice("macroServer", "MetaMacro", self.instanceId, h)
 
 
     def load(self):

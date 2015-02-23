@@ -400,12 +400,16 @@ class ProjectModel(QStandardItemModel):
                 module = item.child(r)
                 ml = macros.get((project.name, module.text()), [])
                 module.removeRows(0, module.rowCount())
+                module.data(ProjectModel.ITEM_OBJECT).instances = ml
                 for k in ml:
                     childItem = QStandardItem(hash[k, "classId"])
                     childItem.setData(manager.getDevice(k),
                                       ProjectModel.ITEM_OBJECT)
                     childItem.setEditable(False)
                     module.appendRow(childItem)
+                    editor = module.data(ProjectModel.ITEM_OBJECT).editor
+                    if editor is not None:
+                        editor.connect(k)
 
     def updateDeviceIcon(self, item, device):
         """
@@ -821,6 +825,7 @@ class ProjectModel(QStandardItemModel):
             self.signalAddScene.emit(scene)
         
         self.selectObject(project)
+        self.updateMacros()
         return project
 
 
