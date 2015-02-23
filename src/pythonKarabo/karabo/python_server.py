@@ -148,6 +148,7 @@ class DeviceServer(SignalSlotable):
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
         super().run()
+        self.notifyNewDeviceAction()
         self.async(self.scanPlugins())
 
 
