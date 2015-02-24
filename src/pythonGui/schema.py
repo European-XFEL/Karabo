@@ -356,30 +356,6 @@ class Vector(hashtypes.Vector, metaclass=Monkey):
     classAlias = 'List'
 
 
-class Slot(hashtypes.Slot, metaclass=Monkey):
-    classAlias = "Command"
-
-    def item(self, treeWidget, parent, box, isClass):
-        item = CommandTreeWidgetItem(self.displayedName, box, treeWidget,
-                                     parent)
-        item.displayText = self.displayedName
-        item.requiredAccessLevel = self.requiredAccessLevel
-        item.onStateChanged()
-        return item
-
-
-    def dummyCast(self, box):
-        return
-
-
-    def setDefault(self, box):
-        return
-
-
-    def execute(self, box):
-        async(self.method.__get__(box.configuration.value, None)())
-
-
 class Object(object):
     def __init__(self, box):
         self.__box__ = box
