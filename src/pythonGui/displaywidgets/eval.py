@@ -12,7 +12,7 @@ class Evaluator(DisplayWidget):
     alias = "Evaluate Expression"
 
     globals = { }
-    exec "from numpy import *" in globals
+    exec("from numpy import *", globals)
 
     def __init__(self, box, parent):
         super(Evaluator, self).__init__(box)
