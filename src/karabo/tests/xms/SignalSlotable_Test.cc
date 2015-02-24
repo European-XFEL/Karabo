@@ -44,7 +44,8 @@ void SignalSlotable_Test::testMethod() {
 
         try {
 
-            connection = BrokerConnection::create("Jms", Hash("serializationType", "text", "hostname", "localhost"));
+            //connection = BrokerConnection::create("Jms", Hash("serializationType", "text", "hostname", "localhost"));
+            connection = BrokerConnection::create("Jms", Hash("serializationType", "text"));
 
         } catch (const Exception& e) {
             clog << "Could not establish connection to broker, skipping SignalSlotable_Test" << endl;
