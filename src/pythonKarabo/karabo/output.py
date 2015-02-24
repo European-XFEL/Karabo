@@ -5,7 +5,7 @@ import threading
 
 threadData = threading.local()
 
-class StdOut:
+class KaraboStream:
     """ An output stream that redirects output to the karabo network """
     def __init__(self, base):
         self.base = base
