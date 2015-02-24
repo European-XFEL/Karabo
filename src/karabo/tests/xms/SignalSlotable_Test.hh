@@ -35,7 +35,7 @@ public:
     }
 
     void slotA(const std::string& msg) {
-        //std::cout << "\nslotA" << std::endl;
+        //std::cout << "\nslotA : msg=" << msg << ", m_messageCount=" << m_messageCount << std::endl;
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
@@ -46,28 +46,32 @@ public:
         SIGNAL2("signalB", int, karabo::util::Hash);
         connectN("signalB", "slotB");
         emit("signalB", 42, karabo::util::Hash("Was.soll.das.bedeuten", "nix"));
+        //std::cout << "\nslotA END" << ", m_messageCount=" << m_messageCount << std::endl;
     }
 
     void slotB(int someInteger, const karabo::util::Hash& someConfig) {
-        //std::cout << "\nslotB" << std::endl;
+        //std::cout << "\nslotB : someInteger = " << someInteger << ", and someConfig ...\n" << someConfig << ", m_messageCount=" << m_messageCount << std::endl;
         boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (someInteger != 42) m_allOk = false;
         if (someConfig.get<std::string>("Was.soll.das.bedeuten") != "nix") m_allOk = false;
+        //std::cout << "\nslotB END" << ", m_messageCount=" << m_messageCount << std::endl;
     }
     
     void slotC(int number) {
-        //std::cout << "\nslotC" << std::endl;
+        //std::cout << "\nslotC : number = " << number << ", m_messageCount=" << m_messageCount << std::endl;
          boost::mutex::scoped_lock lock(m_mutex);
         // Assertions
         m_messageCount++;
         if (number != 1) m_allOk = false;
         reply(number + number);
+        //std::cout << "\nslotC END" << ", m_messageCount=" << m_messageCount << std::endl;
     }
     
     bool wasOk() {
-        return ((m_messageCount == 4) && m_allOk);
+        //std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
+        return ((m_messageCount == 5) && m_allOk);
     }
     
     void myCallBack(const std::string& someData, int number) {
