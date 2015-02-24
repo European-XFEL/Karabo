@@ -148,7 +148,7 @@ class DisplayTrendline(DisplayWidget):
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
-        self.plot.setAxisTitle(QwtPlot.yLeft, 'Value')
+        self.plot.setAxisTitle(QwtPlot.yLeft, box.descriptor.displayedName)
 
         # have a 1 s timeout to request data, thus avoid
         # frequent re-loading while scaling
