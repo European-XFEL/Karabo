@@ -13,7 +13,8 @@ class MetaMacro(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
         Macro.subclasses = []
-        exec(self.code, globals())
+        code = compile(self.code, self.module, "exec")
+        exec(code, globals())
         self.classes = Macro.subclasses
         Macro.subclasses = []
 
