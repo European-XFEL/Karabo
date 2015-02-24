@@ -84,15 +84,8 @@ class PenDialog(QDialog):
     def setBrushWidgets(self):
         if self.brush is None:
             # Hide brush related widgets
-            item = self.formLayout.itemAt(8, QFormLayout.LabelRole)
-            item.widget().setVisible(False)
-            item = self.formLayout.itemAt(8, QFormLayout.FieldRole)
-            item.widget().setVisible(False)
-            
-            item = self.formLayout.itemAt(9, QFormLayout.LabelRole)
-            item.widget().setVisible(False)
-            item = self.formLayout.itemAt(9, QFormLayout.FieldRole)
-            item.widget().setVisible(False)
+            self.gbFill.setHidden(True)
+            self.adjustSize()
         else:
             if self.brush.style() == Qt.SolidPattern:
                 self.gbFill.setChecked(True)
