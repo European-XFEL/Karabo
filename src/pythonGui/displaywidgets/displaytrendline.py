@@ -4,8 +4,12 @@ __all__ = ["DisplayTrendline"]
 import time
 import datetime
 from bisect import bisect
+import pickle
+import base64
+from xml.etree.ElementTree import Element
 
-from manager import Manager
+from const import ns_karabo
+from manager import Manager, getDevice
 from widget import DisplayWidget
 
 from PyQt4.QtCore import Qt, QObject, QTimer, pyqtSlot
@@ -148,7 +152,6 @@ class DisplayTrendline(DisplayWidget):
         self.plot = self.dialog.get_plot()
         self.plot.set_antialiasing(True)
         self.plot.setAxisTitle(QwtPlot.xBottom, 'Time')
-        self.plot.setAxisTitle(QwtPlot.yLeft, box.descriptor.displayedName)
 
         # have a 1 s timeout to request data, thus avoid
         # frequent re-loading while scaling
@@ -181,8 +184,12 @@ class DisplayTrendline(DisplayWidget):
         self.addBox(box)
 
 
+    def typeChanged(self, box):
+        self.plot.setAxisTitle(QwtPlot.yLeft, box.descriptor.displayedName)
+
+
     def addBox(self, box):
-        curve = make.curve([ ], [ ], 'Random values', "r")
+        curve = make.curve([], [], box.key(), "r")
         self.curves[box] = Curve(box, curve, self.dialog)
         self.plot.add_item(curve)
         return True
@@ -231,3 +238,20 @@ class DisplayTrendline(DisplayWidget):
         t0, t1 = asd.lowerBound(), asd.upperBound()
         for v in self.curves.values():
             v.changeInterval(t0, t1)
+
+    def save(self, e):
+        for k, v in self.curves.items():
+            ee = Element(ns_karabo + "box")
+            ee.set("device", k.configuration.id)
+            ee.set("path", ".".join(k.path))
+            ee.text = base64.b64encode(pickle.dumps(v.curve)).decode("ascii")
+            e.append(ee)
+
+    def load(self, e):
+        for ee in e:
+            box = getDevice(ee.get("device")).getBox(ee.get("path").split("."))
+            curve = self.curves.get(box)
+            self.plot.del_item(curve.curve)
+            curve.curve = pickle.loads(base64.b64decode(ee.text))
+            self.plot.add_item(curve.curve)
+            curve.update()
