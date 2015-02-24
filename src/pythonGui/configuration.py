@@ -117,15 +117,16 @@ class Configuration(Box):
             self.status = "offline"
             return
 
-        try:
-            attrs = manager.Manager().systemHash["device"][self.id, ...]
-        except KeyError:
+        for k in ("device", "macro", "server"):
             try:
-                attrs = manager.Manager().systemHash["macro"][self.id, ...]
+                attrs = manager.Manager().systemHash[k][self.id, ...]
             except KeyError:
-                self.error = False
-                self.status = "offline"
-                return
+                continue
+            break
+        else:
+            self.error = False
+            self.status = "offline"
+            return
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
         error = attrs.get("status") == "error"
