@@ -85,7 +85,8 @@ class Device(SignalSlotable):
 
     def __init__(self, configuration):
         super(Device, self).__init__(configuration)
-        self.serverId = self._serverId_
+        if not hasattr(self, "serverId"):
+            self.serverId = self._serverId_
 
         # host & domain names
         self.hostname, _, self.domainname = socket.gethostname().partition('.')

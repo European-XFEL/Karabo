@@ -288,6 +288,7 @@ class SignalSlotable(Configurable):
         task = async(coro, loop=self._ss.loop)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
+        task.instance = self
         return task
 
     def executeSlot(self, slot):
