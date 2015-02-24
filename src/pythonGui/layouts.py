@@ -527,10 +527,6 @@ class ProxyWidget(QWidget):
                     event.globalPos(), None, self)
 
     def element(self):
-        # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
-        if not hasattr(self.widget, "save"):
-            return None
-        
         g = self.geometry()
         d = dict(x=g.x(), y=g.y(), width=g.width(), height=g.height())
         if g.x() == 0 and g.y() == 0 and g.width() == 100 and g.height() == 30:
@@ -540,6 +536,9 @@ class ProxyWidget(QWidget):
         if self.component is not None:
             self.component.save(ret)
         else:
+            # Added by KeWe in case this element should not be saved (e.g. WorkflowConnection)
+            if not hasattr(self.widget, "save"):
+                return None
             self.widget.save(ret)
         return ret
 
