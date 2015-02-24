@@ -30,7 +30,8 @@ class Macro(Device):
 
     print = String(
         displayedName="Printed output",
-        description="The output printed to the console")
+        description="The output printed to the console",
+        defaultValue="")
 
     printno = Integer(
         displayedName="Number of prints",

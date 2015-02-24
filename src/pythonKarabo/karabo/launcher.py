@@ -1,5 +1,6 @@
 from asyncio import (async, coroutine, CancelledError, get_event_loop,
-                     set_event_loop, create_subprocess_exec, wait_for, gather)
+                     set_event_loop, create_subprocess_exec, wait_for, gather,
+                     Task)
 import sys
 import os.path
 from importlib import import_module

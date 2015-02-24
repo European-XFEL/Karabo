@@ -46,6 +46,11 @@ class MacroPanel(QSplitter):
         self.already_connected = set()
         for k in macro.instances:
             self.connect(k)
+        ms = getDevice("macroServer")
+        ms.boxvalue.startingError.signalUpdateComponent.connect(
+            self.startingError)
+        ms.addVisible()
+        self.destroyed.connect(ms.removeVisible)
 
 
     def setupToolBars(self, tb, parent):
@@ -72,9 +77,16 @@ class MacroPanel(QSplitter):
         self.console.moveCursor(QTextCursor.End)
         self.console.insertPlainText(box.configuration.value.print)
 
+    def startingError(self, box, value, ts):
+        if (getDevice("macroServer").value.startingDevice ==
+                self.macro.instanceId):
+            self.console.moveCursor(QTextCursor.End)
+            self.console.insertPlainText(value)
 
     def onRun(self):
+        self.console.clear()
         try:
+            compile(self.edit.toPlainText(), self.macro.name, "exec")
             self.macro.run()
         except SyntaxError as e:
             if e.filename[7:-3] == self.macro.name:

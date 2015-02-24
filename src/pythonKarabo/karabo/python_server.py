@@ -26,7 +26,7 @@ karabo.api_version = 2
 
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.python_loader import PluginLoader
-from karabo.python_device import Device, SignalSlotable
+from karabo.python_device import Device
 from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
 from karabo.hashtypes import Schema, String, Int32
 from karabo import hashtypes
@@ -35,7 +35,7 @@ from karabo.logger import Logger
 from karabo.signalslot import (ConnectionType, Signal, slot, coslot)
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.eventloop import EventLoop
-from karabo.output import StdOut
+from karabo.output import KaraboStream
 
 import karabo.metamacro  # add a default Device MetaMacro
 import karabo.ipython
@@ -43,7 +43,7 @@ import karabo.ipython
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("DeviceServer", "1.0")
-class DeviceServer(SignalSlotable):
+class DeviceServer(Device):
     '''
     Device server serves as a launcher of python devices. It scans
     the 'plugins' directory for new plugins (python scripts) available
@@ -62,7 +62,7 @@ class DeviceServer(SignalSlotable):
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this server at all",
         assignment=Assignment.OPTIONAL,
-        defaultValue=AccessLevel.OBSERVER, options=[0, 1, 2, 3, 4],
+        defaultValue=AccessLevel.OBSERVER,
         requiredAccessLevel=AccessLevel.ADMIN,
         accessMode=AccessMode.RECONFIGURABLE)
 
@@ -71,6 +71,16 @@ class DeviceServer(SignalSlotable):
         description="Directory to search for plugins",
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
+
+    startingDevice = String(
+        displayedName="Starting Device",
+        description="The name of the device we are currently trying to start",
+        defaultValue="", accessMode=AccessMode.READONLY)
+
+    startingError = String(
+        displayedName="Errors of starting device",
+        description="The errors the currently starting device raised",
+        defaultValue="", accessMode=AccessMode.READONLY)
 
     log = Node(Logger,
                description="Logging settings",
@@ -92,7 +102,7 @@ class DeviceServer(SignalSlotable):
             with open(serverIdFileName, 'r') as fin:
                 p = XMLParser()
                 hash = p.read(fin.read())
-            if hasattr(self, "serverId"):
+            if self.serverId != "__none__":
                 saveToFile(Hash("DeviceServer.serverId", self.serverId),
                            serverIdFileName)
             elif 'DeviceServer.serverId' in hash:
@@ -103,7 +113,7 @@ class DeviceServer(SignalSlotable):
                 saveToFile(Hash("DeviceServer.serverId", m_serverId),
                            serverIdFileName)
         else: # No file
-            if not hasattr(self, "serverId"):
+            if self.serverId == "__none__":
                 self.serverId = self._generateDefaultServerId()
             saveToFile(Hash("DeviceServer.serverId", self.serverId),
                        serverIdFileName)
@@ -142,17 +152,20 @@ class DeviceServer(SignalSlotable):
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
         self._registerAndConnectSignalsAndSlots()
+        super().run()
+        self.notifyNewDeviceAction()
+        self.async(self.scanPlugins())
+        sys.stdout = KaraboStream(sys.stdout)
+        sys.stderr = KaraboStream(sys.stderr)
+
+    def initInfo(self):
+        super().initInfo()
         info = self.info
         info["type"] = "server"
         info["serverId"] = self.serverId
         info["version"] = self.__class__.__version__
         info["host"] = self.hostname
         info["visibility"] = self.visibility.value
-        super().run()
-        self.notifyNewDeviceAction()
-        self.async(self.scanPlugins())
-        sys.stdout = StdOut(sys.stdout)
-
 
     def _generateDefaultServerId(self):
         return self.hostname + "_Server_" + str(os.getpid())
@@ -195,12 +208,18 @@ class DeviceServer(SignalSlotable):
         pass
 
     @coroutine
-    def launch(self, cls, config):
+    def launch(self, cls, config, deviceId):
+        self.startingDevice = deviceId
+        self.startingError = ""
         try:
             yield from cls.launch(config)
         except Exception as e:
-            traceback.print_exc()
+            self.startingDevice = deviceId
+            self.startingError = traceback.format_exc()
             self.log.WARN("could not start device {}".format(cls))
+        finally:
+            self.startingDevice = ""
+            self.startingError = ""
 
     @slot
     def slotStartDevice(self, hash):
@@ -216,7 +235,8 @@ class DeviceServer(SignalSlotable):
         try:
             pluginDir = self.pluginLoader.pluginDirectory
             cls = Device.subclasses[classid]
-            self.deviceInstanceMap[deviceid] = async(self.launch(cls, config))
+            self.deviceInstanceMap[deviceid] = async(
+                self.launch(cls, config, deviceid))
             return (True, deviceid)
         except Exception as e:
             self.log.WARN("Wrong input configuration for class '{}': {}".
