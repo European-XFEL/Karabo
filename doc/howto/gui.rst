@@ -2,11 +2,29 @@
  How to use the graphical interface (GUI)
 ******************************************
 
-This chapter describes how to use Karabo's graphical interface.
+This chapter describes how to use Karabo's graphical interface which allows users to interact with devices for testing and debugging purposes. 
+
+Start up the GUI
+================
+
+After the Karabo GUI starts up the GUI needs to connect to the server first. This can be accomplished by pressing the "Connect to server"-button (just under the 'Edit'). Then the following Login-window as on the picture below appears:
+
+.. image:: images/gui_login.png
+
+You can log into the system as "observer", "user", "operator", "expert" oder "admin" depending on your expertise. If you want to login in with your KERBEROS username, you need to change the provider from "LOCAL" to "KEBEROS.
+
+Press the "Connect"-button in the Login-window and you will see the life "Navigation" showing all device-servers, plugins and device instances of the system.
+
+.. image:: images/gui_connected.png
+
+All panels of the GUI are dock-able and resizeable. The "Configurator" is an automatically generated, allowing to read and write the properties and to execute the commands of the selected device.
 
 
 Project handling
 ================
+
+For persisting device start up configurations, scenes (PowerPoint-like), configurations or macros you should create a project in the project panel.
+
 
 Creating a new project
 ----------------------

@@ -1,3 +1,3 @@
-What you should now about Karabo before starting anything
+What you should know about Karabo before starting anything
 =========================================================
 
