@@ -26,7 +26,8 @@ class ImageTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.image)
         self.classAlias = "Image View"
         
-        self.displayComponent = DisplayComponent("Image Element", box, self.treeWidget())
+        self.displayComponent = DisplayComponent("DisplayImageElement", box,
+                                                 self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
              

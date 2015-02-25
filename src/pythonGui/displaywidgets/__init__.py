@@ -12,4 +12,4 @@ __all__ = ["displaybitfield",
     "displayplot", "displayiconset", "displayimageelement", "displayimage",
     "displaylabel", # "displayimagestack",
     "displaylineedit", "displaytrendline", # "displaypycode"
-    "icons", "tauruslabel", "taurusplot", "eval", "xyplot"]
+    "icons", "eval", "xyplot"]

@@ -1,6 +1,8 @@
 from const import ns_karabo
 from widget import DisplayWidget
 
+from karabo.hashtypes import String
+
 from PyQt4.QtCore import pyqtSlot, QBuffer
 from PyQt4.QtGui import QAction, QFileDialog, QInputDialog, QMessageBox
 from PyQt4.QtSvg import QSvgWidget
@@ -36,7 +38,7 @@ class Element(ElementTree.Element):
 
 
 class DisplayIconset(DisplayWidget):
-    category = "State"
+    category = String
     alias = "Iconset"
 
     def __init__(self, box, parent):

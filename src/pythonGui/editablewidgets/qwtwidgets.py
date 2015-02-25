@@ -8,11 +8,13 @@
 from util import SignalBlocker
 from widget import EditableWidget
 
+from karabo.hashtypes import Number, Integer
+
 from PyQt4.Qwt5.Qwt import QwtSlider, QwtKnob
 
 
 class QwtWidget(EditableWidget):
-    category = "Digit"
+    category = Number, Integer
 
     def __init__(self, box, parent):
         super(QwtWidget, self).__init__(box)

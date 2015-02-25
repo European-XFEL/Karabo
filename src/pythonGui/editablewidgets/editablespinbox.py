@@ -24,12 +24,14 @@ __all__ = ["EditableSpinBox"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
+from karabo.hashtypes import Integer
+
 from PyQt4.QtCore import QEvent
 from PyQt4.QtGui import QSpinBox
 
 
 class EditableSpinBox(EditableWidget, DisplayWidget):
-    category = "Digit"
+    category = Integer
     alias = "Integer Spin Box"
 
     def __init__(self, box, parent):

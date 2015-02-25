@@ -23,6 +23,7 @@ __all__ = ["EditableListElement"]
 
 from widget import DisplayWidget, EditableWidget
 from karabo.hash import Hash
+from karabo.hashtypes import VectorString
 from stringlistedit import StringListEdit
 
 from PyQt4.QtCore import pyqtSignal
@@ -30,7 +31,7 @@ from PyQt4.QtGui import QDialog, QPushButton
 
 
 class EditableListElement(EditableWidget, DisplayWidget):
-    category = "SelectionList"
+    category = VectorString
     alias = "List Element Field"
     signalValueChanged = pyqtSignal(str, object) # key, value
     

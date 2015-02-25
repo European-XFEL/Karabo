@@ -8,13 +8,14 @@
 __all__ = ["DisplayChoiceElement"]
 
 
+from schema import ChoiceOfNodes
 from widget import DisplayWidget
 
 from PyQt4.QtGui import QComboBox
 
 
 class DisplayChoiceElement(DisplayWidget):
-    category = "Choice"
+    category = ChoiceOfNodes
     alias = "Choice Element"
 
     def __init__(self, box, parent):
