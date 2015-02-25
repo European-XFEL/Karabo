@@ -315,6 +315,10 @@ class MainWindow(QMainWindow):
 
 
     def onAddMacro(self, macro):
+        if self.middleTab.count() == 1 and self.placeholderPanel is not None:
+            # Remove start up page
+            self._hideStartUpPage()
+        
         if macro.editor is None:
             macroView = MacroPanel(macro)
             self.middleTab.addDockableTab(macroView, macro.name)

@@ -339,7 +339,6 @@ class ProjectTreeView(QTreeView):
                 acAddMacro.setToolTip(text)
                 acAddMacro.triggered.connect(self.model().onEditMacro)
 
-
                 text = "Load Macro"
                 acLoadMacro = QAction(text, self)
                 acLoadMacro.setStatusTip(text)
@@ -348,6 +347,16 @@ class ProjectTreeView(QTreeView):
 
                 menu.addAction(acAddMacro)
                 menu.addAction(acLoadMacro)
+            elif firstObj.displayName == Project.CONFIGURATIONS_LABEL:
+                text = "Apply configurations"
+                acApplyConfigurations = QAction(text, self)
+                acApplyConfigurations.setStatusTip(text)
+                acApplyConfigurations.setToolTip(text)
+                if not self.model().hasChildren(firstIndex):
+                    acApplyConfigurations.setEnabled(False)
+                acApplyConfigurations.triggered.connect(self.model().onApplyConfigurations)
+                
+                menu.addAction(acApplyConfigurations)
         elif selectedType in (Device, DeviceGroup, Scene, Macro):
             # Device or Scene menu
             if nbSelected > 1:
