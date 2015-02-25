@@ -26,11 +26,14 @@ from listedit import ListEdit
 from util import SignalBlocker
 from widget import EditableWidget, DisplayWidget
 
+from karabo.hashtypes import Vector
+
 from PyQt4.QtGui import QDialog, QHBoxLayout, QLineEdit, QToolButton, QWidget
 
 
 class EditableList(EditableWidget, DisplayWidget):
-    category = "List"
+    category = Vector
+    priority = 10
     alias = "List"
 
     def __init__(self, box, parent):

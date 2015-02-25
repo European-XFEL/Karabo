@@ -24,6 +24,8 @@ from const import ns_karabo
 from displaywidgets.icons import Item, SelectionDialog
 from widget import DisplayWidget
 
+from schema import SlotNode
+
 from PyQt4.QtCore import QSize, pyqtSlot
 from PyQt4.QtGui import QToolButton, QWidget, QAction, QStackedLayout, QIcon
 
@@ -31,7 +33,7 @@ from xml.etree.ElementTree import Element
 
 
 class DisplayCommand(DisplayWidget):
-    category = "Slot"
+    category = SlotNode
     alias = "Command"
 
     def __init__(self, box, parent):

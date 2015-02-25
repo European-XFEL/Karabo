@@ -18,11 +18,14 @@ import icons
 from util import SignalBlocker
 from widget import DisplayWidget
 
+from karabo.hashtypes import String
+
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class DisplayFileOut(DisplayWidget):
-    category = "String"
+    category = String
+    displayType = "fileOut"
     alias = "File Out"
 
     def __init__(self, box, parent):

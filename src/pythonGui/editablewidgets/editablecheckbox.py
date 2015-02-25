@@ -24,12 +24,15 @@ __all__ = ["EditableCheckBox"]
 from util import SignalBlocker
 from widget import EditableWidget
 
+from karabo.hashtypes import Bool
+
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCheckBox
 
 
 class EditableCheckBox(EditableWidget):
-    category = "Switch"
+    category = Bool
+    priority = 10
     alias = "Toggle Field"
 
     def __init__(self, box, parent):

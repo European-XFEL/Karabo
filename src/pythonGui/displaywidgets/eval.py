@@ -4,11 +4,13 @@ __all__ = ["Evaluator"]
 from util import SignalBlocker
 from widget import DisplayWidget
 
+from karabo.hashtypes import String, Simple
+
 from PyQt4.QtGui import QLineEdit, QInputDialog, QAction
 
 
 class Evaluator(DisplayWidget):
-    category = "Digit"
+    category = String, Simple
     alias = "Evaluate Expression"
 
     globals = { }

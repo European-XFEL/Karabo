@@ -28,7 +28,6 @@ from PyQt4.QtGui import QComboBox
 
 
 class DisplayComboBox(DisplayWidget):
-    category = "Selection"
     alias = "Selection Field"
     
     def __init__(self, box, parent):
@@ -37,6 +36,11 @@ class DisplayComboBox(DisplayWidget):
         self.widget = QComboBox(parent)
         self.widget.setFrame(False)
         self.widget.setEnabled(False)
+
+
+    @classmethod
+    def isCompatible(cls, box, readonly):
+        return readonly and box.descriptor.options is not None
 
 
     def typeChanged(self, box):

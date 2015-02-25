@@ -6,8 +6,10 @@ from PyQt4.QtGui import QAction, QCheckBox, QInputDialog
 
 from numpy import log2
 
+from karabo.hashtypes import Integer
+
 class SingleBit(DisplayWidget):
-    category = "Digit"
+    category = Integer
     alias = "Single Bit"
 
 

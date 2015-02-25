@@ -136,66 +136,6 @@ class Number(Simple):
         return min, max
 
 
-class Vector(object):
-    @classmethod
-    def register(cls, name, dict):
-        super(Vector, cls).register(name, dict)
-        cls.__bases__[-1].vectortype = cls
-
-
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        return (super(Vector, cls).read(file) for i in range(size))
-
-
-    @classmethod
-    def write(cls, file, data):
-        file.writeFormat('I', len(data))
-        for d in data:
-            super(Vector, cls).write(file, d)
-
-
-class NumpyVector(Vector):
-    vstrs = { }
-
-
-    @classmethod
-    def register(cls, name, dict):
-        super(NumpyVector, cls).register(name, dict)
-        cls.vstrs[cls.numpy().dtype.str] = cls
-
-
-    @classmethod
-    def read(cls, file):
-        size, = file.readFormat('I')
-        ret = numpy.frombuffer(file.data, cls.numpy, size, file.pos)
-        file.pos += cls.numpy().itemsize * size
-        return ret
-
-
-    @classmethod
-    def fromstring(cls, s):
-        if s:
-            return numpy.array([cls.numpy(x) for x in s.split(',')])
-        else:
-            return numpy.array([], dtype=cls.numpy)
-
-
-    @classmethod
-    def toString(cls, data):
-        return ",".join(str(x) for x in data)
-
-
-    def cast(self, other):
-        if isinstance(other, numpy.ndarray) and other.dtype == self.numpy:
-            ret = other
-        else:
-            ret = numpy.array(other, dtype=self.numpy)
-        assert ret.ndim == 1, "can only treat one-dimensional vectors"
-        return ret
-
-
 class Descriptor(object):
     displayedName = Attribute()
     alias = Attribute()
@@ -322,9 +262,9 @@ class Type(Descriptor, Registry):
     @classmethod
     def register(cls, name, dict):
         super(Type, cls).register(name, dict)
-        cls.types[cls.number] = cls
 
         if "number" in dict:
+            cls.types[cls.number] = cls
             s = ''
             lastlower = False
             for c in cls.__name__:
@@ -333,8 +273,7 @@ class Type(Descriptor, Registry):
                 s += c.capitalize()
                 lastlower = c.islower()
             cls._hashname = s.rstrip('_')
-
-        cls.fromname[cls._hashname] = cls
+            cls.fromname[cls._hashname] = cls
         if 'numpy' in dict:
             cls.strs[cls.numpy().dtype.str] = cls
 
@@ -358,8 +297,71 @@ class Type(Descriptor, Registry):
         return self
 
 
+class Vector(Type):
+    @classmethod
+    def register(cls, name, dict):
+        super(Vector, cls).register(name, dict)
+        if "basetype" in dict:
+            cls.basetype.vectortype = cls
+
+
+    @classmethod
+    def read(cls, file):
+        size, = file.readFormat('I')
+        return (cls.basetype.read(file) for i in range(size))
+
+
+    @classmethod
+    def write(cls, file, data):
+        file.writeFormat('I', len(data))
+        for d in data:
+            cls.basetype.write(file, d)
+
+
+class NumpyVector(Vector):
+    vstrs = { }
+
+
+    @classmethod
+    def register(cls, name, dict):
+        super(NumpyVector, cls).register(name, dict)
+        cls.vstrs[cls.basetype.numpy().dtype.str] = cls
+
+
+    @classmethod
+    def read(cls, file):
+        size, = file.readFormat('I')
+        ret = numpy.frombuffer(file.data, cls.basetype.numpy, size, file.pos)
+        file.pos += cls.basetype.numpy().itemsize * size
+        return ret
+
+
+    @classmethod
+    def fromstring(cls, s):
+        if s:
+            return numpy.array([cls.basetype.numpy(x) for x in s.split(',')])
+        else:
+            return numpy.array([], dtype=cls.basetype.numpy)
+
+
+    @classmethod
+    def toString(cls, data):
+        return ",".join(str(x) for x in data)
+
+
+    def cast(self, other):
+        if isinstance(other, numpy.ndarray) and \
+                other.dtype == self.basetype.numpy:
+            ret = other
+        else:
+            ret = numpy.array(other, dtype=self.basetype.numpy)
+        assert ret.ndim == 1, "can only treat one-dimensional vectors"
+        return ret
+
+
 class Bool(Type):
     number = 0
+    numpy = numpy.bool_
 
     @classmethod
     def read(cls, file):
@@ -385,9 +387,9 @@ class Bool(Type):
         return bool(other)
 
 
-class VectorBool(NumpyVector, Bool):
+class VectorBool(NumpyVector):
+    basetype = Bool
     number = 1
-    numpy = numpy.bool_
 
 
 class Char(Simple, Type):
@@ -431,11 +433,12 @@ class Byte(Special, bytes):
         return "${:x}".format(ord(self))
 
 
-class VectorChar(Vector, Char):
+class VectorChar(Vector):
     """A VectorChar is simply some binary data in memory. The corresponding
     python data type is bytes. Make sure you don't use str for strings,
     as this will result in the hash creating a VectorChar, and the C++ will
     not be happy about this."""
+    basetype = Char
     number = 3
 
     @staticmethod
@@ -443,6 +446,16 @@ class VectorChar(Vector, Char):
         size, = file.readFormat('I')
         file.pos += size
         return bytes(file.data[file.pos - size:file.pos])
+
+
+    @classmethod
+    def toString(cls, data):
+        return base64.b64encode(data).decode("ascii")
+
+
+    @classmethod
+    def fromstring(self, s):
+        return base64.b64decode(s)
 
 
     @classmethod
@@ -464,7 +477,8 @@ class Int8(Integer, Type):
     numpy = numpy.int8
 
 
-class VectorInt8(NumpyVector, Int8):
+class VectorInt8(NumpyVector):
+    basetype = Int8
     number = 5
 
 
@@ -474,7 +488,8 @@ class UInt8(Integer, Type):
     numpy = numpy.uint8
 
 
-class VectorUInt8(NumpyVector, UInt8):
+class VectorUInt8(NumpyVector):
+    basetype = UInt8
     number = 7
 
 
@@ -484,7 +499,8 @@ class Int16(Integer, Type):
     numpy = numpy.int16
 
 
-class VectorInt16(NumpyVector, Int16):
+class VectorInt16(NumpyVector):
+    basetype = Int16
     number = 9
 
 
@@ -494,7 +510,8 @@ class UInt16(Integer, Type):
     numpy = numpy.uint16
 
 
-class VectorUInt16(NumpyVector, UInt16):
+class VectorUInt16(NumpyVector):
+    basetype = UInt16
     number = 11
 
 
@@ -504,7 +521,8 @@ class Int32(Integer, Type):
     numpy = numpy.int32
 
 
-class VectorInt32(NumpyVector, Int32):
+class VectorInt32(NumpyVector):
+    basetype = Int32
     number = 13
 
 
@@ -514,7 +532,8 @@ class UInt32(Integer, Type):
     numpy = numpy.uint32
 
 
-class VectorUInt32(NumpyVector, UInt32):
+class VectorUInt32(NumpyVector):
+    basetype = UInt32
     number = 15
 
 
@@ -524,7 +543,8 @@ class Int64(Integer, Type):
     numpy = numpy.int64
 
 
-class VectorInt64(NumpyVector, Int64):
+class VectorInt64(NumpyVector):
+    basetype = Int64
     number = 17
 
 
@@ -534,7 +554,8 @@ class UInt64(Integer, Type):
     numpy = numpy.uint64
 
 
-class VectorUInt64(NumpyVector, UInt64):
+class VectorUInt64(NumpyVector):
+    basetype = UInt64
     number = 19
 
 
@@ -544,7 +565,8 @@ class Float(Number, Type):
     numpy = numpy.float32
 
 
-class VectorFloat(NumpyVector, Float):
+class VectorFloat(NumpyVector):
+    basetype = Float
     number = 21
 
 
@@ -554,7 +576,8 @@ class Double(Number, Type):
     numpy = numpy.float64
 
 
-class VectorDouble(NumpyVector, Double):
+class VectorDouble(NumpyVector):
+    basetype = Double
     number = 23
 
 
@@ -564,7 +587,8 @@ class ComplexFloat(Number, Type):
     numpy = numpy.complex64
 
 
-class VectorComplexFloat(NumpyVector, ComplexFloat):
+class VectorComplexFloat(NumpyVector):
+    basetype = ComplexFloat
     number = 25
 
 
@@ -574,7 +598,8 @@ class ComplexDouble(Number, Type):
     numpy = numpy.complex128
 
 
-class VectorComplexDouble(NumpyVector, ComplexDouble):
+class VectorComplexDouble(NumpyVector):
+    basetype = ComplexDouble
     number = 27
 
 
@@ -610,7 +635,8 @@ class String(Enumable, Type):
             return str(other)
 
 
-class VectorString(Vector, String):
+class VectorString(Vector):
+    basetype = String
     number = 29
 
     @staticmethod
@@ -689,7 +715,8 @@ class Hash(Type):
                             format(type(self).__name__, type(other).__name__))
 
 
-class VectorHash(Vector, Hash):
+class VectorHash(Vector):
+    basetype = Hash
     number = 31
 
     @classmethod

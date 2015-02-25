@@ -26,14 +26,13 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
         self.setIcon(0, icons.slot)
 
         # Create empty label for 2nd column (current value on device)
-        self.displayComponent = DisplayComponent("Value Field", self.box, self.treeWidget())
+        self.displayComponent = DisplayComponent("DisplayLabel", self.box,
+                                                 self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
         # Name of command
         self.__command = command
-        self.classAlias = "Command"
-        
         self.__pbCommand = QPushButton()
         self.__pbCommand.setMinimumHeight(32)
         self.__pbCommand.setEnabled(False)
