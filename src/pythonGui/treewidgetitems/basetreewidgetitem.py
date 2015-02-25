@@ -36,7 +36,7 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         self.box = box
         
         # The components can be defined in Subclasses
-        self.__displayComponent = None
+        self.displayComponent = None
         self.__editableComponent = None
         
         self.mItem = None
@@ -49,12 +49,6 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
         raise NotImplementedError("BaseTreeWidgetItem.setupContextMenu")
 
 
-    # Returns the display component of the item
-    def _displayComponent(self):
-        return self.__displayComponent
-    def _setDisplayComponent(self, component):
-        self.__displayComponent = component
-    displayComponent = property(fget=_displayComponent, fset=_setDisplayComponent)
     isChoiceElement = False
     isListElement = False
     description = None
@@ -75,13 +69,10 @@ class BaseTreeWidgetItem(QTreeWidgetItem):
 
 
     def updateState(self, state):
-        if self.allowedStates is None or len(self.allowedStates) < 1:
+        if not self.allowedStates:
             return
-        
-        if state in self.allowedStates:
-            self.enabled = True
-        else:
-            self.enabled = False
+
+        state = state in self.allowedStates
 
 
     def showContextMenu(self):
