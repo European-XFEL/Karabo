@@ -12,11 +12,10 @@ __all__ = ["MacroPanel"]
 
 import icons
 from manager import getDevice
-from toolbar import ToolBar
 from util import getSaveFileName
 
 from PyQt4.QtCore import Qt, pyqtSignal, QEvent
-from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QHBoxLayout, QMessageBox,
+from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
                          QSplitter, QTextCursor)
 
 from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
@@ -38,6 +37,7 @@ class MacroPanel(QSplitter):
         PygmentsHighlighter(self.edit.document())
         self.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
+        
         self.console = QPlainTextEdit(self)
         self.console.setReadOnly(True)
         self.console.setStyleSheet("font-family: monospace")
@@ -77,11 +77,13 @@ class MacroPanel(QSplitter):
         self.console.moveCursor(QTextCursor.End)
         self.console.insertPlainText(box.configuration.value.print)
 
+
     def startingError(self, box, value, ts):
         if (getDevice("macroServer").value.startingDevice ==
                 self.macro.instanceId):
             self.console.moveCursor(QTextCursor.End)
             self.console.insertPlainText(value)
+
 
     def onRun(self):
         self.console.clear()
