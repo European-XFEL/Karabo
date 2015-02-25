@@ -470,18 +470,22 @@ class ProxyWidget(QWidget):
         self.setToolTip(box.key())
         box.configuration.signalStatusChanged.connect(self.showStatus)
         self.showStatus(None, box.configuration.status, box.configuration.error)
+        box.signalNewDescriptor.connect(self.setDescriptor)
+        if box.descriptor is not None:
+            self.setDescriptor(box)
 
-        for text, factory in component.factories.items():
-            aliases = factory.getAliasesViaCategory(
-                component.widgetCategory)
-            if component.boxes[0].path == ('state',):
-                aliases = aliases + factory.getAliasesViaCategory("State")
-            if aliases:
+    def setDescriptor(self, box):
+        classes = self.component.Widget.getClasses(box)
+        menus = {}
+        for c in classes:
+            menus.setdefault(c.menu, []).append(c)
+        for text, classes in menus.items():
+            if classes:
                 aa = QAction(text, self)
                 menu = QMenu(self)
-                for a in aliases:
-                    menu.addAction(a).triggered.connect(
-                        partial(self.on_changeWidget, factory, a))
+                for c in classes:
+                    menu.addAction(c.alias).triggered.connect(
+                        partial(self.on_changeWidget, c))
                 aa.setMenu(menu)
                 self.addAction(aa)
 
@@ -515,8 +519,8 @@ class ProxyWidget(QWidget):
 
 
     @pyqtSlot()
-    def on_changeWidget(self, factory, alias):
-        self.component.changeWidget(factory, alias)
+    def on_changeWidget(self, factory):
+        self.component.changeWidget(factory)
         self.parent().layout().relayout(self)
         self.adjustSize()
 

@@ -23,7 +23,7 @@ __all__ = ["EditableChoiceElement"]
 
 from widget import EditableWidget
 from karabo.hash import Hash
-from schema import Schema, Descriptor
+from schema import Schema, Descriptor, ChoiceOfNodes
 from util import SignalBlocker
 
 from PyQt4.QtCore import QEvent
@@ -31,7 +31,7 @@ from PyQt4.QtGui import QComboBox
 
 
 class EditableChoiceElement(EditableWidget):
-    category = "Choice"
+    category = ChoiceOfNodes
     alias = "Choice Element"
 
     def __init__(self, box, parent):

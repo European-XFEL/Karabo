@@ -16,12 +16,16 @@ import icons
 from util import SignalBlocker
 from widget import EditableWidget
 
+from karabo.hashtypes import String
+
 from PyQt4.QtGui import (QFileDialog, QHBoxLayout, QLineEdit, QToolButton,
                          QWidget)
 
 
 class EditableFileIn(EditableWidget):
-    category = "String"
+    category = String
+    priority = 20
+    displayType = "fileIn"
     alias = "File In"
 
     def __init__(self, box, parent):

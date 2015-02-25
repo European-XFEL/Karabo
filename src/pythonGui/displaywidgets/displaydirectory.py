@@ -18,11 +18,14 @@ from util import SignalBlocker
 import icons
 from widget import DisplayWidget
 
+from karabo.hashtypes import String
+
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class DisplayDirectory(DisplayWidget):
-    category = "String"
+    category = String
+    displayType = "directory"
     alias = "Directory"
 
     def __init__(self, box, parent):

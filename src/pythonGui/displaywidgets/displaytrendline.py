@@ -23,6 +23,7 @@ from guiqwt.tools import SelectPointTool
 from guiqwt.builder import make
 from guiqwt import signals
 
+from karabo.hashtypes import Simple
 from karabo.timestamp import Timestamp
 
 
@@ -141,7 +142,7 @@ class ScaleEngine(QwtLinearScaleEngine):
         return QwtScaleDiv(x1, x2, [], [], list(range(start, int(x2), v)))
 
 class DisplayTrendline(DisplayWidget):
-    category = "Digit"
+    category = Simple
     alias = "Trendline"
 
  
