@@ -51,8 +51,8 @@ class DisplayIconset(DisplayWidget):
         action = QAction("Iconset from URL...", self.widget)
         action.triggered.connect(self.onChangeURL)
         self.widget.addAction(action)
-        action = QAction("Copy iconset to project", self.widget)
-        action.triggered.connect(self.onToProject)
+        self.toProject = QAction("Copy iconset to project", self.widget)
+        self.toProject.triggered.connect(self.onToProject)
         self.widget.addAction(action)
         self.setURL("file://" + urllib.request.pathname2url(
             os.path.join(os.path.dirname(__file__), "empty.svg")))
@@ -100,6 +100,8 @@ class DisplayIconset(DisplayWidget):
                                              self.project.getURL(self.url)))
 
     def setURL(self, url):
+        if url.startswith("file:"):
+            url = self.project.addResource("iconset", self.project.getURL(url))
         self.url = url
         parser = ElementTree.XMLParser(target=ElementTree.TreeBuilder(
             element_factory=Element))
@@ -107,6 +109,7 @@ class DisplayIconset(DisplayWidget):
         self.xml = ElementTree.ElementTree(parser.close())
         self.valueChanged(None, self.boxes[0].value if self.boxes[0].hasValue()
                           else "")
+        self.toProject.setEnabled(not url.startswith("project:"))
 
     def valueChanged(self, box, value, timestamp=None):
         self.xml.getroot().set(">filter", value)
