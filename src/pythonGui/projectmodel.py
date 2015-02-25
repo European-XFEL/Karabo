@@ -1329,7 +1329,9 @@ class ProjectModel(QStandardItemModel):
             deviceId = parentIndex.data()
             configuration = index.data(ProjectModel.ITEM_OBJECT)
             # Remove data from project
-            configuration.project.removeConfiguration(deviceId, object)
+            project = configuration.project
+            project.removeConfiguration(deviceId, configuration)
+            project.setModified(True)
             
             # Update model
             if self.itemFromIndex(parentIndex).rowCount() == 1:
