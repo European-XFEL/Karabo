@@ -30,6 +30,7 @@ from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QFrame, QLabel, QLayout, QKeySequence, QMenu,
                          QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
                          QWidget)
+from PyQt4 import QtGui
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
@@ -822,9 +823,15 @@ class Paste(SimpleAction):
     shortcut = QKeySequence.Paste
 
 
+    def modify(self, root):
+        return True
+
+
     def run(self):
         root = ElementTree.fromstring(QApplication.clipboard().mimeData().
                                       data("image/svg+xml"))
+        if not self.modify(root):
+            return
         self.parent.ilayout.load_element(root)
         self.parent.tree.getroot().extend(root)
         ar = QByteArray()
@@ -835,6 +842,61 @@ class Paste(SimpleAction):
         self.parent.load(ar)
         self.parent.update()
         self.parent.setModified()
+
+
+class PasteReplace(Paste):
+    text = "Replace"
+    icon = icons.editPasteReplace
+    shortcut = QKeySequence.Replace
+
+
+    def modify(self, root):
+        keys = sum((e.get(ns_karabo + "keys", "").split(",")
+                   for e in root.iter(tag=ns_svg + "rect")), [])
+        devices = sorted({k.split(".", 1)[0] for k in keys if k})
+
+        dialog = QDialog()
+        layout = QtGui.QVBoxLayout(dialog)
+        tree = QtGui.QTreeView(dialog)
+        layout.addWidget(tree)
+        buttons = QtGui.QDialogButtonBox(
+            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
+            Qt.Horizontal, dialog)
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+
+        model = QtGui.QStandardItemModel(len(devices), 2, tree)
+        model.setHorizontalHeaderLabels(["Current Device", "New Device"])
+        for i, d in enumerate(devices):
+            item = QtGui.QStandardItem(d)
+            item.setEditable(False)
+            model.setItem(i, 0, item)
+            item = QtGui.QStandardItem("")
+            item.setEditable(True)
+            model.setItem(i, 1, item)
+        tree.setModel(model)
+
+        if dialog.exec_() != QDialog.Accepted:
+            return False
+
+        map = {}
+        for i in range(len(devices)):
+            t = model.item(i, 1).text()
+            if t:
+                map[model.item(i, 0).text()] = t
+
+        for e in root.iter(tag=ns_svg + "rect"):
+            keys = e.get(ns_karabo + "keys")
+            if not keys:
+                continue
+            keys = [k.split(".", 1) for k in keys.split(",")]
+            for k in keys:
+                k[0] = map.get(k[0], k[0])
+            keys = ",".join(".".join(k) for k in keys)
+            e.set(ns_karabo + "keys", keys)
+
+        return True
 
 
 class Delete(SimpleAction):
