@@ -24,12 +24,14 @@ __all__ = ["DisplayCheckBox"]
 from util import SignalBlocker
 from widget import DisplayWidget
 
+from karabo.hashtypes import Bool
+
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QCheckBox
 
 
 class DisplayCheckBox(DisplayWidget):
-    category = "Switch"
+    category = Bool
     alias = "Toggle Field"
 
     

@@ -24,12 +24,16 @@ from PyQt4.QtGui import QLabel, QPixmap
 from registry import Registry
 import os.path
 
+from karabo.hashtypes import String
+
 import gui
 
 
 class Widget(Registry, QObject):
     """ This is the parent class for all widget factories in the GUI """
     widgets = { }
+    displayType = None
+    priority = 0
 
     def __init__(self, box):
         """ Create a widget with one box.
@@ -56,14 +60,22 @@ class Widget(Registry, QObject):
 
 
     @classmethod
-    def getClass(cls, alias):
-        # Get module and class name as tuple (moduleName,className)
-        return cls.aliasConcreteClass[alias]
-
+    def isCompatible(cls, box, readonly):
+        """ Return wether this widget may be used with a given box and
+        read-only-ness."""
+        return ((readonly and issubclass(cls, DisplayWidget) or
+                 not readonly and issubclass(cls, EditableWidget)) and
+                isinstance(box.descriptor, cls.category) and
+                cls.displayType in (None, box.descriptor.displayType))
 
     @classmethod
-    def getAliasesViaCategory(cls, category):
-        return cls.categoryToAliases.get(category, [ ])
+    def getClass(cls, box):
+        p = -1
+        for c in cls.getClasses(box):
+            if c.priority > p:
+                winner = c
+                p = c.priority
+        return winner
 
 
     def addBox(self, box):
@@ -134,16 +146,12 @@ class DisplayWidget(Widget):
     of :class:`Widget`."""
     menu = "Change display widget"
     factories = { }
-    displayCTA = categoryToAliases = { }
-    displayACC = aliasConcreteClass = { }
 
 
-    @classmethod
-    def register(cls, name, dict):
-        super(DisplayWidget, cls).register(name, dict)
-        if "alias" in dict:
-            cls.displayCTA.setdefault(cls.category, [ ]).append(cls.alias)
-            cls.displayACC[cls.alias] = cls
+    @staticmethod
+    def getClasses(box):
+        return [v for v in Widget.widgets.values()
+                if v.isCompatible(box, True)]
 
 
     def setReadOnly(self, ro):
@@ -152,9 +160,7 @@ class DisplayWidget(Widget):
 
 class VacuumWidget(DisplayWidget):
     menu = "Change vacuum widget"
-    category = "State"
-    displayCTA = categoryToAliases = { }
-    displayACC = aliasConcreteClass = { }
+    category = String
 
     def __init__(self, box, parent):
         DisplayWidget.__init__(self, box)
@@ -164,6 +170,11 @@ class VacuumWidget(DisplayWidget):
 
 
     value = None
+
+
+    @classmethod
+    def isCompatible(cls, box, readonly):
+        return box.path == ("state",) and super().isCompatible(box, readonly)
 
 
     def _setPixmap(self, name):
@@ -189,8 +200,6 @@ class EditableWidget(Widget):
     menu = "Change widget"
     factories = { }
     signalEditingFinished = pyqtSignal(object, object)
-    categoryToAliases = { }
-    aliasConcreteClass = { }
 
 
     def __init__(self, box):
@@ -200,13 +209,10 @@ class EditableWidget(Widget):
         gui.window.signalGlobalAccessLevelChanged.connect(self.updateStateSlot)
 
 
-    @classmethod
-    def register(cls, name, dict):
-        super(EditableWidget, cls).register(name, dict)
-        if "alias" in dict:
-            EditableWidget.categoryToAliases.setdefault(cls.category,
-                                                        [ ]).append(cls.alias)
-            EditableWidget.aliasConcreteClass[cls.alias] = cls
+    @staticmethod
+    def getClasses(box):
+        return [v for v in Widget.widgets.values()
+                if v.isCompatible(box, False)]
 
 
     def setReadOnly(self, ro):

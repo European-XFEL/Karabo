@@ -11,12 +11,14 @@ __all__ = ["Hexadecimal"]
 from util import SignalBlocker
 from widget import DisplayWidget, EditableWidget
 
+from karabo.hashtypes import Integer
+
 from PyQt4.QtGui import QLineEdit
 from numpy import log2
 
 
 class Hexadecimal(EditableWidget, DisplayWidget):
-    category = "Digit"
+    category = Integer
     alias = "Hexadecimal"
 
     def __init__(self, box, parent):

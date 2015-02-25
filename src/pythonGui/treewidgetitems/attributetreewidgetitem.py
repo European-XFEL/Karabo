@@ -24,7 +24,7 @@ class AttributeTreeWidgetItem(BaseTreeWidgetItem):
         
         super(AttributeTreeWidgetItem, self).__init__(box, parent, parentItem)
         self.setIcon(0, icons.signal)
-        self.displayComponent = DisplayComponent("Value Field", self.box)
+        self.displayComponent = DisplayComponent("DisplayLabel", self.box)
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 
