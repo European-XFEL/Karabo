@@ -4,6 +4,8 @@ __all__ = ["XYPlot"]
 
 from widget import DisplayWidget
 
+from karabo.hashtypes import Simple
+
 from PyQt4.Qwt5.Qwt import QwtPlot
 from guiqwt.plot import CurveDialog, PlotManager
 from guiqwt.builder import make
@@ -27,7 +29,7 @@ class Activate(ToggleTool):
 
 
 class XYPlot(DisplayWidget):
-    category = "Digit"
+    category = Simple
     alias = "XY-Plot"
 
     def __init__(self, box, parent):

@@ -21,6 +21,7 @@
 __all__ = ["DisplayLineEdit"]
 
 
+from karabo.hashtypes import String
 from util import SignalBlocker
 from widget import DisplayWidget
 
@@ -28,7 +29,8 @@ from PyQt4.QtGui import QLineEdit
 
 
 class DisplayLineEdit(DisplayWidget):
-    category = "String"
+    category = String
+    priority = 10
     alias = "Text Field"
 
     def __init__(self, box, parent):

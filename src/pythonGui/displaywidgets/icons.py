@@ -159,6 +159,10 @@ class Icons(DisplayWidget):
         action.triggered.connect(self.showDialog)
         self.items = [Item()]
 
+    @classmethod
+    def isCompatible(self, box, ro):
+        return super().isCompatible(box, ro) and box.descriptor.options is None
+
     def showDialog(self):
         box = self.boxes[0]
         dialog = self.Dialog(self.project, self.items, box.descriptor)
@@ -192,8 +196,8 @@ class TextDialog(Dialog):
 
 
 class TextIcons(Icons):
-    category = "State"
-    alias = "Text Icons"
+    alias = "Icons"
+    category = hashtypes.String
     Dialog = TextDialog
 
     def valueChanged(self, box, value, timestamp=None):
@@ -256,8 +260,8 @@ class DigitDialog(Dialog):
 
 
 class DigitIcons(Icons):
-    category = "Digit"
-    alias = "Digit Icons"
+    alias = "Icons"
+    category = hashtypes.Integer, hashtypes.Number
     Dialog = DigitDialog
 
     def valueChanged(self, box, value, timestamp=None):
@@ -302,9 +306,12 @@ class SelectionDialog(Dialog):
 
 
 class SelectionIcons(Icons):
-    category = "Selection"
     alias = "Selection Icons"
     Dialog = SelectionDialog
+
+    @classmethod
+    def isCompatible(self, box, ro):
+        return ro and box.descriptor.options is not None
 
     def typeChanged(self, box):
         items = []

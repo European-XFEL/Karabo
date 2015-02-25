@@ -7,6 +7,7 @@
 __all__ = ["DisplayImage"]
 
 
+from schema import ImageNode
 from widget import DisplayWidget
 
 import numpy as np
@@ -15,7 +16,7 @@ from guiqwt.builder import make
 from karabo import hashtypes
 
 class DisplayImage(DisplayWidget):
-    category = "Image"
+    category = ImageNode
     alias = "Image View"
 
     def __init__(self, box, parent):

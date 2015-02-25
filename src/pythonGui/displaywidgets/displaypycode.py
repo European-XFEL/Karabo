@@ -21,6 +21,7 @@
 __all__ = ["DisplayPyCode"]
 
 
+from karabo.hashtypes import String
 from widget import DisplayWidget
 
 from PyQt4.QtCore import *
@@ -37,7 +38,7 @@ import time
 import _thread
 
 class DisplayPyCode(DisplayWidget):
-    category = "String"
+    category = String
     alias = "Code Field"
 
     def __init__(self, box, parent):

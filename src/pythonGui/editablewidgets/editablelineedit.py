@@ -24,11 +24,14 @@ __all__ = ["EditableLineEdit"]
 from util import SignalBlocker
 from widget import EditableWidget
 
+from karabo.hashtypes import String, Char
+
 from PyQt4.QtGui import QLineEdit
 
 
 class EditableLineEdit(EditableWidget):
-    category = "String"
+    category = String, Char
+    priority = 10
     alias = "Text Field"
 
     def __init__(self, box, parent):

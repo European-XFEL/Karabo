@@ -28,7 +28,8 @@ class PropertyTreeWidgetItem(BaseTreeWidgetItem):
         self.setData(0, Qt.SizeHintRole, QSize(200, 32))
         self.setIcon(0, icons.folder)
 
-        self.displayComponent = DisplayComponent("Value Field", self.box, self.treeWidget())
+        self.displayComponent = DisplayComponent("DisplayLabel", self.box,
+                                                 self.treeWidget())
         self.treeWidget().setItemWidget(self, 1, self.displayComponent.widget)
         self.treeWidget().resizeColumnToContents(1)
 

@@ -25,6 +25,8 @@ import sys
 from widget import DisplayWidget
 from randomcolor import RandomColor
 
+from karabo.hashtypes import NumpyVector
+
 from guiqwt.plot import CurveDialog
 from guiqwt.builder import make
 from PyQt4.Qwt5 import QwtPlotItem
@@ -33,7 +35,7 @@ from numpy import arange
 
 
 class DisplayPlot(DisplayWidget):
-    category = "List"
+    category = NumpyVector
     alias = "Plot"
     colorList = ["red", "green", "blue", "gray", "violet", "orange",
                  "lightgreen", "black"]
