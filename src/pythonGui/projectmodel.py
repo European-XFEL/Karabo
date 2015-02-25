@@ -17,6 +17,7 @@ __all__ = ["ProjectModel"]
 from configuration import Configuration
 import globals
 import icons
+from dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
 from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.devicedialogs import DeviceGroupDialog
 from dialogs.scenedialog import SceneDialog
@@ -1241,6 +1242,24 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")
+
+
+    def onApplyConfigurations(self):
+        """
+        """
+        project = self.currentProject()
+        
+        dialog = SelectMultipleProjectConfigurationDialog(project)
+        if dialog.exec_() == QDialog.Rejected:
+            return
+        
+        # Get configuration which should be applied
+        configs = dialog.projectConfigurations()
+        
+        # Go through project devices and apply configurations
+        for device in project.devices:
+            if device.id in configs:
+                device.dispatchUserChanges(configs[device.id].hash[device.classId])
 
 
     def onSaveAsScene(self):
