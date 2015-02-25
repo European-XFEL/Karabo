@@ -16,11 +16,15 @@ from util import getSaveFileName
 from util import SignalBlocker
 from widget import EditableWidget
 
+from karabo.hashtypes import String
+
 from PyQt4.QtGui import (QHBoxLayout, QLineEdit, QToolButton, QWidget)
 
 
 class EditableFileOut(EditableWidget):
-    category = "String"
+    category = String
+    priority = 20
+    displayType = "fileOut"
     alias = "File Out"
 
     def __init__(self, box, parent):

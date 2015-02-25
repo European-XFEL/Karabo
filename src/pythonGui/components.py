@@ -30,7 +30,7 @@ import numpy
 import numbers
 
 class BaseComponent(Loadable, QObject):
-    factories = EditableWidget.factories
+    Widget = EditableWidget
 
     signalValueChanged = pyqtSignal(object, object) # key, value
 
@@ -90,15 +90,14 @@ class BaseComponent(Loadable, QObject):
 
 
 class DisplayComponent(BaseComponent):
-    factories = DisplayWidget.factories
+    Widget = DisplayWidget
 
 
     def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = DisplayWidget.factories[widgetFactory].\
-                                   getClass(classAlias)(box, parent)
+            self.widgetFactory = DisplayWidget.getClass(box)(box, parent)
             super(DisplayComponent, self).__init__(classAlias, parent)
         else:
             self.widgetFactory = W(box, parent)
@@ -162,13 +161,11 @@ class DisplayComponent(BaseComponent):
             self.removeKey(key)
 
 
-    def changeWidget(self, factory, alias):
-        self.classAlias = alias
+    def changeWidget(self, factory):
         oldWidget = self.widgetFactory.widget
         oldFactory = self.widgetFactory
         self.widgetFactory.setParent(None)
-        self.widgetFactory = factory.getClass(alias)(
-            oldFactory.boxes[0], oldWidget.parent())
+        self.widgetFactory = factory(oldFactory.boxes[0], oldWidget.parent())
         self.widgetFactory.setReadOnly(True)
         self.connectWidget(self.boxes[0])
         for b in oldFactory.boxes[1:]:
@@ -189,7 +186,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(classAlias)(
+            self.widgetFactory = EditableWidget.getClass(box)(
                                         box, self.__compositeWidget)
             super(EditableNoApplyComponent, self).__init__(classAlias, parent)
         else:
@@ -292,7 +289,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(classAlias)(
+            self.widgetFactory = EditableWidget.getClass(box)(
                                             box, self.__compositeWidget)
             super(EditableApplyLaterComponent, self).__init__(classAlias,
                                                               parent)
@@ -526,7 +523,7 @@ class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent, widgetFactory=None):
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(classAlias)(
+            self.widgetFactory = EditableWidget.getClass(box)(
                                                     box, parent)
             super(ChoiceComponent, self).__init__(classAlias, parent)
         else:

@@ -14,10 +14,10 @@ from widget import DisplayWidget, EditableWidget
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLineEdit, QDoubleValidator, QPalette, QValidator
 
+from karabo.hashtypes import Integer, Number
+
 
 class NumberLineEdit(EditableWidget, DisplayWidget):
-    category = "Digit"
-
     def __init__(self, box, parent):
         super(NumberLineEdit, self).__init__(box)
         self.widget = QLineEdit(parent)
@@ -77,6 +77,8 @@ class NumberLineEdit(EditableWidget, DisplayWidget):
 
 
 class DoubleLineEdit(NumberLineEdit):
+    category = Number
+    priority = 10
     alias = "Float Field"
 
     def __init__(self, box, parent):
@@ -124,6 +126,8 @@ class IntValidator(QValidator):
 
 
 class IntLineEdit(NumberLineEdit):
+    category = Integer
+    priority = 10
     alias = "Integer Field"
 
     def __init__(self, box, parent):

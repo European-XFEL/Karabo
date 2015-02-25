@@ -34,7 +34,7 @@ from numpy import ndarray
 
 
 class DisplayLabel(DisplayWidget):
-    category = "Value"
+    category = hashtypes.String, hashtypes.Simple
     alias = "Value Field"
   
     def __init__(self, box, parent):

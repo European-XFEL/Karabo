@@ -20,6 +20,7 @@
 
 __all__ = ["DisplayImageElement"]
 
+from schema import ImageNode
 from widget import DisplayWidget
 
 from karabo import hashtypes
@@ -30,7 +31,7 @@ from PyQt4.QtGui import QColor, QImage, QLabel, QPixmap
 import numpy as np
 
 class DisplayImageElement(DisplayWidget):
-    category = "ImageElement"
+    category = ImageNode
     alias = "Image Element"
 
     colorTable = [QColor(i,i,i).rgb() for i in range(256)]

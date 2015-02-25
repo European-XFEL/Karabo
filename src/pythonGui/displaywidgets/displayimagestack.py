@@ -10,6 +10,7 @@ from widget import DisplayWidget
 import copy
 import icons
 from karabo import enums
+from schema import ImageNode
 
 import numpy as np
 from guiqwt.plot import ImageDialog, CurveDialog
@@ -394,7 +395,7 @@ class ImageListItem(QStandardItem):
 
 
 class ImageStack(DisplayWidget):
-    category = "Image"
+    category = ImageNode
     alias = "Image Stack View"
 
     def __init__(self, box, parent):

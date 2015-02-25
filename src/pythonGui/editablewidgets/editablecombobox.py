@@ -29,7 +29,7 @@ from PyQt4.QtGui import QComboBox
 
 
 class EditableComboBox(EditableWidget):
-    category = "Selection"
+    priority = 20
     alias = "Selection Field"
 
     def __init__(self, box, parent):
@@ -40,6 +40,11 @@ class EditableComboBox(EditableWidget):
 
         self.widget.installEventFilter(self)
         self.widget.currentIndexChanged[str].connect(self.onEditingFinished)
+
+
+    @classmethod
+    def isCompatible(cls, box, readonly):
+        return not readonly and box.descriptor.options is not None
 
 
     def typeChanged(self, box):

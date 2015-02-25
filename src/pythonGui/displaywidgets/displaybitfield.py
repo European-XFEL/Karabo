@@ -1,6 +1,7 @@
 
 
 from widget import DisplayWidget, EditableWidget
+from karabo.hashtypes import Integer
 
 from PyQt4.QtCore import QSize, Qt, pyqtSignal
 from PyQt4.QtGui import QWidget, QPainter
@@ -55,7 +56,7 @@ class BitfieldWidget(QWidget):
 
 
 class Bitfield(EditableWidget, DisplayWidget):
-    category = "Digit"
+    category = Integer
     alias = "Bit Field"
 
     def __init__(self, box, parent):
