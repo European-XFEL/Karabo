@@ -264,7 +264,6 @@ class Type(hashtypes.Type, metaclass=Monkey):
 
         item.setIcon(0, self.icon if self.options is None else icons.enum)
         item.enumeration = self.options
-        item.classAlias = self.classAlias
         component = None
         item.editableComponent = None
         if isClass:
@@ -275,7 +274,7 @@ class Type(hashtypes.Type, metaclass=Monkey):
             if self.accessMode is AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
-            item.editableComponent = component(item.classAlias, box, treeWidget)
+            item.editableComponent = component(None, box, treeWidget)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)
@@ -311,22 +310,15 @@ class Type(hashtypes.Type, metaclass=Monkey):
 
 class Char(hashtypes.Char, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    classAlias = "Text Field"
     icon = icons.string
 
 
 class String(hashtypes.String, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    classAlias = "Text Field"
     icon = icons.string
 
     def item(self, treeWidget, parent, box, isClass):
-        try:
-            self.classAlias = dict(directory='Directory', fileIn='File In',
-                                   fileOut='File Out')[self.displayType]
-        except (AttributeError, KeyError):
-            pass
-        else:
+        if self.displayType in ("directory", "fileIn", "fileOut"):
             self.icon = icons.path
         item = super(String, self).item(treeWidget, parent, box, isClass)
         self.completeItem(treeWidget, item, box, isClass)
@@ -335,25 +327,17 @@ class String(hashtypes.String, metaclass=Monkey):
 
 class Integer(hashtypes.Integer, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    classAlias = 'Integer Field'
     icon = icons.int
 
 
 class Number(hashtypes.Number, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    classAlias = "Float Field"
     icon = icons.float
 
 
 class Bool(hashtypes.Bool, metaclass=Monkey):
     # Means that parent class is overwritten/updated
-    classAlias = "Toggle Field"
     icon = icons.boolean
-
-
-class Vector(hashtypes.Vector, metaclass=Monkey):
-    # Means that parent class is overwritten/updated
-    classAlias = 'List'
 
 
 class Object(object):
@@ -405,8 +389,6 @@ class Dummy(object):
 
 
 class Schema(hashtypes.Descriptor):
-    classAlias = "Value Field"
-
     def __init__(self, name='DUNNO'):
         self.dict = OrderedDict()
         self.cls = None
@@ -456,8 +438,6 @@ class Schema(hashtypes.Descriptor):
         ret.displayedName = key
         ret.key = key
         Schema.parseAttrs(ret, attrs, parent)
-        if ret.options is not None:
-            ret.classAlias = "Selection Field"
         return ret
 
 
@@ -593,8 +573,6 @@ class Schema(hashtypes.Descriptor):
 
 
 class ImageNode(Schema):
-    classAlias = "Image View"
-
     def item(self, treeWidget, parent, box, isClass):
         item = ImageTreeWidgetItem(box, treeWidget, parent)
         item.enabled = not isClass
@@ -602,8 +580,6 @@ class ImageNode(Schema):
 
 
 class OutputNode(Schema):
-    classAlias = "Network output"
-
     def getClass(self):
         if self.cls is None:
             self.cls = type(str(self.name), (NetworkObject,), self.dict)
@@ -621,9 +597,6 @@ class Slot(Object):
 
 
 class SlotNode(Schema):
-    classAlias = "Command"
-
-
     def execute(self, box):
         Network().onExecute(box)
 
@@ -644,7 +617,6 @@ class ChoiceOfNodes(Schema):
     @classmethod
     def parse(cls, key, hash, attrs, parent=None):
         self = super(ChoiceOfNodes, cls).parse(key, hash, attrs, parent)
-        self.classAlias = 'Choice Element'
         assert self.defaultValue is None or self.defaultValue in self.dict, \
             'the default value "{}" is not in {} for node {}'.format(
                 self.defaultValue, list(hash.keys()), key)
@@ -656,8 +628,6 @@ class ChoiceOfNodes(Schema):
         item.defaultValue = self.defaultValue
 
         item.isChoiceElement = True
-        item.classAlias = "Choice Element"
-
         item.editableComponent = None
         component = None
 
@@ -666,7 +636,7 @@ class ChoiceOfNodes(Schema):
         else:
             component = ChoiceComponent
 
-        item.editableComponent = component(item.classAlias, box, treeWidget)
+        item.editableComponent = component(None, box, treeWidget)
         self.completeItem(treeWidget, item, box, isClass)
 
         for i in range(item.childCount()):

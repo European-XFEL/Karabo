@@ -1308,8 +1308,7 @@ class Scene(QSvgWidget):
                 configDisplayComponent = item.displayComponent
                 if configDisplayComponent is not None:
                     proxy = ProxyWidget(self.inner)
-                    displayComponent = DisplayComponent(
-                        box.descriptor.classAlias, realbox, proxy)
+                    displayComponent = DisplayComponent(None, realbox, proxy)
                     proxy.setComponent(displayComponent)
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
@@ -1330,7 +1329,7 @@ class Scene(QSvgWidget):
                     proxy = ProxyWidget(self.inner)
 
                     editableComponent = EditableApplyLaterComponent(
-                        box.descriptor.classAlias, realbox, proxy)
+                        None, realbox, proxy)
 
                     realbox.addVisible()
                     proxy.setComponent(editableComponent)

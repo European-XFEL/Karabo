@@ -33,8 +33,6 @@ class CommandTreeWidgetItem(BaseTreeWidgetItem):
 
         # Name of command
         self.__command = command
-        self.classAlias = "Command"
-        
         self.__pbCommand = QPushButton()
         self.__pbCommand.setMinimumHeight(32)
         self.__pbCommand.setEnabled(False)
