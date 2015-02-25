@@ -80,10 +80,13 @@ class Dialog(QDialog):
         self.image.setPixmap(self.items[row].pixmap)
 
     def setURL(self, url):
+        if url.startswith("file:"):
+            url = self.project.addResource("icon", self.project.getURL(url))
         item = self.items[self.list.currentRow()]
         item.url = url
         item.getPixmap(self.project)
         self.image.setPixmap(item.pixmap)
+        self.copy.setEnabled(not url.startswith("project:"))
 
     def on_image_newMime(self, mime):
         if mime.hasImage():
