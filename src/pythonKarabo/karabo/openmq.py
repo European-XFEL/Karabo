@@ -1,39 +1,55 @@
 import numbers
 from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
-                    c_float, c_double, c_uint, string_at)
+                    c_float, c_double, c_uint, string_at, Structure)
 
 
-class DLL(CDLL):
-    def __getattr__(self, name):
-        ret = CDLL.__getattr__(self, name)
-        ret.restype = check
-        return ret
-
-dll = DLL("libopenmqc.so")
-
-
-class String(c_char_p):
-    def __del__(self):
-        dll.MQFreeString(self)
+dll = CDLL("libopenmqc.so")
 
 
 class Error(Exception):
     def __init__(self, status):
-        s = dll.MQGetStatusString(status)
+        s = dll.dll.MQGetStatusString(status)
         self.status = status
-        Exception.__init__(self, s.value.decode("utf8"))
+        try:
+            super().__init__(self, s.value.decode("utf8"))
+        finally:
+            dll.MQFreeString(s)
 
 
-def check(status):
-    if dll.MQStatusIsError(status):
-        raise Error(status)
+class MQError(Structure):
+    _fields_ = [("error", c_uint)]
 
-dll.MQStatusIsError.restype = int
-dll.MQFreeString.restype = int
-dll.MQPropertiesKeyIterationHasNext.restype = int
-dll.MQGetStatusString.restype = String
 
+class String(c_char_p):
+    pass
+
+
+class Wrapper(object):
+    def __init__(self, dll):
+        self.dll = dll
+        dll.MQGetStatusString.restype = String
+
+    def __getattr__(self, name):
+        inner = getattr(self.dll, name)
+        inner.restype = MQError
+
+        def wrapper(*args):
+            status = inner(*args)
+            if self.dll.MQStatusIsError(status.error):
+                raise Error(status.error)
+            return status.error
+        setattr(self, name, wrapper)
+        return wrapper
+
+    def MQFreeString(self, string):
+        self.dll.MQFreeString(string)
+
+    def MQPropertiesKeyIterationHasNext(self, handle):
+        return bool(self.dll.MQPropertiesKeyIterationHasNext(handle))
+
+
+dll = Wrapper(dll)
 
 types = [c_bool, c_byte, c_short, c_int, c_longlong,
          c_float, c_double, c_char_p]
@@ -273,8 +289,7 @@ class DurableConsumer(_DurableConsumer):
 
 class SharedDurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector):
-        super().__init__(self,
-                                                    durableName=durableName)
+        super().__init__(self, durableName=durableName)
         dll.MQCreateSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")),
@@ -345,6 +360,8 @@ class Message(object):
     def _create(handle):
         type = c_int()
         dll.MQGetMessageType(handle, byref(type))
+        if type.value > 1:
+            raise RuntimeError
         return (TextMessage, BytesMessage,
                 Message, Message)[type.value](handle)
 
