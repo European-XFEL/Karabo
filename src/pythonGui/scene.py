@@ -27,10 +27,11 @@ from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLin
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
                           QPoint)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
-                         QDialog, QFrame, QLabel, QLayout, QKeySequence, QMenu,
-                         QMessageBox, QPalette, QPainter, QPen, QStackedLayout,
-                         QWidget)
-from PyQt4 import QtGui
+                         QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
+                         QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
+                         QPen, QStackedLayout,QStandardItemModel, QStandardItem,
+                         QTreeView, QVBoxLayout, QWidget)
+
 from PyQt4.QtSvg import QSvgWidget
 
 from xml.etree import ElementTree
@@ -856,23 +857,23 @@ class PasteReplace(Paste):
         devices = sorted({k.split(".", 1)[0] for k in keys if k})
 
         dialog = QDialog()
-        layout = QtGui.QVBoxLayout(dialog)
-        tree = QtGui.QTreeView(dialog)
+        layout = QVBoxLayout(dialog)
+        tree = QTreeView(dialog)
         layout.addWidget(tree)
-        buttons = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
             Qt.Horizontal, dialog)
         buttons.accepted.connect(dialog.accept)
         buttons.rejected.connect(dialog.reject)
         layout.addWidget(buttons)
 
-        model = QtGui.QStandardItemModel(len(devices), 2, tree)
+        model = QStandardItemModel(len(devices), 2, tree)
         model.setHorizontalHeaderLabels(["Current Device", "New Device"])
         for i, d in enumerate(devices):
-            item = QtGui.QStandardItem(d)
+            item = QStandardItem(d)
             item.setEditable(False)
             model.setItem(i, 0, item)
-            item = QtGui.QStandardItem("")
+            item = QStandardItem("")
             item.setEditable(True)
             model.setItem(i, 1, item)
         tree.setModel(model)
