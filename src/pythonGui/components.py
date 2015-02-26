@@ -92,7 +92,7 @@ class DisplayComponent(BaseComponent):
     Widget = DisplayWidget
 
 
-    def __init__(self, classAlias, box, parent, widgetFactory="DisplayWidget"):
+    def __init__(self, classAlias, box, parent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
@@ -154,11 +154,6 @@ class DisplayComponent(BaseComponent):
         self.widgetFactory.removeKey(key)
 
 
-    def destroy(self):
-        for key in self.widgetFactory.keys:
-            self.removeKey(key)
-
-
     def changeWidget(self, factory):
         oldWidget = self.widgetFactory.widget
         oldFactory = self.widgetFactory
@@ -177,7 +172,7 @@ class DisplayComponent(BaseComponent):
 class EditableNoApplyComponent(BaseComponent):
     """ These components are used while editing the initial parameters
     of a class. """
-    def __init__(self, classAlias, box, parent, widgetFactory=None):
+    def __init__(self, classAlias, box, parent):
         self.__compositeWidget = QWidget(parent)
         hLayout = QHBoxLayout(self.__compositeWidget)
         hLayout.setContentsMargins(0,0,0,0)
@@ -242,11 +237,6 @@ class EditableNoApplyComponent(BaseComponent):
         pass
 
 
-    def destroy(self):
-        for key in self.widgetFactory.keys:
-            manager.Manager().unregisterEditableComponent(key, self)
-
-
     def changeWidget(self, factory, proxyWidget, alias):
         self.__initParams['value'] = self.value
 
@@ -276,7 +266,7 @@ class EditableApplyLaterComponent(BaseComponent):
     signalApplyChanged = pyqtSignal(object, bool) # key, state of apply button
 
 
-    def __init__(self, classAlias, box, parent, widgetFactory=None):
+    def __init__(self, classAlias, box, parent):
         self.__currentDisplayValue = None
 
         self.__compositeWidget = QWidget(parent)
@@ -385,11 +375,6 @@ class EditableApplyLaterComponent(BaseComponent):
 
     def removeKey(self, key):
         pass
-
-
-    def destroy(self):
-        for key in self.widgetFactory.keys:
-            manager.Manager().unregisterEditableComponent(key, self)
 
 
     def changeWidget(self, factory, alias):
@@ -512,7 +497,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
 
 class ChoiceComponent(BaseComponent):
-    def __init__(self, classAlias, box, parent, widgetFactory=None):
+    def __init__(self, classAlias, box, parent):
         W = Widget.widgets.get(classAlias)
         if W is None:
             self.widgetFactory = EditableWidget.getClass(box)(
