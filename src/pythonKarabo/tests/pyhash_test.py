@@ -6,6 +6,7 @@ import numpy
 from numpy.testing import assert_equal
 
 from karabo.karathon import BinarySerializerHash
+from zlib import adler32
 
 class Hash_TestCase(unittest.TestCase):
 
@@ -133,7 +134,7 @@ class Hash_TestCase(unittest.TestCase):
         h["int"] = 4
         h["string"] = "bla"
         h["chars"] = b"bla"
-        h["vector"] = numpy.arange(7)
+        h["vector"] = numpy.arange(7, dtype=numpy.int64)
         h["emptyvector"] = numpy.array([])
         h["hash"] = Hash("a", 3, "b", 7.1)
 
@@ -192,6 +193,7 @@ class Hash_TestCase(unittest.TestCase):
         w = BinaryWriter()
         r = BinaryParser()
         s = w.write(self.create_hash())
+        self.assertEqual(adler32(s), 2002923287)
         self.check_hash(r.read(s))
 
 
