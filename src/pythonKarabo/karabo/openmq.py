@@ -1,7 +1,7 @@
 import numbers
 from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
-                    c_float, c_double, string_at)
+                    c_float, c_double, c_uint, string_at)
 
 
 class DLL(CDLL):
@@ -22,7 +22,7 @@ class Error(Exception):
     def __init__(self, status):
         s = dll.MQGetStatusString(status)
         self.status = status
-        Exception.__init__(self, s.value.decode("ascii"))
+        Exception.__init__(self, s.value.decode("utf8"))
 
 
 def check(status):
@@ -42,15 +42,25 @@ typenames = ["Bool", "Int8", "Int16", "Int32", "Int64",
 
 
 class Properties(object):
-    def __init__(self, handle=None):
+    def __new__(cls, handle=None):
         if handle is None:
-            self.handle = c_int()
-            dll.MQCreateProperties(byref(self.handle))
-        else:
-            self.handle = handle
+            handle = c_int()
+            dll.MQCreateProperties(byref(handle))
+        self = super().__new__(cls)
+        self.handle = handle
+        return self
+
+    def invalidate(self):
+        """ mark the properties as invalid
+
+        this is done after using OpenMQ functions which eat the properties"""
+        self.handle = c_uint(0xFEEEFEEE)
+
+    def valid(self):
+        return self.handle.value != 0xFEEEFEEE
 
     def __del__(self):
-        if self.handle is not None:
+        if self.valid():
             dll.MQFreeProperties(self.handle)
 
     def __iter__(self):
@@ -59,6 +69,10 @@ class Properties(object):
             key = c_char_p()
             dll.MQPropertiesKeyIterationGetNext(self.handle, byref(key))
             yield key.value.decode('utf8')
+
+    def items(self):
+        for k in self:
+            yield k, self[k]
 
     def __getitem__(self, key):
         key = c_char_p(key.encode('utf8'))
@@ -75,13 +89,13 @@ class Properties(object):
             dll.MQSetBoolProperty(self.handle, key, c_bool(value))
         elif isinstance(value, numbers.Integral):
             if -(1 << 7) <= value < 2 << 7:
-                dll.MQSetInt8Property(self.handle, key, c_int(value))
+                dll.MQSetInt8Property(self.handle, key, c_byte(value))
             elif -(1 << 15) <= value < 1 << 15:
-                dll.MQSetInt16Property(self.handle, key, c_int(value))
+                dll.MQSetInt16Property(self.handle, key, c_short(value))
             elif -(1 << 31) <= value < 1 << 31:
                 dll.MQSetInt32Property(self.handle, key, c_int(value))
             else:
-                dll.MQSetInt64Property(self.handle, key, c_int(value))
+                dll.MQSetInt64Property(self.handle, key, c_longlong(value))
         elif isinstance(value, numbers.Real):
             dll.MQSetFloat64Property(self.handle, key, c_double(value))
         elif isinstance(value, str):
@@ -101,7 +115,7 @@ class Connection(object):
             properties.handle, c_char_p(username.encode("utf8")),
             c_char_p(password.encode("utf8")),
             c_char_p(clientID), c_char_p(0), c_char_p(0), byref(self.handle))
-        properties.handle = None
+        properties.invalidate()
 
     @property
     def properties(self):
@@ -154,8 +168,10 @@ class Session(object):
 
 
 class _Destination(object):
-    def __init__(self, handle):
+    def __new__(cls, handle):
+        self = super().__new__(cls)
         self.handle = handle
+        return self
 
     def __del__(self):
         dll.MQFreeDestination(self.handle)
@@ -176,10 +192,11 @@ class _Destination(object):
 
 
 class Destination(_Destination):
-    def __init__(self, session, name, type):
-        _Destination.__init__(self, c_int())
+    def __new__(cls, session, name, type):
+        handle = c_int()
         dll.MQCreateDestination(session.handle, c_char_p(name.encode("utf8")),
-                                c_char_p(type), byref(self.handle))
+                                c_char_p(type), byref(handle))
+        return super().__new__(cls, handle)
 
 
 class Producer(object):
@@ -209,7 +226,7 @@ class _Consumer(object):
 
 class Consumer(_Consumer):
     def __init__(self, session, destination, selector, noLocal):
-        super(Consumer, self).__init__()
+        super().__init__()
         dll.MQCreateMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
@@ -229,7 +246,7 @@ class Consumer(_Consumer):
 
 class SharedConsumer(_Consumer):
     def __init__(self, session, destination, subscription, selector):
-        super(SharedConsumer, self).__init__(self)
+        super().__init__(self)
         dll.MQCreateSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
@@ -238,7 +255,7 @@ class SharedConsumer(_Consumer):
 
 class _DurableConsumer(_Consumer):
     def __init__(self, durableName, **kwargs):
-        super(_DurableConsumer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.durableName = c_char_p(durableName.encode("utf8"))
 
     def unsubscribe(self):
@@ -247,7 +264,7 @@ class _DurableConsumer(_Consumer):
 
 class DurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super(DurableConsumer, self).__init__(self, durableName=durableName)
+        super().__init__(self, durableName=durableName)
         dll.MQCreateDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal),
@@ -256,7 +273,7 @@ class DurableConsumer(_DurableConsumer):
 
 class SharedDurableConsumer(_DurableConsumer):
     def __init__(self, session, destination, durableName, selector):
-        super(SharedDurableConsumer, self).__init__(self,
+        super().__init__(self,
                                                     durableName=durableName)
         dll.MQCreateSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
@@ -268,7 +285,7 @@ class _AsyncConsumer(_Consumer):
     Callback = CFUNCTYPE(c_int, c_int, c_int, c_int, c_void_p)
 
     def __init__(self, **kwargs):
-        super(_AsyncConsumer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.callback = self.Callback(self.callback)
 
     def callback(self, session, consumer, message, data):
@@ -280,7 +297,7 @@ class _AsyncConsumer(_Consumer):
 
 class AsyncConsumer(_AsyncConsumer):
     def __init__(self, session, destination, selector, noLocal):
-        super(AsyncConsumer, self).__init__()
+        super().__init__()
         dll.MQCreateAsyncMessageConsumer(
             session.handle, destination.handle,
             c_char_p(selector.encode("utf8")),
@@ -289,7 +306,7 @@ class AsyncConsumer(_AsyncConsumer):
 
 class AsyncSharedConsumer(_AsyncConsumer):
     def __init__(self, session, destination, subscription, selector):
-        super(AsyncSharedConsumer, self).__init__()
+        super().__init__()
         dll.MQCreateAsyncSharedMessageConsumer(
             session.handle, destination.handle,
             c_char_p(subscription.encode("utf8")),
@@ -299,7 +316,7 @@ class AsyncSharedConsumer(_AsyncConsumer):
 
 class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super(AsyncDurableConsumer, self).__init__(durableName=durableName)
+        super().__init__(durableName=durableName)
         dll.MQCreateAsyncDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), c_bool(noLocal), self.callback,
@@ -308,8 +325,7 @@ class AsyncDurableConsumer(_AsyncConsumer, _DurableConsumer):
 
 class AsyncSharedDurableConsumer(_AsyncConsumer, _DurableConsumer):
     def __init__(self, session, destination, durableName, selector, noLocal):
-        super(AsyncSharedDurableConsumer, self).__init__(
-            durableName=durableName)
+        super().__init__(durableName=durableName)
         dll.MQCreateAsyncSharedDurableMessageConsumer(
             session.handle, destination.handle, self.durableName,
             c_char_p(selector.encode("utf8")), self.callback, c_void_p(),
@@ -317,19 +333,20 @@ class AsyncSharedDurableConsumer(_AsyncConsumer, _DurableConsumer):
 
 
 class Message(object):
+    def __new__(cls, handle=None):
+        if handle is None:
+            handle = c_int()
+            dll.MQCreateMessage(byref(handle))
+        self = super().__new__(cls)
+        self.handle = handle
+        return self
+
     @staticmethod
     def _create(handle):
         type = c_int()
         dll.MQGetMessageType(handle, byref(type))
         return (TextMessage, BytesMessage,
                 Message, Message)[type.value](handle)
-
-    def __init__(self, handle=None):
-        if handle is None:
-            self.handle = c_int()
-            dll.MQCreateMessage(byref(self.handle))
-        else:
-            self.handle = handle
 
     def __del__(self):
         dll.MQFreeMessage(self.handle)
@@ -349,7 +366,7 @@ class Message(object):
     @properties.setter
     def properties(self, properties):
         dll.MQSetMessageProperties(self.handle, properties.handle)
-        properties.handle = None
+        properties.invalidate()
 
     @property
     def headers(self):
@@ -360,7 +377,7 @@ class Message(object):
     @headers.setter
     def headers(self, properties):
         dll.MQSetMessageHeaders(self.handle, properties.handle)
-        properties.handle = None
+        properties.invalidate()
 
     @property
     def replyTo(self):
@@ -374,12 +391,11 @@ class Message(object):
 
 
 class TextMessage(Message):
-    def __init__(self, handle=None):
+    def __new__(cls, handle=None):
         if handle is None:
-            self.handle = c_int()
-            dll.MQCreateTextMessage(byref(self.handle))
-        else:
-            self.handle = handle
+            handle = c_int()
+            dll.MQCreateTextMessage(byref(handle))
+        return super().__new__(cls, handle)
 
     @property
     def data(self):
@@ -394,12 +410,11 @@ class TextMessage(Message):
 
 
 class BytesMessage(Message):
-    def __init__(self, handle=None):
+    def __new__(cls, handle=None):
         if handle is None:
-            self.handle = c_int()
-            dll.MQCreateBytesMessage(byref(self.handle))
-        else:
-            self.handle = handle
+            handle = c_int()
+            dll.MQCreateBytesMessage(byref(handle))
+        return super().__new__(cls, handle)
 
     @property
     def data(self):
@@ -411,4 +426,5 @@ class BytesMessage(Message):
     @data.setter
     def data(self, data):
         data = bytes(data)
-        dll.MQSetBytesMessageBytes(self.handle, c_char_p(data), len(data))
+        dll.MQSetBytesMessageBytes(self.handle, c_char_p(data),
+                                   c_int(len(data)))
