@@ -348,7 +348,7 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acAddMacro)
                 menu.addAction(acLoadMacro)
             elif firstObj.displayName == Project.CONFIGURATIONS_LABEL:
-                text = "Apply configurations"
+                text = "Apply to devices"
                 acApplyConfigurations = QAction(text, self)
                 acApplyConfigurations.setStatusTip(text)
                 acApplyConfigurations.setToolTip(text)
