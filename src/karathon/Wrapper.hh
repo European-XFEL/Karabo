@@ -272,6 +272,24 @@ namespace karathon {
             return l;
         }
 
+        static bp::object fromStdVectorToPyBytes(const std::vector<char>& v) {
+            const char* data = &v[0];
+            Py_ssize_t size = v.size();
+            return bp::object(bp::handle<>(PyBytes_FromStringAndSize(data, size)));
+        }
+
+        static bp::object fromStdVectorToPyBytes(const std::vector<signed char>& v) {
+            const char* data = reinterpret_cast<const char*> (&v[0]);
+            Py_ssize_t size = v.size();
+            return bp::object(bp::handle<>(PyBytes_FromStringAndSize(data, size)));
+        }
+
+        static bp::object fromStdVectorToPyBytes(const std::vector<unsigned char>& v) {
+            const char* data = reinterpret_cast<const char*> (&v[0]);
+            Py_ssize_t size = v.size();
+            return bp::object(bp::handle<>(PyBytes_FromStringAndSize(data, size)));
+        }
+
         static bp::object fromStdVectorToPyByteArray(const std::vector<char>& v) {
             const char* data = &v[0];
             Py_ssize_t size = v.size();
