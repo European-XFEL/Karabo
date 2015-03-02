@@ -357,12 +357,14 @@ class _Network(QObject):
 
 
     def onStartMonitoringDevice(self, deviceId):
+        print("Network().onStartMonitoringDevice", deviceId)
         h = Hash("type", "startMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
 
 
     def onStopMonitoringDevice(self, deviceId):
+        print("Network().onStopMonitoringDevice", deviceId)
         h = Hash("type", "stopMonitoringDevice")
         h.set("deviceId", deviceId)
         self._tcpWriteHash(h)
