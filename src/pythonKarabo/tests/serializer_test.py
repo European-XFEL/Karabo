@@ -55,7 +55,7 @@ class  Serializer_TestCase(unittest.TestCase):
             hash.setAttribute('e.g.h', 'attr1', None)
             hash.setAttribute('e.f.e', 'attrList', [None, None])
             archive = ser.save(hash)      # serialize hash
-            self.assertEqual(archive.__class__.__name__, 'bytearray')
+            self.assertEqual(archive.__class__.__name__, 'bytes')
             hash2 = ser.load(archive)
             self.assertTrue(similar(hash, hash2))
             
