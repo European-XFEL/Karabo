@@ -202,7 +202,6 @@ class Hash_TestCase(unittest.TestCase):
         r = BinaryParser()
         s = w.write(self.create_hash())
         ser = BinarySerializerHash.create("Bin")
-        print(s)
         h = ser.load(s)
         ret = Hash.decode(ser.save(h), "Bin")
         self.check_hash(ret)
