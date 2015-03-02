@@ -261,12 +261,10 @@ class NavigationTreeModel(QAbstractItemModel):
             self.selectPath(lastSelectionPath)
 
 
-    def onServerConnectionChanged(self, isConnected):
+    def clear(self):
         """
-        If the server connection is changed, the model needs a reset.
+        The model is going to be reseted.
         """
-        if isConnected: return
-        
         self.beginResetModel()
         self.rootNode.parentNode = None
         self.rootNode.childNodes = []

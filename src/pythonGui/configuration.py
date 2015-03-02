@@ -170,10 +170,12 @@ class Configuration(Box):
 
     def addVisible(self):
         self.visible += 1
+        print("+++addVisible", self.visible, self.status, self)
         if self.visible == 1 and self.status not in ("offline", "requested"):
             if self.status == "online":
                 Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
+            print("...Network().onStartMonitoringDevice")
             Network().onStartMonitoringDevice(self.id)
 
 
@@ -181,7 +183,9 @@ class Configuration(Box):
 
     def removeVisible(self):
         self.visible -= 1
+        print("---removeVisible", self.visible, self.status, self)
         if self.visible == 0 and self.status != "offline":
+            print("...Network().onStopMonitoringDevice")
             Network().onStopMonitoringDevice(self.id)
 
 

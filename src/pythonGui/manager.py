@@ -80,8 +80,8 @@ class _Manager(QObject):
 
         Network().signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
-        Network().signalServerConnectionChanged.connect(
-            self.systemTopology.onServerConnectionChanged)
+        #Network().signalServerConnectionChanged.connect(
+        #    self.systemTopology.onServerConnectionChanged)
         Network().signalReceivedData.connect(self.onReceivedData)
 
         # Sets all parameters to start configuration
@@ -208,10 +208,10 @@ class _Manager(QObject):
         if isConnected:
             return
 
+        # Send reset signal to all panels which needs a reset
+        self.signalReset.emit()
         # Reset manager settings
         self.reset()
-        # Send reset signal to configurator to clear stacked widget
-        self.signalReset.emit()
 
 
     def _triggerStateChange(self, box, value, timestamp):
