@@ -1,8 +1,11 @@
 from asyncio import async, get_event_loop, set_event_loop, TimeoutError
+import sys
 import threading
 
 from karabo import KaraboError, String, Integer
+from karabo.eventloop import EventLoop
 from karabo.hash import Hash
+from karabo.hashtypes import Slot, Descriptor
 from karabo.output import threadData
 from karabo.signalslot import Proxy, SignalSlotable
 from karabo.python_device import Device
@@ -90,3 +93,37 @@ class Macro(Device):
     def printToConsole(self, data):
         self.print = data
         self.printno += 1
+
+    @classmethod
+    def main(cls):
+        if len(sys.argv) < 2:
+            if cls.__doc__ is not None:
+                print(cls.__doc__)
+                return
+            print("usage: {} slot [property=value] ...\n".
+                  format(sys.argv[0]))
+            print("this calls a slot in macro {} with the given properties\n".
+                  format(cls.__name__))
+            print("available properties and slots:")
+            print("-------------------------------")
+            for k in cls._attrs:
+                v = getattr(cls, k)
+                if isinstance(v, Descriptor):
+                    dn = v.displayedName if v.displayedName is not None else ""
+                    t = type(v).__name__
+                    print("{:10}{:10}{}".format(k, t, dn))
+            return
+        args = {k: getattr(cls, k).fromstring(v) for k, v in
+                (a.split("=", 1) for a in sys.argv[2:])}
+        call = sys.argv[1]
+        slot = getattr(cls, call)
+        assert isinstance(slot, Slot), "only slots can be called"
+
+        loop = EventLoop()
+        set_event_loop(loop)
+        o = cls(args)
+        async(o.run_async())
+        try:
+            loop.run_until_complete(loop.run_in_executor(None, slot.method, o))
+        finally:
+            loop.close()
