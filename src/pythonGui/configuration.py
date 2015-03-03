@@ -116,7 +116,7 @@ class Configuration(Box):
         if manager.Manager().systemHash is None:
             self.status = "offline"
             return
-
+        
         for k in ("device", "macro", "server"):
             try:
                 attrs = manager.Manager().systemHash[k][self.id, ...]
@@ -127,6 +127,10 @@ class Configuration(Box):
             self.error = False
             self.status = "offline"
             return
+        
+        if len(attrs) < 1:
+            return
+        
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
         error = attrs.get("status") == "error"
