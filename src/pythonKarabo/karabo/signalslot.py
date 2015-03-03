@@ -221,7 +221,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.ADMIN)
 
     def __init__(self, configuration):
-        self.notify_changes = False
+        self._sethash = Hash()
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
@@ -229,7 +229,7 @@ class SignalSlotable(Configurable):
         self.deviceId = self._deviceId_
         self._ss = get_event_loop().getBroker(self.deviceId,
                                               type(self).__name__)
-        self.notify_changes = True
+        self._sethash = None  # don't inform network again about initial config
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
 
         self.__devices = {}
@@ -358,12 +358,21 @@ class SignalSlotable(Configurable):
 
     def setValue(self, attr, value):
         self.__dict__[attr] = value
-        if self.notify_changes:
-            self.signalChanged(Hash(attr.key, value), self.deviceId)
+        if self._sethash is None:
+            self._sethash = Hash()
+            self._ss.loop.call_soon_threadsafe(self.update)
+        self._sethash[attr.key] = value
+
+    def update(self):
+        if self._sethash is not None:
+            self.signalChanged(self._sethash, self.deviceId)
+            self._sethash = None
 
     def setChildValue(self, key, value):
-        if self.notify_changes:
-            self.signalChanged(Hash(key, value), self.deviceId)
+        if self._sethash is None:
+            self._sethash = Hash()
+            self._ss.loop.call_soon_threadsafe(self.update)
+        self._sethash[key] = value
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
