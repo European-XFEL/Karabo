@@ -153,6 +153,11 @@ class NavigationTreeView(QTreeView):
         self.model().selectIndex(index)
 
 
+    def clear(self):
+        self.clearSelection()
+        self.model().clear()
+
+
     def onAbout(self):
         index = self.currentIndex()
         node = index.internalPointer()
