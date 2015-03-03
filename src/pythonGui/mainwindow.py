@@ -214,9 +214,10 @@ class MainWindow(QMainWindow):
         # Close all projects
         # If this was successful, you can be sure that this function
         # was already called - no need to do it again ;)
-        projectsToClose = self.projectPanel.closeAllProjects()
+        #projectsToClose = self.projectPanel.closeAllProjects()
         # if no projects available to close, placeholderPanel was not yet set
-        if not projectsToClose and self.placeholderPanel is None:
+        #if not projectsToClose and self.placeholderPanel is None:
+        if self.placeholderPanel is None:
             # Add startup page
             self._createPlaceholderPanel()
 
