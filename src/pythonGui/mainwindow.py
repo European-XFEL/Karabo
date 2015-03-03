@@ -372,7 +372,6 @@ class MainWindow(QMainWindow):
         
         self.tbAccessLevel.setEnabled(isConnected)
         
-        print("==== MainWindow.onServerConnectionChanged", isConnected)
         # Adapt middle panel
         self._showStartUpPage(isConnected)
 
