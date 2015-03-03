@@ -313,7 +313,7 @@ class WorkflowItem(Item):
         # In case there is a device in the scene but not in the project panel
         if device is None:
             return None
-        
+
         # Trigger selection to get descriptor
         project.signalSelectObject.emit(device)
 
