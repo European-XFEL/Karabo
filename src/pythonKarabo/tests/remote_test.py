@@ -8,6 +8,7 @@ from functools import wraps
 
 from karabo.eventloop import EventLoop
 from karabo.python_device import Device
+from karabo.signalslot import waitUntilNew
 from karabo import Slot, Integer
 
 def async_tst(f):
@@ -133,6 +134,34 @@ class Local(Device):
                 self.timeout = True
 
     @Slot()
+    def waituntilnew(self):
+        with (yield from self.getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            d.count()
+            for i in range(30):
+                j = yield from waitUntilNew(d).counter
+                if i != j:
+                    self.max = i
+                    break
+            else:
+                self.max = 30
+
+    @Slot()
+    def waituntildevice(self):
+        with (yield from self.getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            d.count()
+            for i in range(30):
+                h = yield from waitUntilNew(d)
+                if i != h["counter"]:
+                    self.max = i
+                    break
+            else:
+                self.max = 30
+
+    @Slot()
     def collect_set(self):
         with (yield from self.getDevice("remote")) as d:
             d.once = 3
@@ -211,6 +240,16 @@ class Tests(TestCase):
         self.assertEqual(local.f2, 11)
         self.assertTrue(local.timeout)
 
+
+    @async_tst
+    def test_waituntilnew(self):
+        yield from local.waituntilnew()
+        self.assertEqual(local.max, 30)
+
+    @async_tst
+    def test_waituntildevice(self):
+        yield from local.waituntildevice()
+        self.assertEqual(local.max, 30)
 
     @async_tst
     def test_collect(self):
