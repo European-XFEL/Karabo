@@ -161,6 +161,7 @@ class Proxy(object):
             self.__exit__(None, None, None)
 
     def __iter__(self):
+        self._update()
         conf, _ = yield from self._device.call(self._deviceId,
                                                "slotGetConfiguration")
         self._onChanged(conf)
