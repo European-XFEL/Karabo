@@ -124,7 +124,7 @@ class Proxy(object):
                 self.__dict__[d] = v
                 f = self._futures.pop(k, None)
                 if f is not None:
-                    f.set_result((k, v, Timestamp.fromHashAttributes(a)))
+                    f.set_result(v)
         f = self._futures.pop(None, None)
         if f is not None:
             f.set_result(hash)
@@ -177,6 +177,21 @@ class ProxySlot(Slot):
     def method(self, device):
         device._update()
         device._device._ss.emit("call", {device._deviceId: [self.key]})
+
+
+class waitUntilNew:
+    # this looks like a function to the user, although it is a class
+    def __init__(self, proxy):
+        self.proxy = proxy
+
+    def __getattr__(self, attr):
+        assert isinstance(getattr(type(self.proxy), attr), Type)
+        return self.proxy._futures.setdefault(
+            attr, Future(loop=self.proxy._device._ss.loop))
+
+    def __iter__(self):
+        return (yield from self.proxy._futures.setdefault(
+            None, Future(loop=self.proxy._device._ss.loop)))
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -385,8 +400,9 @@ class SignalSlotable(Configurable):
         if d is not None:
             d._onChanged(configuration)
         loop = get_event_loop()
-        loop.changedFuture.set_result(None)
-        loop.changedFuture = Future()
+        if not loop.changedFuture.done():
+            loop.changedFuture.set_result(None)
+        loop.changedFuture = Future(loop=loop)
 
     @coroutine
     def waitUntil(self, condition):
