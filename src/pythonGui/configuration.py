@@ -116,7 +116,7 @@ class Configuration(Box):
         if manager.Manager().systemHash is None:
             self.status = "offline"
             return
-
+        
         for k in ("device", "macro", "server"):
             try:
                 attrs = manager.Manager().systemHash[k][self.id, ...]
@@ -127,6 +127,10 @@ class Configuration(Box):
             self.error = False
             self.status = "offline"
             return
+        
+        if len(attrs) < 1:
+            return
+        
         self.classId = attrs.get("classId")
         self.serverId = attrs.get("serverId")
         error = attrs.get("status") == "error"
@@ -170,12 +174,10 @@ class Configuration(Box):
 
     def addVisible(self):
         self.visible += 1
-        print("+++addVisible", self.visible, self.status, self)
         if self.visible == 1 and self.status not in ("offline", "requested"):
             if self.status == "online":
                 Network().onGetDeviceSchema(self.id)
                 self.status = "requested"
-            print("...Network().onStartMonitoringDevice")
             Network().onStartMonitoringDevice(self.id)
 
 
@@ -183,9 +185,7 @@ class Configuration(Box):
 
     def removeVisible(self):
         self.visible -= 1
-        print("---removeVisible", self.visible, self.status, self)
         if self.visible == 0 and self.status != "offline":
-            print("...Network().onStopMonitoringDevice")
             Network().onStopMonitoringDevice(self.id)
 
 
