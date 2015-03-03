@@ -45,9 +45,6 @@ class CustomMiddlePanel(QScrollArea):
         self.scene.setParent(self)
         self.scene.designMode = isConnectedToServer
         self.setWidget(self.scene)
-
-        #Manager().signalReset.connect(self.scene.reset)
-        Network().signalServerConnectionChanged.connect(self.onServerConnectionChanged)
         
         self.setupActions(isConnectedToServer)
         self.setBackgroundRole(QPalette.Dark)
@@ -95,15 +92,6 @@ class CustomMiddlePanel(QScrollArea):
         widget = QWidget()
         widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.drawingToolBar.addWidget(widget)
-
-
-    def onServerConnectionChanged(self, isConnected):
-        """
-        This slot is called when the server connection has changed (connect/disconnect).
-        In this case the design mode functionality of the customMiddlePanel changes.
-        """
-        self.__acDesignMode.setChecked(isConnected)
-        self.__acDesignMode.setEnabled(isConnected)
 
 
     def onDesignModeChanged(self, isChecked):

@@ -59,6 +59,7 @@ class ProjectPanel(QWidget):
         manager.Manager().signalProjectLoaded.connect(self.twProject.onProjectLoaded)
         manager.Manager().signalProjectSaved.connect(self.twProject.onProjectSaved)
         manager.Manager().signalProjectClosed.connect(self.twProject.onProjectClosed)
+        manager.Manager().signalReset.connect(self.onResetPanel)
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setContentsMargins(5,5,5,5)
@@ -116,6 +117,10 @@ class ProjectPanel(QWidget):
     def onSelectionChanged(self, selectedIndexes):
         self.acProjectSave.setEnabled(len(selectedIndexes) > 0)
         self.acProjectSaveAs.setEnabled(len(selectedIndexes) > 0)
+
+
+    def onResetPanel(self):
+        self.closeAllProjects()
 
 
     def onUndock(self):
