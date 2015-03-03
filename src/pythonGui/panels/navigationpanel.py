@@ -65,7 +65,7 @@ class NavigationPanel(QWidget):
         This slot is called when the panel needs a reset which means the last
         selection is not needed anymore.
         """
-        self.twNavigation.clearSelection()
+        self.twNavigation.clear()
 
 
     def onNewNavigationItem(self, itemInfo):
