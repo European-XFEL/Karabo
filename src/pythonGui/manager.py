@@ -80,8 +80,6 @@ class _Manager(QObject):
 
         Network().signalServerConnectionChanged.connect(
             self.onServerConnectionChanged)
-        #Network().signalServerConnectionChanged.connect(
-        #    self.systemTopology.onServerConnectionChanged)
         Network().signalReceivedData.connect(self.onReceivedData)
 
         # Sets all parameters to start configuration
