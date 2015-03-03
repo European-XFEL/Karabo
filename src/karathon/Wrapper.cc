@@ -271,6 +271,13 @@ namespace karathon {
             any = b;
             return;
         }
+        if (PyBytes_Check(obj.ptr())) {
+            size_t size = PyBytes_Size(obj.ptr());
+            char* data = PyBytes_AsString(obj.ptr());
+            std::vector<char> b(data, data + size);
+            any = b;
+            return;
+        }
         if (PyByteArray_Check(obj.ptr())) {
             size_t size = PyByteArray_Size(obj.ptr());
             char* data = PyByteArray_AsString(obj.ptr());
