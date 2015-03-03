@@ -111,6 +111,7 @@ class Proxy(object):
         self._futures = {}
         self._deviceId = deviceId
         self._used = 0
+        self._sethash = None
 
     @classmethod
     def __dir__(cls):
@@ -129,8 +130,17 @@ class Proxy(object):
             f.set_result(hash)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
-                              Hash(attr.key, value))
+        if self._sethash is None:
+            get_event_loop().call_soon(self._update)
+            self._sethash = Hash()
+        self._sethash[attr.key] = value
+
+    def _update(self):
+        if self._sethash is None:
+            return
+        self._device._ss.emit("call", {self._deviceId: ["slotReconfigure"]},
+                              self._sethash)
+        self._sethash = None
 
     def __enter__(self):
         self._used += 1
@@ -151,10 +161,22 @@ class Proxy(object):
             self.__exit__(None, None, None)
 
     def __iter__(self):
+        self._update()
         conf, _ = yield from self._device.call(self._deviceId,
                                                "slotGetConfiguration")
         self._onChanged(conf)
         return self
+
+
+class ProxySlot(Slot):
+    def __init__(self, key, args):
+        del args["nodeType"]
+        super().__init__(**args)
+        self.key = key
+
+    def method(self, device):
+        device._update()
+        device._device._ss.emit("call", {device._deviceId: [self.key]})
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -200,7 +222,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.ADMIN)
 
     def __init__(self, configuration):
-        self.notify_changes = False
+        self._sethash = Hash()
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
@@ -208,7 +230,7 @@ class SignalSlotable(Configurable):
         self.deviceId = self._deviceId_
         self._ss = get_event_loop().getBroker(self.deviceId,
                                               type(self).__name__)
-        self.notify_changes = True
+        self._sethash = None  # don't inform network again about initial config
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
 
         self.__devices = {}
@@ -337,12 +359,21 @@ class SignalSlotable(Configurable):
 
     def setValue(self, attr, value):
         self.__dict__[attr] = value
-        if self.notify_changes:
-            self.signalChanged(Hash(attr.key, value), self.deviceId)
+        if self._sethash is None:
+            self._sethash = Hash()
+            self._ss.loop.call_soon_threadsafe(self.update)
+        self._sethash[attr.key] = value
+
+    def update(self):
+        if self._sethash is not None:
+            self.signalChanged(self._sethash, self.deviceId)
+            self._sethash = None
 
     def setChildValue(self, key, value):
-        if self.notify_changes:
-            self.signalChanged(Hash(key, value), self.deviceId)
+        if self._sethash is None:
+            self._sethash = Hash()
+            self._ss.loop.call_soon_threadsafe(self.update)
+        self._sethash[key] = value
 
     @slot
     def slotSchemaUpdated(self, schema, deviceId):
@@ -379,10 +410,7 @@ class SignalSlotable(Configurable):
                 d.key = k
                 dict[k] = d
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
-                s = Slot()
-                s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", {self.deviceId: [name]})
-                dict[k] = s
+                dict[k] = ProxySlot(k, a)
         Cls = type(schema.name, (Base,), dict)
 
         ret = Cls(self, deviceId)

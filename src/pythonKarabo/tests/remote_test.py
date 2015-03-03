@@ -32,6 +32,11 @@ class Remote(Device):
     def other(self, value):
         self.value = value
 
+    @Integer()
+    def once(self, value):
+        if self.once_value is None:
+            self.once_value = value
+
     @Slot()
     def doit(self):
         self.done = True
@@ -43,6 +48,7 @@ class Remote(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
         self.done = False
+        self.once_value = None
 
     @Slot()
     def count(self):
@@ -126,6 +132,13 @@ class Local(Device):
             except TimeoutError:
                 self.timeout = True
 
+    @Slot()
+    def collect_set(self):
+        with (yield from self.getDevice("remote")) as d:
+            d.once = 3
+            d.once = 7
+            d.once = 10
+
 
 class Tests(TestCase):
     @async_tst
@@ -197,6 +210,13 @@ class Tests(TestCase):
         self.assertEqual(local.f1, 0)
         self.assertEqual(local.f2, 11)
         self.assertTrue(local.timeout)
+
+
+    @async_tst
+    def test_collect(self):
+        yield from local.collect_set()
+        yield from sleep(0.1)
+        self.assertEqual(remote.once_value, 10)
 
 
 def setUpModule():
