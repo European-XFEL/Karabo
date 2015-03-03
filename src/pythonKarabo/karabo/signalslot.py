@@ -111,6 +111,7 @@ class Proxy(object):
         self._futures = {}
         self._deviceId = deviceId
         self._used = 0
+        self._sethash = None
 
     @classmethod
     def __dir__(cls):
@@ -129,8 +130,17 @@ class Proxy(object):
             f.set_result(hash)
 
     def setValue(self, attr, value):
-        self._device._ss.emit("call", {self.deviceId: ["slotReconfigure"]},
-                              Hash(attr.key, value))
+        if self._sethash is None:
+            get_event_loop().call_soon(self._update)
+            self._sethash = Hash()
+        self._sethash[attr.key] = value
+
+    def _update(self):
+        if self._sethash is None:
+            return
+        self._device._ss.emit("call", {self._deviceId: ["slotReconfigure"]},
+                              self._sethash)
+        self._sethash = None
 
     def __enter__(self):
         self._used += 1
@@ -155,6 +165,17 @@ class Proxy(object):
                                                "slotGetConfiguration")
         self._onChanged(conf)
         return self
+
+
+class ProxySlot(Slot):
+    def __init__(self, key, args):
+        del args["nodeType"]
+        super().__init__(**args)
+        self.key = key
+
+    def method(self, device):
+        device._update()
+        device._device._ss.emit("call", {device._deviceId: [self.key]})
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -379,10 +400,7 @@ class SignalSlotable(Configurable):
                 d.key = k
                 dict[k] = d
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
-                s = Slot()
-                s.method = lambda self, name=k: self._device._ss.emit(
-                    "call", {self.deviceId: [name]})
-                dict[k] = s
+                dict[k] = ProxySlot(k, a)
         Cls = type(schema.name, (Base,), dict)
 
         ret = Cls(self, deviceId)
