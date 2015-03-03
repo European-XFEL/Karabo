@@ -68,7 +68,7 @@ class Local(Macro):
         time.sleep(0.3)
         self.f1 = d.counter
         time.sleep(0.3)
-        with self.update(d):
+        with self.updateDevice(d):
             self.f2 = d.counter
         time.sleep(1)
         self.f3 = d.counter
