@@ -99,6 +99,10 @@ class Local(Macro):
             d.other = 102
 
     @Slot()
+    def selfcall(self):
+        self.other()
+
+    @Slot()
     def setwait(self):
         d = self.getDevice("remote")
         self.set(d, value=200, counter=300)
@@ -165,7 +169,15 @@ class Tests(TestCase):
 
     @async_tst
     def test_other(self):
+        remote.value = 7
         local.other()
+        time.sleep(0.1)
+        self.assertEqual(remote.value, 102)
+
+    @async_tst
+    def test_selfcall(self):
+        remote.value = 7
+        local.selfcall()
         time.sleep(0.1)
         self.assertEqual(remote.value, 102)
 

@@ -136,7 +136,14 @@ namespace karathon {
     }
 
     void ChannelWrap::write(karabo::net::Channel::Pointer channel, const bp::object& obj) {
-        if (PyByteArray_Check(obj.ptr())) {
+        if (PyBytes_Check(obj.ptr())) {
+            PyObject* bytearray = obj.ptr();
+            size_t size = PyBytes_Size(bytearray);
+            char* data = PyBytes_AsString(bytearray);
+            ScopedGILRelease nogil;
+            channel->write(data, size);
+            return;
+        } else if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
@@ -161,7 +168,14 @@ namespace karathon {
     void ChannelWrap::write2(karabo::net::Channel::Pointer channel, const bp::object& header, const bp::object& obj) {
         if (bp::extract<karabo::util::Hash>(header).check()) {
             const karabo::util::Hash hdr = bp::extract<const karabo::util::Hash&>(header);
-            if (PyByteArray_Check(obj.ptr())) {
+            if (PyBytes_Check(obj.ptr())) {
+                PyObject* bytearray = obj.ptr();
+                size_t size = PyBytes_Size(bytearray);
+                char* data = PyBytes_AsString(bytearray);
+                ScopedGILRelease nogil;
+                channel->write(hdr, data, size);
+                return;
+            } else if (PyByteArray_Check(obj.ptr())) {
                 PyObject* bytearray = obj.ptr();
                 size_t size = PyByteArray_Size(bytearray);
                 char* data = PyByteArray_AsString(bytearray);
@@ -297,7 +311,15 @@ namespace karathon {
     }
 
     void ChannelWrap::writeAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& obj, const bp::object& handler) {
-        if (PyByteArray_Check(obj.ptr())) {
+        if (PyBytes_Check(obj.ptr())) {
+            PyObject* bytearray = obj.ptr();
+            size_t size = PyBytes_Size(bytearray);
+            char* data = PyBytes_AsString(bytearray);
+            registerWriteHandler(channel, handler);
+            ScopedGILRelease nogil;
+            channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
+            return;
+        } else if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
@@ -358,11 +380,20 @@ namespace karathon {
     }
 
     void ChannelWrap::writeAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& hdr, const bp::object& body, const bp::object& handler) {
-        if (bp::extract<Hash>(hdr).check() && PyByteArray_Check(body.ptr())) {
+        if (bp::extract<Hash>(hdr).check()) {
             const Hash& h = bp::extract<Hash>(hdr);
             PyObject* bytearray = body.ptr();
-            size_t size = PyByteArray_Size(bytearray);
-            char* data = PyByteArray_AsString(bytearray);
+            size_t size = 0;
+            char* data = 0;
+            if (PyBytes_Check(bytearray)) {
+                size = PyBytes_Size(bytearray);
+                data = PyBytes_AsString(bytearray);
+            } else if (PyByteArray_Check(bytearray)) {
+                size = PyByteArray_Size(bytearray);
+                data = PyByteArray_AsString(bytearray);
+            } else {
+                throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
+            }
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
             channel->writeAsyncHashRaw(h, data, size, proxyWriteCompleteHandler);
