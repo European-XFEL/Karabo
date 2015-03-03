@@ -86,6 +86,7 @@ class _Network(QObject):
         """
         Disconnect from server.
         """
+        # All panels need to be reseted and all projects closed
         self.signalServerConnectionChanged.emit(False)
         self.endServerConnection()
 
