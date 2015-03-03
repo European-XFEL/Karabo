@@ -70,7 +70,7 @@ public:
     }
     
     bool wasOk() {
-        //std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
+        std::cout << "\nwasOk : m_messageCount=" << m_messageCount << ", m_allOk=" << m_allOk << std::endl;
         return ((m_messageCount == 5) && m_allOk);
     }
     

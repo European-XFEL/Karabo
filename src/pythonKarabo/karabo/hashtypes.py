@@ -233,6 +233,8 @@ class Slot(Descriptor):
         pass  # nothing to set in a slot
 
     def __call__(self, method):
+        if self.description is None:
+            self.description = method.__doc__
         self.themethod = method
         return self
 
@@ -293,6 +295,8 @@ class Type(Descriptor, Registry):
         return ret
 
     def __call__(self, method):
+        if self.description is None:
+            self.description = method.__doc__
         self.setter = method
         return self
 

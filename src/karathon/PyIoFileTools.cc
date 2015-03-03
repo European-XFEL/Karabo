@@ -227,7 +227,14 @@ namespace karathon {
 
 
         static bp::object load(karabo::io::TextSerializer<T>& s, const bp::object& obj) {
-            if (PyByteArray_Check(obj.ptr())) {
+            if (PyBytes_Check(obj.ptr())) {
+                PyObject* bytes = obj.ptr();
+                size_t size = PyBytes_Size(bytes);
+                char* data = PyBytes_AsString(bytes);
+                T object;
+                s.load(object, data, size);
+                return bp::object(object);
+            } else if (PyByteArray_Check(obj.ptr())) {
                 PyObject* bytearray = obj.ptr();
                 size_t size = PyByteArray_Size(bytearray);
                 char* data = PyByteArray_AsString(bytearray);
@@ -239,7 +246,7 @@ namespace karathon {
                 s.load(object, bp::extract<std::string>(obj));
                 return bp::object(object);
             }
-            throw KARABO_PYTHON_EXCEPTION("Python object must be either of type bytearray or string");
+            throw KARABO_PYTHON_EXCEPTION("Python object must be either of type bytes, bytearray or string");
         }
     };
 }
@@ -402,12 +409,20 @@ public:
     static bp::object save(karabo::io::BinarySerializer<T>& s, const T& object) {
         std::vector<char> v;
         s.save(object, v);
-        return bp::object(bp::handle<>(PyByteArray_FromStringAndSize(&v[0], v.size())));
+        return bp::object(bp::handle<>(PyBytes_FromStringAndSize(&v[0], v.size())));
     }
 
 
     static bp::object load(karabo::io::BinarySerializer<T>& s, const bp::object& obj) {
-        if (PyByteArray_Check(obj.ptr())) {
+        if (PyBytes_Check(obj.ptr())) {
+            PyObject* bytearray = obj.ptr();
+            size_t size = PyBytes_Size(bytearray);
+            char* data = PyBytes_AsString(bytearray);
+            T object;
+            s.load(object, data, size);
+            return bp::object(object);
+            // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
+        } else if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
             size_t size = PyByteArray_Size(bytearray);
             char* data = PyByteArray_AsString(bytearray);
@@ -421,7 +436,7 @@ public:
             s.load(object, tmp.c_str(), tmp.size() - 1);
             return bp::object(object);
         }
-        throw KARABO_PYTHON_EXCEPTION("Python object type is not a bytearray!");
+        throw KARABO_PYTHON_EXCEPTION("Python object type must be either string, bytes or bytearray!");
     }
 };
 
