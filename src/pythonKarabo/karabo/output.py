@@ -25,5 +25,5 @@ class KaraboStream:
             except AttributeError:
                 self.base.write(data)
 
-
-
+    def flush(self):
+        pass  # everything is flushed automatically

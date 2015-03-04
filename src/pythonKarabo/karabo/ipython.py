@@ -19,16 +19,19 @@ class ChannelMixin(object):
 class ShellChannel(ChannelMixin, channels.ShellChannel):
     def call_handlers_later(self, msg):
         self.device.shell = pickle.dumps(msg)
+        self.device.update()
 
 
 class IOPubChannel(ChannelMixin, channels.IOPubChannel):
     def call_handlers_later(self, msg):
         self.device.iopub = pickle.dumps(msg)
+        self.device.update()
 
 
 class StdInChannel(ChannelMixin, channels.StdInChannel):
     def call_handlers_later(self, msg):
         self.device.stdin = pickle.dumps(msg)
+        self.device.update()
 
 
 class Client(KernelClient):
