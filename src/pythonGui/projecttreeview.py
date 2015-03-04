@@ -487,7 +487,12 @@ class ProjectTreeView(QTreeView):
                 continue
             
             if project.isModified:
-                self.projectSave()
+                reply = QMessageBox.question(None, "Save changes before closing",
+                    "Do you want to save your project<br><b>\"{}\"</b><br>before closing?"
+                    .format(project.name),
+                    QMessageBox.Save | QMessageBox.Discard, QMessageBox.Discard)
+                if reply == QMessageBox.Save:
+                    self.projectSave()
 
             projects.append(project)
         

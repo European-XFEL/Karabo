@@ -1463,6 +1463,8 @@ class Scene(QSvgWidget):
                 
                 rect = workflowItem.boundingRect()
                 proxy.setWidget(workflowItem)
+                object.signalStatusChanged.connect(proxy.showStatus)
+                proxy.showStatus(None, object.status, object.error)
                 proxy.set_geometry(QRect(event.pos(), QSize(rect.width(), rect.height())))
                 proxy.show()
                 
