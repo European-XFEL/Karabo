@@ -3,7 +3,7 @@ from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
 import sys
 import threading
 
-from karabo import KaraboError, String, Integer, AccessMode
+from karabo import KaraboError, String, Integer, AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Descriptor, Type
@@ -40,21 +40,29 @@ class Macro(Device):
 
     project = String(
         displayedName="Project",
-        description="The name of the project this macro belongs to")
+        description="The name of the project this macro belongs to",
+        accessMode=AccessMode.INITONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     module = String(
         displayedName="Module",
-        description="The name of the module in the project")
+        description="The name of the module in the project",
+        accessMode=AccessMode.INITONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     print = String(
         displayedName="Printed output",
         description="The output printed to the console",
-        defaultValue="")
+        defaultValue="",
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     printno = Integer(
         displayedName="Number of prints",
         description="The number of prints issued so far",
-        defaultValue=0)
+        defaultValue=0,
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     @classmethod
     def register(cls, name, dict):

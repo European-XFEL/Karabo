@@ -4,6 +4,7 @@ from IPython.kernel.manager import KernelManager
 from IPython.kernel import KernelClient
 from IPython.kernel import channels
 
+from karabo.enums import AccessLevel, AccessMode
 from karabo.python_device import Device
 from karabo.hashtypes import VectorChar
 from karabo.signalslot import coslot
@@ -38,15 +39,21 @@ class Client(KernelClient):
 
 
 class IPythonKernel(Device):
-    @VectorChar()
+    @VectorChar(
+        accessMode=AccessMode.RECONFIGURABLE,
+        requiredAccessLevel=AccessLevel.EXPERT)
     def shell(self, msg):
         self.client.shell_channel._queue_send(pickle.loads(msg))
 
-    @VectorChar()
+    @VectorChar(
+        accessMode=AccessMode.RECONFIGURABLE,
+        requiredAccessLevel=AccessLevel.EXPERT)
     def iopub(self, msg):
         self.client.iopub_channel._queue_send(pickle.loads(msg))
 
-    @VectorChar()
+    @VectorChar(
+        accessMode=AccessMode.RECONFIGURABLE,
+        requiredAccessLevel=AccessLevel.EXPERT)
     def stdin(self, msg):
         self.client.stdin_channel._queue_send(pickle.loads(msg))
 
