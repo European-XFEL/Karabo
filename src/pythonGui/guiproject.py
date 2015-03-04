@@ -246,6 +246,9 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         for d in self.devices:
             d.onNewDescriptor(conf)
             self.connectOtherBox(d)
+            # Get correct status from devices
+            d.signalStatusChanged.connect(self.onStatusChanged)
+            self.onStatusChanged(d, d.status, d.error)
 
 
     def onNewDeviceDescriptor(self, conf):
@@ -259,6 +262,13 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
             actual = manager.getDevice(d.id)
             # Copy from online device
             self.copyFrom(actual, lambda descr: descr.accessMode == AccessMode.RECONFIGURABLE)
+
+
+    def onStatusChanged(self, conf, status, error):
+        if self.status != status:
+            self.status = status
+        if self.error != error:
+            self.error = error
 
 
     def isOnline(self):
