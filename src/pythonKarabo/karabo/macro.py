@@ -120,14 +120,14 @@ class Macro(Device):
         return self._sync(SignalSlotable.set(self, device, **kwargs),
                           timeout=timeout)
 
-    def updateDevice(self, device, timeout=-1):
+    def updateDevice(self, device, *, timeout=-1):
         return self._sync(device.__iter__(), timeout=timeout)
 
-    def waitUntil(self, condition, timeout=-1):
+    def waitUntil(self, condition, *, timeout=-1):
         return self._sync(SignalSlotable.waitUntil(self, condition),
                           timeout=timeout)
 
-    def waitUntilNew(self, proxy, timeout=-1):
+    def waitUntilNew(self, proxy, *, timeout=-1):
         class WUN(waitUntilNew):
             def __getattr__(s, attr):
                 assert isinstance(getattr(type(proxy), attr), Type)
