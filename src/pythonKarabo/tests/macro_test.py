@@ -126,6 +126,20 @@ class Local(Macro):
             except TimeoutError:
                 self.timeout = True
 
+    @Slot()
+    def waituntilnew(self):
+        with self.getDevice("remote") as d:
+            d.counter = 0
+            sleep(0.1)
+            d.count()
+            for i in range(30):
+                j = self.waitUntilNew(d).counter
+                if i != j:
+                    self.max = i
+                    break
+            else:
+                self.max = 30
+
 
 class Tests(TestCase):
     @async_tst
@@ -204,6 +218,11 @@ class Tests(TestCase):
         self.assertEqual(local.f1, 0)
         self.assertEqual(local.f2, 11)
         self.assertTrue(local.timeout)
+
+    @async_tst
+    def test_waituntilnew(self):
+        local.waituntilnew()
+        self.assertEqual(local.max, 30)
 
 
 def setUpModule():
