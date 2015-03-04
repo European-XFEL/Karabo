@@ -105,7 +105,10 @@ class Macro(Device):
         cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                          if hasattr(m, "monitor")]
 
-    def __init__(self, configuration):
+    def __init__(self, configuration=None, **kwargs):
+        if configuration is None:
+            configuration = {}
+        configuration.update(kwargs)
         loop = get_event_loop()
         if not isinstance(loop, EventLoop):
             EventThread.start_macro(self, configuration)
