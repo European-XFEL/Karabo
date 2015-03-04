@@ -892,6 +892,8 @@ namespace karabo {
                     }
                 }
                     break;
+                default:
+                    break;
             }
 
             return true;
@@ -928,6 +930,8 @@ namespace karabo {
                         if (!(res = vect[i].visit2(visitor))) break;
                     }
                 }
+                    break;
+                default:
                     break;
             }
 
