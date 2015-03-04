@@ -1097,8 +1097,6 @@ class Scene(QSvgWidget):
                 
                 if isinstance(c.widget, Item):
                     c.widget.getObject().removeVisible()
-                if isinstance(c.widget, WorkflowConnection):
-                    c.widget.removeConnectedOutputChannel()
             #c.setParent(None)
         self.inner.setParent(None)
         self.inner = QWidget(self)
