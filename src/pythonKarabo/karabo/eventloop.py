@@ -185,7 +185,7 @@ class EventLoop(SelectorEventLoop):
     def __init__(self):
         super().__init__()
         self.connection = None
-        self.changedFuture = Future()  # call if some property changes
+        self.changedFuture = Future(loop=self)  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(10000))
 
     def getBroker(self, deviceId, classId):
