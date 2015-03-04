@@ -307,7 +307,8 @@ class SignalSlotable(Configurable):
                 self.call("*", "slotPing", self.deviceId,
                           self.__randPing, False), timeout=3)
             yield from self.slotKillDevice()
-            return
+            raise RuntimeError('deviceId "{}" already in use'.
+                               format(self.deviceId))
         except TimeoutError:
             pass
         self.run()

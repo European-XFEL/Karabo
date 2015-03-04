@@ -1,5 +1,5 @@
 from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
-                     TimeoutError)
+                     Task, TimeoutError)
 import sys
 import threading
 
@@ -35,18 +35,51 @@ class RemoteDevice:
         self.id = id
 
 
+class EventThread(threading.Thread):
+    instance = None
+
+    def run(self):
+        self.loop = EventLoop()
+        set_event_loop(self.loop)
+        self.lock.release()
+        self.loop.run_forever()
+
+    @coroutine
+    def run_macro(self, macro, configuration):
+        self.task = Task.current_task()
+        self.task.add_done_callback(lambda _: self.lock.release())
+        super(Macro, macro).__init__(configuration)
+        yield from macro.run_async()
+
+    @classmethod
+    def start_macro(cls, macro, conf):
+        if cls.instance is None:
+            self = cls.instance = cls()
+            self.lock = threading.Lock()
+            self.lock.acquire()
+            self.start()
+            self.lock.acquire()
+        else:
+            self = cls.instance
+        self.loop.call_soon_threadsafe(async, self.run_macro(macro, conf))
+        self.lock.acquire()
+        return self.task.result()
+
+
 class Macro(Device):
     subclasses = []
 
     project = String(
         displayedName="Project",
         description="The name of the project this macro belongs to",
+        defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
     module = String(
         displayedName="Module",
         description="The name of the module in the project",
+        defaultValue="__none__",
         accessMode=AccessMode.INITONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
@@ -71,6 +104,13 @@ class Macro(Device):
         Macro.subclasses.append(cls)
         cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                          if hasattr(m, "monitor")]
+
+    def __init__(self, configuration):
+        loop = get_event_loop()
+        if not isinstance(loop, EventLoop):
+            EventThread.start_macro(self, configuration)
+        else:
+            super().__init__(configuration)
 
     def initInfo(self):
         super().initInfo()
