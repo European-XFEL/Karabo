@@ -533,6 +533,8 @@ class _Manager(QObject):
             device.fromHash(configuration)
         if device.status == "schema":
             device.status = "alive"
+            # Trigger update scenes - to draw possible Workflow Connections
+            self.signalUpdateScenes.emit()
 
 
     def handle_propertyHistory(self, deviceId, property, data):
