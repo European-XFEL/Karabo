@@ -45,6 +45,11 @@ namespace karabo {
                     .setNewDefaultValue("Karabo_GuiServer_0")
                     .commit();
 
+            // Do not archive the archivers (would lead to infinite recursion)
+            OVERWRITE_ELEMENT(expected).key("archive")
+                    .setNewDefaultValue(false)
+                    .commit();
+
             OVERWRITE_ELEMENT(expected).key("visibility")
                     .setNewDefaultValue(5)
                     .commit();

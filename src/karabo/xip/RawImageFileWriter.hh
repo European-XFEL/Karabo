@@ -102,6 +102,8 @@ namespace karabo {
                     _KARABO_CREATE_AND_WRITE_CPUIMAGE(UINT64, unsigned long long);
                     _KARABO_CREATE_AND_WRITE_CPUIMAGE(FLOAT, float);
                     _KARABO_CREATE_AND_WRITE_CPUIMAGE(DOUBLE, double);
+                    default:
+                        break;
                 }
                 
                 if (writeImageInfo) {
