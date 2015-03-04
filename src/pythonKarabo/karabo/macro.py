@@ -6,7 +6,7 @@ import threading
 from karabo import KaraboError, String, Integer, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
-from karabo.hashtypes import Slot, Descriptor
+from karabo.hashtypes import Slot, Descriptor, Type
 from karabo.output import threadData
 from karabo.signalslot import Proxy, SignalSlotable, waitUntilNew
 from karabo.python_device import Device
@@ -126,6 +126,14 @@ class Macro(Device):
     def waitUntil(self, condition, timeout=-1):
         return self._sync(SignalSlotable.waitUntil(self, condition),
                           timeout=timeout)
+
+    def waitUntilNew(self, proxy, timeout=-1):
+        class WUN(waitUntilNew):
+            def __getattr__(s, attr):
+                assert isinstance(getattr(type(proxy), attr), Type)
+                return self._sync(super().__getattr__(attr), timeout)
+        return WUN(proxy)
+
 
     def printToConsole(self, data):
         self.print = data
