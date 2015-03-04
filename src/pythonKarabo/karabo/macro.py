@@ -1,14 +1,24 @@
-from asyncio import async, get_event_loop, set_event_loop, TimeoutError
+from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
+                     TimeoutError)
 import sys
 import threading
 
-from karabo import KaraboError, String, Integer
+from karabo import KaraboError, String, Integer, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Descriptor
 from karabo.output import threadData
-from karabo.signalslot import Proxy, SignalSlotable
+from karabo.signalslot import Proxy, SignalSlotable, waitUntilNew
 from karabo.python_device import Device
+
+
+def Monitor():
+    def outer(prop):
+        prop.accessMode = AccessMode.READONLY
+        prop.monitor = prop.setter
+        del prop.setter
+        return prop
+    return outer
 
 
 class MacroProxy(Proxy):
@@ -18,6 +28,11 @@ class MacroProxy(Proxy):
             Hash(attr.key, value)))
         if not ok:
             raise KaraboError(msg)
+
+
+class RemoteDevice:
+    def __init__(self, id):
+        self.id = id
 
 
 class Macro(Device):
@@ -46,12 +61,34 @@ class Macro(Device):
         Macro._subclasses = {}
         super().register(name, dict)
         Macro.subclasses.append(cls)
+        cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
+                         if hasattr(m, "monitor")]
 
     def initInfo(self):
         super().initInfo()
         self.info["type"] = "macro"
         self.info["project"] = self.project
         self.info["module"] = self.module
+
+    @coroutine
+    def run_async(self):
+        yield from super().run_async()
+        devices = []
+        for k in dir(type(self)):
+            v = getattr(type(self), k)
+            if isinstance(v, RemoteDevice):
+                d = yield from super().getDevice(v.id, Base=MacroProxy)
+                setattr(self, k, d)
+                devices.append(d)
+        for d in devices:
+            self.async(self._holdDevice(d))
+
+    def _holdDevice(self, d):
+        with d:
+            while True:
+                yield from waitUntilNew(d)
+                for m in self._monitors:
+                    setattr(self, m.key, m.monitor(self))
 
     def _sync(self, coro, timeout=-1):
         lock = threading.Lock()
