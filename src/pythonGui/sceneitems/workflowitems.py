@@ -112,7 +112,7 @@ class Item(QWidget, Loadable):
         painter.drawRoundRect(rect, self._roundness(rect.width()), self._roundness(rect.height()))
         painter.drawText(rect, Qt.AlignCenter, self.displayText)
 
-        self.checkChannels(self.getObject())
+        self.checkChannels()
         self.paintInputChannels(painter)
         self.paintOutputChannels(painter)
         self.checkConnections()
@@ -190,8 +190,15 @@ class Item(QWidget, Loadable):
         return rect
 
 
-    def checkChannels(self, device):
+    def checkChannels(self):
+        device = self.getDevice()
+        if device.isOnline():
+            #print("ONLINE", device, self.getObject())
+            device = self.getObject()
+        
         descr = device.descriptor
+        #print("### checkChannels", device, descr, self.descriptor)
+        #print()
         if descr is not None and self.descriptor is None:
             self.descriptor = descr
             
@@ -320,6 +327,8 @@ class WorkflowItem(Item):
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowItem(device, parent, proxy)
         proxy.setWidget(item)
+        device.signalStatusChanged.connect(proxy.showStatus)
+        proxy.showStatus(None, device.status, device.error)
         layout.loadPosition(elem, proxy)
         ss = [ ]
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
@@ -422,6 +431,8 @@ class WorkflowGroupItem(Item):
         proxy = ProxyWidget(layout.parentWidget())
         item = WorkflowGroupItem(deviceGroup, parent, proxy)
         proxy.setWidget(item)
+        deviceGroup.signalStatusChanged.connect(proxy.showStatus)
+        proxy.showStatus(None, deviceGroup.status, deviceGroup.error)
         layout.loadPosition(elem, proxy)
         ss = [ ]
         ss.append('qproperty-font: "{}";'.format(elem.get(ns_karabo + "font")))
