@@ -200,6 +200,8 @@ namespace karabo {
                     _KARABO_CAST_AND_SET_IMAGE_DATA_POINTER(UINT64, unsigned long);
                     _KARABO_CAST_AND_SET_IMAGE_DATA_POINTER(FLOAT, float);
                     _KARABO_CAST_AND_SET_IMAGE_DATA_POINTER(DOUBLE, double);
+                    default:
+                        break;
                 }
 
             

@@ -919,9 +919,9 @@ namespace karabo {
                     Statistics statistics(st[0], st[1], st[2], st[3], st[4], st[5], st[6], st[8], st[9], st[10]);
                     // Display pixels
                     if (displayPixels) {
-                        int nDigits = 1;
-                        if (statistics.getMax() <= 0) ceil(log10(-1 * statistics.getMax() + 1));
-                        else nDigits = ceil(log10(st[1] + 1));
+                        //int nDigits = 1;
+                        //if (statistics.getMax() <= 0) ceil(log10(-1 * statistics.getMax() + 1));
+                        //else nDigits = ceil(log10(st[1] + 1));
 
                         int dimX = m_cimg.width();
                         int maxX = maxDimX;
