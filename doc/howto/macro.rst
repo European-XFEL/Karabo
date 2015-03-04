@@ -98,7 +98,44 @@ call one slot, it is simpler to just write
    print(self.get("some_device", "someProperty")
     
 
-Note that in this way you never create a handle object to the device but always add its address to the macro function.
+Note that in this way you never create a handle object to the device but always
+add its address to the macro function.
+
+
+Monitors
+--------
+
+Until now, we discussed how to control other devices using a macro. The
+opposite is also an important usecase: process the data coming from other
+devices. We are not talking about heavy processing like complicated fits
+here, this is what compute devices are for, but for simple calculations,
+like unit conversions. This is what monitors are for.
+
+At the beginning of the macro, we need to define which devices we want
+to monitor. This is done with a ``RemoteDevice`` declaration::
+
+    from karabo import RemoteDevice, Monitor
+
+    class MyMonitor(Macro):
+        someDevice = RemoteDevice("some_interesting_device")
+
+Those devices will be accessible throughout the macro's lifetime. The may
+also be used elsewhere in the macro.
+
+Please don't overuse this feature. Once you monitor a device, all its
+changes are sent to your macro. Depending on what device that is, this
+could mean a lot of network traffic.
+
+Now its the time to do something with the data we received. As an example,
+let's look at a simple converter::
+
+    @Monitor()
+    @Float()
+    def temperature(self):
+        return (self.someDevice.temperature - 32) * 5 / 9
+
+This would convert Fahrenheit temperatures from a ridiculous american device
+into the usual Celsius scale.
 
 
 Timeouts and errors
