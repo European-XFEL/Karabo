@@ -888,6 +888,8 @@ public:
                 indent += 2;
                 fill[indent] = 0;
                 break;
+            default:
+                break;
         };
     }
 
@@ -923,6 +925,8 @@ public:
                 indent -= 2;
                 fill[indent] = 0;
                 indices.pop();
+                break;
+            default:
                 break;
         };
     }
@@ -986,6 +990,8 @@ public:
             case Types::VECTOR_HASH:
                 indices.push(0);
                 break;
+            default:
+                break;
         }
         return true;
     }
@@ -997,6 +1003,8 @@ public:
             case Types::VECTOR_HASH:
                 prefix.pop();
                 indices.pop();
+                break;
+            default:
                 break;
         };
     }
@@ -1060,6 +1068,8 @@ public:
             case Types::VECTOR_HASH:
                 indices.push(0);
                 break;
+            default:
+                break;
         }
         return true;
     }
@@ -1071,6 +1081,8 @@ public:
             case Types::VECTOR_HASH:
                 prefix.pop();
                 indices.pop();
+                break;
+            default:
                 break;
         };
     }
