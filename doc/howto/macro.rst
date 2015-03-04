@@ -234,17 +234,19 @@ This is a good example where also a timeout makes sense. Maybe the
 motor never reaches its target? So you could add a timeout like that::
 
     try:
-        self.waitUntil(lambda: motor.state == "Stopped")
+        self.waitUntil(lambda: motor.state == "Stopped", timeout=10)
     except TimeoutError as e:
         self.log.error("Motor did not reach intended state but is in {}".
                        format(motor.state))
 
 If you want to wait until a property has changed (i.e. has been updated) you
-can do it like here::
+can do it the following way::
 
-   motor.waitUntilNew(state, 10)
+   self.waitUntilNew(motor).state  # yes, the syntax is a bit unusual
    print("State has updated to: {}".format(motor.state))
 
 It is a good idea to specify a timeout for how long you are going to wait. In
 the example above it is 10 seconds. If you do not provide a timeout you may
-wait forever...
+wait forever. This is done as follows::
+
+    self.waitUntilNew(motor, timeout=10).state
