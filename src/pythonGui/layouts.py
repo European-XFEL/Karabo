@@ -501,6 +501,9 @@ class ProxyWidget(QWidget):
                 icon = dict(requested=icons.device_requested,
                             schema=icons.device_schema,
                             dead=icons.device_dead,
+                            noserver=icons.deviceOfflineNoServer,
+                            noplugin=icons.deviceOfflineNoPlugin,
+                            incompatible=icons.deviceIncompatible,
                             offline=icons.deviceOffline).get(status)
             if icon is not None:
                 self.marker.setPixmap(icon.pixmap(16))

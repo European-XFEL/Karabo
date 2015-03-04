@@ -324,7 +324,7 @@ class ProjectModel(QStandardItemModel):
         item = QStandardItem(deviceGroup.id)
         item.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        self.updateDeviceGroupIcon(item, deviceGroup)
+        self.updateDeviceIcon(item, deviceGroup)
         item.setToolTip("{}".format(deviceGroup.id))
 
         # Iterate through device of group
@@ -378,7 +378,7 @@ class ProjectModel(QStandardItemModel):
                 dItem = devicesItem.child(childRow)
                 object = dItem.data(ProjectModel.ITEM_OBJECT)
                 if isinstance(object, DeviceGroup):
-                    self.updateDeviceGroupIcon(dItem, object)
+                    self.updateDeviceIcon(dItem, object)
                     for deviceRow in range(dItem.rowCount()):
                         dChildItem = dItem.child(deviceRow)
                         obj = dChildItem.data(ProjectModel.ITEM_OBJECT)
@@ -412,6 +412,7 @@ class ProjectModel(QStandardItemModel):
                     if editor is not None:
                         editor.connect(k)
 
+
     def updateDeviceIcon(self, item, device):
         """
         This function updates the icon of the given \item depending on the
@@ -426,17 +427,6 @@ class ProjectModel(QStandardItemModel):
                               offline=icons.deviceOffline,
                               incompatible=icons.deviceIncompatible,
                               ).get(device.status, icons.deviceInstance))
-
-
-    def updateDeviceGroupIcon(self, item, deviceGroup):
-        """
-        This function updates the icon of the given \item depending on the
-        \deviceGroup status.
-        """
-        if deviceGroup.isOnline():
-            item.setIcon(icons.deviceGroupInstance)
-        else:
-            item.setIcon(icons.deviceGroupOffline)
 
 
     def addSceneItem(self, scene):
