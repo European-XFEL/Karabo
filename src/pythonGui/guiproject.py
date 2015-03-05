@@ -38,6 +38,7 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 
 class BaseConfiguration(Configuration):
+    signalConfigurationModified = pyqtSignal(bool)
 
 
     def __init__(self, deviceId, type, descriptor=None):
@@ -117,7 +118,6 @@ class BaseConfiguration(Configuration):
 
 
 class Device(BaseDevice, BaseConfiguration):
-    signalDeviceModified = pyqtSignal(bool)
     signalDeviceNeedsUpdate = pyqtSignal(object)
 
     def __init__(self, serverId, classId, deviceId, ifexists, descriptor=None):
@@ -337,7 +337,7 @@ class GuiProject(Project, QObject):
     def setupDeviceToProject(self, device):
         self.setModified(True)
         # Connect device to project to get configuration changes
-        device.signalDeviceModified.connect(self.setModified)
+        device.signalConfigurationModified.connect(self.setModified)
 
 
     def addDevice(self, device):
@@ -365,6 +365,8 @@ class GuiProject(Project, QObject):
 
     def setupDeviceGroupToProject(self, deviceGroup):
         self.setModified(True)
+        # Connect device to project to get configuration changes
+        deviceGroup.signalConfigurationModified.connect(self.setModified)
         for device in deviceGroup.devices:
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
             # Get correct status from devices
