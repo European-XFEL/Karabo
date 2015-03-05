@@ -177,6 +177,7 @@ class Device(BaseDevice, BaseConfiguration):
 
 
 class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
+    signalDeviceGroupStatusChanged = pyqtSignal()
 
 
     def __init__(self, id, serverId, classId, ifexists, type="deviceGroupClass"):
@@ -246,9 +247,6 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
         for d in self.devices:
             d.onNewDescriptor(conf)
             self.connectOtherBox(d)
-            # Get correct status from devices
-            d.signalStatusChanged.connect(self.onStatusChanged)
-            self.onStatusChanged(d, d.status, d.error)
 
 
     def onNewDeviceDescriptor(self, conf):
@@ -265,10 +263,16 @@ class DeviceGroup(BaseDeviceGroup, BaseConfiguration):
 
 
     def onStatusChanged(self, conf, status, error):
+        change = False
         if self.status != status:
             self.status = status
+            change = True
         if self.error != error:
             self.error = error
+            change = True
+        
+        if change:
+            self.signalDeviceGroupStatusChanged.emit()
 
 
     def isOnline(self):
@@ -363,6 +367,10 @@ class GuiProject(Project, QObject):
         self.setModified(True)
         for device in deviceGroup.devices:
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
+            # Get correct status from devices
+            actual = manager.getDevice(device.id)
+            actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
+            deviceGroup.onStatusChanged(actual, actual.status, actual.error)
 
 
     def addDeviceGroup(self, deviceGroup):
@@ -404,6 +412,11 @@ class GuiProject(Project, QObject):
             id = "{}{}".format(prefix, index)
             device = Device(serverId, classId, id, ifexists)
             device.signalDeviceNeedsUpdate.connect(deviceGroup.onUpdateDevice)
+            # Get correct status from devices
+            actual = manager.getDevice(device.id)
+            actual.signalStatusChanged.connect(deviceGroup.onStatusChanged)
+            deviceGroup.onStatusChanged(actual, actual.status, actual.error)
+            
             deviceGroup.addDevice(device)
         
         return deviceGroup

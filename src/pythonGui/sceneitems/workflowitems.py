@@ -191,14 +191,18 @@ class Item(QWidget, Loadable):
 
 
     def checkChannels(self):
-        device = self.getDevice()
-        if device.isOnline():
-            #print("ONLINE", device, self.getObject())
-            device = self.getObject()
-        
+        device = self.getObject()
         descr = device.descriptor
-        #print("### checkChannels", device, descr, self.descriptor)
-        #print()
+        if descr is not None and self.descriptor is not None and descr != self.descriptor:
+            self.descriptor = None
+            while self.input_channels:
+                i = self.input_channels.pop()
+                i.clear()
+            while self.output_channels:
+                o = self.output_channels.pop()
+                o.clear()
+            self.connectionsChecked = False
+        
         if descr is not None and self.descriptor is None:
             self.descriptor = descr
             
@@ -387,7 +391,6 @@ class WorkflowGroupItem(Item):
             connectedOutputs = input.box.configuration.getBox(path).value
             if isinstance(connectedOutputs, Dummy):
                 return
-
 
             output = [o.replace(":" ,".") for o in connectedOutputs]
             start_channel = self.scene.getOutputChannelItem(output)
