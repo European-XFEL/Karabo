@@ -75,9 +75,11 @@ namespace karathon {
 
             if (!PyArray_Check(obj.ptr())) throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'numpy array'");
 
-            // Data pointer and size
+            // Get a contiguous copy of the array (or just a reference if already contiguous)
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            char* data = reinterpret_cast<char*> (PyArray_DATA(arr));
+            PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+            // Data pointer and size
+            char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
             size_t size = PyArray_NBYTES(arr);
 
             // Dimensions (shape)
@@ -87,20 +89,21 @@ namespace karathon {
             if (encoding == karabo::xip::Encoding::RGB || encoding == karabo::xip::Encoding::RGBA ||
                 encoding == karabo::xip::Encoding::BGR || encoding == karabo::xip::Encoding::BGRA ||
                 encoding == karabo::xip::Encoding::CMYK || encoding == karabo::xip::Encoding::YUV) {
-              // Color images
+                // Color images
 
-	      if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+                if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
 
-              tmp[2] = shapes[2]; // Number of channels
-              tmp[1] = shapes[0]; // Image height
-              tmp[0] = shapes[1]; // Image width
-	    } else if (encoding == karabo::xip::Encoding::GRAY) {
-	      // Gray-scale images
+                tmp[2] = shapes[2]; // Number of channels
+                tmp[1] = shapes[0]; // Image height
+                tmp[0] = shapes[1]; // Image width
+            } else if (encoding == karabo::xip::Encoding::GRAY) {
+                // Gray-scale images
                 for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
-	    } else {
-	        // Other encodings. Likely it will need to be fixed!
+            } else {
+                // Other encodings. Likely it will need to be fixed!
+                // getDataPy(RawImageData&) will need to be changed accordingly!!!
                 for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
-	    }
+            }
 
             karabo::util::Dims dimensions;
             dimensions.fromVector(tmp);
@@ -189,9 +192,29 @@ namespace karathon {
 
         static bp::object getDataPy(RawImageData& self) {
             std::vector<unsigned long long> dims = self.getDimensions().toVector();
-            std::reverse(dims.begin(), dims.end()); // REVERSING
             npy_intp shape[dims.size()];
-            for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
+
+            int encoding = self.getEncoding();
+            if (encoding == karabo::xip::Encoding::RGB || encoding == karabo::xip::Encoding::RGBA ||
+                encoding == karabo::xip::Encoding::BGR || encoding == karabo::xip::Encoding::BGRA ||
+                encoding == karabo::xip::Encoding::CMYK || encoding == karabo::xip::Encoding::YUV) {
+              // Color images
+
+              if (dims.size() != 3) throw KARABO_PYTHON_EXCEPTION("The 'RawImageData' has the wrong number of dimensions");
+
+              shape[2] = dims[2]; // Number of channels
+              shape[0] = dims[1]; // Image height
+              shape[1] = dims[0]; // Image width
+            } else if (encoding == karabo::xip::Encoding::GRAY) {
+                // Gray-scale images
+                std::reverse(dims.begin(), dims.end()); // REVERSING
+                for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
+            } else {
+                // Other encodings. Likely it will need to be fixed!
+                std::reverse(dims.begin(), dims.end()); // REVERSING
+                for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
+            }
+
             int npyType = karabo::util::Types::convert<karabo::xip::FromChannelSpace, ToNumpy>(self.getChannelSpace());
             PyObject* pyobj = PyArray_SimpleNew(dims.size(), shape, npyType);
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (pyobj);
