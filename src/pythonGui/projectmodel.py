@@ -1278,8 +1278,13 @@ class ProjectModel(QStandardItemModel):
                                          "SVG (*.svg)")
         if not fn:
             return
+        
+        if not fn.endswith(".svg"):
+            fn = "{}.svg".format(fn)
+        
         with ZipFile(project.filename, "r") as zf:
             s = zf.read("{}/{}".format(project.SCENES_KEY, scene.filename))
+        s = s.decode()
         with open(fn, "w") as fout:
             fout.write(s)
 
@@ -1293,7 +1298,8 @@ class ProjectModel(QStandardItemModel):
             return
         scene = Scene(project, os.path.basename(fn))
         with open(fn, "r") as fin:
-            scene.fromXml(fin.read())
+            s = fin.read()
+            scene.fromXml(s.encode())
         project.addScene(scene)
         self.selectObject(scene)
 
