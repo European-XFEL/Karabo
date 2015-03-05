@@ -324,8 +324,9 @@ class ProjectModel(QStandardItemModel):
         item = QStandardItem(deviceGroup.id)
         item.setData(deviceGroup, ProjectModel.ITEM_OBJECT)
         item.setEditable(False)
-        self.updateDeviceIcon(item, deviceGroup)
+        self.updateDeviceGroupIcon(item, deviceGroup)
         item.setToolTip("{}".format(deviceGroup.id))
+        deviceGroup.signalDeviceGroupStatusChanged.connect(self.updateDeviceItems)
 
         # Iterate through device of group
         for device in deviceGroup.devices:
@@ -378,7 +379,7 @@ class ProjectModel(QStandardItemModel):
                 dItem = devicesItem.child(childRow)
                 object = dItem.data(ProjectModel.ITEM_OBJECT)
                 if isinstance(object, DeviceGroup):
-                    self.updateDeviceIcon(dItem, object)
+                    self.updateDeviceGroupIcon(dItem, object)
                     for deviceRow in range(dItem.rowCount()):
                         dChildItem = dItem.child(deviceRow)
                         obj = dChildItem.data(ProjectModel.ITEM_OBJECT)
@@ -427,6 +428,22 @@ class ProjectModel(QStandardItemModel):
                               offline=icons.deviceOffline,
                               incompatible=icons.deviceIncompatible,
                               ).get(device.status, icons.deviceInstance))
+
+
+    def updateDeviceGroupIcon(self, item, deviceGroup):
+        """
+        This function updates the icon of the given \item depending on the
+        \deviceGroup status.
+        """
+        if deviceGroup.status != "offline" and deviceGroup.error:
+            item.setIcon(icons.deviceInstanceError)
+        else:
+            item.setIcon(dict(error=icons.deviceInstanceError,
+                              noserver=icons.deviceOfflineNoServer,
+                              noplugin=icons.deviceOfflineNoPlugin,
+                              offline=icons.deviceGroupOffline,
+                              incompatible=icons.deviceIncompatible,
+                              ).get(deviceGroup.status, icons.deviceGroupInstance))
 
 
     def addSceneItem(self, scene):
@@ -551,6 +568,7 @@ class ProjectModel(QStandardItemModel):
         if self.deviceDialog is not None:
             self.deviceDialog.updateServerTopology(manager.Manager().systemHash)
         self.updateMacros()
+
 
     def currentDevice(self):
         device = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
