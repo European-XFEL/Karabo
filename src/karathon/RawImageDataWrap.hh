@@ -84,7 +84,24 @@ namespace karathon {
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
             std::vector<unsigned long long> tmp(rank);
-            for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
+            if (encoding == karabo::xip::Encoding::RGB || encoding == karabo::xip::Encoding::RGBA ||
+                encoding == karabo::xip::Encoding::BGR || encoding == karabo::xip::Encoding::BGRA ||
+                encoding == karabo::xip::Encoding::CMYK || encoding == karabo::xip::Encoding::YUV) {
+              // Color images
+
+	      if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+
+              tmp[2] = shapes[2]; // Number of channels
+              tmp[1] = shapes[0]; // Image height
+              tmp[0] = shapes[1]; // Image width
+	    } else if (encoding == karabo::xip::Encoding::GRAY) {
+	      // Gray-scale images
+                for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
+	    } else {
+	        // Other encodings. Likely it will need to be fixed!
+                for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
+	    }
+
             karabo::util::Dims dimensions;
             dimensions.fromVector(tmp);
 
