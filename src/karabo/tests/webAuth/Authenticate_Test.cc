@@ -188,7 +188,11 @@ void Authenticate_Test::testIncorrectLogin() {
     testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Test wrong password
-    CPPUNIT_ASSERT(a.login() == false);
+    try {
+        CPPUNIT_ASSERT(a.login() == false);
+    } catch(karabo::util::NetworkException& e) {
+        CPPUNIT_ASSERT(true);
+    }
 
     // Test wrong password (case unsuccess in the getUserNonce function)
     username = "heisenb";
@@ -196,7 +200,11 @@ void Authenticate_Test::testIncorrectLogin() {
     a = Authenticator(username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Test wrong password
-    CPPUNIT_ASSERT(a.login() == false);
+    try {
+        CPPUNIT_ASSERT(a.login() == false);
+    } catch(karabo::util::NetworkException& e) {
+        CPPUNIT_ASSERT(true);
+    }
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
@@ -209,13 +217,22 @@ void Authenticate_Test::testIncorrectLogin() {
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
-    CPPUNIT_ASSERT(a.login() == false);
+    try {
+        CPPUNIT_ASSERT(a.login() == false);
+    } catch(karabo::util::NetworkException& e) {
+        CPPUNIT_ASSERT(true);
+    }
+        
 
     // Class instance should be in the initial state
     testNotLoggedContext(a, username, password, provider, ipAddress, brokerHostname, brokerPortNumber, brokerTopic);
 
     // Unsuccessful logout
-    CPPUNIT_ASSERT(a.logout() == false);
+    try {
+        CPPUNIT_ASSERT(a.logout() == false);
+    } catch(karabo::util::NetworkException& e) {
+        CPPUNIT_ASSERT(true);
+    }
 }
 
 
