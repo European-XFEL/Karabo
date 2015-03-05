@@ -256,8 +256,8 @@ class EditableNoApplyComponent(BaseComponent):
         box.set(value, None)
 
         # Configuration changed - so project needs to be informed to show it
-        if box.configuration.type == 'projectClass':
-            box.configuration.signalDeviceModified.emit(True)
+        if box.configuration.type in ('projectClass', 'deviceGroupClass'):
+            box.configuration.signalConfigurationModified.emit(True)
 
 
 class EditableApplyLaterComponent(BaseComponent):
