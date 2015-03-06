@@ -287,10 +287,10 @@ class ProjectTreeView(QTreeView):
             if firstObj.displayName == Project.DEVICES_LABEL:
                 # Devices menu
                 text = "Add device"
-                acImportPlugin = QAction(text, self)
-                acImportPlugin.setStatusTip(text)
-                acImportPlugin.setToolTip(text)
-                acImportPlugin.triggered.connect(self.model().onEditDevice)
+                acAddDevice = QAction(text, self)
+                acAddDevice.setStatusTip(text)
+                acAddDevice.setToolTip(text)
+                acAddDevice.triggered.connect(self.model().onEditDevice)
 
                 text = "Instantiate all"
                 acInitDevices = QAction(text, self)
@@ -310,7 +310,7 @@ class ProjectTreeView(QTreeView):
                 acRemoveDevices.setToolTip(text)
                 acRemoveDevices.triggered.connect(self.model().onRemoveDevices)
                 
-                menu.addAction(acImportPlugin)
+                menu.addAction(acAddDevice)
                 menu.addSeparator()
                 menu.addAction(acInitDevices)
                 menu.addAction(acKillDevices)
@@ -357,7 +357,16 @@ class ProjectTreeView(QTreeView):
                 acApplyConfigurations.triggered.connect(self.model().onApplyConfigurations)
                 
                 menu.addAction(acApplyConfigurations)
-        elif selectedType in (Device, DeviceGroup, Scene, Macro):
+            elif firstObj.displayName == Project.MONITORS_LABEL:
+                # Monitors menu
+                text = "Add monitor"
+                acAddMonitor = QAction(text, self)
+                acAddMonitor.setStatusTip(text)
+                acAddMonitor.setToolTip(text)
+                acAddMonitor.triggered.connect(self.model().onEditMonitor)
+                
+                menu.addAction(acAddMonitor)
+        elif selectedType in (Device, DeviceGroup, Scene, Macro, Monitor):
             # Device or Scene menu
             if nbSelected > 1:
                 text = "Remove selected"
@@ -425,6 +434,9 @@ class ProjectTreeView(QTreeView):
                 
                     menu.addSeparator()
                     menu.addAction(acSaveAs)
+                elif selectedType is Monitor:
+                    acEdit.triggered.connect(self.model().onEditMonitor)
+                    acDuplicate.triggered.connect(self.model().onDuplicateMonitor)
         
         elif selectedType is ProjectConfiguration:
             if nbSelected > 1:
