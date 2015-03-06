@@ -116,13 +116,25 @@ namespace karathon {
             return Wrapper::fromStdVectorToPyList(this->getCurrentlyExecutableCommands(instanceId));
         }
 
+//        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
+//            try {
+//                ScopedGILRelease nogil;
+//                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
+//            } catch (const karabo::util::Exception& e) {
+//                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+//            }
+//        }
+
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-            try {
+            karabo::util::Hash hash;
+            {    
                 ScopedGILRelease nogil;
-                return HashWrap::get(this->DeviceClient::cacheAndGetConfiguration(instanceId), key, keySep);
-            } catch (const karabo::util::Exception& e) {
-                throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+                this->DeviceClient::get(instanceId, hash);
             }
+            if (hash.has(key)) {
+                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
+            }
+            return bp::object();
         }
 
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
