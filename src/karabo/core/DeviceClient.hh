@@ -314,7 +314,7 @@ namespace karabo {
                     return cacheAndGetConfiguration(instanceId).get<T > (key, keySep);
                 } catch (const karabo::util::Exception& e) {
 
-                    throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
 
@@ -324,7 +324,7 @@ namespace karabo {
                     return cacheAndGetConfiguration(instanceId).get(key, value, keySep);
                 } catch (const karabo::util::Exception& e) {
 
-                    throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
 
@@ -334,7 +334,7 @@ namespace karabo {
                     return cacheAndGetConfiguration(instanceId).getAs<T > (key, keySep);
                 } catch (const karabo::util::Exception& e) {
 
-                    throw KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\"");
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
 
