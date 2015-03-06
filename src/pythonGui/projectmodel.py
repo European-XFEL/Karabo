@@ -455,6 +455,11 @@ class ProjectModel(QStandardItemModel):
                               ).get(deviceGroup.status, icons.deviceGroupInstance))
 
 
+    def updateMonitorItem(self, monitor):
+        item = self.findItem(monitor)
+        item.setText(monitor.name)
+
+
     def addSceneItem(self, scene):
         """
         This function adds the given \scene at the right position to the model.
@@ -546,6 +551,34 @@ class ProjectModel(QStandardItemModel):
             item.appendRow(childItem)
         
         self.signalExpandIndex.emit(self.indexFromItem(item), True)
+
+
+    def createMonitorItem(self, monitor):
+        """
+        This function creates a QStandardItem for the given \monitor and
+        returns it.
+        """
+        item = QStandardItem(monitor.name)
+        item.setIcon(icons.trendline)
+        item.setData(monitor, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+
+        item.setToolTip("{}".format(monitor.name))
+        
+        return item
+
+
+    def addMonitorItem(self, monitor):
+        """
+        This function adds the given \monitor at the right position to the model.
+        """
+        item = self.createMonitorItem(monitor)
+
+        projectItem = self.findItem(monitor.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
+        parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
 
 
     def removeObjectItem(self, object):
@@ -795,6 +828,7 @@ class ProjectModel(QStandardItemModel):
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
+        project.signalMonitorAdded.connect(self.addMonitorItem)
         
         project.signalRemoveObject.connect(self.removeObjectItem)
         
@@ -1144,62 +1178,48 @@ class ProjectModel(QStandardItemModel):
         if monitorDialog.exec_() == QDialog.Rejected:
             return
         
-        return
-
-        if monitorDialog is not None:
-            # Get configuration of device, if classId is the same
-            if device.classId == self.deviceDialog.classId:
-                if device.descriptor is None:
-                    config = device.initConfig
-                else:
-                    config = device.toHash()
-            else:
-                config = None
-            
-            # Remove device of project and get index for later insert to keep the
-            # order
-            index = project.remove(device)
-            
-            if isinstance(device, Device):
-                device = self.insertDevice(index, project,
-                                           self.deviceDialog.serverId,
-                                           self.deviceDialog.classId,
-                                           self.deviceDialog.deviceId,
-                                           self.deviceDialog.startupBehaviour)
-            
-            elif isinstance(device, DeviceGroup):
-                device = self.insertDeviceGroup(index, project,
-                                                self.deviceDialog.deviceGroupName,
-                                                self.deviceDialog.serverId,
-                                                self.deviceDialog.classId,
-                                                self.deviceDialog.startupBehaviour,
-                                                self.deviceDialog.displayPrefix,
-                                                self.deviceDialog.startIndex,
-                                                self.deviceDialog.endIndex)
-            
-            # Set config, if set
-            if config is not None:
-                device.initConfig = config
-        else:
-            if not self.deviceDialog.deviceGroup:
-                # Add new device
-                device = self.addDevice(project,
-                                        self.deviceDialog.serverId,
-                                        self.deviceDialog.classId,
-                                        self.deviceDialog.deviceId,
-                                        self.deviceDialog.startupBehaviour)
-            else:
-                device = self.addDeviceGroup(project,
-                                             self.deviceDialog.deviceGroupName,
-                                             self.deviceDialog.serverId,
-                                             self.deviceDialog.classId,
-                                             self.deviceDialog.startupBehaviour,
-                                             self.deviceDialog.displayPrefix,
-                                             self.deviceDialog.startIndex,
-                                             self.deviceDialog.endIndex)
+        # Create hash object for monitor
+        h = Hash()
+        h.set("deviceId", monitorDialog.deviceId)
+        h.set("deviceProperty", monitorDialog.deviceProperty)
+        h.set("metricPrefixSymbol", monitorDialog.metricPrefixSymbol)
+        h.set("unitSymbol", monitorDialog.unitSymbol)
+        h.set("format", monitorDialog.format)
         
-        self.selectObject(device)
-        self.deviceDialog = None
+        if monitor is not None:
+            monitor.name = monitorDialog.name
+            monitor.config = h
+            # Update view
+            self.updateMonitorItem(monitor)
+        else:
+            monitor = self.addMonitor(project, monitorDialog.name, h)
+
+        self.selectObject(monitor)
+
+
+    def addMonitor(self, project, name, config):
+        """
+        Add a monitor for the given \project with the given data.
+        """
+        monitor = project.getMonitor(name)
+        if monitor is not None:
+            reply = QMessageBox.question(None, 'Monitor already exists',
+                "Another monitor with the same name \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(name),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing device
+            index = project.remove(d)
+            monitor = self.insertMonitor(index, project, name, config)
+            return monitor
+        
+        monitor = Monitor(name, config)
+        project.addMonitor(monitor)
+        
+        return monitor
 
 
 ### slots ###
