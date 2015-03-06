@@ -599,6 +599,19 @@ class GuiProject(Project, QObject):
                 macros[m.name] = f
             projectConfig[self.MACROS_KEY] = macros
 
+            for monitor in self.monitors:
+                name = "{}/{}".format(self.MONITORS_KEY, monitor.filename)
+                try:
+                    zf.writestr(name, monitor.toXml())
+                except Exception as e:
+                    if file is not self.filename:
+                        with ZipFile(self.filename, 'r') as zin:
+                            zf.writestr(name, zin.read(name))
+                    if exception is None:
+                        exception = e
+            projectConfig[self.MONITORS_KEY] = [Hash("filename", monitor.filename)
+                                                for monitor in self.monitors]
+
             # Create folder structure and save content
             projectConfig = Hash(self.PROJECT_KEY, projectConfig)
             projectConfig[self.PROJECT_KEY, "version"] = self.version
