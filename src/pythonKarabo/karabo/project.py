@@ -386,7 +386,7 @@ class Monitor(object):
         # Reference to the project this monitor belongs to
         self.project = None
         
-        self.name = name
+        self.filename = "{}.xml".format(name)
         
         # This hash contains all necessary data like:
         # deviceId
@@ -397,16 +397,28 @@ class Monitor(object):
         self.config = config
 
 
+    @property
+    def name(self):
+        """
+        This function returns the name of the project excluding the suffix.
+        """
+        r = os.path.basename(self.filename)
+        if r.endswith(".xml"):
+            return r[:-4]
+        else:
+            return r
+
+
     def fromXml(self, xmlString):
         """
         This function loads the corresponding XML file of this configuration.
         """
-        self.hash = XMLParser().read(xmlString)
+        self.config = XMLParser().read(xmlString)
 
 
     def toXml(self):
         """
         This function returns the configurations' XML file as a string.
         """
-        return XMLWriter().write(self.hash)
+        return XMLWriter().write(self.config)
 
