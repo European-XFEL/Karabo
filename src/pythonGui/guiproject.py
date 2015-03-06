@@ -15,12 +15,10 @@ __all__ = ["Device", "DeviceGroup", "GuiProject", "Macro", "Category"]
 
 from configuration import Configuration
 from scene import Scene
-from schema import Schema
 from karabo.enums import AccessMode
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.hashtypes import StringList
-from karabo.project import Project, BaseDevice, BaseDeviceGroup
-import karabo
+from karabo.project import BaseDevice, BaseDeviceGroup, Monitor, Project
 import manager
 from network import network
 
@@ -307,6 +305,7 @@ class GuiProject(Project, QObject):
     #signalResourceAdded = pytqtSignal()
     signalMacroAdded = pyqtSignal(object)
     signalMacroChanged = pyqtSignal(object)
+    signalMonitorAdded = pyqtSignal(object)
     
     signalRemoveObject = pyqtSignal(object)
 
@@ -442,6 +441,12 @@ class GuiProject(Project, QObject):
         self.setModified(True)
 
 
+    def addMonitor(self, monitor):
+        Project.addMonitor(self, monitor)
+        self.signalMonitorAdded.emit(monitor)
+        self.setModified(True)
+
+
     def addResource(self, category, data):
         #self.signalResourceAdded.emit(category, data)
         self.setModified(True)
@@ -467,6 +472,10 @@ class GuiProject(Project, QObject):
         elif isinstance(object, Macro):
             del self.macros[object.name]
             return -1
+        elif isinstance(object, Monitor):
+            index = self.monitors.index(object)
+            self.monitors.pop(index)
+            return index
 
 
     def parse(self, projectConfig, zf):
@@ -589,6 +598,19 @@ class GuiProject(Project, QObject):
                     pass
                 macros[m.name] = f
             projectConfig[self.MACROS_KEY] = macros
+
+            for monitor in self.monitors:
+                name = "{}/{}".format(self.MONITORS_KEY, monitor.filename)
+                try:
+                    zf.writestr(name, monitor.toXml())
+                except Exception as e:
+                    if file is not self.filename:
+                        with ZipFile(self.filename, 'r') as zin:
+                            zf.writestr(name, zin.read(name))
+                    if exception is None:
+                        exception = e
+            projectConfig[self.MONITORS_KEY] = [Hash("filename", monitor.filename)
+                                                for monitor in self.monitors]
 
             # Create folder structure and save content
             projectConfig = Hash(self.PROJECT_KEY, projectConfig)

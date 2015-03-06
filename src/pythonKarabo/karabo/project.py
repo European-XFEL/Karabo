@@ -38,6 +38,7 @@ class Project(object):
     MONITORS_LABEL = "Monitors"
     RESOURCES_LABEL = "Resources"
     CONFIGURATIONS_LABEL = "Configurations"
+    MONITORS_LABEL = "Monitors"
 
     PROJECT_KEY = "project"
     DEVICES_KEY = "devices"
@@ -46,6 +47,7 @@ class Project(object):
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
     CONFIGURATIONS_KEY = "configurations"
+    MONITORS_KEY = "monitors"
     
     PROJECT_SUFFIX = "krb"
 
@@ -140,6 +142,21 @@ class Project(object):
                 del self.configurations[deviceId]
             else:
                 self.configurations[deviceId].remove(configuration)
+
+
+    def addMonitor(self, monitor):
+        self.monitors.append(monitor)
+        monitor.project = self
+
+
+    def getMonitor(self, name):
+        """
+        The first occurence of the monitor with the given \name is returned.
+        """
+        for monitor in self.monitors:
+            if name == monitor.name:
+                return monitor
+        return None
 
 
     def addResource(self, category, data):
@@ -264,6 +281,15 @@ class Project(object):
                                               filename))
                 configuration.fromXml(data)
                 self.addConfiguration(deviceId, configuration)
+        for m in projectConfig[self.MONITORS_KEY]:
+            filename = m.get("filename")
+            assert filename.endswith(".xml")
+            data = zf.read("{}/{}".format(self.MONITORS_KEY, filename))
+            filename = filename[:-4]
+            monitor = Monitor(filename)
+            monitor.fromXml(data)
+            self.addMonitor(monitor)
+            
         self.resources = {k: set(v) for k, v in
                           projectConfig["resources"].items()}
 
@@ -356,4 +382,52 @@ class BaseDeviceGroup(BaseDevice):
     def addDevice(self, device):
         self.devices.append(device)
         device.project = self.project
+
+
+class Monitor(object):
+    """
+    This class represents a datastructure which is needed for the later run-control.
+    """
+    
+    def __init__(self, name, config=None):
+        super(Monitor, self).__init__()
+        
+        # Reference to the project this monitor belongs to
+        self.project = None
+        
+        self.filename = "{}.xml".format(name)
+        
+        # This hash contains all necessary data like:
+        # deviceId
+        # deviceProperty
+        # metricPrefixSymbol (optional)
+        # unitSymbol
+        # format
+        self.config = config
+
+
+    @property
+    def name(self):
+        """
+        This function returns the name of the project excluding the suffix.
+        """
+        r = os.path.basename(self.filename)
+        if r.endswith(".xml"):
+            return r[:-4]
+        else:
+            return r
+
+
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.config = XMLParser().read(xmlString)
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        return XMLWriter().write(self.config)
 
