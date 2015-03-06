@@ -281,6 +281,15 @@ class Project(object):
                                               filename))
                 configuration.fromXml(data)
                 self.addConfiguration(deviceId, configuration)
+        for m in projectConfig[self.MONITORS_KEY]:
+            filename = m.get("filename")
+            assert filename.endswith(".xml")
+            data = zf.read("{}/{}".format(self.MONITORS_KEY, filename))
+            filename = filename[:-4]
+            monitor = Monitor(filename)
+            monitor.fromXml(data)
+            self.addMonitor(monitor)
+            
         self.resources = {k: set(v) for k, v in
                           projectConfig["resources"].items()}
 
