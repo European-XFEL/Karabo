@@ -18,18 +18,18 @@ from configuration import Configuration
 import globals
 import icons
 from dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
-from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.devicedialogs import DeviceGroupDialog
-from dialogs.scenedialog import SceneDialog
 from dialogs.dialogs import MacroDialog
+from dialogs.duplicatedialog import DuplicateDialog
+from dialogs.monitordialog import MonitorDialog
+from dialogs.scenedialog import SceneDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
 import network
 
 from karabo.hash import Hash
-from karabo.project import Project, ProjectAccess
-import karabo
+from karabo.project import Project, ProjectAccess, Monitor
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog,
@@ -225,6 +225,15 @@ class ProjectModel(QStandardItemModel):
         childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
         #childItem.setEditable(False)
         childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.MACROS_LABEL)
+        projectItem.appendRow(childItem)
+        
+        # Monitors
+        childItem = QStandardItem(Project.MONITORS_LABEL)
+        childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.MONITORS_LABEL)
         projectItem.appendRow(childItem)
         
         # Show projectItem expanded
@@ -446,6 +455,11 @@ class ProjectModel(QStandardItemModel):
                               ).get(deviceGroup.status, icons.deviceGroupInstance))
 
 
+    def updateMonitorItem(self, monitor):
+        item = self.findItem(monitor)
+        item.setText(monitor.name)
+
+
     def addSceneItem(self, scene):
         """
         This function adds the given \scene at the right position to the model.
@@ -539,6 +553,34 @@ class ProjectModel(QStandardItemModel):
         self.signalExpandIndex.emit(self.indexFromItem(item), True)
 
 
+    def createMonitorItem(self, monitor):
+        """
+        This function creates a QStandardItem for the given \monitor and
+        returns it.
+        """
+        item = QStandardItem(monitor.name)
+        item.setIcon(icons.trendline)
+        item.setData(monitor, ProjectModel.ITEM_OBJECT)
+        item.setEditable(False)
+
+        item.setToolTip("{}".format(monitor.name))
+        
+        return item
+
+
+    def addMonitorItem(self, monitor):
+        """
+        This function adds the given \monitor at the right position to the model.
+        """
+        item = self.createMonitorItem(monitor)
+
+        projectItem = self.findItem(monitor.project)
+        # Find folder for devices
+        parentItem = self.getCategoryItem(Project.MONITORS_LABEL, projectItem)
+        parentItem.appendRow(item)
+        self.signalExpandIndex.emit(self.indexFromItem(parentItem), True)
+
+
     def removeObjectItem(self, object):
         """
         This function removes the item representing the \object to the model..
@@ -592,6 +634,14 @@ class ProjectModel(QStandardItemModel):
             return None
         
         return macro
+
+
+    def currentMonitor(self):
+        monitor = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(monitor, Monitor):
+            return None
+        
+        return monitor
 
 
     def currentIndex(self):
@@ -778,6 +828,7 @@ class ProjectModel(QStandardItemModel):
         project.signalConfigurationAdded.connect(self.addConfigurationItem)
         project.signalMacroAdded.connect(self.addMacroItem)
         project.signalMacroChanged.connect(self.addMacroSubItems)
+        project.signalMonitorAdded.connect(self.addMonitorItem)
         
         project.signalRemoveObject.connect(self.removeObjectItem)
         
@@ -1112,6 +1163,65 @@ class ProjectModel(QStandardItemModel):
         self.signalAddMacro.emit(macro)
 
 
+    def editMonitor(self, monitor=None):
+        """
+        Within a dialog the properties of a monitor can be modified.
+        
+        Depending on the given parameter \monitor (either None or set) it is
+        either created or edited via the dialog.
+        """
+        # Get project name
+        project = self.currentProject()
+        
+        # Show dialog to select plugin
+        monitorDialog = MonitorDialog(monitor)
+        if monitorDialog.exec_() == QDialog.Rejected:
+            return
+        
+        # Create hash object for monitor
+        h = Hash()
+        h.set("deviceId", monitorDialog.deviceId)
+        h.set("deviceProperty", monitorDialog.deviceProperty)
+        h.set("metricPrefixSymbol", monitorDialog.metricPrefixSymbol)
+        h.set("unitSymbol", monitorDialog.unitSymbol)
+        h.set("format", monitorDialog.format)
+        
+        if monitor is not None:
+            monitor.name = monitorDialog.name
+            monitor.config = h
+            # Update view
+            self.updateMonitorItem(monitor)
+        else:
+            monitor = self.addMonitor(project, monitorDialog.name, h)
+
+        self.selectObject(monitor)
+
+
+    def addMonitor(self, project, name, config):
+        """
+        Add a monitor for the given \project with the given data.
+        """
+        monitor = project.getMonitor(name)
+        if monitor is not None:
+            reply = QMessageBox.question(None, 'Monitor already exists',
+                "Another monitor with the same name \"<b>{}</b>\" <br> "
+                "already exists. Do you want to overwrite it?".format(name),
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if reply == QMessageBox.No:
+                return None
+
+            # Overwrite existing device
+            index = project.remove(d)
+            monitor = self.insertMonitor(index, project, name, config)
+            return monitor
+        
+        monitor = Monitor(name, config)
+        project.addMonitor(monitor)
+        
+        return monitor
+
+
 ### slots ###
 
     def onSelectionChanged(self, selected, deselected):
@@ -1250,6 +1360,14 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")
+
+
+    def onEditMonitor(self):
+        self.editMonitor(self.currentMonitor())
+
+
+    def onDuplicateMonitor(self):
+        print("TODO: duplicate monitor...")
 
 
     def onApplyConfigurations(self):
