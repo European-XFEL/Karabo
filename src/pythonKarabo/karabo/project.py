@@ -38,6 +38,7 @@ class Project(object):
     MONITORS_LABEL = "Monitors"
     RESOURCES_LABEL = "Resources"
     CONFIGURATIONS_LABEL = "Configurations"
+    MONITORS_LABEL = "Monitors"
 
     PROJECT_KEY = "project"
     DEVICES_KEY = "devices"
@@ -46,6 +47,7 @@ class Project(object):
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
     CONFIGURATIONS_KEY = "configurations"
+    MONITORS_KEY = "monitors"
     
     PROJECT_SUFFIX = "krb"
 
@@ -356,4 +358,43 @@ class BaseDeviceGroup(BaseDevice):
     def addDevice(self, device):
         self.devices.append(device)
         device.project = self.project
+
+
+class Monitor(object):
+    """
+    This class represents a datastructure which is needed for the later run-control.
+    """
+    
+    def __init__(self, project, name, hash=None):
+        super(Monitor, self).__init__()
+        
+        # Reference to the project this monitor belongs to
+        self.project = project
+
+        if name.endswith(".xml"):
+            self.filename = name
+        else:
+            self.filename = "{}.xml".format(name)
+        
+        # This hash contains all necessary data like:
+        #self.deviceId = ""
+        #self.property = ""
+        #self.metricPrefixSymbol = ""
+        #self.unitSymbol = ""
+        #self.format = ""
+        self.hash = hash
+
+
+    def fromXml(self, xmlString):
+        """
+        This function loads the corresponding XML file of this configuration.
+        """
+        self.hash = XMLParser().read(xmlString)
+
+
+    def toXml(self):
+        """
+        This function returns the configurations' XML file as a string.
+        """
+        return XMLWriter().write(self.hash)
 

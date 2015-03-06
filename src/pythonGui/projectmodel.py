@@ -18,18 +18,18 @@ from configuration import Configuration
 import globals
 import icons
 from dialogs.configurationdialog import SelectMultipleProjectConfigurationDialog
-from dialogs.duplicatedialog import DuplicateDialog
 from dialogs.devicedialogs import DeviceGroupDialog
-from dialogs.scenedialog import SceneDialog
 from dialogs.dialogs import MacroDialog
+from dialogs.duplicatedialog import DuplicateDialog
+from dialogs.monitordialog import MonitorDialog
+from dialogs.scenedialog import SceneDialog
 from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
 import network
 
 from karabo.hash import Hash
-from karabo.project import Project, ProjectAccess
-import karabo
+from karabo.project import Project, ProjectAccess, Monitor
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
 from PyQt4.QtGui import (QDialog, QFileDialog,
@@ -225,6 +225,15 @@ class ProjectModel(QStandardItemModel):
         childItem.setData(Category(Project.MACROS_LABEL), ProjectModel.ITEM_OBJECT)
         #childItem.setEditable(False)
         childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.MACROS_LABEL)
+        projectItem.appendRow(childItem)
+        
+        # Monitors
+        childItem = QStandardItem(Project.MONITORS_LABEL)
+        childItem.setData(Category(Project.MONITORS_LABEL), ProjectModel.ITEM_OBJECT)
+        #childItem.setEditable(False)
+        childItem.setIcon(icons.folder)
+        childItem.setToolTip(Project.MONITORS_LABEL)
         projectItem.appendRow(childItem)
         
         # Show projectItem expanded
@@ -592,6 +601,14 @@ class ProjectModel(QStandardItemModel):
             return None
         
         return macro
+
+
+    def currentMonitor(self):
+        monitor = self.currentIndex().data(ProjectModel.ITEM_OBJECT)
+        if not isinstance(monitor, Monitor):
+            return None
+        
+        return monitor
 
 
     def currentIndex(self):
@@ -1112,6 +1129,79 @@ class ProjectModel(QStandardItemModel):
         self.signalAddMacro.emit(macro)
 
 
+    def editMonitor(self, monitor=None):
+        """
+        Within a dialog the properties of a monitor can be modified.
+        
+        Depending on the given parameter \monitor (either None or set) it is
+        either created or edited via the dialog.
+        """
+        # Get project name
+        project = self.currentProject()
+        
+        # Show dialog to select plugin
+        monitorDialog = MonitorDialog(monitor)
+        if monitorDialog.exec_() == QDialog.Rejected:
+            return
+        
+        return
+
+        if monitorDialog is not None:
+            # Get configuration of device, if classId is the same
+            if device.classId == self.deviceDialog.classId:
+                if device.descriptor is None:
+                    config = device.initConfig
+                else:
+                    config = device.toHash()
+            else:
+                config = None
+            
+            # Remove device of project and get index for later insert to keep the
+            # order
+            index = project.remove(device)
+            
+            if isinstance(device, Device):
+                device = self.insertDevice(index, project,
+                                           self.deviceDialog.serverId,
+                                           self.deviceDialog.classId,
+                                           self.deviceDialog.deviceId,
+                                           self.deviceDialog.startupBehaviour)
+            
+            elif isinstance(device, DeviceGroup):
+                device = self.insertDeviceGroup(index, project,
+                                                self.deviceDialog.deviceGroupName,
+                                                self.deviceDialog.serverId,
+                                                self.deviceDialog.classId,
+                                                self.deviceDialog.startupBehaviour,
+                                                self.deviceDialog.displayPrefix,
+                                                self.deviceDialog.startIndex,
+                                                self.deviceDialog.endIndex)
+            
+            # Set config, if set
+            if config is not None:
+                device.initConfig = config
+        else:
+            if not self.deviceDialog.deviceGroup:
+                # Add new device
+                device = self.addDevice(project,
+                                        self.deviceDialog.serverId,
+                                        self.deviceDialog.classId,
+                                        self.deviceDialog.deviceId,
+                                        self.deviceDialog.startupBehaviour)
+            else:
+                device = self.addDeviceGroup(project,
+                                             self.deviceDialog.deviceGroupName,
+                                             self.deviceDialog.serverId,
+                                             self.deviceDialog.classId,
+                                             self.deviceDialog.startupBehaviour,
+                                             self.deviceDialog.displayPrefix,
+                                             self.deviceDialog.startIndex,
+                                             self.deviceDialog.endIndex)
+        
+        self.selectObject(device)
+        self.deviceDialog = None
+
+
 ### slots ###
 
     def onSelectionChanged(self, selected, deselected):
@@ -1250,6 +1340,14 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateMacro(self):
         print("TODO: duplicate macro...")
+
+
+    def onEditMonitor(self):
+        self.editMonitor(self.currentMonitor())
+
+
+    def onDuplicateMonitor(self):
+        print("TODO: duplicate monitor...")
 
 
     def onApplyConfigurations(self):
