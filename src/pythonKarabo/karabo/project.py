@@ -144,6 +144,21 @@ class Project(object):
                 self.configurations[deviceId].remove(configuration)
 
 
+    def addMonitor(self, monitor):
+        self.monitors.append(monitor)
+        monitor.project = self
+
+
+    def getMonitor(self, name):
+        """
+        The first occurence of the monitor with the given \name is returned.
+        """
+        for monitor in self.monitors:
+            if name == monitor.name:
+                return monitor
+        return None
+
+
     def addResource(self, category, data):
         """add the data into the resources of given category
 
@@ -365,24 +380,21 @@ class Monitor(object):
     This class represents a datastructure which is needed for the later run-control.
     """
     
-    def __init__(self, project, name, hash=None):
+    def __init__(self, name, config=None):
         super(Monitor, self).__init__()
         
         # Reference to the project this monitor belongs to
-        self.project = project
-
-        if name.endswith(".xml"):
-            self.filename = name
-        else:
-            self.filename = "{}.xml".format(name)
+        self.project = None
+        
+        self.name = name
         
         # This hash contains all necessary data like:
-        #self.deviceId = ""
-        #self.property = ""
-        #self.metricPrefixSymbol = ""
-        #self.unitSymbol = ""
-        #self.format = ""
-        self.hash = hash
+        # deviceId
+        # deviceProperty
+        # metricPrefixSymbol (optional)
+        # unitSymbol
+        # format
+        self.config = config
 
 
     def fromXml(self, xmlString):
