@@ -127,9 +127,11 @@ namespace karathon {
 
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
             karabo::util::Hash hash;
-            {    
+            try {    
                 ScopedGILRelease nogil;
                 this->DeviceClient::get(instanceId, hash);
+            } catch(...) {
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
             }
             if (hash.has(key)) {
                 return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
