@@ -2,6 +2,7 @@ from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
                      Task, TimeoutError)
 import sys
 import threading
+import weakref
 
 from karabo import KaraboError, String, Integer, AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
@@ -25,6 +26,13 @@ class RemoteDevice:
         self.id = id
 
 
+class Sentinel:
+    """ everyone needing the event thread to run should keep a reference
+    to a sentinel. One nobody has a reference anymore, the event thread
+    may be collected."""
+    def __init__(self, thread):
+        self.thread = thread
+
 class EventThread(threading.Thread):
     instance = None
 
@@ -44,19 +52,24 @@ class EventThread(threading.Thread):
         super(Macro, macro).__init__(configuration)
         yield from macro.run_async()
 
+    def stop(self, weakref):
+        self.loop.stop()
+
     @classmethod
     def start_macro(cls, macro, conf):
-        if cls.instance is None:
-            self = cls.instance = cls()
+        if cls.instance is None or cls.instance() is None:
+            self = cls()
+            s = Sentinel(self)
+            cls.instance = weakref.ref(s, self.stop)
             self.lock = threading.Lock()
             self.lock.acquire()
             self.start()
             self.lock.acquire()
         else:
-            self = cls.instance
+            self = cls.instance().thread
         self.loop.call_soon_threadsafe(async, self.run_macro(macro, conf))
         self.lock.acquire()
-        return self.task.result()
+        return cls.instance()
 
 
 class Macro(SyncDevice):
@@ -104,7 +117,7 @@ class Macro(SyncDevice):
         configuration.update(kwargs)
         loop = get_event_loop()
         if not isinstance(loop, EventLoop):
-            EventThread.start_macro(self, configuration)
+            self._thread = EventThread.start_macro(self, configuration)
         else:
             super().__init__(configuration)
 
