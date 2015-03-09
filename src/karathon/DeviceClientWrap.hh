@@ -125,18 +125,29 @@ namespace karathon {
 //            }
 //        }
 
+//        bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
+//            karabo::util::Hash hash;
+//            try {    
+//                ScopedGILRelease nogil;
+//                this->DeviceClient::get(instanceId, hash);
+//            } catch(...) {
+//                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+//            }
+//            if (hash.has(key)) {
+//                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
+//            }
+//            throw KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in device \"" + instanceId + "\" configuration:\n" + hash);
+//        }
+
         bp::object getPy(const std::string& instanceId, const std::string& key, const std::string& keySep = ".") {
-            karabo::util::Hash hash;
+            boost::any value;
             try {    
                 ScopedGILRelease nogil;
-                this->DeviceClient::get(instanceId, hash);
+                value = this->DeviceClient::getAsAny(instanceId, key, keySep.at(0));
             } catch(...) {
-                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+                KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("The key \"" + key + "\" is not found in the device \"" + instanceId + "\""));
             }
-            if (hash.has(key)) {
-                return Wrapper::toObject(hash.getNode(key, keySep.at(0)).getValueAsAny(), HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
-            }
-            return bp::object();
+            return Wrapper::toObject(value, HashWrap::isDefault(PyTypes::PYTHON_DEFAULT));
         }
 
         karabo::util::Schema getDeviceSchema(const std::string& instanceId) {
