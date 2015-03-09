@@ -1,5 +1,6 @@
 from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
                      Task, TimeoutError)
+import atexit
 import sys
 import threading
 import weakref
@@ -36,10 +37,14 @@ class Sentinel:
 class EventThread(threading.Thread):
     instance = None
 
+    def __init__(self):
+        super().__init__(name="Karabo macro event loop", daemon=True)
+
     def run(self):
         self.loop = EventLoop()
         set_event_loop(self.loop)
         self.lock.release()
+        atexit.register(self.stop)
         try:
             self.loop.run_forever()
         finally:
@@ -52,7 +57,7 @@ class EventThread(threading.Thread):
         super(Macro, macro).__init__(configuration)
         yield from macro.run_async()
 
-    def stop(self, weakref):
+    def stop(self, weakref=None):
         self.loop.stop()
 
     @classmethod
