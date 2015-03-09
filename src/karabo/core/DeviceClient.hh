@@ -337,7 +337,17 @@ namespace karabo {
                     KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
                 }
             }
+            
+            boost::any getAsAny(const std::string& instanceId, const std::string& key, const char keySep = '.') {
+                try {
+                    return cacheAndGetConfiguration(instanceId).getNode(key, keySep).getValueAsAny();
+                } catch (const karabo::util::Exception& e) {
 
+                    KARABO_RETHROW_AS(KARABO_PARAMETER_EXCEPTION("Could not fetch parameter \"" + key + "\" from device \"" + instanceId + "\""));
+                }
+                return boost::any();
+            }
+            
             karabo::util::vector<karabo::util::Hash> getFromPast(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
 
             karabo::util::vector<karabo::util::Hash> getPropertyHistory(const std::string& deviceId, const std::string& key, const std::string& from, std::string to = "", int maxNumData = 0);
