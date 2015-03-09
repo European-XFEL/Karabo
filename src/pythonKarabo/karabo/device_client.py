@@ -1,12 +1,16 @@
 from karabo.hash import Hash
 from karabo.signalslot import slot
-from karabo.python_device import PythonDevice
+from karabo.python_device import Device
 
-class DeviceClientBase(PythonDevice):
+class DeviceClientBase(Device):
     def __init__(self, configuration):
         super().__init__(configuration)
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash())
+
+    def run(self):
+        super().run()
+        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
 
     @slot
     def slotInstanceNew(self, instanceId, info):
@@ -22,6 +26,10 @@ class DeviceClientBase(PythonDevice):
     def slotInstanceGone(self, instanceId, info):
         self.systemTopology[info[type]].pop(instanceId, None)
         return super().slotInstanceGone(instanceId, info)
+
+    @slot
+    def slotPingAnswer(self, deviceId, info):
+        self.updateSystemTopology(deviceId, info, None)
 
     def updateSystemTopology(self, instanceId, info, task):
         type = info["type"]
