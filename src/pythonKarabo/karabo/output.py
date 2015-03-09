@@ -13,16 +13,16 @@ class KaraboStream:
     def write(self, data):
         try:
             task = Task.current_task()
-            task.instance.printToConsole(data)
+            task.instance().printToConsole(data)
         except (AttributeError, AssertionError):
             try:
-                instance = threadData.instance
+                instance = threadData.instance()
                 func = instance.printToConsole
                 @coroutine
                 def print():
                     func(data)
                 instance.async(print())
-            except AttributeError:
+            except (AttributeError, TypeError):
                 self.base.write(data)
 
     def flush(self):
