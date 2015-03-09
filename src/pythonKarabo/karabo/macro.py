@@ -7,9 +7,8 @@ from karabo import KaraboError, String, Integer, AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Descriptor, Type
-from karabo.output import threadData
 from karabo.signalslot import Proxy, SignalSlotable, waitUntilNew
-from karabo.python_device import Device
+from karabo.sync_device import SyncDevice, SyncProxy
 
 
 def Monitor():
@@ -19,15 +18,6 @@ def Monitor():
         del prop.setter
         return prop
     return outer
-
-
-class MacroProxy(Proxy):
-    def setValue(self, attr, value):
-        ok, msg = self._device._sync(
-            self._device.call(self.deviceId, "slotReconfigure",
-            Hash(attr.key, value)))
-        if not ok:
-            raise KaraboError(msg)
 
 
 class RemoteDevice:
@@ -66,7 +56,7 @@ class EventThread(threading.Thread):
         return self.task.result()
 
 
-class Macro(Device):
+class Macro(SyncDevice):
     subclasses = []
 
     project = String(
@@ -128,7 +118,8 @@ class Macro(Device):
         for k in dir(type(self)):
             v = getattr(type(self), k)
             if isinstance(v, RemoteDevice):
-                d = yield from super().getDevice(v.id, Base=MacroProxy)
+                d = yield from SignalSlotable.getDevice(self, v.id,
+                                                        Base=SyncProxy)
                 setattr(self, k, d)
                 devices.append(d)
         for d in devices:
@@ -140,51 +131,6 @@ class Macro(Device):
                 yield from waitUntilNew(d)
                 for m in self._monitors:
                     setattr(self, m.key, m.monitor(self))
-
-    def _sync(self, coro, timeout=-1):
-        lock = threading.Lock()
-        lock.acquire()
-        future = self.async(coro)
-        future.add_done_callback(lambda _: lock.release())
-        lock.acquire(timeout=timeout)
-        if future.done():
-            return future.result()
-        else:
-            future.cancel()
-            raise TimeoutError
-
-    def _executeSlot(self, slot):
-        threadData.instance = self
-        try:
-            slot(self)
-        finally:
-            threadData.instance = None
-
-    def executeSlot(self, slot):
-        return get_event_loop().run_in_executor(None, self._executeSlot, slot)
-
-    def getDevice(self, deviceId):
-        return self._sync(SignalSlotable.getDevice(self, deviceId,
-                                                   Base=MacroProxy))
-
-    def set(self, device, *, timeout=-1, **kwargs):
-        return self._sync(SignalSlotable.set(self, device, **kwargs),
-                          timeout=timeout)
-
-    def updateDevice(self, device, *, timeout=-1):
-        return self._sync(device.__iter__(), timeout=timeout)
-
-    def waitUntil(self, condition, *, timeout=-1):
-        return self._sync(SignalSlotable.waitUntil(self, condition),
-                          timeout=timeout)
-
-    def waitUntilNew(self, proxy, *, timeout=-1):
-        class WUN(waitUntilNew):
-            def __getattr__(s, attr):
-                assert isinstance(getattr(type(proxy), attr), Type)
-                return self._sync(super().__getattr__(attr), timeout)
-        return WUN(proxy)
-
 
     def printToConsole(self, data):
         self.print = data
