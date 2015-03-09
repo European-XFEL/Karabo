@@ -32,7 +32,10 @@ class EventThread(threading.Thread):
         self.loop = EventLoop()
         set_event_loop(self.loop)
         self.lock.release()
-        self.loop.run_forever()
+        try:
+            self.loop.run_forever()
+        finally:
+            self.loop.close()
 
     @coroutine
     def run_macro(self, macro, configuration):
