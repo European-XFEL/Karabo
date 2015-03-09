@@ -350,8 +350,12 @@ class DeviceDefinitionWidget(QWidget):
         
         serverTopology = systemTopology.get(serverKey)
         
-        self.cbPlugin.clear()
+        # Remember previous setting
+        prevServer = self.cbServer.currentText()
+        prevPlugin = self.cbPlugin.currentText()
+        
         self.cbServer.clear()
+        self.cbPlugin.clear()
 
         for serverId in serverTopology:
             visibility = AccessLevel(serverTopology[serverId, "visibility"])
@@ -441,9 +445,16 @@ class DeviceDefinitionWidget(QWidget):
             return
         # Get plugins which exist on server
         data = self.cbServer.itemData(index)
+        prevPlugin = self.cbPlugin.currentText()
         self.cbPlugin.clear()
         for d in data:
             self.cbPlugin.blockSignals(True)
             self.cbPlugin.addItem(d)
+            self.cbPlugin.blockSignals(False)
+        
+        index = self.cbPlugin.findText(prevPlugin)
+        if index > 0:
+            self.cbPlugin.blockSignals(True)
+            self.cbPlugin.setCurrentIndex(index)
             self.cbPlugin.blockSignals(False)
 
