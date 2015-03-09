@@ -1,6 +1,7 @@
 from bisect import bisect
 import logging
 import time
+import weakref
 
 from karabo.enums import Assignment
 from karabo.hash import Hash
@@ -9,8 +10,20 @@ from karabo.schema import Configurable, ListOfNodes
 
 
 class _Filter(logging.Filter):
+    def __init__(self, parent):
+        self.parent = weakref.ref(parent, self.remove)
+        self.added = []
+
     def filter(self, *args, **kwargs):
-        return self.parent.filter(*args, **kwargs)
+        return self.parent().filter(*args, **kwargs)
+
+    def remove(self, parent):
+        for a in added:
+            a.removeFilter(self)
+
+    def addTo(self, what):
+        self.added.append(what)
+        what.addFilter(self)
 
 
 class Filter(Configurable):
@@ -28,16 +41,27 @@ class Handler(Configurable):
 
     def __init__(self, config, parent, key):
         super().__init__(config, parent, key)
-        self.handler = _Handler()
-        self.handler.parent = self
+        self.handler = _Handler(self)
         for f in self.filters:
-            self.handler.addFilter(f.filter)
+            f.filter.addTo(self.handler)
         self.parent = parent
 
 
 class _Handler(logging.Handler):
+    def __init__(self, parent):
+        self.parent = weakref.ref(parent, self.remove)
+        self.added = []
+
     def emit(self, *args, **kwargs):
-        return self.parent.emit(*args, **kwargs)
+        return self.parent().emit(*args, **kwargs)
+
+    def remove(self, parent):
+        for a in self.added:
+            a.removeHandler(self)
+
+    def addTo(self, what):
+        self.added.append(what)
+        what.addHandler(self)
 
 
 class NetworkHandler(Handler):
@@ -73,9 +97,9 @@ class Logger(Configurable):
         self.logger = logging.getLogger(broker.deviceId)
         self.broker = broker
         for h in self.handlers:
-            self.logger.addHandler(h.handler)
+            h.handler.addTo(self.logger)
         for f in self.filters:
-            self.logger.addFilter(f.filter)
+            f.filter.addTo(self.logger)
 
     def INFO(self, what):
         """ legacy """

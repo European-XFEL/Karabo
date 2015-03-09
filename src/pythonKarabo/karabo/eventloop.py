@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
 import sys
+import weakref
 
 
 class Broker:
@@ -111,8 +112,10 @@ class Broker:
             self.session, self.destination,
             "slotInstanceIds LIKE '%|{0.deviceId}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+        info = device.info
         try:
             while True:
+                device = weakref.ref(device)
                 try:
                     message = yield from get_event_loop().run_in_executor(
                         None, consumer.receiveMessage, 1000)
@@ -121,6 +124,11 @@ class Broker:
                         continue
                     else:
                         raise
+                finally:
+                    device = device()
+                    if device is None:
+                        return
+                info = device.info
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
@@ -139,9 +147,9 @@ class Broker:
                         slot.slot(device, message, params)
                 except:
                     device.logger.exception('error in slot "%s"', slot)
+                slot = slots = None
         finally:
-            self.emit('call', {'*': ['slotInstanceGone']},
-                      self.deviceId, device.info)
+            self.emit('call', {'*': ['slotInstanceGone']}, self.deviceId, info)
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")

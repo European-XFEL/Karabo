@@ -14,6 +14,7 @@ from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
 import random
 import sys
 import time
+import weakref
 
 
 class Signal(object):
@@ -294,10 +295,13 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def heartbeats(self):
-        while True:
+        while self is not None:
             self.signalHeartbeat(self.deviceId, self.heartbeatInterval,
                                  self.info)
-            yield from sleep(self.heartbeatInterval)
+            interval = self.heartbeatInterval
+            self = weakref.ref(self)
+            yield from sleep(interval)
+            self = self()
 
     @coroutine
     def run_async(self):
@@ -326,7 +330,7 @@ class SignalSlotable(Configurable):
         task = async(coro, loop=self._ss.loop)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
-        task.instance = self
+        task.instance = weakref.ref(self, lambda _: task.cancel())
         return task
 
     def executeSlot(self, slot):
