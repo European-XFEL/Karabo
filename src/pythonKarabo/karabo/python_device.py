@@ -159,6 +159,10 @@ class Device(SignalSlotable):
         else:
             return self.fullSchema, self.deviceId
 
+    @slot
+    def slotInstanceNew(self, instanceId, info):
+        pass
+
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
             if state in self._stateDependentSchema:
