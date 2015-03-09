@@ -39,7 +39,6 @@ class GuiServer(DeviceClientBase):
 
     @coroutine
     def run_server(self):
-        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
         yield from start_server(self.connect_client, port=int(self.port))
 
     @coroutine
@@ -167,8 +166,9 @@ class GuiServer(DeviceClientBase):
 
     def updateSystemTopology(self, instanceId, info, task):
         entry = super().updateSystemTopology(instanceId, info, task)
-        for c in self.channels:
-            self.respond(c, task, topologyEntry=entry)
+        if task is not None:
+            for c in self.channels:
+                self.respond(c, task, topologyEntry=entry)
         return entry
 
     @slot
@@ -194,10 +194,6 @@ class GuiServer(DeviceClientBase):
         for c in self.deviceChannels.get(deviceId, []):
             self.respond(c, "deviceConfiguration", deviceId=deviceId,
                          configuration=configuration)
-
-    @slot
-    def slotPingAnswer(self, deviceId, info):
-        self.updateSystemTopology(deviceId, info)
 
     def registerDevice(self, deviceId):
         self._ss.connect(deviceId, "signalChanged", self.slotChanged)
