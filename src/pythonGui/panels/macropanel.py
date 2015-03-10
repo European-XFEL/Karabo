@@ -37,6 +37,7 @@ class MacroPanel(QSplitter):
         PygmentsHighlighter(self.edit.document())
         self.addWidget(self.edit)
         self.edit.setLineWrapMode(QTextEdit.NoWrap)
+        self.edit.textChanged.connect(self.onMacroChanged)
         
         self.console = QPlainTextEdit(self)
         self.console.setReadOnly(True)
@@ -110,6 +111,10 @@ class MacroPanel(QSplitter):
 
         with open(fn, "w") as out:
             out.write(self.edit.toPlainText())
+
+
+    def onMacroChanged(self):
+        self.macro.project.setModified(True)
 
 
     def onDock(self):
