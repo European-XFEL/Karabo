@@ -454,7 +454,7 @@ namespace karabo {
                                         slot->callRegisteredSlotFunctions(header, body);
                                         // In the body of the slot callback the user may have placed a reply
                                         // If so, send it back now
-                                        sendPotentialReply(header);
+                                        sendPotentialReply(header, true);
                                     }
                                 }
                             } else { // Local slot                                                              
@@ -478,7 +478,7 @@ namespace karabo {
                                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
                                         try {
                                             slot->callRegisteredSlotFunctions(header, body);
-                                            sendPotentialReply(header);
+                                            sendPotentialReply(header, false);
                                         } catch (const Exception& e) {
                                             //sendErrorHappenedReply(header, e.detailedMsg());
                                             if (m_exceptionHandler) m_exceptionHandler(e);
@@ -503,18 +503,24 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header) {
+        void SignalSlotable::sendPotentialReply(const karabo::util::Hash& header, bool global) {
             boost::mutex::scoped_lock lock(m_replyMutex);
             Replies::iterator it = m_replies.find(boost::this_thread::get_id());
-            if (it != m_replies.end()) {
-                if (header.has("replyTo")) {
-                    karabo::util::Hash replyHeader;
-                    replyHeader.set("replyFrom", header.get<std::string > ("replyTo"));
-                    replyHeader.set("signalInstanceId", m_instanceId);
-                    replyHeader.set("signalFunction", "__reply__");
-                    replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
+            if (header.has("replyTo")) {
+                karabo::util::Hash replyHeader;
+                replyHeader.set("replyFrom", header.get<std::string > ("replyTo"));
+                replyHeader.set("signalInstanceId", m_instanceId);
+                replyHeader.set("signalFunction", "__reply__");
+                replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
+                if (it != m_replies.end()) {
+                    it->second.set("acknowledge", true);
                     m_producerChannel->write(replyHeader, it->second);
-                } else if (header.has("replyInstanceIds")) { // TODO get rid of this entirely once receiveAsync is everywhere
+                } else if (!global) {
+                    m_producerChannel->write(replyHeader, karabo::util::Hash("acknowledge", false));
+                }
+            }
+            if (it != m_replies.end()) {
+                if (header.has("replyInstanceIds")) { // TODO get rid of this entirely once receiveAsync is everywhere
                     karabo::util::Hash replyHeader;
                     replyHeader.set("signalInstanceId", m_instanceId);
                     replyHeader.set("signalFunction", "__replyNoWait__");
