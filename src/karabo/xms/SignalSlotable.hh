@@ -176,88 +176,111 @@ namespace karabo {
                     m_signalSlotable->registerSlot<A1,A2,A3,A4>(replyCallback, m_replyId);
                 }
 
+                class Receiver {
+                public:
+                    void receive(Requestor *);
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer) = 0;
+                };
+
+                class Receiver0: public Receiver {
+                public:
+                    Receiver0() { }
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer) { }
+                };
+
                 void receive() {
-                    try {
-                        karabo::util::Hash::Pointer header, body;
-                        receiveResponse(header, body);
-                        if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
-                    } catch (const karabo::util::TimeoutException&) {
-                        KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-                    } catch (const karabo::util::CastException&) {
-                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));                   
-                    } catch (const karabo::util::Exception& e) {
-                        KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + m_signalSlotable->getInstanceId() + "\""));
-                    }
+                    Receiver0 receiver;
+                    receiver.receive(this);
                 }
 
                 template <class A1>
-                void receive(A1& a1) {
-                    try {
-                        karabo::util::Hash::Pointer header, body;
-                        receiveResponse(header, body);
-                        if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
-                        a1 = body->get<A1 > ("a1");
-                    } catch (const karabo::util::TimeoutException&) {
-                        KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-                    } catch (const karabo::util::CastException&) {
-                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));                  
-                    } catch (const karabo::util::Exception& e) {
-                        KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + m_signalSlotable->getInstanceId() + "\""));
+                class Receiver1 : public Receiver {
+                    A1 &m_a1;
+
+                public:
+                    Receiver1(A1 &a1): m_a1(a1) { }
+
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer body) {
+                        m_a1 = body->get<A1>("a1");
                     }
+                };
+
+                template <class A1>
+                void receive(A1& a1) {
+                    Receiver1<A1> receiver(a1);
+                    receiver.receive(this);
                 }
 
                 template <class A1, class A2>
-                void receive(A1& a1, A2& a2) {
-                    try {
-                        karabo::util::Hash::Pointer body, header;
-                        receiveResponse(header, body);
-                        if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
-                        a1 = body->get<A1 > ("a1");
-                        a2 = body->get<A2 > ("a2");
-                    } catch (const karabo::util::TimeoutException&) {
-                        KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-                    } catch (const karabo::util::CastException&) {
-                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));                   
-                    } catch (const karabo::util::Exception& e) {
-                        KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + m_signalSlotable->getInstanceId() + "\""));
+                class Receiver2 : public Receiver {
+                    A1 &m_a1;
+                    A2 &m_a2;
+
+                public:
+                    Receiver2(A1 &a1, A2 &a2): m_a1(a1), m_a2(a2) { }
+
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer body) {
+                        m_a1 = body->get<A1>("a1");
+                        m_a2 = body->get<A2>("a2");
                     }
+                };
+
+                template <class A1, class A2>
+                void receive(A1& a1, A2& a2) {
+                    Receiver2<A1, A2> receiver(a1, a2);
+                    receiver.receive(this);
                 }
 
                 template <class A1, class A2, class A3>
-                void receive(A1& a1, A2& a2, A3& a3) {
-                    try {
-                        karabo::util::Hash::Pointer body, header;
-                        receiveResponse(header, body);
-                        if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
-                        a1 = body->get<A1 > ("a1");
-                        a2 = body->get<A2 > ("a2");
-                        a3 = body->get<A3 > ("a3");
-                    } catch (const karabo::util::TimeoutException&) {
-                        KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-                    } catch (const karabo::util::CastException&) {
-                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));                   
-                    } catch (const karabo::util::Exception& e) {
-                        KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + m_signalSlotable->getInstanceId() + "\""));
+                class Receiver3 : public Receiver {
+                    A1 &m_a1;
+                    A2 &m_a2;
+                    A3 &m_a3;
+
+                public:
+                    Receiver3(A1 &a1, A2 &a2, A3 &a3): m_a1(a1), m_a2(a2), m_a3(a3) { }
+
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer body) {
+                        m_a1 = body->get<A1>("a1");
+                        m_a2 = body->get<A2>("a2");
+                        m_a3 = body->get<A3>("a3");
                     }
+                };
+
+                template <class A1, class A2, class A3>
+                void receive(A1& a1, A2& a2, A3& a3) {
+                    Receiver3<A1, A2, A3> receiver(a1, a2, a3);
+                    receiver.receive(this);
                 }
 
                 template <class A1, class A2, class A3, class A4>
-                void receive(A1& a1, A2& a2, A3& a3, A4& a4) {
-                    try {
-                        karabo::util::Hash::Pointer body, header;
-                        receiveResponse(header, body);
-                        if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
-                        a1 = body->get<A1 > ("a1");
-                        a2 = body->get<A2 > ("a2");
-                        a3 = body->get<A3 > ("a3");
-                        a4 = body->get<A4 > ("a4");
-                    } catch (const karabo::util::TimeoutException&) {
-                        KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
-                    } catch (const karabo::util::CastException&) {
-                        KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));                  
-                    } catch (const karabo::util::Exception& e) {
-                        KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + m_signalSlotable->getInstanceId() + "\""));
+                class Receiver4 : public Receiver {
+                    A1 &m_a1;
+                    A2 &m_a2;
+                    A3 &m_a3;
+                    A4 &m_a4;
+
+                public:
+                    Receiver4(A1 &a1, A2 &a2, A3 &a3, A4 &a4): m_a1(a1), m_a2(a2), m_a3(a3), m_a4(a4) { }
+
+                protected:
+                    virtual void inner(karabo::util::Hash::Pointer body) {
+                        m_a1 = body->get<A1>("a1");
+                        m_a2 = body->get<A2>("a2");
+                        m_a3 = body->get<A3>("a3");
+                        m_a4 = body->get<A4>("a4");
                     }
+                };
+
+                template <class A1, class A2, class A3, class A4>
+                void receive(A1& a1, A2& a2, A3& a3, A4& a4) {
+                    Receiver4<A1, A2, A3, A4> receiver(a1, a2, a3, a4);
+                    receiver.receive(this);
                 }
 
                 Requestor& timeout(const int& milliseconds);
