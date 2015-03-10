@@ -794,7 +794,7 @@ namespace karabo {
 
 
         karabo::util::Hash DeviceClient::cacheAndGetConfiguration(const std::string& deviceId) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
+            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());            
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path("device." + deviceId + ".configuration");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
@@ -809,7 +809,7 @@ namespace karabo {
                 }
                 stayConnected(deviceId);
                 return m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
-            } else {
+            } else {                
                 stayConnected(deviceId);
                 return node->getValue<Hash>();
             }
@@ -927,7 +927,11 @@ namespace karabo {
         std::pair<bool, std::string > DeviceClient::set(const std::string& instanceId, const karabo::util::Hash& values, int timeoutInSeconds) {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(std::make_pair<bool, string > (false, "Fail to set"));
 
-            stayConnected(instanceId);
+            //stayConnected(instanceId);
+            
+            // If this is the first time we are going to talk to <instanceId>, we should get all configuration,
+            // else only the answer to our set will fill the cache.            
+            cacheAndGetConfiguration(instanceId);
 
             // TODO Do not hardcode the default timeout
             if (timeoutInSeconds == -1) timeoutInSeconds = 3;
