@@ -50,7 +50,7 @@ namespace karabo {
             Slot(const std::string& slotFunction) : m_slotFunction(slotFunction) {
             }
 
-            ~Slot() {}
+            virtual ~Slot() {}
 
             std::string m_slotFunction;
 
@@ -72,7 +72,7 @@ namespace karabo {
 	    SlotN(const std::string& slotFunction) : Slot(slotFunction) {
             }
 
-            ~SlotN() {}
+            virtual ~SlotN() {}
 
         public:
             void registerSlotFunction(const SlotHandler& slotHandler) {
@@ -89,7 +89,7 @@ namespace karabo {
 
             Slot0(const std::string& slotFunction) : SlotN<void ()> (slotFunction) { }
 
-            ~Slot0() {}
+            virtual ~Slot0() {}
         protected:
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
@@ -107,7 +107,7 @@ namespace karabo {
 
             Slot1(const std::string& slotFunction) : SlotN<void (const A1&)> (slotFunction) { }
 
-            ~Slot1() {}
+            virtual ~Slot1() {}
         private:
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
@@ -126,7 +126,7 @@ namespace karabo {
 
             Slot2(const std::string& slotFunction) : SlotN<void (const A1&, const A2&)> (slotFunction) { }
 
-            ~Slot2() {}
+            virtual ~Slot2() {}
         private:
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
@@ -145,7 +145,7 @@ namespace karabo {
             KARABO_CLASSINFO(Slot3, "Slot3", "1.0")
 
             Slot3(const std::string& slotFunction) : SlotN<void (const A1&, const A2&, const A3&)> (slotFunction) { }
-            ~Slot3() {}
+            virtual ~Slot3() {}
         private:
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
@@ -166,7 +166,7 @@ namespace karabo {
             KARABO_CLASSINFO(Slot4, "Slot4", "1.0")
 
             Slot4(const std::string& slotFunction) : SlotN<void (const A1&, const A2&, const A3&, const A4&)> (slotFunction) { }
-            ~Slot4() {}
+            virtual ~Slot4() {}
         private:
 
             virtual void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
