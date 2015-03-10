@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>362</width>
-    <height>208</height>
+    <width>396</width>
+    <height>213</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,31 +38,11 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLineEdit" name="leDeviceId">
-         <property name="toolTip">
-          <string>Device ID</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pbSelectDeviceId">
-         <property name="maximumSize">
-          <size>
-           <width>35</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Select device ID</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QComboBox" name="cbDeviceId">
+       <property name="toolTip">
+        <string>Device ID</string>
+       </property>
+      </widget>
      </item>
      <item row="2" column="0">
       <widget class="QLabel" name="laProperty">
@@ -81,15 +61,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pbSelectProperty">
-         <property name="maximumSize">
-          <size>
-           <width>35</width>
-           <height>25</height>
-          </size>
-         </property>
+        <widget class="QToolButton" name="tbDeviceProperty">
          <property name="toolTip">
-          <string>Select property</string>
+          <string>Select device property</string>
          </property>
          <property name="text">
           <string/>
