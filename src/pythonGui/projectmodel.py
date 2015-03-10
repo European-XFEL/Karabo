@@ -1191,6 +1191,7 @@ class ProjectModel(QStandardItemModel):
             monitor.config = h
             # Update view
             self.updateMonitorItem(monitor)
+            project.setModified(True)
         else:
             monitor = self.addMonitor(project, monitorDialog.name, h)
 
