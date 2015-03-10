@@ -5,12 +5,15 @@
 #############################################################################
 
 
-__all__ = ["MonitorDialog"]
+__all__ = ["MonitorDialog", "DevicePropertyDialog"]
 
 import icons
+from schema import Schema
 
 from PyQt4 import uic
-from PyQt4.QtGui import (QDialog, QDialogButtonBox, QLineEdit)
+from PyQt4.QtCore import Qt
+from PyQt4.QtGui import (QDialog, QDialogButtonBox, QLineEdit, QTreeWidget,
+                         QTreeWidgetItem, QVBoxLayout)
 
 import os.path
 
@@ -31,8 +34,12 @@ class MonitorDialog(QDialog):
         self.cbDeviceId.setLineEdit(self.leDeviceId)
         
         # Add all available devices of project
-        for d in project.devices:
-            self.cbDeviceId.addItem(d.id, d)
+        for device in project.devices:
+            if device.type in ("deviceGroup", "deviceGroupClass"):
+                for d in device.devices:
+                    self.cbDeviceId.addItem(d.id, d)
+            else:
+                self.cbDeviceId.addItem(device.id, device)
         
         self.leName.textChanged.connect(self.onChanged)
         self.cbDeviceId.currentIndexChanged.connect(self.onSelectDeviceId)
@@ -109,4 +116,74 @@ class MonitorDialog(QDialog):
 
     def onSelectDeviceProperty(self):
         device = self.cbDeviceId.itemData(self.cbDeviceId.currentIndex())
+        # Show dialog to select device property
+        propertyDialog = DevicePropertyDialog(device)
+        if propertyDialog.exec_() == QDialog.Rejected:
+            return
+
+        self.leDeviceProperty.setFocus(Qt.OtherFocusReason)
+        self.leDeviceProperty.setText(propertyDialog.deviceProperty)
+
+
+class DevicePropertyDialog(QDialog):
+
+
+    def __init__(self, device):
+        """
+        Create a dialog to select a device property.
+        """
+        QDialog.__init__(self)
+        self.setWindowTitle("Select device property")
         
+        self.twDeviceProperties = QTreeWidget()
+        self.twDeviceProperties.headerItem().setHidden(True)
+        descr = device.descriptor
+        if descr is None:
+            # Get descriptor first
+            print("get descriptor", device, device.isOnline())
+        else:
+            self._fillWidget(descr, device.boxvalue, self.twDeviceProperties.invisibleRootItem())
+        self.twDeviceProperties.itemClicked.connect(self.onDevicePropertySelected)
+        self.twDeviceProperties.itemDoubleClicked.connect(self.accept)
+        
+        vLayout = QVBoxLayout(self)
+        vLayout.setContentsMargins(5,5,5,5)
+        vLayout.addWidget(self.twDeviceProperties)
+        
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        vLayout.addWidget(self.buttonBox)
+
+
+    @property
+    def deviceProperty(self):
+        return self.twDeviceProperties.currentItem().data(0, Qt.UserRole)
+
+
+    def _fillWidget(self, descriptor, box, item):
+        """
+        Fill tree widget recursively with all device properties.
+        """
+        for k, v in descriptor.dict.items():
+            childBox = getattr(box, k, None)
+            if childBox is None:
+                continue
+            
+            if childBox.isAccessible():
+                childItem = QTreeWidgetItem()
+                childItem.setData(0, Qt.UserRole, k)
+                displayText = childBox.descriptor.displayedName
+                childItem.setText(0, displayText)
+                if hasattr(v, "icon"):
+                    childItem.setIcon(0, v.icon)
+                item.addChild(childItem)
+
+                if isinstance(v, Schema):
+                    self._fillWidget(v, childBox.boxvalue, childItem)
+
+
+    def onDevicePropertySelected(self, item, column):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+
