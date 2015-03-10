@@ -486,6 +486,7 @@ class _Manager(QObject):
         if (serverId, classId) not in self.serverClassData:
             print('not requested schema for classId {} arrived'.format(classId))
             return
+        
         conf = self.serverClassData[serverId, classId]
         if conf.descriptor is not None:
             return
