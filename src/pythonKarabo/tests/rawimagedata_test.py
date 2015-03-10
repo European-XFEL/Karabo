@@ -18,11 +18,11 @@ class  RawImageData_TestCase(unittest.TestCase):
             image = image.reshape(1024, 1024)
             
             # params: numpy array, optional copy flag (True), optional encoding (EncodingType.GRAY), optional endianness (CPU endianness)
-            rdata = RawImageData(image, True, EncodingType.BGR)
+            rdata = RawImageData(image, True, EncodingType.GRAY)
             
             self.assertEqual(rdata.getData().size, 1048576)
             self.assertEqual(rdata.getByteSize(), 4194304)
-            self.assertEqual(rdata.getEncoding(), EncodingType.BGR)
+            self.assertEqual(rdata.getEncoding(), EncodingType.GRAY)
             self.assertEqual(rdata.getChannelSpace(), ChannelSpaceType.u_32_4)
             self.assertFalse(rdata.isBigEndian())
             dims = rdata.getDimensions()
@@ -36,7 +36,7 @@ class  RawImageData_TestCase(unittest.TestCase):
             
             h = rdata.hash()
             self.assertFalse(h["isBigEndian"])   # default setting     
-            self.assertEqual(h["encoding"], 3)
+            self.assertEqual(h["encoding"], 0)
             self.assertEqual(h["channelSpace"], 11)
             self.assertEqual(h["dims"], [1024, 1024])
             rdata.setIsBigEndian(True)
@@ -46,4 +46,5 @@ class  RawImageData_TestCase(unittest.TestCase):
             
             
 if __name__ == '__main__':
-    unittest.main()   
+    unittest.main()
+
