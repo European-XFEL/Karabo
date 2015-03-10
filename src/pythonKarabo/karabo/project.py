@@ -402,6 +402,7 @@ class Monitor(object):
         self.filename = "{}.xml".format(name)
         
         # This hash contains all necessary data like:
+        # name
         # deviceId
         # deviceProperty
         # metricPrefixSymbol (optional)
