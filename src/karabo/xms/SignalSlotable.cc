@@ -32,6 +32,22 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::webAuth;
 
+        void SignalSlotable::Requestor::Receiver::receive(SignalSlotable::Requestor *ss) {
+            try {
+                Hash::Pointer header, body;
+                ss->receiveResponse(header, body);
+                if (header->has("error")) throw KARABO_SIGNALSLOT_EXCEPTION(header->get<std::string>("error"));
+                inner(body);
+            } catch (const karabo::util::TimeoutException&) {
+                KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
+            } catch (const karabo::util::CastException &) {
+                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+            } catch (const karabo::util::Exception& e) {
+                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + ss->m_signalSlotable->getInstanceId() + "\""));
+            }
+
+        }
+
         // Static initializations
         std::set<int> SignalSlotable::m_reconnectIntervals = std::set<int>();
         boost::uuids::random_generator SignalSlotable::Requestor::m_uuidGenerator;
