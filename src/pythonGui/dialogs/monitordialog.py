@@ -108,4 +108,5 @@ class MonitorDialog(QDialog):
 
 
     def onSelectDeviceProperty(self):
-        print("onSelectDeviceProperty")
+        device = self.cbDeviceId.itemData(self.cbDeviceId.currentIndex())
+        

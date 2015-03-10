@@ -1180,6 +1180,7 @@ class ProjectModel(QStandardItemModel):
         
         # Create hash object for monitor
         h = Hash()
+        h.set("name", monitorDialog.name)
         h.set("deviceId", monitorDialog.deviceId)
         h.set("deviceProperty", monitorDialog.deviceProperty)
         h.set("metricPrefixSymbol", monitorDialog.metricPrefixSymbol)
@@ -1187,7 +1188,6 @@ class ProjectModel(QStandardItemModel):
         h.set("format", monitorDialog.format)
         
         if monitor is not None:
-            monitor.name = monitorDialog.name
             monitor.config = h
             # Update view
             self.updateMonitorItem(monitor)
