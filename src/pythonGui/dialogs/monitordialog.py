@@ -8,6 +8,7 @@
 __all__ = ["MonitorDialog", "DevicePropertyDialog"]
 
 import icons
+import manager
 from schema import Schema
 
 from PyQt4 import uic
@@ -37,8 +38,12 @@ class MonitorDialog(QDialog):
         for device in project.devices:
             if device.type in ("deviceGroup", "deviceGroupClass"):
                 for d in device.devices:
+                    # Descriptor needed
+                    d.checkClassSchema()
                     self.cbDeviceId.addItem(d.id, d)
             else:
+                # Descriptor needed
+                device.checkClassSchema()
                 self.cbDeviceId.addItem(device.id, device)
         
         self.leName.textChanged.connect(self.onChanged)
@@ -138,10 +143,7 @@ class DevicePropertyDialog(QDialog):
         self.twDeviceProperties = QTreeWidget()
         self.twDeviceProperties.headerItem().setHidden(True)
         descr = device.descriptor
-        if descr is None:
-            # Get descriptor first
-            print("get descriptor", device, device.isOnline())
-        else:
+        if descr is not None:
             self._fillWidget(descr, device.boxvalue, self.twDeviceProperties.invisibleRootItem())
         self.twDeviceProperties.itemClicked.connect(self.onDevicePropertySelected)
         self.twDeviceProperties.itemDoubleClicked.connect(self.accept)
