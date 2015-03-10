@@ -1174,7 +1174,7 @@ class ProjectModel(QStandardItemModel):
         project = self.currentProject()
         
         # Show dialog to select plugin
-        monitorDialog = MonitorDialog(monitor)
+        monitorDialog = MonitorDialog(project, monitor)
         if monitorDialog.exec_() == QDialog.Rejected:
             return
         
