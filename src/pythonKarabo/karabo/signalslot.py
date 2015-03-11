@@ -175,9 +175,15 @@ class ProxySlot(Slot):
         super().__init__(**args)
         self.key = key
 
-    def method(self, device):
-        device._update()
-        device._device._ss.emit("call", {device._deviceId: [self.key]})
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        key = self.key
+        @coroutine
+        def method(self):
+            self._update()
+            return (yield from self._device.call(self._deviceId, key))
+        return method.__get__(instance, owner)
 
 
 class waitUntilNew:
@@ -333,12 +339,15 @@ class SignalSlotable(Configurable):
         task.instance = weakref.ref(self, lambda _: task.cancel())
         return task
 
-    def executeSlot(self, slot):
+    def executeSlot(self, slot, message):
         coro = slot(self)
         if iscoroutine(coro):
-            return self.async(coro)
+            def inner():
+                self._ss.reply(message, (yield from coro))
+            return self.async(inner())
         ret = Future()
         ret.set_result(coro)
+        self._ss.reply(message, coro)
         return ret
 
     @coslot
