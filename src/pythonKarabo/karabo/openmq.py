@@ -2,6 +2,7 @@ import numbers
 from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
                     c_float, c_double, c_uint, string_at, Structure)
+import collections.abc
 
 
 dll = CDLL("libopenmqc.so")
@@ -57,7 +58,7 @@ typenames = ["Bool", "Int8", "Int16", "Int32", "Int64",
              "Float32", "Float64", "String"]
 
 
-class Properties(object):
+class Properties(collections.abc.MutableMapping):
     def __new__(cls, handle=None):
         if handle is None:
             handle = c_int()
@@ -86,14 +87,15 @@ class Properties(object):
             dll.MQPropertiesKeyIterationGetNext(self.handle, byref(key))
             yield key.value.decode('utf8')
 
-    def items(self):
-        for k in self:
-            yield k, self[k]
-
     def __getitem__(self, key):
         key = c_char_p(key.encode('utf8'))
         type = c_int()
-        dll.MQGetPropertyType(self.handle, key, byref(type))
+        try:
+            dll.MQGetPropertyType(self.handle, key, byref(type))
+        except Error as e:
+            if e.status == 1104:  # not found
+                raise KeyError(key)
+            raise
         ret = types[type.value]()
         getattr(dll, "MQGet{}Property".format(typenames[type.value]))(
             self.handle, key, byref(ret))
@@ -122,6 +124,12 @@ class Properties(object):
         else:
             raise TypeError("cannot convert '{}' to openmq type.".
                             format(type(value)))
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def __delitem__(self, key):
+        raise NotImplementedError
 
 
 class Connection(object):

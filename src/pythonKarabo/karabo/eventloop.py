@@ -71,22 +71,16 @@ class Broker:
         if not isinstance(reply, tuple):
             reply = reply,
 
-        try:
-            replyTo = message.properties['replyTo']
-        except openmq.Error:
-            pass
-        else:
+        replyTo = message.properties.get('replyTo')
+        if replyTo is not None:
             p = openmq.Properties()
             p['replyFrom'] = replyTo
             p['signalFunction'] = "__reply__"
             p['slotInstanceIds'] = b'|' + sender + b'|'
             self.send(p, reply)
 
-        try:
-            replyInstanceIds = message.properties['replyInstanceIds']
-        except openmq.Error:
-            pass
-        else:
+        replyInstanceIds = message.properties.get('replyInstanceIds')
+        if replyInstanceIds is not None:
             p = openmq.Properties()
             p['signalFunction'] = "__replyNoWait__"
             p['slotInstanceIds'] = replyInstanceIds
@@ -158,12 +152,9 @@ class Broker:
                 params.append(hash['a{}'.format(i)])
             except KeyError:
                 break
-        try:
-            replyFrom = message.properties['replyFrom'].decode("ascii")
-        except openmq.Error:
-            pass
-        else:
-            f = self.repliers.get(replyFrom)
+        replyFrom = message.properties.get('replyFrom')
+        if replyFrom is not None:
+            f = self.repliers.get(replyFrom.decode("ascii"))
             if f is not None:
                 f.set_result(params)
             return {}, None
