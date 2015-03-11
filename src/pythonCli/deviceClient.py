@@ -259,7 +259,7 @@ class DeviceClient(object):
         self.monitor = Hash()
         
         try:
-            self.monitor = krb.loadFromFile("monitor.xml").get("monitor")
+            self.reloadMonitorFile()
         except:
             pass
         
@@ -791,7 +791,7 @@ class DeviceClient(object):
         d = dict()
         s = str()
         t = krb.Epochstamp()
-        s += str(t.getSeconds()) + ' ' + str(t.getFractionalSeconds())
+        s += '{:f}'.format(t.toTimestamp())
         for node in self.monitor:
             entry = node.getValue()
             monitorName = node.getKey()
@@ -830,7 +830,7 @@ class DeviceClient(object):
     
     def getMonitorHeadline(self):
         s = str()
-        s += '# epochSec[s] epochFrac[as]'
+        s += '# timestamp'
         for node in self.monitor:
             entry = node.getValue()
             monitorName = node.getKey()
@@ -841,7 +841,11 @@ class DeviceClient(object):
     
     
     def reloadMonitorFile(self, filename = "monitor.xml"):
-        self.monitor = krb.loadFromFile(filename).get("monitor")
+        self.__monitorFile = krb.loadFromFile(filename)
+        if (self.__monitorFile.has("monitor")):
+            self.monitor = self.__monitorFile.get("monitor")
+        else:
+            print("Missing \"monitor\" section")
 
 
     def loadProject(self, filename):
