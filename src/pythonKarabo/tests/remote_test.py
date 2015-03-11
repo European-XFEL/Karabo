@@ -64,17 +64,17 @@ class Local(Device):
     @Slot()
     def letitdo(self):
         with (yield from self.getDevice("remote")) as d:
-            d.doit()
+            yield from d.doit()
 
     @Slot()
     def letitchange(self):
         with (yield from self.getDevice("remote")) as d:
-            d.changeit()
+            yield from d.changeit()
 
     @Slot()
     def disconnect(self):
         d = yield from self.getDevice("remote")
-        d.count()
+        yield from d.count()
         yield from sleep(0.3)
         self.f1 = d.counter
         yield from sleep(0.3)
@@ -93,14 +93,14 @@ class Local(Device):
             d.value = 10
             yield from sleep(0.1)
             self.f2 = d.value
-            d.changeit()
+            yield from d.changeit()
             yield from sleep(0.1)
             self.f3 = d.value
 
     @Slot()
     def dogeneric(self):
         d = yield from self.getDevice("remote")
-        d.generic()
+        yield from d.generic()
 
     @Slot()
     def other(self):
@@ -123,7 +123,7 @@ class Local(Device):
             d.counter = 0
             yield from self.waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
-            d.count()
+            self.async(d.count())
             yield from self.waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
@@ -138,7 +138,7 @@ class Local(Device):
         with (yield from self.getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            d.count()
+            self.async(d.count())
             for i in range(30):
                 j = yield from waitUntilNew(d).counter
                 if i != j:
@@ -152,7 +152,7 @@ class Local(Device):
         with (yield from self.getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            d.count()
+            self.async(d.count())
             for i in range(30):
                 h = yield from waitUntilNew(d)
                 if i != h["counter"]:
