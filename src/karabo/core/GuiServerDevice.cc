@@ -690,9 +690,13 @@ namespace karabo {
                 h.set("name", projectName);
                 h.set("success", success);
                 h.set("data", data);
-
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                channel->write(h); // send back to requestor
+                {                    
+                    boost::mutex::scoped_lock lock(m_channelMutex);
+                    std::map<karabo::net::Channel::Pointer, std::set<std::string> >::iterator it = m_channels.find(channel);
+                    if (it != m_channels.end()) {
+                        channel->write(h); // send back to requestor
+                    }
+                }
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in projectClosed(): " << e.userFriendlyMsg();
             }     
