@@ -221,7 +221,7 @@ class Slot(Descriptor):
         if device.currenttask is not None:
             print("not running", self.key)
             return
-        device.currenttask = device.executeSlot(self.method)
+        device.currenttask = device.executeSlot(self.method, message)
         def deleter(task):
             device.currenttask = None
         device.currenttask.add_done_callback(deleter)
