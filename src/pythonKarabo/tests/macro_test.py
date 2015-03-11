@@ -117,7 +117,7 @@ class Local(Macro):
         with self.getDevice("remote") as d:
             d.counter = 0
             self.f1 = d.counter
-            d.count()
+            self.executeNoWait(d, "count")
             self.waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
@@ -131,7 +131,7 @@ class Local(Macro):
         with self.getDevice("remote") as d:
             d.counter = 0
             sleep(0.1)
-            d.count()
+            self.executeNoWait(d, "count")
             for i in range(30):
                 j = self.waitUntilNew(d).counter
                 if i != j:

@@ -1,15 +1,24 @@
-from asyncio import TimeoutError
+from asyncio import coroutine, TimeoutError
 import threading
 import weakref
 
 from karabo.hash import Hash
-from karabo.hashtypes import Type
+from karabo.hashtypes import Slot, Type
 from karabo.signalslot import Proxy, waitUntilNew
 from karabo.python_device import Device
 from karabo.output import threadData
 
 
 class SyncProxy(Proxy):
+    class ProxySlot(Slot):
+        def method(self, device):
+            @coroutine
+            def inner():
+                device._update()
+                return (yield from device._device.call(device._deviceId,
+                                                       self.key))
+            return device._device._sync(inner())
+
     def setValue(self, attr, value):
         ok, msg = self._device._sync(
             self._device.call(self.deviceId, "slotReconfigure",
@@ -35,12 +44,22 @@ class SyncDevice(Device):
     def _executeSlot(self, slot):
         threadData.instance = weakref.ref(self)
         try:
-            slot(self)
+            return slot(self)
         finally:
             threadData.instance = None
 
-    def executeSlot(self, slot):
-        return get_event_loop().run_in_executor(None, self._executeSlot, slot)
+    def executeSlot(self, slot, message):
+        @coroutine
+        def inner():
+            reply = yield from get_event_loop().run_in_executor(
+                None, self._executeSlot, slot)
+            self._ss.reply(message, reply)
+        return self.async(inner())
+
+    def executeNoWait(self, device, slot):
+        if isinstance(device, Proxy):
+            device = device._deviceId
+        self._ss.emit("call", {device: [slot]})
 
     def getDevice(self, deviceId, *, timeout=-1):
         return self._sync(super().getDevice(deviceId, Base=SyncProxy), timeout)
