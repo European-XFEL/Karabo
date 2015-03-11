@@ -107,6 +107,17 @@ class BoundSignal(object):
 
 
 class Proxy(object):
+    class ProxySlot(Slot):
+        def __get__(self, instance, owner):
+            if instance is None:
+                return self
+            key = self.key
+            @coroutine
+            def method(self):
+                self._update()
+                return (yield from self._device.call(self._deviceId, key))
+            return method.__get__(instance, owner)
+
     def __init__(self, device, deviceId):
         self._device = device
         self._futures = {}
@@ -167,23 +178,6 @@ class Proxy(object):
                                                "slotGetConfiguration")
         self._onChanged(conf)
         return self
-
-
-class ProxySlot(Slot):
-    def __init__(self, key, args):
-        del args["nodeType"]
-        super().__init__(**args)
-        self.key = key
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        key = self.key
-        @coroutine
-        def method(self):
-            self._update()
-            return (yield from self._device.call(self._deviceId, key))
-        return method.__get__(instance, owner)
 
 
 class waitUntilNew:
@@ -440,7 +434,9 @@ class SignalSlotable(Configurable):
                 d.key = k
                 dict[k] = d
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
-                dict[k] = ProxySlot(k, a)
+                del a["nodeType"]
+                dict[k] = Base.ProxySlot()
+                dict[k].key = k
         Cls = type(schema.name, (Base,), dict)
 
         ret = Cls(self, deviceId)
