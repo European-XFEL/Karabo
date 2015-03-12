@@ -207,7 +207,15 @@ class DeviceClientProject(Project):
 
 
 class MonitorTimer(object):
-
+    """
+    This class represents a time which can call a \function in a given \interval.
+    
+    Usage:
+    mt = MonitorTimer(interval, self.timerEvent)
+    mt.start()
+    sleep(5)
+    mt.stop()
+    """
 
     def __init__(self, interval, function, *args, **kwargs):
         self._timer = None
