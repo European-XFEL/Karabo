@@ -43,8 +43,8 @@ class ProjectDevice(BaseDevice):
 
 class ProjectDeviceGroup(BaseDeviceGroup):
 
-    def __init__(self, id):
-        BaseDeviceGroup.__init__(self, id)
+    def __init__(self, id, serverId, classId, ifexists):
+        BaseDeviceGroup.__init__(self, serverId, classId, id, ifexists)
 
         self.serverId = None
         self.classId = None
