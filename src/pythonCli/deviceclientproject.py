@@ -15,7 +15,11 @@ __all__ = ["DeviceClientProject", "ProjectDevice"]
 from karabo.hash import Hash, XMLParser, XMLWriter
 from karabo.project import Project, BaseDevice, BaseDeviceGroup
 
+import csv
+from datetime import datetime
 import os.path
+
+from threading import Timer
 
 
 class ProjectDevice(BaseDevice):
@@ -132,3 +136,102 @@ class DeviceClientProject(Project):
         """
         for d in self.devices:
             self.deviceClient.shutdownDevice(d.deviceId)
+
+
+    def startMonitoring(self, filename, interval=1):
+        """
+        Monitoring is started and all necessary variables are initiated.
+        """
+        if self.isMonitoring:
+            print("Monitoring is already started.")
+            return
+        
+        self.isMonitoring = True
+        
+        if not filename.endswith(".csv"):
+            filename = "{}.csv".format(filename)
+        
+        self.monitorFile = open(filename, "a")
+        self.monitorWriter = csv.writer(self.monitorFile)
+        
+        self.monitorTuples = []
+        monitorString = []
+        for m in self.monitors:
+            # Connect box changes of properties to be monitored
+            deviceId = m.config.get("deviceId")
+            deviceProperty = m.config.get("deviceProperty")
+            self.monitorTuples.append((deviceId, deviceProperty))
+            
+            monitorString.append("{}[{}{}]".format(m.config.get("name"),
+                                             m.config.get("metricPrefixSymbol"),
+                                             m.config.get("unitSymbol")))
+        
+        self.monitorWriter.writerow(["#timestamp"] + monitorString)
+        if interval > 0:
+            self.monitorTimer = MonitorTimer(interval, self.timerEvent)
+            self.monitorTimer.start()
+        else:
+            self.monitorTimer = None
+        
+        print("Monitoring started...")
+
+
+    def stopMonitoring(self):
+        """
+        Monitoring is stopped and all variables are reset.
+        """
+        if not self.isMonitoring:
+            print("Monitoring is already stopped.")
+            return
+        
+        self.isMonitoring = False
+
+        if self.monitorTimer is not None:
+            self.monitorTimer.stop()
+        self.monitorFile.close()
+        
+        print("Monitoring stopped...")
+
+
+    def timerEvent(self):
+        """
+        Write to monitor file.
+        """
+        if self.monitorWriter is None:
+            return
+        
+        timestamp = datetime.now().isoformat()
+        row = [timestamp] + [self.deviceClient.get(deviceData[0], deviceData[1]) for deviceData in self.monitorTuples]
+        self.monitorWriter.writerow(row)
+
+
+
+class MonitorTimer(object):
+
+
+    def __init__(self, interval, function, *args, **kwargs):
+        self._timer = None
+        self.interval = interval
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
+        self.is_running = False
+
+
+    def _run(self):
+        self.is_running = False
+        self.start()
+        self.function(*self.args, **self.kwargs)
+
+
+    def start(self):
+        if not self.is_running:
+            self._timer = Timer(self.interval, self._run)
+            self._timer.start()
+            self.is_running = True
+
+
+    def stop(self):
+        self._timer.cancel()
+        self.is_running = False
+
