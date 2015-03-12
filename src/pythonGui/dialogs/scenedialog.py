@@ -29,7 +29,7 @@ class SceneDialog(QDialog):
         fLayout.setContentsMargins(5,5,5,5)
         self.leSceneName = QLineEdit("")
         self.leSceneName.textChanged.connect(self.onTextChanged)
-        fLayout.addRow("Scene name:", self.leSceneName)
+        fLayout.addRow("Enter scene name:", self.leSceneName)
         vLayout.addLayout(fLayout)
 
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
