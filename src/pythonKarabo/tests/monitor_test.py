@@ -12,12 +12,7 @@ from karabo.macro import Macro, Monitor, RemoteDevice
 from karabo.python_device import Device
 from karabo import Slot, Integer
 
-def async_tst(f):
-    @wraps(f)
-    def wrapper(self):
-        loop.run_until_complete(loop.run_in_executor(None, f, self))
-    return wrapper
-
+from .eventloop import startDevices, stopDevices, sync_tst
 
 class Remote(Device):
     counter = Integer(defaultValue=-1)
@@ -48,7 +43,7 @@ class Local(Macro):
 
 
 class Tests(TestCase):
-    @async_tst
+    @sync_tst
     def test_count(self):
         local.startA()
         local.startB()
@@ -60,20 +55,15 @@ class Tests(TestCase):
 
 def setUpModule():
     global loop, remA, remB, local
-    loop = EventLoop()
-    set_event_loop(loop)
-
-    local = Local(dict(_deviceId_="local", project="test", module="test"))
+    local = Local(_deviceId_="local", project="test", module="test",
+                  may_start_thread=False)
     remA = Remote(dict(_deviceId_="remA"))
     remB = Remote(dict(_deviceId_="remB"))
-    loop.run_until_complete(gather(local.startInstance(), remA.startInstance(),
-                                   remB.startInstance()))
+    loop = startDevices(local, remA, remB)
 
 
 def tearDownModule():
-    loop.run_until_complete(gather(
-        local.slotKillDevice(), remA.slotKillDevice(), remB.slotKillDevice()))
-    loop.close()
+    stopDevices(local, remA, remB)
 
 
 if __name__ == "__main__":

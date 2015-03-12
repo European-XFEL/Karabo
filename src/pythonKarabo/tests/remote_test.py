@@ -11,12 +11,7 @@ from karabo.python_device import Device
 from karabo.signalslot import waitUntilNew
 from karabo import Slot, Integer
 
-def async_tst(f):
-    @wraps(f)
-    def wrapper(self, *args, **kwargs):
-        coro = coroutine(f)
-        return loop.run_until_complete(coro(self, *args, **kwargs))
-    return wrapper
+from .eventloop import startDevices, stopDevices, async_tst
 
 
 class Superslot(Slot):
@@ -259,20 +254,14 @@ class Tests(TestCase):
 
 
 def setUpModule():
-    global loop, remote, local
-    loop = EventLoop()
-    set_event_loop(loop)
-
+    global remote, local, loop
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
-    loop.run_until_complete(gather(local.startInstance(),
-                                   remote.startInstance()))
+    loop = startDevices(local, remote)
 
 
 def tearDownModule():
-    loop.run_until_complete(gather(
-        local.slotKillDevice(), remote.slotKillDevice()))
-    loop.close()
+    stopDevices(local, remote)
 
 
 if __name__ == "__main__":
