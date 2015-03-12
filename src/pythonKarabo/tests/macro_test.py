@@ -5,14 +5,17 @@ from asyncio import (async, coroutine, gather, set_event_loop, sleep,
                      TimeoutError)
 from unittest import TestCase, main
 from functools import wraps
+import sys
 import time
 
 from karabo.eventloop import EventLoop
 from karabo.macro import Macro
 from karabo.python_device import Device
+from karabo.python_server import KaraboStream
+from karabo.signalslot import waitUntilNew
 from karabo import Slot, Integer
 
-from .eventloop import startDevices, stopDevices, sync_tst
+from .eventloop import startDevices, stopDevices, sync_tst, async_tst
 
 
 class Superslot(Slot):
@@ -43,10 +46,19 @@ class Remote(Device):
             self.counter = i
             yield from sleep(0.1)
 
+    @Slot()
+    def call_local(self):
+        with (yield from self.getDevice("local")) as l:
+            yield from l.remotecalls()
+
     generic = Superslot()
 
 
 class Local(Macro):
+    @Slot()
+    def remotecalls(self):
+        print("superpuper", end="hero")
+
     @Slot()
     def letitdo(self):
         with self.getDevice("remote") as d:
@@ -219,6 +231,16 @@ class Tests(TestCase):
     def test_waituntilnew(self):
         local.waituntilnew()
         self.assertEqual(local.max, 30)
+
+    @async_tst
+    def test_remotecalls(self):
+        sys.stdout = KaraboStream(sys.stdout)
+        try:
+            yield from remote.call_local()
+            self.assertEqual(local.print, "hero")
+            self.assertEqual(local.printno, 2)
+        finally:
+            sys.stdout = sys.stdout.base
 
 
 def setUpModule():
