@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, set_event_loop, TimeoutError
+from asyncio import async, coroutine, get_event_loop, TimeoutError
 import threading
 import weakref
 
