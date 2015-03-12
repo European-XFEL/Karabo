@@ -289,7 +289,7 @@ class ProjectTreeView(QTreeView):
             
             if firstObj.displayName == Project.DEVICES_LABEL:
                 # Devices menu
-                text = "Add device"
+                text = "Add device/device group"
                 acAddDevice = QAction(text, self)
                 acAddDevice.setStatusTip(text)
                 acAddDevice.setToolTip(text)
@@ -336,13 +336,13 @@ class ProjectTreeView(QTreeView):
                 menu.addAction(acAddScene)
                 menu.addAction(acOpenScene)
             elif firstObj.displayName == Project.MACROS_LABEL:
-                text = "Add Macro"
+                text = "Add macro"
                 acAddMacro = QAction(text, self)
                 acAddMacro.setStatusTip(text)
                 acAddMacro.setToolTip(text)
                 acAddMacro.triggered.connect(self.model().onEditMacro)
 
-                text = "Load Macro"
+                text = "Load macro"
                 acLoadMacro = QAction(text, self)
                 acLoadMacro.setStatusTip(text)
                 acLoadMacro.setToolTip(text)

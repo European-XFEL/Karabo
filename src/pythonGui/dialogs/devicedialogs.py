@@ -30,7 +30,7 @@ class DeviceDialog(QDialog):
     def __init__(self):
         super(DeviceDialog, self).__init__()
 
-        self.setWindowTitle("Add device")
+        self.setWindowTitle("Add device/device group")
 
         self.deviceWidget = DeviceDefinitionWidget()
         self.deviceWidget.signalValidDeviceId.connect(self.onValidDeviceId)
@@ -87,7 +87,7 @@ class DeviceGroupDialog(QDialog):
     def __init__(self, systemHash=None):
         super(DeviceGroupDialog, self).__init__()
 
-        self.setWindowTitle("Add device")
+        self.setWindowTitle("Add device/device group")
 
         self.deviceWidget = DeviceDefinitionWidget()
         self.deviceWidget.signalValidDeviceId.connect(self.onValidDeviceId)
