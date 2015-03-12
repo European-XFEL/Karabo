@@ -3,6 +3,7 @@ karabo.api_version = 2
 
 import gc
 from unittest import TestCase, main
+import sys
 import time
 import weakref
 
@@ -29,6 +30,14 @@ class Tests(TestCase):
         del remote
         gc.collect()
         self.assertIsNone(r())
+
+    def test_main(self):
+        save = sys.argv
+        try:
+            sys.argv = ["", "count", "counter=7"]
+            Remote.main()
+        finally:
+            sys.argv = save
 
 
 if __name__ == "__main__":

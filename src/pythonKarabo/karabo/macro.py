@@ -48,11 +48,11 @@ class EventThread(threading.Thread):
         try:
             self.loop.run_forever()
         finally:
+            atexit.unregister(self.stop)
             self.loop.close()
 
     @coroutine
     def run_macro(self, macro, configuration):
-        super(Macro, macro).__init__(configuration)
         yield from macro.startInstance()
         self.lock.release()
 
@@ -115,15 +115,13 @@ class Macro(SyncDevice):
         cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
                          if hasattr(m, "monitor")]
 
-    def __init__(self, configuration=None, **kwargs):
+    def __init__(self, configuration=None, may_start_thread=True, **kwargs):
         if configuration is None:
             configuration = {}
         configuration.update(kwargs)
-        loop = get_event_loop()
-        if not isinstance(loop, EventLoop):
+        super().__init__(configuration)
+        if may_start_thread and not isinstance(get_event_loop(), EventLoop):
             self._thread = EventThread.start_macro(self, configuration)
-        else:
-            super().__init__(configuration)
 
     def initInfo(self):
         super().initInfo()
