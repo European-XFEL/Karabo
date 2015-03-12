@@ -123,7 +123,7 @@ class Local(Device):
             d.counter = 0
             yield from self.waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
-            self.async(d.count())
+            async(d.count())
             yield from self.waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
@@ -138,7 +138,7 @@ class Local(Device):
         with (yield from self.getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            self.async(d.count())
+            async(d.count())
             for i in range(30):
                 j = yield from waitUntilNew(d).counter
                 if i != j:
@@ -152,7 +152,7 @@ class Local(Device):
         with (yield from self.getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            self.async(d.count())
+            async(d.count())
             for i in range(30):
                 h = yield from waitUntilNew(d)
                 if i != h["counter"]:
@@ -265,7 +265,8 @@ def setUpModule():
 
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
-    loop.run_until_complete(gather(local.run_async(), remote.run_async()))
+    loop.run_until_complete(gather(local.startInstance(),
+                                   remote.startInstance()))
 
 
 def tearDownModule():
