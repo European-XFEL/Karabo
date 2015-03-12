@@ -11,6 +11,7 @@ from karabo.registry import Registry
 
 from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
                      sleep, TimeoutError, wait, wait_for)
+from functools import wraps
 import random
 import sys
 import time
@@ -106,18 +107,20 @@ class BoundSignal(object):
         self.device._ss.emit(self.name, self.connected, *args)
 
 
-class Proxy(object):
-    class ProxySlot(Slot):
-        def __get__(self, instance, owner):
-            if instance is None:
-                return self
-            key = self.key
-            @coroutine
-            def method(self):
-                self._update()
-                return (yield from self._device.call(self._deviceId, key))
-            return method.__get__(instance, owner)
+class ProxySlot(Slot):
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        key = self.key
 
+        @synchronize
+        def method(self):
+            self._update()
+            return (yield from self._device.call(self._deviceId, key))
+        return method.__get__(instance, owner)
+
+
+class Proxy(object):
     def __init__(self, device, deviceId):
         self._device = device
         self._futures = {}
@@ -143,7 +146,7 @@ class Proxy(object):
 
     def setValue(self, attr, value):
         if self._sethash is None:
-            get_event_loop().call_soon(self._update)
+            self._device._ss.loop.call_soon_threadsafe(self._update)
             self._sethash = Hash()
         self._sethash[attr.key] = value
 
@@ -193,6 +196,13 @@ class waitUntilNew:
     def __iter__(self):
         return (yield from self.proxy._futures.setdefault(
             None, Future(loop=self.proxy._device._ss.loop)))
+
+def synchronize(func):
+    coro = coroutine(func)
+    @wraps(coro)
+    def wrapper(self, *args, timeout=-1, **kwargs):
+        return get_event_loop().sync(coro(self, *args, **kwargs), timeout)
+    return wrapper
 
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -409,7 +419,7 @@ class SignalSlotable(Configurable):
             loop.changedFuture.set_result(None)
         loop.changedFuture = Future(loop=loop)
 
-    @coroutine
+    @synchronize
     def waitUntil(self, condition):
         loop = get_event_loop()
         while not condition():
@@ -432,7 +442,7 @@ class SignalSlotable(Configurable):
                 dict[k] = d
             elif a["nodeType"] == 1 and a.get("displayType") == "Slot":
                 del a["nodeType"]
-                dict[k] = Base.ProxySlot()
+                dict[k] = ProxySlot()
                 dict[k].key = k
         Cls = type(schema.name, (Base,), dict)
 
@@ -441,9 +451,10 @@ class SignalSlotable(Configurable):
         yield from ret
         return ret
 
-    @coroutine
+    @synchronize
     def set(self, device, **kwargs):
         if isinstance(device, Proxy):
+            device._update()
             device = device._deviceId
         h = Hash()
         for k, v in kwargs.items():

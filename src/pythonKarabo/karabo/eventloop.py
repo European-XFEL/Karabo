@@ -3,8 +3,8 @@ from karabo.hashtypes import Type, Slot
 from karabo.hash import Hash, BinaryWriter
 from karabo import openmq
 
-from asyncio import (coroutine, Future, get_event_loop, set_event_loop,
-                     SelectorEventLoop, Task)
+from asyncio import (AbstractEventLoop, coroutine, Future, get_event_loop,
+                     set_event_loop, SelectorEventLoop, Task)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
@@ -177,6 +177,16 @@ class Client(object):
         self._device._ss.emit("call", {deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
+class NoEventLoop(AbstractEventLoop):
+    def __init__(self, instance):
+        self._instance = instance
+
+    def sync(self, coro, timeout):
+        self._instance._sync(coro, timeout)
+
+    def instance(self):
+        return self._instance
+
 
 class EventLoop(SelectorEventLoop):
     def __init__(self, topic=None):
@@ -247,13 +257,34 @@ class EventLoop(SelectorEventLoop):
         task = super().create_task(coro)
         try:
             if instance is None:
-                instance = Task.current_task(loop=self).instance()
+                instance = self.instance()
             instance._tasks.add(task)
-            task.add_done_callback(self._tasks.remove)
+            task.add_done_callback(instance._tasks.remove)
             task.instance = weakref.ref(instance, lambda _: task.cancel())
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError) as e:
             pass
         return task
+
+    @coroutine
+    def start_thread(self, f, *args):
+        def inner():
+            set_event_loop(loop)
+            try:
+                return f(*args)
+            finally:
+                set_event_loop(None)
+        loop = NoEventLoop(self.instance())
+        return (yield from self.run_in_executor(None, inner))
+
+    def instance(self):
+        try:
+            return Task.current_task(loop=self).instance()
+        except AttributeError:
+            return None
+
+    def sync(self, coro, timeout):
+        assert timeout == -1
+        return coro
 
     def close(self):
         for t in Task.all_tasks(self):

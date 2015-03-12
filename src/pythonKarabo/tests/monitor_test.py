@@ -60,6 +60,7 @@ def setUpModule():
     remA = Remote(dict(_deviceId_="remA"))
     remB = Remote(dict(_deviceId_="remB"))
     loop = startDevices(local, remA, remB)
+    Tests.instance = local
 
 
 def tearDownModule():
