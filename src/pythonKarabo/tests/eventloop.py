@@ -1,5 +1,7 @@
 from asyncio import coroutine, gather, set_event_loop
 from functools import wraps
+import os
+import socket
 
 from karabo.eventloop import EventLoop
 
@@ -20,7 +22,7 @@ def sync_tst(f):
 
 def startDevices(*devices):
     global loop
-    loop = EventLoop()
+    loop = EventLoop("{}-{}".format(socket.gethostname(), os.getpid()))
     set_event_loop(loop)
     if len(devices) > 1:
         loop.run_until_complete(gather(*(d.startInstance() for d in devices)))
