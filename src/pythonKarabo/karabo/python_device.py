@@ -95,11 +95,7 @@ class Device(SignalSlotable):
         self.validatorIntern = Validator(injectDefaults=False)
         self.validatorExtern = Validator(injectDefaults=False)
 
-        self.log.setBroker(self._ss)
-        self.logger = self.log.logger
-
         self.classId = type(self).__name__
-
         self.currenttask = None
 
     @classmethod
@@ -125,6 +121,8 @@ class Device(SignalSlotable):
         self.fullSchema.copy(self.staticSchema)
 
     def run(self):
+        self.log.setBroker(self._ss)
+        self.logger = self.log.logger
         self.initSchema()
         self.initInfo()
         super().run()
