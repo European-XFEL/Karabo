@@ -27,12 +27,13 @@ from guiproject import Category, Device, DeviceGroup, GuiProject, Macro
 from scene import Scene
 import manager
 import network
+from util import getSaveFileName
 
 from karabo.hash import Hash
 from karabo.project import Project, ProjectAccess, Monitor
 
 from PyQt4.QtCore import pyqtSignal, QAbstractItemModel, QFileInfo, Qt
-from PyQt4.QtGui import (QDialog, QFileDialog,
+from PyQt4.QtGui import (QDialog, QFileDialog, QInputDialog,
                          QItemSelectionModel, QMessageBox, QStandardItem,
                          QStandardItemModel)
 import os.path
@@ -1369,6 +1370,31 @@ class ProjectModel(QStandardItemModel):
 
     def onDuplicateMonitor(self):
         print("TODO: duplicate monitor...")
+
+
+    def onDefineMonitorFilename(self):
+        filename = getSaveFileName("Filename for monitors", suffix="csv",
+                             filter="Comma-separated value files (*.csv)",
+                             selectFile=self.currentProject().monitorFilename)
+        if filename:
+            self.currentProject().monitorFilename = filename
+
+
+    def onDefineMonitorInterval(self):
+        interval, ok = QInputDialog.getDouble(None, "Monitor interval",
+            "Enter the interval (in seconds) the monitor should be saved.\n"
+            "Enter 0, if it should be triggered by property changes.",
+            self.currentProject().monitorInterval)
+        if ok:
+            self.currentProject().monitorInterval = interval
+
+
+    def onStartMonitoring(self):
+        self.currentProject().startMonitoring()
+               
+                
+    def onStopMonitoring(self):
+        self.currentProject().stopMonitoring()
 
 
     def onApplyConfigurations(self):
