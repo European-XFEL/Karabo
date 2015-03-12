@@ -65,7 +65,7 @@ namespace karabo {
             typedef boost::signals2::signal<void (BrokerChannel::Pointer, const std::string&) > SignalError;
 
             // Provides access to the JmsConnection object
-            const JmsBrokerConnection& m_jmsConnection;
+            boost::shared_ptr<JmsBrokerConnection> m_jmsConnection;
 
             const std::string& m_serializationType;
 
@@ -113,7 +113,7 @@ namespace karabo {
 
             KARABO_CLASSINFO(JmsBrokerChannel, "JmsBrokerChannel", "1.0")
 
-            JmsBrokerChannel(JmsBrokerConnection& connection, const std::string& subDestination);
+            JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
 
@@ -236,13 +236,6 @@ namespace karabo {
 
             void setErrorHandler(const BrokerErrorHandler& handler);
 
-            /**
-             * This stops the asynchronous processing.
-             */
-            void stop();
-
-            void close();
-
             void listenForRawMessages();
 
             void listenForStringMessages();
@@ -258,6 +251,11 @@ namespace karabo {
             void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
 
         private: //functions
+            
+            /**
+             * This stops the asynchronous processing.
+             */
+            void close();           
 
             void ensureExistanceOfConsumer();
 

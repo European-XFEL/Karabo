@@ -73,8 +73,6 @@ namespace karabo {
 
             void stop();
 
-            void close();
-
             const std::string& getBrokerHostname() const;
 
             unsigned int getBrokerPort() const;
@@ -89,6 +87,8 @@ namespace karabo {
 
         private:           
 
+            void close();
+            
             void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
 
             static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);

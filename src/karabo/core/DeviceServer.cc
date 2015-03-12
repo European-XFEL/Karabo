@@ -285,7 +285,7 @@ namespace karabo {
         void DeviceServer::loadLogger(const Hash& input) {
             Hash config = input.get<Hash>("Logger");
 
-
+            
             // make a copy of additional appenders defined by user
             vector<Hash> appenders = config.get < vector<Hash> >("appenders");
 
@@ -322,7 +322,7 @@ namespace karabo {
             config.set("categories[0].Category.appenders[1].Ostream.layout.Pattern.format", "%p  %c  : %m%n");
             config.erase("karabo");
             // cerr << "loadLogger final:" << endl << config << endl;
-            Logger::configure(config);
+            m_logger = Logger::configure(config);
         }
 
 
@@ -643,7 +643,7 @@ namespace karabo {
 
         void DeviceServer::slotDeviceGone(const std::string & instanceId) {
 
-            KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death." << instanceId;
+            KARABO_LOG_WARN << "Device \"" << instanceId << "\" notifies future death.";
             {
                 boost::mutex::scoped_lock lock(m_deviceInstanceMutex);
                 DeviceInstanceMap::iterator it = m_deviceInstanceMap.find(instanceId);
