@@ -256,7 +256,6 @@ class SignalSlotable(Configurable):
         self._sethash = None
         return loop.create_task(self.run_async(), self)
 
-    @slot
     def slotPing(self, instanceId, rand, track=None):
         """return our info to show that we are here"""
         # during startup, we ping possible other instances with our name,
@@ -273,6 +272,13 @@ class SignalSlotable(Configurable):
                           self.deviceId, self.info)
         if track and instanceId != self.deviceId:
             self.signalHeartbeat.connect(instanceId, "slotHeartbeat", None)
+
+    def inner(self, message, args):
+        ret = self.slotPing(*args)
+        if ret is not None:
+            self._ss.reply(message, ret)
+    slotPing.slot = inner
+    del inner
 
     @slot
     def slotHeartbeat(self, networkId, heartbeatInterval, info):
