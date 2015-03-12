@@ -40,15 +40,22 @@ namespace karabo {
          * The BrokerConnection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
+         * The usage of stop() function is optional.  The user may create an object of
+         * BrokerConnection class (BrokerConnection::Pointer) via usual factory 
+         * interface using some configuration.
+         * 
+         * The BrokerConnection class is used by BrokerChannel class that implements
+         * IO operations.  BrokerChannel objects are created by createChannel()
+         * function and each contains BrokerConnection::Pointer inside.
+         * So bookkeeping is automatic i.e. BrokerConnection object is alive until
+         * at least one BrokerConnection::Pointer is still alive.  This preserves the
+         * proper calling order of the destructors.
          */
         class BrokerConnection : public boost::enable_shared_from_this<BrokerConnection> {
 
             typedef boost::shared_ptr<BrokerChannel> BrokerChannelPointer;
-            
 
             friend class BrokerChannel;
-
-            std::set<BrokerChannelPointer> m_channels;
 
             boost::mutex m_channelMutex;
 
@@ -76,11 +83,6 @@ namespace karabo {
              */
             virtual void stop() = 0;
 
-            /**
-             * Closes the connection
-             */
-            virtual void close() = 0;
-            
             /**
              * Returns the broker hostname
              * @return hostname
@@ -126,12 +128,11 @@ namespace karabo {
 
         protected: // functions
 
-            void registerChannel(BrokerChannelPointer channel) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                m_channels.insert(channel);
-            }
-
             void setIOServiceType(const std::string& serviceType);
+
+            boost::shared_ptr<BrokerConnection> getConnectionPointer() {
+                return shared_from_this();
+            }
 
 
         protected: // members
@@ -139,31 +140,6 @@ namespace karabo {
             BrokerIOService::Pointer m_service;
             BrokerErrorHandler m_errorHandler;
             std::string m_serializationType;
-
-        private: // functions
-
-            //            void hashToString(const karabo::util::Hash& hash, std::string& serializedHash);
-            //
-            //            void stringToHash(const std::string& serializedHash, karabo::util::Hash& hash);
-
-            void unregisterChannel(BrokerChannelPointer channel) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                std::set<BrokerChannelPointer>::iterator it = m_channels.find(channel);
-                if (it != m_channels.end()) {
-                    m_channels.erase(it);
-                }
-            }
-
-            boost::shared_ptr<BrokerConnection> getConnectionPointer() {
-                return shared_from_this();
-            }
-
-            //            std::string getHashFormat() {
-            //                return m_hashFormat->getClassInfo().getClassId();
-            //            }
-
-        private: // members
-
 
         };
 

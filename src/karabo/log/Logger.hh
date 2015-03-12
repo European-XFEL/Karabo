@@ -49,7 +49,7 @@ namespace karabo {
             static boost::mutex m_logMutex;
 
             static LogStreamRegistry m_logStreams;
-
+            
         public:
 
             KARABO_CLASSINFO(Logger, "Logger", "1.0")
@@ -67,8 +67,8 @@ namespace karabo {
              */
             Logger(const karabo::util::Hash& input);
 
-            static void configure(const karabo::util::Hash& configuration = karabo::util::Hash()) {
-                karabo::util::Configurator<Logger>::create(classInfo().getClassId(), configuration);
+            static Logger::Pointer configure(const karabo::util::Hash& configuration = karabo::util::Hash()) {
+                return karabo::util::Configurator<Logger>::create(classInfo().getClassId(), configuration);
             }
             
             static void reset();
@@ -93,7 +93,7 @@ namespace karabo {
                     return *tmp;
                 }
             }
-
+            
         private:
 
             /*
