@@ -23,6 +23,7 @@ import urllib.parse
 from uuid import uuid4
 from zipfile import ZipFile, ZIP_DEFLATED
 
+
 class ProjectAccess(Enum):
     """ These states describes the access to a project. """
     CLOUD = 0 # read and write access
@@ -65,8 +66,12 @@ class Project(object):
         # Map for {deviceId, [ProjectConfiguration]}
         self.configurations = dict()
         self.macros = {}
-        self.resources = { }
+        self.resources = {}
         self.monitors = []
+
+        self.monitorFilename = ""
+        self.monitorInterval = 0
+        self.isMonitoring = False
 
 
     @property

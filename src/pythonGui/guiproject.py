@@ -25,6 +25,8 @@ from network import network
 from PyQt4.QtCore import pyqtSignal, QObject
 from PyQt4.QtGui import QMessageBox
 
+import csv
+from datetime import datetime
 from importlib import import_module, reload
 from importlib.util import cache_from_source
 import marshal
@@ -693,6 +695,86 @@ class GuiProject(Project, QObject):
         """
         for d in self.devices:
             self.shutdown(d, False)
+
+
+    def startMonitoring(self):
+        """
+        Monitoring is started and all necessary variables are initiated.
+        """
+        if self.isMonitoring:
+            print("Monitoring is already started.")
+            return
+        
+        self.isMonitoring = True
+        
+        self.monitorFile = open(self.monitorFilename, "a")
+        self.monitorWriter = csv.writer(self.monitorFile)
+        
+        self.monitorBoxes = []
+        monitorString = []
+        for m in self.monitors:
+            # Connect box changes of properties to be monitored
+            deviceId = m.config.get("deviceId")
+            deviceProperty = m.config.get("deviceProperty")
+            
+            conf = manager.getDevice(deviceId)
+            box = conf.getBox(deviceProperty.split("."))
+            self.monitorBoxes.append(box)
+            box.signalUpdateComponent.connect(self.onMonitorValueChanged)
+            
+            monitorString.append("{}[{}{}]".format(m.config.get("name"),
+                                             m.config.get("metricPrefixSymbol"),
+                                             m.config.get("unitSymbol")))
+        
+        self.monitorWriter.writerow(["#timestamp"] + monitorString)
+        if self.monitorInterval > 0:
+            self.monitorTimer = self.startTimer(self.monitorInterval * 1000)
+        else:
+            self.monitorTimer = None
+
+
+    def stopMonitoring(self):
+        """
+        Monitoring is stopped and all variables are reset.
+        """
+        if not self.isMonitoring:
+            print("Monitoring is already stopped.")
+            return
+        
+        self.isMonitoring = False
+        # Disconnect all boxes from signal
+        for b in self.monitorBoxes:
+            b.signalUpdateComponent.disconnect(self.onMonitorValueChanged)
+        self.monitorBoxes = []
+
+        if self.monitorTimer is not None:
+            self.killTimer(self.monitorTimer)
+        self.monitorFile.close()
+
+
+    def timerEvent(self, event=None, timestamp=None):
+        """
+        Write to monitor file.
+        """
+        if self.monitorWriter is None:
+            return
+        
+        if timestamp is None:
+            timestamp = datetime.now().isoformat()
+        else:
+            timestamp = timestamp.toLocal()
+        
+        # TODO: b.value could be Dummy when no schema requested yet
+        self.monitorWriter.writerow([timestamp] + [b.value for b in self.monitorBoxes])
+
+
+    def onMonitorValueChanged(self, box, value, timestamp):
+        """
+        Whenever the value of the given box is changed, write to monitoring file,
+        under certain conditions.
+        """
+        if self.monitorInterval == 0 and self.isMonitoring and box in self.monitorBoxes:
+            self.timerEvent(None, timestamp)
 
 
 class Macro(object):
