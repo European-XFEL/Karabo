@@ -49,5 +49,44 @@ When the project was edited you need to save the changes before closing it.
 Saving projects checked out from the cloud always requires you to specify where to save the changes - either locally or directly in the cloud.
 
 
+Handling devices
+----------------
 
+If you want to add a device or a device group to your projects you need to click on the right mouse-button on the section "Devices". The context menu appears and you select "Add device/device group". The following dialog appears in which you can set all relevant properties.
+
+.. image:: images/gui_add_device.png
+
+Adding a device group requires to check "Add device group" and the dialog gets enlarged:
+
+.. image:: images/gui_add_devicegroup.png
+
+
+Handling scenes
+---------------
+
+If you want to add a scene to your projects you need to click on the right mouse-button on the section "Scenes". The context menu appears and you select "Add scene" or "Open scene" (which expects SVG files). The following dialog appears in which you can set the name of the scene or select the file which you want to open.
+
+.. image:: images/gui_add_scene.png
+
+
+Handling configurations
+-----------------------
+
+
+Handling macros
+---------------
+
+If you want to add a macro to your projects you need to click on the right mouse-button on the section "Macros". The context menu appears and you select "Add macro" or "Load macro". The following dialog appears in which you can set the name of the macro.
+
+.. image:: images/gui_add_macro.png
+
+
+Handling monitors
+-----------------
+
+If you want to add a monitor to your projects you need to click on the right mouse-button on the section "Monitors". The context menu appears and you select "Add monitor". The following dialog appears in which you can set all relevant properties.
+
+.. image:: images/gui_add_monitor.png
+
+If there are monitors in a project a "Filename..." and an "Interval..." can be set via the context menu. Once these these parameters are applied monitors can be started by selecting "Start monitoring" in the context menu of the section "Monitors". If you want to "Stop monitoring" this can be done using the context menu, too.
 
