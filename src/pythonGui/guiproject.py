@@ -720,6 +720,7 @@ class GuiProject(Project, QObject):
             conf = manager.getDevice(deviceId)
             box = conf.getBox(deviceProperty.split("."))
             self.monitorBoxes.append(box)
+            box.addVisible()
             box.signalUpdateComponent.connect(self.onMonitorValueChanged)
             
             monitorString.append("{}[{}{}]".format(m.config.get("name"),
@@ -742,8 +743,9 @@ class GuiProject(Project, QObject):
             return
         
         self.isMonitoring = False
-        # Disconnect all boxes from signal
+        
         for b in self.monitorBoxes:
+            b.removeVisible()
             b.signalUpdateComponent.disconnect(self.onMonitorValueChanged)
         self.monitorBoxes = []
 
@@ -764,7 +766,6 @@ class GuiProject(Project, QObject):
         else:
             timestamp = timestamp.toLocal()
         
-        # TODO: b.value could be Dummy when no schema requested yet
         self.monitorWriter.writerow([timestamp] + [b.value for b in self.monitorBoxes])
 
 
