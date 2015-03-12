@@ -1,9 +1,6 @@
 """ This module redirects output """
 
-from asyncio import coroutine, Task
-import threading
-
-threadData = threading.local()
+from asyncio import coroutine, get_event_loop
 
 class KaraboStream:
     """ An output stream that redirects output to the karabo network """
@@ -12,18 +9,9 @@ class KaraboStream:
 
     def write(self, data):
         try:
-            task = Task.current_task()
-            task.instance().printToConsole(data)
+            get_event_loop().instance().printToConsole(data)
         except (AttributeError, AssertionError):
-            try:
-                instance = threadData.instance()
-                func = instance.printToConsole
-                @coroutine
-                def print():
-                    func(data)
-                instance.async(print())
-            except (AttributeError, TypeError):
-                self.base.write(data)
+            self.base.write(data)
 
     def flush(self):
-        pass  # everything is flushed automatically
+        get_event_loop().instance().update()

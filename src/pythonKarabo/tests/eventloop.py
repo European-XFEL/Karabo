@@ -13,10 +13,12 @@ def async_tst(f):
         loop.run_until_complete(coro(self, *args, **kwargs))
     return wrapper
 
+
 def sync_tst(f):
     @wraps(f)
     def wrapper(self, *args):
-        loop.run_until_complete(loop.run_in_executor(None, f, self, *args))
+        loop.run_until_complete(loop.create_task(
+            loop.start_thread(f, self, *args), self.instance))
     return wrapper
 
 

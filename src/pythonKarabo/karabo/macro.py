@@ -184,6 +184,6 @@ class Macro(SyncDevice):
         o = cls(args)
         o.startInstance()
         try:
-            loop.run_until_complete(loop.run_in_executor(None, slot.method, o))
+            loop.run_until_complete(loop.start_thread(slot.method, o))
         finally:
             loop.close()

@@ -14,12 +14,6 @@ from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, sync_tst
 
-def sync_tst(f):
-    @wraps(f)
-    def wrapper(self):
-        loop.run_until_complete(loop.run_in_executor(None, f, self))
-    return wrapper
-
 
 class Superslot(Slot):
     @coroutine
@@ -233,6 +227,7 @@ def setUpModule():
                   may_start_thread=False)
     remote = Remote(dict(_deviceId_="remote"))
     loop = startDevices(remote, local)
+    Tests.instance = local
 
 
 def tearDownModule():
