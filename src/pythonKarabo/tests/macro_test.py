@@ -12,7 +12,9 @@ from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo import Slot, Integer
 
-def async_tst(f):
+from .eventloop import startDevices, stopDevices, sync_tst
+
+def sync_tst(f):
     @wraps(f)
     def wrapper(self):
         loop.run_until_complete(loop.run_in_executor(None, f, self))
@@ -142,21 +144,21 @@ class Local(Macro):
 
 
 class Tests(TestCase):
-    @async_tst
+    @sync_tst
     def test_execute(self):
         remote.done = False
         local.letitdo()
         time.sleep(0.1)
         self.assertTrue(remote.done)
 
-    @async_tst
+    @sync_tst
     def test_change(self):
         remote.value = 7
         local.letitchange()
         time.sleep(0.1)
         self.assertEqual(remote.value, 3)
 
-    @async_tst
+    @sync_tst
     def test_disconnect(self):
         local.disconnect()
         self.assertEqual(local.f1, -1)
@@ -165,7 +167,7 @@ class Tests(TestCase):
         self.assertEqual(local.f4, 29)
 
 
-    @async_tst
+    @sync_tst
     def test_set(self):
         remote.value = 7
         local.letset()
@@ -174,34 +176,34 @@ class Tests(TestCase):
         self.assertEqual(local.f3, 6)
 
 
-    @async_tst
+    @sync_tst
     def test_generic(self):
         remote.value = 7
         local.dogeneric()
         time.sleep(0.1)
         self.assertEqual(remote.value, 22)
 
-    @async_tst
+    @sync_tst
     def test_other(self):
         remote.value = 7
         local.other()
         time.sleep(0.1)
         self.assertEqual(remote.value, 102)
 
-    @async_tst
+    @sync_tst
     def test_selfcall(self):
         remote.value = 7
         local.selfcall()
         time.sleep(0.1)
         self.assertEqual(remote.value, 102)
 
-    @async_tst
+    @sync_tst
     def test_setwait(self):
         local.setwait()
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
-    @async_tst
+    @sync_tst
     def test_setnowait(self):
         remote.value = 0
         remote.counter = 0
@@ -212,34 +214,29 @@ class Tests(TestCase):
         self.assertEqual(remote.value, 200)
         self.assertEqual(remote.counter, 300)
 
-    @async_tst
+    @sync_tst
     def test_waituntil(self):
         local.waituntil()
         self.assertEqual(local.f1, 0)
         self.assertEqual(local.f2, 11)
         self.assertTrue(local.timeout)
 
-    @async_tst
+    @sync_tst
     def test_waituntilnew(self):
         local.waituntilnew()
         self.assertEqual(local.max, 30)
 
 
 def setUpModule():
-    global loop, remote, local
-    loop = EventLoop()
-    set_event_loop(loop)
-
-    local = Local(_deviceId_="local", project="test", module="test")
+    global remote, local, loop
+    local = Local(_deviceId_="local", project="test", module="test",
+                  may_start_thread=False)
     remote = Remote(dict(_deviceId_="remote"))
-    loop.run_until_complete(gather(local.startInstance(),
-                                   remote.startInstance()))
+    loop = startDevices(remote, local)
 
 
 def tearDownModule():
-    loop.run_until_complete(gather(
-        local.slotKillDevice(), remote.slotKillDevice()))
-    loop.close()
+    stopDevices(remote, local)
 
 
 if __name__ == "__main__":
