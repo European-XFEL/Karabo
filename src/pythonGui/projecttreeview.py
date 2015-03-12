@@ -368,7 +368,41 @@ class ProjectTreeView(QTreeView):
                 acAddMonitor.setToolTip(text)
                 acAddMonitor.triggered.connect(self.model().onEditMonitor)
                 
+                enableActions = self.model().hasChildren(firstIndex)
+                project = self.model().currentProject()
+                enableMonitoring = enableActions and len(project.monitorFilename) > 0
+                
+                text = "Filename..."
+                acFilename = QAction(text, self)
+                acFilename.setStatusTip(text)
+                acFilename.setToolTip(text)
+                acFilename.setEnabled(enableActions)
+                acFilename.triggered.connect(self.model().onDefineMonitorFilename)
+
+                text = "Interval..."
+                acInterval = QAction(text, self)
+                acInterval.setStatusTip(text)
+                acInterval.setToolTip(text)
+                acInterval.setEnabled(enableActions)
+                acInterval.triggered.connect(self.model().onDefineMonitorInterval)
+
+                if project.isMonitoring:
+                    text = "Stop monitoring"
+                else:
+                    text = "Start monitoring"
+                acMonitoring = QAction(text, self)
+                acMonitoring.setStatusTip(text)
+                acMonitoring.setToolTip(text)
+                acMonitoring.setEnabled(enableMonitoring)
+                acMonitoring.setCheckable(True)
+                acMonitoring.setChecked(project.isMonitoring)
+                acMonitoring.triggered.connect(self.onHandleMonitoring)
+                
                 menu.addAction(acAddMonitor)
+                menu.addSeparator()
+                menu.addAction(acFilename)
+                menu.addAction(acInterval)
+                menu.addAction(acMonitoring)
         elif selectedType in (Device, DeviceGroup, Scene, Macro, Monitor):
             # Device or Scene menu
             if nbSelected > 1:
@@ -483,6 +517,13 @@ class ProjectTreeView(QTreeView):
         for index in selectedIndexes:
             device = index.data(ProjectModel.ITEM_OBJECT)
             device.project.shutdown(device, nbSelected == 1)
+
+
+    def onHandleMonitoring(self, checked):
+        if checked:
+            self.model().onStartMonitoring()
+        else:
+            self.model().onStopMonitoring()
 
 
     def onCloseProject(self):

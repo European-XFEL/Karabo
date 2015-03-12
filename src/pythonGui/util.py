@@ -48,8 +48,9 @@ class SignalBlocker(object):
         self.object.blockSignals(self.state)
 
 
-def getSaveFileName(title, dir="", description="", suffix="", filter=None):
+def getSaveFileName(title, dir="", description="", suffix="", filter=None, selectFile=""):
     dialog = QFileDialog(None, title, dir, description)
+    dialog.selectFile(selectFile)
     dialog.setDefaultSuffix(suffix)
     dialog.setFileMode(QFileDialog.AnyFile)
     dialog.setAcceptMode(QFileDialog.AcceptSave)
