@@ -18,8 +18,7 @@ class Broker:
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
-        self.destination = openmq.Destination(self.session,
-                                              getpass.getuser(), 1)
+        self.destination = openmq.Destination(self.session, loop.topic, 1)
         self.producer = openmq.Producer(self.session, self.destination)
         self.deviceId = deviceId
         self.classId = classId
@@ -180,8 +179,12 @@ class Client(object):
 
 
 class EventLoop(SelectorEventLoop):
-    def __init__(self):
+    def __init__(self, topic=None):
         super().__init__()
+        if topic is None:
+            self.topic = getpass.getuser()
+        else:
+            self.topic = topic
         self.connection = None
         self.changedFuture = Future(loop=self)  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(10000))
