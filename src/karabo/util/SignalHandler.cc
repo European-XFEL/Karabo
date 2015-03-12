@@ -128,6 +128,8 @@ namespace karabo {
             sigdelset(&signal_mask, SIGSEGV);
             sigdelset(&signal_mask, SIGFPE);
             sigdelset(&signal_mask, SIGBUS);
+            sigdelset(&signal_mask, SIGUSR1);
+            sigdelset(&signal_mask, SIGUSR2);
 //            sigdelset(&signal_mask, SIGINT);
 //            sigdelset(&signal_mask, SIGHUP);
 
