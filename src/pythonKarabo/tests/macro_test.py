@@ -232,7 +232,8 @@ def setUpModule():
 
     local = Local(_deviceId_="local", project="test", module="test")
     remote = Remote(dict(_deviceId_="remote"))
-    loop.run_until_complete(gather(local.run_async(), remote.run_async()))
+    loop.run_until_complete(gather(local.startInstance(),
+                                   remote.startInstance()))
 
 
 def tearDownModule():

@@ -52,10 +52,9 @@ class EventThread(threading.Thread):
 
     @coroutine
     def run_macro(self, macro, configuration):
-        self.task = Task.current_task()
-        self.task.add_done_callback(lambda _: self.lock.release())
         super(Macro, macro).__init__(configuration)
-        yield from macro.run_async()
+        yield from macro.startInstance()
+        self.lock.release()
 
     def stop(self, weakref=None):
         self.loop.stop()
@@ -144,7 +143,7 @@ class Macro(SyncDevice):
                 setattr(self, k, d)
                 devices.append(d)
         for d in devices:
-            self.async(self._holdDevice(d))
+            async(self._holdDevice(d))
 
     def _holdDevice(self, d):
         with d:
@@ -185,7 +184,7 @@ class Macro(SyncDevice):
         loop = EventLoop()
         set_event_loop(loop)
         o = cls(args)
-        async(o.run_async())
+        o.startInstance()
         try:
             loop.run_until_complete(loop.run_in_executor(None, slot.method, o))
         finally:

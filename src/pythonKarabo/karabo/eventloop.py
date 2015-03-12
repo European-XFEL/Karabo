@@ -240,6 +240,18 @@ class EventLoop(SelectorEventLoop):
     def waitForChanges(self):
         yield from self.changedFuture
 
+    def create_task(self, coro, instance=None):
+        task = super().create_task(coro)
+        try:
+            if instance is None:
+                instance = Task.current_task(loop=self).instance()
+            instance._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            task.instance = weakref.ref(instance, lambda _: task.cancel())
+        except (AttributeError, TypeError):
+            pass
+        return task
+
     def close(self):
         for t in Task.all_tasks(self):
             t.cancel()

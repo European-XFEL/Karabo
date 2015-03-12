@@ -66,8 +66,8 @@ def setUpModule():
     local = Local(dict(_deviceId_="local", project="test", module="test"))
     remA = Remote(dict(_deviceId_="remA"))
     remB = Remote(dict(_deviceId_="remB"))
-    loop.run_until_complete(gather(local.run_async(), remA.run_async(),
-                                   remB.run_async()))
+    loop.run_until_complete(gather(local.startInstance(), remA.startInstance(),
+                                   remB.startInstance()))
 
 
 def tearDownModule():

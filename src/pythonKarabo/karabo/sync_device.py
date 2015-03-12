@@ -1,4 +1,4 @@
-from asyncio import coroutine, TimeoutError
+from asyncio import async, coroutine, TimeoutError
 import threading
 import weakref
 
@@ -32,7 +32,7 @@ class SyncDevice(Device):
     def _sync(self, coro, timeout=-1):
         lock = threading.Lock()
         lock.acquire()
-        future = self.async(coro)
+        future = async(coro, loop=self._ss.loop)
         future.add_done_callback(lambda _: lock.release())
         lock.acquire(timeout=timeout)
         if future.done():
@@ -54,7 +54,7 @@ class SyncDevice(Device):
             reply = yield from get_event_loop().run_in_executor(
                 None, self._executeSlot, slot)
             self._ss.reply(message, reply)
-        return self.async(inner())
+        return async(inner())
 
     def executeNoWait(self, device, slot):
         if isinstance(device, Proxy):

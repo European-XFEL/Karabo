@@ -55,7 +55,7 @@ def coslot(f):
         device._ss.reply(message, (yield from f(device, *args)))
 
     def outer(device, message, args):
-        device.async(inner(device, message, args))
+        async(inner(device, message, args))
 
     f.slot = outer
     return f
@@ -244,14 +244,17 @@ class SignalSlotable(Configurable):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
         super().__init__(configuration)
         self.deviceId = self._deviceId_
-        self._ss = get_event_loop().getBroker(self.deviceId,
-                                              type(self).__name__)
-        self._sethash = None  # don't inform network again about initial config
         self.info = Hash("heartbeatInterval", self.heartbeatInterval)
-
         self.__devices = {}
         self.__randPing = random.randint(2, 0x7fffffff)
         self._tasks = set()
+
+    def startInstance(self, loop=None):
+        if loop is None:
+            loop = get_event_loop()
+        self._ss = loop.getBroker(self.deviceId, type(self).__name__)
+        self._sethash = None
+        return loop.create_task(self.run_async(), self)
 
     @slot
     def slotPing(self, instanceId, rand, track=None):
@@ -305,7 +308,7 @@ class SignalSlotable(Configurable):
 
     @coroutine
     def run_async(self):
-        self.async(self._ss.consume(self))
+        async(self._ss.consume(self))
         try:
             yield from wait_for(
                 self.call("*", "slotPing", self.deviceId,
@@ -319,26 +322,14 @@ class SignalSlotable(Configurable):
         self.__randPing = 0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
                       self.deviceId, self.info)
-        self.async(self.heartbeats())
-
-    def async(self, coro):
-        """start a coroutine asynchronously
-
-        Use this to execute a coroutine in the background. The coroutine
-        is registered with this object so it will be stopped once this
-        object is stopped. """
-        task = async(coro, loop=self._ss.loop)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        task.instance = weakref.ref(self, lambda _: task.cancel())
-        return task
+        async(self.heartbeats())
 
     def executeSlot(self, slot, message):
         coro = slot(self)
         if iscoroutine(coro):
             def inner():
                 self._ss.reply(message, (yield from coro))
-            return self.async(inner())
+            return async(inner())
         ret = Future()
         ret.set_result(coro)
         self._ss.reply(message, coro)

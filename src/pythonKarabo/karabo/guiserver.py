@@ -16,7 +16,7 @@ def parallel(f):
     f = coroutine(f)
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        return self.async(f(self, *args, **kwargs))
+        return async(f(self, *args, **kwargs))
     return wrapper
 
 
@@ -33,9 +33,9 @@ class GuiServer(DeviceClientBase):
         self.histories = {}
 
     def run(self):
-        self.async(self.log_handler())
+        async(self.log_handler())
         super().run()
-        self.async(self.run_server())
+        async(self.run_server())
 
     @coroutine
     def run_server(self):
