@@ -24,7 +24,7 @@ namespace karabo {
 
         
         JmsBrokerConnection::~JmsBrokerConnection() {
-            MQFreeConnection(m_connectionHandle);
+            close();
         }
 
 
@@ -180,7 +180,9 @@ namespace karabo {
         }
 
 
-        JmsBrokerConnection::JmsBrokerConnection(const karabo::util::Hash& input) : BrokerConnection(input) {
+        JmsBrokerConnection::JmsBrokerConnection(const karabo::util::Hash& input)
+        : BrokerConnection(input)
+        , m_connectionHandle(MQ_INVALID_HANDLE) {
 
             this->setIOServiceType("Jms"); // Defines the type of the composed IO service within abstract IO service
 
@@ -268,10 +270,16 @@ namespace karabo {
 
         void JmsBrokerConnection::close() {
             try {
-                MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
-                //MQFreeConnection(m_connectionHandle);
+                MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
+                if (m_connectionHandle.handle != invalidConnection.handle) {
+                    MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
+                    MQ_SAFE_CALL(MQFreeConnection(m_connectionHandle));
+                    m_connectionHandle = MQ_INVALID_HANDLE;
+                }
             } catch (...) {
-                //MQFreeConnection(m_connectionHandle);
+                MQCloseConnection(m_connectionHandle);
+                MQFreeConnection(m_connectionHandle);
+                m_connectionHandle = MQ_INVALID_HANDLE;
                 KARABO_RETHROW
             }
         }
@@ -290,8 +298,7 @@ namespace karabo {
 
 
         BrokerChannel::Pointer JmsBrokerConnection::createChannel(const std::string& subDestination) {
-            BrokerChannel::Pointer channel(new JmsBrokerChannel(*this, subDestination));
-            this->registerChannel(channel);
+            BrokerChannel::Pointer channel(new JmsBrokerChannel(this->getConnectionPointer(), subDestination));
             return channel;
         }
 

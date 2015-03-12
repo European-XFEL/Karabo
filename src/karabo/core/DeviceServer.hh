@@ -37,6 +37,7 @@ namespace karabo {
             typedef std::map<std::string, boost::thread*> DeviceInstanceMap;
 
             krb_log4cpp::Category* m_log;
+            karabo::log::Logger::Pointer m_logger;
 
             karabo::util::PluginLoader::Pointer m_pluginLoader;
             boost::thread m_pluginThread;
