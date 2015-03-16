@@ -8,7 +8,8 @@ from functools import wraps
 
 from karabo.eventloop import EventLoop
 from karabo.python_device import Device
-from karabo.signalslot import waitUntilNew
+from karabo.device_client import (waitUntilNew, getDevice, waitUntil, set,
+                                  setNoWait)
 from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, async_tst
@@ -58,17 +59,17 @@ class Remote(Device):
 class Local(Device):
     @Slot()
     def letitdo(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             yield from d.doit()
 
     @Slot()
     def letitchange(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             yield from d.changeit()
 
     @Slot()
     def disconnect(self):
-        d = yield from self.getDevice("remote")
+        d = yield from getDevice("remote")
         yield from d.count()
         yield from sleep(0.3)
         self.f1 = d.counter
@@ -83,7 +84,7 @@ class Local(Device):
 
     @Slot()
     def letset(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             self.f1 = d.value
             d.value = 10
             yield from sleep(0.1)
@@ -94,35 +95,35 @@ class Local(Device):
 
     @Slot()
     def dogeneric(self):
-        d = yield from self.getDevice("remote")
+        d = yield from getDevice("remote")
         yield from d.generic()
 
     @Slot()
     def other(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.other = 102
 
     @Slot()
     def setwait(self):
-        d = yield from self.getDevice("remote")
-        yield from self.set(d, value=200, counter=300)
+        d = yield from getDevice("remote")
+        yield from set(d, value=200, counter=300)
 
     @Slot()
     def setnowait(self):
-        d = yield from self.getDevice("remote")
-        self.setNoWait(d, value=200, counter=300)
+        d = yield from getDevice("remote")
+        setNoWait(d, value=200, counter=300)
 
     @Slot()
     def waituntil(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.counter = 0
-            yield from self.waitUntil(lambda: d.counter == 0)
+            yield from waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
             async(d.count())
-            yield from self.waitUntil(lambda: d.counter > 10)
+            yield from waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
-                yield from wait_for(self.waitUntil(lambda: d.counter > 40),
+                yield from wait_for(waitUntil(lambda: d.counter > 40),
                                     timeout=3)
                 self.timeout = False
             except TimeoutError:
@@ -130,7 +131,7 @@ class Local(Device):
 
     @Slot()
     def waituntilnew(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
             async(d.count())
@@ -144,7 +145,7 @@ class Local(Device):
 
     @Slot()
     def waituntildevice(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
             async(d.count())
@@ -158,7 +159,7 @@ class Local(Device):
 
     @Slot()
     def collect_set(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.once = 3
             d.once = 7
             d.once = 10
@@ -258,6 +259,7 @@ def setUpModule():
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
     loop = startDevices(local, remote)
+    Tests.instance = local
 
 
 def tearDownModule():

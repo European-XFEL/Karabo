@@ -10,7 +10,8 @@ def async_tst(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         coro = coroutine(f)
-        loop.run_until_complete(coro(self, *args, **kwargs))
+        loop.run_until_complete(loop.create_task(coro(self, *args, **kwargs),
+                                                 self.instance))
     return wrapper
 
 
