@@ -91,9 +91,10 @@ class Proxy(object):
             f.set_result(hash)
 
     def setValue(self, attr, value):
-        if self._sync:
-            ok, msg = self._device._ss.loop.sync(self._device.call(
-                self.deviceId, "slotReconfigure", Hash(attr.key, value)))
+        loop = get_event_loop()
+        if loop.sync_set:
+            ok, msg = loop.sync(self._device.call(
+                self.deviceId, "slotReconfigure", Hash(attr.key, value)), -1)
             if not ok:
                 raise KaraboError(msg)
         else:
@@ -140,6 +141,7 @@ class waitUntilNew:
     def __init__(self, proxy):
         self.proxy = proxy
 
+    @synchronize
     def __getattr__(self, attr):
         assert isinstance(getattr(type(self.proxy), attr), Type)
         return self.proxy._futures.setdefault(
@@ -162,8 +164,7 @@ def waitUntil(condition):
 
 
 @synchronize
-def getDevice(deviceId, *, sync=None):
-    sync = False
+def _getDevice(deviceId, sync, timeout=None):
     instance = get_instance()
     ret = instance._devices.get(deviceId)
     if ret is not None:
@@ -189,6 +190,13 @@ def getDevice(deviceId, *, sync=None):
     yield from ret
     return ret
 
+
+def getDevice(deviceId, *, sync=None, timeout=-1):
+    if sync is None:
+        sync = get_event_loop().sync_set
+    return _getDevice(deviceId, sync=sync, timeout=timeout)
+
+
 @synchronize
 def set(device, **kwargs):
     if isinstance(device, Proxy):
@@ -209,7 +217,13 @@ def setNoWait(device, **kwargs):
     get_instance()._ss.emit("call", {device: ["slotReconfigure"]}, h)
 
 
-def executeNoWait(self, device, slot):
+def executeNoWait(device, slot):
     if isinstance(device, Proxy):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: [slot]})
+
+
+@synchronize
+def updateDevice(device):
+    yield from device
+    return device
