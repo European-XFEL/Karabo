@@ -66,7 +66,7 @@ first step, we need to connect to a device. This is done as follows::
 
     @Slot()
     def some_function(self):
-        with self.getDevice("some_device") as device:
+        with getDevice("some_device") as device:
 	    print(device.speed)
 
 we just left out the class definition, probably you got that.
@@ -82,9 +82,9 @@ and execute its commands::
 There is another way of setting and getting properties and executing
 commands::
 
-   self.set(device, "someProperty", 7)
-   self.execute(device, "start")
-   print(self.get(device, "someProperty")
+   set(device, "someProperty", 7)
+   execute(device, "start")
+   print(get(device, "someProperty")
 
 Getting a device into a variable takes some time. It makes a lot of sense
 if you are changing properties or calling slots on that device all the time.
@@ -93,9 +93,9 @@ call one slot, it is simpler to just write
 
 ::
 
-   self.set("some_device", "someProperty", 7)
-   self.execute("some_device", "start")
-   print(self.get("some_device", "someProperty")
+   set("some_device", "someProperty", 7)
+   execute("some_device", "start")
+   print(get("some_device", "someProperty")
     
 
 Note that in this way you never create a handle object to the device but always
@@ -163,18 +163,18 @@ this::
 
     @Slot()
     def some_function(self):
-        with self.getDevice("some_device", timeout=3) as device:
-	    self.set(device, "someProperty", 7, timeout=4)
+        with getDevice("some_device", timeout=3) as device:
+	    set(device, "someProperty", 7, timeout=4)
 	    device.start(timeout=5)  # Timeout after 5s
-	print(self.get(device, "someProperty", timeout=6)
+	print(get(device, "someProperty", timeout=6)
 
 Or if you are using strings for addressing::
 
    @Slot()
    def some_function(self):
-       self.set("some_device", "someProperty", 7, timeout=3)
-       self.execute("some_device", "start", timeout=4)
-       print(self.get("some_device", "someProperty", timeout=5))
+       set("some_device", "someProperty", 7, timeout=3)
+       execute("some_device", "start", timeout=4)
+       print(get("some_device", "someProperty", timeout=5))
 
 *TODO: Show some examples for possible exceptions*
 
@@ -193,20 +193,20 @@ the 3 devices in parallel you can write like::
    @Slot()
    def some_function(self):
        with \ 
-               self.getDevice("some_device1") as dev1, \
-               self.getDevice("some_device2") as dev2, \
-               self.getDevice("some_device3") as dev3:
-           dev1.executeNoWait('configure')
-	   dev2.executeNoWait('configure')
-           dev3.executeNoWait('configure')
+               getDevice("some_device1") as dev1, \
+               getDevice("some_device2") as dev2, \
+               getDevice("some_device3") as dev3:
+           executeNoWait('configure')
+	   executeNoWait('configure')
+           executeNoWait('configure')
 
 Or shorter by writing::
 
    @Slot()
    def some_function(self):
        devices = self.getDevices()
-           for device in devices:
-               self.execute(device, "configure", wait=False)
+       for device in devices:
+           self.execute(device, "configure", wait=False)
 
 *TODO: Decide about naming: ``Exec.sync`` vs. ``Exec.async`` and
 ``executeNoWait`` vs. ``executeAsync``*
@@ -225,16 +225,16 @@ Waiting for things to happen is quite simple, you can do it like this::
 
    @Slot()
    def some_function(self):
-       with self.getDevice("some_motor") as motor:
+       with getDevice("some_motor") as motor:
            motor.targetPosition = 10
            motor.move()
-	   self.waitUntil(lambda: motor.state == "Stopped")
+	   waitUntil(lambda: motor.state == "Stopped")
 
 This is a good example where also a timeout makes sense. Maybe the
 motor never reaches its target? So you could add a timeout like that::
 
     try:
-        self.waitUntil(lambda: motor.state == "Stopped", timeout=10)
+        waitUntil(lambda: motor.state == "Stopped", timeout=10)
     except TimeoutError as e:
         self.log.error("Motor did not reach intended state but is in {}".
                        format(motor.state))
@@ -242,11 +242,11 @@ motor never reaches its target? So you could add a timeout like that::
 If you want to wait until a property has changed (i.e. has been updated) you
 can do it the following way::
 
-   self.waitUntilNew(motor).state  # yes, the syntax is a bit unusual
+   waitUntilNew(motor).state  # yes, the syntax is a bit unusual
    print("State has updated to: {}".format(motor.state))
 
 It is a good idea to specify a timeout for how long you are going to wait. In
 the example above it is 10 seconds. If you do not provide a timeout you may
 wait forever. This is done as follows::
 
-    self.waitUntilNew(motor, timeout=10).state
+    waitUntilNew(motor, timeout=10).state
