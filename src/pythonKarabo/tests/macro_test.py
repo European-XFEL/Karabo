@@ -12,7 +12,8 @@ from karabo.eventloop import EventLoop
 from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
-from karabo.signalslot import waitUntilNew
+from karabo.device_client import (waitUntilNew, waitUntil, set, setNoWait,
+                                  getDevice, executeNoWait, updateDevice)
 from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
@@ -48,7 +49,7 @@ class Remote(Device):
 
     @Slot()
     def call_local(self):
-        with (yield from self.getDevice("local")) as l:
+        with (yield from getDevice("local")) as l:
             yield from l.remotecalls()
 
     generic = Superslot()
@@ -61,22 +62,22 @@ class Local(Macro):
 
     @Slot()
     def letitdo(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             d.doit()
 
     @Slot()
     def letitchange(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             d.changeit()
 
     @Slot()
     def disconnect(self):
-        d = self.getDevice("remote")
-        d.count()
+        d = getDevice("remote")
+        executeNoWait(d, "count")
         time.sleep(0.3)
         self.f1 = d.counter
         time.sleep(0.3)
-        with self.updateDevice(d):
+        with updateDevice(d):
             self.f2 = d.counter
         time.sleep(1)
         self.f3 = d.counter
@@ -86,7 +87,7 @@ class Local(Macro):
 
     @Slot()
     def letset(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             self.f1 = d.value
             d.value = 10
             time.sleep(0.1)
@@ -97,13 +98,13 @@ class Local(Macro):
 
     @Slot()
     def dogeneric(self):
-        d = self.getDevice("remote")
+        d = getDevice("remote")
         d.generic()
 
 
     @Slot()
     def other(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             d.other = 102
 
     @Slot()
@@ -112,36 +113,36 @@ class Local(Macro):
 
     @Slot()
     def setwait(self):
-        d = self.getDevice("remote")
-        self.set(d, value=200, counter=300)
+        d = getDevice("remote")
+        set(d, value=200, counter=300)
 
     @Slot()
     def setnowait(self):
-        d = self.getDevice("remote")
-        self.setNoWait(d, value=200, counter=300)
+        d = getDevice("remote")
+        setNoWait(d, value=200, counter=300)
 
     @Slot()
     def waituntil(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             d.counter = 0
             self.f1 = d.counter
-            self.executeNoWait(d, "count")
-            self.waitUntil(lambda: d.counter > 10)
+            executeNoWait(d, "count")
+            waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
-                self.waitUntil(lambda: d.counter > 40, timeout=3)
+                waitUntil(lambda: d.counter > 40, timeout=3)
                 self.timeout = False
             except TimeoutError:
                 self.timeout = True
 
     @Slot()
     def waituntilnew(self):
-        with self.getDevice("remote") as d:
+        with getDevice("remote") as d:
             d.counter = 0
             sleep(0.1)
-            self.executeNoWait(d, "count")
+            executeNoWait(d, "count")
             for i in range(30):
-                j = self.waitUntilNew(d).counter
+                j = waitUntilNew(d).counter
                 if i != j:
                     self.max = i
                     break

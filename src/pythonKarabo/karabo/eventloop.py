@@ -4,12 +4,13 @@ from karabo.hash import Hash, BinaryWriter
 from karabo import openmq
 
 from asyncio import (AbstractEventLoop, coroutine, Future, get_event_loop,
-                     set_event_loop, SelectorEventLoop, Task)
+                     set_event_loop, SelectorEventLoop, Task, TimeoutError)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
 import sys
+import threading
 import weakref
 
 
@@ -178,17 +179,31 @@ class Client(object):
                               Hash(attr.key, value))
 
 class NoEventLoop(AbstractEventLoop):
+    sync_set = True
+
     def __init__(self, instance):
         self._instance = instance
 
-    def sync(self, coro, timeout):
-        self._instance._sync(coro, timeout)
+    def sync(self, coro, timeout=-1):
+        lock = threading.Lock()
+        lock.acquire()
+        task = self._instance._ss.loop.create_task(coro,
+                                                   instance=self._instance)
+        task.add_done_callback(lambda _: lock.release())
+        lock.acquire(timeout=timeout)
+        if task.done():
+            return task.result()
+        else:
+            task.cancel()
+            raise TimeoutError
 
     def instance(self):
         return self._instance
 
 
 class EventLoop(SelectorEventLoop):
+    sync_set = False
+
     def __init__(self, topic=None):
         super().__init__()
         if topic is None:

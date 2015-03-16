@@ -260,12 +260,13 @@ class SignalSlotable(Configurable):
         yield from wait(self._tasks)
         return True
 
+    @coroutine
     def call(self, device, target, *args):
         reply = "{}-{}".format(self.deviceId, time.monotonic().hex())
         self._ss.call("call", {device: [target]}, reply, args)
         future = Future(loop=self._ss.loop)
         self._ss.repliers[reply] = future
-        return future
+        return (yield from future)
 
     def stopEventLoop(self):
         get_event_loop().stop()

@@ -9,9 +9,8 @@ from karabo import KaraboError, String, Integer, AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Descriptor, Type
-from karabo.signalslot import Proxy, SignalSlotable, waitUntilNew
-from karabo.sync_device import SyncDevice, SyncProxy
-
+from karabo.device_client import waitUntilNew, Proxy, getDevice
+from karabo.python_device import Device
 
 def Monitor():
     def outer(prop):
@@ -76,7 +75,7 @@ class EventThread(threading.Thread):
         return cls.instance()
 
 
-class Macro(SyncDevice):
+class Macro(Device):
     subclasses = []
 
     project = String(
@@ -136,8 +135,7 @@ class Macro(SyncDevice):
         for k in dir(type(self)):
             v = getattr(type(self), k)
             if isinstance(v, RemoteDevice):
-                d = yield from SignalSlotable.getDevice(self, v.id,
-                                                        Base=SyncProxy)
+                d = yield from getDevice(v.id)
                 setattr(self, k, d)
                 devices.append(d)
         for d in devices:
@@ -184,6 +182,7 @@ class Macro(SyncDevice):
         o = cls(args)
         o.startInstance()
         try:
-            loop.run_until_complete(loop.start_thread(slot.method, o))
+            loop.run_until_complete(loop.create_task(loop.start_thread(
+                slot.method, o), o))
         finally:
             loop.close()
