@@ -3,8 +3,9 @@ from karabo.hashtypes import Type, Slot
 from karabo.hash import Hash, BinaryWriter
 from karabo import openmq
 
-from asyncio import (AbstractEventLoop, coroutine, Future, get_event_loop,
-                     set_event_loop, SelectorEventLoop, Task, TimeoutError)
+from asyncio import (AbstractEventLoop, async, coroutine, Future,
+                     get_event_loop, set_event_loop, SelectorEventLoop, Task,
+                     TimeoutError)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
@@ -187,8 +188,7 @@ class NoEventLoop(AbstractEventLoop):
     def sync(self, coro, timeout=-1):
         lock = threading.Lock()
         lock.acquire()
-        task = self._instance._ss.loop.create_task(coro,
-                                                   instance=self._instance)
+        task = async(coro, loop=self._instance._ss.loop)
         task.add_done_callback(lambda _: lock.release())
         lock.acquire(timeout=timeout)
         if task.done():
@@ -272,7 +272,7 @@ class EventLoop(SelectorEventLoop):
         task = super().create_task(coro)
         try:
             if instance is None:
-                instance = self.instance()
+                instance = get_event_loop().instance()
             instance._tasks.add(task)
             task.add_done_callback(instance._tasks.remove)
             task.instance = weakref.ref(instance, lambda _: task.cancel())
