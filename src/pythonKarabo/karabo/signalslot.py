@@ -9,8 +9,8 @@ from karabo.p2p import NetworkOutput
 from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
-from asyncio import (async, coroutine, Future, get_event_loop, iscoroutine,
-                     sleep, TimeoutError, wait, wait_for)
+from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
+                     iscoroutine, sleep, TimeoutError, wait, wait_for)
 from functools import wraps
 import random
 import sys
@@ -231,11 +231,16 @@ class SignalSlotable(Configurable):
             yield from wait_for(
                 self.call("*", "slotPing", self.deviceId,
                           self.__randPing, False), timeout=3)
-            yield from self.slotKillDevice()
+            try:
+                yield from self.slotKillDevice()
+            except CancelledError:
+                pass
             raise RuntimeError('deviceId "{}" already in use'.
                                format(self.deviceId))
         except TimeoutError:
             pass
+        except Exception as e:
+            raise
         self.run()
         self.__randPing = 0
         self._ss.emit('call', {'*': ['slotInstanceNew']},
