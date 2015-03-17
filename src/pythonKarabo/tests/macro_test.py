@@ -34,20 +34,24 @@ class Remote(Device):
         self.value = value
 
     @Slot()
+    @coroutine
     def doit(self):
         self.done = True
 
     @Slot()
+    @coroutine
     def changeit(self):
         self.value -= 4
 
     @Slot()
+    @coroutine
     def count(self):
         for i in range(30):
             self.counter = i
             yield from sleep(0.1)
 
     @Slot()
+    @coroutine
     def call_local(self):
         with (yield from getDevice("local")) as l:
             yield from l.remotecalls()

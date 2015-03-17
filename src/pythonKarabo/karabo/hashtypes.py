@@ -3,7 +3,7 @@ import karabo.hash
 from karabo.registry import Registry
 from karabo.enums import AccessLevel, AccessMode, Assignment
 
-from asyncio import coroutine
+from asyncio import iscoroutinefunction, coroutine
 import base64
 from enum import Enum
 import numpy
@@ -193,6 +193,8 @@ class Descriptor(object):
 
 
 class Slot(Descriptor):
+    iscoroutine = None
+
     def parameters(self):
         ret = super(Slot, self).parameters()
         ret["nodeType"] = 1
@@ -221,7 +223,7 @@ class Slot(Descriptor):
         if device.currenttask is not None:
             print("not running", self.key)
             return
-        device.currenttask = device.executeSlot(self.method, message)
+        device.currenttask = device.executeSlot(self, message)
         def deleter(task):
             device.currenttask = None
         device.currenttask.add_done_callback(deleter)
@@ -235,6 +237,7 @@ class Slot(Descriptor):
     def __call__(self, method):
         if self.description is None:
             self.description = method.__doc__
+        self.iscoroutine = iscoroutinefunction(method)
         self.themethod = method
         return self
 
