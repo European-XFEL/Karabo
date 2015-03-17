@@ -18,6 +18,7 @@ class Remote(Device):
     counter = Integer(defaultValue=-1)
 
     @Slot()
+    @coroutine
     def count(self):
         for i in range(30):
             self.counter = i

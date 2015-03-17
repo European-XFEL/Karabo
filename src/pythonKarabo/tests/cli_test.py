@@ -57,7 +57,6 @@ class Tests(TestCase):
             @Slot()
             def do(self):
                 self.s = "done"
-                sleep(1)
     """
 
     @coroutine
@@ -71,7 +70,6 @@ class Tests(TestCase):
         proxy = yield from getDevice("bla-TestMacro")
         with proxy:
             yield from proxy.do()
-            yield from sleep(0.1)
         return proxy
 
 

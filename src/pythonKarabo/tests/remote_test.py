@@ -35,10 +35,12 @@ class Remote(Device):
             self.once_value = value
 
     @Slot()
+    @coroutine
     def doit(self):
         self.done = True
 
     @Slot()
+    @coroutine
     def changeit(self):
         self.value -= 4
 
@@ -48,6 +50,7 @@ class Remote(Device):
         self.once_value = None
 
     @Slot()
+    @coroutine
     def count(self):
         for i in range(30):
             self.counter = i
@@ -58,16 +61,19 @@ class Remote(Device):
 
 class Local(Device):
     @Slot()
+    @coroutine
     def letitdo(self):
         with (yield from getDevice("remote")) as d:
             yield from d.doit()
 
     @Slot()
+    @coroutine
     def letitchange(self):
         with (yield from getDevice("remote")) as d:
             yield from d.changeit()
 
     @Slot()
+    @coroutine
     def disconnect(self):
         d = yield from getDevice("remote")
         yield from d.count()
@@ -83,6 +89,7 @@ class Local(Device):
             self.f4 = d.counter
 
     @Slot()
+    @coroutine
     def letset(self):
         with (yield from getDevice("remote")) as d:
             self.f1 = d.value
@@ -94,26 +101,31 @@ class Local(Device):
             self.f3 = d.value
 
     @Slot()
+    @coroutine
     def dogeneric(self):
         d = yield from getDevice("remote")
         yield from d.generic()
 
     @Slot()
+    @coroutine
     def other(self):
         with (yield from getDevice("remote")) as d:
             d.other = 102
 
     @Slot()
+    @coroutine
     def setwait(self):
         d = yield from getDevice("remote")
         yield from set(d, value=200, counter=300)
 
     @Slot()
+    @coroutine
     def setnowait(self):
         d = yield from getDevice("remote")
         setNoWait(d, value=200, counter=300)
 
     @Slot()
+    @coroutine
     def waituntil(self):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
@@ -130,6 +142,7 @@ class Local(Device):
                 self.timeout = True
 
     @Slot()
+    @coroutine
     def waituntilnew(self):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
@@ -144,6 +157,7 @@ class Local(Device):
                 self.max = 30
 
     @Slot()
+    @coroutine
     def waituntildevice(self):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
@@ -158,6 +172,7 @@ class Local(Device):
                 self.max = 30
 
     @Slot()
+    @coroutine
     def collect_set(self):
         with (yield from getDevice("remote")) as d:
             d.once = 3
