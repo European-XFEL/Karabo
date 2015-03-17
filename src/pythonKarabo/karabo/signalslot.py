@@ -10,7 +10,7 @@ from karabo.timestamp import Timestamp
 from karabo.registry import Registry
 
 from asyncio import (async, CancelledError, coroutine, Future, get_event_loop,
-                     iscoroutine, sleep, TimeoutError, wait, wait_for)
+                     iscoroutinefunction, sleep, TimeoutError, wait, wait_for)
 from functools import wraps
 import random
 import sys
@@ -248,15 +248,13 @@ class SignalSlotable(Configurable):
         async(self.heartbeats())
 
     def executeSlot(self, slot, message):
-        coro = slot(self)
-        if iscoroutine(coro):
-            def inner():
-                self._ss.reply(message, (yield from coro))
-            return async(inner())
-        ret = Future()
-        ret.set_result(coro)
-        self._ss.reply(message, coro)
-        return ret
+        if slot.iscoroutine or iscoroutinefunction(slot.method):
+            coro = slot.method(self)
+        else:
+            coro = get_event_loop().start_thread(slot.method, self)
+        def inner():
+            self._ss.reply(message, (yield from coro))
+        return async(inner())
 
     @coslot
     def slotKillDevice(self):
