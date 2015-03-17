@@ -23,10 +23,15 @@ def sync_tst(f):
     return wrapper
 
 
-def startDevices(*devices):
-    global loop
+def setEventLoop():
     loop = EventLoop("{}-{}".format(socket.gethostname(), os.getpid()))
     set_event_loop(loop)
+    return loop
+
+
+def startDevices(*devices):
+    global loop
+    loop = setEventLoop()
     if len(devices) > 1:
         loop.run_until_complete(gather(*(d.startInstance() for d in devices)))
     else:

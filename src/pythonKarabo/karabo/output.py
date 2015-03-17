@@ -14,4 +14,7 @@ class KaraboStream:
             self.base.write(data)
 
     def flush(self):
-        get_event_loop().instance().update()
+        try:
+            get_event_loop().instance().update()
+        except AttributeError:
+            self.base.flush()

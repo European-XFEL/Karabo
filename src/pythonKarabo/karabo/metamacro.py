@@ -26,4 +26,4 @@ class MetaMacro(Device):
         for c in self.classes:
             p["_deviceId_"] ="{}-{}".format(self.deviceId, c.__name__)
             objs.append(c(p))
-        yield from gather(*[o.run_async() for o in objs])
+        yield from gather(*[o.startInstance() for o in objs])

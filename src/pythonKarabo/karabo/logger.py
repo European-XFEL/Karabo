@@ -11,6 +11,7 @@ from karabo.schema import Configurable, ListOfNodes
 
 class _Filter(logging.Filter):
     def __init__(self, parent):
+        super().__init__()
         self.parent = weakref.ref(parent, self.remove)
         self.added = []
 
@@ -49,6 +50,7 @@ class Handler(Configurable):
 
 class _Handler(logging.Handler):
     def __init__(self, parent):
+        super().__init__()
         self.parent = weakref.ref(parent, self.remove)
         self.added = []
 
