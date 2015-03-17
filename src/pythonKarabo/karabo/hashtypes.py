@@ -1,4 +1,5 @@
 
+import karabo
 import karabo.hash
 from karabo.registry import Registry
 from karabo.enums import AccessLevel, AccessMode, Assignment
@@ -191,6 +192,18 @@ class Descriptor(object):
     def setter_async(self, instance, value):
         self.setter(instance, value)
 
+    def checkedSet(self, instance, value):
+        if self.accessMode is not AccessMode.RECONFIGURABLE:
+            raise karabo.KaraboError('property "{}" is not reconfigurable'.
+                                     format(self.key))
+        elif (self.allowedStates is not None and
+              instance.state in self.allowedStates):
+            raise karabo.KaraboError(
+                'setting "{}" is not allowed in state "{}"'.
+                format(self.key, instance.state))
+        else:
+            return self.setter_async(instance, self.cast(value))
+
 
 class Slot(Descriptor):
     iscoroutine = None
@@ -220,13 +233,11 @@ class Slot(Descriptor):
             return inner.__get__(instance, owner)
 
     def inner(self, device, message, args):
-        if device.currenttask is not None:
-            print("not running", self.key)
-            return
-        device.currenttask = device.executeSlot(self, message)
-        def deleter(task):
-            device.currenttask = None
-        device.currenttask.add_done_callback(deleter)
+        if self.allowedStates is None or device.state in self.allowedStates:
+            device.executeSlot(self, message)
+        else:
+            device.logger.error('calling slot "{}" not allowed in state "{}"'.
+                                format(self.key, device.state))
 
     def method(self, device):
         return self.themethod(device)
