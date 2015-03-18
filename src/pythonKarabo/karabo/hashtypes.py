@@ -4,7 +4,7 @@ import karabo.hash
 from karabo.registry import Registry
 from karabo.enums import AccessLevel, AccessMode, Assignment
 
-from asyncio import iscoroutinefunction, coroutine
+from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
 import base64
 from enum import Enum
 import numpy
@@ -233,11 +233,24 @@ class Slot(Descriptor):
             return inner.__get__(instance, owner)
 
     def inner(self, device, message, args):
-        if self.allowedStates is None or device.state in self.allowedStates:
-            device.executeSlot(self, message)
+        if (self.allowedStates is not None and
+                device.state not in self.allowedStates):
+            msg = 'calling slot "{}" not allowed in state "{}"'.format(
+                self.key, device.state)
+            device._ss.reply(message, msg)
+            raise karabo.KaraboError(msg)
+        if self.iscoroutine or iscoroutinefunction(self.method):
+            coro = self.method(device)
         else:
-            device.logger.error('calling slot "{}" not allowed in state "{}"'.
-                                format(self.key, device.state))
+            coro = get_event_loop().start_thread(self.method, device)
+        def inner():
+            try:
+                device._ss.reply(message, (yield from coro))
+            except Exception as e:
+                device.logger.exception('slot "{}" raised exception'.
+                                        format(self.key))
+                device._ss.reply(message, str(e))
+        return async(inner())
 
     def method(self, device):
         return self.themethod(device)
