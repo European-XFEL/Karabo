@@ -8,14 +8,11 @@ from functools import wraps
 
 from karabo.eventloop import EventLoop
 from karabo.python_device import Device
+from karabo.device_client import (waitUntilNew, getDevice, waitUntil, set,
+                                  setNoWait)
 from karabo import Slot, Integer
 
-def async_tst(f):
-    @wraps(f)
-    def wrapper(self, *args, **kwargs):
-        coro = coroutine(f)
-        return loop.run_until_complete(coro(self, *args, **kwargs))
-    return wrapper
+from .eventloop import startDevices, stopDevices, async_tst
 
 
 class Superslot(Slot):
@@ -37,11 +34,22 @@ class Remote(Device):
         if self.once_value is None:
             self.once_value = value
 
+    @Integer(allowedStates=["Other state"])
+    def disallowed_int(self, value):
+        self.value = value
+
+    @Slot(allowedStates=["uninitialized"])
+    def disallow(self):
+        self.state = "Other state"
+        self.value = 777
+
     @Slot()
+    @coroutine
     def doit(self):
         self.done = True
 
     @Slot()
+    @coroutine
     def changeit(self):
         self.value -= 4
 
@@ -51,6 +59,7 @@ class Remote(Device):
         self.once_value = None
 
     @Slot()
+    @coroutine
     def count(self):
         for i in range(30):
             self.counter = i
@@ -61,19 +70,22 @@ class Remote(Device):
 
 class Local(Device):
     @Slot()
+    @coroutine
     def letitdo(self):
-        with (yield from self.getDevice("remote")) as d:
-            d.doit()
+        with (yield from getDevice("remote")) as d:
+            yield from d.doit()
 
     @Slot()
+    @coroutine
     def letitchange(self):
-        with (yield from self.getDevice("remote")) as d:
-            d.changeit()
+        with (yield from getDevice("remote")) as d:
+            yield from d.changeit()
 
     @Slot()
+    @coroutine
     def disconnect(self):
-        d = yield from self.getDevice("remote")
-        d.count()
+        d = yield from getDevice("remote")
+        yield from d.count()
         yield from sleep(0.3)
         self.f1 = d.counter
         yield from sleep(0.3)
@@ -86,58 +98,111 @@ class Local(Device):
             self.f4 = d.counter
 
     @Slot()
+    @coroutine
     def letset(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             self.f1 = d.value
             d.value = 10
             yield from sleep(0.1)
             self.f2 = d.value
-            d.changeit()
+            yield from d.changeit()
             yield from sleep(0.1)
             self.f3 = d.value
 
     @Slot()
+    @coroutine
     def dogeneric(self):
-        d = yield from self.getDevice("remote")
-        d.generic()
+        d = yield from getDevice("remote")
+        yield from d.generic()
 
     @Slot()
+    @coroutine
     def other(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.other = 102
 
     @Slot()
+    @coroutine
     def setwait(self):
-        d = yield from self.getDevice("remote")
-        yield from self.set(d, value=200, counter=300)
+        d = yield from getDevice("remote")
+        yield from set(d, value=200, counter=300)
 
     @Slot()
+    @coroutine
     def setnowait(self):
-        d = yield from self.getDevice("remote")
-        self.setNoWait(d, value=200, counter=300)
+        d = yield from getDevice("remote")
+        setNoWait(d, value=200, counter=300)
 
     @Slot()
+    @coroutine
     def waituntil(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.counter = 0
-            yield from self.waitUntil(lambda: d.counter == 0)
+            yield from waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
-            d.count()
-            yield from self.waitUntil(lambda: d.counter > 10)
+            async(d.count())
+            yield from waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
-                yield from wait_for(self.waitUntil(lambda: d.counter > 40),
+                yield from wait_for(waitUntil(lambda: d.counter > 40),
                                     timeout=3)
                 self.timeout = False
             except TimeoutError:
                 self.timeout = True
 
     @Slot()
+    @coroutine
+    def waituntilnew(self):
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            async(d.count())
+            for i in range(30):
+                j = yield from waitUntilNew(d).counter
+                if i != j:
+                    self.max = i
+                    break
+            else:
+                self.max = 30
+
+    @Slot()
+    @coroutine
+    def waituntildevice(self):
+        with (yield from getDevice("remote")) as d:
+            d.counter = 0
+            yield from sleep(0.1)
+            async(d.count())
+            for i in range(30):
+                h = yield from waitUntilNew(d)
+                if i != h["counter"]:
+                    self.max = i
+                    break
+            else:
+                self.max = 30
+
+    @Slot()
+    @coroutine
     def collect_set(self):
-        with (yield from self.getDevice("remote")) as d:
+        with (yield from getDevice("remote")) as d:
             d.once = 3
             d.once = 7
             d.once = 10
+
+    @Slot()
+    @coroutine
+    def disallowed(self):
+        with (yield from getDevice("remote")) as d:
+            d.disallowed_int = 333
+            yield from sleep(0.1)
+            self.f1 = d.value
+            yield from d.disallow()
+            yield from sleep(0.1)
+            self.f2 = d.value
+            d.disallowed_int = 444
+            yield from sleep(0.1)
+            self.f3 = d.value
+            yield from d.disallow()
+            self.f4 = d.value
 
 
 class Tests(TestCase):
@@ -213,26 +278,41 @@ class Tests(TestCase):
 
 
     @async_tst
+    def test_waituntilnew(self):
+        yield from local.waituntilnew()
+        self.assertEqual(local.max, 30)
+
+    @async_tst
+    def test_waituntildevice(self):
+        yield from local.waituntildevice()
+        self.assertEqual(local.max, 30)
+
+    @async_tst
     def test_collect(self):
         yield from local.collect_set()
         yield from sleep(0.1)
         self.assertEqual(remote.once_value, 10)
 
+    @async_tst
+    def test_disallow(self):
+        yield from local.disallowed()
+        self.assertEqual(local.f1, 333)
+        self.assertEqual(local.f2, 777)
+        self.assertEqual(local.f3, 777)
+        self.assertEqual(local.f4, 777)
+
+
 
 def setUpModule():
-    global loop, remote, local
-    loop = EventLoop()
-    set_event_loop(loop)
-
+    global remote, local, loop
     local = Local({"_deviceId_": "local"})
     remote = Remote({"_deviceId_": "remote"})
-    loop.run_until_complete(gather(local.run_async(), remote.run_async()))
+    loop = startDevices(local, remote)
+    Tests.instance = local
 
 
 def tearDownModule():
-    loop.run_until_complete(gather(
-        local.slotKillDevice(), remote.slotKillDevice()))
-    loop.close()
+    stopDevices(local, remote)
 
 
 if __name__ == "__main__":

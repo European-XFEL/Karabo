@@ -1,4 +1,4 @@
-from asyncio import async, coroutine, Future, sleep, TimeoutError, wait
+from asyncio import async, coroutine, Future, gather, sleep, TimeoutError
 import threading
 import os
 import time
@@ -15,7 +15,7 @@ from karabo.schema import Configurable, Schema, Validator, Node
 from karabo.signalslot import (SignalSlotable, Signal, ConnectionType, slot,
                                coslot, replySlot)
 from karabo.timestamp import Timestamp
-from karabo import hashtypes
+from karabo import hashtypes, KaraboError
 from karabo.enums import AccessLevel, AccessMode, Assignment
 from karabo.registry import Registry
 from karabo.eventloop import EventLoop
@@ -95,12 +95,7 @@ class Device(SignalSlotable):
         self.validatorIntern = Validator(injectDefaults=False)
         self.validatorExtern = Validator(injectDefaults=False)
 
-        self.log.setBroker(self._ss)
-        self.logger = self.log.logger
-
         self.classId = type(self).__name__
-
-        self.currenttask = None
 
     @classmethod
     def register(cls, name, dict):
@@ -125,6 +120,8 @@ class Device(SignalSlotable):
         self.fullSchema.copy(self.staticSchema)
 
     def run(self):
+        self.log.setBroker(self._ss)
+        self.logger = self.log.logger
         self.initSchema()
         self.initInfo()
         super().run()
@@ -143,11 +140,15 @@ class Device(SignalSlotable):
 
     @coslot
     def slotReconfigure(self, reconfiguration):
-        yield from wait(
-            [t.setter_async(self, t.cast(v)) for t, v in (
-                (getattr(type(self), k), v) for k, v in reconfiguration.items())
-             if isinstance(t, Type)])
-
+        props = ((getattr(self.__class__, k), v)
+                 for k, v in reconfiguration.items())
+        try:
+            setters = [t.checkedSet(self, v) for t, v in props
+                       if isinstance(t, Type)]
+            yield from gather(*setters)
+        except KaraboError as e:
+            self.logger.exception("Failed to set property")
+            return False, str(e)
         self.signalChanged(self.configurationAsHash(), self.deviceId)
         return True, ""
 
@@ -158,6 +159,10 @@ class Device(SignalSlotable):
             return self._getStateDependentSchema(currentState), self.deviceId
         else:
             return self.fullSchema, self.deviceId
+
+    @slot
+    def slotInstanceNew(self, instanceId, info):
+        pass
 
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:

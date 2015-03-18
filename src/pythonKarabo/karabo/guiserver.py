@@ -5,7 +5,7 @@ from asyncio import (async, coroutine, start_server, get_event_loop,
                      IncompleteReadError)
 from functools import wraps
 
-from karabo.python_device import Device
+from karabo.device_client import DeviceClientBase
 from karabo import Integer, Assignment, openmq
 from karabo.hash import Hash
 from karabo.p2p import Channel
@@ -16,11 +16,11 @@ def parallel(f):
     f = coroutine(f)
     @wraps(f)
     def wrapper(self, *args, **kwargs):
-        return self.async(f(self, *args, **kwargs))
+        return async(f(self, *args, **kwargs))
     return wrapper
 
 
-class GuiServer(Device):
+class GuiServer(DeviceClientBase):
     port = Integer(displayedName="Hostport",
                    description="Local port for this server",
                    assignment=Assignment.OPTIONAL, defaultValue=44444)
@@ -31,16 +31,14 @@ class GuiServer(Device):
         self.channels = set()
         self.deviceChannels = {}  # which channels is this device visbile in
         self.histories = {}
-        self.systemTopology = Hash("device", Hash(), "server", Hash())
 
     def run(self):
-        self.async(self.log_handler())
+        async(self.log_handler())
         super().run()
-        self.async(self.run_server())
+        async(self.run_server())
 
     @coroutine
     def run_server(self):
-        self._ss.emit("call", {"*": ["slotPing"]}, self.deviceId, 0, False)
         yield from start_server(self.connect_client, port=int(self.port))
 
     @coroutine
@@ -166,11 +164,16 @@ class GuiServer(Device):
                 for c in self.channels:
                     self.respond(c, "log", message=message.data)
 
+    def updateSystemTopology(self, instanceId, info, task):
+        entry = super().updateSystemTopology(instanceId, info, task)
+        if task is not None:
+            for c in self.channels:
+                self.respond(c, task, topologyEntry=entry)
+        return entry
+
     @slot
     def slotInstanceNew(self, instanceId, info):
-        entry = self.updateSystemTopology(instanceId, info)
-        for c in self.channels:
-            self.respond(c, "instanceNew", topologyEntry=entry)
+        super().slotInstanceNew(instanceId, info)
 
         if "device" not in info:
             return
@@ -180,36 +183,17 @@ class GuiServer(Device):
             self.registerDevice(deviceId)
 
     @slot
-    def slotInstanceUpdated(self, instanceId, info):
-        entry = self.updateSystemTopology(instanceId, info)
-        for c in self.channels:
-            self.respond(c, "instanceUpdated", topologyEntry=entry)
-
-    @slot
     def slotInstanceGone(self, instanceId, info):
-        type = info["type"]
         for c in self.channels:
             self.respond(c, "instanceGone", instanceId=instanceId,
-                         instanceType=type)
-        self.systemTopology[type].pop(instanceId, None)
+                         instanceType=info["type"])
+        return super().slotInstanceGone(instanceId, info)
 
     @slot
     def slotChanged(self, configuration, deviceId):
         for c in self.deviceChannels.get(deviceId, []):
             self.respond(c, "deviceConfiguration", deviceId=deviceId,
                          configuration=configuration)
-
-    @slot
-    def slotPingAnswer(self, deviceId, info):
-        self.updateSystemTopology(deviceId, info)
-
-    def updateSystemTopology(self, instanceId, info):
-        type = info["type"]
-        ret = Hash(type, Hash())
-        ret[type][instanceId] = Hash()
-        ret[type][instanceId, ...] = dict(info.items())
-        self.systemTopology.merge(ret)
-        return ret
 
     def registerDevice(self, deviceId):
         self._ss.connect(deviceId, "signalChanged", self.slotChanged)

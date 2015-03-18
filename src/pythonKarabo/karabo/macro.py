@@ -1,23 +1,78 @@
-from asyncio import async, get_event_loop, set_event_loop, TimeoutError
+from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
+                     Task, TimeoutError)
+import atexit
 import sys
 import threading
+import weakref
 
-from karabo import KaraboError, String, Integer
+from karabo import KaraboError, String, Integer, AccessLevel, AccessMode
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
-from karabo.hashtypes import Slot, Descriptor
-from karabo.output import threadData
-from karabo.signalslot import Proxy, SignalSlotable
+from karabo.hashtypes import Slot, Descriptor, Type
+from karabo.device_client import waitUntilNew, Proxy, getDevice
 from karabo.python_device import Device
 
+def Monitor():
+    def outer(prop):
+        prop.accessMode = AccessMode.READONLY
+        prop.monitor = prop.setter
+        del prop.setter
+        return prop
+    return outer
 
-class MacroProxy(Proxy):
-    def setValue(self, attr, value):
-        ok, msg = self._device._sync(
-            self._device.call(self.deviceId, "slotReconfigure",
-            Hash(attr.key, value)))
-        if not ok:
-            raise KaraboError(msg)
+
+class RemoteDevice:
+    def __init__(self, id):
+        self.id = id
+
+
+class Sentinel:
+    """ everyone needing the event thread to run should keep a reference
+    to a sentinel. One nobody has a reference anymore, the event thread
+    may be collected."""
+    def __init__(self, thread):
+        self.thread = thread
+
+class EventThread(threading.Thread):
+    instance = None
+
+    def __init__(self):
+        super().__init__(name="Karabo macro event loop", daemon=True)
+
+    def run(self):
+        self.loop = EventLoop()
+        set_event_loop(self.loop)
+        self.lock.release()
+        atexit.register(self.stop)
+        try:
+            self.loop.run_forever()
+        finally:
+            atexit.unregister(self.stop)
+            self.loop.close()
+
+    @coroutine
+    def run_macro(self, macro, configuration):
+        yield from macro.startInstance()
+        self.lock.release()
+
+    def stop(self, weakref=None):
+        self.loop.stop()
+
+    @classmethod
+    def start_macro(cls, macro, conf):
+        if cls.instance is None or cls.instance() is None:
+            self = cls()
+            s = Sentinel(self)
+            cls.instance = weakref.ref(s, self.stop)
+            self.lock = threading.Lock()
+            self.lock.acquire()
+            self.start()
+            self.lock.acquire()
+        else:
+            self = cls.instance().thread
+        self.loop.call_soon_threadsafe(async, self.run_macro(macro, conf))
+        self.lock.acquire()
+        return cls.instance()
 
 
 class Macro(Device):
@@ -25,27 +80,47 @@ class Macro(Device):
 
     project = String(
         displayedName="Project",
-        description="The name of the project this macro belongs to")
+        description="The name of the project this macro belongs to",
+        defaultValue="__none__",
+        accessMode=AccessMode.INITONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     module = String(
         displayedName="Module",
-        description="The name of the module in the project")
+        description="The name of the module in the project",
+        defaultValue="__none__",
+        accessMode=AccessMode.INITONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     print = String(
         displayedName="Printed output",
         description="The output printed to the console",
-        defaultValue="")
+        defaultValue="",
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     printno = Integer(
         displayedName="Number of prints",
         description="The number of prints issued so far",
-        defaultValue=0)
+        defaultValue=0,
+        accessMode=AccessMode.READONLY,
+        requiredAccessLevel=AccessLevel.EXPERT)
 
     @classmethod
     def register(cls, name, dict):
         Macro._subclasses = {}
         super().register(name, dict)
         Macro.subclasses.append(cls)
+        cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
+                         if hasattr(m, "monitor")]
+
+    def __init__(self, configuration=None, may_start_thread=True, **kwargs):
+        if configuration is None:
+            configuration = {}
+        configuration.update(kwargs)
+        super().__init__(configuration)
+        if may_start_thread and not isinstance(get_event_loop(), EventLoop):
+            self._thread = EventThread.start_macro(self, configuration)
 
     def initInfo(self):
         super().initInfo()
@@ -53,42 +128,25 @@ class Macro(Device):
         self.info["project"] = self.project
         self.info["module"] = self.module
 
-    def _sync(self, coro, timeout=-1):
-        lock = threading.Lock()
-        lock.acquire()
-        future = self.async(coro)
-        future.add_done_callback(lambda _: lock.release())
-        lock.acquire(timeout=timeout)
-        if future.done():
-            return future.result()
-        else:
-            future.cancel()
-            raise TimeoutError
+    @coroutine
+    def run_async(self):
+        yield from super().run_async()
+        devices = []
+        for k in dir(type(self)):
+            v = getattr(type(self), k)
+            if isinstance(v, RemoteDevice):
+                d = yield from getDevice(v.id)
+                setattr(self, k, d)
+                devices.append(d)
+        for d in devices:
+            async(self._holdDevice(d))
 
-    def _executeSlot(self, slot):
-        threadData.instance = self
-        try:
-            slot(self)
-        finally:
-            threadData.instance = None
-
-    def executeSlot(self, slot):
-        return get_event_loop().run_in_executor(None, self._executeSlot, slot)
-
-    def getDevice(self, deviceId):
-        return self._sync(SignalSlotable.getDevice(self, deviceId,
-                                                   Base=MacroProxy))
-
-    def set(self, device, *, timeout=-1, **kwargs):
-        return self._sync(SignalSlotable.set(self, device, **kwargs),
-                          timeout=timeout)
-
-    def updateDevice(self, device, timeout=-1):
-        return self._sync(device.__iter__(), timeout=timeout)
-
-    def waitUntil(self, condition, timeout=-1):
-        return self._sync(SignalSlotable.waitUntil(self, condition),
-                          timeout=timeout)
+    def _holdDevice(self, d):
+        with d:
+            while True:
+                yield from waitUntilNew(d)
+                for m in self._monitors:
+                    setattr(self, m.key, m.monitor(self))
 
     def printToConsole(self, data):
         self.print = data
@@ -122,8 +180,9 @@ class Macro(Device):
         loop = EventLoop()
         set_event_loop(loop)
         o = cls(args)
-        async(o.run_async())
+        o.startInstance()
         try:
-            loop.run_until_complete(loop.run_in_executor(None, slot.method, o))
+            loop.run_until_complete(loop.create_task(loop.start_thread(
+                slot.method, o), o))
         finally:
             loop.close()
