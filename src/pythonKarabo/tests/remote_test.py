@@ -34,6 +34,15 @@ class Remote(Device):
         if self.once_value is None:
             self.once_value = value
 
+    @Integer(allowedStates=["Other state"])
+    def disallowed_int(self, value):
+        self.value = value
+
+    @Slot(allowedStates=["uninitialized"])
+    def disallow(self):
+        self.state = "Other state"
+        self.value = 777
+
     @Slot()
     @coroutine
     def doit(self):
@@ -179,6 +188,22 @@ class Local(Device):
             d.once = 7
             d.once = 10
 
+    @Slot()
+    @coroutine
+    def disallowed(self):
+        with (yield from getDevice("remote")) as d:
+            d.disallowed_int = 333
+            yield from sleep(0.1)
+            self.f1 = d.value
+            yield from d.disallow()
+            yield from sleep(0.1)
+            self.f2 = d.value
+            d.disallowed_int = 444
+            yield from sleep(0.1)
+            self.f3 = d.value
+            yield from d.disallow()
+            self.f4 = d.value
+
 
 class Tests(TestCase):
     @async_tst
@@ -267,6 +292,15 @@ class Tests(TestCase):
         yield from local.collect_set()
         yield from sleep(0.1)
         self.assertEqual(remote.once_value, 10)
+
+    @async_tst
+    def test_disallow(self):
+        yield from local.disallowed()
+        self.assertEqual(local.f1, 333)
+        self.assertEqual(local.f2, 777)
+        self.assertEqual(local.f3, 777)
+        self.assertEqual(local.f4, 777)
+
 
 
 def setUpModule():

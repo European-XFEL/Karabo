@@ -247,15 +247,6 @@ class SignalSlotable(Configurable):
                       self.deviceId, self.info)
         async(self.heartbeats())
 
-    def executeSlot(self, slot, message):
-        if slot.iscoroutine or iscoroutinefunction(slot.method):
-            coro = slot.method(self)
-        else:
-            coro = get_event_loop().start_thread(slot.method, self)
-        def inner():
-            self._ss.reply(message, (yield from coro))
-        return async(inner())
-
     @coslot
     def slotKillDevice(self):
         for t in self._tasks:
