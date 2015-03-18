@@ -3,13 +3,16 @@ from karabo.hashtypes import Type, Slot
 from karabo.hash import Hash, BinaryWriter
 from karabo import openmq
 
-from asyncio import (coroutine, Future, get_event_loop, set_event_loop,
-                     SelectorEventLoop, Task)
+from asyncio import (AbstractEventLoop, async, coroutine, Future,
+                     get_event_loop, set_event_loop, SelectorEventLoop, Task,
+                     TimeoutError)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
 import sys
+import threading
+import weakref
 
 
 class Broker:
@@ -17,8 +20,7 @@ class Broker:
         self.loop = loop
         self.connection = loop.connection
         self.session = openmq.Session(self.connection, False, 1, 0)
-        self.destination = openmq.Destination(self.session,
-                                              getpass.getuser(), 1)
+        self.destination = openmq.Destination(self.session, loop.topic, 1)
         self.producer = openmq.Producer(self.session, self.destination)
         self.deviceId = deviceId
         self.classId = classId
@@ -70,23 +72,16 @@ class Broker:
         if not isinstance(reply, tuple):
             reply = reply,
 
-        if reply != (None,):
-            try:
-                replyTo = message.properties['replyTo']
-            except openmq.Error:
-                pass
-            else:
-                p = openmq.Properties()
-                p['replyFrom'] = replyTo
-                p['signalFunction'] = "__reply__"
-                p['slotInstanceIds'] = b'|' + sender + b'|'
-                self.send(p, reply)
+        replyTo = message.properties.get('replyTo')
+        if replyTo is not None:
+            p = openmq.Properties()
+            p['replyFrom'] = replyTo
+            p['signalFunction'] = "__reply__"
+            p['slotInstanceIds'] = b'|' + sender + b'|'
+            self.send(p, reply)
 
-        try:
-            replyInstanceIds = message.properties['replyInstanceIds']
-        except openmq.Error:
-            pass
-        else:
+        replyInstanceIds = message.properties.get('replyInstanceIds')
+        if replyInstanceIds is not None:
             p = openmq.Properties()
             p['signalFunction'] = "__replyNoWait__"
             p['slotInstanceIds'] = replyInstanceIds
@@ -111,8 +106,10 @@ class Broker:
             self.session, self.destination,
             "slotInstanceIds LIKE '%|{0.deviceId}|%' "
             "OR slotInstanceIds LIKE '%|*|%'".format(self), False)
+        info = device.info
         try:
             while True:
+                device = weakref.ref(device)
                 try:
                     message = yield from get_event_loop().run_in_executor(
                         None, consumer.receiveMessage, 1000)
@@ -121,6 +118,11 @@ class Broker:
                         continue
                     else:
                         raise
+                finally:
+                    device = device()
+                    if device is None:
+                        return
+                info = device.info
                 try:
                     slots, params = self.decodeMessage(message)
                 except:
@@ -139,9 +141,9 @@ class Broker:
                         slot.slot(device, message, params)
                 except:
                     device.logger.exception('error in slot "%s"', slot)
+                slot = slots = None
         finally:
-            self.emit('call', {'*': ['slotInstanceGone']},
-                      self.deviceId, device.info)
+            self.emit('call', {'*': ['slotInstanceGone']}, self.deviceId, info)
 
     def decodeMessage(self, message):
         hash = Hash.decode(message.data, "Bin")
@@ -151,12 +153,9 @@ class Broker:
                 params.append(hash['a{}'.format(i)])
             except KeyError:
                 break
-        try:
-            replyFrom = message.properties['replyFrom'].decode("ascii")
-        except openmq.Error:
-            pass
-        else:
-            f = self.repliers.get(replyFrom)
+        replyFrom = message.properties.get('replyFrom')
+        if replyFrom is not None:
+            f = self.repliers.get(replyFrom.decode("ascii"))
             if f is not None:
                 f.set_result(params)
             return {}, None
@@ -180,12 +179,39 @@ class Client(object):
         self._device._ss.emit("call", {deviceId: ["slotReconfigure"]},
                               Hash(attr.key, value))
 
+class NoEventLoop(AbstractEventLoop):
+    sync_set = True
+
+    def __init__(self, instance):
+        self._instance = instance
+
+    def sync(self, coro, timeout=-1):
+        lock = threading.Lock()
+        lock.acquire()
+        task = async(coro, loop=self._instance._ss.loop)
+        task.add_done_callback(lambda _: lock.release())
+        lock.acquire(timeout=timeout)
+        if task.done():
+            return task.result()
+        else:
+            task.cancel()
+            raise TimeoutError
+
+    def instance(self):
+        return self._instance
+
 
 class EventLoop(SelectorEventLoop):
-    def __init__(self):
+    sync_set = False
+
+    def __init__(self, topic=None):
         super().__init__()
+        if topic is None:
+            self.topic = getpass.getuser()
+        else:
+            self.topic = topic
         self.connection = None
-        self.changedFuture = Future()  # call if some property changes
+        self.changedFuture = Future(loop=self)  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(10000))
 
     def getBroker(self, deviceId, classId):
@@ -241,6 +267,39 @@ class EventLoop(SelectorEventLoop):
     @coroutine
     def waitForChanges(self):
         yield from self.changedFuture
+
+    def create_task(self, coro, instance=None):
+        task = super().create_task(coro)
+        try:
+            if instance is None:
+                instance = get_event_loop().instance()
+            instance._tasks.add(task)
+            task.add_done_callback(instance._tasks.remove)
+            task.instance = weakref.ref(instance, lambda _: task.cancel())
+        except (AttributeError, TypeError) as e:
+            pass
+        return task
+
+    @coroutine
+    def start_thread(self, f, *args):
+        def inner():
+            set_event_loop(loop)
+            try:
+                return f(*args)
+            finally:
+                set_event_loop(None)
+        loop = NoEventLoop(self.instance())
+        return (yield from self.run_in_executor(None, inner))
+
+    def instance(self):
+        try:
+            return Task.current_task(loop=self).instance()
+        except AttributeError:
+            return None
+
+    def sync(self, coro, timeout):
+        assert timeout == -1
+        return coro
 
     def close(self):
         for t in Task.all_tasks(self):

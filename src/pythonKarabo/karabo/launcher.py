@@ -25,7 +25,7 @@ def newProcess(cls, config):
         loop = EventLoop()
         set_event_loop(loop)
         device = self.cls(self.config)
-        async(device.run_async(), loop=loop)
+        device.startInstance(loop)
         try:
             loop.run_forever()
         finally:
@@ -42,7 +42,7 @@ def newThread(cls, config):
         loop = EventLoop()
         set_event_loop(loop)
         device = self.cls(self.config)
-        async(device.run_async(), loop=loop)
+        device.startInstance(loop)
         try:
             loop.run_forever()
         finally:

@@ -82,11 +82,6 @@ class DeviceServer(Device):
         description="The errors the currently starting device raised",
         defaultValue="", accessMode=AccessMode.READONLY)
 
-    log = Node(Logger,
-               description="Logging settings",
-               displayedName="Logger",
-               requiredAccessLevel=AccessLevel.EXPERT)
-
     instanceCountPerDeviceServer = { }
 
 
@@ -117,7 +112,7 @@ class DeviceServer(Device):
                 self.serverId = self._generateDefaultServerId()
             saveToFile(Hash("DeviceServer.serverId", self.serverId),
                        serverIdFileName)
-        self._ss.deviceId = self.deviceId = self._deviceId_ = self.serverId
+        self.deviceId = self._deviceId_ = self.serverId
 
         self.pluginLoader = PluginLoader(
             Hash("pluginDirectory", self.pluginDirectory))
@@ -144,17 +139,13 @@ class DeviceServer(Device):
                     "Pattern", Hash("format",
                                     "%d{%F %H:%M:%S} | %p | %c | %m"))))])
 
-        self.log.setBroker(self._ss)
-        self.logger = self.log.logger
-
-
     def run(self):
+        super().run()
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
         self._registerAndConnectSignalsAndSlots()
-        super().run()
         self.notifyNewDeviceAction()
-        self.async(self.scanPlugins())
+        async(self.scanPlugins())
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
@@ -212,7 +203,8 @@ class DeviceServer(Device):
         self.startingDevice = deviceId
         self.startingError = ""
         try:
-            yield from cls.launch(config)
+            obj = cls(config)
+            yield from obj.startInstance()
         except Exception as e:
             self.startingDevice = deviceId
             self.startingError = traceback.format_exc()
@@ -341,7 +333,7 @@ def main(args):
     validated = v.validate(DeviceServer.getSchema("DeviceServer"), h)
     server = DeviceServer(validated["DeviceServer"])
     if server:
-        async(server.run_async())
+        server.startInstance()
         try:
             loop.run_forever()
         finally:

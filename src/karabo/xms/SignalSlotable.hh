@@ -1282,7 +1282,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             void slotPingAnswer(const std::string& instanceId, const karabo::util::Hash& hash);
 
-            void sendPotentialReply(const karabo::util::Hash& header);
+            void sendPotentialReply(const karabo::util::Hash& header, bool global);
 
             void sendErrorHappenedReply(const karabo::util::Hash& header, const std::string& errorMesssage);
 
