@@ -1,9 +1,10 @@
 
+import karabo
 import karabo.hash
 from karabo.registry import Registry
 from karabo.enums import AccessLevel, AccessMode, Assignment
 
-from asyncio import coroutine
+from asyncio import async, iscoroutinefunction, coroutine, get_event_loop
 import base64
 from enum import Enum
 import numpy
@@ -191,8 +192,22 @@ class Descriptor(object):
     def setter_async(self, instance, value):
         self.setter(instance, value)
 
+    def checkedSet(self, instance, value):
+        if self.accessMode is not AccessMode.RECONFIGURABLE:
+            raise karabo.KaraboError('property "{}" is not reconfigurable'.
+                                     format(self.key))
+        elif (self.allowedStates is not None and
+              instance.state in self.allowedStates):
+            raise karabo.KaraboError(
+                'setting "{}" is not allowed in state "{}"'.
+                format(self.key, instance.state))
+        else:
+            return self.setter_async(instance, self.cast(value))
+
 
 class Slot(Descriptor):
+    iscoroutine = None
+
     def parameters(self):
         ret = super(Slot, self).parameters()
         ret["nodeType"] = 1
@@ -218,13 +233,24 @@ class Slot(Descriptor):
             return inner.__get__(instance, owner)
 
     def inner(self, device, message, args):
-        if device.currenttask is not None:
-            print("not running", self.key)
-            return
-        device.currenttask = device.executeSlot(self.method)
-        def deleter(task):
-            device.currenttask = None
-        device.currenttask.add_done_callback(deleter)
+        if (self.allowedStates is not None and
+                device.state not in self.allowedStates):
+            msg = 'calling slot "{}" not allowed in state "{}"'.format(
+                self.key, device.state)
+            device._ss.reply(message, msg)
+            raise karabo.KaraboError(msg)
+        if self.iscoroutine or iscoroutinefunction(self.method):
+            coro = self.method(device)
+        else:
+            coro = get_event_loop().start_thread(self.method, device)
+        def inner():
+            try:
+                device._ss.reply(message, (yield from coro))
+            except Exception as e:
+                device.logger.exception('slot "{}" raised exception'.
+                                        format(self.key))
+                device._ss.reply(message, str(e))
+        return async(inner())
 
     def method(self, device):
         return self.themethod(device)
@@ -235,6 +261,7 @@ class Slot(Descriptor):
     def __call__(self, method):
         if self.description is None:
             self.description = method.__doc__
+        self.iscoroutine = iscoroutinefunction(method)
         self.themethod = method
         return self
 
