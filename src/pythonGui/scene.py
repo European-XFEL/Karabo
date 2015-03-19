@@ -22,6 +22,7 @@ from const import ns_karabo, ns_svg
 import pathparser
 import icons
 import manager
+from widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
@@ -1369,7 +1370,8 @@ class Scene(QSvgWidget):
                 configDisplayComponent = item.displayComponent
                 if configDisplayComponent is not None:
                     proxy = ProxyWidget(self.inner)
-                    displayComponent = DisplayComponent(None, realbox, proxy)
+                    factory = DisplayWidget.getClass(box)(realbox, proxy)
+                    displayComponent = DisplayComponent(factory, realbox, proxy)
                     proxy.setComponent(displayComponent)
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
@@ -1389,8 +1391,9 @@ class Scene(QSvgWidget):
                 if configEditableComponent is not None:
                     proxy = ProxyWidget(self.inner)
 
+                    factory = EditableWidget.getClass(box)(realbox, proxy)
                     editableComponent = EditableApplyLaterComponent(
-                        None, realbox, proxy)
+                        factory, realbox, proxy)
 
                     realbox.addVisible()
                     proxy.setComponent(editableComponent)
