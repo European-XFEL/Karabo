@@ -202,7 +202,7 @@ namespace karathon {
     void ChannelWrap::readAsyncSizeInBytes(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->readAsyncSizeInBytes(proxyReadSizeInBytesHandler);
+        channel->readAsyncSizeInBytes(boost::bind(proxyReadSizeInBytesHandler, channel, _1));
     }
 
     void ChannelWrap::proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size) {
@@ -224,7 +224,7 @@ namespace karathon {
     void ChannelWrap::readAsyncStr(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->readAsyncString(proxyReadStringHandler);
+        channel->readAsyncString(boost::bind(proxyReadStringHandler, channel, _1));
     }
 
     void ChannelWrap::proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s) {
@@ -246,7 +246,7 @@ namespace karathon {
     void ChannelWrap::readAsyncHash(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->readAsyncHash(proxyReadHashHandler);
+        channel->readAsyncHash(boost::bind(proxyReadHashHandler, channel, _1));
     }
 
     void ChannelWrap::proxyReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h) {
@@ -268,7 +268,7 @@ namespace karathon {
     void ChannelWrap::readAsyncHashStr(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->readAsyncHashVector(proxyReadHashVectorHandler);
+        channel->readAsyncHashVector(boost::bind(proxyReadHashVectorHandler, channel, _1, _2));
     }
 
     void ChannelWrap::proxyReadHashVectorHandler(karabo::net::Channel::Pointer channel,
@@ -291,7 +291,7 @@ namespace karathon {
     void ChannelWrap::readAsyncHashHash(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerReadHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->readAsyncHashHash(proxyReadHashHashHandler);
+        channel->readAsyncHashHash(boost::bind(proxyReadHashHashHandler, channel, _1, _2));
     }
 
     void ChannelWrap::proxyReadHashHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b) {
@@ -317,7 +317,7 @@ namespace karathon {
             char* data = PyBytes_AsString(bytearray);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         } else if (PyByteArray_Check(obj.ptr())) {
             PyObject* bytearray = obj.ptr();
@@ -325,14 +325,14 @@ namespace karathon {
             char* data = PyByteArray_AsString(bytearray);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         } else if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
             const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncRaw(data, size, proxyWriteCompleteHandler);
+            channel->writeAsyncRaw(data, size, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
@@ -373,7 +373,7 @@ namespace karathon {
             const Hash& h = bp::extract<Hash>(data);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncHash(h, proxyWriteCompleteHandler);
+            channel->writeAsyncHash(h, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
@@ -396,7 +396,7 @@ namespace karathon {
             }
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncHashRaw(h, data, size, proxyWriteCompleteHandler);
+            channel->writeAsyncHashRaw(h, data, size, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
@@ -408,7 +408,7 @@ namespace karathon {
             const Hash& data = bp::extract<Hash>(body);
             registerWriteHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->writeAsyncHashHash(header, data, proxyWriteCompleteHandler);
+            channel->writeAsyncHashHash(header, data, boost::bind(proxyWriteCompleteHandler, channel));
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
@@ -417,7 +417,7 @@ namespace karathon {
     void ChannelWrap::setErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler) {
         registerErrorHandler(channel, handler);
         ScopedGILRelease nogil;
-        channel->setErrorHandler(proxyErrorHandler);
+        channel->setErrorHandler(boost::bind(proxyErrorHandler, channel, _1));
     }
 
     void ChannelWrap::proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
@@ -454,7 +454,7 @@ namespace karathon {
             int milliseconds = bp::extract<int>(milliobj);
             registerWaitHandler(channel, handler);
             ScopedGILRelease nogil;
-            channel->waitAsync(milliseconds, proxyWaitCompleteHandler, id);
+            channel->waitAsync(milliseconds, boost::bind(proxyWaitCompleteHandler, channel, _1), id);
             return;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type in parameter is not supported");
