@@ -208,7 +208,7 @@ class DeviceServer(Device):
         except Exception as e:
             self.startingDevice = deviceId
             self.startingError = traceback.format_exc()
-            self.log.WARN("could not start device {}".format(cls))
+            self.logger.exception("could not start device {}".format(cls))
         finally:
             self.startingDevice = ""
             self.startingError = ""
