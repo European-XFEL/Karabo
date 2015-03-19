@@ -17,7 +17,7 @@ namespace karathon {
         IOService::Pointer ioserv = connection->getIOService();
         try {
             ScopedGILRelease nogil;
-            connection->startAsync(proxyConnectionHandler);
+            connection->startAsync(boost::bind(proxyConnectionHandler, _1));
         } catch(...) {
             KARABO_RETHROW
         }
@@ -69,11 +69,10 @@ namespace karathon {
             hash.set("_error", errorHandler); // register python error handler for connection
         }
         ScopedGILRelease nogil;
-        connection->setErrorHandler(proxyErrorHandler);
+        connection->setErrorHandler(boost::bind(proxyErrorHandler, connection, _1));
     }
 
-    void ConnectionWrap::proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code) {
-        Connection::Pointer connection = channel->getConnection();
+    void ConnectionWrap::proxyErrorHandler(karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code) {
         IOService::Pointer ioserv = connection->getIOService();
         Hash hash;
         {
@@ -94,6 +93,6 @@ namespace karathon {
         bp::object onerror = hash.get<bp::object>("_error");
         if (!PyCallable_Check(onerror.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        onerror(bp::object(channel), bp::object(code));
+        onerror(bp::object(connection), bp::object(code));
     }
 }
