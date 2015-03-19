@@ -184,7 +184,7 @@ namespace karabo {
         }
 
 
-        void TcpConnection::startAsync(const ConnectionHandler& handler) {
+        int TcpConnection::startAsync(const ConnectionHandler& handler) {
 
             this->setIOServiceType("Asio");
             // Get the specific boost::asio::io_service object
@@ -202,10 +202,14 @@ namespace karabo {
                         acceptor->set_option(ip::tcp::acceptor::enable_connection_aborted(true));
                         acceptor->bind(endpoint); // <=== here exception possible: port in use
                         acceptor->listen();
-                        m_acceptor = acceptor;
-                        if (m_port != endpoint.port()) {
-                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
+                        if (m_port == 0) {
+                            ip::tcp::endpoint le = acceptor->local_endpoint();
+                            m_port = le.port();
                         }
+                        m_acceptor = acceptor;
+//                        if (m_port != endpoint.port()) {
+//                            m_port = endpoint.port(); // if m_port was == 0 then the OS assigns free port number.
+//                        }
                     } catch (...) {
                         KARABO_RETHROW
                     }
@@ -218,6 +222,7 @@ namespace karabo {
                 }
                 startClient(handler);
             }
+            return m_port;
         }
 
 

@@ -70,7 +70,7 @@ namespace karabo {
              * Starts the connection asynchronously
              * @param handler A callback with the following signature: void myHandler(ChannelPointer)
              */
-            virtual void startAsync(const ConnectionHandler& handler) {
+            virtual int startAsync(const ConnectionHandler& handler) {
                 throw KARABO_NOT_SUPPORTED_EXCEPTION("Asynchronous connect is not available for " + this->classInfo().getClassId() + "connections");
             }
 

@@ -69,7 +69,7 @@ namespace karabo {
             /**
              * Starts the connection asynchronously providing a slot
              */
-            virtual void startAsync(const ConnectionHandler& slot);
+            virtual int startAsync(const ConnectionHandler& slot);
 
             /**
              * Closes the connection
