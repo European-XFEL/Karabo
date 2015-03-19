@@ -77,7 +77,7 @@ namespace karabo {
 
             void onConnect(karabo::net::Channel::Pointer channel);
 
-            void onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+            void onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info);
 
             void onLogin(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 

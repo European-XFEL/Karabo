@@ -270,9 +270,9 @@ namespace karabo {
                     }
                     connected = true;
                 }
-                channel->setErrorHandler(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelError, this, _1, _2));
+                channel->setErrorHandler(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelError, this, channel, _1));
                 channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
-                channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+                channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, channel, _1, _2));
 
                 m_tcpConnections.insert(connection); // TODO check whether really needed
                 m_tcpChannels.insert(std::make_pair(hostname + port, channel));
@@ -316,7 +316,7 @@ namespace karabo {
                         m_eosChannels.clear();
                     }
 
-                    channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+                    channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, channel, _1, _2));
                     return;
                 }
 
@@ -366,7 +366,7 @@ namespace karabo {
                     }
                 }
 
-                channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, _1, _2, _3));
+                channel->readAsyncHashVector(boost::bind(&karabo::xms::NetworkInput<T>::onTcpChannelRead, this, channel, _1, _2));
             }
 
             void swapBuffers() {

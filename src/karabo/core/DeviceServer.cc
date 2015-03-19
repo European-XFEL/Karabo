@@ -132,7 +132,7 @@ namespace karabo {
                     .description("Log Appender settings for file")
                     .displayedName("Rolling File Appender")
                     .appendParametersOfConfigurableClass<AppenderConfigurator>("RollingFile")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("Logger.rollingFile.layout")
@@ -151,14 +151,14 @@ namespace karabo {
                     .description("Log Appender settings for Network")
                     .displayedName("Network Appender")
                     .appendParametersOfConfigurableClass<AppenderConfigurator>("Network")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             NODE_ELEMENT(expected).key("Logger.ostream")
                     .description("Log Appender settings for terminal")
                     .displayedName("Ostream Appender")
                     .appendParametersOfConfigurableClass<AppenderConfigurator>("Ostream")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("Logger.ostream.layout")
@@ -173,7 +173,7 @@ namespace karabo {
                     .description("Logger category for karabo framework")
                     .displayedName("Karabo framework logger")
                     .appendParametersOfConfigurableClass<CategoryConfigurator>("Category")
-                    .advanced()
+                    .expertAccess()
                     .commit();
 
             OVERWRITE_ELEMENT(expected).key("Logger.karabo.name")
