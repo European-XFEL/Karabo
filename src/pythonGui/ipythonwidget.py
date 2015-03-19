@@ -15,7 +15,7 @@ from PyQt4 import QtCore
 
 from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
 from IPython.lib import guisupport
-from IPython.qt import kernel_mixins, util
+from IPython.qt import kernel_mixins, inprocess, util
 from IPython.kernel.inprocess.client import InProcessKernelClient
 from IPython.kernel.inprocess import channels
 
@@ -33,7 +33,6 @@ class IPythonWidget(RichIPythonWidget):
         self.kernel_manager = Manager()
         self.kernel_manager.start_kernel()
         self.kernel_client = self.kernel_manager.client()
-        self.kernel_client.start_channels()
         self.exit_requested.connect(self.stop)
 
     def stop(self):
@@ -41,7 +40,11 @@ class IPythonWidget(RichIPythonWidget):
         self.kernel_manager.shutdown_kernel()
 
 
-class Channel(channels.InProcessChannel):
+class Channel(inprocess.QtInProcessChannel):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.last = None
+
     def is_alive(self):
         return self.client.alive
 
@@ -49,46 +52,6 @@ class Channel(channels.InProcessChannel):
         if value != self.last:
             self.last = value
             self.call_handlers_later(pickle.loads(value))
-
-
-class IOPubChannel(kernel_mixins.QtIOPubChannelMixin,
-                   channels.InProcessIOPubChannel, Channel):
-    def __init__(self, client):
-        super().__init__(client)
-        self.last = None
-        self.client.device.boxvalue.iopub.signalUpdateComponent.connect(
-            self.receive)
-
-
-class ShellChannel(kernel_mixins.QtShellChannelMixin,
-                   channels.InProcessShellChannel, Channel):
-    def __init__(self, client):
-        super().__init__(client)
-        self.last = None
-        self.client.device.boxvalue.shell.signalUpdateComponent.connect(
-            self.receive)
-
-    def _dispatch_to_kernel(self, msg):
-        self.client.device.value.shell = pickle.dumps(msg)
-
-
-class StdInChannel(kernel_mixins.QtStdInChannelMixin,
-                   channels.InProcessStdInChannel, Channel):
-    def __init__(self, client):
-        super().__init__(client)
-        self.last = None
-        self.client.device.boxvalue.stdin.signalUpdateComponent.connect(
-            self.receive)
-
-    def input(self, string):
-        content = dict(value=string)
-        msg = self.client.session.msg('input_reply', content)
-        self.client.device.value.stdin = pickle.dumps(msg)
-
-
-class HBChannel(kernel_mixins.QtHBChannelMixin,
-                channels.InProcessHBChannel, Channel):
-    pass
 
 
 class Manager(kernel_mixins.QtKernelManagerMixin):
@@ -103,29 +66,43 @@ class Manager(kernel_mixins.QtKernelManagerMixin):
         return Client(self.name)
 
 
-class Client(InProcessKernelClient, util.SuperQObject,
-             metaclass=util.MetaQObjectHasTraits):
-    started_channels = QtCore.pyqtSignal()
-    stopped_channels = QtCore.pyqtSignal()
-
-    shell_channel_class = ShellChannel
-    iopub_channel_class = IOPubChannel
-    stdin_channel_class = StdInChannel
-    hb_channel_class = HBChannel
+class Client(inprocess.QtInProcessKernelClient):
+    shell_channel_class = Channel
+    iopub_channel_class = Channel
+    stdin_channel_class = Channel
+    hb_channel_class = inprocess.QtInProcessHBChannel
 
     def __init__(self, name):
         super().__init__()
         self.alive = False
+        self.started = False
         self.name = name
         self.device = manager.getDevice(self.name)
         self.device.addVisible()
         self.device.signalStatusChanged.connect(self.onStatusChanged)
+        self.device.boxvalue.iopub.signalUpdateComponent.connect(
+            self.iopub_channel.receive)
+        self.device.boxvalue.shell.signalUpdateComponent.connect(
+            self.shell_channel.receive)
+        self.device.boxvalue.stdin.signalUpdateComponent.connect(
+            self.stdin_channel.receive)
 
     def onStatusChanged(self, device, status, error):
         self.alive = status == "alive"
         if self.alive:
-            self.started_channels.emit()
+            if not self.started:
+                self.start_channels()
+                self.started = True
+                self.started_channels.emit()
+
+    def _dispatch_to_kernel(self, msg):
+        self.device.value.shell = pickle.dumps(msg)
 
     def start_channels(self):
         # magic: skip InProcessKernelClient, does stuff we don't want
         super(InProcessKernelClient, self).start_channels(self)
+
+    def input(self, string):
+        content = dict(value=string)
+        msg = self.session.msg('input_reply', content)
+        self.device.value.stdin = pickle.dumps(msg)
