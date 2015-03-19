@@ -96,7 +96,7 @@ class DisplayComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = DisplayWidget.getClass(box)(box, parent)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, parent)
         super(DisplayComponent, self).__init__(parent)
@@ -275,8 +275,7 @@ class EditableApplyLaterComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(box)(
-                                            box, self.__compositeWidget)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
         super(EditableApplyLaterComponent, self).__init__(parent)
