@@ -16,8 +16,17 @@ namespace karabo {
         using namespace boost::asio;
         using namespace karabo::util;
 
-        TcpChannel::TcpChannel(const TcpConnection::Pointer& connection) : m_connectionPointer(connection),
-        m_socket(*(connection->m_boostIoServicePointer)), m_timer(*(connection->m_boostIoServicePointer)), m_activeHandler(TcpChannel::NONE), m_readHeaderFirst(false) {
+
+        TcpChannel::TcpChannel(Connection::Pointer connection)
+        : m_connectionPointer(boost::dynamic_pointer_cast<TcpConnection>(connection))
+        , m_socket(*(m_connectionPointer->m_boostIoServicePointer))
+        , m_timer(*(m_connectionPointer->m_boostIoServicePointer))
+        , m_activeHandler(TcpChannel::NONE)
+        , m_readHeaderFirst(false)
+        , m_inboundData(new std::vector<char>())
+        , m_inboundHeader(new std::vector<char>())
+        , m_outboundData(new std::vector<char>())
+        , m_outboundHeader(new std::vector<char>()) {
             if (m_connectionPointer->m_serializationType == "binary") {
                 m_binarySerializer = karabo::io::BinarySerializer<Hash>::create("Bin");
             } else {
@@ -25,7 +34,9 @@ namespace karabo {
             }
         }
 
+
         TcpChannel::~TcpChannel() {
+            close();
         }
 
 #define _KARABO_VECTOR_TO_SIZE(x, v) {\
@@ -66,6 +77,7 @@ namespace karabo {
                 }\
                 }
 
+
         size_t TcpChannel::readSizeInBytes() {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength > 0) {
@@ -82,6 +94,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::read(char* data, const size_t& size) {
             ErrorCode error;
             boost::asio::read(m_socket, buffer(data, size), transfer_all(), error);
@@ -90,11 +103,20 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::read(std::vector<char>& data) {
             size_t nBytes = this->readSizeInBytes();
             data.resize(nBytes);
             this->read(&data[0], nBytes);
         }
+
+
+        void TcpChannel::read(boost::shared_ptr<std::vector<char> >& data) {
+            size_t nBytes = this->readSizeInBytes();
+            data->resize(nBytes);
+            this->read(&(*data)[0], nBytes);
+        }
+
 
         void TcpChannel::read(karabo::util::Hash& data) {
             std::vector<char> tmp;
@@ -105,6 +127,7 @@ namespace karabo {
                 m_binarySerializer->load(data, tmp);
             }
         }
+
 
         void TcpChannel::read(karabo::util::Hash& header, char* data, const size_t& size) {
             this->read(header);
@@ -117,6 +140,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::read(karabo::util::Hash& header, std::vector<char>& data) {
             this->read(header);
             if (header.has("__compression__")) {
@@ -127,6 +151,19 @@ namespace karabo {
                 this->read(data);
             }
         }
+
+
+        void TcpChannel::read(karabo::util::Hash& header, boost::shared_ptr<std::vector<char> >& data) {
+            this->read(header);
+            if (header.has("__compression__")) {
+                std::vector<char> compressed;
+                this->read(compressed);
+                decompress(header, compressed, *data);
+            } else {
+                this->read(*data);
+            }
+        }
+
 
         void TcpChannel::read(karabo::util::Hash& header, karabo::util::Hash& data) {
             this->read(header);
@@ -144,6 +181,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::readAsyncSizeInBytes(const ReadSizeInBytesHandler& handler) {
             size_t sizeofLength = m_connectionPointer->getSizeofLength();
             if (sizeofLength == 0) throw KARABO_LOGIC_EXCEPTION("Message's sizeTag size was configured to be 0. Thus, registration of this function does not make sense!");
@@ -152,88 +190,116 @@ namespace karabo {
                     boost::bind(&karabo::net::TcpChannel::onSizeInBytesAvailable, this, handler, boost::asio::placeholders::bytes_transferred, boost::asio::placeholders::error));
         }
 
+
         void TcpChannel::onSizeInBytesAvailable(const ReadSizeInBytesHandler& handler, const size_t bytesTransferred, const ErrorCode& error) {
             if (error) {
-                if (m_errorHandler) m_errorHandler(shared_from_this(), error);
+                if (m_errorHandler) m_errorHandler(error);
                 else throw KARABO_NETWORK_EXCEPTION(error.message());
             } else {
                 size_t messageSize;
                 _KARABO_VECTOR_TO_SIZE(m_inboundMessagePrefix, messageSize);
-                handler(shared_from_this(), messageSize);
+                handler(messageSize);
             }
         }
 
-        void TcpChannel::byteSizeAvailableHandler(Channel::Pointer channel, const size_t byteSize) {
-            m_inboundData.resize(byteSize);
-            this->readAsyncRaw(&m_inboundData[0], byteSize, boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, _1));
+
+        void TcpChannel::byteSizeAvailableHandler(const Channel::Pointer& channel, const size_t byteSize) {
+            m_inboundData->resize(byteSize);
+            this->readAsyncRaw(&(*m_inboundData)[0], byteSize, boost::bind(&karabo::net::TcpChannel::bytesAvailableHandler, this, channel));
         }
+
 
         void TcpChannel::readAsyncRaw(char* data, const size_t& size, const ReadRawHandler& handler) {
             boost::asio::async_read(m_socket, buffer(data, size), transfer_all(),
                     boost::bind(&karabo::net::TcpChannel::onBytesAvailable, this, handler, boost::asio::placeholders::error));
         }
 
+
         void TcpChannel::onBytesAvailable(const ReadRawHandler& handler, const ErrorCode& error) {
             if (error) {
-                if (m_errorHandler) m_errorHandler(shared_from_this(), error);
+                if (m_errorHandler) m_errorHandler(error);
                 else throw KARABO_NETWORK_EXCEPTION(error.message());
             } else {
-                handler(shared_from_this());
+                handler();
             }
         }
+
 
         void TcpChannel::readAsyncVector(const ReadVectorHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::VECTOR;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
+
+
+        void TcpChannel::readAsyncVectorPointer(const ReadVectorPointerHandler& handler) {
+            if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
+            m_activeHandler = TcpChannel::VECTOR_POINTER;
+            m_readHandler = handler;
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
+        }
+
 
         void TcpChannel::readAsyncString(const ReadStringHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::STRING;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
+
 
         void TcpChannel::readAsyncHash(const ReadHashHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
+
 
         void TcpChannel::readAsyncHashVector(const ReadHashVectorHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_VECTOR;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
+
+
+        void TcpChannel::readAsyncHashVectorPointer(const ReadHashVectorPointerHandler& handler) {
+            if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
+            m_activeHandler = TcpChannel::HASH_VECTOR_POINTER;
+            m_readHeaderFirst = true;
+            m_readHandler = handler;
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
+        }
+
 
         void TcpChannel::readAsyncHashString(const ReadHashStringHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_STRING;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
+
 
         void TcpChannel::readAsyncHashHash(const ReadHashHashHandler& handler) {
             if (m_activeHandler != TcpChannel::NONE) throw KARABO_NETWORK_EXCEPTION("Multiple async read: You are allowed to register only exactly one asynchronous read or write per channel.");
             m_activeHandler = TcpChannel::HASH_HASH;
             m_readHeaderFirst = true;
             m_readHandler = handler;
-            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+            this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, shared_from_this(), _1));
         }
 
-        void TcpChannel::bytesAvailableHandler(Channel::Pointer channel) {
+
+        void TcpChannel::bytesAvailableHandler(const Channel::Pointer& channel) {
 
             // Only parse header information
             if (m_readHeaderFirst) {
                 m_readHeaderFirst = false;
                 m_inboundData.swap(m_inboundHeader);
-                this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, _1, _2));
+                this->readAsyncSizeInBytes(boost::bind(&karabo::net::TcpChannel::byteSizeAvailableHandler, this, channel, _1));
                 return;
             }
 
@@ -242,32 +308,55 @@ namespace karabo {
             switch (type) {
                 case VECTOR:
                 {
-                    boost::any_cast<ReadVectorHandler>(m_readHandler) (shared_from_this(), m_inboundData);
+                    boost::any_cast<ReadVectorHandler>(m_readHandler) (*m_inboundData);
+                    break;
+                }
+                case VECTOR_POINTER:
+                {
+                    boost::shared_ptr<std::vector<char> > vec(new std::vector<char>());
+                    vec.swap(m_inboundData);
+                    boost::any_cast<ReadVectorPointerHandler>(m_readHandler) (vec);
                     break;
                 }
                 case STRING:
                 {
-                    string tmp(m_inboundData.begin(), m_inboundData.end());
-                    boost::any_cast<ReadStringHandler>(m_readHandler) (shared_from_this(), tmp);
+                    string tmp(m_inboundData->begin(), m_inboundData->end());
+                    boost::any_cast<ReadStringHandler>(m_readHandler) (tmp);
                     break;
                 }
                 case HASH:
                 {
                     Hash h;
                     this->prepareHashFromData(h);
-                    boost::any_cast<ReadHashHandler>(m_readHandler) (shared_from_this(), h);
+                    boost::any_cast<ReadHashHandler>(m_readHandler) (h);
                     break;
                 }
+
                 case HASH_VECTOR:
                 {
                     Hash header;
                     this->prepareHashFromHeader(header);
                     if (header.has("__compression__")) {
                         std::vector<char> inData;
-                        decompress(header, m_inboundData, inData);
-                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (shared_from_this(), header, inData);
+                        decompress(header, *m_inboundData, inData);
+                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, inData);
                     } else
-                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (shared_from_this(), header, m_inboundData);
+                        boost::any_cast<ReadHashVectorHandler>(m_readHandler) (header, *m_inboundData);
+                    break;
+                }
+                case HASH_VECTOR_POINTER:
+                {
+                    Hash header;
+                    this->prepareHashFromHeader(header);
+                    if (header.has("__compression__")) {
+                        boost::shared_ptr<std::vector<char> > inData(new std::vector<char>());
+                        decompress(header, *m_inboundData, *inData);
+                        boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (header, inData);
+                    } else {
+                        boost::shared_ptr<std::vector<char> > vec(new std::vector<char>());
+                        vec.swap(m_inboundData);
+                        boost::any_cast<ReadHashVectorPointerHandler>(m_readHandler) (header, vec);
+                    }
                     break;
                 }
 
@@ -277,10 +366,10 @@ namespace karabo {
                     this->prepareHashFromHeader(header);
                     string tmp;
                     if (header.has("__compression__"))
-                        decompress(header, m_inboundData, tmp);
+                        decompress(header, *m_inboundData, tmp);
                     else
-                        tmp.assign(m_inboundData.begin(), m_inboundData.end());
-                    boost::any_cast<ReadHashStringHandler>(m_readHandler) (shared_from_this(), header, tmp);
+                        tmp.assign(m_inboundData->begin(), m_inboundData->end());
+                    boost::any_cast<ReadHashStringHandler>(m_readHandler) (header, tmp);
                     break;
                 }
 
@@ -289,19 +378,20 @@ namespace karabo {
                     Hash header;
                     this->prepareHashFromHeader(header);
                     if (header.has("__compression__")) {
-                        std::vector<char> tmp(m_inboundData.begin(), m_inboundData.end());
-                        m_inboundData.clear();
-                        decompress(header, tmp, m_inboundData);
+                        boost::shared_ptr<std::vector<char> > tmp(new std::vector<char>());
+                        tmp.swap(m_inboundData);
+                        decompress(header, *tmp, *m_inboundData);
                     }
                     Hash body;
                     this->prepareHashFromData(body);
-                    boost::any_cast<ReadHashHashHandler>(m_readHandler) (shared_from_this(), header, body);
+                    boost::any_cast<ReadHashHashHandler>(m_readHandler) (header, body);
                     break;
                 }
                 default:
                     throw KARABO_LOGIC_EXCEPTION("Bad internal error regarding asynchronous read handlers, contact BH or SE");
             }
         }
+
 
         void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, char* data, const size_t& size) {
             if (header.get<string>("__compression__") == "snappy") {
@@ -311,6 +401,7 @@ namespace karabo {
             header.erase("__compression__");
         }
 
+
         void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, std::vector<char>& target) {
             if (header.get<string>("__compression__") == "snappy") {
                 decompressSnappy(&source[0], source.size(), target);
@@ -318,6 +409,7 @@ namespace karabo {
                 throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
             header.erase("__compression__");
         }
+
 
         void TcpChannel::decompress(karabo::util::Hash& header, const std::vector<char>& source, std::string& target) {
             if (header.get<string>("__compression__") == "snappy") {
@@ -328,6 +420,7 @@ namespace karabo {
                 throw KARABO_MESSAGE_EXCEPTION("Unsupported compression algorithm: \"" + header.get<string>("__compression__") + "\".");
             header.erase("__compression__");
         }
+
 
         void TcpChannel::decompressSnappy(const char* compressed, size_t compressed_length, char* data, const size_t& size) {
             // Get uncompressed length
@@ -345,6 +438,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& target) {
             // Get uncompressed length
             size_t uncompressedLength;
@@ -359,6 +453,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const char* source, const size_t& source_length, std::vector<char>& target) {
             if (cmprs == "snappy")
                 compressSnappy(source, source_length, target);
@@ -367,15 +462,18 @@ namespace karabo {
             header.set("__compression__", cmprs);
         }
 
+
         void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const std::string& source, std::string& target) {
             std::vector<char> compressed;
             compress(header, cmprs, source.c_str(), source.size(), compressed);
             target.assign(compressed.begin(), compressed.end());
         }
 
+
         void TcpChannel::compress(karabo::util::Hash& header, const std::string& cmprs, const std::vector<char>& source, std::vector<char>& target) {
             compress(header, cmprs, &source[0], source.size(), target);
         }
+
 
         void TcpChannel::compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target) {
             size_t maxlen = snappy::MaxCompressedLength(source_length);
@@ -384,6 +482,7 @@ namespace karabo {
             snappy::RawCompress(source, source_length, &target[0], &compressed_length);
             target.resize(compressed_length);
         }
+
 
         void TcpChannel::write(const char* data, const size_t& size) {
             try {
@@ -399,13 +498,14 @@ namespace karabo {
                 boost::asio::write(m_socket, buf, transfer_all(), error);
 
                 if (!error) return;
-                else if (m_errorHandler) m_errorHandler(shared_from_this(), error);
+                else if (m_errorHandler) m_errorHandler(error);
                 else throw KARABO_NETWORK_EXCEPTION(error.message());
 
             } catch (...) {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpChannel::write(const karabo::util::Hash& data) {
             try {
@@ -422,6 +522,7 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpChannel::write(const karabo::util::Hash& header, const karabo::util::Hash& body) {
             try {
@@ -459,6 +560,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::write(const karabo::util::Hash& header, const char* data, const size_t& size) {
             try {
                 size_t sizeofLength = m_connectionPointer->getSizeofLength();
@@ -495,6 +597,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::write(const char* header, const size_t& headerSize, const char* body, const size_t& bodySize) {
             try {
                 boost::system::error_code error; //in case of error
@@ -512,7 +615,7 @@ namespace karabo {
                 buf.push_back(buffer(body, bodySize));
                 boost::asio::write(m_socket, buf, transfer_all(), error);
                 if (error) {
-                    if (m_errorHandler) m_errorHandler(shared_from_this(), error);
+                    if (m_errorHandler) m_errorHandler(error);
                     else throw KARABO_NETWORK_EXCEPTION(error.message());
                 }
             } catch (...) {
@@ -522,38 +625,41 @@ namespace karabo {
 
         // asynchronous write
 
+
         void TcpChannel::managedWriteAsync(const WriteCompleteHandler& handler) {
             try {
                 size_t sizeofLength = m_connectionPointer->getSizeofLength();
                 vector<const_buffer> buf;
                 if (sizeofLength > 0) {
-                    size_t s = m_outboundData.size();
+                    size_t s = m_outboundData->size();
                     _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, s);
                     buf.push_back(buffer(m_outboundMessagePrefix));
                 }
-                buf.push_back(buffer(m_outboundData));
+                buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
+
         void TcpChannel::managedWriteAsyncWithHeader(const WriteCompleteHandler& handler) {
             try {
-                size_t hsize = m_outboundHeader.size(); // Header size
-                size_t dsize = m_outboundData.size(); // Data size
+                size_t hsize = m_outboundHeader->size(); // Header size
+                size_t dsize = m_outboundData->size(); // Data size
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, hsize);
                 _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, dsize);
                 vector<const_buffer> buf;
                 buf.push_back(buffer(m_outboundHeaderPrefix));
-                buf.push_back(buffer(m_outboundHeader));
+                buf.push_back(buffer(*m_outboundHeader));
                 buf.push_back(buffer(m_outboundMessagePrefix));
-                buf.push_back(buffer(m_outboundData));
+                buf.push_back(buffer(*m_outboundData));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpChannel::unmanagedWriteAsync(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
@@ -570,15 +676,16 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::unmanagedWriteAsyncWithHeader(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
-                size_t hsize = m_outboundHeader.size(); // Header size
-                size_t dsize = m_outboundData.size(); // Data size
+                size_t hsize = m_outboundHeader->size(); // Header size
+                size_t dsize = m_outboundData->size(); // Data size
                 _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, hsize);
                 _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, dsize);
                 vector<const_buffer> buf;
                 buf.push_back(buffer(m_outboundHeaderPrefix));
-                buf.push_back(buffer(m_outboundHeader));
+                buf.push_back(buffer(*m_outboundHeader));
                 buf.push_back(buffer(m_outboundMessagePrefix));
                 buf.push_back(buffer(data, size));
                 boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler, this, handler, boost::asio::placeholders::error));
@@ -587,47 +694,63 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::prepareHeaderFromHash(const karabo::util::Hash& hash) {
             if (m_textSerializer) {
                 string archive;
                 m_textSerializer->save(hash, archive);
-                m_outboundHeader.assign(archive.begin(), archive.end());
+                m_outboundHeader->assign(archive.begin(), archive.end());
             } else {
-                m_binarySerializer->save(hash, m_outboundHeader);
+                m_binarySerializer->save(hash, *m_outboundHeader);
             }
         }
 
+
         void TcpChannel::prepareHashFromHeader(karabo::util::Hash& hash) const {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &m_inboundHeader[0], m_inboundHeader.size());
+                m_textSerializer->load(hash, &(*m_inboundHeader)[0], m_inboundHeader->size());
             } else {
-                m_binarySerializer->load(hash, m_inboundHeader);
+                m_binarySerializer->load(hash, *m_inboundHeader);
             }
         }
+
 
         void TcpChannel::prepareDataFromHash(const karabo::util::Hash& hash) {
             if (m_textSerializer) {
                 string archive;
                 m_textSerializer->save(hash, archive);
-                m_outboundData.assign(archive.begin(), archive.end());
+                m_outboundData->assign(archive.begin(), archive.end());
             } else {
-                m_binarySerializer->save(hash, m_outboundData);
+                m_binarySerializer->save(hash, *m_outboundData);
             }
         }
 
-        void TcpChannel::prepareHashFromData(karabo::util::Hash& hash) const {
+
+        void TcpChannel::prepareDataFromHash(const karabo::util::Hash& hash, boost::shared_ptr<std::vector<char> >& dataPtr) {
             if (m_textSerializer) {
-                m_textSerializer->load(hash, &m_inboundData[0], m_inboundData.size());
+                string archive;
+                m_textSerializer->save(hash, archive);
+                dataPtr->assign(archive.begin(), archive.end());
             } else {
-                m_binarySerializer->load(hash, m_inboundData);
+                m_binarySerializer->save(hash, *dataPtr);
             }
         }
+
+
+        void TcpChannel::prepareHashFromData(karabo::util::Hash& hash) const {
+            if (m_textSerializer) {
+                m_textSerializer->load(hash, &(*m_inboundData)[0], m_inboundData->size());
+            } else {
+                m_binarySerializer->load(hash, *m_inboundData);
+            }
+        }
+
 
         void TcpChannel::writeAsyncRaw(const char* data, const size_t& size, const WriteCompleteHandler& handler) {
             try {
                 if (m_connectionPointer->m_manageAsyncData) {
-                    m_outboundData.resize(size);
-                    std::memcpy(&m_outboundData[0], data, size);
+                    m_outboundData->resize(size);
+                    std::memcpy(&(*m_outboundData)[0], data, size);
                     this->managedWriteAsync(handler);
                 } else {
                     this->unmanagedWriteAsync(data, size, handler);
@@ -637,6 +760,7 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::writeAsyncVector(const vector<char>& data, const Channel::WriteCompleteHandler& handler) {
             try {
                 this->writeAsyncRaw(&data[0], data.size(), handler);
@@ -645,22 +769,48 @@ namespace karabo {
             }
         }
 
-        void TcpChannel::writeAsyncHash(const Hash& data, const Channel::WriteCompleteHandler& handler) {
+
+        void TcpChannel::writeAsyncVectorPointer(const boost::shared_ptr<vector<char> >& dataPtr,
+                                                 const Channel::WriteCompleteHandler& handler) {
             try {
-                this->prepareDataFromHash(data);
-                this->managedWriteAsync(handler);
+                if (!dataPtr)
+                    throw KARABO_PARAMETER_EXCEPTION("Input parameter dataPtr is uninitialized shared pointer.");
+                vector<const_buffer> buf;
+                size_t sizeofLength = m_connectionPointer->getSizeofLength();
+                if (sizeofLength > 0) {
+                    const size_t size = dataPtr->size();
+                    _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, size);
+                    buf.push_back(buffer(m_outboundMessagePrefix));
+                }
+                buf.push_back(buffer(*dataPtr));
+                boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler,
+                                                                    this, handler, dataPtr,
+                                                                    boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
-        void TcpChannel::writeAsyncHashRaw(const karabo::util::Hash& header, const char* data, const size_t& size, const WriteCompleteHandler& handler) {
+
+        void TcpChannel::writeAsyncHash(const Hash& hash, const Channel::WriteCompleteHandler& handler) {
+            try {
+                boost::shared_ptr<std::vector<char> > dataPtr(new std::vector<char>());
+                this->prepareDataFromHash(hash, dataPtr);
+                this->writeAsyncVectorPointer(dataPtr, handler);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void TcpChannel::writeAsyncHashRaw(const karabo::util::Hash& header, const char* data,
+                                           const size_t& size, const WriteCompleteHandler& handler) {
             try {
                 if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(size)) {
                     Hash hdr = header;
                     if (m_connectionPointer->m_manageAsyncData) {
-                        m_outboundData.clear();
-                        compress(hdr, m_connectionPointer->m_compression, data, size, m_outboundData); // from "data,size" to "m_outboundData" (compressed data)
+                        m_outboundData->clear();
+                        compress(hdr, m_connectionPointer->m_compression, data, size, *m_outboundData); // from "data,size" to "m_outboundData" (compressed data)
                         this->prepareHeaderFromHash(hdr);
                         this->managedWriteAsyncWithHeader(handler);
                     } else {
@@ -671,8 +821,8 @@ namespace karabo {
                 } else {
                     this->prepareHeaderFromHash(header);
                     if (m_connectionPointer->m_manageAsyncData) {
-                        m_outboundData.resize(size);
-                        std::memcpy(&m_outboundData[0], data, size);
+                        m_outboundData->resize(size);
+                        std::memcpy(&(*m_outboundData)[0], data, size);
                         this->managedWriteAsyncWithHeader(handler);
                     } else {
                         this->unmanagedWriteAsyncWithHeader(data, size, handler);
@@ -683,7 +833,9 @@ namespace karabo {
             }
         }
 
-        void TcpChannel::writeAsyncHashVector(const Hash& header, const std::vector<char>& data, const Channel::WriteCompleteHandler& handler) {
+
+        void TcpChannel::writeAsyncHashVector(const Hash& header, const std::vector<char>& data,
+                                              const Channel::WriteCompleteHandler& handler) {
             try {
                 this->writeAsyncHashRaw(header, &data[0], data.size(), handler);
             } catch (...) {
@@ -691,34 +843,73 @@ namespace karabo {
             }
         }
 
-        void TcpChannel::writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& data, const WriteCompleteHandler& handler) {
+
+        void TcpChannel::writeAsyncHeaderBodyImpl(const boost::shared_ptr<std::vector<char> >& header,
+                                                  const boost::shared_ptr<std::vector<char> >& body,
+                                                  const Channel::WriteCompleteHandler& handler) {
             try {
-                this->prepareDataFromHash(data);
-                if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(m_outboundData.size())) {
-                    Hash hdr = header; // copy header to be able to change it
-                    std::vector<char> tmp;
-                    tmp.swap(m_outboundData);
-                    compress(hdr, m_connectionPointer->m_compression, tmp, m_outboundData);
-                    this->prepareHeaderFromHash(hdr);
-                } else {
-                    this->prepareHeaderFromHash(header);
-                }
-                this->managedWriteAsyncWithHeader(handler);
+                size_t hsize = header->size(); // Header size
+                size_t dsize = body->size(); // Data size
+                _KARABO_SIZE_TO_VECTOR(m_outboundHeaderPrefix, hsize);
+                _KARABO_SIZE_TO_VECTOR(m_outboundMessagePrefix, dsize);
+                vector<const_buffer> buf;
+                buf.push_back(buffer(m_outboundHeaderPrefix));
+                buf.push_back(buffer(*header));
+                buf.push_back(buffer(m_outboundMessagePrefix));
+                buf.push_back(buffer(*body));
+                boost::asio::async_write(m_socket, buf, boost::bind(&TcpChannel::asyncWriteHandler,
+                                                                    this, handler, header, body,
+                                                                    boost::asio::placeholders::error));
             } catch (...) {
                 KARABO_RETHROW
             }
         }
 
+
+        void TcpChannel::writeAsyncHashVectorPointer(const karabo::util::Hash& header,
+                                                     const boost::shared_ptr<std::vector<char> >& data,
+                                                     const Channel::WriteCompleteHandler& handler) {
+            try {
+                if (!data)
+                    throw KARABO_PARAMETER_EXCEPTION("Input parameter dataPtr is uninitialized shared pointer.");
+                boost::shared_ptr<std::vector<char> > headerPtr(new std::vector<char>());
+                if (m_connectionPointer->m_compressionUsageThreshold >= 0 && m_connectionPointer->m_compressionUsageThreshold < int(data->size())) {
+                    Hash hdr = header;
+                    m_outboundData->clear();
+                    compress(hdr, m_connectionPointer->m_compression, *data, *m_outboundData);
+                    this->prepareDataFromHash(hdr, headerPtr);
+                    writeAsyncHeaderBodyImpl(headerPtr, m_outboundData, handler);
+                } else {
+                    this->prepareDataFromHash(header, headerPtr);
+                    writeAsyncHeaderBodyImpl(headerPtr, data, handler);
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void TcpChannel::writeAsyncHashHash(const karabo::util::Hash& header, const karabo::util::Hash& hash, const WriteCompleteHandler& handler) {
+            try {
+                boost::shared_ptr<std::vector<char> > dataPtr(new std::vector<char>());
+                this->prepareDataFromHash(hash, dataPtr);
+                this->writeAsyncHashVectorPointer(header, dataPtr, handler);
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
         void TcpChannel::asyncWriteHandler(const Channel::WriteCompleteHandler& handler, const ErrorCode& e) {
             try {
                 if (!e) {
                     try {
-                        handler(shared_from_this());
+                        handler();
                     } catch (...) {
                         KARABO_RETHROW
                     }
                 } else if (m_errorHandler) {
-                    m_errorHandler(shared_from_this(), e);
+                    m_errorHandler(e);
                 } else {
                     throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
@@ -726,6 +917,50 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
+
+        void TcpChannel::asyncWriteHandler(const Channel::WriteCompleteHandler& handler,
+                                           const boost::shared_ptr<std::vector<char> >& body,
+                                           const ErrorCode& e) {
+            try {
+                if (!e) {
+                    try {
+                        handler();
+                    } catch (...) {
+                        KARABO_RETHROW
+                    }
+                } else if (m_errorHandler) {
+                    m_errorHandler(e);
+                } else {
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+
+        void TcpChannel::asyncWriteHandler(const Channel::WriteCompleteHandler& handler,
+                                           const boost::shared_ptr<std::vector<char> >& header,
+                                           const boost::shared_ptr<std::vector<char> >& body,
+                                           const ErrorCode& e) {
+            try {
+                if (!e) {
+                    try {
+                        handler();
+                    } catch (...) {
+                        KARABO_RETHROW
+                    }
+                } else if (m_errorHandler) {
+                    m_errorHandler(e);
+                } else {
+                    throw KARABO_NETWORK_EXCEPTION(e.message());
+                }
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
 
         void TcpChannel::waitAsync(int millisecs, const WaitHandler& handler, const std::string& id) {
             try {
@@ -736,16 +971,17 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::asyncWaitHandler(const Channel::WaitHandler& handler, const std::string& id, const ErrorCode& e) {
             try {
                 if (!e) {
                     try {
-                        handler(shared_from_this(), id);
+                        handler(id);
                     } catch (...) {
                         KARABO_RETHROW
                     }
                 } else if (m_errorHandler) {
-                    m_errorHandler(shared_from_this(), e);
+                    m_errorHandler(e);
                 } else {
                     throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
@@ -754,14 +990,15 @@ namespace karabo {
             }
         }
 
+
         void TcpChannel::close() {
             try {
                 m_socket.close();
-                m_connectionPointer->unregisterChannel(shared_from_this());
             } catch (...) {
                 KARABO_RETHROW
             }
         }
+
 
         bool TcpChannel::isOpen() {
             return m_socket.is_open();

@@ -25,6 +25,7 @@ using namespace karabo::util;
 namespace karabo {
     namespace net {
 
+
         KARABO_REGISTER_FOR_CONFIGURATION(Connection, TcpConnection)
 
         void TcpConnection::expectedParameters(karabo::util::Schema& expected) {
@@ -99,6 +100,7 @@ namespace karabo {
                     .commit();
         }
 
+
         TcpConnection::TcpConnection(const karabo::util::Hash& input)
         : Connection(input)
         , m_boostIoServicePointer()
@@ -114,6 +116,7 @@ namespace karabo {
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
             input.get("compression", m_compression);
         }
+
 
         Channel::Pointer TcpConnection::start() {
 
@@ -150,6 +153,7 @@ namespace karabo {
             }
         }
 
+
         Channel::Pointer TcpConnection::startServer() {
             Channel::Pointer new_channel;
             try {
@@ -162,6 +166,7 @@ namespace karabo {
             }
             return new_channel;
         }
+
 
         Channel::Pointer TcpConnection::startClient() {
             Channel::Pointer new_channel;
@@ -177,6 +182,7 @@ namespace karabo {
             }
             return new_channel;
         }
+
 
         void TcpConnection::startAsync(const ConnectionHandler& handler) {
 
@@ -214,6 +220,7 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::startServer(const ConnectionHandler& handler) {
             try {
                 Channel::Pointer new_channel = this->createChannel();
@@ -225,18 +232,22 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::acceptHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             if (!e) {
+                {
                 TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
                 KARABO_LOG_FRAMEWORK_DEBUG << "Accepted new connection: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
+                }
                 handler(channel);
             } else {
                 if (m_errorHandler)
-                    m_errorHandler(channel, e);
+                    m_errorHandler(e);
                 else
                     throw KARABO_NETWORK_EXCEPTION(e.message());
             }
         }
+
 
         void TcpConnection::startClient(const ConnectionHandler& handler) {
             try {
@@ -247,6 +258,7 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
+
 
         void TcpConnection::resolveHandler(const ConnectionHandler& handler, const ErrorCode& e, ip::tcp::resolver::iterator it) {
             try {
@@ -263,15 +275,18 @@ namespace karabo {
             }
         }
 
-        void TcpConnection::connectHandler(Channel::Pointer channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
+
+        void TcpConnection::connectHandler(const Channel::Pointer& channel, const ConnectionHandler& handler, const boost::system::error_code& e) {
             try {
                 if (!e) {
+                    {
                     TcpChannel::Pointer tc = boost::static_pointer_cast<TcpChannel > (channel);
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connected to: " << tc->socket().remote_endpoint().address() << ":" << tc->socket().remote_endpoint().port();
+                    }
                     handler(channel);
                 } else {
                     if (m_errorHandler)
-                        m_errorHandler(channel, e);
+                        m_errorHandler(e);
                     else
                         throw KARABO_NETWORK_EXCEPTION(e.message());
                 }
@@ -280,19 +295,15 @@ namespace karabo {
             }
         }
 
+
         void TcpConnection::stop() {
             if (m_connectionType == "server")
                 m_acceptor->close();
-
-            this->closeAllChannels();
-
-            // Think about stopping service
-            //m_boost_io_service->stop();
         }
 
+
         ChannelPointer TcpConnection::createChannel() {
-            ChannelPointer channel(new TcpChannel(shared_from_this()));
-            registerChannel(channel);
+            ChannelPointer channel(new TcpChannel(this->getConnectionPointer()));
             return channel;
         }
     }

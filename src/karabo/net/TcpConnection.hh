@@ -46,7 +46,7 @@ namespace karabo {
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
-        class TcpConnection : public Connection, public boost::enable_shared_from_this<TcpConnection>{
+        class TcpConnection : public Connection {
 
             friend class TcpChannel;
 
@@ -94,7 +94,7 @@ namespace karabo {
 
             void resolveHandler(const ConnectionHandler&, const ErrorCode&, boost::asio::ip::tcp::resolver::iterator);
             void acceptHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
-            void connectHandler(ChannelPointer, const ConnectionHandler&, const ErrorCode&);
+            void connectHandler(const ChannelPointer&, const ConnectionHandler&, const ErrorCode&);
             ChannelPointer startServer();
             ChannelPointer startClient();
             void startServer(const ConnectionHandler&);

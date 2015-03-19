@@ -50,17 +50,6 @@ namespace karabo {
             m_service->setService(serviceType);
         }
 
-        void Connection::closeAllChannels() {
-            // create local copy on stack to avoid deadlock
-            std::vector<ChannelPointer> vec(m_channels.size());
-            {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                std::copy(m_channels.begin(), m_channels.end(), vec.begin());
             }
-            // close all channels
-            for (std::vector<ChannelPointer>::iterator it = vec.begin(); it != vec.end(); ++it) (*it)->close();
         }
-
-    }
-}
 

@@ -32,14 +32,14 @@ namespace karabo {
 
         class Channel;
         
-        typedef boost::function<void (boost::shared_ptr<Channel>, const ErrorCode&) > ErrorHandler;
+        typedef boost::function<void (const ErrorCode&) > ErrorHandler;
 
         /**
          * The Connection class.
          * This class serves as the interface for all connections.
          * A connection is only established upon call of the start() function.
          */
-        class Connection {
+        class Connection : public boost::enable_shared_from_this<Connection> {
 
             friend class Channel;
             
@@ -52,7 +52,7 @@ namespace karabo {
             KARABO_CLASSINFO(Connection, "Connection", "1.0")
             KARABO_CONFIGURATION_BASE_CLASS
 
-            typedef boost::function<void (ChannelPointer) > ConnectionHandler;
+            typedef boost::function<void (const ChannelPointer&) > ConnectionHandler;
 
             virtual ~Connection() {
             }
@@ -106,34 +106,17 @@ namespace karabo {
 
         protected: // functions
 
-            void registerChannel(ChannelPointer channel) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                m_channels.insert(channel);
-            }
-
             void setIOServiceType(const std::string& serviceType);
 
+            boost::shared_ptr<Connection> getConnectionPointer() {
+                return shared_from_this();
+            }
 
         protected: // members
 
             IOService::Pointer m_service;
             ErrorHandler m_errorHandler;
             std::string m_serializationType;
-
-            void unregisterChannel(ChannelPointer channel) {
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                std::set<ChannelPointer>::iterator it = m_channels.find(channel);
-                if (it != m_channels.end()) {
-                    m_channels.erase(it);
-                }
-            }
-
-            void closeAllChannels();
-
-        private: // members
-
-            std::set<ChannelPointer> m_channels;
-            boost::mutex m_channelMutex;
 
         };
 

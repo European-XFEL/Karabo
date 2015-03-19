@@ -130,8 +130,8 @@ namespace karabo {
         void GuiServerDevice::onConnect(karabo::net::Channel::Pointer channel) {
             try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "Incoming connection";
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2));
-                channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
+                channel->setErrorHandler(boost::bind(&karabo::core::GuiServerDevice::onError, this, channel, _1));
                 // Re-register acceptor socket (allows handling multiple clients)
                 m_dataConnection->startAsync(boost::bind(&karabo::core::GuiServerDevice::onConnect, this, _1));
                 registerConnect(channel);
@@ -154,7 +154,7 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info) {
+        void GuiServerDevice::onRead(karabo::net::Channel::Pointer channel, karabo::util::Hash& info) {
             try {
                 // GUI communication scenarios
                 if (info.has("type")) {
@@ -201,7 +201,7 @@ namespace karabo {
                 } else {
                     KARABO_LOG_WARN << "Ignoring request";
                 }
-                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, _1, _2));
+                channel->readAsyncHash(boost::bind(&karabo::core::GuiServerDevice::onRead, this, channel, _1));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onRead(): " << e.userFriendlyMsg();
             }
