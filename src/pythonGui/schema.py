@@ -23,6 +23,7 @@ import globals
 from treewidgetitems.commandtreewidgetitem import CommandTreeWidgetItem
 from treewidgetitems.imagetreewidgetitem import ImageTreeWidgetItem
 from treewidgetitems.propertytreewidgetitem import PropertyTreeWidgetItem
+from widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import QObject, pyqtSignal, pyqtSlot
 
@@ -274,7 +275,8 @@ class Type(hashtypes.Type, metaclass=Monkey):
             if self.accessMode is AccessMode.RECONFIGURABLE:
                 component = EditableApplyLaterComponent
         if component is not None:
-            item.editableComponent = component(None, box, treeWidget)
+            factory = EditableWidget.getClass(box)(box, treeWidget)
+            item.editableComponent = component(factory, box, treeWidget)
         if component is EditableApplyLaterComponent:
             item.editableComponent.signalApplyChanged.connect(
                 treeWidget.onApplyChanged)
