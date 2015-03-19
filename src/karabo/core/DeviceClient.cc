@@ -27,8 +27,9 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
+        , m_masterMode(NO_MASTER)
         , m_getOlder(true)
-        , m_masterMode(NO_MASTER) {
+        {
 
             std::string ownInstanceId = generateOwnInstanceId();
             karabo::xms::SignalSlotable::Pointer p(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -48,8 +49,9 @@ namespace karabo {
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
+        , m_masterMode(NO_MASTER)
         , m_getOlder(true)
-        , m_masterMode(NO_MASTER) {
+        {
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
