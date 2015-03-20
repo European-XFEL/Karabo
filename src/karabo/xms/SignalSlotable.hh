@@ -53,9 +53,15 @@ namespace karabo {
          *
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
+           
+            // Performance statistics
+            mutable boost::mutex m_latencyMutex;
+            std::pair<int, int> m_brokerLatency;
+            std::pair<int, int> m_processingLatency;
+            
 
         protected:
-            
+
             class Requestor {
                 SignalSlotable* m_signalSlotable;
                 std::string m_replyId;
@@ -98,9 +104,8 @@ namespace karabo {
                     sendRequest(prepareHeader(slotInstanceId, slotFunction), karabo::util::Hash("a1", a1, "a2", a2, "a3", a3, "a4", a4));
                     return *this;
                 }
-                
+
                 // TODO: Add another API layer, which is called execute and does synchronous slot execution
-                
 
                 Requestor& requestNoWait(
                         const std::string& requestSlotInstanceId,
@@ -163,17 +168,17 @@ namespace karabo {
 
                 template <class A1, class A2>
                 void receiveAsync(const boost::function<void (const A1&, const A2&) >& replyCallback) {
-                    m_signalSlotable->registerSlot<A1,A2>(replyCallback, m_replyId);
+                    m_signalSlotable->registerSlot<A1, A2>(replyCallback, m_replyId);
                 }
 
                 template <class A1, class A2, class A3>
                 void receiveAsync(const boost::function<void (const A1&, const A2&, const A3&) >& replyCallback) {
-                    m_signalSlotable->registerSlot<A1,A2,A3>(replyCallback, m_replyId);
+                    m_signalSlotable->registerSlot<A1, A2, A3>(replyCallback, m_replyId);
                 }
 
                 template <class A1, class A2, class A3, class A4>
                 void receiveAsync(const boost::function<void (const A1&, const A2&, const A3&, const A4&) >& replyCallback) {
-                    m_signalSlotable->registerSlot<A1,A2,A3,A4>(replyCallback, m_replyId);
+                    m_signalSlotable->registerSlot<A1, A2, A3, A4>(replyCallback, m_replyId);
                 }
 
                 class Receiver {
@@ -183,11 +188,15 @@ namespace karabo {
                     virtual void inner(karabo::util::Hash::Pointer) = 0;
                 };
 
-                class Receiver0: public Receiver {
+                class Receiver0 : public Receiver {
                 public:
-                    Receiver0() { }
+
+                    Receiver0() {
+                    }
                 protected:
-                    virtual void inner(karabo::util::Hash::Pointer) { }
+
+                    virtual void inner(karabo::util::Hash::Pointer) {
+                    }
                 };
 
                 void receive() {
@@ -200,9 +209,12 @@ namespace karabo {
                     A1 &m_a1;
 
                 public:
-                    Receiver1(A1 &a1): m_a1(a1) { }
+
+                    Receiver1(A1 &a1) : m_a1(a1) {
+                    }
 
                 protected:
+
                     virtual void inner(karabo::util::Hash::Pointer body) {
                         m_a1 = body->get<A1>("a1");
                     }
@@ -220,9 +232,12 @@ namespace karabo {
                     A2 &m_a2;
 
                 public:
-                    Receiver2(A1 &a1, A2 &a2): m_a1(a1), m_a2(a2) { }
+
+                    Receiver2(A1 &a1, A2 &a2) : m_a1(a1), m_a2(a2) {
+                    }
 
                 protected:
+
                     virtual void inner(karabo::util::Hash::Pointer body) {
                         m_a1 = body->get<A1>("a1");
                         m_a2 = body->get<A2>("a2");
@@ -242,9 +257,12 @@ namespace karabo {
                     A3 &m_a3;
 
                 public:
-                    Receiver3(A1 &a1, A2 &a2, A3 &a3): m_a1(a1), m_a2(a2), m_a3(a3) { }
+
+                    Receiver3(A1 &a1, A2 &a2, A3 &a3) : m_a1(a1), m_a2(a2), m_a3(a3) {
+                    }
 
                 protected:
+
                     virtual void inner(karabo::util::Hash::Pointer body) {
                         m_a1 = body->get<A1>("a1");
                         m_a2 = body->get<A2>("a2");
@@ -266,9 +284,12 @@ namespace karabo {
                     A4 &m_a4;
 
                 public:
-                    Receiver4(A1 &a1, A2 &a2, A3 &a3, A4 &a4): m_a1(a1), m_a2(a2), m_a3(a3), m_a4(a4) { }
+
+                    Receiver4(A1 &a1, A2 &a2, A3 &a3, A4 &a4) : m_a1(a1), m_a2(a2), m_a3(a3), m_a4(a4) {
+                    }
 
                 protected:
+
                     virtual void inner(karabo::util::Hash::Pointer body) {
                         m_a1 = body->get<A1>("a1");
                         m_a2 = body->get<A2>("a2");
@@ -328,7 +349,7 @@ namespace karabo {
             typedef boost::function<void (const std::string& /*instanceId*/, const karabo::util::Hash& /*instanceInfo*/) > InstanceNewHandler;
             typedef boost::function<void (const karabo::util::Exception& /*exception*/) > ExceptionHandler;
             typedef boost::function<bool (const std::string& /*slotFunction*/, std::string& /*errorMessage*/) > SlotCallGuardHandler;
-            typedef boost::function<void ()> UpdateLatenciesHandler;
+            typedef boost::function<void (float /*brokerLatency*/, float /*processingLatency*/, unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
             typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
@@ -430,17 +451,14 @@ namespace karabo {
             InstanceAvailableAgainHandler m_instanceAvailableAgainHandler;
             SlotCallGuardHandler m_slotCallGuardHandler;
             ExceptionHandler m_exceptionHandler;
-            UpdateLatenciesHandler m_updateLatencies;
-            
-            // Thresholds for warnings that messages are traveling slow (signal -> broker -> slot)
-            long long m_brokerLatency;
-            long long m_processingLatency;
+            UpdatePerformanceStatisticsHandler m_updatePerformanceStatistics;
+
+
+
 
         public:
 
             KARABO_CLASSINFO(SignalSlotable, "SignalSlotable", "1.0")
-
-            typedef boost::function<void (const std::string&) > ExpireHandler;
 
             /**
              * Slots may be of two different types:
@@ -507,7 +525,7 @@ KARABO_SIGNAL2(__VA_ARGS__), \
 KARABO_SIGNAL1(__VA_ARGS__), \
 KARABO_SIGNAL0(__VA_ARGS__) \
 )
-            
+
             #define KARABO_SLOT(...) \
 _KARABO_SLOT_N(,##__VA_ARGS__, \
 KARABO_SLOT4(__VA_ARGS__), \
@@ -621,8 +639,8 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
 
             void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
-            
-            void registerUpdateLatenciesHandler(const UpdateLatenciesHandler& updateLatenciesHandler);
+
+            void registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler);
 
             karabo::net::BrokerConnection::Pointer getConnection() const;
 
@@ -1194,15 +1212,6 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 return std::string(tokens[0] + "_" + T::classInfo().getClassId() + "_" + karabo::util::toString(getpid()));
             }
 
-            void startTimer(int milliseconds, const ExpireHandler& handler, const std::string& id);
-
-            void killTimer(const std::string& id);
-
-            void setThresholds(const long long& brokerThreshold, const long long& processingThreshold) {
-                m_brokerLatency = brokerThreshold <= 0 ? 10000LL : brokerThreshold;
-                m_processingLatency = processingThreshold <= 0 ? 15000LL : processingThreshold;
-            }
-
         protected: // Functions
 
             void startEmittingHeartbeats(const int heartbeatInterval);
@@ -1353,7 +1362,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             // Thread-safe, locks m_signalSlotInstancesMutex
             SlotInstancePointer getLocalSlot(const std::string& slotFunction) const;
-            
+
             // Thread-safe, locks m_signalSlotInstancesMutex
             void removeLocalSlot(const std::string& slotFunction);
 
@@ -1371,19 +1380,13 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
-
-            void asyncTimerHandler(const std::string& id);
-
+            
             long long getEpochMillis() {
                 timespec ts;
                 clock_gettime(CLOCK_REALTIME, &ts);
                 long long milliseconds = ts.tv_sec * 1000 + ts.tv_nsec / 1000000L;
                 return milliseconds;
             }
-
-        private:
-            mutable boost::mutex m_timerMutex;
-            std::map<std::string, ExpireHandler> m_timerHandlers;
         };
     }
 }
