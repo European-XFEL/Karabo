@@ -32,6 +32,7 @@ namespace karabo {
         using namespace karabo::net;
         using namespace karabo::webAuth;
 
+
         void SignalSlotable::Requestor::Receiver::receive(SignalSlotable::Requestor *ss) {
             try {
                 Hash::Pointer header, body;
@@ -41,9 +42,9 @@ namespace karabo {
             } catch (const karabo::util::TimeoutException&) {
                 KARABO_RETHROW_AS(KARABO_TIMEOUT_EXCEPTION("Response timed out"));
             } catch (const karabo::util::CastException &) {
-                 KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
+                KARABO_RETHROW_AS(KARABO_CAST_EXCEPTION("Received unexpected (incompatible) response type"));
             } catch (const karabo::util::Exception& e) {
-                 KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + ss->m_signalSlotable->getInstanceId() + "\""));
+                KARABO_RETHROW_AS(KARABO_SIGNALSLOT_EXCEPTION("Error whilst receiving message on instance \"" + ss->m_signalSlotable->getInstanceId() + "\""));
             }
 
         }
@@ -129,19 +130,19 @@ namespace karabo {
         }
 
 
-        SignalSlotable::SignalSlotable() : m_brokerLatency(0LL), m_processingLatency(0LL), m_randPing(rand() + 2) {
+        SignalSlotable::SignalSlotable() : m_randPing(rand() + 2) {
         }
 
 
         SignalSlotable::SignalSlotable(const string& instanceId,
-                const BrokerConnection::Pointer& connection) : m_brokerLatency(0LL), m_processingLatency(0LL) {
+                const BrokerConnection::Pointer& connection) : m_randPing(rand() + 2) {
             init(instanceId, connection);
         }
 
 
         SignalSlotable::SignalSlotable(const std::string& instanceId,
                 const std::string& brokerType,
-                const karabo::util::Hash& brokerConfiguration) : m_brokerLatency(0LL), m_processingLatency(0LL) {
+                const karabo::util::Hash& brokerConfiguration) : m_randPing(rand() + 2) {
             BrokerConnection::Pointer connection = BrokerConnection::create(brokerType, brokerConfiguration);
             init(instanceId, connection);
         }
@@ -170,8 +171,6 @@ namespace karabo {
             m_consumerChannel = m_connection->createChannel();
             m_heartbeatProducerChannel = m_connection->createChannel("beats");
             m_heartbeatConsumerChannel = m_connection->createChannel("beats");
-
-            m_timerHandlers.clear();
 
             registerDefaultSignalsAndSlots();
         }
@@ -203,7 +202,12 @@ namespace karabo {
 
         void SignalSlotable::injectEvent(karabo::net::BrokerChannel::Pointer, const karabo::util::Hash::Pointer& header, const karabo::util::Hash::Pointer& body) {
 
-            m_brokerLatency = getEpochMillis() - header->get<long long>("MQTimestamp");
+            {
+                boost::mutex::scoped_lock lock(m_latencyMutex);
+                m_brokerLatency.first += (getEpochMillis() - header->get<long long>("MQTimestamp"));
+                m_brokerLatency.second++;
+            }
+            
 
             // Check whether this message is a reply
             if (header->has("replyFrom")) {
@@ -299,23 +303,16 @@ namespace karabo {
 
         void SignalSlotable::_runEventLoop() {
 
-            try {
+            while (m_runEventLoop) {
 
-                while (m_runEventLoop) {
-
-                    if (eventQueueIsEmpty()) { // If queue is empty we wait for the next event
-                        boost::mutex::scoped_lock lock(m_waitMutex);
-                        m_hasNewEvent.wait(lock);
-                    }
-
-                    // Got notified about new events, start processing them
-                    processEvents();
-
+                if (eventQueueIsEmpty()) { // If queue is empty we wait for the next event
+                    boost::mutex::scoped_lock lock(m_waitMutex);
+                    m_hasNewEvent.wait(lock);
                 }
-            } catch (const Exception& e) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Exception whilst running event loop occurred: " << e;
-            } catch (...) {
-                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception whilst running event loop occurred.";
+
+                // Got notified about new events, start processing them
+                processEvents(); // Should never throw
+
             }
         }
 
@@ -406,108 +403,121 @@ namespace karabo {
             Event event;
             while (tryToPopEvent(event)) {
 
-                /* Header and body are shared pointers               
-                 * By now the event variable keeps the only reference to them and hence the objects alive
-                 * In the next while loop header and body will be destructed
-                 * We take const references for convenience here
-                 */
-                const Hash& header = *(event.first);
-                const Hash& body = *(event.second);
-                m_processingLatency = getEpochMillis() - header.get<long long>("MQTimestamp");
+                try {
+                    
+                    /* Header and body are shared pointers               
+                     * By now the event variable keeps the only reference to them and hence the objects alive
+                     * In the next while loop header and body will be destructed
+                     * We take const references for convenience here
+                     */
+                    const Hash& header = *(event.first);
+                    const Hash& body = *(event.second);
+                    
+                    // Collect performance statistics
+                    {                        
+                        boost::mutex::scoped_lock lock(m_latencyMutex);
+                        m_processingLatency.first += (getEpochMillis() - header.get<long long>("MQTimestamp"));
+                        m_processingLatency.second++;
+                    }
 
-                /* The header of each event (message) 
-                 * should contain all slotFunctions that must be a called
-                 * The formatting is like: 
-                 * slotFunctions -> [|<instanceId1>:<slotFunction1>[,<slotFunction2>]]
-                 * Example:
-                 * slotFunctions -> |FooInstance:slotFoo1,slotFoo2|BarInstance:slotBar1,slotBar2|"
-                 */
-                boost::optional<const Hash::Node&> allSlotsNode = header.find("slotFunctions");
-                if (allSlotsNode) {
-                    std::vector<string> allSlots;
-                    std::string tmp = allSlotsNode->getValue<string>();
+                    /* The header of each event (message) 
+                     * should contain all slotFunctions that must be a called
+                     * The formatting is like: 
+                     * slotFunctions -> [|<instanceId1>:<slotFunction1>[,<slotFunction2>]]
+                     * Example:
+                     * slotFunctions -> |FooInstance:slotFoo1,slotFoo2|BarInstance:slotBar1,slotBar2|"
+                     */
+                    boost::optional<const Hash::Node&> allSlotsNode = header.find("slotFunctions");
+                    if (allSlotsNode) {
+                        std::vector<string> allSlots;
+                        std::string tmp = allSlotsNode->getValue<string>();
 
-                    // Trim and split on the "|" string, avoid empty entries
-                    boost::trim_if(tmp, boost::is_any_of("|"));
-                    boost::split(allSlots, tmp, boost::is_any_of("|"), boost::token_compress_on);
-
-
-                    BOOST_FOREACH(string instanceSlots, allSlots) {
-                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
-                        size_t pos = instanceSlots.find_first_of(":");
-                        if (pos == std::string::npos) {
-                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Encountered badly shaped message header";
-                            continue;
-                        }
-                        string instanceId = instanceSlots.substr(0, pos);
-                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Instance is: " << instanceId;
-
-                        // We should call only functions defined for our instanceId or global ("*") ones
-                        if (instanceId == m_instanceId || instanceId == "*") {
-                            vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
-                            if (instanceId == "*") { // Global slot
+                        // Trim and split on the "|" string, avoid empty entries
+                        boost::trim_if(tmp, boost::is_any_of("|"));
+                        boost::split(allSlots, tmp, boost::is_any_of("|"), boost::token_compress_on);
 
 
-                                BOOST_FOREACH(string slotFunction, slotFunctions) {
+                        BOOST_FOREACH(string instanceSlots, allSlots) {
+                            //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Processing instanceSlots: " << instanceSlots;
+                            size_t pos = instanceSlots.find_first_of(":");
+                            if (pos == std::string::npos) {
+                                KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Encountered badly shaped message header";
+                                continue;
+                            }
+                            string instanceId = instanceSlots.substr(0, pos);
+                            //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Instance is: " << instanceId;
 
-                                    // Place a guard for executing this slot here
+                            // We should call only functions defined for our instanceId or global ("*") ones
+                            if (instanceId == m_instanceId || instanceId == "*") {
+                                vector<string> slotFunctions = karabo::util::fromString<string, vector>(instanceSlots.substr(pos + 1));
+                                if (instanceId == "*") { // Global slot
 
-                                    if (m_slotCallGuardHandler) {
-                                        string errorMessage;
-                                        bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
-                                        if (!ok) {
-                                            std::cout << "Rejected global slot: " << slotFunction << std::endl;
-                                            //sendErrorHappenedReply(header, errorMessage);
-                                            continue;
+
+                                    BOOST_FOREACH(string slotFunction, slotFunctions) {
+
+                                        // Place a guard for executing this slot here
+
+                                        if (m_slotCallGuardHandler) {
+                                            string errorMessage;
+                                            bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
+                                            if (!ok) {
+                                                std::cout << "Rejected global slot: " << slotFunction << std::endl;
+                                                //sendErrorHappenedReply(header, errorMessage);
+                                                continue;
+                                            }
                                         }
-                                    }
 
-                                    //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
-                                    SlotInstancePointer slot = getGlobalSlot(slotFunction);
-                                    if (slot) {
-                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
-                                        // This will synchronously call back all registered slot functions
-                                        slot->callRegisteredSlotFunctions(header, body);
-                                        // In the body of the slot callback the user may have placed a reply
-                                        // If so, send it back now
-                                        sendPotentialReply(header, true);
-                                    }
-                                }
-                            } else { // Local slot                                                              
-
-
-                                BOOST_FOREACH(string slotFunction, slotFunctions) {
-                                    //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";                                   
-
-                                    if (m_slotCallGuardHandler) {
-                                        string errorMessage;
-                                        bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
-                                        if (!ok) {
-                                            std::cout << "Rejected local slot: " << slotFunction << std::endl;
-                                            //sendErrorHappenedReply(header, errorMessage);
-                                            continue;
-                                        }
-                                    }
-
-                                    SlotInstancePointer slot = getLocalSlot(slotFunction);
-                                    if (slot) {
-                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
-                                        try {
+                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call global " << slotFunction << " if registered";
+                                        SlotInstancePointer slot = getGlobalSlot(slotFunction);
+                                        if (slot) {
+                                            //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
+                                            // This will synchronously call back all registered slot functions
                                             slot->callRegisteredSlotFunctions(header, body);
-                                            sendPotentialReply(header, false);
-                                        } catch (const Exception& e) {
-                                            //sendErrorHappenedReply(header, e.detailedMsg());
-                                            if (m_exceptionHandler) m_exceptionHandler(e);
-                                            else KARABO_LOG_FRAMEWORK_ERROR << e;
+                                            // In the body of the slot callback the user may have placed a reply
+                                            // If so, send it back now
+                                            sendPotentialReply(header, true);
+                                        }
+                                    }
+                                } else { // Local slot                                                              
+
+
+                                    BOOST_FOREACH(string slotFunction, slotFunctions) {
+                                        //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";                                   
+
+                                        if (m_slotCallGuardHandler) {
+                                            string errorMessage;
+                                            bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
+                                            if (!ok) {
+                                                std::cout << "Rejected local slot: " << slotFunction << std::endl;
+                                                //sendErrorHappenedReply(header, errorMessage);
+                                                continue;
+                                            }
                                         }
 
-                                    } else {
-                                        KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a call from ? to non-existing slot \"" << slotFunction << "\"";
+                                        SlotInstancePointer slot = getLocalSlot(slotFunction);
+                                        if (slot) {
+                                            //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Now calling " << slotFunction;
+                                            try {
+                                                slot->callRegisteredSlotFunctions(header, body);
+                                                sendPotentialReply(header, false);
+                                            } catch (const Exception& e) {
+                                                //sendErrorHappenedReply(header, e.detailedMsg());
+                                                if (m_exceptionHandler) m_exceptionHandler(e);
+                                                else KARABO_LOG_FRAMEWORK_ERROR << e;
+                                            }
+
+                                        } else {
+                                            KARABO_LOG_FRAMEWORK_WARN << m_instanceId << ": Received a call from ? to non-existing slot \"" << slotFunction << "\"";
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                } catch (const Exception& e) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Exception while running inner event loop occurred: " << e;
+                } catch (...) {
+                    KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception while running inner event loop occurred.";
                 }
             }
         }
@@ -771,6 +781,7 @@ namespace karabo {
             if (instanceInfo.has("host")) instanceInfo.get("host", hostname);
             return std::make_pair(true, hostname);
         }
+
 
         void SignalSlotable::slotPing(const std::string& instanceId, int rand, bool trackPingedInstance) {
 
@@ -1679,9 +1690,26 @@ namespace karabo {
                             cleanSignalsAndStopTracking(it->getKey());
                         }
                     }
-
-                    // TODO Why not using this-> ????
-                    if (m_updateLatencies) m_updateLatencies();
+                    
+                    // This thread is used as a "Trittbrett" for slowly updating latency information and queue sizes
+                     if (m_updatePerformanceStatistics) {
+                        boost::mutex::scoped_lock lock(m_latencyMutex);
+                        float blAve = -1;
+                        float plAve = -1;
+                        if (m_brokerLatency.second > 0) {
+                            blAve = m_brokerLatency.first / (float)m_brokerLatency.second;                           
+                        }
+                        if (m_processingLatency.second > 0) {
+                            plAve = m_processingLatency.first / (float)m_processingLatency.second;
+                        }                        
+                        
+                        // Call handler
+                        m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int>(m_eventQueue.size()));
+                        
+                        // Reset statistics
+                        m_brokerLatency.first = m_brokerLatency.second = 0;
+                        m_processingLatency.first = m_processingLatency.second = 0;
+                     }
 
                     // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
                     boost::this_thread::sleep(boost::posix_time::seconds(3));
@@ -1875,39 +1903,11 @@ namespace karabo {
                 popReceivedReply(replyId, header, body);
             }
             return result;
-        }
+        }       
 
 
-        void SignalSlotable::startTimer(int milliseconds, const ExpireHandler& handler, const std::string& id) {
-            boost::mutex::scoped_lock lock(m_timerMutex);
-            m_timerHandlers[id] = handler;
-            m_heartbeatProducerChannel->waitAsync(milliseconds, boost::bind(&SignalSlotable::asyncTimerHandler, this, id), id);
-        }
-
-
-        void SignalSlotable::killTimer(const std::string& id) {
-            boost::mutex::scoped_lock lock(m_timerMutex);
-            m_timerHandlers.erase(id);
-        }
-
-
-        void SignalSlotable::asyncTimerHandler(const std::string& id) {
-            bool found = false;
-            ExpireHandler handler;
-            {
-                boost::mutex::scoped_lock lock(m_timerMutex);
-                std::map<std::string, ExpireHandler>::iterator it = m_timerHandlers.find(id);
-                if (it != m_timerHandlers.end()) {
-                    found = true;
-                    handler = it->second;
-                    m_timerHandlers.erase(it);
-                }
-            }
-            if (found) handler(id);
-        }
-        
-        void SignalSlotable::registerUpdateLatenciesHandler(const UpdateLatenciesHandler& updateLatenciesHandler) {
-            m_updateLatencies = updateLatenciesHandler;
+        void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler) {
+            m_updatePerformanceStatistics = updatePerformanceStatisticsHandler;
         }
     }
 }
