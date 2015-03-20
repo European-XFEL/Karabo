@@ -13,11 +13,12 @@ std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::uti
 
 namespace karathon {
 
-    void ConnectionWrap::startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler) {
+    int ConnectionWrap::startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler) {
         IOService::Pointer ioserv = connection->getIOService();
+        int port = 0;
         try {
             ScopedGILRelease nogil;
-            connection->startAsync(boost::bind(proxyConnectionHandler, _1));
+            port = connection->startAsync(boost::bind(proxyConnectionHandler, _1));
         } catch(...) {
             KARABO_RETHROW
         }
@@ -29,6 +30,7 @@ namespace karathon {
         if (ii == cmap.end()) cmap[connection.get()] = Hash();
         Hash& hash = cmap[connection.get()];
         hash.set("_connection", connectionHandler);
+        return port;
     }
 
     void ConnectionWrap::proxyConnectionHandler(karabo::net::Channel::Pointer channel) {
