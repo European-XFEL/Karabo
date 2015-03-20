@@ -55,7 +55,7 @@ namespace karathon {
             return bp::object(connection->getIOService());
         }
 
-        static void startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
+        static int startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler);
         static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
 
         static void clear(karabo::net::IOService::Pointer ioserv) {
