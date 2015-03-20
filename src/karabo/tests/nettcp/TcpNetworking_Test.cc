@@ -7,6 +7,7 @@
  */
 
 #include "TcpNetworking_Test.hh"
+#include <boost/assert.hpp>
 
 using namespace std;
 using namespace karabo::util;
@@ -29,243 +30,165 @@ void TcpNetworking_Test::tearDown() {
 //////////////  TcpServer implementation  /////////////////////////
 
 namespace karabo {
-    namespace net {
+    namespace nettcp {
+        
+        TcpServer::TcpServer() : m_count(0), m_port(0) {
+            m_connection = Connection::create(Hash("Tcp.port", 0, "Tcp.type", "server"));
+            m_port = m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1));
+        }
+        
+        TcpServer::~TcpServer() {}
 
         void TcpServer::run() {
-            // this factory crates connection and, silently, IOService object ...
-            m_connection = Connection::create(Hash(
-                    "Tcp.port", 22222,
-                    "Tcp.type", "server",
-                    "Tcp.sizeofLength", 2,
-                    "Tcp.hashSerialization.Xml.printDataType", true)); // create a connection
-            m_connection->startAsync(boost::bind(&TcpServer::connectHandler, this, _1)); // ... and start it (connect!) asynchronously
-
-            // Usually, we might write here simply ...
-            // m_connection->getIOService()->run();  // block here
-            // However, start io_service::run method in other thread, just for FUN!
-            // All the handlers will be called in that thread ...
-            boost::thread ioThread(boost::bind(&IOService::run, m_connection->getIOService()));
-
-            ioThread.join(); // block here
-
+            IOService::Pointer io = m_connection->getIOService();
+            io->run();
         }
 
-        void TcpServer::connectHandler(Channel::Pointer channel) {
-            channel->setErrorHandler(boost::bind(&TcpServer::errorHandler, this, _1, _2));
-            channel->readAsyncVectorHash(boost::bind(&TcpServer::readVectorHashHandler, this, _1, _2, _3));
-
-        }
-
-        void TcpServer::readVectorHashHandler(Channel::Pointer channel, const vector<char>& data, const Hash& hdr) {
-            string s(data.begin(), data.end());                     
-            // put business logic of data processing here : do something with read data :)
-            // ...
-            
-            //CppUnit TEST: check content of 's':
-            if (m_count == 0) {
-                string etalon(80, '5');
-                CPPUNIT_ASSERT(s.compare(etalon) == 0);
-                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "QuestionMark");
-            } else { 
-                string etalon(50, '7');
-                CPPUNIT_ASSERT(s.compare(etalon) == 0);
+        void TcpServer::errorHandler(const Channel::Pointer& channel, const ErrorCode& ec) {
+            if (ec.value() == 2) {
+                cout << "SERVER: client has closed the connection!" << endl;
+            } else {
+                cout << "SERVER_ERROR: " << ec.value() << " -- " << ec.message() << endl;
             }
-                        
-            // Prepare the answer to the client
-            m_count++;
-
-            // fill header
-            m_hash.clear();
-
-            if (!hdr.empty()) {
-                m_hash.append(hdr);
-                if (m_hash.has("Crate2") && m_hash.getFromPath<string > ("Crate2.Module3.Administrator") == "QuestionMark")
-                    m_hash.setFromPath("Crate2.Module3.Administrator", "C.Youngman");
-            } else
-                m_hash.setFromPath("Crate2.Module3.TechDirector", "APPROVED!");
-
-            // fill data
-            m_data.clear();
-            m_data.assign(60, '9');
-
-
-            //*************************************************************************************
-            // NOTE: this 'write' is asynchronous operation and the user should care about 
-            // live time of the data, but string and Hash data are copied internally (not a vector)
-            // so we do nothing here
-            //*************************************************************************************
-            channel->writeAsyncVectorHash(m_data, m_hash, boost::bind(&TcpServer::writeCompleteHandler, this, _1));
-        }
-
-        void TcpServer::writeCompleteHandler(Channel::Pointer channel) {
-            channel->readAsyncVectorHash(boost::bind(&TcpServer::readVectorHashHandler, this, _1, _2, _3));
-        }
-
-        void TcpServer::errorHandler(Channel::Pointer channel, const string & errmsg) {
             channel->close();
         }
-    }
-}
+
+        void TcpServer::connectHandler(const Channel::Pointer& channel) {
+            channel->setErrorHandler(boost::bind(&TcpServer::errorHandler, this, channel, _1));
+            channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2));
+        }
+
+        void TcpServer::readHashHashHandler(const Channel::Pointer& channel, Hash& header, Hash& body) {
+            m_count++;
+            cout << "SERVER_INFO: count " << m_count << "\n" << header << body << "-----------------\n";
+
+            //CPPUNIT_ASSERT(header.get<string>("headline") == "*** CLIENT ***");
+            //assert(header.get<string>("headline") == "*** CLIENT ***", std::string("get(headline) gives \"") + header.get<string>("headline") + "\"");
+            BOOST_ASSERT(header.get<string>("headline") == "*** CLIENT ***");
+            
+            header.set("headline", "----- SERVER -----");
+            
+            body.set("a.e", "server data");
+            
+            if (body.has("a") && body.get<string > ("a.b") == "?")
+                body.set("a.b", "server reply");
+            else
+                body.set("a.b", "counter " + toString(m_count));
+            
+
+            channel->writeAsyncHashHash(header, body, boost::bind(&TcpServer::writeCompleteHandler, this, channel, "some string"));
+        }
+
+
+        void TcpServer::writeCompleteHandler(const karabo::net::Channel::Pointer& channel, const std::string& id) {
+            //CPPUNIT_ASSERT(id == "some string");
+            //assert(id == "some string", std::string("assert failure: id = \"") + id + "\"");
+            BOOST_ASSERT(id == "some string");
+            channel->readAsyncHashHash(boost::bind(&TcpServer::readHashHashHandler, this, channel, _1, _2));
+        }
+        
 
 //////////////////  TcpClient implementation  ///////////////////////////////
 
-namespace karabo {
-    namespace net {
-
+        TcpClient::TcpClient(const std::string& host, int port) : m_count(0), m_host(host), m_port(port) {}
+        
+        TcpClient::~TcpClient() {}
+        
         void TcpClient::run() {
-            // create connection instance with given parameters
-            m_connection = Connection::create(Hash(
-                    "Tcp.hostname", "localhost",
-                    "Tcp.port", 22222,
-                    "Tcp.sizeofLength", 2,
-                    "Tcp.hashSerialization.Xml.printDataType", true));
-            IOService::Pointer io = m_connection->getIOService();
+            m_connection = Connection::create(Hash("Tcp.port", m_port, "Tcp.hostname", m_host));
+            //m_connection->setErrorHandler(boost::bind(&TcpClient::connectionErrorHandler, this, m_connection, _1));
             m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1));
-            boost::thread ioThread(boost::bind(&IOService::run, io));
 
-            ioThread.join(); // block here
-
+            IOService::Pointer io = m_connection->getIOService();
+            io->run();
         }
 
-        void TcpClient::connectHandler(Channel::Pointer channel) {
 
-            try {
-                // register error handler
-                channel->setErrorHandler(boost::bind(&TcpClient::errorHandler, this, _1, _2));
-                // fill header
-                m_hash.clear();
-                m_hash.setFromPath("Crate2.Module3.Administrator", "QuestionMark");
-
-                // fill data
-                m_data.clear();
-                m_data.assign(80, '5');
-
-                // synchronous write
-                channel->write(m_data, m_hash);
-
-                // register read handler
-                channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
-
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
-
-        void TcpClient::errorHandler(Channel::Pointer channel, const string & errmsg) {
-
-            channel->close(); // close connection
-            // sleep 5 seconds
-            boost::this_thread::sleep(boost::posix_time::milliseconds(5000));
-            m_connection->startAsync(boost::bind(&TcpClient::connectHandler, this, _1)); // repeat connection attempt
-
-        }
-
-        void TcpClient::readStringHashHandler(Channel::Pointer channel, const string& data, const Hash& hdr) {
-
-            //uncomment to see 'data' and 'header':
-            //cout<<"\n data: \n" << data << endl;
-            //cout << "hdr: \n" << hdr << endl;
+        void TcpClient::connectHandler(const Channel::Pointer& channel) {
+            channel->setErrorHandler(boost::bind(&TcpClient::errorHandler, this, channel, _1));
+            Hash header("headline", "*** CLIENT ***");
+            Hash data("a.b", "?", "a.c", 42.22f, "a.d", 12);
             
-            //CppUnit TEST: check content of 'data':
-            string etalon(60,'9');
-            CPPUNIT_ASSERT(data.compare(etalon) == 0);
+            // first sending
+            channel->writeAsyncHashHash(header, data, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
+        }
 
-            //CppUnit TEST: check content of header:
-            if (m_count == 0) {
-                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "C.Youngman");
+
+        void TcpClient::connectionErrorHandler(const karabo::net::Connection::Pointer& connection, const ErrorCode& ec) {
+            cout << "CLIENT_ERROR: Failed to connect to remote server. Stop...\n";
+            boost::this_thread::sleep(boost::posix_time::milliseconds(2000));
+            connection->stop();
+        }
+
+
+        void TcpClient::errorHandler(const Channel::Pointer& channel, const ErrorCode& ec) {
+            // Check if it is End-Of-File
+            if (ec.value() == 2) {
+                cout << "CLIENT: server has closed the connection!" << endl;
             } else {
-                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Administrator") == "N.Coppola");
-                CPPUNIT_ASSERT(hdr.getFromPath<float>("Crate2.Module3.Channel0.Voltage") == 201.500000);
-                CPPUNIT_ASSERT(hdr.getFromPath<string>("Crate2.Module3.Location") == "Located AER19, room 2-21, rack 4");
+                cout << "CLIENT_ERROR: " << ec.value() << " -- " << ec.message() << endl;
             }
-            
-            // check if we have to stop sending
-            if (m_count >= 5) {
+            channel->close();
+        }
+
+
+        void TcpClient::readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& body) {
+            // inspect here the server reply.... just count
+            m_count++;
+            if (m_count >= 3) { // stop after 15 attempts
                 channel->close();
                 return;
             }
-            // wait a bit to be polite to the server :)
-            channel->waitAsync(100, boost::bind(&TcpClient::timerHandler, this, channel));
-        }
 
-        void TcpClient::timerHandler(Channel::Pointer channel) {
-            // send next message, increase counter
-            try {
-
-                // fill header
-                vector<short> v;
-                m_hash.clear();
-                m_hash.setFromPath("Crate2.Module3.Administrator", "N.Coppola");
-                m_hash.setFromPath("Crate2.Module3.Location", "Located AER19, room 2-21, rack 4");
-                m_hash.setFromPath("Crate2.Module3.Channel0.Voltage", 201.5f);
-                m_hash.setFromPath("Crate2.Module3.Channel0.RampUp", 20.3f);
-                m_hash.setFromPath("Crate2.Module3.Channel0.RampDown", 22.2f);
-                m_hash.setFromPath("Crate2.Module3.Channel1.Voltage", 15.0f);
-                m_hash.setFromPath("Crate2.Module3.Channel1.RampUp", 30.3f);
-                m_hash.setFromPath("Crate2.Module3.Channel1.RampDown", 30.3f);
-                m_hash.setFromPath("Crate2.Module3.Channel2.Voltage", 70.0f);
-                m_hash.setFromPath("Crate2.Module3.Channel2.RampUp", 10.0f);
-                m_hash.setFromPath("Crate2.Module3.Channel2.RampDown", 10.0f);
-                m_hash.setFromPath("Crate2.Module3.Image", v);
-                vector<short>& x = m_hash.getFromPath<vector<short> >("Crate2.Module3.Image");
-                x.push_back(12);
-                x.push_back(42);
-                x.push_back(77);
-                x.push_back(101);
-                x.push_back(-3);
-                x.push_back(-101);
-                x.push_back(0);
-                for (short i = 0; i < 10; i++) {
-                    x.push_back(i);
-                }
-
-                CPPUNIT_ASSERT(x.capacity() == 32);
-
-                string longMsg("This is a long message to check that vector of char, signed and unsigned char works properly!");
-                vector<unsigned char> longV(longMsg.begin(), longMsg.end());
-                m_hash.setFromPath("Crate2.Module3.CharImage", longV);
-
-                // fill data
-                m_data.clear();
-                m_data.assign(50, '7');
-
-                // write synchronously
-                channel->write(m_data, m_hash);
-                m_count++;
-
-                // register read handler
-                channel->readAsyncStringHash(boost::bind(&TcpClient::readStringHashHandler, this, _1, _2, _3));
-                
-            } catch (...) {
-                KARABO_RETHROW
+            BOOST_ASSERT(header.get<string>("headline") == "----- SERVER -----");
+            if (body.has("a.e")) {
+                BOOST_ASSERT(body.get<string>("a.e") == "server data");
+                body.erase("a.e");
             }
+            
+            header.set("headline", "*** CLIENT ***");
+            
+            // Prepare new data
+            body.set("a.b", "John Doe");
+            body.set("a.c", 1.0f * (static_cast<unsigned int> (::rand()) % 1000));
+            body.set("a.d", static_cast<int> (::rand()) % 100);
+            vector<unsigned char> pixels;
+            body.set("a.v", pixels);
+            vector<unsigned char>& x = body.get<vector<unsigned char> >("a.v");
+            for (int i = 1; i <= 20; i++) x.push_back(static_cast<unsigned char> (i % 256));
+
+            // send client data asynchronous: define "write" completion handler
+            channel->writeAsyncHashHash(header, body, boost::bind(&TcpClient::writeCompleteHandler, this, channel, 42));
         }
+
+
+        void TcpClient::writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id) {
+            BOOST_ASSERT(id == 42);
+            // data was sent successfully! Prepare to read a reply asynchronous from a server: placeholder _1 is a Hash
+            channel->readAsyncHashHash(boost::bind(&TcpClient::readHashHashHandler, this, channel, _1, _2));
+        }
+        
     }
 }
 
 void TcpNetworking_Test::testMethod() {
     try {
+        int port = 0;
+        string host = "localhost";
 
-        // Create server object and run it in different thread
-        TcpServer server;
-        boost::thread serverThread(boost::bind(&TcpServer::run, &server));
-
-        // suspend main thread to give a chance for server thread really to start
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
-
-        // create client object and run it in main thread
-        TcpClient client;
+        karabo::nettcp::TcpServer server;
+        port = server.getPort();
+        boost::thread server_thread(boost::bind(&karabo::nettcp::TcpServer::run, &server));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1500));
+        
+        cout << "testMethod: port is " << port << endl;
+        karabo::nettcp::TcpClient client(host,port);
         client.run();
-
-        // when client id done the main thread is waiting for server thread to join
-        serverThread.join();
-
-    } catch (const Exception& e) {
-        cout << "Test produced an error:" << endl;
-        cout << e.userFriendlyMsg() << endl << endl;
-        cout << "Details:" << endl;
-        cout << e.detailedMsg();
-
+        
+        server_thread.join();
+    } catch (const std::exception& e) {
+        std::cerr << "\n\ntestMethod:   ERROR: " << e.what() << std::endl;
+        CPPUNIT_FAIL(e.what());
     } catch (...) {
         KARABO_RETHROW
     }
