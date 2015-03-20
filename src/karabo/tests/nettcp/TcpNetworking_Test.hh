@@ -21,6 +21,59 @@
 #include <karabo/net/Connection.hh>
 #include <karabo/net/Channel.hh>
 
+namespace karabo {
+    namespace nettcp {
+
+        struct TcpServer {
+
+            TcpServer();
+
+            virtual ~TcpServer();
+
+            int getPort() {
+                return m_port;
+            }
+            
+            void connectHandler(const karabo::net::Channel::Pointer& channel);
+            
+            void errorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode & ec);
+            
+            void readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash& header, karabo::util::Hash& data);
+            
+            void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, const std::string& id);
+            
+            void run();
+
+        private:
+            int m_count;
+            int m_port;
+            karabo::net::Connection::Pointer m_connection;
+        };
+
+        struct TcpClient {
+
+            TcpClient(const std::string& host, int port);
+
+            virtual ~TcpClient();
+
+            void run();
+            void connectHandler(const karabo::net::Channel::Pointer& channel);
+            void connectionErrorHandler(const karabo::net::Connection::Pointer& connection, const karabo::net::ErrorCode & ec);
+            void errorHandler(const karabo::net::Channel::Pointer& channel, const karabo::net::ErrorCode & ec);
+            void readHashHashHandler(const karabo::net::Channel::Pointer& channel, karabo::util::Hash & header, karabo::util::Hash& data);
+            void writeCompleteHandler(const karabo::net::Channel::Pointer& channel, int id);
+
+        private:
+            int m_count;
+            std::string m_host;
+            int m_port;
+            karabo::net::Connection::Pointer m_connection;
+            karabo::util::Hash m_hash;
+            std::string m_data;
+        };
+    }
+}
+
 class TcpNetworking_Test : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE(TcpNetworking_Test);
 
@@ -36,55 +89,8 @@ public:
 
 private:
     void testMethod();
-
+    
 };
-
-namespace karabo {
-    namespace net {
-
-        struct TcpServer {
-
-            TcpServer() : m_count(0) {
-            }
-
-            virtual ~TcpServer() {
-            }
-
-            void connectHandler(karabo::net::Channel::Pointer channel);
-            void readVectorHashHandler(karabo::net::Channel::Pointer channel, const std::vector<char>& data, const karabo::util::Hash & hash);
-            void writeCompleteHandler(karabo::net::Channel::Pointer channel);
-            void errorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
-            void run();
-
-        private:
-            int m_count;
-            karabo::net::Connection::Pointer m_connection;
-            karabo::util::Hash m_hash;
-            std::vector<char> m_data;
-        };
-
-        struct TcpClient {
-
-            TcpClient() : m_count(0){
-            }
-
-            virtual ~TcpClient() {
-            }
-
-            void run();
-            void errorHandler(karabo::net::Channel::Pointer channel, const std::string & errmsg);
-            void readStringHashHandler(karabo::net::Channel::Pointer channel, const std::string& data, const karabo::util::Hash & hash);
-            void connectHandler(karabo::net::Channel::Pointer channel);
-            void timerHandler(karabo::net::Channel::Pointer channel);
-
-        private:
-            int m_count;
-            karabo::net::Connection::Pointer m_connection;
-            karabo::util::Hash m_hash;
-            std::string m_data;
-        };
-    }
-}
 
 #endif	/* TCPNETWORKING_TEST_HH */
 
