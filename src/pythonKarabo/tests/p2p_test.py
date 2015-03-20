@@ -9,19 +9,18 @@ from karabo.karathon import *
 
 class Server(threading.Thread):
     
-    def __init__(self, port):
+    def __init__(self):
         threading.Thread.__init__(self)
         #create connection object
-        self.connection = Connection.create("Tcp", Hash("type", "server", "port", port))
+        self.connection = Connection.create("Tcp", Hash("type", "server", "port", 0))
         #set up error handler
         self.connection.setErrorHandler(self.onError)
         #register connect handler for incoming connections
-        self.connection.startAsync(self.onConnect)
+        self.port = self.connection.startAsync(self.onConnect)
         #extract io service object
         self.ioserv = self.connection.getIOService()
         #initialize the store (channel.__id__, Hash) used by async write
-        self.store = {}
-        print("TCP Async server listening port", port)
+        print("TCP Async server listening port", self.port)
         
     def onError(self, channel, ec):
         if ec.value() != 2:
@@ -41,14 +40,12 @@ class Server(threading.Thread):
     def onReadHash(self, channel, hash):
         try:
             hash["server"] = "APPROVED!"
-            self.store[channel.__id__] = hash
-            channel.writeAsyncHash(self.store[channel.__id__], self.onWriteComplete)
+            channel.writeAsyncHash(hash, self.onWriteComplete)
         except RuntimeError as e:
             print("TCP Async server onReadHash:",str(e))
     
     def onWriteComplete(self, channel):
         try:
-            del self.store[channel.__id__]
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError as e:
             print("TCP Async server onReadHash:",str(e))
@@ -67,9 +64,7 @@ class Server(threading.Thread):
 class  P2p_TestCase(unittest.TestCase):
     
     def setUp(self):
-        #start server listening, for example, on port 32723
-        self.serverPort = 32723
-        self.server = Server(self.serverPort)
+        self.server = Server()
         self.server.start()
         time.sleep(1)
 
@@ -81,10 +76,10 @@ class  P2p_TestCase(unittest.TestCase):
         # Synchronous TCP client
         try:
             #create client connection object
-            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.serverPort))    
+            connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.server.port))    
             #connect to the server
             channel = connection.start()
-            print("TCP Sync client open connection: id #", channel.__id__)
+            print("TCP Sync client open connection.")
             #build hash to send to server
             h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
             print("TCP Sync client send Hash")
