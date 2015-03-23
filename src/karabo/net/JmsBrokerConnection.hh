@@ -33,8 +33,8 @@ namespace karabo {
          * The Connection class.
          */
         class JmsBrokerConnection : public BrokerConnection {
-            
-            
+            bool m_clusterMode;
+            std::vector<std::string> m_brokerHosts;
             std::string m_hostname;
             unsigned int m_port;
             std::string m_destinationName;
@@ -51,11 +51,11 @@ namespace karabo {
             int m_messageTimeToLive;
             int m_compressionUsageThreshold;
             std::string m_compression;
-            
+
             mutable boost::mutex m_openMQMutex;
 
             MQConnectionHandle m_connectionHandle;
-            
+
 
         public:
 
@@ -85,14 +85,20 @@ namespace karabo {
                 return m_deliveryInhibition;
             }
 
-        private:           
+        private:
 
             void close();
-            
+
             void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
 
             static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
             
+            void connectToBrokers();
+            
+            void connectStandalone();
+            
+            void connectCluster();
+
         };
 
 
