@@ -260,6 +260,9 @@ namespace karabo {
 
             m_connectionConfiguration = config.get<Hash>("connection");
             m_connection = BrokerConnection::createChoice("connection", config);
+            // Real connection parameters were chosen in above call.  Use the same parameters for logger
+            m_connectionConfiguration.set("Jms.hostname", m_connection->getBrokerHostname() + ":" + toString(m_connection->getBrokerPort()));
+            m_connectionConfiguration.set("Jms.port", m_connection->getBrokerPort());
             m_pluginLoader = PluginLoader::create("PluginLoader", Hash("pluginDirectory", config.get<string>("pluginDirectory")));
             loadLogger(config);
 
@@ -340,8 +343,8 @@ namespace karabo {
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
             KARABO_LOG_INFO << "ServerId: " << m_serverId;
-            KARABO_LOG_INFO << "Broker (host/port/topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << "/"
-                    << m_connectionConfiguration.get<unsigned int>("Jms.port") << "/" << m_connectionConfiguration.get<string>("Jms.destinationName");
+            KARABO_LOG_INFO << "Broker (host/topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << "/"
+                    << m_connectionConfiguration.get<string>("Jms.destinationName");
 
             // Initialize SignalSlotable instance
             init(m_serverId, m_connection);
@@ -558,7 +561,7 @@ namespace karabo {
 
                 // Inject connection
                 tmp.set("_connection_", m_connectionConfiguration);
-
+                
                 BaseDevice::Pointer device = BaseDevice::create(modifiedConfig); // TODO If constructor blocks, we are lost here!!
                 boost::thread* t = m_deviceThreads.create_thread(boost::bind(&karabo::core::BaseDevice::run, device));
 

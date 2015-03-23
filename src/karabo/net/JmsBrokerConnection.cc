@@ -12,6 +12,7 @@
 #include "JmsBrokerConnection.hh"
 #include "karabo/log/Logger.hh"
 #include <karabo/util/SimpleElement.hh>
+#include <karabo/util/VectorElement.hh>
 
 using namespace std;
 using namespace karabo::util;
@@ -22,7 +23,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BrokerConnection, JmsBrokerConnection)
 
-        
+
         JmsBrokerConnection::~JmsBrokerConnection() {
             close();
         }
@@ -31,8 +32,12 @@ namespace karabo {
         void JmsBrokerConnection::expectedParameters(Schema& expected) {
 
             // Some tricks with environment here
-            string defaultHostname = "exfl-broker.desy.de";
-            char* env = getenv("KARABO_BROKER_HOST");
+            string defaultBrokerHosts = ""; // no defaults; it serves as a flag for clustering setup
+            char* env = getenv("KARABO_BROKER_HOSTS");
+            if (env != 0) defaultBrokerHosts = string(env); // List of host1:port1, host2:port2,  ...
+
+            string defaultHostname = "exfl-broker.desy.de:7777";
+            env = getenv("KARABO_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
 
             unsigned int defaultPort = 7777;
@@ -43,10 +48,17 @@ namespace karabo {
             env = getenv("KARABO_BROKER_TOPIC");
             if (env != 0) defaultTopic = string(env);
 
+            VECTOR_STRING_ELEMENT(expected)
+                    .key("brokerHosts")
+                    .displayedName("Broker hosts")
+                    .description("List of brokers participating in cluster setup.")
+                    .assignmentOptional().defaultValueFromString(defaultBrokerHosts)
+                    .commit();
+
             STRING_ELEMENT(expected)
                     .key("hostname")
                     .displayedName("Broker Hostname")
-                    .description("Broker Hostname")
+                    .description("Broker Hostname:Port")
                     .assignmentOptional().defaultValue(defaultHostname)
                     .commit();
 
@@ -154,7 +166,7 @@ namespace karabo {
                     .minInc(0)
                     .expertAccess()
                     .commit();
-            
+
             INT32_ELEMENT(expected)
                     .key("compressionUsageThreshold")
                     .displayedName("Compression Usage Threshold")
@@ -164,7 +176,7 @@ namespace karabo {
                     .assignmentOptional().defaultValue(-1)
                     .expertAccess()
                     .commit();
-            
+
             STRING_ELEMENT(expected)
                     .key("compression")
                     .displayedName("Compression")
@@ -186,8 +198,16 @@ namespace karabo {
 
             this->setIOServiceType("Jms"); // Defines the type of the composed IO service within abstract IO service
 
-            input.get("hostname", m_hostname);
+            input.get("brokerHosts", m_brokerHosts);
             input.get("port", m_port);
+
+            vector<string> hostport = fromString<string, vector>(input.get<string>("hostname"), ":");
+            m_hostname = hostport[0];
+            if (hostport.size() < 2 || hostport[1] == "")
+                m_port = 7777;
+            else
+                m_port = fromString<unsigned int>(hostport[1]);
+
             input.get("destinationName", m_destinationName);
 
             string destinationType;
@@ -206,7 +226,7 @@ namespace karabo {
             input.get("messageTimeToLive", m_messageTimeToLive);
             input.get("compressionUsageThreshold", m_compressionUsageThreshold);
             input.get("compression", m_compression);
-            
+
             string acknowledgeMode;
             input.get("acknowledgeMode", acknowledgeMode);
             if (acknowledgeMode == "auto") m_acknowledgeMode = MQ_AUTO_ACKNOWLEDGE;
@@ -214,6 +234,39 @@ namespace karabo {
             else if (acknowledgeMode == "transacted") m_acknowledgeMode = MQ_SESSION_TRANSACTED;
             else if (acknowledgeMode == "dupsOk") m_acknowledgeMode = MQ_DUPS_OK_ACKNOWLEDGE;
 
+            if (m_brokerHosts.empty()) {
+                // Standalone broker setup
+                m_clusterMode = false;
+                m_brokerHosts.push_back(m_hostname + ":" + toString(m_port));
+            } else {
+                // Cluster broker setup.
+                m_clusterMode = true;
+            }
+
+            try {
+                connectToBrokers();
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
+            }
+        }
+
+
+        void JmsBrokerConnection::connectToBrokers() {
+            vector<string> hostport = fromString<string, vector>(m_brokerHosts[0], ":");
+            m_hostname = hostport[0];
+            if (hostport.size() < 2 || hostport[1] == "")
+                m_port = 7777;
+            else
+                m_port = fromString<unsigned int>(hostport[1]);
+            if (m_clusterMode)
+                connectCluster();
+            else {
+                connectStandalone();
+            }
+        }
+
+
+        void JmsBrokerConnection::connectStandalone() {
             // Establish the Jms connection (in stopped mode)
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
@@ -224,11 +277,46 @@ namespace karabo {
                 setConnectionProperties(propertiesHandle);
                 // Initiate connection
                 // Check if onException is a good idea
-                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle))
-
+                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle));
             } catch (...) {
-                KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
+                KARABO_RETHROW
             }
+        }
+
+
+        void JmsBrokerConnection::connectCluster() {
+            // Establish the Jms connection (in stopped mode)
+            MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
+
+            for (size_t i = 0; i < m_brokerHosts.size(); ++i) {
+                vector<string> hostport = fromString<string, vector>(m_brokerHosts[i], ":");
+                m_hostname = hostport[0];
+                m_port = fromString<unsigned int>(hostport[1]);
+                // Retrieve property handle
+                MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
+                // Set all properties
+                setConnectionProperties(propertiesHandle);
+                // Initiate connection
+                // Check if onException is a good idea
+                {
+                    MQStatus status;
+                    boost::mutex::scoped_lock lock(m_openMQMutex);
+                    status = MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle);
+                    if (MQStatusIsError(status) == MQ_TRUE) {
+                        MQString tmp = MQGetStatusString(status);
+                        std::string errorString(tmp);
+                        MQFreeString(tmp);
+                        KARABO_LOG_FRAMEWORK_WARN << errorString;
+                    } else {
+                        MQFreeProperties(propertiesHandle);
+                        return;
+                    }
+                }
+            }
+
+            MQFreeProperties(propertiesHandle);
+
+            KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker cluster.");
         }
 
 
@@ -283,15 +371,18 @@ namespace karabo {
                 KARABO_RETHROW
             }
         }
-        
+
+
         const std::string& JmsBrokerConnection::getBrokerHostname() const {
             return m_hostname;
         }
-        
+
+
         unsigned int JmsBrokerConnection::getBrokerPort() const {
             return m_port;
         }
-        
+
+
         const std::string& JmsBrokerConnection::getBrokerTopic() const {
             return m_destinationName;
         }
