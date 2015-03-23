@@ -84,6 +84,12 @@ namespace karabo {
             int m_progressMin;
             int m_progressMax;
 
+            unsigned long long m_timeId;
+            unsigned long long m_timeSec;           // seconds
+            unsigned long long m_timeFrac;          // attoseconds
+            unsigned long long m_timePeriod;        // microseconds
+            mutable boost::mutex m_timeChangeMutex;
+
             krb_log4cpp::Category* m_log;
 
             karabo::util::Hash m_parameters;
@@ -168,6 +174,14 @@ namespace karabo {
                         .assignmentOptional().defaultValue(true)
                         .commit();
 
+                BOOL_ELEMENT(expected).key("useTimeserver")
+                        .displayedName("Use Timeserver")
+                        .description("Decides whether to use time and train ID from TimeServer device")
+                        .init()
+                        .expertAccess()
+                        .assignmentOptional().defaultValue(false)
+                        .commit();
+
                 INT32_ELEMENT(expected).key("progress")
                         .displayedName("Progress")
                         .description("The progress of the current action")
@@ -250,6 +264,11 @@ namespace karabo {
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
                 
+                m_timeId = 0;
+                m_timeSec = 0;
+                m_timeFrac = 0;
+                m_timePeriod = 0;
+                
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
@@ -291,6 +310,9 @@ namespace karabo {
                 
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
+                
+                SLOT4(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+
             }
 
             virtual ~Device() {
@@ -326,13 +348,29 @@ namespace karabo {
              * @param value The corresponding value (of corresponding data-type)
              */
             template <class ValueType>
-            void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void set(const std::string& key, const ValueType& value) {
+                this->set<ValueType>(key, value, getActualTimestamp());
+            }
+
+            /**
+             * Updates the state of the device. This function automatically notifies any observers in the distributed system.
+             * @param key A valid parameter of the device (must be defined in the expectedParameters function)
+             * @param value The corresponding value (of corresponding data-type)
+             * @param timestamp The time of the value change
+             */
+            template <class ValueType>
+            void set(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, value);
                 this->set(h, timestamp);
             }
 
             template <class PixelType>
-            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+                this->set<PixelType>(key, image, getActualTimestamp());
+            }
+            
+            template <class PixelType>
+            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
 
                 Dims dims(image.dimX(), image.dimY(), image.dimZ());
@@ -344,7 +382,11 @@ namespace karabo {
                 emit("signalChanged", hash, getInstanceId());
             }
 
-            void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void set(const std::string& key, const karabo::xip::RawImageData& image) {
+                this->set(key, image, getActualTimestamp());
+            }
+            
+            void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
 
                 Hash hash(key, image.hash());
@@ -360,7 +402,17 @@ namespace karabo {
              * any observers.
              * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
              */
-            void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void set(const karabo::util::Hash& hash) {
+                this->set(hash, getActualTimestamp());
+            }
+            
+            /**
+             * Updates the state of the device with all key/value pairs given in the hash
+             * NOTE: This function will automatically and efficiently (only one message) inform
+             * any observers.
+             * @param config Hash of updated internal parameters (must be declared in the expectedParameters function)
+             */
+            void set(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
                 boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
@@ -387,12 +439,21 @@ namespace karabo {
             }
 
             template <class ValueType>
-            void setNoValidate(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void setNoValidate(const std::string& key, const ValueType& value) {
+                this->setNoValidate<ValueType>(key, value, getActualTimestamp());
+            }
+
+            template <class ValueType>
+            void setNoValidate(const std::string& key, const ValueType& value, const karabo::util::Timestamp& timestamp) {
                 karabo::util::Hash h(key, value);
                 this->setNoValidate(h, timestamp);
             }
 
-            void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp = karabo::util::Timestamp()) {
+            void setNoValidate(const karabo::util::Hash& hash) {
+                this->setNoValidate(hash, getActualTimestamp());
+            }
+
+            void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
                 // TODO Care about timestamps!!
                 if (!hash.empty()) {
                     m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
@@ -465,7 +526,7 @@ namespace karabo {
                 rules.injectDefaults = true;
                 rules.injectTimestamps = true;
                 karabo::util::Validator v(rules);
-                v.validate(schema, karabo::util::Hash(), validated, karabo::util::Timestamp());
+                v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
 
@@ -505,7 +566,7 @@ namespace karabo {
                 rules.injectDefaults = true;
                 rules.injectTimestamps = true;
                 karabo::util::Validator v(rules);
-                v.validate(schema, karabo::util::Hash(), validated, karabo::util::Timestamp());
+                v.validate(schema, karabo::util::Hash(), validated, getActualTimestamp());
                 {
                     boost::mutex::scoped_lock lock(m_objectStateChangeMutex);
                     // Clear previously injected parameters
@@ -694,6 +755,9 @@ namespace karabo {
                 KARABO_LOG_ERROR << detailedMessage;
             }
 
+            virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+            }
+            
             void execute(const std::string& command) const {
                 call("", command);
             }
@@ -772,7 +836,7 @@ namespace karabo {
 
                 // The following lines of code are needed to initially inject timestamps to the parameters
                 karabo::util::Hash validated;
-                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, karabo::util::Timestamp());
+                std::pair<bool, std::string> result = m_validatorIntern.validate(m_fullSchema, m_parameters, validated, getActualTimestamp());
                 if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 m_objectStateChangeMutex.unlock();
@@ -780,6 +844,11 @@ namespace karabo {
                 // Start the state machine
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
+                if (m_parameters.get<bool>("useTimeserver")) {
+                    // TODO: change this to connect(), once the startup bug is fixed)
+                    connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
+                }
+                
                 t.join(); // Blocks 
             }
 
@@ -949,8 +1018,34 @@ namespace karabo {
                         KARABO_LOG_WARN << "Processing latency " << processingLatency << " are higher than established limit : " << latencyUpper;
                     }
                 }
-                this->set(h, karabo::util::Timestamp());
+                this->set(h);
             }
+
+            void slotTimeTick(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
+                m_timeChangeMutex.lock();
+                m_timeId = id;
+                m_timeSec = sec;
+                m_timeFrac = frac;
+                m_timePeriod = period;
+                m_timeChangeMutex.unlock();
+                
+                onTimeUpdate(id, sec, frac, period);
+            }
+            
+            karabo::util::Timestamp getActualTimestamp() {
+                karabo::util::Epochstamp epochNow;
+                unsigned long long id = 0;
+                m_timeChangeMutex.lock();
+                if (m_timePeriod > 0) {
+                    karabo::util::Epochstamp epochLastReceived(m_timeSec, m_timeFrac);
+                    karabo::util::TimeDuration duration = epochNow.elapsed(epochLastReceived);
+                    unsigned int nPeriods = (duration.getTotalSeconds() * 1000000 + duration.getFractions(karabo::util::MICROSEC)) / m_timePeriod;
+                    id = m_timeId + nPeriods;
+                }
+                m_timeChangeMutex.unlock();
+                return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
+            }
+            
         };
     }
 }
