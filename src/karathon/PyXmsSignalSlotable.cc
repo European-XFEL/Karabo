@@ -283,15 +283,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             , (bp::arg("instanceId")))
 
             .def("connectInputChannels"
-            , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))
-
-            .def("startTimer"
-            , (void (SignalSlotableWrap::*)(int, const bp::object&, string const &)) (&SignalSlotableWrap::startTimerPy)
-            , (bp::arg("millis"), bp::arg("handler"), bp::arg("id")))
-
-            .def("killTimer"
-            , (void (SignalSlotableWrap::*)(string const &)) (&SignalSlotableWrap::killTimerPy)
-            , (bp::arg("timerId")))
+            , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))          
             ;
 }
 
