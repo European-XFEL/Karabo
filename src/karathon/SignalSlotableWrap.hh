@@ -436,41 +436,10 @@ namespace karathon {
                 d[it->first] = bp::object(it->second);
             }
             return bp::object(d);
-        }
-
-        void proxyTimerHandler(const std::string& id) {
-            bool found = false;
-            ScopedGILAcquire gil;
-            bp::object handler;
-            {
-                boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
-                std::map<std::string, bp::object>::iterator it = m_timerHandlersPy.find(id);
-                if (it == m_timerHandlersPy.end()) return; // not registered
-                handler = it->second;
-                found = true;
-                m_timerHandlersPy.erase(it); // <--- unregister handler
-            }
-            if (found)
-                handler(id); // <--- call python handler (inside it may register itself again :)
-        }
-
-        void startTimerPy(int millis, const bp::object& timerHandler, const std::string& id) {
-            {
-                boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
-                m_timerHandlersPy[id] = timerHandler;
-            }
-            startTimer(millis, boost::bind(&SignalSlotableWrap::proxyTimerHandler, this, id), id);
-        }
-
-        void killTimerPy(const std::string& id) {
-            boost::mutex::scoped_lock lock(m_timerHandlersPyMutex);
-            m_timerHandlersPy.erase(id);
-        }
+        }       
 
     private: // members
-        boost::thread m_eventLoop;
-        boost::mutex m_timerHandlersPyMutex;
-        std::map<std::string, bp::object> m_timerHandlersPy;
+        boost::thread m_eventLoop;       
     };
 }
 
