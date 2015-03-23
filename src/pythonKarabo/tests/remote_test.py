@@ -62,6 +62,7 @@ class Remote(Device):
     @coroutine
     def count(self):
         for i in range(30):
+            print("count", i)
             self.counter = i
             yield from sleep(0.1)
 
@@ -84,18 +85,31 @@ class Local(Device):
     @Slot()
     @coroutine
     def disconnect(self):
+        print("l0")
         d = yield from getDevice("remote")
-        yield from d.count()
+        print("l1")
+        task = async(d.count())
+        print("l2")
         yield from sleep(0.3)
+        print("l3")
         self.f1 = d.counter
+        print("l4")
         yield from sleep(0.3)
+        print("l5")
         with (yield from d):
+            print("l6")
             self.f2 = d.counter
+        print("l7")
         yield from sleep(1)
+        print("l8")
         self.f3 = d.counter
+        print("l9")
         with d:
+            print("l10")
             yield from sleep(2)
             self.f4 = d.counter
+        print("l11")
+        yield from task
 
     @Slot()
     @coroutine
@@ -140,7 +154,7 @@ class Local(Device):
             d.counter = 0
             yield from waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
-            async(d.count())
+            task = async(d.count())
             yield from waitUntil(lambda: d.counter > 10)
             self.f2 = d.counter
             try:
@@ -149,6 +163,7 @@ class Local(Device):
                 self.timeout = False
             except TimeoutError:
                 self.timeout = True
+            yield from task
 
     @Slot()
     @coroutine
@@ -225,7 +240,7 @@ class Tests(TestCase):
         yield from local.disconnect()
         self.assertEqual(local.f1, -1)
         self.assertNotEqual(local.f2, -1)
-        self.assertTrue(local.f2 == local.f3 or (local.f2 + 1) == local.f3)  # temporary patch
+        self.assertTrue(local.f2 < 7 and (0 <= local.f3 - local.f2 < 2))
         self.assertEqual(local.f4, 29)
 
 
