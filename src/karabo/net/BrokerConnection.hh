@@ -101,7 +101,12 @@ namespace karabo {
              */
             virtual const std::string& getBrokerTopic() const = 0;
                             
-
+            /**
+             * Returns vector of the brokers in cluster, or just empty vector
+             * @return a vector of string elements of <hostname1>:<port1>, <hostname2>:<port2>, ...
+             */
+            virtual const std::vector<std::string>& getBrokerHosts() const = 0;
+            
             /**
              * This function creates a "channel" for the given connection.
              * @return Pointer to BrokerChannel

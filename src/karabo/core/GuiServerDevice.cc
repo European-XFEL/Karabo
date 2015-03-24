@@ -74,15 +74,25 @@ namespace karabo {
             m_ioService = m_dataConnection->getIOService();
             m_serializer = BinarySerializer<Hash>::create("Bin"); // for reading
             
+            // Inherit from device connection settings
             Hash loggerInput = input;
-            string host = getConnection()->getBrokerHostname() + ":" + toString(getConnection()->getBrokerPort());
+            string hostname = getConnection()->getBrokerHostname();
+            unsigned int port = getConnection()->getBrokerPort();
+            const vector<string>& brokers = getConnection()->getBrokerHosts();
+            string host = hostname + ":" + toString(port);
+            
             loggerInput.set("loggerConnection.Jms.hostname", host);
+            loggerInput.set("loggerConnection.Jms.port", port);
+            loggerInput.set("loggerConnection.Jms.brokerHosts", brokers);
             
             m_loggerConnection = BrokerConnection::createChoice("loggerConnection", loggerInput);
             m_loggerIoService = m_loggerConnection->getIOService();
       
             // This creates a connection in order to forward exceptions happened in the GUI
-            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug", "hostname", host));
+            m_guiDebugConnection = BrokerConnection::create("Jms", Hash("destinationName", "karaboGuiDebug",
+                                                                        "hostname", host,
+                                                                        "port", port,
+                                                                        "brokerHosts", brokers));
         }
 
 
