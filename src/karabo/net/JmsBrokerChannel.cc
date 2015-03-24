@@ -47,12 +47,30 @@ namespace karabo {
                 m_isTransacted = MQ_TRUE;
             }
 
-            MQ_SAFE_CALL(MQCreateSession(m_jmsConnection->m_connectionHandle, m_isTransacted, m_jmsConnection->m_acknowledgeMode, MQ_SESSION_SYNC_RECEIVE, &m_sessionHandle));
+            try {
+                m_jmsConnection->connectToBrokers();
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
+            }
+            
+            MQSessionHandle invalidSession = MQ_INVALID_HANDLE;
+            if (m_sessionHandle.handle == invalidSession.handle) {
+                MQ_SAFE_CALL(MQCreateSession(m_jmsConnection->m_connectionHandle,
+                                             m_isTransacted,
+                                             m_jmsConnection->m_acknowledgeMode,
+                                             MQ_SESSION_SYNC_RECEIVE,
+                                             &m_sessionHandle));
+            }
 
-            string destination = m_jmsConnection->m_destinationName;
-            if (!subDestination.empty()) destination += "_" + subDestination;
-            MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(), m_jmsConnection->m_destinationType, &m_destinationHandle));
-
+            MQDestinationHandle invalidDest = MQ_INVALID_HANDLE;
+            if (m_destinationHandle.handle == invalidDest.handle) {
+                string destination = m_jmsConnection->m_destinationName;
+                if (!subDestination.empty()) destination += "_" + subDestination;
+                MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(),
+                                                 m_jmsConnection->m_destinationType,
+                                                 &m_destinationHandle));
+            }            
+            
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
