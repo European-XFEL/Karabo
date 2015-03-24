@@ -207,7 +207,6 @@ namespace karabo {
                 if (hostport.size() < 2) input.get("port", m_port);
                 else m_port = fromString<unsigned int>(hostport[1]);
                 m_brokerHosts.push_back(m_hostname + ":" + toString(m_port));
-                cout << "m_brokerHost is empty and hostname: " << m_hostname << ", port: " << m_port << ", brokers: " << endl;
             } else {
                 // Cluster broker setup.
                 m_clusterMode = true;
