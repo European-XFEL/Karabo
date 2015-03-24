@@ -62,7 +62,6 @@ class Remote(Device):
     @coroutine
     def count(self):
         for i in range(30):
-            print("count", i)
             self.counter = i
             yield from sleep(0.1)
 
@@ -85,31 +84,19 @@ class Local(Device):
     @Slot()
     @coroutine
     def disconnect(self):
-        print("l0")
-        d = yield from getDevice("remote")
-        print("l1")
+        d = yield from wait_for(getDevice("remote"), 1)
         task = async(d.count())
-        print("l2")
         yield from sleep(0.3)
-        print("l3")
         self.f1 = d.counter
-        print("l4")
         yield from sleep(0.3)
-        print("l5")
-        with (yield from d):
-            print("l6")
+        with (yield from wait_for(iter(d), 1)):
             self.f2 = d.counter
-        print("l7")
         yield from sleep(1)
-        print("l8")
         self.f3 = d.counter
-        print("l9")
         with d:
-            print("l10")
             yield from sleep(2)
             self.f4 = d.counter
-        print("l11")
-        yield from task
+        yield from wait_for(task, 1)
 
     @Slot()
     @coroutine
