@@ -79,6 +79,8 @@ namespace karabo {
 
             const std::string& getBrokerTopic() const;
 
+            const std::vector<std::string>& getBrokerHosts() const;
+
             BrokerChannel::Pointer createChannel(const std::string& subDestionation = "");
 
             bool getDeliveryInhibition() const {

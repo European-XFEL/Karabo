@@ -41,7 +41,7 @@ namespace karabo {
         }
 
         DataLogReader::DataLogReader(const Hash& input) : karabo::core::Device<karabo::core::OkErrorFsm>(input) {
-            set<int>("nThreads", 1);
+            //set<int>("nThreads", 1);
         }
 
         DataLogReader::~DataLogReader() {

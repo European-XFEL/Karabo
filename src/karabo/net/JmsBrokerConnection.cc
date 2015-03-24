@@ -199,14 +199,17 @@ namespace karabo {
             this->setIOServiceType("Jms"); // Defines the type of the composed IO service within abstract IO service
 
             input.get("brokerHosts", m_brokerHosts);
-            input.get("port", m_port);
-
-            vector<string> hostport = fromString<string, vector>(input.get<string>("hostname"), ":");
-            m_hostname = hostport[0];
-            if (hostport.size() < 2 || hostport[1] == "")
-                m_port = 7777;
-            else
-                m_port = fromString<unsigned int>(hostport[1]);
+            if (m_brokerHosts.empty()) {
+                // Standalone broker setup
+                m_clusterMode = false;
+                vector<string> hostport = fromString<string, vector>(input.get<string>("hostname"), ":");
+                m_hostname = hostport[0];
+                if (hostport.size() < 2) input.get("port", m_port);
+                m_brokerHosts.push_back(m_hostname + ":" + toString(m_port));
+            } else {
+                // Cluster broker setup.
+                m_clusterMode = true;
+            }
 
             input.get("destinationName", m_destinationName);
 
@@ -234,15 +237,6 @@ namespace karabo {
             else if (acknowledgeMode == "transacted") m_acknowledgeMode = MQ_SESSION_TRANSACTED;
             else if (acknowledgeMode == "dupsOk") m_acknowledgeMode = MQ_DUPS_OK_ACKNOWLEDGE;
 
-            if (m_brokerHosts.empty()) {
-                // Standalone broker setup
-                m_clusterMode = false;
-                m_brokerHosts.push_back(m_hostname + ":" + toString(m_port));
-            } else {
-                // Cluster broker setup.
-                m_clusterMode = true;
-            }
-
             try {
                 connectToBrokers();
             } catch (...) {
@@ -252,6 +246,11 @@ namespace karabo {
 
 
         void JmsBrokerConnection::connectToBrokers() {
+
+            MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
+            if (m_connectionHandle.handle != invalidConnection.handle)
+                return;
+
             vector<string> hostport = fromString<string, vector>(m_brokerHosts[0], ":");
             m_hostname = hostport[0];
             if (hostport.size() < 2 || hostport[1] == "")
@@ -277,7 +276,7 @@ namespace karabo {
                 setConnectionProperties(propertiesHandle);
                 // Initiate connection
                 // Check if onException is a good idea
-                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle));
+                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &/*::karabo_net_jmsbrokerconnection_*/onException, this, &m_connectionHandle));
             } catch (...) {
                 KARABO_RETHROW
             }
@@ -301,7 +300,7 @@ namespace karabo {
                 {
                     MQStatus status;
                     boost::mutex::scoped_lock lock(m_openMQMutex);
-                    status = MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, NULL, &m_connectionHandle);
+                    status = MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
                         MQString tmp = MQGetStatusString(status);
                         std::string errorString(tmp);
@@ -321,11 +320,24 @@ namespace karabo {
 
 
         void JmsBrokerConnection::onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData) {
-            MQString tmp = MQGetStatusString(status);
-            std::string errorString(tmp);
-            MQFreeString(tmp);
-            KARABO_LOG_FRAMEWORK_ERROR << "Broker is in trouble: " << errorString;
-            //throw KARABO_MESSAGE_EXCEPTION(errorString);
+            JmsBrokerConnection* that = reinterpret_cast<JmsBrokerConnection*> (callbackData);
+            string host = that->getBrokerHostname() + ":" + toString(that->getBrokerPort());
+            MQError code = MQGetStatusCode(status);
+            {
+                MQString tmp = MQGetStatusString(status);
+                std::string errorString(tmp);
+                MQFreeString(tmp);
+                KARABO_LOG_FRAMEWORK_ERROR << "Current broker \"" << host << "\" is in trouble: " << errorString;
+            }
+
+            switch (code) {
+                case MQ_BROKER_CONNECTION_CLOSED:
+                case MQ_TCP_CONNECTION_CLOSED:
+                    that->close();
+                    break;
+                default:
+                    break;
+            }
         }
 
 
@@ -362,14 +374,14 @@ namespace karabo {
                 if (m_connectionHandle.handle != invalidConnection.handle) {
                     MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
                     MQ_SAFE_CALL(MQFreeConnection(m_connectionHandle));
-                    m_connectionHandle = MQ_INVALID_HANDLE;
                 }
             } catch (...) {
                 MQCloseConnection(m_connectionHandle);
                 MQFreeConnection(m_connectionHandle);
-                m_connectionHandle = MQ_INVALID_HANDLE;
                 KARABO_RETHROW
             }
+
+            m_connectionHandle = MQ_INVALID_HANDLE;
         }
 
 
@@ -385,6 +397,11 @@ namespace karabo {
 
         const std::string& JmsBrokerConnection::getBrokerTopic() const {
             return m_destinationName;
+        }
+
+
+        const std::vector<std::string>& JmsBrokerConnection::getBrokerHosts() const {
+            return m_brokerHosts;
         }
 
 
