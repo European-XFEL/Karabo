@@ -5,6 +5,8 @@ karabo.api_version = 2
 
 from asyncio import set_event_loop
 
+import IPython
+
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setNoWait, executeNoWait,
     DeviceClientBase)
@@ -26,8 +28,16 @@ class DeviceClient(Macro, DeviceClientBase):
             else:
                 raise AttributeError('Unknown device "{}"'.format(name))
 
+
+def completer(self, line):
+    return list(devices.systemTopology["device"])
+
 devices = DeviceClient()
 set_event_loop(NoEventLoop(devices))
+
+ip = IPython.get_ipython()
+ip.set_hook("complete_command", completer, re_key=".*getDevice")
+
 
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setNoWait",
            "executeNoWait"]
