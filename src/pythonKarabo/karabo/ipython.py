@@ -10,7 +10,7 @@ from IPython.kernel import KernelClient
 
 from karabo.enums import AccessLevel, AccessMode
 from karabo.python_device import Device
-from karabo.hashtypes import VectorChar
+from karabo.hashtypes import VectorChar, Slot
 from karabo.signalslot import coslot
 
 
@@ -78,6 +78,10 @@ class IPythonKernel(Device):
         requiredAccessLevel=AccessLevel.EXPERT)
     def stdin(self, msg):
         self.client.stdin_channel.send(pickle.loads(msg))
+
+    @Slot(requiredAccessLevel=AccessLevel.EXPERT)
+    def interrupt(self):
+        self.manager.interrupt_kernel()
 
     def run(self):
         super().run()
