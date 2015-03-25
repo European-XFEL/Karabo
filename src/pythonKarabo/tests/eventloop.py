@@ -1,4 +1,4 @@
-from asyncio import coroutine, gather, set_event_loop
+from asyncio import coroutine, gather, set_event_loop, wait_for
 from functools import wraps
 import os
 import socket
@@ -10,16 +10,16 @@ def async_tst(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         coro = coroutine(f)
-        loop.run_until_complete(loop.create_task(coro(self, *args, **kwargs),
-                                                 self.instance))
+        loop.run_until_complete(wait_for(loop.create_task(
+            coro(self, *args, **kwargs), self.instance), 15))
     return wrapper
 
 
 def sync_tst(f):
     @wraps(f)
     def wrapper(self, *args):
-        loop.run_until_complete(loop.create_task(
-            loop.start_thread(f, self, *args), self.instance))
+        loop.run_until_complete(wait_for(loop.create_task(
+            loop.start_thread(f, self, *args), self.instance), 15))
     return wrapper
 
 
