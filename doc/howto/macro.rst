@@ -1,5 +1,6 @@
-Writing a macro
-===============
+********************
+How to write a macro
+********************
 
 Karabo uses `Python <http://www.python.org>`_ as a macro language. So it might
 be a good idea to have a look at the `Python Documentation
@@ -13,7 +14,7 @@ on. Macros can be configured using so-called properties which are shown as
 editable widgets in the GUI.
 
 Hello World!
-------------
+============
 
 Let's just start with the classic hello world example: Right-Click onto the
 Macros section in the project and add a macro, calling it for example
@@ -59,7 +60,7 @@ follows::
 
 
 Talking to devices
-------------------
+==================
 
 Macros would be quite boring, if one could not control devices with them. As a
 first step, we need to connect to a device. This is done as follows::
@@ -103,7 +104,7 @@ add its address to the macro function.
 
 
 Monitors
---------
+========
 
 Until now, we discussed how to control other devices using a macro. The
 opposite is also an important usecase: process the data coming from other
@@ -139,7 +140,7 @@ into the usual Celsius scale.
 
 
 Timeouts and errors
--------------------
+==================-
 
 While the code above looks quite simple, the things that are happening under
 the hood are quite complex and deserve some attention. The first thing to be
@@ -179,7 +180,7 @@ Or if you are using strings for addressing::
 *TODO: Show some examples for possible exceptions*
 
 Non-blocking operations
------------------------
+======================-
 
 While most of the time the blocking, sequencing like behaviour of dealing with
 devices is exactly what you want and anyways the safest way to perform the
@@ -219,7 +220,7 @@ that what I did really happended? This leads to the next section of learning
 how to wait on something.
 
 Waiting for things to happen
-----------------------------
+============================
 
 Waiting for things to happen is quite simple, you can do it like this::
 
