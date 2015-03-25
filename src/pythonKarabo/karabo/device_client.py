@@ -8,9 +8,9 @@ from karabo.python_device import Device
 
 class DeviceClientBase(Device):
     def __init__(self, configuration):
-        super().__init__(configuration)
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash())
+        super().__init__(configuration)
 
     def run(self):
         super().run()
