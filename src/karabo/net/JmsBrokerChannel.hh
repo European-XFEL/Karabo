@@ -79,6 +79,7 @@ namespace karabo {
             SignalError m_signalError;
 
             // Types needed by the OpenMQ API
+            boost::mutex m_sessionHandleMutex;
             MQSessionHandle m_sessionHandle;
             MQDestinationHandle m_destinationHandle;
             MQBool m_isTransacted;
@@ -108,6 +109,8 @@ namespace karabo {
             // Consumer mutex
             mutable boost::mutex m_openMQMutex;
 
+            // Sub-destination
+            std::string m_subDestination;
 
         public:
 
@@ -251,6 +254,8 @@ namespace karabo {
             void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
 
         private: //functions
+            
+            void init();
             
             /**
              * This stops the asynchronous processing.
