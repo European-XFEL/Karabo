@@ -84,19 +84,19 @@ class Local(Device):
     @Slot()
     @coroutine
     def disconnect(self):
-        d = yield from wait_for(getDevice("remote"), 1)
+        d = yield from getDevice("remote")
         task = async(d.count())
         yield from sleep(0.3)
         self.f1 = d.counter
         yield from sleep(0.3)
-        with (yield from wait_for(iter(d), 1)):
+        with (yield from d):
             self.f2 = d.counter
         yield from sleep(1)
         self.f3 = d.counter
         with d:
             yield from sleep(2)
             self.f4 = d.counter
-        yield from wait_for(task, 1)
+        yield from task
 
     @Slot()
     @coroutine
@@ -142,15 +142,17 @@ class Local(Device):
             yield from waitUntil(lambda: d.counter == 0)
             self.f1 = d.counter
             task = async(d.count())
-            yield from waitUntil(lambda: d.counter > 10)
-            self.f2 = d.counter
             try:
-                yield from wait_for(waitUntil(lambda: d.counter > 40),
-                                    timeout=3)
-                self.timeout = False
-            except TimeoutError:
-                self.timeout = True
-            yield from task
+                yield from waitUntil(lambda: d.counter > 10)
+                self.f2 = d.counter
+                try:
+                    yield from wait_for(waitUntil(lambda: d.counter > 40),
+                                        timeout=3)
+                    self.timeout = False
+                except TimeoutError:
+                    self.timeout = True
+            finally:
+                yield from task
 
     @Slot()
     @coroutine
@@ -158,14 +160,17 @@ class Local(Device):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            async(d.count())
-            for i in range(30):
-                j = yield from waitUntilNew(d).counter
-                if i != j:
-                    self.max = i
-                    break
-            else:
-                self.max = 30
+            task = async(d.count())
+            try:
+                for i in range(30):
+                    j = yield from waitUntilNew(d).counter
+                    if i != j:
+                        self.max = i
+                        break
+                else:
+                    self.max = 30
+            finally:
+                yield from task
 
     @Slot()
     @coroutine
@@ -173,14 +178,17 @@ class Local(Device):
         with (yield from getDevice("remote")) as d:
             d.counter = 0
             yield from sleep(0.1)
-            async(d.count())
-            for i in range(30):
-                h = yield from waitUntilNew(d)
-                if i != h["counter"]:
-                    self.max = i
-                    break
-            else:
-                self.max = 30
+            task = async(d.count())
+            try:
+                for i in range(30):
+                    h = yield from waitUntilNew(d)
+                    if i != h["counter"]:
+                        self.max = i
+                        break
+                else:
+                    self.max = 30
+            finally:
+                yield from task
 
     @Slot()
     @coroutine
