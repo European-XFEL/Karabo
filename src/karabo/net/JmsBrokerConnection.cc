@@ -242,8 +242,9 @@ namespace karabo {
 
 
         void JmsBrokerConnection::connectToBrokers() {
-
+            
             MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
+            boost::mutex::scoped_lock lock(m_connectionHandleMutex);
             if (m_connectionHandle.handle != invalidConnection.handle)
                 return;
 
@@ -298,6 +299,7 @@ namespace karabo {
                 {
                     MQStatus status;
                     boost::mutex::scoped_lock lock(m_openMQMutex);
+                    m_connectionHandle = MQ_INVALID_HANDLE;
                     status = MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, this, &m_connectionHandle);
                     if (MQStatusIsError(status) == MQ_TRUE) {
                         MQString tmp = MQGetStatusString(status);
