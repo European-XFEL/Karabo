@@ -36,7 +36,8 @@ namespace karabo {
         , m_hasAsyncHandler(false)
         , m_syncReadTimeout(100000)
         , m_hasConsumer(false)
-        , m_hasProducer(false) {
+        , m_hasProducer(false)
+        , m_subDestination(subDestination) {
             
             // Get the type specific IO service
             m_ioService = m_jmsConnection->getIOService()->castTo<JmsBrokerIOService > ();
@@ -47,12 +48,27 @@ namespace karabo {
                 m_isTransacted = MQ_TRUE;
             }
 
+            //init();
+            
+            // Create the serializers
+            m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
+            m_binarySerializer = BinarySerializer<Hash>::create("Bin");
+        }
+
+        JmsBrokerChannel::~JmsBrokerChannel() {
+            close();
+        }
+
+
+        void JmsBrokerChannel::init() {
+            m_isStopped = false;
             try {
                 m_jmsConnection->connectToBrokers();
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
             }
             
+            boost::mutex::scoped_lock lock(m_sessionHandleMutex);
             MQSessionHandle invalidSession = MQ_INVALID_HANDLE;
             if (m_sessionHandle.handle == invalidSession.handle) {
                 MQ_SAFE_CALL(MQCreateSession(m_jmsConnection->m_connectionHandle,
@@ -65,22 +81,14 @@ namespace karabo {
             MQDestinationHandle invalidDest = MQ_INVALID_HANDLE;
             if (m_destinationHandle.handle == invalidDest.handle) {
                 string destination = m_jmsConnection->m_destinationName;
-                if (!subDestination.empty()) destination += "_" + subDestination;
+                if (!m_subDestination.empty()) destination += "_" + m_subDestination;
                 MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(),
                                                  m_jmsConnection->m_destinationType,
                                                  &m_destinationHandle));
             }            
-            
-            // Create the serializers
-            m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
-            m_binarySerializer = BinarySerializer<Hash>::create("Bin");
         }
-
-        JmsBrokerChannel::~JmsBrokerChannel() {
-            close();
-        }
-
-
+        
+        
         void JmsBrokerChannel::read(std::vector<char>& data) {
 
             Hash headerDummy;
@@ -154,7 +162,7 @@ namespace karabo {
 
 
         MQStatus JmsBrokerChannel::consumeMessage(MQMessageHandle& messageHandle, const int timeout) {
-
+            
             ensureExistanceOfConsumer();
 
             MQStatus status;
@@ -165,6 +173,7 @@ namespace karabo {
 
         void JmsBrokerChannel::ensureExistanceOfConsumer() {
             if (!m_hasConsumer) {
+                init();
                 MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection->m_deliveryInhibition, &m_consumerHandle));
                 boost::mutex::scoped_lock lock(m_openMQMutex);
                 m_hasConsumer = true;
@@ -904,6 +913,7 @@ namespace karabo {
 
         void JmsBrokerChannel::ensureProducerAvailable() {
             if (!m_hasProducer) {
+                init();
                 MQ_SAFE_CALL(MQCreateMessageProducerForDestination(m_sessionHandle, m_destinationHandle, &m_producerHandle));
                 boost::mutex::scoped_lock lock(m_openMQMutex);
                 m_hasProducer = true;
@@ -1015,11 +1025,13 @@ namespace karabo {
             if (m_hasProducer && m_producerHandle.handle != invalidProducer.handle) {
                 MQ_SAFE_CALL(MQCloseMessageProducer(m_producerHandle));
                 m_producerHandle = MQ_INVALID_HANDLE;
+                m_hasProducer = false;
             }
             MQConsumerHandle invalidConsumer = MQ_INVALID_HANDLE;
             if (m_hasConsumer && m_consumerHandle.handle != invalidConsumer.handle) {
                 MQ_SAFE_CALL(MQCloseMessageConsumer(m_consumerHandle));
                 m_consumerHandle = MQ_INVALID_HANDLE;
+                m_hasConsumer = false;
             }
             MQDestinationHandle invalidDestination = MQ_INVALID_HANDLE;
             if (m_destinationHandle.handle != invalidDestination.handle) {
@@ -1030,7 +1042,8 @@ namespace karabo {
             if (m_sessionHandle.handle != invalidSession.handle) {
                 MQ_SAFE_CALL(MQCloseSession(m_sessionHandle));
                 m_sessionHandle = MQ_INVALID_HANDLE;
-            }                                    
+            }
+            m_hasAsyncHandler = false;
         }      
 
 

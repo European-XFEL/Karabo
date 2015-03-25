@@ -54,6 +54,7 @@ namespace karabo {
 
             mutable boost::mutex m_openMQMutex;
 
+            boost::mutex m_connectionHandleMutex;
             MQConnectionHandle m_connectionHandle;
 
 
