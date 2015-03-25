@@ -79,7 +79,8 @@ class Client(inprocess.QtInProcessKernelClient):
         self.name = name
         self.device = manager.getDevice(self.name)
         self.device.addVisible()
-        self.device.signalStatusChanged.connect(self.onStatusChanged)
+        self.device.boxvalue.state.signalUpdateComponent.connect(
+            self.onStateChanged)
         self.device.boxvalue.iopub.signalUpdateComponent.connect(
             self.iopub_channel.receive)
         self.device.boxvalue.shell.signalUpdateComponent.connect(
@@ -87,8 +88,8 @@ class Client(inprocess.QtInProcessKernelClient):
         self.device.boxvalue.stdin.signalUpdateComponent.connect(
             self.stdin_channel.receive)
 
-    def onStatusChanged(self, device, status, error):
-        self.alive = status == "alive"
+    def onStateChanged(self, box, state, timestamp):
+        self.alive = state == "Running"
         if self.alive:
             if not self.started:
                 self.start_channels()
