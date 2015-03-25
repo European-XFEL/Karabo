@@ -82,7 +82,8 @@ class IPythonKernel(Device):
     def run(self):
         super().run()
         self.manager = KernelManager(client_factory=Client)
-        self.manager.start_kernel()
+        self.manager.start_kernel(
+            extra_arguments=["-c", "from karabo.cli import *"])
         self.client = self.manager.client()
         self.client.shell_channel.device = self
         self.client.iopub_channel.device = self
