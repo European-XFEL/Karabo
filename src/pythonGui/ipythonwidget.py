@@ -55,6 +55,8 @@ class Channel(inprocess.QtInProcessChannel):
 
 
 class Manager(kernel_mixins.QtKernelManagerMixin):
+    __client = None
+
     def start_kernel(self):
         self.name = "CLI-{}-{}".format(socket.gethostname(), os.getpid())
         network.onInitDevice("macroServer", "IPythonKernel", self.name, Hash())
@@ -63,7 +65,12 @@ class Manager(kernel_mixins.QtKernelManagerMixin):
         network.onKillDevice(self.name)
 
     def client(self):
-        return Client(self.name)
+        if self.__client is None:
+            self.__client = Client(self.name)
+        return self.__client
+
+    def interrupt_kernel(self):
+        self.__client.device.boxvalue.interrupt.execute()
 
 
 class Client(inprocess.QtInProcessKernelClient):
