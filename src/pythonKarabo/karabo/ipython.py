@@ -88,9 +88,13 @@ class IPythonKernel(Device):
         self.client.iopub_channel.device = self
         self.client.stdin_channel.device = self
         self.client.start_channels()
+        self.state = "Running"
 
     @coslot
     def slotKillDevice(self):
+        self.state = "Closing"
         yield from self._ss.loop.run_in_executor(None,
                                                  self.manager.shutdown_kernel)
+        self.state = "Killing"
         yield from super().slotKillDevice()
+        self.state = "Killed"
