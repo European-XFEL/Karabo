@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <string>
+#include "Configurator.hh"
 
 namespace karabo {
     namespace util {
@@ -37,20 +38,20 @@ namespace karabo {
                 calculate();
             }
 
-            Dims(ull64 xSize) : m_vec(std::vector<ull64>(1, xSize)) {
+            Dims(ull64 x1Size) : m_vec(std::vector<ull64>(1, x1Size)) {
                 calculate();
             }
 
-            Dims(ull64 xSize, ull64 ySize) : m_vec(std::vector<ull64>(2, 0)) {
-                m_vec[0] = xSize;
-                m_vec[1] = ySize;
+            Dims(ull64 x1Size, ull64 x2Size) : m_vec(std::vector<ull64>(2, 0)) {
+                m_vec[0] = x1Size;
+                m_vec[1] = x2Size;
                 calculate();
             }
 
-            Dims(ull64 xSize, ull64 ySize, ull64 zSize) : m_vec(std::vector<ull64>(3, 0)) {
-                m_vec[0] = xSize;
-                m_vec[1] = ySize;
-                m_vec[2] = zSize;
+            Dims(ull64 x1Size, ull64 x2Size, ull64 x3Size) : m_vec(std::vector<ull64>(3, 0)) {
+                m_vec[0] = x1Size;
+                m_vec[1] = x2Size;
+                m_vec[2] = x3Size;
                 calculate();
             }
 
@@ -92,20 +93,41 @@ namespace karabo {
                 calculate();
             }
 
-            ull64 x() const {
+            KARABO_DEPRECATED ull64 x() const {
                 if (m_rank >= 1) return m_vec[0];
                 return 0;
             }
 
-            ull64 y() const {
+            KARABO_DEPRECATED ull64 y() const {
                 if (m_rank >= 2) return m_vec[1];
                 return 1;
             }
 
-            ull64 z() const {
+            KARABO_DEPRECATED ull64 z() const {
                 if (m_rank >= 3) return m_vec[2];
                 return 1;
             }
+            
+            ull64 x1() const {
+                if (m_rank >= 1) return m_vec[0];
+                return 0;
+            }
+
+            ull64 x2() const {
+                if (m_rank >= 2) return m_vec[1];
+                return 1;
+            }
+
+            ull64 x3() const {
+                if (m_rank >= 3) return m_vec[2];
+                return 1;
+            }
+            
+             ull64 x4() const {
+                if (m_rank >= 4) return m_vec[3];
+                return 1;
+            }
+
 
 
 

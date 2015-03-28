@@ -30,6 +30,7 @@ private:
     karabo::util::Hash m_bigHash;
     karabo::util::Hash m_unrootedHash;
     std::vector<karabo::util::Hash> m_vectorOfHashes;
+    karabo::util::Hash m_sharedPtrHash;
 
     std::vector<double> m_data;
 };

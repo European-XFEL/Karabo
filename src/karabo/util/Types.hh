@@ -121,7 +121,11 @@ namespace karabo {
                 ARRAY_INT64, // std::pair<long long*, size_t>
                 ARRAY_UINT64, // std::pair<unsigned long long*, size_t>
                 ARRAY_FLOAT, // std::pair<float*, size_t>
-                ARRAY_DOUBLE // std::pair<double*, size_t>
+                ARRAY_DOUBLE, // std::pair<double*, size_t>
+                        
+                HASH_POINTER, // Hash::Pointer 
+                VECTOR_HASH_POINTER // std::vector<Hash::Pointer>
+                        
             };
 
             template <class From, class To>
@@ -211,8 +215,12 @@ namespace karabo {
                         return RAW_ARRAY;
                     case Types::VECTOR_HASH:
                         return VECTOR_HASH;
+                    case Types::VECTOR_HASH_POINTER:
+                        return VECTOR_HASH_POINTER;
                     case Types::HASH:
                         return HASH;
+                    case Types::HASH_POINTER:
+                        return HASH_POINTER;
                     case Types::SCHEMA:
                         return SCHEMA;
                     case Types::ANY:

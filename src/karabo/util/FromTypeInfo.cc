@@ -65,6 +65,8 @@ namespace karabo {
                     _KARABO_HELPER_MACRO2(UINT64, unsigned long long)
                     _KARABO_HELPER_MACRO2(FLOAT, float)
                     _KARABO_HELPER_MACRO2(DOUBLE, double)
+                    (std::string(typeid (Hash::Pointer).name()), Types::HASH_POINTER)
+                    (std::string(typeid (std::vector<Hash::Pointer>).name()), Types::VECTOR_HASH_POINTER)
 
                     ;
 #undef _KARABO_HELPER_MACRO

@@ -534,12 +534,22 @@ namespace karabo {
                 if (type == Types::HASH) {
                     os << " +" << std::endl;
                     toStream(os, hit->getValue<Hash>(), depth + 1);
+                } else if (type == Types::HASH_POINTER) {
+                    os << " + (Pointer)" << std::endl;
+                    toStream(os, *(hit->getValue<Hash::Pointer>()), depth + 1);
                 } else if (type == Types::VECTOR_HASH) {
                     const vector<Hash>& hashes = hit->getValue<vector<Hash> >();
                     os << " @" << endl;
                     for (size_t i = 0; i < hashes.size(); ++i) {
                         os << fill << "[" << i << "]" << std::endl;
                         toStream(os, hashes[i], depth + 1);
+                    }
+                } else if (type == Types::VECTOR_HASH_POINTER) {
+                    const vector<Hash::Pointer>& hashes = hit->getValue<vector<Hash::Pointer> >();
+                    os << " @ (Pointer)" << endl;
+                    for (size_t i = 0; i < hashes.size(); ++i) {
+                        os << fill << "[" << i << "]" << std::endl;
+                        toStream(os, *(hashes[i]), depth + 1);
                     }
                 } else if (type == Types::SCHEMA) {
                     os << " => " << hit->getValue<Schema>() << std::endl;

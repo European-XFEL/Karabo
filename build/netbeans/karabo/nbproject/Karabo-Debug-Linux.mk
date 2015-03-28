@@ -148,7 +148,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122747/Signal.o \
 	${OBJECTDIR}/_ext/1103122747/SignalSlotable.o \
 	${OBJECTDIR}/_ext/1103122747/Slot.o \
-	${OBJECTDIR}/_ext/1103122747/Statics.o
+	${OBJECTDIR}/_ext/1103122747/Statics.o \
+	${OBJECTDIR}/_ext/220519193/Data.o \
+	${OBJECTDIR}/_ext/220519193/NDArray.o
 
 # Test Directory
 TESTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tests
@@ -757,6 +759,16 @@ ${OBJECTDIR}/_ext/1103122747/Statics.o: ../../../src/karabo/xms/Statics.cc
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Statics.o ../../../src/karabo/xms/Statics.cc
 
+${OBJECTDIR}/_ext/220519193/Data.o: /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/220519193
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/220519193/Data.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc
+
+${OBJECTDIR}/_ext/220519193/NDArray.o: /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/220519193
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/220519193/NDArray.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc
+
 # Subprojects
 .build-subprojects:
 
@@ -770,7 +782,7 @@ ${TESTDIR}/TestFiles/f3: ${TESTDIR}/_ext/936496563/Logger_Test.o ${TESTDIR}/_ext
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f3 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit 
 
-${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/TestFiles/f4: ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ${TESTDIR}/_ext/936498188/netTestRunner.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}/TestFiles
 	${LINK.cc}   -o ${TESTDIR}/TestFiles/f4 $^ ${LDLIBSOPTIONS} -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib -lcppunit `cppunit-config --libs`   
 
@@ -861,12 +873,6 @@ ${TESTDIR}/_ext/936498188/JmsBroker_Test.o: ../../../src/karabo/tests/net/JmsBro
 	${MKDIR} -p ${TESTDIR}/_ext/936498188
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/JmsBroker_Test.o ../../../src/karabo/tests/net/JmsBroker_Test.cc
-
-
-${TESTDIR}/_ext/936498188/TcpNetworking_Test.o: ../../../src/karabo/tests/net/TcpNetworking_Test.cc 
-	${MKDIR} -p ${TESTDIR}/_ext/936498188
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -w -D__SO__ -DKARABO_TESTPATH=\"${CND_BASEDIR}/../../../src/karabo/tests/\" -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/include/hdf5 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`  `cppunit-config --cflags` -MMD -MP -MF "$@.d" -o ${TESTDIR}/_ext/936498188/TcpNetworking_Test.o ../../../src/karabo/tests/net/TcpNetworking_Test.cc
 
 
 ${TESTDIR}/_ext/936498188/netTestRunner.o: ../../../src/karabo/tests/net/netTestRunner.cc 
@@ -2481,6 +2487,32 @@ ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o: ${OBJECTDIR}/_ext/1103122747/Stat
 	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o ../../../src/karabo/xms/Statics.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/Statics.o ${OBJECTDIR}/_ext/1103122747/Statics_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/220519193/Data_nomain.o: ${OBJECTDIR}/_ext/220519193/Data.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/220519193
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/220519193/Data.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/220519193/Data_nomain.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/220519193/Data.o ${OBJECTDIR}/_ext/220519193/Data_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/220519193/NDArray_nomain.o: ${OBJECTDIR}/_ext/220519193/NDArray.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/220519193
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/220519193/NDArray.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -w -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/220519193/NDArray_nomain.o /home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/220519193/NDArray.o ${OBJECTDIR}/_ext/220519193/NDArray_nomain.o;\
 	fi
 
 # Run Test Targets

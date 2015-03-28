@@ -99,6 +99,33 @@ void Hash_Test::testConstructors() {
         CPPUNIT_ASSERT(h.get<int > ("f.a") == 6);
 
     }
+    
+     {
+        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", Hash::Pointer(new Hash("a", 6)));
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 6);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
+        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
+        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<Hash::Pointer > ("f")->get<int>("a") == 6);        
+    }
+    
+    
+    {
+        Hash h("a", 1, "b", 2.0, "c", 3.f, "d", "4", "e", std::vector<unsigned int>(5, 5), "f", std::vector<Hash::Pointer>(5, Hash::Pointer(new Hash("a", 6))));
+        CPPUNIT_ASSERT(h.empty() == false);
+        CPPUNIT_ASSERT(h.size() == 6);
+        CPPUNIT_ASSERT(h.get<int>("a") == 1);
+        CPPUNIT_ASSERT(h.get<double>("b") == 2.0);
+        CPPUNIT_ASSERT(h.get<float>("c") == 3.0);
+        CPPUNIT_ASSERT(h.get<string > ("d") == "4");
+        CPPUNIT_ASSERT(h.get<std::vector<unsigned int> >("e")[0] == 5);
+        CPPUNIT_ASSERT(h.get<std::vector<Hash::Pointer > > ("f")[3]->get<int>("a") == 6);
+        cout << h;
+
+    }
 
     {
         Hash h("a.b.c", 1, "b.c", 2.0, "c", 3.f, "d.e", "4", "e.f.g.h", std::vector<unsigned long long> (5, 5), "F.f.f.f.f", Hash("x.y.z", 99));
