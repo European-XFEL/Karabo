@@ -17,6 +17,7 @@
 #include <karabo/util/Factory.hh>
 
 #include "BrokerConnection.hh"
+#include "BrokerChannel.hh"
 #include "JmsBrokerChannel.hh"
 
 /**
@@ -55,8 +56,11 @@ namespace karabo {
             mutable boost::mutex m_openMQMutex;
 
             boost::mutex m_connectionHandleMutex;
+            bool m_hasConnection;
+            bool m_closeOldConnection;
             MQConnectionHandle m_connectionHandle;
 
+            std::set<BrokerChannel::Pointer> m_channels;
 
         public:
 
@@ -95,17 +99,14 @@ namespace karabo {
             void setConnectionProperties(const MQPropertiesHandle& propertiesHandle);
 
             static void onException(const MQConnectionHandle connectionHandle, MQStatus status, void* callbackData);
-            
+
             void connectToBrokers();
-            
+
             void connectStandalone();
-            
+
             void connectCluster();
 
         };
-
-
-
 
     } // namespace net
 } // namespace karabo
