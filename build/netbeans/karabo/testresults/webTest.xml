@@ -1,95 +1,27 @@
 <?xml version="1.0" encoding='ISO-8859-1' standalone='yes' ?>
 <TestRun>
-  <FailedTests>
-    <FailedTest id="1">
+  <FailedTests></FailedTests>
+  <SuccessfulTests>
+    <Test id="1">
       <Name>Authenticate_Test::testCorrectLogin</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util16NetworkExceptionE
-- 1. Exception =====&gt;  {
-    Exception Type....:  Network Exception
-    Message...........:  Error: Problem with SOAP message: SOAP 1.1 fault: SOAP-ENV:Client [no subcode ]
-&quot;Timeout&quot;
-Detail: connect failed in tcp_connect()
-
-    File..............:  /[...]/src/karabo/webAuth/Authenticator.cc
-    Function..........:  ns1__getUserNonceResponse karabo::webAuth::Authenticator::getUserNonce()
-    Line Number.......:  215
-    Timestamp.........:  2015-Jan-23 21:21:56.419736
-}
-
-
-</Message>
-    </FailedTest>
-    <FailedTest id="2">
+    </Test>
+    <Test id="2">
       <Name>Authenticate_Test::testCorrectLoginAccessLevelZero</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util16NetworkExceptionE
-- 1. Exception =====&gt;  {
-    Exception Type....:  Network Exception
-    Message...........:  Error: Problem with SOAP message: SOAP 1.1 fault: SOAP-ENV:Client [no subcode ]
-&quot;Timeout&quot;
-Detail: connect failed in tcp_connect()
-
-    File..............:  /[...]/src/karabo/webAuth/Authenticator.cc
-    Function..........:  ns1__getUserNonceResponse karabo::webAuth::Authenticator::getUserNonce()
-    Line Number.......:  215
-    Timestamp.........:  2015-Jan-23 21:21:59.424581
-}
-
-
-</Message>
-    </FailedTest>
-    <FailedTest id="3">
+    </Test>
+    <Test id="3">
       <Name>Authenticate_Test::testIncorrectLogin</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util16NetworkExceptionE
-- 1. Exception =====&gt;  {
-    Exception Type....:  Network Exception
-    Message...........:  Error: Problem with SOAP message: SOAP 1.1 fault: SOAP-ENV:Client [no subcode ]
-&quot;Timeout&quot;
-Detail: connect failed in tcp_connect()
-
-    File..............:  /[...]/src/karabo/webAuth/Authenticator.cc
-    Function..........:  ns1__getUserNonceResponse karabo::webAuth::Authenticator::getUserNonce()
-    Line Number.......:  215
-    Timestamp.........:  2015-Jan-23 21:22:02.429386
-}
-
-
-</Message>
-    </FailedTest>
-    <FailedTest id="4">
+    </Test>
+    <Test id="4">
       <Name>Authenticate_Test::testIncorrectUsername</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util16NetworkExceptionE
-- 
-</Message>
-    </FailedTest>
-    <FailedTest id="5">
+    </Test>
+    <Test id="5">
       <Name>Authenticate_Test::testSingleSignOn</Name>
-      <FailureType>Error</FailureType>
-      <Message>uncaught exception of type N6karabo4util16NetworkExceptionE
-- 1. Exception =====&gt;  {
-    Exception Type....:  Network Exception
-    Message...........:  Error: Problem with SOAP message: SOAP 1.1 fault: SOAP-ENV:Client [no subcode ]
-&quot;Timeout&quot;
-Detail: connect failed in tcp_connect()
-
-    File..............:  /[...]/src/karabo/webAuth/Authenticator.cc
-    Function..........:  ns1__getUserNonceResponse karabo::webAuth::Authenticator::getUserNonce()
-    Line Number.......:  215
-    Timestamp.........:  2015-Jan-23 21:22:08.438885
-}
-
-
-</Message>
-    </FailedTest>
-  </FailedTests>
-  <SuccessfulTests></SuccessfulTests>
+    </Test>
+  </SuccessfulTests>
   <Statistics>
     <Tests>5</Tests>
-    <FailuresTotal>5</FailuresTotal>
-    <Errors>5</Errors>
+    <FailuresTotal>0</FailuresTotal>
+    <Errors>0</Errors>
     <Failures>0</Failures>
   </Statistics>
 </TestRun>

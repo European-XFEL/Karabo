@@ -74,6 +74,10 @@ void HashBinarySerializer_Test::setUp() {
     for (size_t i = 0; i < 10; ++i) {
         m_vectorOfHashes.push_back(m_rootedHash);
     }
+    
+    Hash::Pointer hp1(new Hash("a", std::vector<unsigned long long > (5, 5)));
+    Hash::Pointer hp2(new Hash("b", std::vector<float > (8, 1.0)));
+    m_sharedPtrHash = Hash("hp1", hp1, "hp2", hp2, "vec", vector<Hash::Pointer>(10, hp2));
 }
 
 
@@ -174,5 +178,27 @@ void HashBinarySerializer_Test::testSerialization() {
 
         p->save(hs, archive2);
         CPPUNIT_ASSERT(archive1 == archive2);
+    }
+    
+    {
+        vector<char> archive1;
+        vector<char> archive2;
+               
+        p->save(m_sharedPtrHash, archive1);
+        
+         cout << m_sharedPtrHash << endl;
+
+        //cout << "\n\nXML string size: " << archive.size() / 1024 / 1024 << " MB" << endl;
+
+        Hash h;
+        p->load(h, archive1);
+        
+        cout << h << endl;
+        
+        CPPUNIT_ASSERT(karabo::util::similar(m_sharedPtrHash, h) == true);
+
+        p->save(h, archive2);
+        CPPUNIT_ASSERT(string(archive1[0], archive1.size()) == string(archive2[0], archive2.size()));
+
     }
 }
