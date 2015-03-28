@@ -39,7 +39,7 @@ namespace karabo {
          */
         class JmsBrokerChannel : public BrokerChannel, public boost::enable_shared_from_this<JmsBrokerChannel> {
             // JMS-Error handling convenience
-            #define MQ_SAFE_CALL(mqCall) \
+#define MQ_SAFE_CALL(mqCall) \
             { \
               MQStatus status; \
               boost::mutex::scoped_lock lock(m_openMQMutex); \
@@ -50,8 +50,8 @@ namespace karabo {
                 throw KARABO_OPENMQ_EXCEPTION(errorString); \
               } \
             }
-            
-            #define MQ_SAFE_CALL_STATUS(mqCall, status) \
+
+#define MQ_SAFE_CALL_STATUS(mqCall, status) \
             { \
               boost::mutex::scoped_lock lock(m_openMQMutex); \
               if (MQStatusIsError(status = (mqCall)) == MQ_TRUE) { \
@@ -60,7 +60,7 @@ namespace karabo {
                 MQFreeString(tmp); \
                 throw KARABO_OPENMQ_EXCEPTION(errorString); \
               } \
-            }         
+            }
 
             typedef boost::signals2::signal<void (BrokerChannel::Pointer, const std::string&) > SignalError;
 
@@ -96,7 +96,7 @@ namespace karabo {
 
             // Protects against registering multiple async handlers
             bool m_hasAsyncHandler;
-            
+
             // Time out for synchronous reads (milliseconds)
             int m_syncReadTimeout;
 
@@ -104,13 +104,16 @@ namespace karabo {
             bool m_hasConsumer;
 
             // Flags whether a producer exists
-            bool m_hasProducer;                        
+            bool m_hasProducer;
 
             // Consumer mutex
             mutable boost::mutex m_openMQMutex;
 
             // Sub-destination
             std::string m_subDestination;
+
+            // Flag: initialization required
+            bool m_hasSession;
 
         public:
 
@@ -253,14 +256,16 @@ namespace karabo {
 
             void deadlineTimer(const WaitHandler& handler, int milliseconds, const std::string& id);
 
+            void setSessionFalse();
+
         private: //functions
-            
+
             void init();
-            
+
             /**
              * This stops the asynchronous processing.
              */
-            void close();           
+            void close();
 
             void ensureExistanceOfConsumer();
 
@@ -275,8 +280,12 @@ namespace karabo {
             void parseHeader(const MQMessageHandle& messageHandle, karabo::util::Hash& header);
 
             void ensureSingleAsyncHandler();
-            
+
             void ensureProducerAvailable();
+
+            void ensureSessionAvailable();
+
+            void ensureConnectionAvailable();
 
             /**
              * Signals arrival of a message to the private m_readStringHashHandler
@@ -299,23 +308,23 @@ namespace karabo {
             std::string prepareSelector() const;
 
             void rawHash2HashHash(BrokerChannel::Pointer channel, const char* data, const size_t& size, const karabo::util::Hash::Pointer& header);
-            
+
             void sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority);
-            
+
             void sendBinaryMessage(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
 
             void sendBinaryMessageCompressed(const karabo::util::Hash& header, const char* messageBody, const size_t& size, const int priority);
-            
+
             void compressSnappy(const char* source, const size_t& source_length, std::vector<char>& target);
-            
+
             void compress(karabo::util::Hash& header, const std::string& cmprs, const char* source, const size_t& source_length, std::vector<char>& target);
-            
+
             void decompressSnappy(const char* compressed, size_t compressed_length, std::vector<char>& data);
 
             void decompressSnappy(const char* compressed, size_t compressed_length, std::string& data);
-            
+
             void decompress(karabo::util::Hash& header, const char* compressed, size_t compressed_length, std::vector<char>& data);
-            
+
             void decompress(karabo::util::Hash& header, const char* compressed, size_t compressed_length, std::string& data);
         };
     }
