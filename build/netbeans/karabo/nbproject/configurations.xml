@@ -311,15 +311,7 @@
       <itemPath>../../../src/karabo/webAuth/stdsoap2.h</itemPath>
     </logicalFolder>
     <logicalFolder name="f9" displayName="xip" projectFiles="true">
-      <logicalFolder name="f3" displayName="FileIO" projectFiles="true">
-        <itemPath>../../../src/karabo/xip/ImageFileReader.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileReader.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/ImageFileWriter.hh</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageFileWriter.cc</itemPath>
-        <itemPath>../../../src/karabo/xip/RawImageFileWriter.hh</itemPath>
-      </logicalFolder>
-      <logicalFolder name="f1" displayName="Image" projectFiles="true">
+      <logicalFolder name="f1" displayName="Data" projectFiles="true">
         <itemPath>../../../src/karabo/xip/AbstractImage.hh</itemPath>
         <itemPath>../../../src/karabo/xip/CImg.h</itemPath>
         <itemPath>../../../src/karabo/xip/CpuEnvironment.cc</itemPath>
@@ -341,14 +333,26 @@
         <itemPath>../../../src/karabo/xip/Statistics.hh</itemPath>
         <itemPath>../../../src/karabo/xip/ToChannelSpace.hh</itemPath>
       </logicalFolder>
+      <logicalFolder name="f3" displayName="FileIO" projectFiles="true">
+        <itemPath>../../../src/karabo/xip/ImageFileReader.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileReader.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileWriter.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/ImageFileWriter.hh</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageFileWriter.cc</itemPath>
+        <itemPath>../../../src/karabo/xip/RawImageFileWriter.hh</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2" displayName="Processor" projectFiles="true">
         <itemPath>../../../src/karabo/xip/BinaryProcessor.hh</itemPath>
         <itemPath>../../../src/karabo/xip/SingleProcessor.hh</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
+      <itemPath>/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc</itemPath>
+      <itemPath>/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
+      <itemPath>/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc</itemPath>
+      <itemPath>/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
@@ -395,8 +399,6 @@
       <logicalFolder name="f4" displayName="net_test" projectFiles="true" kind="TEST">
         <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.cc</itemPath>
         <itemPath>../../../src/karabo/tests/net/JmsBroker_Test.hh</itemPath>
-        <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.cc</itemPath>
-        <itemPath>../../../src/karabo/tests/net/TcpNetworking_Test.hh</itemPath>
         <itemPath>../../../src/karabo/tests/net/netTestRunner.cc</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -1382,16 +1384,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/net/netTestRunner.cc"
             ex="false"
             tool="1"
@@ -2151,6 +2143,26 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
@@ -3208,16 +3220,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/tests/net/TcpNetworking_Test.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/tests/net/netTestRunner.cc"
             ex="false"
             tool="1"
@@ -3987,6 +3989,26 @@
       <item path="../../../src/karabo/xms/Statics.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Statics.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/Data.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="/home/heisenb/Development/karaboFramework-virginTrunk/src/karabo/xms/NDArray.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <folder path="TestFiles">
         <ccTool>
