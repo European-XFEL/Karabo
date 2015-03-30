@@ -25,7 +25,19 @@ namespace karabo {
 
 
         JmsBrokerConnection::~JmsBrokerConnection() {
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
             close();
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " EXIT  ******" << endl;
+        }
+
+
+        void JmsBrokerConnection::close() {
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
+            m_channels.clear();
+            MQCloseConnection(m_connectionHandle);
+            MQFreeConnection(m_connectionHandle);
+            m_connectionHandle = MQ_INVALID_HANDLE;
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " EXIT  ******" << endl;
         }
 
 
@@ -39,7 +51,7 @@ namespace karabo {
             string defaultHostname = "exfl-broker.desy.de:7777";
             env = getenv("KARABO_BROKER_HOST");
             if (env != 0) defaultHostname = string(env);
-            
+
             unsigned int defaultPort = 7777;
             env = getenv("KARABO_BROKER_PORT");
             if (env != 0) defaultPort = fromString<unsigned int>(string(env));
@@ -384,23 +396,6 @@ namespace karabo {
         }
 
 
-        void JmsBrokerConnection::close() {
-            try {
-                MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
-                if (m_connectionHandle.handle != invalidConnection.handle) {
-                    MQ_SAFE_CALL(MQCloseConnection(m_connectionHandle));
-                    MQ_SAFE_CALL(MQFreeConnection(m_connectionHandle));
-                }
-            } catch (...) {
-                MQCloseConnection(m_connectionHandle);
-                MQFreeConnection(m_connectionHandle);
-                KARABO_RETHROW
-            }
-
-            m_connectionHandle = MQ_INVALID_HANDLE;
-        }
-
-
         const std::string& JmsBrokerConnection::getBrokerHostname() const {
             return m_hostname;
         }
@@ -422,7 +417,7 @@ namespace karabo {
 
 
         BrokerChannel::Pointer JmsBrokerConnection::createChannel(const std::string& subDestination) {
-            BrokerChannel::Pointer channel(new JmsBrokerChannel(this->getConnectionPointer(), subDestination));
+            BrokerChannel::Pointer channel(new JmsBrokerChannel(shared_from_this(), subDestination));
             m_channels.insert(channel); // add this additional bookkeeping needed for live reconnection on the fly
             return channel;
         }

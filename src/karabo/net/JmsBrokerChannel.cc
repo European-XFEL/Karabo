@@ -25,9 +25,9 @@ namespace karabo {
 
 
         JmsBrokerChannel::JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination)
-        : BrokerChannel(connection)
+        : BrokerChannel()
         , m_jmsConnection(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection))
-        , m_serializationType(m_jmsConnection->m_serializationType)
+        , m_serializationType(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection)->m_serializationType)
         , m_sessionHandle(MQ_INVALID_HANDLE)
         , m_destinationHandle(MQ_INVALID_HANDLE)
         , m_consumerHandle(MQ_INVALID_HANDLE)
@@ -41,12 +41,15 @@ namespace karabo {
         , m_subDestination(subDestination)
         , m_hasSession(false) {
 
+            boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+            if (!jbc)
+                throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
             // Get the type specific IO service
-            m_ioService = m_jmsConnection->getIOService()->castTo<JmsBrokerIOService > ();
+            m_ioService = jbc->getIOService()->castTo<JmsBrokerIOService > ();
 
             // Transaction mode
             m_isTransacted = MQ_FALSE;
-            if (m_jmsConnection->m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
+            if (jbc->m_acknowledgeMode == MQ_SESSION_TRANSACTED) {
                 m_isTransacted = MQ_TRUE;
             }
 
@@ -59,24 +62,34 @@ namespace karabo {
 
 
         JmsBrokerChannel::~JmsBrokerChannel() {
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
             close();
-            set<BrokerChannel::Pointer>& channels = m_jmsConnection->m_channels;
-            for (set<BrokerChannel::Pointer>::iterator it = channels.begin(); it != channels.end(); it++) {
-                if ((*it).get() == this) {
-                    channels.erase(it);
-                    break;
+
+            boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+            if (jbc) {
+                set<BrokerChannel::Pointer>& channels = jbc->m_channels;
+                for (set<BrokerChannel::Pointer>::iterator it = channels.begin(); it != channels.end(); it++) {
+                    if ((*it).get() == this) {
+                        channels.erase(it);
+                        break;
+                    }
                 }
             }
+            //cout << "****** " << BOOST_CURRENT_FUNCTION << " EXIT  ******" << endl;
         }
 
 
         void JmsBrokerChannel::ensureConnectionAvailable() {
+            boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+            if (!jbc)
+                throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+
             try {
-                m_jmsConnection->connectToBrokers();
+                jbc->connectToBrokers();
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
             }
-            assert(m_jmsConnection->m_hasConnection == true);
+            assert(jbc->m_hasConnection == true);
         }
 
 
@@ -84,19 +97,23 @@ namespace karabo {
 
             ensureConnectionAvailable();
 
+            boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+            if (!jbc)
+                throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+
             // this code runs "once per channel"
             boost::mutex::scoped_lock lock(m_sessionHandleMutex);
             if (!m_hasSession) {
-                MQ_SAFE_CALL(MQCreateSession(m_jmsConnection->m_connectionHandle,
+                MQ_SAFE_CALL(MQCreateSession(jbc->m_connectionHandle,
                                              m_isTransacted,
-                                             m_jmsConnection->m_acknowledgeMode,
+                                             jbc->m_acknowledgeMode,
                                              MQ_SESSION_SYNC_RECEIVE,
                                              &m_sessionHandle));
 
-                string destination = m_jmsConnection->m_destinationName;
+                string destination = jbc->m_destinationName;
                 if (!m_subDestination.empty()) destination += "_" + m_subDestination;
                 MQ_SAFE_CALL(MQCreateDestination(m_sessionHandle, destination.c_str(),
-                                                 m_jmsConnection->m_destinationType,
+                                                 jbc->m_destinationType,
                                                  &m_destinationHandle));
                 m_hasSession = true;
                 boost::mutex::scoped_lock lock(m_openMQMutex);
@@ -217,9 +234,20 @@ namespace karabo {
 
             ensureSessionAvailable();
 
+            bool deliveryInhibition;
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (!jbc)
+                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+                else
+                    deliveryInhibition = jbc->m_deliveryInhibition;
+            }
+
             if (!m_hasConsumer) {
                 KARABO_LOG_FRAMEWORK_DEBUG << "ensureExistanceOfConsumer";
-                MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle, m_filterCondition.c_str(), m_jmsConnection->m_deliveryInhibition, &m_consumerHandle));
+                MQ_SAFE_CALL(MQCreateMessageConsumer(m_sessionHandle, m_destinationHandle,
+                                                     m_filterCondition.c_str(), deliveryInhibition,
+                                                     &m_consumerHandle));
                 boost::mutex::scoped_lock lock(m_openMQMutex);
                 m_hasConsumer = true;
             }
@@ -818,6 +846,15 @@ namespace karabo {
 
 
         void JmsBrokerChannel::sendTextMessage(const karabo::util::Hash& header, const std::string& messageBody, const int priority) {
+            int messageTimeToLive;
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (!jbc)
+                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+                else
+                    messageTimeToLive = jbc->m_messageTimeToLive;
+            }
+
             try {
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
                 MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
@@ -843,7 +880,7 @@ namespace karabo {
                     {
                         boost::mutex::scoped_lock lock(m_openMQMutex);
                         status = MQSendMessageExt(m_producerHandle, messageHandle, MQ_NON_PERSISTENT_DELIVERY,
-                                                  priority, m_jmsConnection->m_messageTimeToLive);
+                                                  priority, messageTimeToLive);
                     }
                     if (MQStatusIsError(status) == MQ_FALSE) break;
                     switch (MQGetStatusCode(status)) {
@@ -875,6 +912,15 @@ namespace karabo {
 
 
         void JmsBrokerChannel::sendBinaryMessage(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
+            int messageTimeToLive;
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (!jbc)
+                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+                else
+                    messageTimeToLive = jbc->m_messageTimeToLive;
+            }
+
             try {
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -900,8 +946,8 @@ namespace karabo {
                     {
                         boost::mutex::scoped_lock lock(m_openMQMutex);
                         status = MQSendMessageExt(m_producerHandle, messageHandle,
-                                                  MQ_NON_PERSISTENT_DELIVERY, priority,
-                                                  m_jmsConnection->m_messageTimeToLive);
+                                                  MQ_NON_PERSISTENT_DELIVERY,
+                                                  priority, messageTimeToLive);
                     }
                     if (MQStatusIsError(status) == MQ_FALSE) break;
                     switch (MQGetStatusCode(status)) {
@@ -932,6 +978,19 @@ namespace karabo {
 
 
         void JmsBrokerChannel::sendBinaryMessageCompressed(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
+            int messageTimeToLive;
+            string compression;
+
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (!jbc)
+                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+                else {
+                    compression = jbc->m_compression;
+                    messageTimeToLive = jbc->m_messageTimeToLive;
+                }
+            }
+
             try {
                 //MQProducerHandle producerHandle = MQ_INVALID_HANDLE;
                 MQMessageHandle messageHandle = MQ_INVALID_HANDLE;
@@ -943,7 +1002,7 @@ namespace karabo {
                 // Add some default properties
                 Hash properties(header);
                 std::vector<char> tmp;
-                compress(properties, m_jmsConnection->m_compression, messageBody, size, tmp);
+                compress(properties, compression, messageBody, size, tmp);
 
                 //properties.set<long long>("__timestamp", karabo::util::Time::getMsSinceEpoch());
                 setProperties(properties, propertiesHandle);
@@ -960,8 +1019,8 @@ namespace karabo {
                     {
                         boost::mutex::scoped_lock lock(m_openMQMutex);
                         MQStatus status = MQSendMessageExt(m_producerHandle, messageHandle,
-                                                           MQ_NON_PERSISTENT_DELIVERY, priority,
-                                                           m_jmsConnection->m_messageTimeToLive);
+                                                           MQ_NON_PERSISTENT_DELIVERY,
+                                                           priority, messageTimeToLive);
                     }
                     if (MQStatusIsError(status) == MQ_FALSE) break;
                     switch (MQGetStatusCode(status)) {
@@ -1009,7 +1068,7 @@ namespace karabo {
                 if (cmprs == "snappy")
                     compressSnappy(source, source_length, target);
                 else
-                    throw KARABO_PARAMETER_EXCEPTION("Unsupported compression algorithm: \"" + m_jmsConnection->m_compression + "\".");
+                    throw KARABO_PARAMETER_EXCEPTION("Unsupported compression algorithm: \"" + cmprs + "\".");
                 header.set("__compression__", cmprs);
             } catch (...) {
                 KARABO_RETHROW
@@ -1044,12 +1103,24 @@ namespace karabo {
 
 
         void JmsBrokerChannel::write(const Hash& header, const char* messageBody, const size_t& size, const int priority) {
+            int compressionUsageThreshold;
+            //string compression;
+
+            {
+                boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
+                if (!jbc)
+                    throw KARABO_IO_EXCEPTION("BrokerChannel found parent connection destroyed");
+                else {
+                    compressionUsageThreshold = jbc->m_compressionUsageThreshold;
+                    //compression = jbc->m_compression;
+                }
+            }
 
             try {
                 //ensureProducerAvailable();
-                //                std::cout << "JmsBrokerChannel::write: threshold=" << m_jmsConnection->m_compressionUsageThreshold
-                //                        << ", compression = \"" <<  m_jmsConnection->m_compression << "\"." << std::endl;
-                if (m_jmsConnection->m_compressionUsageThreshold >= 0 && m_jmsConnection->m_compressionUsageThreshold < int(size)) {
+                //                std::cout << "JmsBrokerChannel::write: threshold=" << compressionUsageThreshold
+                //                        << ", compression = \"" <<  jbc->m_compression << "\"." << std::endl;
+                if (compressionUsageThreshold >= 0 && compressionUsageThreshold < int(size)) {
                     sendBinaryMessageCompressed(header, messageBody, size, priority);
                 } else {
                     sendBinaryMessage(header, messageBody, size, priority);
@@ -1143,29 +1214,21 @@ namespace karabo {
         void JmsBrokerChannel::close() {
             m_isStopped = true;
 
-            //            MQProducerHandle invalidProducer = MQ_INVALID_HANDLE;
-            //            if (m_hasProducer && m_producerHandle.handle != invalidProducer.handle) {
-            //                MQ_SAFE_CALL(MQCloseMessageProducer(m_producerHandle));
-            //                m_producerHandle = MQ_INVALID_HANDLE;
-            //                m_hasProducer = false;
-            //            }
-            //            MQConsumerHandle invalidConsumer = MQ_INVALID_HANDLE;
-            //            if (m_hasConsumer && m_consumerHandle.handle != invalidConsumer.handle) {
-            //                MQ_SAFE_CALL(MQCloseMessageConsumer(m_consumerHandle));
-            //                m_consumerHandle = MQ_INVALID_HANDLE;
-            //                m_hasConsumer = false;
-            //            }
-            //            MQDestinationHandle invalidDestination = MQ_INVALID_HANDLE;
-            //            if (m_destinationHandle.handle != invalidDestination.handle) {
-            //                MQ_SAFE_CALL(MQFreeDestination(m_destinationHandle));
-            //                m_destinationHandle = MQ_INVALID_HANDLE;
-            //            }
-            //            MQSessionHandle invalidSession = MQ_INVALID_HANDLE;
-            //            if (m_sessionHandle.handle != invalidSession.handle) {
-            //                MQ_SAFE_CALL(MQCloseSession(m_sessionHandle));
-            //                m_sessionHandle = MQ_INVALID_HANDLE;
-            //            }
-            //m_hasAsyncHandler = false;
+            MQCloseMessageProducer(m_producerHandle);
+            m_producerHandle = MQ_INVALID_HANDLE;
+            m_hasProducer = false;
+            
+            MQCloseMessageConsumer(m_consumerHandle);
+            m_consumerHandle = MQ_INVALID_HANDLE;
+            m_hasConsumer = false;
+            
+            MQFreeDestination(m_destinationHandle);
+            m_destinationHandle = MQ_INVALID_HANDLE;
+            
+            MQCloseSession(m_sessionHandle);
+            m_sessionHandle = MQ_INVALID_HANDLE;
+ 
+            m_hasAsyncHandler = false;
         }
 
 
