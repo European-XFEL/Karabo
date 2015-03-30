@@ -16,6 +16,7 @@
 #include <boost/signals2.hpp>
 #include <openmqc/mqcrt.h>
 
+#include "BrokerConnection.hh"
 #include "BrokerChannel.hh"
 #include "JmsBrokerIOService.hh"
 
@@ -65,7 +66,7 @@ namespace karabo {
             typedef boost::signals2::signal<void (BrokerChannel::Pointer, const std::string&) > SignalError;
 
             // Provides access to the JmsConnection object
-            boost::shared_ptr<JmsBrokerConnection> m_jmsConnection;
+            boost::weak_ptr<JmsBrokerConnection> m_jmsConnection;
 
             const std::string& m_serializationType;
 
@@ -122,11 +123,16 @@ namespace karabo {
             JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination);
 
             virtual ~JmsBrokerChannel();
+            
+            BrokerConnection::Pointer getConnection() {
+                boost::shared_ptr<JmsBrokerConnection> jbc(m_jmsConnection.lock());
+                return boost::reinterpret_pointer_cast<BrokerConnection, JmsBrokerConnection>(jbc);
+            }
 
             /**************************************************************/
             /*              Synchronous Read - No Header                  */
             /**************************************************************/
-
+            
             /**
              * This function reads binary messages into vector of chars. 
              * The reading will block until the data record is read.

@@ -62,15 +62,13 @@ namespace karabo {
             
         public:
 
-            BrokerChannel(BrokerConnection::Pointer connection) : m_connection(connection) {
+            BrokerChannel() {
             }
 
             virtual ~BrokerChannel() {
             }
 
-            BrokerConnection::Pointer getConnection() const {
-                return m_connection;
-            }
+            virtual BrokerConnection::Pointer getConnection() = 0;
 
 
             /**************************************************************/
@@ -222,10 +220,6 @@ namespace karabo {
 
             virtual void close() = 0;
 
-
-        protected: // members
-
-            BrokerConnection::Pointer m_connection;
 
         private: // functions
 
