@@ -13,13 +13,14 @@ std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::uti
 
 namespace karathon {
 
+
     int ConnectionWrap::startAsync(const karabo::net::Connection::Pointer& connection, const bp::object& connectionHandler) {
         IOService::Pointer ioserv = connection->getIOService();
         int port = 0;
         try {
             ScopedGILRelease nogil;
             port = connection->startAsync(boost::bind(proxyConnectionHandler, _1));
-        } catch(...) {
+        } catch (...) {
             KARABO_RETHROW
         }
         boost::mutex::scoped_lock lock(m_changedHandlersMutex);
@@ -32,6 +33,7 @@ namespace karathon {
         hash.set("_connection", connectionHandler);
         return port;
     }
+
 
     void ConnectionWrap::proxyConnectionHandler(karabo::net::Channel::Pointer channel) {
         Hash hash;
@@ -55,8 +57,21 @@ namespace karathon {
         bp::object onconnect = hash.get<bp::object>("_connection");
         if (!PyCallable_Check(onconnect.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        onconnect(bp::object(channel));
+
+        try {
+
+            onconnect(bp::object(channel));
+
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            throw KARABO_PYTHON_EXCEPTION("ConnectionHandler has thrown an exception. See above.");
+        } catch (...) {
+            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+        }
     }
+
 
     void ConnectionWrap::setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler) {
         IOService::Pointer ioserv = connection->getIOService();
@@ -73,6 +88,7 @@ namespace karathon {
         ScopedGILRelease nogil;
         connection->setErrorHandler(boost::bind(proxyErrorHandler, connection, _1));
     }
+
 
     void ConnectionWrap::proxyErrorHandler(karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code) {
         IOService::Pointer ioserv = connection->getIOService();
@@ -95,6 +111,18 @@ namespace karathon {
         bp::object onerror = hash.get<bp::object>("_error");
         if (!PyCallable_Check(onerror.ptr()))
             throw KARABO_PYTHON_EXCEPTION("Registered object is not a function object.");
-        onerror(bp::object(connection), bp::object(code));
+
+        try {
+
+            onerror(bp::object(connection), bp::object(code));
+
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            throw KARABO_PYTHON_EXCEPTION("ErrorHandler has thrown an exception. See above.");
+        } catch (...) {
+            KARABO_RETHROW_AS(KARABO_PYTHON_EXCEPTION("Un-handled or forwarded exception happened in python handler"));
+        }
     }
 }
