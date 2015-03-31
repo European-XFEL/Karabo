@@ -9,7 +9,7 @@ __all__ = ["MonitorDialog", "DevicePropertyDialog"]
 
 import icons
 import manager
-from schema import Schema
+from schema import Schema, SlotNode
 
 from PyQt4 import uic
 from PyQt4.QtCore import Qt
@@ -171,6 +171,10 @@ class DevicePropertyDialog(QDialog):
         for k, v in descriptor.dict.items():
             childBox = getattr(box, k, None)
             if childBox is None:
+                continue
+            
+            if isinstance(v, SlotNode):
+                # Do not show commands in parameter list
                 continue
             
             if childBox.isAccessible():

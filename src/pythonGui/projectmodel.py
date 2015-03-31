@@ -286,6 +286,26 @@ class ProjectModel(QStandardItemModel):
         return self.findItemString(category, projectItem)
 
 
+    def updateCategoryIcon(self, category, project):
+        """
+        This function updates the icon of the \category.
+        """
+        projectItem = self.findItem(project)
+        item = self.getCategoryItem(category, projectItem)
+        if item is None: return
+        
+        if category == Project.DEVICES_LABEL:
+            pass
+        elif category == Project.SCENES_LABEL:
+            pass
+        elif category == Project.CONFIGURATIONS_LABEL:
+            pass
+        elif category == Project.MACROS_LABEL:
+            pass
+        elif category == Project.MONITORS_LABEL:
+            item.setIcon(icons.folderRecord if project.isMonitoring else icons.folder)
+
+
     def createDeviceItem(self, device):
         """
         This function creates a QStandardItem for the given \device and
@@ -1390,11 +1410,17 @@ class ProjectModel(QStandardItemModel):
 
 
     def onStartMonitoring(self):
-        self.currentProject().startMonitoring()
+        project = self.currentProject()
+        project.startMonitoring()
+        # Update monitors icon
+        self.updateCategoryIcon(Project.MONITORS_LABEL, project)
                
                 
     def onStopMonitoring(self):
-        self.currentProject().stopMonitoring()
+        project = self.currentProject()
+        project.stopMonitoring()
+        # Update monitors icon
+        self.updateCategoryIcon(Project.MONITORS_LABEL, project)
 
 
     def onApplyConfigurations(self):
