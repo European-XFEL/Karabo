@@ -35,20 +35,18 @@ class Project(object):
 
     DEVICES_LABEL = "Devices"
     SCENES_LABEL = "Scenes"
+    CONFIGURATIONS_LABEL = "Configurations"
     MACROS_LABEL = "Macros"
     MONITORS_LABEL = "Monitors"
     RESOURCES_LABEL = "Resources"
-    CONFIGURATIONS_LABEL = "Configurations"
-    MONITORS_LABEL = "Monitors"
 
     PROJECT_KEY = "project"
     DEVICES_KEY = "devices"
     SCENES_KEY = "scenes"
+    CONFIGURATIONS_KEY = "configurations"
     MACROS_KEY = "macros"
     MONITORS_KEY = "monitors"
     RESOURCES_KEY = "resources"
-    CONFIGURATIONS_KEY = "configurations"
-    MONITORS_KEY = "monitors"
     
     PROJECT_SUFFIX = "krb"
 
