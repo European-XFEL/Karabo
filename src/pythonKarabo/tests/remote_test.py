@@ -305,7 +305,8 @@ class Tests(TestCase):
 
     @async_tst
     def test_disallow(self):
-        yield from local.disallowed()
+        with self.assertLogs(logger="remote", level="ERROR"):
+            yield from local.disallowed()
         self.assertEqual(local.f1, 333)
         self.assertEqual(local.f2, 777)
         self.assertEqual(local.f3, 777)
