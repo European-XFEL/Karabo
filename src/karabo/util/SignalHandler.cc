@@ -17,7 +17,7 @@ namespace karabo {
 
         #ifdef __linux__
 
-        extern jmp_buf context;
+        jmp_buf context;
 
 
         std::string StackTrace::demangle(const char* symbol) {
@@ -56,6 +56,12 @@ namespace karabo {
             }
 
             free(symbols);
+        }
+
+
+        std::ostream& operator <<(std::ostream& os, const StackTrace& trace) {
+            trace.print(os);
+            return os;
         }
 
 
