@@ -334,7 +334,7 @@ class DeviceServer(object):
 #        print "loadLogger final:\n", config
         self.loggerConfiguration = Hash()
         self.loggerConfiguration += config
-        Logger.configure(config)
+        self.logger = Logger.configure(config)
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)

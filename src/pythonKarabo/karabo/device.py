@@ -159,7 +159,7 @@ class PythonDevice(NoFsm):
         if "connection" in input:
             config["appenders[2].Network.connection"] = input["connection"]
 #        print "loadLogger final:\n", config
-        Logger.configure(config)
+        self.logger=Logger.configure(config)
         
     def run(self):
         self.initClassId()
