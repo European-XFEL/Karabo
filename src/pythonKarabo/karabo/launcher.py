@@ -10,10 +10,6 @@ import karabo
 
 if __name__ == "__main__":
     _, fn, cls, what = sys.argv
-    if what in ("legacy", "schema"):
-        karabo.api_version = 1
-    else:
-        karabo.api_version = 2
 
 from karabo.hash import BinaryWriter, BinaryParser
 from karabo.eventloop import EventLoop
