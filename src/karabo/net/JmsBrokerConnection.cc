@@ -252,6 +252,11 @@ namespace karabo {
             else if (acknowledgeMode == "transacted") m_acknowledgeMode = MQ_SESSION_TRANSACTED;
             else if (acknowledgeMode == "dupsOk") m_acknowledgeMode = MQ_DUPS_OK_ACKNOWLEDGE;
 
+            try {
+                connectToBrokers();
+            } catch (...) {
+                KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
+            }
         }
 
 

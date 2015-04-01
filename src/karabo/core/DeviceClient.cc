@@ -1164,6 +1164,7 @@ if (nodeData) {\
                 while (m_getOlder) { // Loop forever
                     KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
                     karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                    if (!p) break;
                     for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) { // Loop connected instances
 
                         if (isImmortal(it->first)) continue; // Immortal, registered monitors will have this status
