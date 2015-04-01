@@ -7,7 +7,6 @@ import sys
 import socket
 from abc import ABCMeta, abstractmethod
 from karabo.async import NewValueTimestamp
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.hash import BinaryParser, Hash, HashMergePolicy
 from karabo.hashtypes import Bool, Int32, UInt32, String, Type
 from karabo.logger import Logger
@@ -22,10 +21,11 @@ from karabo.eventloop import EventLoop
 from karabo.launcher import getClassSchema_async, sameThread, legacy
 
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("Device", "1.0")
 class Device(SignalSlotable):
     """This is the base class for all devices."""
+
+    __version__ = "1.3"
+
     visibility = Int32(
         enum=AccessLevel, displayedName="Visibility",
         description="Configures who is allowed to see this device at all",
@@ -175,8 +175,6 @@ class Device(SignalSlotable):
             return self._stateDependentSchema[state]
 
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("PythonDevice", "1.0")
 class PythonDevice(Device):
     abstract = True
 

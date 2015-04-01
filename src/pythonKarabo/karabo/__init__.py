@@ -9,8 +9,6 @@ from karabo.async import waitUntil
 from asyncio import sleep
 from karabo.enums import *
 
-api_version = 1
-
 __all__ = []  # don't allow star-import
 
 class KaraboError(Exception):
