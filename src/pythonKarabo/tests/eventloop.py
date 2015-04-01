@@ -1,7 +1,5 @@
 from asyncio import coroutine, gather, set_event_loop, wait_for
 from functools import wraps
-import os
-import socket
 
 from karabo.eventloop import EventLoop
 
@@ -24,7 +22,7 @@ def sync_tst(f):
 
 
 def setEventLoop():
-    loop = EventLoop("{}-{}".format(socket.gethostname(), os.getpid()))
+    loop = EventLoop()
     set_event_loop(loop)
     return loop
 
