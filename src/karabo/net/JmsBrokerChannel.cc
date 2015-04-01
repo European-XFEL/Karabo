@@ -53,11 +53,11 @@ namespace karabo {
                 m_isTransacted = MQ_TRUE;
             }
 
-            //init();
-
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
+            
+            ensureSessionAvailable();
         }
 
 
@@ -889,9 +889,10 @@ namespace karabo {
                         case MQ_PRODUCER_NO_DESTINATION:
                         case MQ_PRODUCER_CLOSED:
                         case MQ_STATUS_INVALID_HANDLE:
+                        {
                             ensureProducerAvailable();
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-                            break;
+                            continue;
+                        }
                         default:
                         {
                             MQFreeMessage(messageHandle); // free resource because we are going to throw exception
@@ -956,9 +957,10 @@ namespace karabo {
                         case MQ_PRODUCER_NO_DESTINATION:
                         case MQ_PRODUCER_CLOSED:
                         case MQ_STATUS_INVALID_HANDLE:
+                        {
                             ensureProducerAvailable();
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-                            break;
+                            continue;
+                        }
                         default:
                         {
                             MQFreeMessage(messageHandle);
@@ -1029,9 +1031,10 @@ namespace karabo {
                         case MQ_PRODUCER_NO_DESTINATION:
                         case MQ_PRODUCER_CLOSED:
                         case MQ_STATUS_INVALID_HANDLE:
+                        {
                             ensureProducerAvailable();
-                            boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-                            break;
+                            continue;
+                        }
                         default:
                         {
                             MQFreeMessage(messageHandle);

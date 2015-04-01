@@ -38,7 +38,7 @@ namespace karabo {
 
         #ifdef __linux__
 
-        jmp_buf context;
+        extern jmp_buf context;
 
         /*************************************************************
          * 
@@ -54,10 +54,7 @@ namespace karabo {
             static void print(std::ostream& os);
         };
 
-        std::ostream& operator <<(std::ostream& os, const StackTrace& trace) {
-            trace.print(os);
-            return os;
-        }
+        std::ostream& operator <<(std::ostream& os, const StackTrace& trace);
 
         /*************************************************************
          * 
