@@ -65,7 +65,7 @@ namespace karabo {
 
             size_t getByteSize() const;
 
-            const std::vector<char>& getData();
+            const std::vector<char>& getData();                        
 
             template <class T>
             inline void setData(const std::vector<T>& data, const bool copy = true) {

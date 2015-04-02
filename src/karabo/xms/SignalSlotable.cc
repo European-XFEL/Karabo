@@ -1756,6 +1756,17 @@ namespace karabo {
                 m_trackedComponents.erase(instanceId);
             }
         }
+        
+        OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
+            OutputChannel::Pointer channel = Configurator<OutputChannel>::create("Network", config);
+            channel->setInstanceId(m_instanceId);
+            if (onOutputPossibleHandler) {
+                channel->registerIOEventHandler(onOutputPossibleHandler);
+            }
+            m_outputChannels[name] = channel;
+            return channel;
+        }
+
 
 
         Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash & hash) const {
@@ -1814,7 +1825,7 @@ namespace karabo {
         karabo::util::Hash SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
-                karabo::util::Hash h(it->second->getInformation());
+                karabo::util::Hash h(it->second->getInformation());               
                 if (processId == static_cast<int> (getpid())) {
                     h.set("memoryLocation", "local");
                 } else {

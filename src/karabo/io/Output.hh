@@ -13,7 +13,7 @@
 #ifndef KARABO_IO_OUTPUT_HH
 #define	KARABO_IO_OUTPUT_HH
 
-#include "AbstractOutput.hh"
+#include <karabo/util/Configurator.hh>
 #include <karabo/util/SimpleElement.hh>
 
 namespace karabo {
@@ -21,7 +21,7 @@ namespace karabo {
     namespace io {
 
         template <class T>
-        class Output : public AbstractOutput {
+        class Output {
 
         protected:
 
@@ -38,7 +38,7 @@ namespace karabo {
                 using namespace karabo::util;
 
                 BOOL_ELEMENT(expected).key("enableAppendMode")
-                        .description("NOTE: Has no effect on Output-Network. If set to true a different internal structure is used, which buffers consecutive "
+                        .description("If set to true a different internal structure is used, which buffers consecutive "
                                      "calls to write(). The update() function must then be called to trigger final outputting "
                                      "of the accumulated sequence of data.")
                         .displayedName("Enable append mode")
@@ -47,7 +47,7 @@ namespace karabo {
                         .commit();
             }
 
-            Output(const karabo::util::Hash& config) : AbstractOutput(config) {
+            Output(const karabo::util::Hash& config) {
                 config.get<bool>("enableAppendMode", m_appendModeEnabled);
             }
 
@@ -55,6 +55,8 @@ namespace karabo {
             }
 
             virtual void write(const T& object) = 0;
+            
+            virtual void update() {}
         };
     }
 }
