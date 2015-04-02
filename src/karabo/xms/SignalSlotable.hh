@@ -20,8 +20,9 @@
 #include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
 #include <karabo/io/Input.hh>
-#include <karabo/io/Output.hh>
+//#include <karabo/io/Output.hh>
 
+#include "OutputChannel.hh"
 #include "Signal.hh"
 #include "Slot.hh"
 
@@ -53,12 +54,11 @@ namespace karabo {
          *
          */
         class SignalSlotable : public boost::enable_shared_from_this<SignalSlotable> {
-           
             // Performance statistics
             mutable boost::mutex m_latencyMutex;
             std::pair<int, int> m_brokerLatency;
             std::pair<int, int> m_processingLatency;
-            
+
 
         protected:
 
@@ -352,7 +352,7 @@ namespace karabo {
             typedef boost::function<void (float /*brokerLatency*/, float /*processingLatency*/, unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
             typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+            typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
 
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
@@ -1142,15 +1142,15 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 return boost::static_pointer_cast<karabo::io::Input<T> >(channel);
             }
 
-            template <class T>
-            boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name, const std::string& type, const karabo::util::Hash& config) {
-                using namespace karabo::util;
-                karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
-                channel->setInstanceId(m_instanceId);
-                channel->setOutputHandlerType("c++");
-                m_outputChannels[name] = channel;
-                return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
-            }
+            //            template <class T>
+            //            boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name, const std::string& type, const karabo::util::Hash& config) {
+            //                using namespace karabo::util;
+            //                karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
+            //                channel->setInstanceId(m_instanceId);
+            //                channel->setOutputHandlerType("c++");
+            //                m_outputChannels[name] = channel;
+            //                return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
+            //            }
 
             bool connectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
 
@@ -1174,21 +1174,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
                 return boost::static_pointer_cast<InputType >(channel);
             }
 
-            template <class OutputType>
-            boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input, const boost::function<void (const karabo::io::AbstractOutput::Pointer&) >& onOutputPossibleHandler = boost::function<void (const karabo::io::AbstractOutput::Pointer&) >()) {
-                using namespace karabo::util;
-                Hash copy;
-                copy += input;
-                copy.get<Hash>(name).eraseFound("schema");
-                karabo::io::AbstractOutput::Pointer channel = OutputType::createNode(name, "Network", copy);
-                channel->setInstanceId(m_instanceId);
-                channel->setOutputHandlerType("c++");
-                if (!onOutputPossibleHandler.empty()) {
-                    channel->registerIOEventHandler(onOutputPossibleHandler);
-                }
-                m_outputChannels[name] = channel;
-                return boost::static_pointer_cast<OutputType >(channel);
-            }
+            virtual OutputChannel::Pointer createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
 
             const InputChannels& getInputChannels() const {
                 return m_inputChannels;
@@ -1380,7 +1366,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             void popReceivedReply(const std::string& replyFromValue, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body);
 
             bool timedWaitAndPopReceivedReply(const std::string& replyId, karabo::util::Hash::Pointer& header, karabo::util::Hash::Pointer& body, int timeout);
-            
+
             long long getEpochMillis() {
                 timespec ts;
                 clock_gettime(CLOCK_REALTIME, &ts);

@@ -49,6 +49,16 @@ namespace karabo {
             DataElement(karabo::util::Schema& s) : m_schema(s) {
 
             }
+            
+            Derived& channel(const std::string& channelName) {
+                using namespace karabo::util;
+                m_key = channelName + "." + Described::classInfo().getClassId();
+                NODE_ELEMENT(m_schema).key(m_key)
+                        .appendParametersOf<Described>()
+                        .commit();
+
+                return *(static_cast<Derived*> (this));
+            }
 
             Derived& key(const std::string& key) {
                 using namespace karabo::util;
@@ -74,7 +84,7 @@ namespace karabo {
                 // Dummy function (commit was never really needed... :-()
             }
 
-        };
+        };                   
     }
 }
 

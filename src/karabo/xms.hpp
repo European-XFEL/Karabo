@@ -13,7 +13,7 @@
 
 #include "xms/SignalSlotable.hh"
 #include "xms/NetworkInput.hh"
-#include "xms/NetworkOutput.hh"
+#include "xms/OutputChannel.hh"
 
 #endif
 

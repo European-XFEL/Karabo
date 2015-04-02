@@ -105,11 +105,8 @@
         <itemPath>../../../src/karabo/io/TextFileInput.hh</itemPath>
       </logicalFolder>
       <logicalFolder name="f4" displayName="Output" projectFiles="true">
-        <itemPath>../../../src/karabo/io/AbstractOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/BinaryFileOutput.hh</itemPath>
-        <itemPath>../../../src/karabo/io/CppOutputHandler.cc</itemPath>
-        <itemPath>../../../src/karabo/io/CppOutputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/HashBinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/HashTextFileOutput.cc</itemPath>
@@ -117,7 +114,6 @@
         <itemPath>../../../src/karabo/io/Hdf5FileOutput.hh</itemPath>
         <itemPath>../../../src/karabo/io/Output.hh</itemPath>
         <itemPath>../../../src/karabo/io/OutputElement.hh</itemPath>
-        <itemPath>../../../src/karabo/io/OutputHandler.hh</itemPath>
         <itemPath>../../../src/karabo/io/SchemaBinaryFileOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaOutput.cc</itemPath>
         <itemPath>../../../src/karabo/io/SchemaTextFileOutput.cc</itemPath>
@@ -355,8 +351,8 @@
       <itemPath>../../../src/karabo/xms/NDArray.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.cc</itemPath>
       <itemPath>../../../src/karabo/xms/NetworkInput.hh</itemPath>
-      <itemPath>../../../src/karabo/xms/NetworkOutput.cc</itemPath>
-      <itemPath>../../../src/karabo/xms/NetworkOutput.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/OutputChannel.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/OutputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Signal.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Signal.hh</itemPath>
       <itemPath>../../../src/karabo/xms/SignalSlotable.cc</itemPath>
@@ -635,11 +631,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/AbstractOutput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/io/BinaryFileInput.cc"
             ex="false"
             tool="1"
@@ -671,16 +662,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/CppInputHandler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/CppOutputHandler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/CppOutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -795,11 +776,6 @@
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/OutputElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/OutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2115,12 +2091,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkOutput.cc"
+      <item path="../../../src/karabo/xms/OutputChannel.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkOutput.hh"
+      <item path="../../../src/karabo/xms/OutputChannel.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2447,11 +2423,6 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/io/AbstractOutput.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
       <item path="../../../src/karabo/io/BinaryFileInput.cc"
             ex="false"
             tool="1"
@@ -2483,16 +2454,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/io/CppInputHandler.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/CppOutputHandler.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/CppOutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2607,11 +2568,6 @@
       <item path="../../../src/karabo/io/Output.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/io/OutputElement.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/io/OutputHandler.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3949,12 +3905,12 @@
             tool="3"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkOutput.cc"
+      <item path="../../../src/karabo/xms/OutputChannel.cc"
             ex="false"
             tool="1"
             flavor2="0">
       </item>
-      <item path="../../../src/karabo/xms/NetworkOutput.hh"
+      <item path="../../../src/karabo/xms/OutputChannel.hh"
             ex="false"
             tool="3"
             flavor2="0">

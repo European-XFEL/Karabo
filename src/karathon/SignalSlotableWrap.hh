@@ -344,99 +344,99 @@ namespace karathon {
             registerReply(reply);
         }
 
-        template <class T>
-        boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name,
-                const std::string& type,
-                const karabo::util::Hash& config,
-                const bp::object& onRead,
-                const bp::object& onEndOfStream) {
-
-            karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
-            channel->setInstanceId(m_instanceId);
-            channel->setInputHandlerType("python", std::string(typeid (typename karabo::io::Input<T>).name()));
-            if (onRead != bp::object()) {
-                channel->registerIOEventHandler(onRead);
-            }
-            if (onEndOfStream != bp::object()) {
-                channel->registerEndOfStreamEventHandler(onEndOfStream);
-            }
-            m_inputChannels[name] = channel;
-            return boost::static_pointer_cast<karabo::io::Input<T> >(channel);
-
-        }
-
-        template <class T>
-        boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name,
-                const std::string& type,
-                const karabo::util::Hash& config,
-                const bp::object& onOutputPossibleHandler) {
-            using namespace karabo::util;
-
-            karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
-
-            channel->setInstanceId(m_instanceId);
-            channel->setOutputHandlerType("python");
-            if (onOutputPossibleHandler != bp::object()) {
-                channel->registerIOEventHandler(onOutputPossibleHandler);
-            }
-            m_outputChannels[name] = channel;
-            return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
-        }
-
-        template <class InputType>
-        boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash& input,
-                const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
-            using namespace karabo::util;
-
-            karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
-
-            channel->setInstanceId(m_instanceId);
-            channel->setInputHandlerType("python", std::string(typeid (InputType).name()));
-            if (onInputAvailableHandler != bp::object()) {
-                channel->registerIOEventHandler(onInputAvailableHandler);
-            }
-            if (onEndOfStreamEventHandler != bp::object()) {
-                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
-            }
-            m_inputChannels[name] = channel;
-            return boost::static_pointer_cast<InputType >(channel);
-        }
-
-        template <class OutputType>
-        boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input,
-                const bp::object& onOutputPossibleHandler) {
-            using namespace karabo::util;
-
-            karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
-
-            channel->setInstanceId(m_instanceId);
-            channel->setOutputHandlerType("python");
-            if (onOutputPossibleHandler != bp::object()) {
-                channel->registerIOEventHandler(onOutputPossibleHandler);
-            }
-            m_outputChannels[name] = channel;
-            return boost::static_pointer_cast<OutputType>(channel);
-        }
-
-        bp::object getInputChannels() {
-            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-            const InputChannels& ichannels = karabo::xms::SignalSlotable::getInputChannels();
-            bp::dict d;
-            for (InputChannels::const_iterator it = ichannels.begin(); it != ichannels.end(); ++it) {
-                d[it->first] = bp::object(it->second);
-            }
-            return bp::object(d);
-        }
-
-        bp::object getOutputChannels() {
-            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
-            const OutputChannels& ochannels = karabo::xms::SignalSlotable::getOutputChannels();
-            bp::dict d;
-            for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
-                d[it->first] = bp::object(it->second);
-            }
-            return bp::object(d);
-        }       
+//        template <class T>
+//        boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name,
+//                const std::string& type,
+//                const karabo::util::Hash& config,
+//                const bp::object& onRead,
+//                const bp::object& onEndOfStream) {
+//
+//            karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
+//            channel->setInstanceId(m_instanceId);
+//            channel->setInputHandlerType("python", std::string(typeid (typename karabo::io::Input<T>).name()));
+//            if (onRead != bp::object()) {
+//                channel->registerIOEventHandler(onRead);
+//            }
+//            if (onEndOfStream != bp::object()) {
+//                channel->registerEndOfStreamEventHandler(onEndOfStream);
+//            }
+//            m_inputChannels[name] = channel;
+//            return boost::static_pointer_cast<karabo::io::Input<T> >(channel);
+//
+//        }
+//
+//        template <class T>
+//        boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name,
+//                const std::string& type,
+//                const karabo::util::Hash& config,
+//                const bp::object& onOutputPossibleHandler) {
+//            using namespace karabo::util;
+//
+//            karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
+//
+//            channel->setInstanceId(m_instanceId);
+//            channel->setOutputHandlerType("python");
+//            if (onOutputPossibleHandler != bp::object()) {
+//                channel->registerIOEventHandler(onOutputPossibleHandler);
+//            }
+//            m_outputChannels[name] = channel;
+//            return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
+//        }
+//
+//        template <class InputType>
+//        boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash& input,
+//                const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
+//            using namespace karabo::util;
+//
+//            karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
+//
+//            channel->setInstanceId(m_instanceId);
+//            channel->setInputHandlerType("python", std::string(typeid (InputType).name()));
+//            if (onInputAvailableHandler != bp::object()) {
+//                channel->registerIOEventHandler(onInputAvailableHandler);
+//            }
+//            if (onEndOfStreamEventHandler != bp::object()) {
+//                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+//            }
+//            m_inputChannels[name] = channel;
+//            return boost::static_pointer_cast<InputType >(channel);
+//        }
+//
+//        template <class OutputType>
+//        boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input,
+//                const bp::object& onOutputPossibleHandler) {
+//            using namespace karabo::util;
+//
+//            karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
+//
+//            channel->setInstanceId(m_instanceId);
+//            channel->setOutputHandlerType("python");
+//            if (onOutputPossibleHandler != bp::object()) {
+//                channel->registerIOEventHandler(onOutputPossibleHandler);
+//            }
+//            m_outputChannels[name] = channel;
+//            return boost::static_pointer_cast<OutputType>(channel);
+//        }
+//
+//        bp::object getInputChannels() {
+//            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
+//            const InputChannels& ichannels = karabo::xms::SignalSlotable::getInputChannels();
+//            bp::dict d;
+//            for (InputChannels::const_iterator it = ichannels.begin(); it != ichannels.end(); ++it) {
+//                d[it->first] = bp::object(it->second);
+//            }
+//            return bp::object(d);
+//        }
+//
+//        bp::object getOutputChannels() {
+//            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
+//            const OutputChannels& ochannels = karabo::xms::SignalSlotable::getOutputChannels();
+//            bp::dict d;
+//            for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
+//                d[it->first] = bp::object(it->second);
+//            }
+//            return bp::object(d);
+//        }       
 
     private: // members
         boost::thread m_eventLoop;       
