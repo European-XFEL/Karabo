@@ -273,7 +273,7 @@ namespace karabo {
              */
             void close();
 
-            void ensureExistanceOfConsumer();
+            void ensureExistenceOfConsumer();
 
             void readBinaryMessage(karabo::util::Hash& header, std::vector<char>& body, bool withHeader);
 
