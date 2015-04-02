@@ -62,6 +62,7 @@ class ProxySlot(Slot):
         def method(self):
             self._update()
             return (yield from self._device.call(self._deviceId, key))
+        method.__doc__ = self.description
         return method.__get__(instance, owner)
 
 
@@ -183,6 +184,7 @@ def _getDevice(deviceId, sync, timeout=None):
             del a["nodeType"]
             dict[k] = ProxySlot()
             dict[k].key = k
+            dict[k].description = a.get("description")
     Cls = type(schema.name, (Proxy,), dict)
 
     ret = Cls(instance, deviceId, sync)
