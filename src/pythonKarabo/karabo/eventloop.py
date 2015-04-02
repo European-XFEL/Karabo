@@ -4,13 +4,14 @@ from karabo.hash import Hash, BinaryWriter
 from karabo import openmq
 
 from asyncio import (AbstractEventLoop, async, coroutine, Future,
-                     get_event_loop, set_event_loop, SelectorEventLoop, Task,
-                     TimeoutError)
+                     get_event_loop, Queue, set_event_loop, SelectorEventLoop,
+                     Task, TimeoutError)
 from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
 import os
+import queue
 import sys
 import threading
 import weakref
@@ -181,6 +182,7 @@ class Client(object):
                               Hash(attr.key, value))
 
 class NoEventLoop(AbstractEventLoop):
+    Queue = queue.Queue
     sync_set = True
 
     def __init__(self, instance):
@@ -203,6 +205,7 @@ class NoEventLoop(AbstractEventLoop):
 
 
 class EventLoop(SelectorEventLoop):
+    Queue = Queue
     sync_set = False
 
     def __init__(self, topic=None):
