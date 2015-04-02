@@ -9,7 +9,9 @@ only very simple. This can be achieved by functions which operate directly
 on the deviceId, without going through the hazzle of creating a device
 proxy. """
 from asyncio import coroutine, Future, get_event_loop
+from collections import defaultdict
 from functools import wraps
+from weakref import WeakSet
 
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Type
@@ -100,7 +102,7 @@ class Proxy(object):
             print(device.speed)"""
     def __init__(self, device, deviceId, sync):
         self._device = device
-        self._futures = {}
+        self._queues = defaultdict(WeakSet)
         self._deviceId = deviceId
         self._used = 0
         self._sethash = None
@@ -115,12 +117,10 @@ class Proxy(object):
             d = getattr(type(self), k, None)
             if d is not None:
                 self.__dict__[d] = v
-                f = self._futures.pop(k, None)
-                if f is not None:
-                    f.set_result(v)
-        f = self._futures.pop(None, None)
-        if f is not None:
-            f.set_result(hash)
+                for q in self._queues[k]:
+                    q.put_nowait(v)
+        for q in self._queues[None]:
+            q.put_nowait(hash)
 
     def setValue(self, attr, value):
         loop = get_event_loop()
@@ -168,6 +168,16 @@ class Proxy(object):
         return self
 
 
+class OneShotQueue(Future):
+    """ This is a future that looks like a queue
+
+    It may be registered in the list of queues for a property, and is removed
+    from that property once fired """
+    def put_nowait(self, value):
+        if not self.done():
+            self.set_result(value)
+
+
 class waitUntilNew:
     # this looks like a function to the user, although it is a class
     """wait until a new value for a property is available
@@ -186,12 +196,25 @@ class waitUntilNew:
     @synchronize
     def __getattr__(self, attr):
         assert isinstance(getattr(type(self.proxy), attr), Type)
-        return self.proxy._futures.setdefault(
-            attr, Future(loop=self.proxy._device._ss.loop))
+        future = OneShotQueue(loop=self.proxy._device._ss.loop)
+        self.proxy._queues[attr].add(future)
+        return (yield from future)
 
     def __iter__(self):
-        return (yield from self.proxy._futures.setdefault(
-            None, Future(loop=self.proxy._device._ss.loop)))
+        future = OneShotQueue(loop=self.proxy._device._ss.loop)
+        self.proxy._queues[None].add(future)
+        return (yield from future)
+
+
+class Queue:
+    def __init__(self, proxy):
+        self.proxy = proxy
+
+    def __getattr__(self, attr):
+        assert isinstance(getattr(type(self.proxy), attr), Type)
+        queue = get_event_loop().Queue()
+        self.proxy._queues[attr].add(queue)
+        return queue
 
 
 def get_instance():
