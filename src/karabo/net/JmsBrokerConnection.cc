@@ -44,19 +44,31 @@ namespace karabo {
         void JmsBrokerConnection::expectedParameters(Schema& expected) {
 
             // Some tricks with environment here
+            char* env = 0;
             string defaultBrokerHosts = ""; // no defaults; it serves as a flag for clustering setup
-            char* env = getenv("KARABO_BROKER_HOSTS");
-            if (env != 0) defaultBrokerHosts = string(env); // List of host1:port1, host2:port2,  ...
-
             string defaultHostname = "exfl-broker.desy.de:7777";
-            env = getenv("KARABO_BROKER_HOST");
-            if (env != 0) defaultHostname = string(env);
-
             unsigned int defaultPort = 7777;
+            string defaultTopic = string(getenv("USER"));
+            
             env = getenv("KARABO_BROKER_PORT");
             if (env != 0) defaultPort = fromString<unsigned int>(string(env));
-
-            string defaultTopic = string(getenv("USER"));
+            env = getenv("KARABO_BROKER_HOST");
+            if (env != 0) defaultHostname = string(env);
+            env = getenv("KARABO_BROKER_HOSTS");
+            if (env != 0) {
+                defaultBrokerHosts = string(env); // List of host1:port1, host2:port2,  ...
+                vector<string> hostports = fromString<string, vector>(defaultBrokerHosts);
+                vector<string> hostport = fromString<string, vector>(hostports[0], ":");
+                if (hostport[0] != "") defaultHostname = hostport[0];
+                if (hostport.size() >= 2 && hostport[1] != "") defaultPort = fromString<unsigned int>(hostport[1]);
+            }
+            {
+                vector<string> hostport = fromString<string, vector>(defaultHostname, ":");
+                if (hostport.size() < 2)
+                    defaultHostname += ":" + toString(defaultPort);
+                else if (hostport[1] == "")
+                    defaultHostname += toString(defaultPort);
+            }
             env = getenv("KARABO_BROKER_TOPIC");
             if (env != 0) defaultTopic = string(env);
 
@@ -216,11 +228,7 @@ namespace karabo {
             if (m_brokerHosts.empty()) {
                 // Standalone broker setup
                 m_clusterMode = false;
-                vector<string> hostport = fromString<string, vector>(input.get<string>("hostname"), ":");
-                m_hostname = hostport[0];
-                if (hostport.size() < 2) input.get("port", m_port);
-                else m_port = fromString<unsigned int>(hostport[1]);
-                m_brokerHosts.push_back(m_hostname + ":" + toString(m_port));
+                m_brokerHosts.push_back(input.get<string>("hostname"));
             } else {
                 // Cluster broker setup.
                 m_clusterMode = true;
@@ -254,6 +262,8 @@ namespace karabo {
 
             try {
                 connectToBrokers();
+            } catch (const SystemException& e) {
+                KARABO_RETHROW
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
             }
@@ -270,12 +280,6 @@ namespace karabo {
                 m_hasConnection = false;
             }
             if (!m_hasConnection) {
-                vector<string> hostport = fromString<string, vector>(m_brokerHosts[0], ":");
-                m_hostname = hostport[0];
-                if (hostport.size() < 2 || hostport[1] == "")
-                    m_port = 7777;
-                else
-                    m_port = fromString<unsigned int>(hostport[1]);
                 if (m_clusterMode)
                     connectCluster();
                 else {
@@ -297,6 +301,14 @@ namespace karabo {
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
 
             try {
+                vector<string> hostport = fromString<string, vector>(m_brokerHosts[0], ":");
+                if (hostport.size() == 2) {
+                    m_hostname = hostport[0] == "" ? "exfl-broker.desy.de" : hostport[0];
+                    m_port = hostport[1] == "" ? 7777 : fromString<unsigned int>(hostport[1]);
+                } else {
+                    m_hostname = hostport[0] == "" ? "exfl-broker.desy.de" : hostport[0];
+                    m_port = 7777;
+                }
                 // Retrieve property handle
                 MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
                 // Set all properties
@@ -304,9 +316,9 @@ namespace karabo {
                 // Initiate connection
                 // Check if onException is a good idea
                 m_connectionHandle = MQ_INVALID_HANDLE;
-                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &/*::karabo_net_jmsbrokerconnection_*/onException, this, &m_connectionHandle));
+                MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, this, &m_connectionHandle));
             } catch (...) {
-                KARABO_RETHROW
+                throw KARABO_SYSTEM_EXCEPTION("Cannot connect to the broker with given parameters. Exit...");
             }
         }
 
@@ -316,9 +328,16 @@ namespace karabo {
             MQPropertiesHandle propertiesHandle = MQ_INVALID_HANDLE;
             while (true) {
                 for (size_t i = 0; i < m_brokerHosts.size(); ++i) {
+
                     vector<string> hostport = fromString<string, vector>(m_brokerHosts[i], ":");
-                    m_hostname = hostport[0];
-                    m_port = fromString<unsigned int>(hostport[1]);
+                    if (hostport.size() == 2) {
+                        m_hostname = hostport[0] == "" ? "exfl-broker.desy.de" : hostport[0];
+                        m_port = hostport[1] == "" ? 7777 : fromString<unsigned int>(hostport[1]);
+                    } else {
+                        m_hostname = hostport[0] == "" ? "exfl-broker.desy.de" : hostport[0];
+                        m_port = 7777;
+                    }
+
                     // Retrieve property handle
                     MQ_SAFE_CALL(MQCreateProperties(&propertiesHandle));
                     // Set all properties
@@ -340,7 +359,7 @@ namespace karabo {
                         }
                     }
                 }
-                boost::this_thread::sleep(boost::posix_time::seconds(5));
+                boost::this_thread::sleep(boost::posix_time::seconds(10));
             }
         }
 
