@@ -3,11 +3,11 @@ The Karabo API
 
 Karabo has an extensive API, both in C++ and Python.
 
-The API for asynchronous calls in macros
-----------------------------------------
-.. automodule:: async
+The API for communication with remote devices
+---------------------------------------------
 
-.. automodule:: karabo.async
+.. automodule:: karabo.device_client
+   :members:
 
 
 The API of the GUI

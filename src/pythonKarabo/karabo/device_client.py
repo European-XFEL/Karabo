@@ -1,3 +1,13 @@
+"""This is the machinery to communicate with remote devices.
+
+Usually, one communicated with a remote device by creating a device
+proxy :class:`Proxy` using :func:`getDevice`. This is a convenient way to access
+a remote device often.
+
+A more rare usecase is that many remote devices should be accessed, but
+only very simple. This can be achieved by functions which operate directly
+on the deviceId, without going through the hazzle of creating a device
+proxy. """
 from asyncio import coroutine, Future, get_event_loop
 from functools import wraps
 
@@ -67,6 +77,27 @@ class ProxySlot(Slot):
 
 
 class Proxy(object):
+    """A proxy for a remote device
+
+    This proxy represents a real device somewhere in the karabo system.
+    It is typically created by :func:`getDevice`, do not create it yourself.
+
+    properties and slots may be accessed as if one would access the actual
+    device object, as in::
+
+        device = getDevice("someDevice")
+        device.speed = 7
+        device.start()
+
+    Note that in order to reduce network traffic, the proxy device is initially
+    not *connected*, meaning that it does not receive updates of properties
+    from the device. There are two ways to change that: you can call
+    :func:`updateDevice` to get the current configuration once, or you may use
+    the proxy in a with statment, which will connect the device during the
+    execution of that statement, as in::
+
+        with getDevice("someDevice") as device:
+            print(device.speed)"""
     def __init__(self, device, deviceId, sync):
         self._device = device
         self._futures = {}
@@ -139,6 +170,16 @@ class Proxy(object):
 
 class waitUntilNew:
     # this looks like a function to the user, although it is a class
+    """wait until a new value for a property is available
+
+    this function waits until a specific property of a device changes.
+    It has an unusual syntax::
+
+        waitUntilNew(someDevice).someProperty
+
+    this function is used rather rarely. If you want to wait for something
+    to reach a certain value, use :func:`waitUntil`. If you want to get all
+    updates of a property, use :func:`iterate`."""
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -159,6 +200,16 @@ def get_instance():
 
 @synchronize
 def waitUntil(condition):
+    """Wait until the condition is True
+
+    the condition is typically a lambda function, as in::
+
+        waitUntil(lambda: device.speed > 3)
+
+    The condition will be evaluated each time something changes. Note
+    that for this to work, it is necessary that all the devices used in the
+    condition are connected while we are waiting (so typically they appear
+    in a with statement)"""
     loop = get_event_loop()
     while not condition():
         yield from loop.changedFuture
@@ -194,6 +245,18 @@ def _getDevice(deviceId, sync, timeout=None):
 
 
 def getDevice(deviceId, *, sync=None, timeout=-1):
+    """get a device proxy for the device deviceId
+
+    Request a schema of a remote device and create a proxy object which
+    acts as if one would act on the device itself.
+
+    Note that the created device will not be connected to changes on the
+    actual device. In order to achieve this, put the returned device in a
+    with statement as such::
+
+        with getDevice("someDevice") as device:
+            # do something with device
+    """
     if sync is None:
         sync = get_event_loop().sync_set
     return _getDevice(deviceId, sync=sync, timeout=timeout)
@@ -201,6 +264,22 @@ def getDevice(deviceId, *, sync=None, timeout=-1):
 
 @synchronize
 def set(device, **kwargs):
+    """Set properties of a device
+
+    device may either be a device proxy as returned by :func:`getDevice`, or
+    simply the deviceId as a string. Add the properties to be set as keyword
+    arguments, as in::
+
+        set("someDevice", speed=3, position=5)
+
+    Note that for proxy devices this method is normally not necessary,
+    you may just write::
+
+        someDevice.speed = 3
+        someDevice.position = 5
+
+    the function waits until the device has acknowledged that the values
+    have been set."""
     if isinstance(device, Proxy):
         device._update()
         device = device._deviceId
@@ -211,6 +290,7 @@ def set(device, **kwargs):
 
 
 def setNoWait(device, **kwargs):
+    """same as :func:`set`, but don't wait for acknowledgement"""
     if isinstance(device, Proxy):
         device = device._deviceId
     h = Hash()
@@ -220,6 +300,19 @@ def setNoWait(device, **kwargs):
 
 
 def executeNoWait(device, slot):
+    """execute a slot without waiting for it to be finished
+
+    device may be a device proxy returned by getDevice, or simply a string
+    with the device id, as in::
+
+        executeNoWait("someDevice", "start")
+
+    Normally you would call a slot simply using its proxy devive, as in::
+
+        someDevice.start()
+
+    but then we wait until the device has finished with the operation. If
+    this is not desired, use executeNoWait."""
     if isinstance(device, Proxy):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: [slot]})
@@ -227,5 +320,9 @@ def executeNoWait(device, slot):
 
 @synchronize
 def updateDevice(device):
+    """wait for an update of a device
+
+    request new properties and wait until they arrive. This is the only
+    way to receive changes on a device while the device is not connected."""
     yield from device
     return device
