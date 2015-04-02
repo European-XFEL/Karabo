@@ -22,7 +22,7 @@
 namespace karabo {
     namespace io {
 
-        class AbstractOutput : public boost::enable_shared_from_this<AbstractOutput> {
+        class AbstractOutput {                       
 
         public:
 
@@ -49,65 +49,36 @@ namespace karabo {
             virtual ~AbstractOutput() {
             }
 
-            void setInstanceId(const std::string& instanceId) {
-                m_instanceId = instanceId;
-            }
+//            void setOutputHandlerType(const std::string& handlerType) {
+//                std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
+//                if (capitalType == "C++")
+//                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("CppOutputHandler", shared_from_this());
+//                else if (capitalType == "PYTHON")
+//                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("PythonOutputHandler", shared_from_this());
+//                else
+//                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + handlerType + " is not supported.  Supported types (case-insensitive) are C++, Python");
+//            }
 
-            const std::string& getInstanceId() const {
-                return m_instanceId;
-            }
+//            OutputHandler::Pointer getOutputHandler() {
+//                return m_handlers;
+//            }
 
-            void setOutputHandlerType(const std::string& handlerType) {
-                std::string capitalType = boost::algorithm::to_upper_copy(handlerType);
-                if (capitalType == "C++")
-                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("CppOutputHandler", shared_from_this());
-                else if (capitalType == "PYTHON")
-                    m_handlers = karabo::util::Factory<OutputHandler>::create<AbstractOutput::Pointer>("PythonOutputHandler", shared_from_this());
-                else
-                    throw KARABO_PARAMETER_EXCEPTION("Handler type " + handlerType + " is not supported.  Supported types (case-insensitive) are C++, Python");
-            }
-
-            OutputHandler::Pointer getOutputHandler() {
-                return m_handlers;
-            }
-
-            void registerIOEventHandler(const boost::any& ioEventHandler) {
-                if (!m_handlers)
-                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setOutputHandler' first.");
-                m_handlers->registerIOEventHandler(ioEventHandler);
-            }
+//            void registerIOEventHandler(const boost::any& ioEventHandler) {
+//                if (!m_handlers)
+//                    throw KARABO_LOGIC_EXCEPTION("Handler storage not initialized: call 'setOutputHandler' first.");
+//                m_handlers->registerIOEventHandler(ioEventHandler);
+//            }
 
             //virtual void onInputAvailable(const std::string& instanceId) {
             //}
 
-            virtual karabo::util::Hash getInformation() const {
-                return karabo::util::Hash();
-            }
+//            virtual karabo::util::Hash getInformation() const {
+//                return karabo::util::Hash();
+//            }
 
             
-            virtual void update() {
-                
-            }
-
-            virtual void signalEndOfStream() {
-            }
-
-            virtual bool canCompute() const {
-                return true;
-            }
-
-        protected:
-            
-            void triggerIOEvent() {
-                if (m_handlers) {
-                    m_handlers->triggerIOEvent();
-                }
-            }
-                       
-        protected:
-
-            std::string m_instanceId;
-            OutputHandler::Pointer m_handlers;
+            virtual void update() {                
+            }                            
         };
     }
 }

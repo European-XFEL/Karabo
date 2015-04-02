@@ -258,7 +258,7 @@ namespace karabo {
 
             const CpuImage& write(const std::string& filename, const bool enableAppendMode = false) const {
                 karabo::util::Hash h("ImageFile.filename", filename, "ImageFile.enableAppendMode", enableAppendMode);
-                typename karabo::io::Output<CpuImage<TPix> >::Pointer out = karabo::io::Output<CpuImage<TPix> >::create(h);
+                typename karabo::io::Output<CpuImage<TPix> >::Pointer out = karabo::util::Configurator<karabo::io::Output<CpuImage<TPix> > >::create(h);
                 out->write(*this);
                 return *this;
             }
