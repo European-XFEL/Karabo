@@ -88,6 +88,9 @@ namespace karabo {
 
             try {
                 jbc->connectToBrokers();
+            } catch (const SystemException& e) {
+                m_isStopped = true;
+                KARABO_RETHROW
             } catch (...) {
                 KARABO_RETHROW_AS(KARABO_OPENMQ_EXCEPTION("Problems whilst connecting to broker"));
             }
