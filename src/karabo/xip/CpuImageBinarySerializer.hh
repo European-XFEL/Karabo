@@ -76,7 +76,7 @@ namespace karabo {
                 RawImageData raw;
                 m_rawImageDataSerializer->load(raw, archive, nBytes);
                 const karabo::util::Dims& dims = raw.getDimensions();
-                CpuImage<TPix> tmp(dims.x(), dims.y(), dims.z());
+                CpuImage<TPix> tmp(dims.x1(), dims.x2(), dims.x3());
                 std::memcpy(tmp.pixelPointer(), raw.getDataPointer(), raw.getByteSize());
                 tmp.setHeader(raw.getHeader());
                 tmp.swap(image);

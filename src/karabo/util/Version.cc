@@ -63,6 +63,7 @@ namespace karabo {
                 path = path.substr(0, path.size() - 1); // Cut away newline character
                 return path + "/VERSION";
             }
+            throw KARABO_IO_EXCEPTION("No karabo framework installation found: $HOME/.karabo/karaboFramework");
         }
 
 

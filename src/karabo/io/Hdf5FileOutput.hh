@@ -215,7 +215,7 @@ namespace karabo {
                     if(m_h5file < 0){
                         //assume the file does not exist, try creating it new instead
                     
-                        m_writeMode == karabo::io::h5::File::TRUNCATE;
+                        m_writeMode = karabo::io::h5::File::TRUNCATE;
                         openFile();
                     }
                     KARABO_CHECK_HDF5_STATUS(H5Pclose(fapl));
