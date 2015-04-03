@@ -382,7 +382,7 @@ namespace karabo {
             SLOT1(slotGetClassSchema, string /*classId*/)
 
             // Connect to global slot(s))
-            connectN("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable");
+            connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", NO_TRACK);
         }
 
 
