@@ -47,6 +47,15 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
                     .expertAccess().reconfigurable().commit()
                     ,
+            CHOICE_ELEMENT(expected).key("_connection_")
+                    .displayedName("Connection")
+                    .description("The connection to the communication layer of the distributed system")
+                    .appendNodesOfConfigurationBase(BrokerConnection)
+                    .assignmentOptional().defaultValue("Jms")
+                    .adminAccess()
+                    .init()
+                    .commit()
+                    ,                    
             STRING_ELEMENT(expected).key("classId")
                     .displayedName("ClassID").description("The (factory)-name of the class of this device")
                     .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
@@ -127,7 +136,7 @@ class PythonDevice(NoFsm):
 
         # Instantiate SignalSlotable object without starting event loop
         try:
-            self._ss = SignalSlotable.create(self.deviceid)    #, "Jms", self.parameters["connection.Jms"], autostart = False
+            self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart = False)
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
         # Setup device logger
