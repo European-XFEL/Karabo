@@ -46,7 +46,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/BinaryFileOutput.o \
 	${OBJECTDIR}/_ext/1072794519/CppInputHandler.o \
-	${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o \
 	${OBJECTDIR}/_ext/1072794519/FileTools.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinaryFileInput.o \
 	${OBJECTDIR}/_ext/1072794519/HashBinaryFileOutput.o \
@@ -146,7 +145,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1103122747/Memory.o \
 	${OBJECTDIR}/_ext/1103122747/NDArray.o \
 	${OBJECTDIR}/_ext/1103122747/NetworkInput.o \
-	${OBJECTDIR}/_ext/1103122747/NetworkOutput.o \
+	${OBJECTDIR}/_ext/1103122747/OutputChannel.o \
 	${OBJECTDIR}/_ext/1103122747/Signal.o \
 	${OBJECTDIR}/_ext/1103122747/SignalSlotable.o \
 	${OBJECTDIR}/_ext/1103122747/Slot.o \
@@ -243,11 +242,6 @@ ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o: ../../../src/karabo/io/CppInputH
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o ../../../src/karabo/io/CppInputHandler.cc
-
-${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o: ../../../src/karabo/io/CppOutputHandler.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ../../../src/karabo/io/CppOutputHandler.cc
 
 ${OBJECTDIR}/_ext/1072794519/FileTools.o: ../../../src/karabo/io/FileTools.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
@@ -744,10 +738,10 @@ ${OBJECTDIR}/_ext/1103122747/NetworkInput.o: ../../../src/karabo/xms/NetworkInpu
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/NetworkInput.o ../../../src/karabo/xms/NetworkInput.cc
 
-${OBJECTDIR}/_ext/1103122747/NetworkOutput.o: ../../../src/karabo/xms/NetworkOutput.cc 
+${OBJECTDIR}/_ext/1103122747/OutputChannel.o: ../../../src/karabo/xms/OutputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/NetworkOutput.o ../../../src/karabo/xms/NetworkOutput.cc
+	$(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/OutputChannel.o ../../../src/karabo/xms/OutputChannel.cc
 
 ${OBJECTDIR}/_ext/1103122747/Signal.o: ../../../src/karabo/xms/Signal.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
@@ -1148,19 +1142,6 @@ ${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o: ${OBJECTDIR}/_ext/1072794
 	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o ../../../src/karabo/io/CppInputHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/1072794519/CppInputHandler.o ${OBJECTDIR}/_ext/1072794519/CppInputHandler_nomain.o;\
-	fi
-
-${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o: ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ../../../src/karabo/io/CppOutputHandler.cc 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1072794519
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o`; \
-	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
-	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
-	then  \
-	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o ../../../src/karabo/io/CppOutputHandler.cc;\
-	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1072794519/CppOutputHandler.o ${OBJECTDIR}/_ext/1072794519/CppOutputHandler_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1072794519/FileTools_nomain.o: ${OBJECTDIR}/_ext/1072794519/FileTools.o ../../../src/karabo/io/FileTools.cc 
@@ -2450,17 +2431,17 @@ ${OBJECTDIR}/_ext/1103122747/NetworkInput_nomain.o: ${OBJECTDIR}/_ext/1103122747
 	    ${CP} ${OBJECTDIR}/_ext/1103122747/NetworkInput.o ${OBJECTDIR}/_ext/1103122747/NetworkInput_nomain.o;\
 	fi
 
-${OBJECTDIR}/_ext/1103122747/NetworkOutput_nomain.o: ${OBJECTDIR}/_ext/1103122747/NetworkOutput.o ../../../src/karabo/xms/NetworkOutput.cc 
+${OBJECTDIR}/_ext/1103122747/OutputChannel_nomain.o: ${OBJECTDIR}/_ext/1103122747/OutputChannel.o ../../../src/karabo/xms/OutputChannel.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1103122747
-	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/NetworkOutput.o`; \
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/1103122747/OutputChannel.o`; \
 	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/NetworkOutput_nomain.o ../../../src/karabo/xms/NetworkOutput.cc;\
+	    $(COMPILE.cc) -O2 -Wall -D__SO__ -I../../../src -I${KARABO}/extern/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 `pkg-config --cflags karaboDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1103122747/OutputChannel_nomain.o ../../../src/karabo/xms/OutputChannel.cc;\
 	else  \
-	    ${CP} ${OBJECTDIR}/_ext/1103122747/NetworkOutput.o ${OBJECTDIR}/_ext/1103122747/NetworkOutput_nomain.o;\
+	    ${CP} ${OBJECTDIR}/_ext/1103122747/OutputChannel.o ${OBJECTDIR}/_ext/1103122747/OutputChannel_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/1103122747/Signal_nomain.o: ${OBJECTDIR}/_ext/1103122747/Signal.o ../../../src/karabo/xms/Signal.cc 
