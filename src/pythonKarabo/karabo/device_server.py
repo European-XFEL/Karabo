@@ -173,49 +173,28 @@ class DeviceServer(object):
         #**************************************************************
         
         KARABO_FSM_EVENT2(self, 'ErrorFoundEvent', 'errorFound')
-        KARABO_FSM_EVENT0(self, 'EndErrorEvent', 'endError')
-        KARABO_FSM_EVENT0(self, 'NewPluginAvailableEvent', 'newPluginAvailable')
-        KARABO_FSM_EVENT0(self, 'InbuildDevicesAvailableEvent', 'inbuildDevicesAvailable')
-        KARABO_FSM_EVENT1(self, 'StartDeviceEvent', 'slotStartDevice')
+        KARABO_FSM_EVENT0(self, 'ResetEvent', 'reset')
 
         #**************************************************************
         #*                        States                              *
         #**************************************************************
 
-        KARABO_FSM_STATE('ErrorState')
-        KARABO_FSM_STATE_E('IdleState', self.idleStateOnEntry)
-        KARABO_FSM_STATE('ServingState')
+        KARABO_FSM_STATE_E('Ok', self.okStateOnEntry)
+        KARABO_FSM_STATE('Error')
 
         #**************************************************************
         #*                    Transition Actions                      *
         #**************************************************************
 
         KARABO_FSM_ACTION2('ErrorFoundAction', self.errorFoundAction, str, str)
-        KARABO_FSM_ACTION0('EndErrorAction', self.endErrorAction)
-        KARABO_FSM_ACTION0('NotifyNewDeviceAction', self.notifyNewDeviceAction)
-        KARABO_FSM_ACTION1('StartDeviceAction', self.startDeviceAction, Hash)
-        
         KARABO_FSM_NO_TRANSITION_ACTION(self.noStateTransition)
-            
-        #**************************************************************
-        #*                      AllOk Machine                         *
-        #**************************************************************
-
-        AllOkSTT = [
-                    ('IdleState',         'NewPluginAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
-                    ('IdleState',    'InbuildDevicesAvailableEvent', 'none',       'NotifyNewDeviceAction',    'none'),
-                    ('IdleState',         'StartDeviceEvent',      'ServingState', 'StartDeviceAction',        'none'),
-                    ('ServingState',      'StartDeviceEvent',        'none',       'StartDeviceAction',        'none')
-                   ]
-        
-        KARABO_FSM_STATE_MACHINE('AllOkState', AllOkSTT, 'IdleState')
-        
+                    
         DeviceServerMachineSTT=[
-                                ('AllOkState', 'ErrorFoundEvent', 'ErrorState', 'ErrorFoundAction', 'none'),
-                                ('ErrorState', 'EndErrorEvent',   'AllOkState', 'EndErrorAction',   'none')
+                                ('Ok', 'ErrorFoundEvent', 'Error', 'ErrorFoundAction', 'none'),
+                                ('Error', 'ResetEvent',   'Ok',    'none',   'none')
                                ]
         
-        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'AllOkState')
+        KARABO_FSM_STATE_MACHINE('DeviceServerMachine', DeviceServerMachineSTT, 'Ok')
         
         return KARABO_FSM_CREATE_MACHINE('DeviceServerMachine')
         
@@ -338,9 +317,14 @@ class DeviceServer(object):
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)
+        
         self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
+        self.log.INFO("ServerId: {}".format(self.serverid))
+        self.log.INFO("Broker (host/topic): {}/{}".format(self.connectionParameters['hostname'],self.connectionParameters['destinationName']))
+
         self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
         self._registerAndConnectSignalsAndSlots()
+                
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
@@ -360,14 +344,13 @@ class DeviceServer(object):
         self.ss.registerSlot(self.slotKillServer)
         self.ss.registerSlot(self.slotDeviceGone)
         self.ss.registerSlot(self.slotGetClassSchema)
-
         self.ss.connect("", "signalNewDeviceClassAvailable", "*", "slotNewDeviceClassAvailable", ConnectionType.NO_TRACK, False)
-        self.ss.connect("", "signalClassSchema", "*", "slotClassSchema", ConnectionType.NO_TRACK, False)
 
     def onStateUpdate(self, currentState):
-        self.ss.reply(currentState)
+        #self.ss.reply(currentState)
+        pass
         
-    def idleStateOnEntry(self):
+    def okStateOnEntry(self):
         self.log.INFO("DeviceServer starts up with id: {}".format(self.serverid))
         if self.needScanPlugins:
             self.log.INFO("Keep watching directory: \"{}\" for Device plugins".format(self.pluginLoader.getPluginDirectory()))
@@ -437,18 +420,97 @@ class DeviceServer(object):
     def errorFoundAction(self, m1, m2):
         self.log.ERROR("{} -- {}".format(m1,m2))
     
-    def endErrorAction(self):
-        pass
-
-    def startDeviceAction(self, hash):
-
-        config = Hash()
-
-        if hash.has('classId'):
-            classid, deviceid, config = self.parseNew(hash)
+    def slotStartDevice(self, configuration):
+        if configuration.has('classId'):
+            self.instantiateNew(configuration)
         else:
-            classid, deviceid, config = self.parseOld(hash)
+            self.instantiateOld(configuration)
 
+    def instantiateNew(self, hash):
+        classid = hash['classId']
+        
+        self.log.INFO("Trying to start {}...".format(classid))
+        self.log.DEBUG("with the following configuration:\n{}".format(hash))
+
+        # Get configuration
+        config = copy.copy(hash['configuration'])
+
+        # Inject serverId
+        config['_serverId_'] = self.serverid
+
+        # Inject deviceId
+        if 'deviceId' not in hash:
+            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
+        elif len(hash['deviceId']) == 0:
+            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
+        else:
+            config['_deviceId_'] = hash['deviceId']
+
+        # Add connection type and parameters used by device server for connecting to broker
+        config['_connection_.' + self.connectionType] = self.connectionParameters;
+        
+        # Add logger configuration from DeviceServer:
+        config['Logger'] = copy.copy(self.loggerConfiguration)
+
+        deviceid = config['_deviceId_']
+
+        # create temporary instance to check the configuration parameters are valid
+        try:
+            pluginDir = self.pluginLoader.getPluginDirectory()
+            modname = self.availableDevices[classid]["module"]
+            module = __import__(modname)
+            UserDevice = getattr(module, classid)
+            schema = UserDevice.getSchema(classid)
+            validator = Validator()
+            self.log.DEBUG("Trying to validate  the configuration on device server")
+            validated = validator.validate(schema, config)
+            self.log.DEBUG("Validated configuration is ...\n{}".format(validated))
+            
+            if "_deviceId_" in config:
+                device = config["_deviceId_"]
+            else:
+                raise RuntimeError("Access to {}._deviceId_ failed".
+                                   format(classid))
+            script = os.path.realpath(pluginDir + "/" + modname + ".py")
+            filename = "/tmp/{}.().configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
+            while os.path.isfile(filename):
+                self.seqnum += 1
+                filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname,classid,self.pid,self.seqnum)
+            saveToFile(config, filename, Hash("format.Xml.indentation", 2))
+            params = [script, modname, classid, filename]
+            
+            launcher = Launcher(device, script, params)
+            launcher.start()
+            self.deviceInstanceMap[deviceid] = launcher
+            del validated
+            self.ss.reply(True, deviceid)
+        except Exception as e:
+            self.log.WARN("Device '{}' could not be started because: {}".format(classid, e.message))
+            self.ss.reply(False, "Device '{}' could not be started because: {}".format(classid, e.message))
+        
+
+    def instantiateOld(self, hash):
+         # Input 'config' parameter comes from GUI or DeviceClient
+        classid = next(iter(hash)).getKey()
+        
+        self.log.INFO("Trying to start {}...".format(classid))
+        self.log.DEBUG("with the following configuration:\n{}".format(hash))
+        
+        config = copy.copy(hash[classid])
+        config["_serverId_"] = self.serverid
+        deviceid = str()
+        if "deviceId" in config:
+            deviceid = config["deviceId"]
+        else:
+            deviceid = self._generateDefaultDeviceInstanceId(classid)
+            
+        config["_deviceId_"] = deviceid
+
+        # Add connection type and parameters used by device server for connecting to broker
+        config['_connection_.' + self.connectionType] = self.connectionParameters;
+        
+        # Add logger configuration from DeviceServer:
+        config["Logger"] = copy.copy(self.loggerConfiguration)
         
         # create temporary instance to check the configuration parameters are valid
         try:
@@ -481,53 +543,11 @@ class DeviceServer(object):
             del validated
             self.ss.reply(True, deviceid)
         except Exception as e:
-            self.log.WARN("Wrong input configuration for class '{}': {}".format(classid, e.message))
-            return
-
-    def parseNew(self, hash):
-        classid = hash['classId']
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))
-
-        # Get configuration
-        config = copy.copy(hash['configuration'])
-
-        # Inject serverId
-        config['_serverId_'] = self.serverid
-
-        # Inject deviceId
-        if 'deviceId' not in hash:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
-        elif len(hash['deviceId']) == 0:
-            config['_deviceId_'] = self._generateDefaultDeviceInstanceId(classid)
-        else:
-            config['_deviceId_'] = hash['deviceId']
-
-        # Add logger configuration from DeviceServer:
-        config['Logger'] = copy.copy(self.loggerConfiguration)
-        return classid, config['_deviceId_'], config
-
-
-    def parseOld(self, hash):
-         # Input 'config' parameter comes from GUI or DeviceClient
-        classid = next(iter(hash)).getKey()
-        self.log.INFO("Trying to start {}...".format(classid))
-        self.log.DEBUG("with the following configuration:\n{}".format(hash))        
-        configuration = copy.copy(hash[classid])
-        configuration["_serverId_"] = self.serverid
-        deviceid = str()
-        if "deviceId" in configuration:
-            deviceid = configuration["deviceId"]
-        else:
-            deviceid = self._generateDefaultDeviceInstanceId(classid)
-            
-        configuration["_deviceId_"] = deviceid
-        # Add logger configuration from DeviceServer:
-        configuration["Logger"] = copy.copy(self.loggerConfiguration)
-        return classid, deviceid, configuration
+            self.log.WARN("Device '{}' could not be started because: {}".format(classid, e.message))
+            self.ss.reply(False, "Device '{}' could not be started because: {}".format(classid, e.message))
 
         
-    def notifyNewDeviceAction(self):
+    def newPluginAvailable(self):
         deviceClasses = []
         visibilities = []
         for (classid, d) in list(self.availableDevices.items()):
@@ -538,6 +558,7 @@ class DeviceServer(object):
         self.log.DEBUG("Sending instance update as new device plugins are available: {}".format(deviceClasses))
         self.ss.updateInstanceInfo(Hash("deviceClasses", deviceClasses, "visibilities", visibilities))
 
+    
     def noStateTransition(self):
         self.log.DEBUG("DeviceServer \"{}\" does not allow the transition for this event".format(self.serverid))
    
