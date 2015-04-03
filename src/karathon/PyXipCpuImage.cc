@@ -37,7 +37,7 @@ namespace karathon {
             karabo::util::Dims dimensions;
             dimensions.fromVector(tmp);
             
-            self.assign(data, dimensions.x(), dimensions.y(), dimensions.z());
+            self.assign(data, dimensions.x1(), dimensions.x2(), dimensions.x3());
         }
 
         static bp::object getNdarrayPy(const CpuImage<T>& self) {
