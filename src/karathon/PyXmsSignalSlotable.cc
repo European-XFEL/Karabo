@@ -277,13 +277,18 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("exists"
             , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::exists)
             , (bp::arg("instanceId")))
-
+            
             .def("getAccessLevel"
             , (int (SignalSlotable::*)(const std::string&) const) (&SignalSlotable::getAccessLevel)
             , (bp::arg("instanceId")))
 
 //            .def("connectInputChannels"
-//            , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))          
+//            , (void (SignalSlotable::*)()) (&SignalSlotable::connectInputChannels))
+            
+            .def("getBrokerHost",  &SignalSlotableWrap::getBrokerHost)
+            .def("getBrokerHosts", &SignalSlotableWrap::getBrokerHosts)
+            .def("getBrokerTopic", &SignalSlotableWrap::getBrokerTopic)
+            
             ;
 }
 
