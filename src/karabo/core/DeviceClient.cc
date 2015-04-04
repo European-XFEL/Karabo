@@ -1183,6 +1183,8 @@ if (nodeData) {\
                 }
             } catch (const Exception& e) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered an exception: " << e;
+            } catch (const std::exception& e) {
+                KARABO_LOG_FRAMEWORK_ERROR << "Aging thread encountered system exception: " << e.what();
             } catch (...) {
                 KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception encountered in aging thread";
             }
