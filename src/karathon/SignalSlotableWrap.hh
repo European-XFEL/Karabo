@@ -436,7 +436,19 @@ namespace karathon {
 //                d[it->first] = bp::object(it->second);
 //            }
 //            return bp::object(d);
-//        }       
+//        }
+        
+        bp::object getBrokerHost() {
+            return bp::object(getConnection()->getBrokerHostname() + ":" + karabo::util::toString(getConnection()->getBrokerPort()));
+        }
+        
+        bp::object getBrokerTopic() {
+            return bp::object(getConnection()->getBrokerTopic());
+        }
+        
+        bp::object getBrokerHosts() {
+            return Wrapper::fromStdVectorToPyList<std::string>(getConnection()->getBrokerHosts());
+        }
 
     private: // members
         boost::thread m_eventLoop;       
