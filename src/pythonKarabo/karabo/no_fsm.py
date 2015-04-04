@@ -5,6 +5,10 @@
 __author__="Sergey Esenov serguei.essenov@xfel.eu"
 __date__ ="$Nov 26, 2014 3:18:24 PM$"
 
+import copy
+import threading
+from collections import deque
+
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 
 @KARABO_CONFIGURATION_BASE_CLASS
@@ -28,3 +32,119 @@ class NoFsm(object):
         
     def registerInitialFunction(self, func):
         self.func = func
+
+
+#======================================== Worker
+class Worker(threading.Thread):
+    
+    def __init__(self, callback = None, timeout = -1, repetition = -1):
+        threading.Thread.__init__(self)
+        self.callback = callback
+        self.timeout  = timeout
+        self.repetition = repetition
+        self.running = False
+        self.aborted = False
+        self.suspended = False
+        self.counter = -1
+        self.cv = threading.Condition()  # cv = condition variable
+        self.dq = deque()
+    
+    def set(self, callback, timeout = -1, repetition = -1):
+        self.callback = callback
+        self.timeout  = timeout
+        self.repetition = repetition
+
+    def is_running(self):
+        return self.running
+    
+    def push(self,o):
+        if self.running:
+            with self.cv:
+                self.dq.append(o)
+                self.cv.notify()
+            
+    def isRepetitionCounterExpired(self):
+        return self.counter == 0
+    
+    def run(self):
+        self.running = True
+        self.aborted = False
+        self.suspended = False
+        self.counter = self.repetition
+        while not self.aborted:
+            t = None
+            if self.counter == 0:
+                break
+            if not self.running:
+                break
+            try:
+                if self.suspended:
+                    with self.cv:
+                        while self.suspended:
+                            self.cv.wait()
+                        if self.aborted or not self.running:
+                            break
+                    continue
+                if self.timeout < 0:
+                    with self.cv:
+                        while len(self.dq) == 0:
+                            self.cv.wait()
+                        if not self.suspended:
+                            t = self.dq.popleft()
+                elif self.timeout > 0:
+                    with self.cv:
+                        if len(self.dq) == 0:
+                            self.cv.wait(float(self.timeout) / 1000)   # self.timeout in milliseconds
+                        if len(self.dq) != 0 and not self.suspended:
+                            t = self.dq.popleft()
+                else:
+                    with self.cv:
+                        if len(self.dq) != 0 and not self.suspended:
+                            t = self.dq.popleft()
+                if self.suspended:
+                    continue
+            except RuntimeError as e:
+                t = None
+            if self.counter > 0:
+                self.counter -= 1
+            if self.running:
+                self.callback(self.counter == 0)      # self.callback(self.counter == 0)
+        if self.running:
+            self.running = False
+            
+    def start(self):
+        if not self.running:
+            self.suspended = False
+            super(Worker, self).start()
+        if self.suspended:
+            with self.cv:
+                self.suspended = False
+                self.cv.notify()
+        return self
+    
+    def stop(self):
+        if self.running:
+            with self.cv:
+                self.running = False
+                self.suspended = False
+                self.cv.notify()
+        return self
+    
+    def abort(self):
+        self.aborted = True
+        self.running = False
+        if self.suspended:
+            with self.cv:
+                self.suspended = False
+                self.cv.notify()        
+        if len(self.dq) != 0:
+            with self.cv:
+                self.dq.clear()
+        return self
+    
+    def pause(self):
+        if not self.suspended:
+            with self.cv:
+                self.suspended = True
+                self.cv.notify()
+            
