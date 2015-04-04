@@ -53,12 +53,14 @@ int main(int argc, char** argv) {
                 while (deviceServer->isRunning() && maxWait < 10) {
                     std::cout << "Waiting for device server to die..." << std::endl;
                     maxWait++;
-                    usleep(1000000);
+                    sleep(3);
+                    //usleep(1000000);
                 }
                 if (deviceServer->isRunning()) {
                     std::cout << "\n\n" << "Device server could not be shut down in time, still exiting now." << std::endl;
                     usleep(1000000);
-                }
+                } else
+                    exit(0);
             }
 
             // Log the error in a temporary file
