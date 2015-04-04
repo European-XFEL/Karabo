@@ -39,6 +39,7 @@
             <pElem>${KARABO}/include</pElem>
             <pElem>.</pElem>
           </incDir>
+          <useLinkerLibraries>false</useLinkerLibraries>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/bin/karabo-deviceserver</output>
@@ -105,7 +106,6 @@
           </incDir>
         </cTool>
         <ccTool>
-          <developmentMode>5</developmentMode>
           <incDir>
             <pElem>../../../src</pElem>
             <pElem>${KARABO}/extern/include</pElem>
