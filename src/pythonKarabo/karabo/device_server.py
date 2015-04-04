@@ -317,14 +317,13 @@ class DeviceServer(object):
         
     def run(self):
         self.log = Logger.getLogger(self.serverid)
-        
-        self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
-        self.log.INFO("ServerId: {}".format(self.serverid))
-        self.log.INFO("Broker (host/topic): {}/{}".format(self.connectionParameters['hostname'],self.connectionParameters['destinationName']))
-
         self.ss = SignalSlotable.create(self.serverid, self.connectionType, self.connectionParameters)        
         self._registerAndConnectSignalsAndSlots()
                 
+        self.log.INFO("Starting Karabo DeviceServer on host: {}".format(self.hostname))
+        self.log.INFO("ServerId: {}".format(self.serverid))
+        self.log.INFO("Broker (host/topic): {}/{}".format(self.ss.getBrokerHost(),self.ss.getBrokerTopic()))
+        
         info = Hash("type", "server")
         info["serverId"] = self.serverid
         info["version"] = self.__class__.__version__
