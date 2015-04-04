@@ -209,8 +209,14 @@ class DeviceServer(object):
         else:
             self.slotKillServer()
         self.signalSlotableThread.join()
+        self.signalSlotableThread = None
         self.pluginThread.join()
-        os._exit(0)
+        self.pluginThread = None
+        self.ss = None
+        self.logger = None
+        #time.sleep(3)
+        sys.exit()
+        #os._exit(0)
     
     def __init__(self, input):
         '''Constructor'''
