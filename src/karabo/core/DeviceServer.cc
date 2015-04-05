@@ -282,6 +282,8 @@ namespace karabo {
 
 
         DeviceServer::~DeviceServer() {
+            KARABO_LOG_FRAMEWORK_TRACE << "DeviceServer::~DeviceServer() dtor : m_logger.use_count()=" << m_logger.use_count();
+            m_logger.reset();
         }
 
 
