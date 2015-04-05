@@ -59,8 +59,7 @@ int main(int argc, char** argv) {
                 if (deviceServer->isRunning()) {
                     std::cout << "\n\n" << "Device server could not be shut down in time, still exiting now." << std::endl;
                     usleep(1000000);
-                } else
-                    exit(0);
+                }
             }
 
             // Log the error in a temporary file
@@ -76,7 +75,8 @@ int main(int argc, char** argv) {
              */
             // Auto-restart application
             // system(program_invocation_name);
-
+            deviceServer.reset();
+            
             std::cout << "Thread: " << pthread_self() << " -> invoke the default handler for \"" << strsignal(signum) << "\"\n\n";
             // Raise the signal again using default handler.
             // This trick will trigger the core dump
@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
             int ret = pthread_sigmask(SIG_BLOCK, &signal_mask, NULL);
 
             deviceServer->run();
+            deviceServer.reset();
         }
 
         return EXIT_SUCCESS;
