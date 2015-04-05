@@ -28,8 +28,7 @@ namespace karabo {
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
         , m_masterMode(NO_MASTER)
-        , m_getOlder(true)
-        {
+        , m_getOlder(true) {
 
             std::string ownInstanceId = generateOwnInstanceId();
             karabo::xms::SignalSlotable::Pointer p(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
@@ -38,6 +37,7 @@ namespace karabo {
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
+            //m_ageingThread.detach();
 
             this->setupSlots();
         }
@@ -50,14 +50,28 @@ namespace karabo {
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
         , m_masterMode(NO_MASTER)
-        , m_getOlder(true)
-        {
+        , m_getOlder(true) {
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
+            //m_ageingThread.detach();
 
             this->setupSlots();
         }
+
+
+        DeviceClient::~DeviceClient() {
+            setAgeing(false); // Joins the thread
+            KARABO_LOG_FRAMEWORK_TRACE << "DeviceClient::~DeviceClient() : age thread is joined";
+            if (!m_isShared) {
+                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                if (p) {
+                    p->stopEventLoop();
+                    m_eventThread.join();
+                }
+            }
+        }
+
 
 #define KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(...) if (m_signalSlotable.expired()) { \
                     KARABO_LOG_FRAMEWORK_WARN << "SignalSlotable object is not valid (destroyed)."; \
@@ -172,25 +186,25 @@ namespace karabo {
             KARABO_LOG_FRAMEWORK_DEBUG << "onInstanceAvailableAgain was called";
 
             slotInstanceNew(instanceId, instanceInfo);
-            
-//            try {
-//                string path = prepareTopologyPath(instanceId, instanceInfo);
-//                bool hasInstance = existsInRuntimeSystemDescription(path);
-//
-//                if (hasInstance) {
-//                    // Should never happen
-//                    KARABO_LOG_FRAMEWORK_ERROR << "Instance \"" << instanceId << "\" silently appeared, which never died before.";
-//                } else {
-//                    KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
-//                    Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
-//                    mergeIntoRuntimeSystemDescription(entry);
-//                    if (m_instanceNewHandler) m_instanceNewHandler(entry);
-//                }
-//            } catch (const Exception& e) {
-//                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceAvailableAgain(): " << e;
-//            } catch (...) {
-//                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceAvailableAgain()";
-//            }
+
+            //            try {
+            //                string path = prepareTopologyPath(instanceId, instanceInfo);
+            //                bool hasInstance = existsInRuntimeSystemDescription(path);
+            //
+            //                if (hasInstance) {
+            //                    // Should never happen
+            //                    KARABO_LOG_FRAMEWORK_ERROR << "Instance \"" << instanceId << "\" silently appeared, which never died before.";
+            //                } else {
+            //                    KARABO_LOG_FRAMEWORK_INFO << "Previously lost instance \"" << instanceId << "\" silently came back";
+            //                    Hash entry = prepareTopologyEntry(instanceId, instanceInfo);
+            //                    mergeIntoRuntimeSystemDescription(entry);
+            //                    if (m_instanceNewHandler) m_instanceNewHandler(entry);
+            //                }
+            //            } catch (const Exception& e) {
+            //                KARABO_LOG_FRAMEWORK_ERROR << "Problem in onInstanceAvailableAgain(): " << e;
+            //            } catch (...) {
+            //                KARABO_LOG_FRAMEWORK_ERROR << "Unknown exception thrown in onInstanceAvailableAgain()";
+            //            }
         }
 
 
@@ -278,19 +292,6 @@ namespace karabo {
         }
 
 
-        DeviceClient::~DeviceClient() {
-            setAgeing(false); // Joins the thread
-
-            if (!m_isShared) {
-                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                if (p) {
-                    p->stopEventLoop();
-                    m_eventThread.join();
-                }
-            }
-        }
-
-
         void DeviceClient::setInternalTimeout(const unsigned int internalTimeout) {
             m_internalTimeout = internalTimeout;
         }
@@ -317,7 +318,8 @@ namespace karabo {
                 m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
             } else if (!on && m_getOlder) {
                 m_getOlder = false;
-                m_ageingThread.join();
+                if (m_ageingThread.joinable())
+                    m_ageingThread.join();
             }
         }
 
@@ -796,7 +798,7 @@ namespace karabo {
 
 
         karabo::util::Hash DeviceClient::cacheAndGetConfiguration(const std::string& deviceId) {
-            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());            
+            KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(Hash());
             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
             std::string path("device." + deviceId + ".configuration");
             boost::optional<Hash::Node&> node = m_runtimeSystemDescription.find(path);
@@ -811,7 +813,7 @@ namespace karabo {
                 }
                 stayConnected(deviceId);
                 return m_runtimeSystemDescription.set(path, hash).getValue<Hash>();
-            } else {                
+            } else {
                 stayConnected(deviceId);
                 return node->getValue<Hash>();
             }
@@ -930,7 +932,7 @@ namespace karabo {
             KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN(std::make_pair<bool, string > (false, "Fail to set"));
 
             //stayConnected(instanceId);
-            
+
             // If this is the first time we are going to talk to <instanceId>, we should get all configuration,
             // else only the answer to our set will fill the cache.            
             cacheAndGetConfiguration(instanceId);
@@ -1162,9 +1164,6 @@ if (nodeData) {\
         void DeviceClient::age() {
             try {
                 while (m_getOlder) { // Loop forever
-                    KARABO_IF_SIGNAL_SLOTABLE_EXPIRED_THEN_RETURN();
-                    karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                    if (!p) break;
                     for (InstanceUsage::iterator it = m_instanceUsage.begin(); it != m_instanceUsage.end(); ++it) { // Loop connected instances
 
                         if (isImmortal(it->first)) continue; // Immortal, registered monitors will have this status
@@ -1172,9 +1171,13 @@ if (nodeData) {\
                         it->second++; // Others just age
                         if (it->second == CONNECTION_KEEP_ALIVE) { // Too old
                             //cout << "Instance " << it->first << " got too old. It will die a natural death." << endl;
-                            p->disconnect(it->first, "signalChanged", "", "_slotChanged", false);
-                            p->disconnect(it->first, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
-                            std::string path("device." + it->first + ".configuration");                            
+                            {
+                                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
+                                if (!p) break;
+                                p->disconnect(it->first, "signalChanged", "", "_slotChanged", false);
+                                p->disconnect(it->first, "signalSchemaUpdated", "", "_slotSchemaUpdated", false);
+                            }
+                            std::string path("device." + it->first + ".configuration");
                             boost::mutex::scoped_lock lock(m_runtimeSystemDescriptionMutex);
                             if (m_runtimeSystemDescription.has(path)) m_runtimeSystemDescription.erase(path);
                         }

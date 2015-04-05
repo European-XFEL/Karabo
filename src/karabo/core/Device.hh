@@ -15,6 +15,7 @@
 #include <boost/algorithm/string.hpp>
 #include <string>
 #include <karabo/util.hpp>
+#include <karabo/util/SignalHandler.hh>
 #include <karabo/xms/SignalSlotable.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
@@ -316,6 +317,9 @@ namespace karabo {
             }
 
             virtual ~Device() {
+                KARABO_LOG_FRAMEWORK_TRACE << "Device::~Device() dtor : m_deviceClient.use_count()="
+                        << m_deviceClient.use_count() << "\n" << karabo::util::StackTrace();
+                m_deviceClient.reset();
             };
 
             /**
