@@ -985,7 +985,7 @@ namespace karabo {
                     call(m_serverId, "slotDeviceGone", m_deviceId);
                 }
                 this->preDestruction(); // Give devices a chance to react
-                this->stopWorkers();
+                this->stopFsm();
                 stopEventLoop();
             }
 
