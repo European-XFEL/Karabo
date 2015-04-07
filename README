@@ -15,13 +15,14 @@ https://docs.xfel.eu/share/page/site/KaraboFramework/dashboard
 The supported OS are: 
     SL 6
     Fedora 16/17
-    Ubuntu 10.04 LTS
     Ubuntu 11.x
     Ubuntu 12.04 LTS
-    MacOS 10.6 (Snow Leopard)
-    MacOS 10.7 (
 
-Other distributions like Fedora or Suse may still work.
+The GUI application is furthermore available under:
+
+    Windows 7
+    MacOSX (>= 10.6)
+
 
 ---------------------------------------------------------------------------------------------------------------------------------
 (2) Building

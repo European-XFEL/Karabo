@@ -10,8 +10,6 @@
         <itemPath>../../../src/karabo/core/DataLoggerManager.cc</itemPath>
         <itemPath>../../../src/karabo/core/DataLoggerManager.hh</itemPath>
         <itemPath>../../../src/karabo/core/Device.hh</itemPath>
-        <itemPath>../../../src/karabo/core/FileDataLogger.cc</itemPath>
-        <itemPath>../../../src/karabo/core/FileDataLogger.hh</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.cc</itemPath>
         <itemPath>../../../src/karabo/core/GuiServerDevice.hh</itemPath>
         <itemPath>../../../src/karabo/core/ProjectManager.cpp</itemPath>
@@ -571,16 +569,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceServer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/FileDataLogger.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/FileDataLogger.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2363,16 +2351,6 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/DeviceServer.hh"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/FileDataLogger.cc"
-            ex="false"
-            tool="1"
-            flavor2="0">
-      </item>
-      <item path="../../../src/karabo/core/FileDataLogger.hh"
             ex="false"
             tool="3"
             flavor2="0">

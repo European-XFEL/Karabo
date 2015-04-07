@@ -36,6 +36,7 @@ Usage: $0 Debug|Release|Clean [flags]
 
 Available flags:
   --auto      - Tries to automatically install needed system packages (sudo rights required!)
+  --noBundle  - Only installs Karabo, does not create the software bundle
 
 End-of-help
 
@@ -68,11 +69,19 @@ else
 fi
 
 # Check whether to build system dependencies
-if [[ $2 = "--auto" ]]; then
+if [[ $2 = "--auto" || $3 = "--auto" ]]; then
     SKIP="n"
 else 
     SKIP="y"
 fi
+
+# Check whether to skip bundling
+if [[ $2 = "--noBundle" || $3 = "--noBundle" ]]; then
+    BUNDLE="n"
+else 
+    BUNDLE="y"
+fi
+
 
 # Get some information about our system
 OS=$(uname -s)
@@ -149,7 +158,16 @@ echo
 sleep 2
 
 safeRunCommand "cd $scriptDir/build/netbeans/karabo"
-safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
+
+if [ "$BUNDLE" = "y" ]; then
+
+    safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-package"
+    
+else
+    
+    safeRunCommand "make CONF=$CONF -j$NUM_CORES bundle-install"
+
+fi
 
 echo "### Successfully finished building and packaging of karaboFramework ###"
 echo

@@ -194,17 +194,28 @@ safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib/pythonCli/. $PYKARABO/
 
-# pythonCli
+# serverControl
 cd ../serverControl
 safeRunCommand "./build.sh"
 cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
 cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
 
-# pythonTools
-cd ../pythonTools
-safeRunCommand "./build.sh"
-cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
-cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
+# pythonTools (deprecated)
+#cd ../pythonTools
+#safeRunCommand "./build.sh"
+#cp -rf $DISTDIR/$OS/bin $PACKAGEDIR/
+#cp -rf $DISTDIR/$OS/lib/pythonTools/. $PYKARABO/
+
+# run (Karabo's run/package development environment)
+#tmpPwd=$(pwd)
+cp -rf ../../../run $PACKAGEDIR/karaboRun
+#cd $PACKAGEDIR
+#tar -czf KaraboRun-$VERSION.tar.gz KaraboRun-$VERSION
+# Version information
+echo $VERSION > $PACKAGEDIR/karaboRun/VERSION
+#rm -rf KaraboRun-$VERSION
+#cd $tmpPwd
+
 
 # bundle scripts for plugin packages
 cd ../karabo
