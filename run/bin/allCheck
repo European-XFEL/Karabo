@@ -1,0 +1,113 @@
+#! /bin/bash
+####################################################################################
+# allCheck checks the correctness of the definitions contained in allInfo
+# author: CY 18.12.2012
+
+# returns the number of xterms running and cleans up if there are none
+function fclean()
+{
+    declare -i count=0
+    while true; do
+        if ! read nn n0 n1; then
+	    if [ "$count" = "0" ]; then
+		mv .allInfo .allInfo.last
+            fi
+            return $count
+        fi
+	if [ "$nn" = "key:" ]; then
+	    name=$n0
+	    pid=$n1
+            xpid=$(ps -u $USER -o pid,ppid | grep "^[ \t]*$pid[ \t]*[0-9]*[ \t]*" | grep -v grep | grep $pid | awk '{print $1}')
+	    if [ "x$pid" = "x$xpid" ]; then  # yes, the x is needed!
+                echo "INFO [$count] $name xterm still running with pid $n1"
+	        count+=1
+	    fi
+        elif [ "$nn" = "args:" ]; then
+	    job="$n0"
+            arg="$n1"
+	    # echo "INFO last invocation: $job $arg"
+	fi
+    done
+    return $count
+}
+
+# source bash_profile to update PATH
+#source ~/.bash_profile
+[ -f $HOME/.bash_profile ] &&  source $HOME/.bash_profile
+
+# required allInfo file
+foo=allInfo
+test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
+
+# required environmental
+source allInfo
+test -n "$ALLINFO" || { echo "ERROR ALLINFO array does not exist"; exit 3;} 
+
+# check allInfo content definitions
+declare -i TOKENS=9
+for key in "${!ALLINFO[@]}"
+do
+    value=${ALLINFO[$key]}
+    
+    nf=$(echo $value | awk -F ":" '{print NF}')
+    if [ $nf != "$TOKENS" ]; then
+        echo "ERROR need $TOKENS : separated tokens, find $nf in: $value"
+        exit 4
+    fi
+
+    source ./.allParse
+
+#    echo "name: $name ${#name[@]}"
+#    echo "dir: $dir ${#dir[@]}"
+#    echo "exe: $exe ${#exe[@]}"
+#    echo "params: $params ${#params[@]}"
+#    echo "wait: $wait ${#wait[@]}"
+#    echo "match: $match ${#match[@]}"
+#    echo "signal: $signal ${#signal[@]}"
+#    echo "scroll: $scroll ${#scroll[@]}"
+
+    if [ "$name" != "master" ] && [ "$name" != "server" ] && [ "$name" != "pyServer" ] && [ "$name" != "gui" ]; then
+	echo "INFO non-standard name: $name in: ALLINFO[$key], standard names are: master, server or gui"
+    fi
+    test -d $dir || { echo "ERROR bad directory token: $dir in $value, no such dircetory"; exit 6;}
+    test -f $dir/$exe || { echo "ERROR bad exe file: $dir/$exe in: $value, no such file"; exit 7;}
+    test -e $dir/$exe || { echo "ERROR bad exe file: $dir/$exe in: $value, not executable"; exit 8;}
+    test -n $wait || { echo "ERROR cannot have zero length, seconds to wait before xterm"; exit 9;}
+    test -n $match || { echo "ERROR cannot have zero length, pattern match of executable"; exit 10;}
+    test -n $signal || { echo "ERROR cannot have zero length, signal number"; exit 11;}
+    test -n $scroll || { echo "ERROR cannot have zero length, scroll line count"; exit 12;}
+done
+
+# check already running xterms
+    foo=.allInfo
+    if [ -r $foo ]; then
+	cat .allInfo | fclean
+        xterms=$?
+	if [ $xterms != "0" ]; then
+	    echo "WARN $xterms xterms are running! To cold start use allStop"
+	    exit 13; # !! must be 13
+	fi
+    fi
+
+# check orphaned process
+for key in "${!ALLINFO[@]}"
+do
+    value=${ALLINFO[$key]}
+    source ./.allParse
+
+    orphans="no"
+    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $match | awk '{print $1}')
+    for job in $jobs; 
+    do 
+    	echo "INFO $name running orphaned from xterm, pid "$job
+	orphans="yes"
+    done
+done
+if [ $orphans = "yes" ]; then
+    echo "WARN orphans are running! To cold start use allStop"
+    exit 16;
+fi
+
+# must be OK then!
+exit 0
+

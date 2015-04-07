@@ -1,0 +1,11 @@
+# PACKAGE CONFIGURATION: wp83motors
+#
+# type             category              package                 release
+device             controlDevices        beckhoffCom             trunk
+device             controlDevices        beckhoffAnalogInput     trunk
+device             controlDevices        beckhoffDigitalInput    trunk
+device             controlDevices        beckhoffDigitalOutput   trunk
+device             controlDevices        beckhoffSimpleMotor     trunk
+device		   controlDevcies        simpleGpibClient        trunk
+device             controlDevices        simpleScpi              trunk
+

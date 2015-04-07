@@ -1,0 +1,3 @@
+<DeviceServer KRB_Type="HASH">
+  <serverId KRB_Type="STRING">macroServer</serverId>
+</DeviceServer>

@@ -1,0 +1,2192 @@
+#!/bin/bash
+#
+# This script should be used in the karaboDeviceDevelopment environment.
+# The purpose of this script is to ease device development for Karabo
+# 
+
+
+#original working directory
+origCWD=`pwd`
+
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
+
+function getEmail() {
+    
+    if [ -f "${HOME}/.karabo/email" ];then
+        email=`cat ${HOME}/.karabo/email`
+    else
+        echo
+        echo -n "Please type your email address: "
+        read email
+        echo "Your email address will be stored in ${HOME}/.karabo/email"
+        echo -n "Is this correct? $email [y/n] "
+        read c
+        if [ "x$c" == "xy" ]; then 
+            if [ ! -d "${HOME}/.karabo" ]; then
+                mkdir ${HOME}/.karabo
+            fi
+            echo $email > ${HOME}/.karabo/email
+        else
+            echo "Nothing done"
+            exit 1;
+        fi
+    fi
+}
+
+function getKaraboFramework() {
+    if [ -f "${HOME}/.karabo/karaboFramework" ];then
+        local tmp=`cat ${HOME}/.karabo/karaboFramework`
+        if [ -d $tmp ]; then
+            karaboFramework=$tmp
+        fi
+    fi
+    if [ ! -f $karaboFramework/bin/karabo-deviceserver ]; then
+        echo
+        read -e -p "Please enter the path to the Karabo framework installation: " karaboFramework
+        if [ -f $karaboFramework/bin/karabo-deviceserver ]; then
+            echo
+            echo "The path to the Karabo framework installation is stored in ${HOME}/.karabo/karaboFramework"
+            echo
+            echo $karaboFramework > $HOME/.karabo/karaboFramework
+        else
+            echo "### WARNING $karaboFramework is not a valid path. Nothing done."
+        fi
+    fi
+}
+
+function getSvnPath() {
+    if [ -z $KARABOPACKAGESSVNPATH ]; then
+        if [ -e $HOME/.karabo/karaboPackagesSvnPath ]; then
+            KARABOPACKAGESSVNPATH=$(cat $HOME/.karabo/karaboPackagesSvnPath)
+        else
+          echo "WARNING Could not find $HOME/.karabo/karaboPackagesSvnPath. Setting default one."
+          KARABOPACKAGESSVNPATH=https://svnsrv.desy.de/desy/EuXFEL/karaboPackages
+          echo $KARABOPACKAGESSVNPATH 
+          echo $KARABOPACKAGESSVNPATH > ${HOME}/.karabo/karaboPackagesSvnPath
+#          exit 1
+        fi
+    fi
+    svnPath=$KARABOPACKAGESSVNPATH
+
+    if [ -z $KARABODEPSSVNPATH ]; then
+        if [ -e $HOME/.karabo/karaboDepsSvnPath ]; then
+            KARABODEPSSVNPATH=$(cat $HOME/.karabo/karaboDepsSvnPath)
+        else
+          echo "WARNING Could not find $HOME/.karabo/karaboDepsSvnPath. Setting default one."
+          KARABODEPSSVNPATH=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+          echo $KARABODEPSSVNPATH 
+          echo $KARABODEPSSVNPATH > ${HOME}/.karabo/karaboDepsSvnPath
+#          exit 1
+        fi
+    fi
+    svnDepsPath=$KARABODEPSSVNPATH
+}
+
+
+function setSvnPath() {
+    defaultSvn=https://svnsrv.desy.de/desy/EuXFEL/karaboPackages
+    isCorrect=0
+    read -e -p "Please enter the path to Karabo Packages SVN repository [$defaultSvn]: " user
+    if [ -z "$user" ]; then
+        user=$defaultSvn
+    fi
+    svn ls $user 2>/dev/null >/dev/null
+    if [ $? -eq 0 ];then
+      isCorrect=1
+    fi
+    if [[ "$isCorrect" == "0" ]]; then
+        echo
+        echo " SVN path \"$user\" could not be found or you don't have appropiate credentials."
+        echo
+        exit 1
+    fi
+    echo
+    echo "The path to Karabo Packages SVN repository is stored in ${HOME}/.karabo/karaboPackagesSvnPath"
+    echo
+    echo $user > ${HOME}/.karabo/karaboPackagesSvnPath
+
+    defaultDepsSvn=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+    isCorrect=0
+    read -e -p "Please enter the path to Karabo Dependencies SVN repository [$defaultDepsSvn]: " user
+    if [ -z "$user" ]; then
+        user=$defaultDepsSvn
+    fi
+    svn ls $user 2>/dev/null >/dev/null
+    if [ $? -eq 0 ];then
+      isCorrect=1
+    fi
+    if [[ "$isCorrect" == "0" ]]; then
+        echo
+        echo " SVN path \"$user\" could not be found or you don't have appropiate credentials."
+        echo
+        exit 1
+    fi
+    echo
+    echo "The path to Karabo Dependencies SVN repository is stored in ${HOME}/.karabo/karaboDepsSvnPath"
+    echo
+    echo $user > ${HOME}/.karabo/karaboDepsSvnPath
+}
+
+
+toUpper() {
+    local char="$*"
+    out=$(echo $char | tr [:lower:] [:upper:])
+    local retval=$?
+    echo "$out"
+    unset out char
+    return $retval
+}
+
+
+toLower() {
+    local char="$*"
+    out=$(echo $char | tr [:upper:] [:lower:])
+    local retval=$?
+    echo "$out"
+    unset out
+    unset char
+    return $retval
+}
+
+convertsecs() {
+ ((d=${1}/(3600*24)))
+ #((h=${1}/3600))
+ ((h=(${1}%(3600*24))/3600))
+ ((m=(${1}%3600)/60))
+ ((s=${1}%60))
+ printf "%02d day(s) %02d hour(s) %02d minute(s) %02d second(s)\n" $d $h $m $s
+}
+
+# Etc directory (global variable)
+etcDir="$scriptDir/etc"
+
+# Global indication whether there was an error
+hasError="n"
+
+#number of cores
+OS=$(uname -s)
+if [ "$OS" = "Linux" ]; then
+    numCores=`grep "processor" /proc/cpuinfo | wc -l`
+elif [ "$OS" = "Darwin" ]; then
+    numCores=`sysctl hw.ncpu | awk '{print $2}'`
+fi
+# Cut the total number to ensure memory fitness
+if [ "$numCores" -gt "8" ]; then numCores=8; fi
+#number of make threads (used like that: make -j${numMakeThreads} )
+numMakeThreads=$numCores;
+# fallback, if number of cores not recognized properly use at least one
+if [ "$numCores" -eq "0" ]; then
+  numCores=1
+  numMakeThreads=1
+fi
+
+oldSvnPath=""
+
+# Level 0
+new=0
+checkout=0
+import=0
+install=0
+uninstall=0
+list=0
+update=0
+rebuild=0
+#forget=0  # handles removeContinueBuildInfo
+createBranch=0
+createTag=0
+setSvn=0
+updateProjectFiles=0
+
+# Level 1
+packageCategory=""
+packageName=""
+moduleName=""
+configurationName=""
+packageDevPath=$scriptDir
+listWhat=""
+isSvn=1
+force=0
+buildType="Debug"
+#svnUpdateConflict="postpone"
+forceRebuild="canSkip"
+checkLocal="n"  #for update
+clean="n"       #for update
+templateName=""      #for new
+#category=""     #for checkout
+tag=""          #for checkout
+revision="HEAD"     # for checkout
+svnTagName=""
+svnBranchName=""
+allList=0
+verboseList=0
+
+# Checks if selected package name and category are valid
+# @param packageName The package name
+# @param packageCategory The packages category
+# 
+# The function will exit the whole script upon failed validation
+function validateNewPackage() {
+
+    lowerPackageName=`echo $1 | tr  [:upper:]  [:lower:] | sed -e s#/##g`
+    lowerPackageCategory=`echo $2 | tr  [:upper:]  [:lower:] | sed -e s#/##g`
+    
+    isValidPackageName=1
+    isValidPackageCategory=0
+
+    echo " Validating package and category names ..."
+    refreshAllPackagesFromSvn now
+    
+    # Retrieve available packages
+    while read type category package
+    do
+        if [[ ${type:0:1} = "#" || -z $category  ]]; then
+            continue
+        fi
+        lowerCategory=`echo ${category} | tr  [:upper:]  [:lower:] | sed -e s#/##g`
+        
+        if [[ "$lowerCategory" = "$lowerPackageCategory" ]]; then
+            isValidPackageCategory=1;
+        fi
+        lowerPackage=`echo ${package} | tr  [:upper:]  [:lower:] | sed -e s#/##g`
+        if [[ "$lowerPackage" = "$lowerPackageName" ]]; then
+            isValidPackageName=0;
+        fi
+    done < $etcDir/configurations/all
+    if [[ "$isValidPackageName" == "0" ]]; then
+        echo " Package name \"$1\" does aleady exist. Please select another name."
+        exit 1;
+    fi
+    if [[ "$isValidPackageCategory" == "0" ]]; then
+        echo " Invalid package category: $2"
+        exit 1;
+    fi
+}
+
+function updateProject() {
+
+    packageDevPath=$1
+    packageName=$2
+    packageCategory=$3
+
+    packagePath=$packageDevPath/packages/$packageCategory/$packageName
+    if [ ! -d $packagePath ]; then
+            echo
+            echo " Package $3 does not exists, check it out first"
+            echo
+            exit 1
+    fi
+    mkdir -p ${packagePath}_tmp
+    cp -rf $etcDir/templates/cppDevice/minimal/nbproject/*.xml ${packagePath}_tmp
+    cp -rf $etcDir/templates/cppDevice/minimal/nbproject/Karabo*.mk ${packagePath}_tmp
+    cp -rf $etcDir/templates/cppDevice/minimal/src/tests/*.cc ${packagePath}_tmp
+    
+    # need to code better in case of multiple hh files, now assuming only one 
+    className=`basename $packagePath/src/*hh .hh`
+    emailAuthor=`grep 'Author: ' $packagePath/src/*.hh |awk -F'[<>]' '{print $2}'`
+    templateName="minimal"
+    currentDate=$(date +"%B, %Y, %I:%M %p")
+    upperClassName=$(toUpper $className)
+    filesToReplace=$(find ${packagePath}_tmp -type f -name '*.*')
+    for file in $filesToReplace
+    do
+        if [ ! -d ${file} ]; then
+           if [ "$OS" = "Darwin" ]; then
+             sed -i "" -e s#__DATE__#"${currentDate}"#g \
+             -e s#__EMAIL__#"${emailAuthor}"#g \
+             -e s#__PACKAGE_NAME__#"${packageName}"#g \
+             -e s#${templateName}#"${packageName}"#g \
+             -e s#__CLASS_NAME__#"${className}"#g \
+             -e s#__CLASS_NAME_ALL_CAPS__#"${upperClassName}"#g ${file}
+            elif [ "$OS" = "Linux" ]; then
+             sed -i -e s#__DATE__#"${currentDate}"#g \
+             -e s#__EMAIL__#"${emailAuthor}"#g \
+             -e s#__PACKAGE_NAME__#"${packageName}"#g \
+             -e s#${templateName}#"${packageName}"#g \
+             -e s#__CLASS_NAME__#"${className}"#g \
+             -e s#__CLASS_NAME_ALL_CAPS__#"${upperClassName}"#g ${file}
+            fi
+        fi
+        filename=${file##*/}
+        base=${filename%.*}
+        ext=${filename##*.}
+        if [ "$base" = "__CLASS_NAME___App" ]; then
+            mv $file ${packagePath}_tmp/${className}_App.$ext
+        fi
+        if [ "$base" = "__CLASS_NAME___Test" ]; then
+            mv $file ${packagePath}_tmp/${className}_Test.$ext
+        fi
+    done
+    cp -f ${packagePath}_tmp/*.xml ${packagePath}/nbproject/ 
+    cp -f ${packagePath}_tmp/Karabo*.mk ${packagePath}/nbproject/ 
+    if [ ! -d ${packagePath}/src/tests ]; then
+        mkdir ${packagePath}/src/tests
+        cp -f ${packagePath}_tmp/*.cc ${packagePath}/src/tests/
+    fi
+    rm -rf ${packagePath}_tmp
+
+
+}
+
+
+
+# This function configures the default template 
+# @param $1 packagePath    Full path to the current package
+# @param $2 packageName    Package name
+# @param $3 className      Class name
+# @param $4 templateName   Template name (fsmDevice, device, ...)
+function configureTemplate() {
+
+    #echo " configureTemplate()"
+    packageName=$2
+    cdate=$(date +"%B, %Y, %I:%M %p")
+    className=$3 
+    upperClassName=$(toUpper $className)
+    templateName=$4
+    
+    filesToReplace=$(find $1 -type f -name '*.*')
+   
+    for file in $filesToReplace
+    do
+        if [ ! -d ${file} ]; then
+           if [ "$OS" = "Darwin" ]; then
+             sed -i "" -e s#__DATE__#"${cdate}"#g \
+             -e s#__EMAIL__#"${email}"#g \
+             -e s#__PACKAGE_NAME__#"${packageName}"#g \
+             -e s#${templateName}#"${packageName}"#g \
+             -e s#__CLASS_NAME__#"${className}"#g \
+             -e s#__CLASS_NAME_ALL_CAPS__#"${upperClassName}"#g ${file}
+            elif [ "$OS" = "Linux" ]; then
+             sed -i -e s#__DATE__#"${cdate}"#g \
+             -e s#__EMAIL__#"${email}"#g \
+             -e s#__PACKAGE_NAME__#"${packageName}"#g \
+             -e s#${templateName}#"${packageName}"#g \
+             -e s#__CLASS_NAME__#"${className}"#g \
+             -e s#__CLASS_NAME_ALL_CAPS__#"${upperClassName}"#g ${file}
+            fi
+	        #mv ${file}.new ${file}
+        fi
+        filename=${file##*/}
+        base=${filename%.*}
+        ext=${filename##*.}
+        if [ "$base" = "__CLASS_NAME__" ]; then
+            mv $file $1/src/$className.$ext
+        fi
+        if [ "$base" = "__CLASS_NAME___App" ]; then
+            mv $file $1/src/tests/${className}_App.$ext
+        fi
+        if [ "$base" = "__CLASS_NAME___Test" ]; then
+            mv $file $1/src/tests/${className}_Test.$ext
+        fi
+    
+    done
+}
+
+# checkout package
+# checks DEPENDS file and checkout all dependencies
+# If a package misses DEPENDS file, or files is empty, then no dependencies are taken into account
+# @param $1 packageDevPath   The package development system path
+# @param $2 packageName      The package name
+# @param $3 categoryName     The category name
+# @param $4 tag              SVN tag. The examples are: trunk, branches/0.1.0 tags/0.1.0 tags/0.1.2
+# @param $5 force            0: no overwriting 1: force overwriting
+# @param $6 isSvn            0: no integration 1: integration to repository
+# @param $7 revision         SVN revision number
+function checkoutPackage() {
+    
+    local packageDevPath=$1
+    local package=$2
+    local category=$3
+    local tag=$4
+    local force=$5
+    local isSvn=$6
+    local revision=$7
+
+    local skip=0
+
+    local isFound=0
+
+    # in case of dependencies, change svnPath temporarily to old location of dependencies    
+    oldSvnPath=$svnPath; if [[ "$category" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+
+    svn ls $svnPath/$category/$package/$tag 2>/dev/null >/dev/null
+    if [ $? -eq 0 ];then
+      isFound=1
+    fi
+    if [[ "$isFound" == "0" ]]; then
+        echo
+        echo " Package \"$svnPath/$category/$package/$tag\" could not be found."
+	echo " Check if the package name, category or version is properly specified"
+	echo
+        exit 1
+    fi
+    echo 
+    echo -n " Adding package $package, please wait..."
+    local packagePath=$packageDevPath/packages/$category/$package
+    if [ ! -d $packageDevPath/packages ]; then
+        mkdir -p $packageDevPath/packages
+    fi
+    if [ ! -d $packageDevPath/packages/$category ]; then
+        mkdir -p $packageDevPath/packages/$category
+    fi
+    if [ -d $packagePath ]; then
+        if [[ "$force" == "0" ]]; then
+            cd $packagePath
+            taglocal=`svn info|grep URL|awk -F/ '{print $NF}'`
+            cd $scriptDir
+            if [[ "$tag" != "$taglocal" ]]; then
+               echo
+               echo "  Warning:"
+               echo "  You want to check out package $package version $tag"
+               echo "  but it exists already with version $taglocal"
+               echo "  Checkout is skipped, resolve manually"
+               echo
+            else
+               echo
+               echo "  Package $package already exists, skipping "
+               echo
+            fi
+            skip=1
+            #exit 1
+        fi
+    fi
+
+    if [[ "$isSvn" == "1" && "$skip" == "0" ]]; then
+         # TODO Check if svn rep is accessible
+        svn co -r $revision $svnPath/$category/$package/$tag $packagePath -q
+        echo " done."
+        echo " Package was checked out to $packageDevPath/packages/$category/$package"
+    elif [[ "$isSvn" == "0" && "$skip" == "0" ]]; then
+        svn export -r $revision $svnPath/$category/$package/$tag $packagePath
+        echo " done."
+        echo " Package was exported to $packageDevPath/packages/$category/$package"
+    fi
+
+    # restoring previous svnPath
+    svnPath=$oldSvnPath
+
+    echo " Checking for dependencies for package $package ... please wait"
+    local deps=( `getArrayOfPackageDependencies $packagePath` )
+    local depsNumberOfElements=${#deps[@]}
+    if [ $depsNumberOfElements -gt 0 ]; then
+       echo
+       echo " Adding dependencies for package $package ... " 
+       echo
+    else
+       echo
+       echo " No dependencies defined for package $package"
+       echo
+    fi
+    local idx=0
+    while [ $idx -lt $depsNumberOfElements ]; do
+        skip=0
+        let "typeIdx = $idx"
+        let "categoryIdx = $idx + 1"
+        let "packageIdx = $idx + 2"
+        let "tagIdx = $idx + 3"
+        local packageDep=${deps[$packageIdx]}
+        local categoryDep=${deps[$categoryIdx]}
+        local tagDep=${deps[$tagIdx]}
+        echo -n " Adding package $packageDep, please wait..."
+        local packageDepPath=$packageDevPath/packages/$categoryDep/$packageDep
+        if [ -d $packageDepPath ]; then
+            if [[ "$force" == "0" ]]; then
+                cd $packageDepPath
+                tagDeplocal=`svn info|grep URL|awk -F/ '{print $NF}'`
+                cd $scriptDir
+                if [[ "$tagDep" != "$tagDeplocal" ]]; then
+                   echo
+                   echo "  Warning:"
+                   echo "  You want to check out package $packageDep version $tagDep"
+                   echo "  as a dependency of package $package version $tag"
+                   echo "  but it exists already with version $tagDeplocal"
+                   echo "  Checkout is skipped, resolve manually"
+                   echo
+                else
+                   echo
+                   echo "  Package $packageDep already exists, skipping "
+                   echo
+                fi
+                skip=1
+                #exit 1
+            fi
+        fi
+        if [[ "$isSvn" == "1" && "$skip" == "0" ]]; then
+             # TODO Check if svn rep is accessible
+             # in case of dependencies, change svnPath temporarily to old location of dependencies    
+            oldSvnPath=$svnPath; if [[ "$categoryDep" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+
+            svn co -r $revision $svnPath/$categoryDep/$packageDep/$tagDep $packageDepPath -q
+            echo " done."
+            echo " Package was checked out to $packageDevPath/packages/$categoryDep/$packageDep"
+        elif [[ "$isSvn" == "0" && "$skip" == "0" ]]; then
+            svn export -r $revision $svnPath/$categoryDep/$packageDep/$tagDep $packagePathDep
+            echo " done."
+            echo " Package was exported to $packageDevPath/packages/$categoryDep/$packageDep"
+        fi
+        # you may call this function recursively to check also DEPENDS file of dependencies of current package
+        # instead of one level checking and checkout done above
+        # checkoutPackage $packageDevPath $packageName $category $tag $force $isSvn $revision
+
+        # restoring previous svnPath
+        svnPath=$oldSvnPath
+
+        let "idx = $idx + 4"
+    done 
+
+}
+
+
+# read DEPENDS and return array of package dependencies
+# @param $1 package path
+function getArrayOfPackageDependencies() {
+
+    local allPackages
+    local packageDependencies
+
+    if [ ! -f $etcDir/configurations/all ]; then
+       refreshAllPackagesFromSvn now supress
+    fi
+
+    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackagesNumberOfElements=${#allPackages[@]}
+
+    packageDependencies=(`cat $1/DEPENDS 2>/dev/null | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}'`)
+    packageDependenciesNumberOfElements=${#packageDependencies[@]}
+    
+
+    local dependencies=()
+    local j=0
+    while [ "$j" -lt "$packageDependenciesNumberOfElements" ]
+    do
+
+      let "packageJ = $j"
+      let "tagJ = $j + 1"
+      package=${packageDependencies[$packageJ]}
+      tag=${packageDependencies[$tagJ]}
+
+      local idx=0
+      while [ "$idx" -lt "$allPackagesNumberOfElements" ]
+      do
+        let "typeIdx = $idx"
+        let "categoryIdx = $idx + 1"
+        let "packageIdx = $idx + 2"
+        if [ "$package" = "${allPackages[$packageIdx]}" ]; then
+           type=${allPackages[$typeIdx]}
+           category=${allPackages[$categoryIdx]}
+           #echo "install package $package with type $type in category $category. Tag: $tag" 
+           dependencies=( "${dependencies[@]}" $type $category $package $tag )
+           break
+        fi
+        let "idx = $idx + 3"
+      done
+
+      let "j = $j + 2"
+
+    done
+    # return the array of packages according to DEPENDS content  
+    # in proper build order
+    # This array has one dimension, but logically should be seen as 2 dimensional.
+    # Content of the array:
+    # [0] = typeOfFirstPackage [1] = categoryNameOfFirstPackage, [2] = packageNameOfFirstPackage, [3] = tagNameOfFirstPackage, [4] =
+    # typeOfSecondPackage, [5] = categoryNameOfSecondPackage, [6] = packageNameOfSecondPackage, [7] = tagNameOfSecondPackage, ...
+    echo "${dependencies[@]}"  
+
+}
+
+
+
+# Sets up a new package to host system
+# @param $1 packageDevPath   The package development system path
+# @param $2 packageCategory  The category name
+# @param $3 packageName      The package name
+# @param $4 templateType     The type of template (cpp-netbeans, device-netbeans)
+# @param $5 templateName     Initial class definition templateName (for device-netbeans: device,fsmDevice)
+# @param $6 className        The class name
+# @param $7 force            0: no overwriting 1: force overwriting
+# @param $8 isSvn            0: no integration 1: integration to repository
+function setupNewPackage() {
+    packageDevPath=$1
+    packageCategory=$2
+    packageName=$3
+    templateType=$4
+    templateName=$5
+    className=$6
+    force=$7 
+    isSvn=$8
+
+    packagePath=$packageDevPath/packages/$packageCategory/$packageName
+    
+    if [ -d $packagePath ]; then
+        if [[ "$force" == "0" ]]; then
+            echo
+            echo " Package $3 already exists. (Use -f to overwrite)"
+            echo
+            exit 1
+        fi
+    fi
+
+    if [ ! -d $etcDir/templates/$templateType ]; then
+      echo
+      echo " Template type $templateType is not supported"
+      echo " Use 'list templates' to see available options"
+      echo
+      exit 1
+    fi
+
+    if [ ! -d $etcDir/templates/$templateType/$templateName ]; then
+      echo
+      echo " Template name $templateName is not supported"
+      echo " Use 'list templates' to see available options"
+      echo
+      exit 1
+    fi
+    
+    echo 
+    echo -n " Creating new package \"$3\", please wait..."
+
+    mkdir -p $packagePath
+    if [[ "$isSvn" == "1" ]]; then
+
+        # TODO Check if svn rep is accessible
+        mkdir $packagePath/trunk
+        mkdir $packagePath/branches
+        # mkdir $packagePath/tags
+        cp -rf $etcDir/templates/$templateType/$templateName/* $packagePath/trunk
+        cp -rf $etcDir/templates/$templateType/$templateName/.[^.]* $packagePath/trunk 2>/dev/null
+       
+        # Clear all .svn folders and potential makefiles
+        rm -rf `find $packagePath -name ".svn" -or -name 'Makefile-*' -or -name 'Package-*' -or -name "private"`
+        
+        # Configure the template
+        configureTemplate $packagePath/trunk $packageName $className $templateName
+
+        echo -n "(registering to svn)..."
+
+        # in case of dependencies, change svnPath temporarily to old location of dependencies
+        oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+
+
+        svn -q import $packagePath $svnPath/$packageCategory/$packageName -m "Auto-initial import of new package: $packageName ($packageCategory)"
+        rm -rf $packagePath
+        svn -q co $svnPath/$packageCategory/$packageName/trunk $packagePath
+        svn -q propset -R svn:keywords "Id" $packagePath/src
+        svn -q commit $packagePath -m "Auto-set svn properties of new package: $packageName ($packageCategory)"
+        echo "done"
+
+        # restoring previous svnPath
+        svnPath=$oldSvnPath
+
+        refreshAllPackagesFromSvn now 
+        
+    else
+        cp -rf $etcDir/templates/$templateType/$templateName/* $packagePath
+        cp -rf $etcDir/templates/$templateType/$templateName/.[^.]* $packagePath 2>/dev/null
+        
+        # Clear all .svn folders
+        rm -rf `find $packagePath -name ".svn" -or -name 'Makefile-*' -or -name 'Package-*' -or -name "private"`
+        #find $packagePath -name ".svn" -type d -exec rm -rf {} \; 2>/dev/null
+        # Configure the template
+        configureTemplate $packagePath $packageName $className $templateName
+        echo "done"
+    fi
+        
+    echo -e " New package \"$3\" was added to $packagePath\n"
+}
+
+# imports to svn a new package which was created with noSvn option
+# only rough cleaning is done before import - take care of it yourself
+# @param $1 The package development system path
+# @param $2 The package name
+# @param $3 The category name
+function importPackage() {
+
+    packageDevPath=$1
+    packageName=$2
+    packageCategory=$3
+
+    packagePath=$packageDevPath/packages/$packageCategory/$packageName
+    if [ ! -d $packagePath ]; then
+        echo
+        echo " Package $3 does not exists under"
+        echo " "$packagePath
+        echo " Check path to your unversioned package"
+        exit 1
+    fi
+
+    validateNewPackage $packageName $packageCategory
+
+    tempPackagePath=${packagePath}_import
+    mkdir -p $tempPackagePath
+    mkdir $tempPackagePath/trunk
+    mkdir $tempPackagePath/branches
+    # mkdir $tempPackagePath/tags
+
+    # Clear all .svn folders and potential makefiles
+    rm -rf `find $packagePath -name ".svn" -or -name 'Makefile-*' -or -name 'Package-*' -or -name "private" -or -name "*~"`
+    rm -rf `find $packagePath -type l`
+    rm -rf $packagePath/dist
+    rm -rf $packagePath/build
+    rm -rf $packagePath/.dep.inc
+    #  For custom build from package.tar.gz you may need to delete directory created after untar'ing the package archive - not possible to implement
+
+    cp -rf $packagePath/* $tempPackagePath/trunk 
+    cp -rf $packagePath/.[^.]* $tempPackagePath/trunk 2>/dev/null
+
+    # in case of dependencies, change svnPath temporarily to old location of dependencies
+    oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+
+    svn -q import $tempPackagePath $svnPath/$packageCategory/$packageName -m "Auto-initial import of new package: $packageName ($packageCategory)"
+    if [ $? -eq 0 ]; then
+        echo
+        echo " Succesfully imported $packageName"
+        echo
+        rm -rf $packagePath 
+        svn -q co $svnPath/$packageCategory/$packageName/trunk $packagePath
+        if [ $? -eq 0 ]; then
+            rm -rf $tempPackagePath
+        else
+            echo "checkout error, leaving $tempPackagePath untouched"
+        fi
+    else
+        echo 
+        echo " Error importing $packageName"
+        echo
+        exit 1
+    fi
+    # restoring previous svnPath
+    svnPath=$oldSvnPath
+}
+
+
+
+
+# Installs a selected package configuration to the suite
+# For each package resolves its dependencies separately (one level only)
+# @param $1 configuration The (file-)name of the configuration
+# @param $2 buildType Either "Debug" or "Release"
+function installConfiguration() {
+    
+    configurationName=$1
+    buildType=$2
+
+    if [ -h $etcDir/installed/$1 ]; then
+        echo " Configuration \"$1\" is already installed."
+        echo " Use: $0 update and $0 rebuild"
+        echo " to update or rebuild installed configuration"
+        echo
+        exit 1
+    fi
+    
+    echo
+    echo " Installing configuration \"$1\"..."
+    
+    # Parse the configuration file
+    sortedPackages=( `getSortedArrayOfPackagesToInstall $1 ` )
+    sortedPackagesNumberOfElements=${#sortedPackages[@]}
+
+    local idx=-4
+    local max_idx
+    let "max_idx = $sortedPackagesNumberOfElements - 4"
+    local rowIdx=-1
+    while [ "$idx" -lt "$max_idx" ]
+    do
+      let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
+      let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
+
+      let "typeIdx = $idx"
+      let "categoryIdx = $idx + 1"
+      let "packageIdx = $idx + 2"
+      let "tagIdx = $idx + 3"
+
+      local type=${sortedPackages[$typeIdx]}
+      local category=${sortedPackages[$categoryIdx]}
+      local package=${sortedPackages[$packageIdx]}
+      local tag=${sortedPackages[$tagIdx]}
+
+        if [[ ${type:0:1} == "#" || -z $category ]]; then
+            continue
+        fi        
+        
+        echo
+        echo " Checking out package: "$package "from category: "$category
+        #echo svn -q co $fullpath $packagePath
+        checkoutPackage $scriptDir $package $category $tag 0 1 $revision
+        local packagePath=$scriptDir/packages/$category/$package
+        echo " Checking for dependencies for package $package ... please wait"
+        local deps=( `getArrayOfPackageDependencies $packagePath` )
+        local depsNumberOfElements=${#deps[@]} 
+        if [ $depsNumberOfElements -gt 0 ]; then
+            echo
+            echo " Building  dependencies for package $package first ... " 
+        fi
+        local idy=0
+        while [ $idy -lt $depsNumberOfElements ]; do
+            let "categoryIdy = $idy + 1"
+            let "packageIdy = $idy + 2"
+            local packageDep=${deps[$packageIdy]}
+            local categoryDep=${deps[$categoryIdy]}
+            echo 
+            echo  "  Building dependency package $packageDep ..."
+            local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
+            cd $packageDepPath
+            if [ -e Makefile ]; then
+                make -j2 CONF=$buildType
+                # link is created only for devices(plugins), not for their dependencies 
+                #if [ $? -eq 0 ]; then
+                #    cd $scriptDir/run/deviceServer/plugins
+                #    ln -sf $packageDepPath/dist/$buildType/*/*
+                #fi
+            fi
+            cd $scriptDir
+            let "idy = $idy + 4"
+        done
+        echo
+        echo " Building package $package ..."
+        cd $packagePath
+        if [ -e Makefile ]; then
+            make -j2 CONF=$buildType
+            # link only when library.so file exist otherwise explicit '*/*' link created
+            if [ $? -eq 0 ]; then 
+                cd $scriptDir/servers/deviceServer01/c++/plugins
+                find ../../../packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+            fi      
+        else
+            cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
+            find ../../../packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+        fi
+        cd $scriptDir
+    done
+    echo
+    echo " No more packages to install"
+    echo
+
+    # Test whether installed directory exists
+    if [ ! -d $etcDir/installed ]; then
+        mkdir $etcDir/installed
+    fi
+
+    # Create a softlink
+    cd $etcDir/installed
+    ln -sf ../configurations/$configurationName
+    cd $scriptDir
+  
+
+}
+
+# Return the array of packages to be installed sorted according to svn directory listing
+# @param $1 configuration to be installed
+function getSortedArrayOfPackagesToInstall() {
+
+    local allPackages
+    local packagesToInstall
+
+    if [ ! -f $etcDir/configurations/all ]; then
+       refreshAllPackagesFromSvn now supress
+    fi
+
+    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackagesNumberOfElements=${#allPackages[@]}
+    packagesToInstall=(`cat $etcDir/configurations/$1 | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}' | sort | uniq `)
+    packagesToInstallNumberOfElements=${#packagesToInstall[@]}
+    local sortedPackages
+    sortedPackages=()
+
+    local rowIdx=0
+    local idx=0
+    while [ "$idx" -lt "$allPackagesNumberOfElements" ]
+    do
+      let "typeIdx = $idx"  
+      let "categoryIdx = $idx + 1"
+      let "packageIdx = $idx + 2"
+      #let "tagIdx = $idx + 3"
+
+      #echo [$rowIdx]:   ${allPackages[$categoryIdx]} ${allPackages[$packageIdx]}
+      local type=${allPackages[$typeIdx]}
+      local category=${allPackages[$categoryIdx]}
+      local package=${allPackages[$packageIdx]}
+      #tag=${allPackages[$tagIdx]}
+
+      local j=0
+      while [ "$j" -lt "$packagesToInstallNumberOfElements" ]
+      do
+        #echo [$j]:  ${packagesToInstall[$j]}
+        if [ "$package" = "${packagesToInstall[$j]}" ]; then
+           let "tagIdx = $j + 1"
+           local tag=${packagesToInstall[$tagIdx]}
+           #echo "install package $package with type $type in category $category. Tag: $tag" 
+           sortedPackages=( "${sortedPackages[@]}" $type $category $package $tag )
+           break
+        fi
+        let "j = $j + 2"
+      done
+
+
+      let "idx = $idx + 3"
+      let "rowIdx = $rowIdx + 1"
+
+    done
+    # return the array of packages to be installed sorted according to svn directory listing
+    # and with removed duplicates
+    # This array has one dimension, but logically should be seen as 2 dimensional.
+    # Content of the array:
+    # [0] = typeOfFirstPackage [1] = categoryNameOfFirstPackage, [2] = packageNameOfFirstPackage, [3] = tagNameOfFirstPackage, [4] =
+    # typeOfSecondPackage, [5] = categoryNameOfSecondPackage, [6] = packageNameOfSecondPackage, [7] = tagNameOfSecondPackage, ...
+    echo "${sortedPackages[@]}"  
+
+}
+
+# Return the array of all installed packages sorted according to
+# dependencies and with removed duplicates
+function getSortedArrayOfInstalledPackages(){
+    
+    local allPackages
+    local installedPackages
+
+    #refreshAllPackagesFromSvn notnow supress
+
+    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackagesNumberOfElements=${#allPackages[@]}
+    installedPackages=(`cat $etcDir/installed/* | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}' | sort | uniq `)
+    installedPackagesNumberOfElements=${#installedPackages[@]}
+    local sortedPackages
+    sortedPackages=()
+
+    local rowIdx=0
+    local idx=0
+    while [ "$idx" -lt "$allPackagesNumberOfElements" ]
+    do
+      let "typeIdx = $idx"
+      let "categoryIdx = $idx + 1"
+      let "packageIdx = $idx + 2"
+      #let "tagIdx = $idx + 3"
+
+      #echo [$rowIdx]:   ${allPackages[$categoryIdx]} ${allPackages[$packageIdx]}
+      type=${allPackages[$typeIdx]}
+      category=${allPackages[$categoryIdx]}
+      package=${allPackages[$packageIdx]}
+      #tag=${allPackages[$tagIdx]}
+      
+      local j=0
+      while [ "$j" -lt "$installedPackagesNumberOfElements" ]
+      do
+        #echo [$j]:  ${installedPackages[$j]}
+        if [ "$package" = "${installedPackages[$j]}" ]; then
+           let "tagIdx = $j + 1"
+           tag=${installedPackages[$tagIdx]}
+           #echo "update package $package from type $type in category $category. Tag: $tag" 
+           sortedPackages=( "${sortedPackages[@]}" $type $category $package $tag )
+           break
+        fi
+        let "j = $j + 2"
+      done
+      
+      
+      let "idx = $idx + 3"
+      let "rowIdx = $rowIdx + 1"
+
+    done
+    # return the array of installed packages sorted according to
+    # dependencies and with removed duplicates
+    # This array has one dimension, but logically should be seen as 2 dimensional.
+    echo "${sortedPackages[@]}"  
+
+}
+
+
+# Updates from svn all packages found in a given configuration
+# @param $1 configurationName
+# @param $2 package Updates only this package with its dependencies
+function updateConfiguration() {
+    echo
+    if [ ! -d $etcDir/installed ]; then
+        echo " No configurations seems to be installed."
+        echo " Please install a configuration prior to updating."
+        echo -e " Type: \"$0 help install\" for help.\n"
+        exit 1
+    fi
+    
+    #echo "arg1 $1 arg2 $2 arg3 $3 arg4 $4 arg5 $5"
+    date=$(date +"%B %d, %Y, %I:%M %p")
+    echo " #-------- KARABO PACKAGE UPDATE ($date) --------#" | tee -a $etcDir/update.log
+
+    configurationName=$1
+    updateFromPackageArg=$2
+
+    updateFromPackageArgFlag=n
+    if [[ "$updateFromPackageArg" != "" ]]; then
+        updateFromPackageArgFlag=y
+    fi
+
+    # Initialize update and rebuild modes
+    doUpdate=n
+    svnUpdateConflict=postpone
+
+    sortedPackages=( `getSortedArrayOfPackagesToInstall $configurationName ` ) 
+    sortedPackagesNumberOfElements=${#sortedPackages[@]}
+        
+    local idx=-4
+    local max_idx
+    let "max_idx = $sortedPackagesNumberOfElements - 4"
+    local rowIdx=-1 
+    while [ "$idx" -lt "$max_idx" ]
+    do
+        let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
+        let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
+        let "typeIdx = $idx"
+        let "categoryIdx = $idx + 1"
+        let "packageIdx = $idx + 2"
+        let "tagIdx = $idx + 3"
+      
+        local type=${sortedPackages[$typeIdx]}
+        local category=${sortedPackages[$categoryIdx]}
+        local package=${sortedPackages[$packageIdx]}
+        local tag=${sortedPackages[$tagIdx]}
+      
+        if [[ ${type:0:1} == "#" || -z $category ]]; then
+            continue
+        fi
+     
+        if [[ "$updateFromPackageArgFlag" == "y" ]]; then
+            if [[ "$package" == "$updateFromPackageArg" ]]; then
+                doUpdate=y
+            fi
+        else
+            doUpdate=y
+        fi
+
+        # If update from svn is required
+        if [[ "$doUpdate" == "y" ]]; then
+          # do the update from SVN
+            local packagePath=$scriptDir/packages/$category/$package
+
+            if [ ! -d $packagePath ]; then
+                echo " New package $package appeared in configuration $configurationName"
+                echo " New package $package appeared in configuration $configurationName" >> $etcDir/update.log
+                echo " Checking it out ...."
+                echo " Checking it out ...." >> $etcDir/update.log
+                checkoutPackage $scriptDir $package $category $tag 0 1 $revision
+            else
+            
+                echo " Update of package: \"$package\""
+                echo " Update of package: \"$package\"" >> $etcDir/update.log
+                # this complex syntax allows us to obtain return code from svn command
+                # without this syntax return code from tee would be returned
+                status=`((svn update --non-interactive --accept $svnUpdateConflict $packagePath 2>&1 3>&-; echo \$? >&3 ) | \
+                          tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1` 
+                rm updateStatus.tmp
+            
+                if [ $status -ne 0 ]; then
+                    echo "svn update encountered some problems in $packagePath."
+                    exit 1
+                fi
+	        hasConflicts=$(svn status $packagePath | grep "C       ")
+	        if [ "$hasConflicts" != "" ]; then
+	            echo "The following svn conflicts have been found:"
+	            echo $hasConflicts
+	            exit 1
+	        fi
+            fi 
+            
+            local deps=( `getArrayOfPackageDependencies $packagePath` )
+            local depsNumberOfElements=${#deps[@]}
+            if [ $depsNumberOfElements -gt 0 ]; then
+                echo
+                echo " Updating dependencies for package $package ... " 
+                echo " Updating dependencies for package $package ... " >> $etcDir/update.log
+            fi
+
+            local idy=0
+            while [ $idy -lt $depsNumberOfElements ]; do
+                let "categoryIdy = $idy + 1"
+                let "packageIdy = $idy + 2"
+                let "tagIdy = $idy + 3"
+                local packageDep=${deps[$packageIdy]}
+                local categoryDep=${deps[$categoryIdy]}
+                local tagDep=${deps[$tagIdy]}
+                local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
+               
+                if [ ! -d $packageDepPath ]; then
+                    echo
+                    echo "  Dependency $packageDep for package $package doesn't exist locally"
+                    echo "  Dependency $packageDep for package $package doesn't exist locally" >> $etcDir/update.log
+                    echo "  Checking it out ..."
+                    echo "  Checking it out ..." >> $etcDir/update.log
+                    checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
+                else
+                    echo 
+                    echo  "  Updating dependency package $packageDep ..."
+                    echo  "  Updating dependency package $packageDep ..." >> $etcDir/update.log
+
+                    # this complex syntax allows us to obtain return code from svn command
+                    # without this syntax return code from tee would be returned
+                    status=`((svn update --non-interactive --accept $svnUpdateConflict $packageDepPath 2>&1 3>&-; echo \$? >&3 ) | \
+                              tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1`
+                    rm updateStatus.tmp
+                    if [ $status -ne 0 ]; then
+                        echo "svn update encountered some problems in $packageDepPath."
+                        exit 1
+                    fi
+	            hasConflicts=$(svn status $packageDepPath | grep "C       ")
+	            if [ "$hasConflicts" != "" ]; then
+	                echo "The following svn conflicts have been found:"
+	                echo $hasConflicts
+	                exit 1
+	            fi
+                fi
+                let "idy = $idy + 4"
+            done
+
+        fi
+             
+    done
+        
+    echo
+    echo " Update successful." 
+    echo " Update information has been written to: $etcDir/update.log"
+    echo
+}
+
+# Rebuild all packages in a given configuration
+# @param $1 configurationName
+# @param $2 buildType [Release|Debug]
+# @param $3 force [force,canSkip]
+# @param $4 package The package from where to start the rebuild
+function rebuildConfiguration() {
+    echo
+    if [ ! -d $etcDir/installed ]; then
+        echo " No configurations seems to be installed."
+        echo " Please install a configuration prior to rebuilding."
+        echo " Type: \"./$0 help install\" for help."
+        exit 1
+    fi
+    configurationName=$1
+    buildType=$2
+    compileFromPackage=$4
+    force=n
+    if [[ "x$3" == "xforce" ]]; then
+        force=y
+    fi
+    
+    sortedPackages=( `getSortedArrayOfPackagesToInstall $configurationName ` ) 
+    sortedPackagesNumberOfElements=${#sortedPackages[@]}
+    
+    local idx=-4
+    local max_idx
+    let "max_idx = $sortedPackagesNumberOfElements -4"
+    rowIdx=-1 
+    while [ "$idx" -lt "$max_idx" ]
+    do
+      let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
+      let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
+
+      let "typeIdx = $idx"
+      let "categoryIdx = $idx + 1"
+      let "packageIdx = $idx + 2"
+      let "tagIdx = $idx + 3"
+      
+      local type=${sortedPackages[$typeIdx]}
+      local category=${sortedPackages[$categoryIdx]}
+      local package=${sortedPackages[$packageIdx]}
+      local tag=${sortedPackages[$tagIdx]}
+      
+      if [[ ${type:0:1} == "#" || -z $category ]]; then
+          continue
+      fi            
+      
+      if [[ "$compileFromPackage" != "" ]]; then 
+          if [[ "$package" != "$compileFromPackage" ]]; then
+              continue;
+  #        else 
+  #            compileFromPackage=""
+          fi
+      fi
+      
+      local packagePath=$scriptDir/packages/$category/$package
+      if [ ! -d $packagePath ]; then
+          echo " New package $package appeared in configuration $configurationName"
+          echo " Checking it out ...."
+          checkoutPackage $scriptDir $package $category $tag 0 1 $revision
+      fi
+
+      echo
+      echo " Rebuilding package: \"$package\""
+      echo
+
+      local deps=( `getArrayOfPackageDependencies $packagePath` ) 
+      local depsNumberOfElements=${#deps[@]}
+      if [ $depsNumberOfElements -gt 0 ]; then
+          echo
+          echo " Rebuilding dependencies for package $package first ... " 
+      else
+          echo
+          echo "  No dependencies to rebuild for package $package"
+      fi
+      
+
+      local idy=0
+      while [ $idy -lt $depsNumberOfElements ]; do
+          let "categoryIdy = $idy + 1"
+          let "packageIdy = $idy + 2"
+          let "tagIdy = $idy + 3"
+          local packageDep=${deps[$packageIdy]}
+          local categoryDep=${deps[$categoryIdy]}
+          local tagDep=${deps[$tagIdy]}
+          echo 
+          echo  "  Rebuilding dependency package $packageDep ..."
+          local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
+          if [ ! -d $packageDepPath ]; then
+              echo " Dependency $packageDep for package $package doesn't exists locally"
+              echo " Checking it out ...."
+              checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
+          fi
+          cd $packageDepPath
+          if [ -e Makefile ]; then
+              if [[ "$force" == "y" ]]; then
+                  make clean
+              fi
+              make -j${numMakeThreads} CONF=$buildType
+              # link is created only for devices(plugins), not for their dependencies
+              #if [ $? -eq 0 ]; then
+              #    cd $scriptDir/run/deviceServer/plugins
+              #    ln -sf $packageDepPath/dist/$buildType/*/*
+              #fi
+          fi
+          cd $scriptDir
+          let "idy = $idy + 4"
+      done
+      echo
+      echo " Rebuilding package $package ..."
+      cd $packagePath
+      if [ -e Makefile ]; then
+          if [[ "$force" == "y" ]]; then
+              make clean
+          fi
+          make -j${numMakeThreads} CONF=$buildType
+          # link only when library.so file exist otherwise explicit '*/*' link created
+          if [ $? -eq 0 ]; then
+              cd $scriptDir/servers/deviceServer01/c++/plugins
+              find ../../../packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+          fi
+      else
+            cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
+            find ../../../packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+      fi
+      cd $scriptDir
+     
+            # check if there are any modifications to source code
+#      cd $packagePath
+#            hasModification=$(svn status | grep "M       ")
+#      cd $scriptDir
+            # Performance increase for the case that nothing has changed
+#      if [[ "$canSkip" == "y" && "$hasModification" == "" ]]; then
+#          continue;
+#      else
+#          canSkip=n
+#      fi
+      
+      
+    done
+
+    echo
+    echo " Rebuild successful." 
+    echo
+    
+      
+}
+
+
+function refreshAllPackagesFromSvn() {
+
+   supress=0
+   if [[ $2 == "supress" ]]; then
+      supress=1
+   fi
+   allExist=0
+   delta=0
+   if [ -f $etcDir/configurations/all ]; then
+      allExist=1
+      OS=$(uname -s)
+      if [ "$OS" = "Linux" ]; then
+        modsecs=$(date --utc --reference=$etcDir/configurations/all +%s)
+        # or in this way:
+        #modsecs=$(stat -c %Y $etcDir/configurations/all)
+      elif [ "$OS" = "Darwin" ]; then
+        modsecs=$(stat -f %m $etcDir/configurations/all)
+      fi
+      nowsecs=$(date +%s)
+      delta=$(($nowsecs-$modsecs))
+      #echo "File $etcDir/configurations/all was modified $delta secs ago"
+   fi
+   if [[ $delta -gt 1 && $1 != "now" ]]; then
+      echo
+      echo "Local configuration all out of sync by `convertsecs $delta` "
+      echo " Consider updating it with the command:"
+      echo " $0 list refresh"
+      echo
+   fi
+   if [[ $1 == "now" || $allExist -eq 0 ]]; then
+     if [[ $supress -eq 0 ]]; then
+        echo "Refreshing all configuration, please wait ..." 
+        echo "# automatically created; do not edit" > $etcDir/configurations/all
+        echo "# type  category  package"   >> $etcDir/configurations/all
+     fi
+     typeDevice="device"
+     typeDeviceServer="deviceServer"
+     typeDependency="dependency"
+     typeApplication="application"
+
+     local sortedCategories=(`svn ls $svnPath|sed -e s#\/##g|sort`)
+     local sortedCategoriesNumberOfElements=${#sortedCategories[@]}
+     local idx=0
+     while [ "$idx" -lt "$sortedCategoriesNumberOfElements" ]
+     do
+       local sortedPackages=(`svn ls $svnPath/${sortedCategories[$idx]}|sed -e s#\/##g|sort`)
+       local sortedPackagesNumberOfElements=${#sortedPackages[@]}
+       if [[ $sortedPackagesNumberOfElements -eq 0 ]]; then
+          sortedPackages=(dummy)
+          sortedPackagesNumberOfElements=${#sortedPackages[@]}
+       fi
+       local idy=0
+       while [ "$idy" -lt "$sortedPackagesNumberOfElements" ]
+       do
+         if [[ "${sortedCategories[$idx]}" == "dependencies" ]]; then
+            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+         elif [[ "${sortedCategories[$idx]}" == "deviceServers" ]]; then
+            echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+         elif [[ "${sortedCategories[$idx]}" == "testApplications" ]]; then
+            echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+         else
+            echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+         fi
+         let "idy=$idy+1"
+       done
+       let "idx=$idx+1"
+     done
+
+     sortedCategories=(`svn ls $svnDepsPath|sed -e s#\/##g|sort`)
+     sortedCategoriesNumberOfElements=${#sortedCategories[@]}
+     idx=0
+     while [ "$idx" -lt "$sortedCategoriesNumberOfElements" ]
+     do
+       local sortedPackages=(`svn ls $svnDepsPath/${sortedCategories[$idx]}|sed -e s#\/##g|sort`)
+       local sortedPackagesNumberOfElements=${#sortedPackages[@]}
+       if [[ $sortedPackagesNumberOfElements -eq 0 ]]; then
+          sortedPackages=(dummy)
+          sortedPackagesNumberOfElements=${#sortedPackages[@]}
+       fi
+       local idy=0
+       while [ "$idy" -lt "$sortedPackagesNumberOfElements" ]
+       do
+         if [[ "${sortedCategories[$idx]}" == "dependencies" ]]; then
+            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        # elif [[ "${sortedCategories[$idx]}" == "deviceServers" ]]; then
+        #    echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        # elif [[ "${sortedCategories[$idx]}" == "testApplications" ]]; then
+        #    echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        # else
+        #    echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+         fi
+         let "idy=$idy+1"
+       done
+       let "idx=$idx+1"
+     done
+
+
+   fi
+
+}
+
+
+function listPackages() {
+    
+    refreshAllPackagesFromSvn
+
+    echo
+    echo " Existing packages (with corresponding category):"
+    echo
+
+    listAll=$1
+    verbosePrint=$2
+
+    # Retrieve available packages
+    while read type category package tag
+    do 
+        if [[ ${type:0:1} == "#" ]]; then
+            continue
+        fi
+        if [[ $type != "device" && $listAll -eq 0 ]]; then
+            continue
+        fi
+        
+        printf " %-20s %-20s" "$package" "($category)"
+        if [[ $verbosePrint -eq 1 ]]; then
+            oldSvnPath=$svnPath; if [[ "$type" == "dependency" ]]; then svnPath=$svnDepsPath; fi 
+            #sortedbranches=`svn ls $svnPath/$category/$package/branches 2>/dev/null |sed -e s#\/##g|sort|tr '\n' ' '`
+            sortedBranches=(`svn ls $svnPath/$category/$package/branches 2>/dev/null |sed -e s#\/##g|sort`)
+            sortedBranchesListOfElements=${#sortedBranches[@]}
+            #sortedtags=`svn ls $svnPath/$category/$package/tags 2>/dev/null |sed -e s#\/##g|sort|tr '\n' ' '`
+            sortedTags=(`svn ls $svnPath/$category/$package/tags 2>/dev/null |sed -e s#\/##g|sort`)
+            sortedTagsListOfElements=${#sortedTagsListOfElements[@]}
+            svnPath=$oldSvnPath;
+            local idd=0
+            while [ "$idd" -lt "$sortedBranchesListOfElements" ]
+            do
+               printf " %-20s" "branches/${sortedBranches[$idd]}"
+               let "idd=$idd+1"
+            done
+            local idd=0
+            while [ "$idd" -lt "$sortedTagsListOfElements" ]
+            do
+               printf " %-20s" "tags/${sortedTags[$idd]}"
+               let "idd=$idd+1"
+            done
+        fi
+        printf "\n"
+    done < $etcDir/configurations/all
+    echo
+}
+
+function listInstalledPackages() {
+    
+    echo
+    echo " Installed packages (with corresponding category):"
+    echo
+
+    local sortedPackages
+    local sortedPackagesNumberOfElements
+    # Retrieve array of installed packages
+    sortedPackages=( `getSortedArrayOfInstalledPackages ` ) 
+    sortedPackagesNumberOfElements=${#sortedPackages[@]}
+    
+    local idx=-4
+    local max_idx
+    let "max_idx = sortedPackagesNumberOfElements -4"
+    while [ "$idx" -lt "$max_idx" ]
+    do
+      let "idx = $idx + 4"        
+
+      let "categoryIdx = $idx + 1"
+      let "packageIdx = $idx + 2"
+      let "tagIdx = $idx + 3"
+      
+      category=${sortedPackages[$categoryIdx]}
+      package=${sortedPackages[$packageIdx]}
+      
+      echo " $package ($category)"
+    
+   done
+   echo
+}
+
+
+function listCategories() {
+    
+    refreshAllPackagesFromSvn
+
+    echo
+    echo " Supported categories:"
+    echo
+    
+    listAll=$1
+
+    # Retrieve available packages
+    previousCategory=""
+    while read type category package tag
+    do 
+        if [[ ${type:0:1} = "#" ]]; then
+            continue
+        fi
+        if [[ $type = "dependency" && $listAll -eq 0 ]]; then
+            continue
+        fi
+        
+        if [[ "$category" != "$previousCategory" ]]; then
+            echo " $category"
+        fi
+        previousCategory=$category
+    done < $etcDir/configurations/all
+    echo
+}
+
+function listConfigurations() {
+    
+    echo 
+    echo " Available configurations:"
+    echo 
+    
+    cd $etcDir/configurations
+    i=0
+    # Parse package configurations
+    for configuration in *; do
+        configuration=${configuration%%.*}
+	if [[ "$configuration" != "all" ]]; then
+          ((i=$i+1))
+          echo " ($i) $configuration"
+	fi
+    done
+    echo
+}
+
+function listTemplates() {
+
+    cd $etcDir/templates
+    
+    for templateType in *; do
+        echo -e "\n  Template type: $templateType\n"
+        cd $templateType
+        for templateName in *; do
+            echo "      $templateName"
+        done
+        echo
+        cd ../
+    done
+    cd ../../
+}
+
+function removeContinueBuildInfo() {    
+   \rm $etcDir/continueBuild.info
+}
+
+function createSvnTag() {
+    local packageName=$1
+    local packageCategory=$2
+    local svnTagFrom=$3
+    local svnTagName=$4
+    
+    echo
+    echo "  Creating svn tag, please wait..."
+    echo
+    # TODO Validate proper tag format: \d\.\d\.\d  (e.g. 0.1.7)
+    # in case of dependencies, change svnPath temporarily to old location of dependencies
+    oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+    svn copy --parents $svnPath/$packageCategory/$packageName/$svnTagFrom $svnPath/$packageCategory/$packageName/tags/$svnTagName -m "Package $packageName got tagged from \"$svnTagFrom\" to \"tags/$svnTagName\" via karabo script"
+    # restoring previous svnPath
+    svnPath=$oldSvnPath
+}
+
+function createSvnBranch() {
+    local packageName=$1
+    local packageCategory=$2
+    local svnBranchName=$3
+    echo
+    echo "  Creating svn branch, please wait..."
+    echo
+    # in case of dependencies, change svnPath temporarily to old location of dependencies
+    oldSvnPath=$svnPath; if [[ "$packageCategory" == "dependencies" ]]; then svnPath=$svnDepsPath; fi
+    svn copy --parents $svnPath/$packageCategory/$packageName/trunk $svnPath/$packageCategory/$packageName/branches/$svnBranchName -m "Package $packageName got branched to \"branches/$svnBranchName\" via karabo script"
+    # restoring previous svnPath
+    svnPath=$oldSvnPath
+}
+
+function detailedHelp() {
+    
+    if [[ "$1" == "new" ]]; then
+        cat <<End-of-help
+new: Create a new package in order to contribute to the development of karabo.
+
+usage: $0 new PACKAGE_NAME PACKAGE_CATEGORY TEMPLATE_TYPE TEMPLATE_NAME CLASS_NAME [options]
+
+PACKAGE_NAME has to be a unique (alpha-numeric, camel case) name identifying a logical set of binaries/libraries.
+Already existent packages can be listed using: $0 list packages
+
+For organizational reasons each package has to be assigned to a supported PACKAGE_CATEGORY.
+Supported package categories can be listed using: $0 list categories
+New category, if needed, can bew added on request.
+
+TEMPLATE_TYPE is the type of the template to be used. Currently supported values are application, cppDevice, pythonDevice, deviceServer and dependency. 
+Supported types can be listed using: $0 list templates
+
+TEMPLATE_NAME must be a valid template name under the specified template type. 
+Possible templates can be listed using: $0 list templates
+
+CLASS_NAME, in case of device, is the name of the class which will be initially generated. Use the convention for class capitalization, 
+for example: TestMessageReader, LinkedList, LinearMotor. Do not use Device in device class name, like LinearMotorDevice. 
+In case af application it is the name of the source file containing main function. Use camel case names for instance: tcpClientAsync, brokerMonitor. 
+In case of dependency, with template configureMakeInstall, it should the base name of tarball, for instance you have tarball fftw-3.3.2.tar.gz then 
+use fftw-3.3.2 as CLASS_NAME. With custom template CLASS_NAME can be set simply the same as PACKAGE_NAME
+
+Valid options:
+  -f               : forces creation of package, i.e. will overwrite in case of (locally) pre-existing packages
+  -noSvn           : new package is not automatically integrated to the versioning system
+
+Examples:
+
+(1) Create a package for a new CPP device with custom FSM. The name of device is set to simulatedCamera.
+$0 new simulatedCamera testDevices cppDevice customFsm SimulatedCamera
+
+(2) Create package for a new python device with minimal FSM (AllOK and Error states). The name of the device is set to simulatedCamera.
+$0 new simulatedCamera testDevices pythonDevice minimal SimulatedCamera
+
+(3) Create a package dependency, (e.g. for fftw) which must be build using a regular configure/make/install (gnu autotools) commands. 
+$0 new fftw dependencies dependency configureMakeInstall fftw-3.3.2
+
+(4) Create a package dependency, (e.g. matplotlib) which must be build using custom commands.
+$0 new matplotlib dependencies dependency custom matplotlib
+
+(5) Create an application
+$0 new myNewApp testApplications application defaultCpp myNewApp 
+
+
+End-of-help
+    elif [[ "$1" == "checkout" ]]; then
+        cat <<End-of-help
+checkout: Retrieve a package for editing (further development) with defined dependencies (DEPENDS file)
+
+usage: $0 checkout PACKAGE_NAME PACKAGE_CATEGORY SVN_TAG [options]
+
+PACKAGE_NAME and PACKAGE_CATEGORY have to be valid, and existing. Dependent packages are also automatically
+checked out.
+
+SVN_TAG is relative to the main package directory. For head revision specify "trunk".
+In case of branches (or tags) use "branches/vesion" (or tags/version) i.e.: "branches/0.1.0" ("tags/0.1.4")
+
+Valid options:
+  -f               : forces checkout of package, i.e. will overwrite in case of (locally) pre-existing packages
+  -noSvn           : package to be edited is retrieved without versioning
+  -r revision      : checkout specified revision number
+
+Examples:
+(1) Checkout the HEAD revision of simulatedMotor device
+    $0 checkout simulatedMotor testDevices trunk 
+(2) Checkout revision 9999 of skilift device from trunk
+    $0 checkout skilift testDevices trunk -r 9999
+
+End-of-help
+    elif [[ "$1" == "import" ]]; then
+        cat <<End-of-help
+import: import a local package to SVN, previously created with -noSvn option
+
+usage: $0 import PACKAGE_NAME PACKAGE_CATEGORY 
+
+PACKAGE_NAME PACKAGE_CATEGORY has to be existing locally and valid.
+
+The cleaning of package directory is not complete, remove all not needed files before importing
+
+Examples:
+(1) import of a local simulatedMotor device
+    $0 import simulatedMotor testDevices 
+
+End-of-help
+
+    elif [[ "$1" == "updateProject" ]]; then
+        cat <<End-of-help
+updateProject: update cppdevice project files in accordance to latest templates
+
+usage: $0 updateProject PACKAGE_NAME PACKAGE_CATEGORY 
+
+PACKAGE_NAME PACKAGE_CATEGORY has to be existing locally and valid.
+
+Examples:
+(1) update of a local simulatedMotor device
+    $0 updatePackage simulatedMotor testDevices 
+
+End-of-help
+
+    elif [[ "$1" == "install" ]]; then
+        cat <<End-of-help
+install: Install a selected package configuration.
+
+usage: install PACKAGE_CONFIGURATION [options]
+
+Valid package configurations can be listed using: 
+  $0 list configurations
+
+Valid options:
+  -type [Debug|Release] : the build type for the individual packages, defaults to Debug
+             
+Examples:
+
+(1) Installation of pnccd packages with build type Release.
+  $0 install pnccd -type Release
+
+End-of-help
+
+    elif [[ "$1" == "uninstall" ]]; then
+        cat <<End-of-help
+
+  Uninstall is not yet available.
+
+End-of-help
+
+    elif [[ "$1" == "update" ]]; then
+        cat <<End-of-help
+update: updates the currently installed package configurations.
+
+usage: update CONFIGURATION_NAME [PACKAGE_NAME]
+
+CONFIGURATION_NAME: updates all packages within the installed configuration
+
+PACKAGE_NAME : updates only this package with its dependencies
+
+If a new package is added to a given configuration it will be checked out.
+
+Examples:
+
+(1) Update code from repository for all packages in pnccd configuration with their dependencies
+ $0 update pnccd
+
+(2) Update only beckhoffMotor package within pnccd configuration with its dependencies
+ $0 update pnccd beckhoffMotor
+
+End-of-help
+    
+    elif [[ "$1" == "rebuild" ]]; then
+        cat <<End-of-help
+rebuild: rebuilds the packages installed in a given configuration. Dependencies of each package
+ are rebuilt first, then the package itself. 
+
+usage: rebuild CONFIGURATION_NAME [PACKAGE_NAME] [options]
+
+CONFIGURATION_NAME: the name of the installed configuration to be rebuild. Get the list if available
+                    configurations using $0 list configurations
+
+PACKAGE_NAME : rebuild only given package within installed configuration with its dependencies.
+               List included packages with $0 list installed
+
+If a new package is added to a given configuration it will be checked out and compiled together with its dependencies.
+
+Valid options:
+  -type [Debug|Release] : the build type for the individual packages, defaults to Debug 
+  -force : rebuild even if there are no local modifications (runs make clean)
+
+Examples:
+ 
+(1) Rebuild pnccd configuration (all packages with their dependencies). If actual recompilation
+    takes place depends on local modifications (make)
+ $0 rebuild  pnccd
+  
+(2) Rebuild pnccd configutation regardless of local modifications
+ $0 rebuild pnccd -force
+
+(3) Rebuild only package beckhoffMotor in pnccd configuration with its dependencies
+ $0 rebuild pnccd beckhoffMotor
+
+(4) Rebuild package beckhoffMotor from pnccd configuration independent of local modifications
+ $0 rebuild pnccd beckhoffMotor -force
+
+(5) Rebuild package beckhoffMotor from pnccd configuration independent of local modifications and use "Release" build type
+ $0 rebuild pnccd beckhoffMotor -force -type Release
+
+End-of-help
+        
+    elif [[ "$1" == "list" ]]; then
+        cat <<End-of-help
+list: Create listings of various type
+
+usage: list DETAIL  [options] 
+
+  DETAIL may be one of the following options:
+
+  packages       - Lists all available packages (devices)
+           options:  -a  list all available packages (devices, dependencies, ...)
+                     -v  verbose listing - includes available versions (branches and tags) (experimental)
+  installed      - Lists all packages within installed configurations
+  categories     - Lists all supported categories (i.e. package groupings)
+  configurations - Lists all configurations (logical package subsets)
+  templates      - Lists all available templates
+  refresh        - Refreshes list from svn
+
+Examples:
+
+(1) List all available package configurations
+  $0 list configurations
+
+(2) List all installed packages within all installed configurations
+  $0 list installed
+
+(3) List all available packages of device type (plugins)
+  $0 list packages
+
+(4)  List all available packages regardless of their type
+  $0 list packages -a
+
+End-of-help
+
+    elif [[ "$1" == "tag" ]]; then
+        cat <<End-of-help
+tag: Create a svn tag of a package
+
+usage: tag PACKAGE_NAME PACKAGE_CATEGORY TAG_FROM TAG_NAME
+
+Examples:
+
+$0 tag beckhoffCom controlDevices branches/0.1 0.1.0
+
+End-of-help
+
+    elif [[ "$1" == "branch" ]]; then
+        cat <<End-of-help
+branch: Create a svn branch of a package
+
+usage: branch PACKAGE_NAME PACKAGE_CATEGORY BRANCH_NAME
+
+Examples:
+
+$0 branch conveyor testDevices 0.1
+
+End-of-help
+
+    elif [[ "$1" == "setsvn" ]]; then
+        cat <<End-of-help
+setsvn: sets interactively svn path to KaraboPackages and karabo dependencies repositories
+
+usage: setsvn   (then press Enter to get default paths)
+
+End-of-help
+
+    fi
+    exit 0
+}
+
+
+#############################
+#        Script start       #
+#############################
+
+# check if email address is defined in [home directory]/.karabo/email and if not ask user to provide it
+getEmail
+
+# check if path to Karabo framework is set
+getKaraboFramework
+
+# check env variable KARABOSVNPATH or $HOME/.karabo/karaboSvnPath, otherwise set to default 
+#svnPath=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+getSvnPath
+
+if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" ]]; then
+
+    if [ ! -z "$2" ]; then
+        detailedHelp $2
+    fi
+
+    cat <<End-of-help
+usage: $0 <subcommand> [options] 
+
+Type '$0 help <subcommand>' for help on a specific command
+
+Available subcommands:
+  new       - Create a new package
+  checkout  - Checkout an existing package (use list to retrieve name)
+  install   - Install a package configuration
+  update    - Update (svn) an installed package configuration
+  rebuild   - Rebuild packages within installed configuration
+  list      - Create listings of various type
+  tag       - Creates a svn tag for a given package
+  branch    - Creates a svn branch for a given package
+  setsvn    - Sets karabo svn repository path
+  import    - Imports local project into repository 
+
+End-of-help
+
+    exit 0
+fi
+    
+
+#############################
+#     Parse commandline     #
+#############################
+until [ -z "$1" ]; do
+    
+    # Interactive mode
+    if [ $1 = "-i" ]; then
+        selectAction
+        break
+
+    # New package
+    elif [ $1 = "new" ]; then
+        new=1
+        if [ $# -lt 6 ]; then
+            detailedHelp $1
+        fi
+        packageName=$2
+        packageCategory=$3
+        templateType=$4
+	    templateName=$5
+	    moduleName=$6
+
+        shift; shift; shift; shift; shift;shift
+        until [ -z "$1" ]; do
+            lower=$(toLower $1)
+            if [[ "${lower:0:1}" == "-" ]]; then
+                if [ $lower = "-f" ]; then
+                    force=1
+                elif [ $lower = "-nosvn" ]; then
+                    isSvn=0
+                else
+                    echo " Unrecognized option: $1"
+                    exit 1;
+                fi
+            else
+               echo " Unrecognized option: $1"
+               exit 1;
+            fi
+            shift
+        done
+
+    # Checkout package
+    elif [ $1 = "checkout" ]; then
+        checkout=1
+        if [ $# -lt 4 ]; then
+            detailedHelp $1
+        fi
+        packageName=$2
+	packageCategory=$3
+	tag=$4
+        shift; shift; shift; shift
+        until [ -z "$1" ]; do
+            lower=$(toLower $1)
+            if [[ "${lower:0:1}" == "-" ]]; then
+                if [ $lower = "-f" ]; then
+                    force=1
+                elif [ $lower = "-nosvn" ]; then
+                    isSvn=0
+                elif [ $lower = "-r" ]; then
+                    revision=$2
+                    shift
+                else
+                    echo " Unrecognized option: $1"
+                    exit 1;
+                fi
+            else
+               echo " Unrecognized option: $1"
+               exit 1;
+            fi
+            shift
+        done
+
+    # import package
+    elif [ $1 = "import" ]; then
+        import=1
+        if [ $# -lt 3 ]; then
+            detailedHelp $1
+        fi
+        packageName=$2
+	packageCategory=$3
+        shift; shift; shift
+
+    # update project files
+    elif [ $1 = "updateProject" ]; then
+        updateProjectFiles=1
+        if [ $# -lt 3 ]; then
+            detailedHelp $1
+        fi
+        packageName=$2
+        packageCategory=$3
+        shift; shift; shift
+
+
+    # Install package configuration
+    elif [ $1 = "install" ]; then
+        install=1
+        if [ $# -lt 2 ]; then
+            detailedHelp $1
+        elif [ $2 = "help" ]; then
+            detailedHelp $1
+        fi
+        configurationName=$2
+	if [[ "$configurationName" == "all" ]]; then
+            echo " $configurationName configuration is not supported"
+            exit 1
+	fi
+        shift;
+        until [ -z "$2" ]; do
+            if [[ "$2" == "-type" ]]; then
+                if [ -z "$3" ]; then
+                    echo " Missing option, expecting either Debug or Release"
+                    exit 1
+                fi
+                buildType=$3;
+                echo "Build Type: $buildType"
+                # valid options
+                if [[ "$buildType" != "Debug" && "$buildType" != "Release" ]]; then
+                    echo " Invalid option: \"$3\", expecting either Debug or Release"
+                    exit 1
+                fi
+                shift; shift
+            else
+                echo " Invalid option: \"$2\""
+                detailedHelp "install"
+            fi
+        done
+        shift
+    # Update packages
+    elif [ $1 = "update" ]; then
+        update=1
+        if [ $# -lt 2 ]; then
+            detailedHelp $1
+        elif [ $2 = "help" ]; then
+            detailedHelp $1
+        fi
+        configurationName=$2
+        if [[ "$configurationName" == "all" ]]; then
+            echo " $configurationName configuration is not supported"
+            exit 1
+        fi
+        shift;
+        until [ -z "$2" ]; do
+                packageName=$2
+                echo "update $packageName"
+                shift;
+        done
+        shift
+    # Rebuild suite
+    elif [ $1 = "rebuild" ]; then
+        rebuild=1
+        if [ $# -lt 2 ]; then
+            detailedHelp $1
+        elif [ $2 = "help" ]; then
+            detailedHelp $1
+        fi
+        configurationName=$2
+        if [[ "$configurationName" == "all" ]]; then
+            echo " $configurationName configuration is not supported"
+            exit 1
+        fi
+        shift;
+        until [ -z "$2" ]; do
+            if [[ "$2" == "-type" ]]; then
+                if [ -z "$3" ]; then
+                    echo " Missing option, expecting either Debug or Release"
+                    exit 1
+                fi
+                buildType=$3;
+                echo "Build Type: $buildType"
+                # valid options
+                if [[ "$buildType" != "Debug" && "$buildType" != "Release" ]]; then
+                    echo " Invalid option: \"$3\", expecting either Debug or Release"
+                    exit 1
+                fi
+                shift; shift
+            elif [[ "$2" == "-force" ]]; then
+                forceRebuild="force"
+                shift
+            else
+                packageName=$2
+                shift;
+            fi
+        done
+        shift
+    # Uninstall package    
+    elif [ $1 = "uninstall" ]; then
+        uninstall=1
+        shift
+
+    # List all available packages
+    elif [ $1 = "list" ]; then
+        list=1
+        if [ $# -lt 2 ]; then
+            detailedHelp $1
+        elif [ $2 = "help" ]; then
+            detailedHelp $1
+        fi
+        listWhat=$2
+        shift; shift
+        until [ -z "$1" ]; do
+            if [[ "$1" == "-a" ]]; then
+                allList=1
+            elif [[ "$1" == "-v" ]]; then
+                verboseList=1
+            else
+                echo "invalid option, expecting -a or -v "
+                exit 1
+            fi
+            shift
+        done
+        
+    # Create a tag
+    elif [ $1 = "tag" ]; then
+        createTag=1
+        if [ $# -lt 5 ]; then
+            detailedHelp $1
+        else
+            packageName=$2
+            packageCategory=$3
+            svnTagFrom=$4
+            svnTagName=$5
+            shift; shift; shift; shift; shift
+        fi
+
+    # Create a branch
+    elif [ $1 = "branch" ]; then
+        createBranch=1
+        if [ $# -lt 4 ]; then
+            detailedHelp $1
+        else
+            packageName=$2
+            packageCategory=$3
+            svnBranchName=$4
+            shift; shift; shift; shift
+        fi
+
+    # Set svn path
+    elif [ $1 = "setsvn" ]; then
+        setSvn=1
+        shift
+    else
+        echo "  Invalid option: $1"
+        exit 1
+    fi
+done
+
+#############################
+#         Logic             #
+#############################
+
+if [[ "$forget" == "1" ]]; then
+    removeContinueBuildInfo
+elif [[ "$install" == "1" ]]; then
+    installConfiguration $configurationName $buildType
+
+elif [[ "$update" == "1" ]]; then
+    #lowerPackageName=$(toLower $packageName)
+    updateConfiguration $configurationName $packageName
+    
+elif [[ "$list" == "1" ]]; then
+    if [[ "$listWhat" == "packages" ]]; then
+        listPackages $allList $verboseList
+    elif [[ "$listWhat" == "installed" ]]; then
+        listInstalledPackages 
+    elif [[ "$listWhat" == "categories" ]]; then
+        listCategories $allList
+    elif [[ "$listWhat" == "configurations" ]]; then
+        listConfigurations
+    elif [[ "$listWhat" == "templates" ]]; then
+        listTemplates
+    elif [[ "$listWhat" == "refresh" ]]; then
+        refreshAllPackagesFromSvn now
+    fi
+
+elif [[ "$new" == "1" ]]; then
+    validateNewPackage $packageName $packageCategory
+    setupNewPackage $packageDevPath $packageCategory $packageName $templateType $templateName $moduleName $force $isSvn
+
+elif [[ "$checkout" == "1" ]]; then
+    checkoutPackage $packageDevPath $packageName $packageCategory $tag $force $isSvn $revision
+
+elif [[ "$import" == "1" ]]; then
+    importPackage $packageDevPath $packageName $packageCategory $tag
+
+elif [[ "$rebuild" == "1" ]]; then
+    #lowerPackageName=$(toLower $packageName)
+    rebuildConfiguration $configurationName $buildType $forceRebuild $packageName
+
+elif [[ "$createTag" == "1" ]]; then
+    createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
+
+elif [[ "$createBranch" == "1" ]]; then
+    createSvnBranch $packageName $packageCategory $svnBranchName
+elif [[ "$setSvn" == "1" ]]; then
+    setSvnPath
+elif [[ "$updateProjectFiles" == "1" ]]; then
+    updateProject $packageDevPath $packageName $packageCategory 
+
+fi
+
+

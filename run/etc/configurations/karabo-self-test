@@ -1,0 +1,12 @@
+# PACKAGE CONFIGURATION: karabo-self-test
+# type             category              package                 version
+device             testDevices           helloWorld              tags/0.1.0-1.2
+device             testDevices           conveyor                tags/0.1.0-1.2
+device             testDevices           conveyorPy              tags/0.1.0-1.2
+device             testDevices           simulatedCamera         tags/0.1.0-1.2
+device             testDevices           simulatedCameraPy       tags/0.1.0-1.2
+device             testDevices           dataGenerator           tags/0.1.0-1.2
+device             testDevices           parameterInjector       tags/0.1.0-1.2
+device             testDevices           parameterInjectorPy     tags/0.1.0-1.2
+device             testDevices           p2pLowLevelTest         tags/0.1.0-1.2
+device		   testDevices		 p2pLowLevelTestPy	 tags/0.1.0-1.2

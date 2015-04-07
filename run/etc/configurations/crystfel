@@ -1,0 +1,9 @@
+# PACKAGE CONFIGURATION: crystfel
+#
+# type             category              package                 release
+device             computeDevices        patternSim              trunk
+device             computeDevices        indexamajig 		 trunk
+device             computeDevices        processHKL		 trunk
+
+
+

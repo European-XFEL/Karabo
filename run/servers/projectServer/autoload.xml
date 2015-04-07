@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <ProjectManager>
+      </ProjectManager>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">Karabo_ProjectServer</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>DEBUG</priority></Logger>
+</DeviceServer>

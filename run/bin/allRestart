@@ -1,0 +1,21 @@
+#! /bin/bash
+####################################################################################
+# allRestart restarts those ALLINFO applications which have died
+# author: CY 16.1.2013
+
+foo="./.allInfo"
+if [ ! -e $foo ]; then
+    echo "ERROR no previous allStart"
+    exit 1
+fi
+
+arg=$(grep "args:" $foo | grep "allStart" | grep -v grep | awk '{print $3}')
+if [ -n "$arg" ]; then
+    echo "INFO text dump file arguement: $arg"
+fi 
+
+export RESTART="yes"
+./allStart $arg
+
+exit $?
+
