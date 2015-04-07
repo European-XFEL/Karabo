@@ -26,16 +26,14 @@ namespace karabo {
             void initFsmSlots() {
             }
 
-            virtual void stopWorkers() {}
-            
-        public:
-
             virtual ~NoFsm() {
             }                      
             
             void startFsm() {
                 if (m_initialFunc) m_initialFunc();
             }
+            
+            virtual void stopFsm() {}
 
             void registerInitialFunction(const boost::function<void()>& func) {
                 m_initialFunc = func;

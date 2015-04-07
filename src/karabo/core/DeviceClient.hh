@@ -61,6 +61,8 @@ namespace karabo {
 
             static const unsigned int CONNECTION_KEEP_ALIVE = 15;
 
+            boost::shared_ptr<karabo::xms::SignalSlotable> m_internalSignalSlotable;
+            
         protected: // members
 
             enum MasterMode {

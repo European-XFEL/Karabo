@@ -176,7 +176,7 @@ namespace karabo {
 // Getting State pointer to the state in deeply nested state machines...
 // It is possible to use in code KARABO_FSM_GET(3,A,B,C)->setContext(this);
 #define KARABO_FSM_GET_DECLARE(machineName, instanceName) boost::shared_ptr<machineName> getFsm() { return instanceName; } \
-    virtual void stopWorkers() { boost::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
+    virtual void stopFsm() { boost::shared_ptr<StateVisitor> v(new StateVisitor); this->getFsm()->visit_current_states(v, true); }
     
 #define KARABO_FSM_GET0() getFsm() 
 #define KARABO_FSM_GET1(A)            KARABO_FSM_GET0()->get_state<A*>()

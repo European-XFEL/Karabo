@@ -23,7 +23,9 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const std::string& brokerType, const karabo::util::Hash& brokerConfiguration)
-        : m_isShared(false)
+        : m_internalSignalSlotable()
+        , m_signalSlotable()
+        , m_isShared(false)
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
         , m_topologyInitialized(false)
@@ -31,9 +33,9 @@ namespace karabo {
         , m_getOlder(true) {
 
             std::string ownInstanceId = generateOwnInstanceId();
-            karabo::xms::SignalSlotable::Pointer p(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
-            m_signalSlotable = p;
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, p, 60, Hash(), 2));
+            m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
+            m_signalSlotable = m_internalSignalSlotable;
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, Hash(), 2));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
@@ -44,7 +46,8 @@ namespace karabo {
 
 
         DeviceClient::DeviceClient(const boost::shared_ptr<SignalSlotable>& signalSlotable)
-        : m_signalSlotable(signalSlotable)
+        : m_internalSignalSlotable()
+        , m_signalSlotable(signalSlotable)
         , m_isShared(true)
         , m_internalTimeout(2000)
         , m_isAdvancedMode(false)
@@ -64,12 +67,12 @@ namespace karabo {
             setAgeing(false); // Joins the thread
             KARABO_LOG_FRAMEWORK_TRACE << "DeviceClient::~DeviceClient() : age thread is joined";
             if (!m_isShared) {
-                karabo::xms::SignalSlotable::Pointer p = m_signalSlotable.lock();
-                if (p) {
-                    p->stopEventLoop();
+                if (m_internalSignalSlotable) {
+                    m_internalSignalSlotable->stopEventLoop();
                     m_eventThread.join();
                 }
             }
+            m_internalSignalSlotable.reset();
         }
 
 
