@@ -1,0 +1,112 @@
+################################
+#   How does it work?          #
+################################
+
+We have to run some distributed system that basically uses JMS as a communication layer.
+Therefore some "man in the middle" (JMS broker) should run somewhere.  We use broker as a part of glassfish
+application server distribution.  At XFEL, we have dedicated servers that run JMS brokers.  The hostname of main
+server is hardcoded in karabo:
+  
+  exflserv01.desy.de.
+  
+If you are outside of XFEL you have to start your own broker.  Assuming that you have netbeans with glassfish installed in /usr/local
+you can start broker like:
+ 
+    sudo /usr/local/glassfish-3.1.2.2/mq/bin/imqbrokerd
+
+then enter 'root' password, and then move this process to background (Ctrl-Z, bg)
+The karabo library may be informed about broker location via environment variable:
+
+    export XFEL_BROKER_HOST=localhost
+
+Define this variable before you start any karabo processes.  You don't need to define it if you are using XFEL default broker.
+
+################################
+#   How to compile my device?  #
+################################
+
+(1) You don't need to compile python project
+
+################################
+#    How to test my device?    #
+################################
+
+We have to start three processes, each in its own shell, in this order:
+    -  master device server
+    -  device server
+    -  graphical user interface client
+
+Master will start GUI server that, in turn, will communicate with GUI client via TCP.
+Other processes will communicate with master via JMS broker
+
+Device server serves as a launcher for your devices.  The device server inspects 'plugins' directory for devices.
+Python devices should be python scripts with shebang line: #!/usr/bin/env python
+
+GUI client allows you to control your devices (parameters, states, lifetime)
+
+
+Now detail instruction follows...
+
+(1) Navigate to the run directory
+
+(2) Start Master Device Server
+
+    Navigate to masterDeviceServer and type:
+
+    ./startMasterDeviceServer
+
+    NOTE: 1. Check that startMasterDeviceServer has "execute" permission
+
+          2. Make sure that the time service on your computer is synchronized with the computer where JMS broker is running
+               
+	  3. If the master crashes whilst starting up, check that no other master server is already running!
+          Only one master server can run at a time!!  
+
+          4. Don't start anything else until the master fully started
+            ...
+            INFO    : Starting the XFEL GuiServer
+
+
+
+(3) Deploy (device-)"plugin": python script! 
+
+    Navigate to deviceServer and make sure your device plugin (the python script that you created for your device) is loaded to the plugins folder.
+    If this folder is empty you must create a link to your plugin. Simply navigate into the plugins folder and type:
+    
+    ln -sf ../../../src/<DEVICE_NAME>.py
+
+    With "< >" representing built/device specific names.
+
+
+(4) Navigate back to run directory, check permissions  and start a Device Server by typing:
+
+    ./startPythonDeviceServer
+
+
+(5a) Start the GUI to control/monitor your device
+
+    ./startGui
+
+    NOTE: Press the connect-icon on the upper left in the GUI. Use the default values of the pop-up dialog and press the connect button.
+
+(5b) Or alternatively start the command line interface by typing
+
+    ./startCli
+
+
+GENERAL NOTE:
+
+  Steps (2), (3), and (5) are typically needed to be done only once. 
+  If you have an updated version of your device it should be sufficient to kill the device via GUI and to "initiate device" again.
+
+  In some cases you may need to kill your Device Server. You can use MouseRightButtonClick in "Hierarchical View" panel to kill instance of Device Server.
+
+##################################
+#   What you can do in GUI?      #
+##################################
+
+Select entries in "Hierarchical View".  You will see hostnames, device server instances as many as you started and device classes found by these instances.  
+
+If you select device class (for example, "PythonConveyor" or "LpdFem") you will see in "Configurator" panel the device expected parameters: attribute/value pairs
+Change them as required and push "Initiate device" button to create an instance of the device.  Now you can control behavior of your device: push buttons to change states and change the parameters.
+Enjoy! 

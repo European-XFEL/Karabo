@@ -1,0 +1,19 @@
+#!/bin/bash
+cd $(dirname $0)
+if [ -z $KARABO ]; then
+    if [ -e $HOME/.karabo/karaboFramework ]; then
+        KARABO=$(cat $HOME/.karabo/karaboFramework)
+    else
+      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
+      exit 1
+    fi
+fi
+
+if [ -z $KARABO_BROKER_HOST ]; then
+   $KARABO/extern/bin/imqcmd $@
+else
+   host=$KARABO_BROKER_HOST 
+   port=`grep port= $KARABO/extern/bin/imqcmd|cut -c 6-`
+   $KARABO/extern/bin/imqcmd -b $host:$port $@ 
+fi
+

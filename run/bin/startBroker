@@ -1,0 +1,24 @@
+#!/bin/bash
+cd $(dirname $0)
+if [ -z $KARABO ]; then
+    if [ -e $HOME/.karabo/karaboFramework ]; then
+        KARABO=$(cat $HOME/.karabo/karaboFramework)
+    else
+      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
+      exit 1
+    fi
+fi
+echo "Starting broker ..."
+$KARABO/extern/bin/imq start $@
+sleep 1
+brokerLogFile=$KARABO/extern/MessageQueue/var/mq/instances/imqbroker/log/log.txt
+brokerConfFile=$KARABO/extern/MessageQueue/etc/mq/imqbrokerd.conf
+echo "Info: "
+echo "    broker log file $brokerLogFile"
+tmp=$(grep 'Java Heap Size' $brokerLogFile)
+tmp2=${tmp##*] }
+echo "    $tmp2"
+echo "    If you want to change available JVM memory size, stop the broker,"
+echo "    edit broker config file:"
+echo "       $brokerConfFile"
+echo "    and start the broker again"
