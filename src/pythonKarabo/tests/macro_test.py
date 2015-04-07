@@ -12,7 +12,8 @@ from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
 from karabo.device_client import (waitUntilNew, waitUntil, set, setNoWait,
-                                  getDevice, executeNoWait, updateDevice)
+                                  getDevice, executeNoWait, updateDevice,
+                                  Queue)
 from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
@@ -152,6 +153,19 @@ class Local(Macro):
             else:
                 self.max = 30
 
+    @Slot()
+    def queue(self):
+        with getDevice("remote") as d:
+            self.good = 0
+            executeNoWait(d, "count")
+            waitUntil(lambda: d.counter == 0)
+            q = Queue(d).counter
+            for i in range(1, 30):
+                j = q.get()
+                if i == j:
+                    self.good += 1
+                time.sleep(i * 0.01)
+
 
 class Tests(TestCase):
     @sync_tst
@@ -245,6 +259,11 @@ class Tests(TestCase):
             self.assertEqual(local.printno, 2)
         finally:
             sys.stdout = sys.stdout.base
+
+    @sync_tst
+    def test_queue(self):
+        local.queue()
+        self.assertEqual(local.good, 29)
 
 
 def setUpModule():

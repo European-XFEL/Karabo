@@ -8,7 +8,7 @@ from functools import wraps
 from karabo.eventloop import EventLoop
 from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, set,
-                                  setNoWait)
+                                  setNoWait, Queue)
 from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, async_tst
@@ -213,6 +213,23 @@ class Local(Device):
             yield from d.disallow()
             self.f4 = d.value
 
+    @Slot()
+    @coroutine
+    def queue(self):
+        with (yield from getDevice("remote")) as d:
+            self.good = 0
+            task = async(d.count())
+            yield from waitUntil(lambda: d.counter == 0)
+            try:
+                q = Queue(d).counter
+                for i in range(1, 30):
+                    j = yield from q.get()
+                    if i == j:
+                        self.good += 1
+                    yield from sleep(i * 0.01)
+            finally:
+                yield from task
+
 
 class Tests(TestCase):
     @async_tst
@@ -310,6 +327,11 @@ class Tests(TestCase):
         self.assertEqual(local.f2, 777)
         self.assertEqual(local.f3, 777)
         self.assertEqual(local.f4, 777)
+
+    @async_tst
+    def test_queue(self):
+        yield from local.queue()
+        self.assertEqual(local.good, 29)
 
 
 
