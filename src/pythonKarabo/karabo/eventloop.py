@@ -10,6 +10,7 @@ from copy import copy
 from concurrent.futures import ThreadPoolExecutor
 import getpass
 from itertools import count
+import os
 import sys
 import threading
 import weakref
@@ -206,10 +207,12 @@ class EventLoop(SelectorEventLoop):
 
     def __init__(self, topic=None):
         super().__init__()
-        if topic is None:
-            self.topic = getpass.getuser()
-        else:
+        if topic is not None:
             self.topic = topic
+        elif "KARABO_BROKER_TOPIC" in os.environ:
+            self.topic = os.environ["KARABO_BROKER_TOPIC"]
+        else:
+            self.topic = getpass.getuser()
         self.connection = None
         self.changedFuture = Future(loop=self)  # call if some property changes
         self.set_default_executor(ThreadPoolExecutor(10000))
@@ -217,8 +220,10 @@ class EventLoop(SelectorEventLoop):
     def getBroker(self, deviceId, classId):
         if self.connection is None:
             p = openmq.Properties()
-            p["MQBrokerHostName"] = "exfl-broker.desy.de"
-            p["MQBrokerHostPort"] = 7777
+            p["MQBrokerHostName"] = os.environ.get("KARABO_BROKER_HOST",
+                                                   "exfl-broker.desy.de")
+            p["MQBrokerHostPort"] = int(os.environ.get("KARABO_BROKER_PORT",
+                                        7777))
             p["MQConnectionType"] = "TCP"
             p["MQPingInterval"] = 20
             p["MQSSLIsHostTrusted"] = True

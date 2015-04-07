@@ -1,5 +1,4 @@
 import karabo
-karabo.api_version = 2
 
 from asyncio import (async, coroutine, gather, set_event_loop, sleep,
                      TimeoutError)

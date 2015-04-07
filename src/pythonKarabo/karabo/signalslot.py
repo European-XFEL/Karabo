@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo import hashtypes
 from karabo.hash import BinaryParser, Hash
 from karabo.hashtypes import String, Int32, Type, Slot
@@ -107,8 +106,6 @@ class BoundSignal(object):
         self.device._ss.emit(self.name, self.connected, *args)
 
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO('SignalSlotable', '1.0')
 class SignalSlotable(Configurable):
     """The base class for all objects connected to the broker
 
