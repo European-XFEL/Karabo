@@ -29,6 +29,7 @@ fi
 ipython3 -i \$PYKARABO/karabo/deviceClient.py "\$@"
 End-of-file
 chmod u+x karabo-cli
+install ../../../../../../src/pythonCli/ikarabo .
 cd ../lib
 cp -rf ../../../../../../src/pythonCli .
 rm -f `find . -type f -name *.pyc`
