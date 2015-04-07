@@ -48,28 +48,43 @@ echo " NOTE: This installer will NOT change any settings on your machine."
 echo "       Installation will be limited to a directory (\"karabo-$VERSION\")" 
 echo "       under the specified path and a $HOME/.karabo for private settings."
 echo
+echo "       In case you also install Karabo's run environment a directory"
+echo "       (\"karaboRun\") will be created under the specified run-path."
+echo "       Already existing karaboRun folders will be updated."
+echo 
 
 installDir=$HOME
-if [ "x${install_prefix_dir}x" != "xx" ]
-then
-  installDir="${install_prefix_dir}"
+runDir=$HOME
+if [ "x${install_prefix_dir}x" != "xx" ]; then
+    installDir="${install_prefix_dir}"
+    runDir=0
 fi
 
 echo " This is a self-extracting archive."
-if [ "x${interactive}x" = "xTRUEx" ]
-then
-  read -e -p " Installation path [$HOME]: " dir
-    # Always reslove to absolute path
-    #installDir=`[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`
+if [ "x${interactive}x" = "xTRUEx" ]; then
+    read -e -p " Framework installation path [$HOME]: " dir
+    # Always resolve to absolute path
+    #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
     #mkdir -p $installDir
-  if [ "x${dir}x" != "xx" ]; then
-     if [ ! -d ${dir} ]; then
-       mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
-     fi
-     installDir=`cd "${dir}"; pwd`
-  fi
+    if [ "x${dir}x" != "xx" ]; then
+	if [ ! -d ${dir} ]; then
+	    mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
+	fi
+	installDir=`cd "${dir}"; pwd`
+    fi
+    read -e -p " Run environment installation path (type 0 to skip) [$HOME]: " dir
+    # Always resolve to absolute path
+    #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
+    if [ "$dir" = "0" ]; then 
+	runDir=0
+    elif [ "x${dir}x" != "xx" ]; then
+	if [ ! -d ${dir} ]; then
+	    mkdir -p  ${dir} ||  echo_exit "Cannot create directory $dir"
+	fi
+	runDir=`cd "${dir}"; pwd`
+	
+    fi
 fi
-
 echo -n " Extracting files, please wait..."
 # searches for the line number where finish the script and start the tar.gz
 SKIP=`awk '/^__TARFILE_FOLLOWS__/ { print NR + 1; exit 0; }' $0`
@@ -83,6 +98,9 @@ echo  " unpacking finished successfully"
 # Any script here will happen after the tar file extract.
 echo
 echo -n " Running post install script..."
+if [ "$runDir" != "0" ]; then
+    cp -rf $installDir/karabo-$VERSION/karaboRun $runDir/
+fi
 mkdir -p $HOME/.karabo
 echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 #echo "https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo" > $HOME/.karabo/karaboSvnPath
@@ -105,7 +123,13 @@ cd -
 echo " done."
 echo
 echo
-echo " Karabo was successfully installed to: $installDir/karabo-$VERSION"
+echo " Karabo framework was successfully installed to: $installDir/karabo-$VERSION"
+echo
+if [ "$runDir" != "0" ]; then
+    echo " Karabo's run environment was successfully installed to: $runDir/karaboRun"
+else
+    echo " Karabo's run environment was NOT installed."
+fi
 echo
 exit 0
 # NOTE: Don't place any newline characters after the last line below.
