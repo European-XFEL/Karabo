@@ -45,7 +45,7 @@ namespace karabo {
 
             virtual void startFsm() {
             }
-            
+
             virtual void stopFsm() {
             }
 
