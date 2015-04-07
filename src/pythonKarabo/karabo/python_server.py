@@ -22,9 +22,7 @@ from importlib import import_module
 from subprocess import Popen, PIPE
 
 import karabo
-karabo.api_version = 2
 
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.python_loader import PluginLoader
 from karabo.python_device import Device
 from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
@@ -41,8 +39,6 @@ import karabo.metamacro  # add a default Device MetaMacro
 import karabo.ipython
 
 
-@KARABO_CONFIGURATION_BASE_CLASS
-@KARABO_CLASSINFO("DeviceServer", "1.0")
 class DeviceServer(Device):
     '''
     Device server serves as a launcher of python devices. It scans
@@ -208,7 +204,7 @@ class DeviceServer(Device):
         except Exception as e:
             self.startingDevice = deviceId
             self.startingError = traceback.format_exc()
-            self.log.WARN("could not start device {}".format(cls))
+            self.logger.exception("could not start device {}".format(cls))
         finally:
             self.startingDevice = ""
             self.startingError = ""
@@ -330,7 +326,7 @@ def main(args):
     set_event_loop(loop)
     v = Validator()
     h = Hash({k: v for k, v in (a.split("=", 2) for a in args[1:])})
-    validated = v.validate(DeviceServer.getSchema("DeviceServer"), h)
+    validated = v.validate(DeviceServer.getClassSchema(), h)
     server = DeviceServer(validated["DeviceServer"])
     if server:
         server.startInstance()

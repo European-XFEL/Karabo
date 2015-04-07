@@ -1,7 +1,6 @@
 # this script is loaded at the beginning of a cli session
 
 import karabo
-karabo.api_version = 2
 
 from asyncio import set_event_loop
 
