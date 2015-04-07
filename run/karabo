@@ -438,7 +438,9 @@ function checkoutPackage() {
     if [ -d $packagePath ]; then
         if [[ "$force" == "0" ]]; then
             cd $packagePath
-            taglocal=`svn info|grep URL|awk -F/ '{print $NF}'`
+            #taglocal=`svn info|grep URL|awk -F/ '{print $NF}'`
+	    taglocal=`svn info|grep "Relative URL"`
+	    taglocal=`expr "$taglocal" : '.*/\(.*/.*\)'`
             cd $scriptDir
             if [[ "$tag" != "$taglocal" ]]; then
                echo
@@ -1065,7 +1067,7 @@ function updateConfiguration() {
         if [[ "$doUpdate" == "y" ]]; then
           # do the update from SVN
             local packagePath=$scriptDir/packages/$category/$package
-
+	    
             if [ ! -d $packagePath ]; then
                 echo " New package $package appeared in configuration $configurationName"
                 echo " New package $package appeared in configuration $configurationName" >> $etcDir/update.log
@@ -1073,6 +1075,34 @@ function updateConfiguration() {
                 echo " Checking it out ...." >> $etcDir/update.log
                 checkoutPackage $scriptDir $package $category $tag 0 1 $revision
             else
+
+		# Check, wether the tags are still the same
+		cd $packagePath
+		taglocal=`svn info|grep "Relative URL"`
+		taglocal=`expr "$taglocal" : '.*/\(.*/.*\)'`
+		cd $scriptDir
+		if [[ "$tag" != "$taglocal" ]]; then
+		    echo
+		    echo "  Warning:"
+		    echo "  Update requires package $package in version $tag"
+		    echo "  but it (locally) exists in version $taglocal"
+		    echo
+		    echo -n "  Do you want to change version (old package will be deleted)? [y/n] "
+		    read c
+		    if [ "x$c" == "xy" ]; then 
+			rm -rf $packagePath
+			checkoutPackage $scriptDir $package $category $tag 1 1 $revision
+			echo
+			echo " Package now is in local version $tag"
+		    else
+			echo
+			echo "  Nothing done, package is not in sync with configuration file"
+			echo
+			exit 1;
+		    fi
+
+
+		fi
             
                 echo " Update of package: \"$package\""
                 echo " Update of package: \"$package\"" >> $etcDir/update.log
