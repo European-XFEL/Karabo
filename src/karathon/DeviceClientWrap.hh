@@ -25,9 +25,9 @@ namespace karathon {
     class DeviceClientWrap : public karabo::core::DeviceClient {
     public:
 
-        DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash()) :
-        DeviceClient(boost::shared_ptr<karabo::xms::SignalSlotable>(new SignalSlotableWrap(DeviceClient::generateOwnInstanceId(), connectionType, connectionParameters))),
-        m_isVerbose(true) {
+        DeviceClientWrap(const std::string& connectionType = "Jms", const karabo::util::Hash& connectionParameters = karabo::util::Hash())
+        : DeviceClient(connectionType, connectionParameters)
+        , m_isVerbose(true) {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
@@ -35,8 +35,9 @@ namespace karathon {
             m_signalSlotableWrap = boost::static_pointer_cast<SignalSlotableWrap > (p);
         }
 
-        DeviceClientWrap(boost::shared_ptr<SignalSlotableWrap>& o) : DeviceClient(boost::static_pointer_cast<karabo::xms::SignalSlotable>(o)),
-        m_isVerbose(true) {
+        DeviceClientWrap(boost::shared_ptr<SignalSlotableWrap>& o)
+        : DeviceClient(boost::static_pointer_cast<karabo::xms::SignalSlotable>(o))
+        , m_isVerbose(true) {
             boost::shared_ptr<karabo::xms::SignalSlotable> p = m_signalSlotable.lock();
             if (!p) {
                 throw KARABO_PARAMETER_EXCEPTION("Broker connection is not valid.");
