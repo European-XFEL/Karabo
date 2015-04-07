@@ -855,11 +855,11 @@ function installConfiguration() {
             # link only when library.so file exist otherwise explicit '*/*' link created
             if [ $? -eq 0 ]; then 
                 cd $scriptDir/servers/deviceServer01/c++/plugins
-                find ../../../packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+                find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
             fi      
         else
             cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
-            find ../../../packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+            find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
         fi
         cd $scriptDir
     done
@@ -1272,11 +1272,11 @@ function rebuildConfiguration() {
           # link only when library.so file exist otherwise explicit '*/*' link created
           if [ $? -eq 0 ]; then
               cd $scriptDir/servers/deviceServer01/c++/plugins
-              find ../../../packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+              find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
           fi
       else
             cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
-            find ../../../packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+            find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
       fi
       cd $scriptDir
      
