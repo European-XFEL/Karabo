@@ -1,8 +1,0 @@
-# type category      package        tag
-device testDevices   skiLift        trunk
-device testDevices   liftConveyor   trunk
-device testDevices   liftEntryGate  trunk
-device testDevices   liftMotor      trunk
-device testDevices   liftSimulatedCamera  trunk
-device testDevices   liftSwitch     trunk
-device testDevices   liftWindSensor trunk
