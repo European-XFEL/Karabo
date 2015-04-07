@@ -1,0 +1,73 @@
+################################
+#   How to compile my device?  #
+################################
+
+(1) Navigate to the build directory and type
+
+    make
+
+    Optionally specify CONF=Debug or CONF=Release for a debug
+    or release build (default: Debug)
+
+
+(2) For coding/compiling using netbeans, open the folder 
+    containing this README as netbeans project
+
+
+################################
+#    How to test my device?    #
+################################
+
+(1) Navigate to the run directory
+
+(2) Start Master Device Server
+
+    Navigate to masterDeviceServer and type:
+
+    ./startMasterDeviceServer
+
+    NOTE: If the master crashes whilst starting up, check that no other master server is already running!
+          Only on master server can run at a time!!  
+
+
+(3) Deploy (device-)plugin 
+
+    Navigate to deviceServer and make sure your device plugin (the shared library that you built for your device) is loaded to the plugins folder.
+    If this folder is empty you must create a link to your plugin. Simply navigate into the plugins folder and type:
+    
+    ln -sf ../../../dist/<CONF>/<PLATFORM>/<DEVICE_NAME>.so
+
+    With "< >" representing built/device specific names.
+
+
+(4) Navigate back to run directory and start a Device Server by typing:
+
+    ./startDeviceServer
+
+    NOTE: Type "./startDeviceServer --help" for displaying more startup options/help
+
+
+(5a) Start the GUI to control/monitor your device
+
+    ./startGui
+
+    NOTE: Press the connect-icon on the upper left in the GUI. Use the default values of the pop-up dialog and press the connect button.
+
+(5b) Or alternatively start the command line interface by typing
+
+    ./startCli
+
+
+HINT:
+
+You can run your Device in stand-alone mode (without Device Server) by starting the project-associated test in NetBeans.
+If you are using the command-line interface you can even skip to start the Master Device Server!!
+
+
+GENERAL NOTE:
+
+  Steps (2), (3), and (5) are typically needed to be done only once. 
+  If you have an updated version of your device (recompiled code) it should be sufficient to kill (Ctrl-c) and restart the DeviceServer (see (3)).
+
+  If you see a problem with your device, just kill your Device Server (./startServer script) go to the code, recompile
+  and start the server again. 

@@ -1,0 +1,26 @@
+#! /bin/bash
+####################################################################################
+# allStart stops the applications defined in ALLINFO in separate xterms
+# author: CY 18.12.2012 (tbd: possibly tie in xterm cmd and pid in .allInfo for kill) 
+
+# configuration file present?
+foo=./allInfo
+test -r $foo || { echo "ERROR cannot read definitions file $foo";  exit 1;}
+
+# ALLINFO content checking is done in allCheck 
+source ./allInfo
+for key in "${!ALLINFO[@]}"
+do
+    value=${ALLINFO[$key]}
+    source ./.allParse
+
+    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $match | awk '{print $1}')
+    for job in $jobs; 
+    do
+    	echo "INFO $name: kill signal $signal pgrp and pid $job"
+    	kill -s $signal -$job 1>/dev/null 2>/dev/null
+	kill -$signal $job 1>/dev/null 2>/dev/null
+    done
+done
+
+exit 0

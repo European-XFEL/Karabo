@@ -1,0 +1,50 @@
+print "Starting the device client"
+c = DeviceClient()
+
+# Find some server with a conveyor"
+servers = c.getServers()
+
+server = None
+for server in servers:
+    classes = c.getClasses(server)
+    if "Conveyor" in classes: break
+
+print "Instantiating a conveyor device"
+ret = c.instantiate(server, "Conveyor", Hash("deviceId", "Test_Conveyor_0"))
+assert ret[0], ret[1]
+
+print "Setting target speed to 50.0"
+ret = c.set("Test_Conveyor_0", "targetSpeed", 50.0)
+assert ret[0], ret[1]
+
+currentSpeed = c.get("Test_Conveyor_0", "currentSpeed")
+print "Current speed is ", currentSpeed
+
+state = c.get("Test_Conveyor_0", "state")
+print "Current state is ", state
+
+print "Starting the conveyor"
+ret = c.execute("Test_Conveyor_0", "start")
+assert ret[0], ret[1]
+
+currentSpeed = c.get("Test_Conveyor_0", "currentSpeed")
+print "Current speed is ", currentSpeed
+
+state = c.get("Test_Conveyor_0", "state")
+print "Current state is ", state
+
+print "Stopping the conveyor"
+ret = c.execute("Test_Conveyor_0", "stop")
+assert ret[0], ret[1]
+
+currentSpeed = c.get("Test_Conveyor_0", "currentSpeed")
+print "Current speed is ", currentSpeed
+
+state = c.get("Test_Conveyor_0", "state")
+print "Current state is ", state
+
+print "Killing the device"
+ret = c.killDevice("Test_Conveyor_0")
+assert ret[0], ret[1]
+
+print "### Macro finished successfully ###"

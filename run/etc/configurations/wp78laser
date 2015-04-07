@@ -1,0 +1,16 @@
+# PACKAGE CONFIGURATION: pnccd
+#
+# type             category              package                 release
+device             controlDevices        beckhoffCom             trunk
+device             controlDevices        beckhoffAnalogInput     trunk
+device             controlDevices        beckhoffDigitalInput    trunk
+device             controlDevices        beckhoffDigitalOutput   trunk
+device             controlDevices        beckhoffSimpleMotor     trunk
+device             controlDevices        limaBaslerCamera        trunk
+device             controlDevices        amphosLaserAmplifier    trunk
+device             controlDevices        idilLaserFrontend       trunk
+device		   controlDevices	 energyMax		 trunk
+device		   controlDevices	 stsSpectrometer	 trunk
+device		   testDevices		 imageProcessor		 trunk
+device		   controlDevices	 feedbackPid		 trunk
+device		   calibrationDevices	 autoCorrelator		 trunk
