@@ -1,0 +1,5 @@
+#!/bin/bash
+
+PYKARABO="$(cd "$(dirname "$0")"/..; pwd)"
+exec $PYKARABO/extern/bin/python3 -c "from IPython import start_ipython;\
+    start_ipython(code_to_run='from karabo.cli import *', force_interact=True)"
