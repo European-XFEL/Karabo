@@ -89,6 +89,9 @@ class StartStopFsmPeriodic(base.BaseFsm):
         KARABO_FSM_STATE_MACHINE('StartStopMachine', startStopMachineTransitionTable, 'Initialization')
         self.fsm = KARABO_FSM_CREATE_MACHINE('StartStopMachine')
     
+    def stop(self):
+        self.fsm.stop()
+        
     def getFsm(self):
         return self.fsm
     

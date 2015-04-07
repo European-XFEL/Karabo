@@ -561,6 +561,7 @@ class PythonDevice(NoFsm):
         if senderid == self.serverid: 
             self.log.INFO("Device is going down as instructed by server")
             self.preDestruction()
+            self.stopFsm()
             self.stopEventLoop()
         else:
             self.log.INFO("Device is going down as instructed by \"{}\"".format(senderid))
