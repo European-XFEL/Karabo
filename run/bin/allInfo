@@ -73,6 +73,8 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
 
 KARABO_SERVERS="../servers"
 
+KARABO_KILL_SIGNAL=9
+
 ###################
 # Service Servers #
 ###################
@@ -87,7 +89,7 @@ ALLINFO[2]="server:$KARABO_SERVERS/projectServer:startCppServer::1:projectServer
 ##################
 
 ALLINFO[10]="server:$KARABO_SERVERS/deviceServer01/c++:startCppServer::1:c++/startCppServer:9:100:yes"
-ALLINFO[11]="server:$KARABO_SERVERS/deviceServer01/pythonApi1:startPythonServerApi1::1:pythonApi1/startPythonServerApi1:9:100:yes"
+ALLINFO[11]="server:$KARABO_SERVERS/deviceServer01/pythonApi1:startPythonServerApi1:DeviceServer:1:pythonApi1/startPythonServerApi1:9:100:yes"
 
 ###################
 # Device Server02 #
