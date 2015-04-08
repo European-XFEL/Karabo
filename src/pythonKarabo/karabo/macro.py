@@ -56,7 +56,7 @@ class EventThread(threading.Thread):
         self.lock.release()
 
     def stop(self, weakref=None):
-        self.loop.stop()
+        self.loop.call_soon_threadsafe(self.loop.stop)
 
     @classmethod
     def start_macro(cls, macro, conf):
