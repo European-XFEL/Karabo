@@ -12,19 +12,14 @@ from karabo.karathon import *
 class Server(threading.Thread):
     
     def __init__(self):
-        print("Server: __init__ 1")
         threading.Thread.__init__(self)
         #create connection object
         try:
-            print("Server: __init__ 2")
             self.connection = Connection.create("Tcp", Hash("type", "server", "port", 0, "compressionUsageThreshold", 1))
-            print("Server: __init__ 3")
             #set error handler:  IT GIVES SEGFAULT!
             self.connection.setErrorHandler(self.onError)
             #register connect handler for incoming connections
-            print("Server: __init__ 4")
             self.port = self.connection.startAsync(self.onConnect)
-            print("Server: __init__ 5")
             
             #extract io service object
             self.ioserv = self.connection.getIOService()
@@ -33,7 +28,6 @@ class Server(threading.Thread):
             print("*** Server __init__() unexpected error:", sys.exc_info()[0])
             self.connection = None
             raise
-        print("Server : init exit.")
         
     def onError(self, channel, ec):
         if ec.value() != 2:
@@ -42,21 +36,20 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            print("Server onConnect entry.")
+            print("Server.onConnect entry.")
             #register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
-            #channel.setErrorHandler(self.onError);
+            channel.setErrorHandler(self.onError);
             #register read Hash handler for this channel (client)
-            print("Server: channel.readAsyncHashHash(self.onReadHashHash)")
             channel.readAsyncHashHash(self.onReadHashHash)
         except RuntimeError as e:
-            print("*** Server onConnect RuntimeError ",str(e))
+            print("*** Server.onConnect RuntimeError ",str(e))
             #raise
         except:
-            print("*** Server onConnect unexpected error:", sys.exc_info()[0])
+            print("*** Server.onConnect unexpected error:", sys.exc_info()[0])
             #raise
         finally:        
-            print("Server onConnect exit.")
+            print("Server.onConnect exit.")
     
     def onReadHashHash(self, channel, header, body):
         try:
@@ -108,16 +101,9 @@ class Server(threading.Thread):
 class  P2p_asyncTestCase(unittest.TestCase):
     def setUp(self):
         #choose the port not in use
-        print("*** P2p_asyncTestCase.setUp() : 1 api_version={}".format(karabo.api_version))
         self.server = Server()
-        print("*** P2p_asyncTestCase.setUp() : 2")
         self.server.start()
-        print("*** P2p_asyncTestCase.setUp() : 3")
-        try:
-            time.sleep(0.5)
-        except:
-            print("*** P2p_asyncTestCase.setUp() : sleep -> ()" + sys.exc_info()[0])
-        print("*** P2p_asyncTestCase.setUp() : 4")
+        time.sleep(0.5)
 
     def tearDown(self):
         self.server.stop() # stop server io service
@@ -169,7 +155,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
         try:
             #create client connection object
             connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.server.port, "compressionUsageThreshold", 1))
-            #connection.setErrorHandler(onError)
+            connection.setErrorHandler(onError)
             #register connect handler
             connection.startAsync(onConnect)
             ioservice = connection.getIOService()
