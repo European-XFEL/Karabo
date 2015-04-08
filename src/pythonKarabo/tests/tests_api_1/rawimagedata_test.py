@@ -8,7 +8,7 @@ import numpy
 
 class  RawImageData_TestCase(unittest.TestCase):
     def setUp(self):
-        self.resourcesdir = "../../../src/pythonKarabo/tests/resources/"
+        self.resourcesdir = "../../../../src/pythonKarabo/tests/tests_api_1/resources/"
     
     def test_rawimagedata(self):
         
