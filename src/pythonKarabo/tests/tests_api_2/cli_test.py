@@ -1,14 +1,12 @@
 import karabo
-karabo.api_version = 2
-
-from asyncio import coroutine, sleep
+from asyncio import async, coroutine, sleep
 import gc
 from unittest import TestCase, main
 import sys
 import time
 import weakref
 
-from karabo.macro import Macro
+from karabo.macro import Macro, EventThread
 from karabo import Integer, Slot
 from karabo.eventloop import EventLoop
 from karabo.hash import Hash
@@ -34,9 +32,13 @@ class Tests(TestCase):
         remote.count()
         self.assertEqual(remote.counter, 29)
         r = weakref.ref(remote)
+        thread = EventThread.instance().thread
         del remote
         gc.collect()
         self.assertIsNone(r())
+        self.assertIsNone(EventThread.instance())
+        time.sleep(0.1)
+        self.assertFalse(thread.is_alive())
 
     def test_main(self):
         save = sys.argv
@@ -47,7 +49,6 @@ class Tests(TestCase):
             sys.argv = save
 
     code = """if True:
-        from time import sleep
         from karabo.macro import Macro
         from karabo.hashtypes import Slot, String
 
@@ -64,7 +65,7 @@ class Tests(TestCase):
         yield from server.startInstance()
         config = Hash("project", "test", "module", "test", "code", self.code)
         hash = Hash("classId", "MetaMacro", "configuration", config,
-        "deviceId", "bla")
+                    "deviceId", "bla")
         yield from server.call("macroServer", "slotStartDevice", hash)
         yield from sleep(4)
         proxy = yield from getDevice("bla-TestMacro")
@@ -79,6 +80,9 @@ class Tests(TestCase):
         task = loop.create_task(self.init_macroserver(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.s, "done")
+        async(server.slotKillServer())
+        loop.run_forever()
+        loop.close()
 
 
 if __name__ == "__main__":
