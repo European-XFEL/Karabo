@@ -17,6 +17,9 @@ elif [ "$check" != "0" ]; then
     exit 1;
 fi;
 
+# Clean old pid file
+mv .allStart.pid .allStart.pid.last 2> /dev/null
+
 # cleanup old xml files
 ./allClean
 
@@ -33,7 +36,7 @@ do
     value=${ALLINFO[$key]}
     source ./.allParse
 
-# the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
+    # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
     job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $match | awk '{print $1}')
 
     if [ -n "$job" ]; then
@@ -48,29 +51,26 @@ do
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
 	    display="-display $XUSE"
 	fi
-        if [ -n "$1" ]; then
-            arg=$1
-            stem=$name
-            if [ "${arg:0:1}" = "-" ]; then
-                foo=$stem$key$arg
-            elif [ "${arg#${arg%?}}" = "-" ]; then
-	        foo=$arg$stem$key
-            else
-                foo=$stem$key"-"$arg
-            fi
-            if [ -w $foo ]; then
-                append="-a" 
-                echo "#!#! allStart $(date +%Y%m%d.%H%M%S)" >> $foo 
-            fi
-            redirect="2>&1 | tee $append $foo"
+        if [ "$1" = "-nox" ]; then
+            # No xterms should be used
+	    echo "INFO Starting: $target $params 2>&1 > /dev/null &"
+	    $target $params 2>&1 > /dev/null &
+	else
+            echo "INFO Starting: xterm $options $display -e $target $params $redirect &"
+	    xterm $options $display -e "$target $params $redirect" &
         fi
-        echo "INFO starting: xterm $options $display -e $target $params $redirect &"
-# start xterm and store name and pid of started xterm
-        xterm $options $display -e "$target $params $redirect" &
+	# store name and pid of started process
         bg=$!
-        echo "key: $name $!" >> .allInfo 
-# wait before starting next xterm
-        sleep $wait 
-    fi
+	# Give the xterm processes time to start and set up their pids
+	sleep 0.5 
+        echo "key: $match $!" >> .allInfo 
+	echo -n "$bg," >> .allStart.pid
+	cpid=`pgrep -P $bg`
+	echo -n "$cpid," >> .allStart.pid
+	# Sleep as defined in allInfo
+	sleep $wait
+    fi    
 done
+# Persist own PID
+echo "$$" >> .allStart.pid
 exit 0

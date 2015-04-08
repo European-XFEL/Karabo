@@ -10,7 +10,7 @@ function fclean()
     while true; do
         if ! read nn n0 n1; then
 	    if [ "$count" = "0" ]; then
-		mv .allInfo .allInfo.last
+		mv .allInfo .allInfo.last		
             fi
             return $count
         fi
@@ -19,7 +19,7 @@ function fclean()
 	    pid=$n1
             xpid=$(ps -u $USER -o pid,ppid | grep "^[ \t]*$pid[ \t]*[0-9]*[ \t]*" | grep -v grep | grep $pid | awk '{print $1}')
 	    if [ "x$pid" = "x$xpid" ]; then  # yes, the x is needed!
-                echo "INFO [$count] $name xterm still running with pid $n1"
+                echo "INFO [$count] $name still running with pid $n1"
 	        count+=1
 	    fi
         elif [ "$nn" = "args:" ]; then
