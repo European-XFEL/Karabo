@@ -258,7 +258,7 @@ function validateNewPackage() {
         if [[ "$lowerPackage" = "$lowerPackageName" ]]; then
             isValidPackageName=0;
         fi
-    done < $etcDir/configurations/all
+    done < $etcDir/configurations/.all
     if [[ "$isValidPackageName" == "0" ]]; then
         echo " Package name \"$1\" does aleady exist. Please select another name."
         exit 1;
@@ -552,11 +552,11 @@ function getArrayOfPackageDependencies() {
     local allPackages
     local packageDependencies
 
-    if [ ! -f $etcDir/configurations/all ]; then
+    if [ ! -f $etcDir/configurations/.all ]; then
        refreshAllPackagesFromSvn now supress
     fi
 
-    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackages=(`cat $etcDir/configurations/.all | grep -v "^#" | grep -v "^$"`)
     allPackagesNumberOfElements=${#allPackages[@]}
 
     packageDependencies=(`cat $1/DEPENDS 2>/dev/null | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}'`)
@@ -856,11 +856,11 @@ function installConfiguration() {
             make -j2 CONF=$buildType
             # link only when library.so file exist otherwise explicit '*/*' link created
             if [ $? -eq 0 ]; then 
-                cd $scriptDir/servers/deviceServer01/c++/plugins
+                cd $scriptDir/servers/cppDeviceServer/plugins
                 find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
             fi      
         else
-            cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
+            cd $scriptDir/servers/pythonDeviceServer/plugins
             find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
         fi
         cd $scriptDir
@@ -889,11 +889,11 @@ function getSortedArrayOfPackagesToInstall() {
     local allPackages
     local packagesToInstall
 
-    if [ ! -f $etcDir/configurations/all ]; then
+    if [ ! -f $etcDir/configurations/.all ]; then
        refreshAllPackagesFromSvn now supress
     fi
 
-    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackages=(`cat $etcDir/configurations/.all | grep -v "^#" | grep -v "^$"`)
     allPackagesNumberOfElements=${#allPackages[@]}
     packagesToInstall=(`cat $etcDir/configurations/$1 | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}' | sort | uniq `)
     packagesToInstallNumberOfElements=${#packagesToInstall[@]}
@@ -953,7 +953,7 @@ function getSortedArrayOfInstalledPackages(){
 
     #refreshAllPackagesFromSvn notnow supress
 
-    allPackages=(`cat $etcDir/configurations/all | grep -v "^#" | grep -v "^$"`)
+    allPackages=(`cat $etcDir/configurations/.all | grep -v "^#" | grep -v "^$"`)
     allPackagesNumberOfElements=${#allPackages[@]}
     installedPackages=(`cat $etcDir/installed/* | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}' | sort | uniq `)
     installedPackagesNumberOfElements=${#installedPackages[@]}
@@ -1301,11 +1301,11 @@ function rebuildConfiguration() {
           make -j${numMakeThreads} CONF=$buildType
           # link only when library.so file exist otherwise explicit '*/*' link created
           if [ $? -eq 0 ]; then
-              cd $scriptDir/servers/deviceServer01/c++/plugins
+              cd $scriptDir/servers/cppDeviceServer/plugins
               find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
           fi
       else
-            cd $scriptDir/servers/deviceServer01/pythonApi1/plugins
+            cd $scriptDir/servers/pythonDeviceServer/plugins
             find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
       fi
       cd $scriptDir
@@ -1340,19 +1340,19 @@ function refreshAllPackagesFromSvn() {
    fi
    allExist=0
    delta=0
-   if [ -f $etcDir/configurations/all ]; then
+   if [ -f $etcDir/configurations/.all ]; then
       allExist=1
       OS=$(uname -s)
       if [ "$OS" = "Linux" ]; then
-        modsecs=$(date --utc --reference=$etcDir/configurations/all +%s)
+        modsecs=$(date --utc --reference=$etcDir/configurations/.all +%s)
         # or in this way:
-        #modsecs=$(stat -c %Y $etcDir/configurations/all)
+        #modsecs=$(stat -c %Y $etcDir/configurations/.all)
       elif [ "$OS" = "Darwin" ]; then
-        modsecs=$(stat -f %m $etcDir/configurations/all)
+        modsecs=$(stat -f %m $etcDir/configurations/.all)
       fi
       nowsecs=$(date +%s)
       delta=$(($nowsecs-$modsecs))
-      #echo "File $etcDir/configurations/all was modified $delta secs ago"
+      #echo "File $etcDir/configurations/.all was modified $delta secs ago"
    fi
    if [[ $delta -gt 1 && $1 != "now" ]]; then
       echo
@@ -1364,8 +1364,8 @@ function refreshAllPackagesFromSvn() {
    if [[ $1 == "now" || $allExist -eq 0 ]]; then
      if [[ $supress -eq 0 ]]; then
         echo "Refreshing all configuration, please wait ..." 
-        echo "# automatically created; do not edit" > $etcDir/configurations/all
-        echo "# type  category  package"   >> $etcDir/configurations/all
+        echo "# automatically created; do not edit" > $etcDir/configurations/.all
+        echo "# type  category  package"   >> $etcDir/configurations/.all
      fi
      typeDevice="device"
      typeDeviceServer="deviceServer"
@@ -1387,13 +1387,13 @@ function refreshAllPackagesFromSvn() {
        while [ "$idy" -lt "$sortedPackagesNumberOfElements" ]
        do
          if [[ "${sortedCategories[$idx]}" == "dependencies" ]]; then
-            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
          elif [[ "${sortedCategories[$idx]}" == "deviceServers" ]]; then
-            echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+            echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
          elif [[ "${sortedCategories[$idx]}" == "testApplications" ]]; then
-            echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+            echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
          else
-            echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+            echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
          fi
          let "idy=$idy+1"
        done
@@ -1415,13 +1415,13 @@ function refreshAllPackagesFromSvn() {
        while [ "$idy" -lt "$sortedPackagesNumberOfElements" ]
        do
          if [[ "${sortedCategories[$idx]}" == "dependencies" ]]; then
-            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+            echo "$typeDependency ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
         # elif [[ "${sortedCategories[$idx]}" == "deviceServers" ]]; then
-        #    echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        #    echo "$typeDeviceServer ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
         # elif [[ "${sortedCategories[$idx]}" == "testApplications" ]]; then
-        #    echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        #    echo "$typeApplication ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
         # else
-        #    echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/all
+        #    echo "$typeDevice ${sortedCategories[$idx]} ${sortedPackages[$idy]}" >> $etcDir/configurations/.all
          fi
          let "idy=$idy+1"
        done
@@ -1479,7 +1479,7 @@ function listPackages() {
             done
         fi
         printf "\n"
-    done < $etcDir/configurations/all
+    done < $etcDir/configurations/.all
     echo
 }
 
@@ -1541,7 +1541,7 @@ function listCategories() {
             echo " $category"
         fi
         previousCategory=$category
-    done < $etcDir/configurations/all
+    done < $etcDir/configurations/.all
     echo
 }
 

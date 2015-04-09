@@ -1,9 +1,0 @@
-#PACKAGE CONFIGURATION: dps
-#
-# type             category              package                        release
-device             controlDevices        beckhoffCom                    tags/0.1.0-1.2
-device             controlDevices        beckhoffPfeifferTCDriveUnit    branches/0.1-1.2
-device             controlDevices        beckhoffAnalogInput            tags/0.1.0-1.2
-device             controlDevices        beckhoffDigitalInput           tags/0.1.0-1.2
-device             controlDevices        beckhoffDigitalOutput          tags/0.1.0-1.2
-device             controlDevices        beckhoffOpenClose              tags/0.1.0-1.2
