@@ -40,7 +40,7 @@ class DeviceClientBase(Device):
 
     @slot
     def slotInstanceGone(self, instanceId, info):
-        self.systemTopology[info[type]].pop(instanceId, None)
+        self.systemTopology[info["type"]].pop(instanceId, None)
         return super().slotInstanceGone(instanceId, info)
 
     @slot
@@ -283,6 +283,53 @@ def getDevice(deviceId, *, sync=None, timeout=-1):
     if sync is None:
         sync = get_event_loop().sync_set
     return _getDevice(deviceId, sync=sync, timeout=timeout)
+
+
+def getDevices(serverId=None):
+    """Return a list of currently running devices
+
+    Optionally, it may only return the devices running on device server
+    `serverId`."""
+    instance = get_instance()
+    if serverId is None:
+        return list(instance.systemTopology["device"])
+    else:
+        return [k for k, v in instance.systemTopology["device"]
+                if v["serverId"] == serverId]
+
+def getServers():
+    """Return a list of currently running servers"""
+    return list(get_instance().systemTopology["server"])
+
+
+def getClasses(serverId):
+    """Return a list of device classes (plugins) available on a server"""
+    instance = get_instance()
+    return instance.systemTopology["server"]["serverId"]["deviceClasses"]
+
+
+@synchronize
+def instantiate(serverId, classId, deviceId="", configuration=Hash(),
+                **kwargs):
+    """Instantiate and configure a device on a running server
+
+    Arguments:
+    * *serverId*: The serverId of the server on which the device should be
+      started.
+
+    * *classId*: The classId of the device (corresponding plugin must already
+      be loaded on the server)
+
+    * *deviceId*: The future name of the device in the Karabo installation
+      (will fail if not unique)
+
+    * *configuration*: the configuration of the device (optional)
+
+    The keyword arguments are used to further configure the device. """
+    configuration.update(kwargs)
+    h = Hash("classId", classId, "deviceId", deviceId,
+             "configuration", configuration)
+    yield from get_instance().call(serverId, "slotStartDevice", h)
 
 
 @synchronize
