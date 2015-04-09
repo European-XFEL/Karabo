@@ -1,9 +1,12 @@
 #! /bin/bash
 
-pid=$(cat .allStart.pid)
-
 source ./allInfo
 
-pkill -${KARABO_KILL_SIGNAL} -g $pid 1>/dev/null 2>/dev/null
+while read line; do
+
+    #echo "kill -${KARABO_KILL_SIGNAL} $line 1>/dev/null 2>/dev/null"
+    kill -${KARABO_KILL_SIGNAL} $line 1>/dev/null 2>/dev/null
+
+done < .allStart.pid
 
 exit 0

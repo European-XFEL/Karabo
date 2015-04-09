@@ -1,9 +1,5 @@
-    name=$(echo $value | awk -F ":" '{print $1}')   # master | server | gui 
-    dir=$(echo $value | awk -F ":" '{print $2}')    # directory where executable of script are located
-    exe=$(echo $value | awk -F ":" '{print $3}')    # file name of executable of script are located
-    params=$(echo $value | awk -F ":" '{print $4}') # blank separated parameters of $exe   
-    wait=$(echo $value | awk -F ":" '{print $5}')   # delay in seconds before starting following xterm
-    match=$(echo $value | awk -F ":" '{print $6}')  # pattern match string for kill
-    signal=$(echo $value | awk -F ":" '{print $7}') # kill signal used   
-    scroll=$(echo $value | awk -F ":" '{print $8}') # xterm scroll line count
-    xuse=$(echo $value | awk -F ":" '{print $9}')   # xhost display to use if requested, not set use default display
+    exe=$(echo $value | awk -F ":" '{print $1}')    # exectuable (full relative path)
+    params=$(echo $value | awk -F ":" '{print $2}') # blank separated parameters of $exe   
+    wait=$(echo $value | awk -F ":" '{print $3}')   # delay in seconds before starting following xterm
+    scroll=$(echo $value | awk -F ":" '{print $4}') # xterm scroll line count
+    xuse=$(echo $value | awk -F ":" '{print $5}')   # xhost display to use if requested, not set use default display

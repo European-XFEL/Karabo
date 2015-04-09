@@ -44,7 +44,7 @@ source allInfo
 test -n "$ALLINFO" || { echo "ERROR ALLINFO array does not exist"; exit 3;} 
 
 # check allInfo content definitions
-declare -i TOKENS=9
+declare -i TOKENS=5
 for key in "${!ALLINFO[@]}"
 do
     value=${ALLINFO[$key]}
@@ -57,24 +57,14 @@ do
 
     source ./.allParse
 
-#    echo "name: $name ${#name[@]}"
-#    echo "dir: $dir ${#dir[@]}"
 #    echo "exe: $exe ${#exe[@]}"
 #    echo "params: $params ${#params[@]}"
 #    echo "wait: $wait ${#wait[@]}"
-#    echo "match: $match ${#match[@]}"
-#    echo "signal: $signal ${#signal[@]}"
 #    echo "scroll: $scroll ${#scroll[@]}"
 
-    if [ "$name" != "master" ] && [ "$name" != "server" ] && [ "$name" != "pyServer" ] && [ "$name" != "gui" ]; then
-	echo "INFO non-standard name: $name in: ALLINFO[$key], standard names are: master, server or gui"
-    fi
-    test -d $dir || { echo "ERROR bad directory token: $dir in $value, no such dircetory"; exit 6;}
-    test -f $dir/$exe || { echo "ERROR bad exe file: $dir/$exe in: $value, no such file"; exit 7;}
-    test -e $dir/$exe || { echo "ERROR bad exe file: $dir/$exe in: $value, not executable"; exit 8;}
+    test -f $exe || { echo "ERROR bad exe file: $exe in: $value, no such file"; exit 7;}
+    test -e $exe || { echo "ERROR bad exe file: $exe in: $value, not executable"; exit 8;}
     test -n $wait || { echo "ERROR cannot have zero length, seconds to wait before xterm"; exit 9;}
-    test -n $match || { echo "ERROR cannot have zero length, pattern match of executable"; exit 10;}
-    test -n $signal || { echo "ERROR cannot have zero length, signal number"; exit 11;}
     test -n $scroll || { echo "ERROR cannot have zero length, scroll line count"; exit 12;}
 done
 
@@ -84,7 +74,7 @@ done
 	cat .allInfo | fclean
         xterms=$?
 	if [ $xterms != "0" ]; then
-	    echo "WARN $xterms xterms are running! To cold start use allStop"
+	    echo "WARN $xterms Karabo processes are running! To cold start use allStop"
 	    exit 13; # !! must be 13
 	fi
     fi
@@ -96,7 +86,7 @@ do
     source ./.allParse
 
     orphans="no"
-    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $match | awk '{print $1}')
+    jobs=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $exe | awk '{print $1}')
     for job in $jobs; 
     do 
     	echo "INFO $name running orphaned from xterm, pid "$job
