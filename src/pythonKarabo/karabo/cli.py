@@ -8,7 +8,7 @@ import IPython
 
 from karabo.device_client import (
     getDevice, waitUntil, waitUntilNew, setNoWait, executeNoWait,
-    DeviceClientBase)
+    DeviceClientBase, getDevices, getClasses, getServers, instantiate)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
@@ -39,4 +39,5 @@ ip.set_hook("complete_command", completer, re_key=".*getDevice")
 
 
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setNoWait",
-           "executeNoWait"]
+           "executeNoWait", "getDevices", "getClasses", "getServers",
+           "instantiate"]
