@@ -208,7 +208,8 @@ cp -rf $DISTDIR/$OS/lib/serverControl/. $PYKARABO/
 
 # run (Karabo's run/package development environment)
 #tmpPwd=$(pwd)
-cp -rf ../../../run $PACKAGEDIR/karaboRun
+#cp -rf ../../../run $PACKAGEDIR/karaboRun
+tar --exclude=.svn -cf - ../../../run 2>/dev/null | ( cd $PACKAGEDIR; tar xf - ; mv run karaboRun)
 #cd $PACKAGEDIR
 #tar -czf KaraboRun-$VERSION.tar.gz KaraboRun-$VERSION
 # Version information
