@@ -1,6 +1,0 @@
-# PACKAGE CONFIGURATION: wp73-alio
-#
-# type             category              package                 release
-device             controlDevices        beckhoffCom             tags/1.0.0
-device             controlDevices        beckhoffAlioStage       branches/1.0
-device             controlDevices        beckhoffMotor           tags/1.0.1
