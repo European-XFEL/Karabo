@@ -9,19 +9,23 @@
 check=$?
 
 if [ -n "$RESTART" ] && [ "$check" = "13" ]; then
-    echo "INFO restart any missing xterms"
+    echo
+    echo "INFO restarting any missing processes"
 elif  [ -n "$RESTART" ] && [ "$check" = "0" ]; then
-    echo "INFO restart all xterms"
+    echo
+    echo "INFO restart all processes"    
+    # Clean old pid file
+    mv .allStart.pid .allStart.pid.last 2> /dev/null
 elif [ "$check" != "0" ]; then 
+    echo
     echo "ERROR xterms running cannot allStart"
+    echo
     exit 1;
-fi;
+else
+    # Clean old pid file
+    mv .allStart.pid .allStart.pid.last 2> /dev/null
+fi
 
-# Clean old pid file
-mv .allStart.pid .allStart.pid.last 2> /dev/null
-
-# cleanup old xml files
-./allClean
 
 # ALLINFO content checking is done in allCheck 
 source ./allInfo
@@ -37,15 +41,13 @@ do
     source ./.allParse
 
     # the match is too indescriminant and fails to identify all cases! Correct solution use pid chain?
-    job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $match | awk '{print $1}')
+    job=$(ps -u $USER -o  pid,ppid,pgrp,user,cmd | grep -v grep | grep $exe | awk '{print $1}')
 
-    if [ -n "$job" ]; then
-        echo "INFO key $key running, not restarting"
-    elif [ "$name" = "gui" ] && [ "$NOGUI" = "true" ]; then
-        echo "INFO NOGUI environmental is 'true', gui not started"
+    if [ -n "$job" ]; then	
+        echo "INFO $exe running, not restarting"
     else 
-        target=$dir/$exe
-        title=${dir##[./]*/}/$exe
+        target=$exe
+        title=${exe##[./]*/}
         options="-T $title -sb -rightbar -sl $scroll"
 	display=""
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then
@@ -63,14 +65,16 @@ do
         bg=$!
 	# Give the xterm processes time to start and set up their pids
 	sleep 0.5 
-        echo "key: $match $!" >> .allInfo 
-	echo -n "$bg," >> .allStart.pid
+        echo "key: $exe $!" >> .allInfo 
+	echo "$bg" >> .allStart.pid
 	cpid=`pgrep -P $bg`
-	echo -n "$cpid," >> .allStart.pid
+	while [ -n "$cpid" ]; do
+	    echo "$cpid" >> .allStart.pid
+	    cpid=`pgrep -P $cpid`
+	done
 	# Sleep as defined in allInfo
 	sleep $wait
     fi    
 done
-# Persist own PID
-echo "$$" >> .allStart.pid
+
 exit 0

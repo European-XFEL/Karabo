@@ -3,26 +3,17 @@
 # server, gui and other applications used in a localhost device test system.
 #
 # management scripts: 
-#   1. allStart - to start master|server|gui xterms defined by the ALLINFO environmental
-#              a. allStart has a single optional parameter which controls whether stdout
-#                 and stderr, seen at the xterm, are additionally redirected to file.
-#                 "allStart -foo" or "allStart foo" sends output to files 
-#                 master-foo|server-foo|gui-foo
-#                 "allStart foo-" sends output to files foo-master|foo-server|foo-gui
-#                 If the file exist, then output is appended after inserting a 
-#                 marker line "#!#! YYYYMMDD.HHMMSS". 
-#   2. allStop  - to stop started xterms 
-#              a. grepping the match string process is used in the kill, this is rather
-#                 indiscriminant, but suites single user test system (the aim here) 
+#   1. allStart - to start karabo processes defined by the ALLINFO environmental
+#                 allStart has a single optional parameter "-nox" which controls whether
+#	       	  the processes are started as individual xterms or accumulated as background jobs
+#   2. allStop  - to stop started processes
 #   3. allCheck - to check the definitions used by test system scripts 
-#              a. this script is the only check made of the definitionas used
-#   4. allClean - to remove test system XML files
-#              a. this guarantees a cold start (it is called early in allStart)
+#                 this script is the only check made of the definitions used
 #   5. allRestart - to restart any "missing" applicationsd
-#              a. a candidate to a missing application is the gui which was closed at
+#                 a candidate to a missing application is the gui which was closed at
 #                 the end of the last session with all other applications left running.
 # 
-# author: CY 18.12.2012
+# author: CY 18.12.2012, largely modified: BH 09.04.2015
 
 
 ##################
@@ -50,20 +41,23 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
 #export KARABO_BROKER_TOPIC=xbeam
 
 
+##################################
+# Kill Signal (used by allStop)  #
+##################################
+
+KARABO_KILL_SIGNAL=9
+
+
 ################
 # Applications #
 ################
 
-# Component definitions, currently 8 tokens per xterm
-# 1. type master|server|gui
-# 2. directory containing the starter (script or executable)
-# 3. starter filename
-# 4. blank separated parameters to starter
-# 5. delay, in seconds, before starting next xterm
-# 6. match string used in kill operation
-# 7. kill signal used to kill the xterm
-# 8. number of scroll lines of xterm
-# 9. if "yes" use the x11 display specified in XUSE environmental. To start applications on the
+# Component definitions, currently 6 tokens per process
+# 1. relative path of the starter filename (including the starter)
+# 2. blank separated parameters to starter
+# 3. delay, in seconds, before starting next process
+# 4. number of scroll lines of xterm
+# 5. if "yes" use the x11 display specified in XUSE environmental. To start applications on the
 #    control host define XUSE to the main console ($ export XUSE=":0") and, provided your login account
 #    is identical to the console's owner account, all applications with 9="yes" will be displayed there. 
 #    Applications started in this way will remain alive when the session is closed. 
@@ -73,48 +67,33 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
 
 KARABO_SERVERS="../servers"
 
-KARABO_KILL_SIGNAL=9
-
 ###################
 # Service Servers #
 ###################
 
-ALLINFO[0]="server:$KARABO_SERVERS/guiServer:startCppServer::1:guiServer/startCppServer:9:100:yes"
-ALLINFO[1]="server:$KARABO_SERVERS/dataLoggerServer:startCppServer::1:dataLoggerServer/startCppServer:9:100:yes"
-ALLINFO[2]="server:$KARABO_SERVERS/projectServer:startCppServer::1:projectServer/startCppServer:9:100:yes"
-#ALLINFO[3]="server:$KARABO_SERVERS/macroServer:startPythonServerApi2::1:macroServer/startPythonServerApi2:9:100:yes"
+ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer::0:100:yes"
+ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer::0:100:yes"
+ALLINFO[2]="$KARABO_SERVERS/projectServer/startCppServer::0:100:yes"
+#ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2::0:100:yes"
 
-##################
-# DeviceServer01 #
-##################
 
-ALLINFO[10]="server:$KARABO_SERVERS/deviceServer01/c++:startCppServer::1:c++/startCppServer:9:100:yes"
-ALLINFO[11]="server:$KARABO_SERVERS/deviceServer01/pythonApi1:startPythonServerApi1:DeviceServer:1:pythonApi1/startPythonServerApi1:9:100:yes"
+#####################
+# Device Server C++ #
+#####################
 
-###################
-# Device Server02 #
-###################
+ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer::0:100:yes"
 
-#ALLINFO[12]="server:$KARABO_SERVERS/deviceServer02/c++:startCppServer::1:c++/startCppServer:9:100:yes"
-#ALLINFO[13]="server:$KARABO_SERVERS/deviceServer02/pythonApi1:startPythonServerApi1::1:pythonApi1/startPythonServerApi1:9:100:yes"
 
-###################
-# Device Server03 #
-###################
+########################
+# Device Server Python #
+########################
 
-#ALLINFO[14]="server:$KARABO_SERVERS/deviceServer03/c++:startCppServer::1:c++/startCppServer:9:100:yes"
-#ALLINFO[15]="server:$KARABO_SERVERS/deviceServer03/pythonApi1:startPythonServerApi1::1:pythonApi1/startPythonServerApi1:9:100:yes"
+ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer:0:100:yes"
 
-###################
-# Device Server04 #
-###################
-
-#ALLINFO[16]="server:$KARABO_SERVERS/deviceServer04/c++:startCppServer::0:c++/startCppServer:9:100:yes"
-#ALLINFO[17]="server:$KARABO_SERVERS/deviceServer04/pythonApi1:startPythonServerApi1::0:pythonApi1/startPythonServerApi1:9:100:yes"
 
 ###################
 # User Interfaces #
 ###################
 
-#ALLINFO[20]="gui:.:startGui::0:karabo-gui.py:9:100:no"
-#ALLINFO[21]="gui:.:startCli::0:karabo-cli.py:9:100:no"
+#ALLINFO[30]="startGui::0:100:no"
+#ALLINFO[31]="startCli::0:100:no"
