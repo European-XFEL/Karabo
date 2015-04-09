@@ -11,7 +11,7 @@ fi
 
 arg=$(grep "args:" $foo | grep "allStart" | grep -v grep | awk '{print $3}')
 if [ -n "$arg" ]; then
-    echo "INFO text dump file arguement: $arg"
+    echo "INFO Restarting with argument: $arg"
 fi 
 
 export RESTART="yes"
