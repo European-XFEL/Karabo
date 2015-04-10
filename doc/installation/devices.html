@@ -1,0 +1,829 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <title>Alfresco &raquo; Wiki</title>
+   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+
+   <!-- Icons -->
+   <link rel="shortcut icon" href="/share/res/favicon.ico" type="image/vnd.microsoft.icon" />
+   <link rel="icon" href="/share/res/favicon.ico" type="image/vnd.microsoft.icon" />
+
+   <!-- YUI -->
+   <script type="text/javascript" src="/share/res/js/yui-common.js"></script>
+   <script type="text/javascript" src="/share/res/js/bubbling.v2.1-min.js"></script>
+   <script type="text/javascript">//<![CDATA[
+      YAHOO.Bubbling.unsubscribe = function(layer, handler, scope)
+      {
+         this.bubble[layer].unsubscribe(handler, scope);
+      };
+   //]]></script>
+
+   <!-- Common i18n msg properties -->
+   <script type="text/javascript" src="/share/service/messages.js?locale=en_US"></script>
+
+   <!-- Alfresco web framework constants -->
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.constants = Alfresco.constants || {};
+      Alfresco.constants.DEBUG = false;
+      Alfresco.constants.AUTOLOGGING = false;
+      Alfresco.constants.PROXY_URI = window.location.protocol + "//" + window.location.host + "/share/proxy/alfresco/";
+      Alfresco.constants.PROXY_URI_RELATIVE = "/share/proxy/alfresco/";
+      Alfresco.constants.PROXY_FEED_URI = window.location.protocol + "//" + window.location.host + "/share/proxy/alfresco-feed/";
+      Alfresco.constants.THEME = "xfel";
+      Alfresco.constants.URL_CONTEXT = "/share/";
+      Alfresco.constants.URL_RESCONTEXT = "/share/res/";
+      Alfresco.constants.URL_PAGECONTEXT = "/share/page/";
+      Alfresco.constants.URL_SERVICECONTEXT = "/share/service/";
+      Alfresco.constants.URL_FEEDSERVICECONTEXT = "/share/feedservice/";
+      Alfresco.constants.USERNAME = "heisenb";
+      Alfresco.constants.SITE = "KaraboFramework";
+      Alfresco.constants.PAGEID = "wiki-page";
+      Alfresco.constants.PORTLET = false;
+      Alfresco.constants.PORTLET_URL = unescape("");
+      Alfresco.constants.JS_LOCALE = "en_US";
+   //]]></script>
+
+   <!-- Alfresco web framework common resources -->
+   <script type="text/javascript" src="/share/res/js/flash/AC_OETags-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/alfresco-min.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/tiny_mce/tiny_mce.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/tiny_mce-min.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/yui_editor-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/forms-runtime-min.js"></script>
+
+   <!-- Share Constants -->
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.service.Preferences.FAVOURITE_DOCUMENTS = "org.alfresco.share.documents.favourites";
+      Alfresco.service.Preferences.FAVOURITE_FOLDERS = "org.alfresco.share.folders.favourites";
+      Alfresco.service.Preferences.FAVOURITE_SITES = "org.alfresco.share.sites.favourites";
+      Alfresco.service.Preferences.IMAP_FAVOURITE_SITES = "org.alfresco.share.sites.imapFavourites";
+      Alfresco.service.Preferences.COLLAPSED_TWISTERS = "org.alfresco.share.twisters.collapsed";
+      Alfresco.service.Preferences.RULE_PROPERTY_SETTINGS = "org.alfresco.share.rule.properties";
+      Alfresco.constants.URI_TEMPLATES =
+      {
+         "sitedashboardpage": "/site/{site}/dashboard",
+         "sitepage": "/site/{site}/{pageid}",
+         "userdashboardpage": "/user/{userid}/dashboard",
+         "userpage": "/user/{userid}/{pageid}",
+         "userprofilepage": "/user/{userid}/profile",
+         "userdefaultpage": "/user/{pageid}",
+         "consoletoolpage": "/console/{pageid}/{toolid}",
+         "consolepage": "/console/{pageid}"
+      };
+      Alfresco.constants.HELP_PAGES =
+      {
+         "share-help": "http://docs.alfresco.com/4.1/topic/com.alfresco.enterprise.doc/topics/sh-uh-welcome.html",
+         "share-tutorial": "http://docs.alfresco.com/4.1/topic/com.alfresco.enterprise.doc/concepts/gs-intro.html",
+         "share-faq": "https://docs.xfel.eu/share/page/site/exfel/wiki-page?title=Alfresco_FAQ",
+         "share-presentation": "https://docs.xfel.eu/share/proxy/alfresco/api/node/content/workspace/SpacesStore/4602730a-1d1c-4fe5-942c-d59d106d3ea4/Alfresco_Tutorial.ppt?a=true",
+         "share-user-guide": "https://docs.xfel.eu/share/proxy/alfresco/api/node/content/workspace/SpacesStore/9051594a-b9f0-4945-a7e9-b480142b8436/IN-2012-004-01_Alfresco_User_Guide.pdf?a=true",
+         "imprint": "https://docs.xfel.eu/share/page/user/imprint?nodeRef=workspace://SpacesStore/674abac5-cbe7-4730-bfbb-3172a9b765f9",
+         "share-support": "mailto:alfresco-support@xfel.eu",
+         "home": "https://docs.xfel.eu/share/page/site/exfel/dashboard"
+      };
+      Alfresco.constants.HTML_EDITOR = 'tinyMCE';
+   //]]></script>
+
+   <!-- Share resources -->
+   <script type="text/javascript" src="/share/res/js/share-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/lightbox-min.js"></script>
+
+   <!-- Common stylesheets gathered to workaround IEBug KB262161 -->
+   <style type="text/css" media="screen">
+      @import "/share/res/css/yui-fonts-grids.css";
+      @import "/share/res/yui/columnbrowser/assets/columnbrowser.css";
+      @import "/share/res/yui/columnbrowser/assets/skins/default/columnbrowser-skin.css";
+      @import "/share/res/themes/xfel/yui/assets/skin.css";
+      @import "/share/res/css/base.css";
+      @import "/share/res/css/yui-layout.css";
+      @import "/share/res/themes/xfel/presentation.css";
+   </style>
+
+
+   <!-- Template Resources (nested content from < @templateHeader > call) -->
+   <!-- Additional template resources -->
+    <style type="text/css">
+        @import url("/share/res/css/print.css");
+    </style>
+
+   <!-- Component Resources (from .get.head.ftl files) -->
+   
+<!-- Header -->
+   <script type="text/javascript" src="/share/res/components/header/header-min.js"></script>
+<!-- About Share -->
+   <script type="text/javascript" src="/share/res/modules/about-share-min.js"></script>
+<!-- License usage -->
+<!-- Configured dependencies -->
+<link rel="stylesheet" type="text/css" href="/share/res/modules/create-site.css" />
+<link rel="stylesheet" type="text/css" href="/share/res/modules/header/sites.css" />
+<script type="text/javascript" src="/share/res/modules/create-site.js"></script>
+<script type="text/javascript" src="/share/res/modules/header/sites.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/header/header.css";
+      @import "/share/res/modules/about-share.css";
+      @import "/share/res/components/console/license.css";
+   </style>
+<!-- Collaboration Title -->
+   <script type="text/javascript" src="/share/res/components/title/collaboration-title-min.js"></script>
+<!-- Edit Site -->
+   <script type="text/javascript" src="/share/res/modules/edit-site-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/modules/edit-site.css";
+   </style>
+<!-- Wiki Toolbar -->
+   <script type="text/javascript" src="/share/res/components/wiki/toolbar-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/wiki/toolbar.css";
+   </style>
+<!-- Wiki -->
+<link rel="alternate" type="application/wiki" href="/share/page/site/KaraboFramework/wiki-page?title=Getting_Started_-_Karabo_Packages&amp;action=edit" />
+   <script type="text/javascript" src="/share/res/components/wiki/parser-min.js"></script>
+   <script type="text/javascript" src="/share/res/components/wiki/page-min.js"></script>
+
+<!-- Document Picker for Document links -->
+   <script type="text/javascript" src="/share/res/modules/document-picker/document-picker-min.js"></script>
+   <script type="text/javascript" src="/share/res/components/object-finder/object-finder-min.js"></script>
+
+
+<!-- Wiki Editor -->
+   <script type="text/javascript" src="/share/res/modules/simple-editor-min.js"></script>
+<!-- Tag -->
+   <script type="text/javascript" src="/share/res/modules/taglibrary/taglibrary-min.js"></script>
+<!-- Wiki Versioning -->
+   <script type="text/javascript" src="/share/res/modules/wiki/revert-wiki-version-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/wiki/wiki.css";
+      @import "/share/res/modules/document-picker/document-picker.css";
+      @import "/share/res/components/object-finder/object-finder.css";
+      @import "/share/res/modules/simple-editor.css";
+      @import "/share/res/modules/taglibrary/taglibrary.css";
+      @import "/share/res/modules/wiki/revert-wiki-version.css";
+   </style>
+<!-- Footer -->
+   <style type="text/css" media="screen">
+      @import "/share/res/components/footer/footer.css";
+   </style>
+   <script type="text/javascript" src="/share/res/extras/components/wiki/page-parsers-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/video-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/toc-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/table-parser-min.js"></script>
+
+
+<!-- Alfresco.WebPreview  -->
+   <script type="text/javascript" src="/share/res/components/preview/web-preview-min.js"></script>
+
+<!-- Alfresco.WebPreview.Plugins -->
+
+<!-- Alfresco.WebPreviewer.Plugins.WebPreviewer -->
+   <script type="text/javascript" src="/share/res/components/preview/WebPreviewer-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/flash/extMouseWheel-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.FlashFox -->
+   <script type="text/javascript" src="/share/res/components/preview/FlashFox-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.StrobeMediaPlayback -->
+   <script type="text/javascript" src="/share/res/components/preview/StrobeMediaPlayback-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Video -->
+   <script type="text/javascript" src="/share/res/components/preview/Video-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Audio -->
+   <script type="text/javascript" src="/share/res/components/preview/Audio-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Flash -->
+   <script type="text/javascript" src="/share/res/components/preview/Flash-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Image -->
+   <script type="text/javascript" src="/share/res/components/preview/Image-min.js"></script>
+
+<!-- Wiki Rich Content Document Parser -->
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/document-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/prettyprint-parser-min.js"></script>
+   <script type="text/javascript" src="/share/res/extras/modules/prettify/prettify-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/extras/components/wiki/wiki-rich-content.css";
+      @import "/share/res/extras/components/wiki/video-parser.css";
+      @import "/share/res/extras/components/wiki/toc-parser.css";
+      @import "/share/res/extras/components/wiki/table-parser.css";
+      @import "/share/res/components/preview/web-preview.css";
+      @import "/share/res/components/preview/WebPreviewerHTML.css";
+      @import "/share/res/components/preview/Audio.css";
+      @import "/share/res/components/preview/Image.css";
+      @import "/share/res/extras/components/wiki/document-parser.css";
+      @import "/share/res/extras/components/wiki/prettyprint-parser.css";
+      @import "/share/res/extras/modules/prettify/prettify.css";
+   </style>
+
+
+   <!-- MSIE CSS fix overrides -->
+   <!--[if lt IE 7]><link rel="stylesheet" type="text/css" href="/share/res/css/ie6.css" /><![endif]-->
+   <!--[if IE 7]><link rel="stylesheet" type="text/css" href="/share/res/css/ie7.css" /><![endif]-->
+
+   <!-- iPad CSS overrides -->
+   <link media="only screen and (max-device-width: 1024px)" rel="stylesheet" type="text/css" href="/share/res/css/ipad.css"/>
+</head>
+
+<body id="Share" class="yui-skin-xfel alfresco-share">
+   <div class="sticky-wrapper">
+      <div id="doc3">
+   <div id="alf-hd">
+<div id="global_x002e_header">
+    <div id="global_x002e_header_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   var global_x002e_header_x0023_default = new Alfresco.component.Header("global_x002e_header_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      siteTitle: "Karabo Framework",
+      minSearchTermLength: 1,
+      tokens:
+      {
+         site: "KaraboFramework",
+         pageid: "wiki-page",
+         userid: "heisenb"
+      }
+   }).setMessages({"message.status.failure": "Couldn't update status.", "message.status.success": "Status successfully updated.", "status.updated": "Last updated: {0}", "status.never-updated": "never", "status.default": "What are you doing?"});
+   Alfresco.util.createTwister.collapsed = "";
+//]]></script>
+<div class="header">
+   <span class="header-left">
+      <span class="logo">
+         <a href="#" onclick="global_x002e_header_x0023_default.showAboutShare(); return false;"><img src="/share/res/themes/xfel/images/app-logo.png" alt="Alfresco Share" /></a>
+      </span>
+      <span class="logo-spacer">&nbsp;</span>
+      <span id="global_x002e_header_x0023_default-appItems" class="app-items hidden"><span id="global_x002e_header_x0023_default-app_my-dashboard" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/my-dashboard.png);">
+      <a title="My Dashboard" templateUri="{userdashboardpage}" href="" tabindex="0" >My Dashboard</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_sites" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/sites.png);">
+      <button title="Sites" tabindex="0">Sites</button>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_people" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/people.png);">
+      <a title="People" templateUri="/people-finder" href="" tabindex="0" >People</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_repository" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/repository.png);">
+      <a title="Repository" templateUri="/repository" href="" tabindex="0" >Repository</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_more" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/more.png);">
+      <button title="More..." tabindex="0">More...</button>
+   </span>
+</span>
+<div id="global_x002e_header_x0023_default-appmenu_more" class="yuimenu">
+   <div class="bd">
+      <h6 class="first-of-type">My...</h6>
+      <ul class="first-of-type">
+<li><a style="background-image: url(/share/res/components/images/header/my-tasks.png);" title="My Tasks" templateUri="/my-tasks" href="" tabindex="0" >My Tasks</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-workflows.png);" title="Workflows I've Started" templateUri="/my-workflows" href="" tabindex="0" >Workflows I've Started</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-content.png);" title="My Content" templateUri="/user/user-content" href="" tabindex="0" >My Content</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-sites.png);" title="My Sites" templateUri="/user/user-sites" href="" tabindex="0" >My Sites</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-profile.png);" title="My Profile" templateUri="{userprofilepage}" href="" tabindex="0" >My Profile</a>
+</li>
+      </ul>
+   </div>
+</div>
+      
+</span>
+   </span>
+<script type="text/javascript">//<![CDATA[
+   global_x002e_header_x0023_default.setAppItems([ new YAHOO.widget.Button("global_x002e_header_x0023_default-app_my-dashboard"), (function(){ var module = new Alfresco.module.Sites("global_x002e_header_x0023_default-app_sites"); module.setOptions({ siteId: "KaraboFramework" }); return module;})(), new YAHOO.widget.Button("global_x002e_header_x0023_default-app_people"), new YAHOO.widget.Button("global_x002e_header_x0023_default-app_repository"), (function(){ var btn = new YAHOO.widget.Button("global_x002e_header_x0023_default-app_more", { type: "menu", menu: "global_x002e_header_x0023_default-appmenu_more", lazyloadmenu: false }); btn.getMenu().cfg.setProperty("keepopen", true); return btn; })()]);
+//]]></script>
+
+   <span id="global_x002e_header_x0023_default-userItems" class="user-items">
+      <div class="user-items-wrapper">
+<span id="global_x002e_header_x0023_default-user_user" class="yui-button">
+   <span class="first-child" >
+      <button  tabindex="0">Burkhard Heisen</button>
+   </span>
+</span>
+<div id="global_x002e_header_x0023_default-usermenu_user" class="yuimenu">
+   <div class="bd">
+      
+      <ul class="first-of-type">
+<li class="user-menuitem HEADER-MARKER">
+   <a class="avatar" templateUri="{userprofilepage}" href="" tabindex="0"><img src="/share/proxy/alfresco/slingshot/profile/avatar/heisenb" alt="avatar" /></a>
+   <span class="user-status">
+      <textarea id="global_x002e_header_x0023_default-statusText" tabindex="0">What are you doing?</textarea>
+      <div id="global_x002e_header_x0023_default-statusTime" class="user-status-time" title=""></div>
+      <div>
+         <span id="global_x002e_header_x0023_default-submitStatus" class="yui-button yui-push-button">
+            <span class="first-child">
+               <button type="button" tabindex="0" title="Share"><span>Share</span></button>
+            </span>
+         </span>
+      </div>
+   </span>
+</li>   
+<li><a style="background-image: url(/share/res/components/images/header/my-profile.png);" title="My Profile" templateUri="{userprofilepage}" href="" tabindex="0" >My Profile</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/help.png);" title="Help" templateUri="{share-help}" href="" tabindex="0" target="_blank">Help</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/logout.png);" title="Logout" templateUri="/dologout" href="" tabindex="0" >Logout</a>
+</li>
+      </ul>
+   </div>
+</div>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_help" class="yui-button">
+   <span class="first-child" >
+      <a title="Help" templateUri="{share-help}" href="" tabindex="0" target="_blank">Help</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_tutorial" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco Tutorial for XFEL Users (Power Point Presentation)" templateUri="{share-presentation}" href="" tabindex="0" target="_blank">Tutorial</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_user-guide" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco User Guide for XFEL Users (PDF)" templateUri="{share-user-guide}" href="" tabindex="0" target="_blank">User Guide</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_share-faq" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco Frequently Asked Questions" templateUri="{share-faq}" href="" tabindex="0" >FAQ</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_imprint" class="yui-button">
+   <span class="first-child" >
+      <a title="Imprint" templateUri="{imprint}" href="" tabindex="0" >Imprint</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_support" class="yui-button">
+   <span class="first-child" >
+      <a title="Problems? Email support" templateUri="{share-support}" href="" tabindex="0" >Support</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_home" class="yui-button">
+   <span class="first-child" >
+      <a title="European XFEL Home Directory" templateUri="{home}" href="" tabindex="0" >Home</a>
+   </span>
+</span>
+      
+      </div>
+      <div class="search-box">
+         <span id="global_x002e_header_x0023_default-search_more" class="yui-button yui-menu-button">
+            <span class="first-child" style="background-image: url(/share/res/components/images/header/search-menu.png)">
+               <button type="button" title="Search Options..." tabindex="0"></button>
+            </span>
+         </span>
+         <input id="global_x002e_header_x0023_default-searchText" type="text" maxlength="1024" />
+      </div>
+      <div id="global_x002e_header_x0023_default-searchmenu_more" class="yuimenu yui-overlay yui-overlay-hidden">
+         <div class="bd">
+            <ul class="first-of-type">
+               <li><a style="background-image: url(/share/res/components/images/header/advanced-search.png)" title="Advanced Search..." href="/share/page/site/KaraboFramework/advsearch">Advanced Search...</a></li>
+            </ul>
+         </div>
+      </div>
+   </span>
+<script type="text/javascript">//<![CDATA[
+   global_x002e_header_x0023_default.setUserItems([ (function(){ var btn = new YAHOO.widget.Button("global_x002e_header_x0023_default-user_user", { type: "menu", menu: "global_x002e_header_x0023_default-usermenu_user", lazyloadmenu: false }); btn.getMenu().cfg.setProperty("keepopen", true); return btn; })(), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_help"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_tutorial"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_user-guide"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_share-faq"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_imprint"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_support"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_home")]);
+//]]></script>
+</div>
+<div class="clear"></div>
+    </div>
+
+</div><div id="template_x002e_title_x002e_wiki-page">
+    <div id="template_x002e_title_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.CollaborationTitle("template_x002e_title_x002e_wiki-page_x0023_default").setOptions(
+   {
+      site: "KaraboFramework",
+      siteTitle: "Karabo Framework",
+      user: "heisenb"
+   }).setMessages(
+      {"link.more": "More", "link.become-manager": "Become Site Manager", "message.become-manager-failure": "Failed grant Site Manager access", "link.editSite": "Edit Site Details", "message.leave-failure": "Failed to remove user {0} from site {1}. There must be at least one Site Manager for a site.", "message.become-manager-success": "Site Manager access granted", "link.join": "Join", "message.request-joining": "Requesting to add user {0} to site {1}...", "link.customiseDashboard": "Customize Dashboard", "message.become-manager": "Requesting to grant Site Manager access to site {0}...", "message.leave-site-prompt": "Are you sure you want to permanently leave the site ''{0}''? You will no longer be a member of this site.", "link.actions": "Actions", "header.site": "{0}", "link.leave": "Leave Site", "message.request-join-failure": "Could not make the request to add user {0} to site {1}.", "link.invite": "Invite", "message.leaving": "Removing user {0} from site {1}...", "message.joining": "Adding user {0} to site {1}...", "message.leave": "Leave Site ''{0}''", "message.request-join-success": "Request to join site {1} successfully sent. You will now be returned to your personal dashboard.", "message.join-failure": "Failed to add user {0} to site {1}.", "link.customiseSite": "Customize Site", "link.request-join": "Request to Join"}
+   );
+   Alfresco.constants.DASHLET_RESIZE = true && YAHOO.env.ua.mobile === null;
+//]]></script>
+<div class="page-title theme-bg-color-1 theme-border-1">
+   <div class="title">
+      <h1 class="theme-color-3"><span>Karabo Framework</span></h1>
+   </div>
+   <div class="links title-button">
+      <span class="yui-button yui-link-button">
+         <span class="first-child">
+            <a href="/share/page/site/KaraboFramework/invite" >Invite</a>
+         </span>
+      </span>
+      <input type="button" id="template_x002e_title_x002e_wiki-page_x0023_default-more" name="template_x002e_title_x002e_wiki-page_x0023_default-more" value="More"/>
+      <select id="template_x002e_title_x002e_wiki-page_x0023_default-more-menu">
+         <option value="editSite">Edit Site Details</option>
+         <option value="customiseSite">Customize Site</option>
+         <option value="leaveSite">Leave Site</option>         
+      </select> 
+   </div>
+   <div style="clear: both"></div>
+</div>    </div>
+
+</div><div id="template_x002e_navigation_x002e_wiki-page">
+    <div id="template_x002e_navigation_x002e_wiki-page_x0023_default">
+<div class="site-navigation">
+   <span class="navigation-item"><a href="/share/page/site/KaraboFramework/dashboard" class="theme-color-4">Site Dashboard</a></span>
+      <span class="navigation-separator">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/wiki-page?title=Main_Page" class="active-page theme-color-4">Wiki</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/blog-postlist" class="theme-color-4">Blog</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/documentlibrary" class="theme-color-4">Document Library</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/calendar" class="theme-color-4">Calendar</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/discussions-topiclist" class="theme-color-4">Discussions</a></span>
+   <span class="navigation-separator">&nbsp;</span>
+<span class="navigation-item"><a href="/share/page/site/KaraboFramework/site-members" class="theme-color-4">Members</a></span>
+</div>    </div>
+
+</div>   </div>
+   <div id="bd">
+<div id="template_x002e_toolbar_x002e_wiki-page">
+    <div id="template_x002e_toolbar_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.WikiToolbar("template_x002e_toolbar_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      title: "Getting_Started_-_Karabo_Packages",
+      showBackLink: true,
+      exists: true
+   }).setMessages(
+      {"link.mainPage": "Main Page", "message.rssfeed": "RSS Feed", "load.fail": "Could not delete page", "button.rename": "Rename", "rename.failure.title": "Error", "panel.confirm.delete-msg": "Are you sure you want to delete this page?", "panel.rename.title": "Rename ", "rename.failure.409": "A wiki page called \"{0}\" already exists. Please choose a different title for this page.", "panel.create.title": "New Page", "panel.rename.footer": "Enter the new name for the page", "panel.confirm.header": "Delete", "panel.create.footer": "Enter a title for the new page", "link.listView": "Wiki Page List", "button.create": "New Page", "rename.failure": "Could Not Rename Page"}
+   );
+//]]></script>
+<div id="template_x002e_toolbar_x002e_wiki-page_x0023_default-body" class="share-toolbar wiki-toolbar flat-button theme-bg-2">
+
+   <div class="navigation-bar theme-bg-1">
+      <div>
+         <span class="forwardLink">
+            <a href="/share/page/site/KaraboFramework/wiki">Wiki Page List</a>
+         </span>
+         <span class="forwardLink">
+            <a href="/share/page/site/KaraboFramework/wiki-page?filter=main&amp;title=Main_Page">Main Page</a>
+         </span>
+      </div>
+   </div>
+
+   <div class="action-bar">
+      <div class="new-page"><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-create-button">New Page</button></div>
+      <div class="separator" >&nbsp;</div>
+      <div class="delete-page" ><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-delete-button">Delete</button></div>
+      <div class="separator" >&nbsp;</div>
+      <div class="rename-page" ><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rename-button">Rename</button></div>
+   </div>
+
+   <div class="rss-feed">
+      <div>
+         <a id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rssFeed-button" href="/share/proxy/alfresco-feed/slingshot/wiki/pages/KaraboFramework?format=rss">RSS Feed</a>
+      </div>
+   </div>
+
+   <div id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renamepanel" class="rename-panel">
+      <div class="hd"><label for="template_x002e_toolbar_x002e_wiki-page_x0023_default-renameTo">Rename </label></div>
+      <div class="bd">
+         <form id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renamePageForm" method="post" action="/share/proxy/alfresco/slingshot/wiki/page/KaraboFramework/Getting_Started_-_Karabo_Packages">
+            <div class="yui-ge">
+               <input type="hidden" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-page" name="page" value="wiki-page" />
+               <div class="yui-u first">
+                  <input type="text" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renameTo" name="name" value="" size="30" tabindex="0" />
+               </div>
+               <div class="yui-u">
+                  <input type="submit" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rename-save-button" value="Save" tabindex="0" />
+               </div>
+            </div>
+         </form>
+         <div class="bdft">Enter the new name for the page</div>
+      </div>
+   </div>   
+</div>
+<div class="clear"></div>
+        
+    </div>
+
+</div><div id="template_x002e_wikipage-print_x002e_wiki-page">
+    <div id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default">
+<div id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default-wikiprint" class="yui-u align-right">
+         <span id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default-printButton" class="yui-button yui-push-button print">
+             <span class="first-child">
+                 <button type="button" onClick="window.print()">Print Wiki Page</button>
+             </span>
+         </span>
+</div>
+
+    </div>
+
+</div><div id="template_x002e_wikipage_x002e_wiki-page">
+    <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.WikiPage("template_x002e_wikipage_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      pageTitle: "Getting_Started_-_Karabo_Packages",
+      mode: "view",
+      
+      tags: [],
+      pages: ["How_To", "SCPI_Karabo_Devices", "Teststand_setup_and_usage", "SVN_-_tips_and_tricks", "Timestamp_code_examples", "Timestamp", "SVN_Repository_Management", "Karabo_Workshop_Help", "Interaction_via_GUI_", "Device_porting_from_0.1_to_1.0", "Device_porting_from_0.1_to_1.0_(C++)", "Karabo_Devices", "Karabo_script_documentation", "Device-Developer_Documentation", "Other_Tools", "Examples_Karabo_Devices", "Interaction_via_command-line_(IPython_based)", "Application-Developer_Documentation", "Remote_connection_to_Linux_server_X11_session", "Test_stand_primer", "Karathon", "Test_Stand_Setup", "Framework-Developer_Documentation", "State_Machines", "Beckhoff_-_Communication_Protocol", "Beckhoff_-_Communication_protocol_sniffer_", "Configuration", "Getting_Started_-_Device_test_scripts", "Netbeans", "Getting_start_-_Message_Broker", "JMS-Broker", "Getting_Started_-_Message_Broker", "Getting_Started_-_NetBeans", "Getting_Started_-_Local_Broker", "Getting_Started_-_Karabo_Packages", "Getting_Started_-_Karabo_Framework", "Clients_and_User_interfaces", "Software_management", "Integration_into_other_software_systems", "Client_and_User_interfaces", "Scientific_computing", "Logging", "Statistics", "Security", "Central_s", "Central_services", "Real-time_needs", "Data_storage_and_management", "Data_acquisition", "States", "Process_control", "Data_transport", "Data_containers", "Distributed_end_points_and_processes", "Intro", "Downloads", "Design_Concepts", "Feature_Requests", "Documentation", "Getting_Started", "Main_Page"],
+      versions: [
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.17",
+            versionId: "80416aa7-833a-4093-996e-fa1abfa6cb93",
+            createdDate: "2014-09-01T12:09:32.467+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.16",
+            versionId: "a3470bf6-3e47-4b97-9eb2-f0ff948505ad",
+            createdDate: "2014-08-05T12:43:18.429+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.15",
+            versionId: "66495543-5cad-4684-89bb-bf6ea48ff5a7",
+            createdDate: "2014-02-18T10:23:40.192+01:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.14",
+            versionId: "c62659e1-cffc-4ae8-b6ff-20b0411706f6",
+            createdDate: "2014-01-07T15:55:54.736+01:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.13",
+            versionId: "be17bf78-a926-4792-b0df-fd417f123e17",
+            createdDate: "2013-09-20T11:29:42.510+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.12",
+            versionId: "07a11a1d-721b-467d-bb74-c4143a2830a3",
+            createdDate: "2013-09-16T17:02:16.679+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.11",
+            versionId: "adace0fb-2e0b-44a0-8e2e-104a0bfd249f",
+            createdDate: "2013-08-06T14:55:55.501+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.10",
+            versionId: "99ba617e-0407-466b-8a01-f6659754c4ad",
+            createdDate: "2013-07-22T22:57:45.799+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.9",
+            versionId: "de78d88c-d5bb-4397-9c10-4a81032e015f",
+            createdDate: "2013-07-22T22:56:39.211+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.8",
+            versionId: "a3992da6-328c-472d-b94c-dbea3d187559",
+            createdDate: "2013-07-22T22:52:12.828+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.7",
+            versionId: "41f0b47a-4490-4842-9ce3-e923d22452c1",
+            createdDate: "2013-07-22T22:50:36.264+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.6",
+            versionId: "db9ddfbe-0169-442a-9e68-37c615e12b49",
+            createdDate: "2013-07-22T22:43:21.076+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.5",
+            versionId: "b227317d-7072-43f1-bb8e-501a51e165a9",
+            createdDate: "2013-07-22T22:31:09.353+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.4",
+            versionId: "6e6b3052-0e4c-43ef-a934-30f97405dd8b",
+            createdDate: "2013-07-22T22:28:56.386+02:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.3",
+            versionId: "fe57509c-2b1d-43a1-9d08-5eb6f7036b10",
+            createdDate: "2012-12-14T11:35:41.574+01:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.2",
+            versionId: "0176e3b0-fe2d-461d-9b5c-635645cd0c09",
+            createdDate: "2012-12-13T09:31:03.046+01:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.1",
+            versionId: "87b4048b-a5c2-44f6-865b-ef21abcc55ac",
+            createdDate: "2012-12-13T09:30:34.980+01:00"
+         },
+         {
+            title: "Getting_Started_-_Karabo_Packages",
+            label: "1.0",
+            versionId: "77defb00-6181-40cd-8210-2e0e5e5b77fd",
+            createdDate: "2012-12-13T09:29:27.543+01:00"
+         }
+      ],
+      locale: "en",
+      permissions:
+      {
+         "create": true,
+         "edit": true,
+         "delete": true
+      }
+   }).setMessages(
+      {"label.earlier": "Earlier", "label.viewVersion": "View version:", "label.versionHistory": "Version History", "section.olderVersion": "Earlier version(s):", "button.revert": "Revert", "message.revertComplete": "The document was reverted. The page will be reloaded.", "section.thisVersion": "This version:", "label.text": "Text", "label.linkedPages": "Linked Pages", "message.saving": "Saving...", "label.createdDate": "Modified on:", "tab.details": "Details", "message.sessionTimeout.text": "Cannot save these changes due to a session timeout. Please copy your changes to the clipboard and refresh the page.", "label.version": "Version", "label.latest": "Latest", "message.sessionTimeout.title": "Session Timeout", "label.shortVersion": "v", "label.creator": "Modifier:", "message.confirm.newerVersion": "A newer version of this page exists. Are you sure you want to save your changes?", "link.revert": "Revert", "tab.edit": "Edit Page", "label.title": "Title:", "tab.view": "View Page"}
+   );    
+//]]></script>
+<div class="yui-g wikipage-bar">
+
+   <div class="title-bar">
+      <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-viewButtons" class="yui-u first pageTitle">Getting Started - Karabo Packages</div>
+      <div class="yui-u align-right">
+         <span class="theme-color-2">View Page</span>
+         <span class="separator">|</span>
+         <a href="?title=Getting_Started_-_Karabo_Packages&amp;action=edit" class="tabLabel">Edit Page</a>
+         <span class="separator">|</span>
+         <a href="?title=Getting_Started_-_Karabo_Packages&amp;action=details" class="tabLabel">Details</a>
+      </div>
+   </div>
+</div>  
+<div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-wikipage" class="wiki-page">       
+   <div class="yui-content" style="background: #FFFFFF;"> 
+      <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-page" class="rich-content"><p>Back to [[Getting Started]]</p>
+<h1>1. Install dependencies</h1>
+<p>Before you install the Karabo Framework, you need to first install some dependencies.</p>
+<ul>
+<li>Ubuntu type system:
+<pre>sudo apt-get install subversion build-essential
+sudo apt-get install krb5-user 
+</pre>
+<p>For krb5-user use DESY.DE as default REALM</p>
+</li>
+<li>SL6:
+<pre>yum install make gcc gcc-c++ subversion
+yum install krb5-workstation</pre>
+<p>For krb5-workstation copy /etc/krb5.conf from DESY server</p>
+</li>
+<li>MacOS system - see [[Getting Started - Karabo Framework|instructions]] for Karabo Framework.</li>
+</ul>
+<h1>2. Get and install Karabo Framework</h1>
+<p>A self extracting shell script is available on [[Downloads]].</p>
+<p>Download it to a local folder.</p>
+<p>Change permissions and extract it using the following commands:</p>
+<pre>chmod +x karabo-*.sh
+./karabo-*.sh</pre>
+<p>When asked for path, simply press Enter to use the default path or just enter a new path where you would like to install the Karabo Framework.</p>
+<p>Your installation of the Karabo Framework is now complete.</p>
+<h1>3. Get and install Karabo package development</h1>
+<p>In addition to the Karabo Framework, if you need to install the package development, you can do it like this:</p>
+<ul>
+<li>Create the folder where you want to check out the karaboPackageDevelopment and go there, e.g.
+<pre>mkdir karaboPackageDevelopment 
+cd karaboPackageDevelopment</pre>
+</li>
+<li>Now you need to checkout the code from the svn. But before the check out, you need to get a valid kerberos ticket via:
+<pre>kinit username@DESY.DE</pre>
+<p>(Note: this is NOT your DESY email address.)</p>
+<p>Provide your password when prompted.</p>
+</li>
+<li>Now check out:
+<pre>svn co https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackageDevelopment/trunk .</pre>
+</li>
+</ul>
+<p>(If you have never used our SVN repository before, <a title="SVN How-to" href="/share/proxy/alfresco/api/node/content/workspace/SpacesStore/b24e732a-1eac-49a3-8830-406f07f7d71a/Subversion.pdf">here</a> is the documentation on how to get an account.)</p>
+<p>The installation of your Karabo package development is now complete.</p>
+<h1>4. Testing the installation</h1>
+<p>To test if you installed everything correctly, please do the following:</p>
+<p>Within the karaboPackageDevelopment you will find the "karabo" script. It is a tool like a package manager which helps to set up existing karabo packages or create new ones.</p>
+<p>For testing your Karabo installation simply type:</p>
+<pre>./karabo install karabo-self-test</pre>
+<p>Enter your email address when prompted.</p>
+<p>This will download and build some sample-devices for self-testing and automatically deploy them to the plugin folder of the deviceServer in the central run directory.</p>
+<p>Now you can navigate to run folder and first start all device servers and gui:</p>
+<pre>cd run<br />./allStart
+./startCli
+</pre>
+<p>This will open a few xterms - one for each device server (data logger, gui server, cpp device server, python device server) and one for gui. Go to gui and click connect button, leave the defaults entries in popped-up window and click connect. Once connected, you should see on the navigation panel all devices loaded. On the left bottom side, there is project panel. Click on 'Open project button' navigate to your ...../run/project folder and open Karabo_Self_Test.krb project. Right click on devices and select 'Initiate all'. You will see a few scenes loaded in the middle panel. Now you can go to different scenes, start/stop devices and so on.</p>
+<p>In future also python macro will be available to do some automatic checks.</p>
+<p>Read <a href="/share/page/site/KaraboFramework/wiki-page?title=Device-Developer_Documentation">here</a> for more details.</p>
+<h1>5. Testing an individual package</h1>
+<ul>
+<li>Let's say you wanted to test the conveyor device, simply type
+<pre>./karabo checkout conveyor testDevices trunk</pre>
+</li>
+<li>Go to the directory of the package, e.g.
+<pre>cd packages/testDevices/conveyor</pre>
+</li>
+<li>Compile the package:
+<pre>make</pre>
+</li>
+<li>You will need one running instance of the gui device server. If it is not running, within your package go to the guiServer directory and start the script startGuiServer<br />
+<pre>cd karaboPackageDevelopment/run/guiServer<br />./startGuiServer</pre>
+</li>
+<li>Next, the plugin needs to be deployed, e.g.:
+<pre>cd karaboPackageDevelopment/packages/testDevices/conveyor/run/deviceServer/plugins
+ln -s ../../../dist/Debug/GNU-Linux-x86/libconveyor.so<br />cd .. </pre>
+</li>
+<li>Finally the deviceServer can be started:
+<pre>./startDeviceServer</pre>
+</li>
+<li>You may use the GUI in order to instantiate and interact with your device. In the run folder simply execute:
+<pre>./startGui</pre>
+</li>
+</ul>
+<p>&nbsp;</p></div> 
+   </div>        
+</div>
+    </div>
+
+</div><div id="template_x002e_wikipage-parsers_x002e_wiki-page">
+    <div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default">
+<div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default-wikipage" class="wiki-page preview">
+<h2>Wiki Page Preview</h2>
+<div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default-content" class="rich-content"></div>
+</div>
+<script type="text/javascript">//<![CDATA[
+   new Extras.WikiPageParsers("template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      pageTitle: "Getting_Started_-_Karabo_Packages",
+      mode: "view"
+   }).setMessages(
+      {"label.tocHide": "hide", "label.tocShow": "show", "tinymce.linkTargets.embedNoLink": "Embed preview with no link", "wikipage.preview": "Wiki Page Preview", "tinymce.linkTargets.embed": "Embed preview with link", "button.preview": "Preview", "label.tocHeader": "Contents"}
+   );
+//]]></script>
+    </div>
+
+</div>   </div>
+      </div>
+      <div class="sticky-push"></div>
+   </div>
+
+   <div class="sticky-footer">
+   <div id="alf-ft">
+<div id="global_x002e_footer">
+    <div id="global_x002e_footer_x0023_default">
+<div class="footer footer-ent">
+   <span class="copyright">
+      <img src="/share/components/images/alfresco-share-logo-enterprise.png" alt="Alfresco Enterprise" height="27" width="212" />
+      <span>Alfresco Software, Inc. &copy; 2005-2012 All rights reserved.</span>
+   </span>
+</div>
+    </div>
+
+</div>   </div>
+   </div>
+   <div id="alfresco-yuiloader"></div>
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.util.YUILoaderHelper.loadComponents(true);
+      if (Alfresco.constants.PORTLET)
+      {
+         YUIDom.addClass(document.body, "yui-skin-xfel alfresco-share");
+      }
+   //]]></script>
+</body>
+</html>
