@@ -98,7 +98,7 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-  </logicalFolder>
+      </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karathon</Elem>
   </sourceRootList>

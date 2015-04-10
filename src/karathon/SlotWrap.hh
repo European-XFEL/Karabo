@@ -35,7 +35,7 @@ namespace karathon {
 
     public:
 
-        SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {           
+        SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {
         }
 
         virtual ~SlotWrap() {
@@ -51,7 +51,13 @@ namespace karathon {
 
             ScopedGILAcquire gil;
 
-            size_t arity = body.size();
+            //size_t arity = body.size();
+            size_t arity = 0; // body.size()
+            for (karabo::util::Hash::const_iterator it = body.begin(); it != body.end(); it++) {
+                std::string key = it->getKey();
+                if (key == "a1" || key == "a2" || key == "a3" || key == "a4") arity++;
+            }
+
             switch (arity) {
                 case 4:
                     if (callFunction4(body)) break;
@@ -145,7 +151,7 @@ namespace karathon {
                 PyErr_Print();
             else
                 PyErr_Clear();
-        }       
+        }
     };
 }
 
