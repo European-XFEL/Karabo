@@ -1030,8 +1030,35 @@ namespace karabo {
                 float isoValue = getStatistics().getMean();
                 displayAndKeep3dVolume(title, isoValue);
             }
-
-
+            
+            /***************************************
+             *             Data Input              *
+             ***************************************/
+            
+            inline CpuImage& load_bmp(std::FILE* const file) {
+                m_header.clear();
+                m_cimg.load_bmp(file);
+                return *this;
+            }
+            
+            inline CpuImage& load_jpeg(std::FILE* const file) {
+                m_header.clear();
+                m_cimg.load_jpeg(file);
+                return *this;
+            }
+            
+            inline CpuImage& load_png(std::FILE* const file) {
+                m_header.clear();
+                m_cimg.load_png(file);
+                return *this;
+            }
+            
+            inline CpuImage& load_tiff(std::FILE* const file) {
+                m_header.clear();
+                m_cimg.load_tiff(file);
+                return *this;
+            }
+            
         public: // functions
 
             const ci::CImg<TPix>& getCImg() const {
