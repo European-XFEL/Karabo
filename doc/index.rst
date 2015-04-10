@@ -5,6 +5,7 @@ Contents:
 
 .. toctree::
    fundamentals
+   installation/index
    howto/index
    library/index
    documentation   

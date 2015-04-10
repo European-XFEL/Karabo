@@ -1,0 +1,1466 @@
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+   <title>Alfresco &raquo; Wiki</title>
+   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+
+   <!-- Icons -->
+   <link rel="shortcut icon" href="/share/res/favicon.ico" type="image/vnd.microsoft.icon" />
+   <link rel="icon" href="/share/res/favicon.ico" type="image/vnd.microsoft.icon" />
+
+   <!-- YUI -->
+   <script type="text/javascript" src="/share/res/js/yui-common.js"></script>
+   <script type="text/javascript" src="/share/res/js/bubbling.v2.1-min.js"></script>
+   <script type="text/javascript">//<![CDATA[
+      YAHOO.Bubbling.unsubscribe = function(layer, handler, scope)
+      {
+         this.bubble[layer].unsubscribe(handler, scope);
+      };
+   //]]></script>
+
+   <!-- Common i18n msg properties -->
+   <script type="text/javascript" src="/share/service/messages.js?locale=en_US"></script>
+
+   <!-- Alfresco web framework constants -->
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.constants = Alfresco.constants || {};
+      Alfresco.constants.DEBUG = false;
+      Alfresco.constants.AUTOLOGGING = false;
+      Alfresco.constants.PROXY_URI = window.location.protocol + "//" + window.location.host + "/share/proxy/alfresco/";
+      Alfresco.constants.PROXY_URI_RELATIVE = "/share/proxy/alfresco/";
+      Alfresco.constants.PROXY_FEED_URI = window.location.protocol + "//" + window.location.host + "/share/proxy/alfresco-feed/";
+      Alfresco.constants.THEME = "xfel";
+      Alfresco.constants.URL_CONTEXT = "/share/";
+      Alfresco.constants.URL_RESCONTEXT = "/share/res/";
+      Alfresco.constants.URL_PAGECONTEXT = "/share/page/";
+      Alfresco.constants.URL_SERVICECONTEXT = "/share/service/";
+      Alfresco.constants.URL_FEEDSERVICECONTEXT = "/share/feedservice/";
+      Alfresco.constants.USERNAME = "heisenb";
+      Alfresco.constants.SITE = "KaraboFramework";
+      Alfresco.constants.PAGEID = "wiki-page";
+      Alfresco.constants.PORTLET = false;
+      Alfresco.constants.PORTLET_URL = unescape("");
+      Alfresco.constants.JS_LOCALE = "en_US";
+   //]]></script>
+
+   <!-- Alfresco web framework common resources -->
+   <script type="text/javascript" src="/share/res/js/flash/AC_OETags-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/alfresco-min.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/tiny_mce/tiny_mce.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/tiny_mce-min.js"></script>
+   <script type="text/javascript" src="/share/res/modules/editors/yui_editor-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/forms-runtime-min.js"></script>
+
+   <!-- Share Constants -->
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.service.Preferences.FAVOURITE_DOCUMENTS = "org.alfresco.share.documents.favourites";
+      Alfresco.service.Preferences.FAVOURITE_FOLDERS = "org.alfresco.share.folders.favourites";
+      Alfresco.service.Preferences.FAVOURITE_SITES = "org.alfresco.share.sites.favourites";
+      Alfresco.service.Preferences.IMAP_FAVOURITE_SITES = "org.alfresco.share.sites.imapFavourites";
+      Alfresco.service.Preferences.COLLAPSED_TWISTERS = "org.alfresco.share.twisters.collapsed";
+      Alfresco.service.Preferences.RULE_PROPERTY_SETTINGS = "org.alfresco.share.rule.properties";
+      Alfresco.constants.URI_TEMPLATES =
+      {
+         "sitedashboardpage": "/site/{site}/dashboard",
+         "sitepage": "/site/{site}/{pageid}",
+         "userdashboardpage": "/user/{userid}/dashboard",
+         "userpage": "/user/{userid}/{pageid}",
+         "userprofilepage": "/user/{userid}/profile",
+         "userdefaultpage": "/user/{pageid}",
+         "consoletoolpage": "/console/{pageid}/{toolid}",
+         "consolepage": "/console/{pageid}"
+      };
+      Alfresco.constants.HELP_PAGES =
+      {
+         "share-help": "http://docs.alfresco.com/4.1/topic/com.alfresco.enterprise.doc/topics/sh-uh-welcome.html",
+         "share-tutorial": "http://docs.alfresco.com/4.1/topic/com.alfresco.enterprise.doc/concepts/gs-intro.html",
+         "share-faq": "https://docs.xfel.eu/share/page/site/exfel/wiki-page?title=Alfresco_FAQ",
+         "share-presentation": "https://docs.xfel.eu/share/proxy/alfresco/api/node/content/workspace/SpacesStore/4602730a-1d1c-4fe5-942c-d59d106d3ea4/Alfresco_Tutorial.ppt?a=true",
+         "share-user-guide": "https://docs.xfel.eu/share/proxy/alfresco/api/node/content/workspace/SpacesStore/9051594a-b9f0-4945-a7e9-b480142b8436/IN-2012-004-01_Alfresco_User_Guide.pdf?a=true",
+         "imprint": "https://docs.xfel.eu/share/page/user/imprint?nodeRef=workspace://SpacesStore/674abac5-cbe7-4730-bfbb-3172a9b765f9",
+         "share-support": "mailto:alfresco-support@xfel.eu",
+         "home": "https://docs.xfel.eu/share/page/site/exfel/dashboard"
+      };
+      Alfresco.constants.HTML_EDITOR = 'tinyMCE';
+   //]]></script>
+
+   <!-- Share resources -->
+   <script type="text/javascript" src="/share/res/js/share-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/lightbox-min.js"></script>
+
+   <!-- Common stylesheets gathered to workaround IEBug KB262161 -->
+   <style type="text/css" media="screen">
+      @import "/share/res/css/yui-fonts-grids.css";
+      @import "/share/res/yui/columnbrowser/assets/columnbrowser.css";
+      @import "/share/res/yui/columnbrowser/assets/skins/default/columnbrowser-skin.css";
+      @import "/share/res/themes/xfel/yui/assets/skin.css";
+      @import "/share/res/css/base.css";
+      @import "/share/res/css/yui-layout.css";
+      @import "/share/res/themes/xfel/presentation.css";
+   </style>
+
+
+   <!-- Template Resources (nested content from < @templateHeader > call) -->
+   <!-- Additional template resources -->
+    <style type="text/css">
+        @import url("/share/res/css/print.css");
+    </style>
+
+   <!-- Component Resources (from .get.head.ftl files) -->
+   
+<!-- Header -->
+   <script type="text/javascript" src="/share/res/components/header/header-min.js"></script>
+<!-- About Share -->
+   <script type="text/javascript" src="/share/res/modules/about-share-min.js"></script>
+<!-- License usage -->
+<!-- Configured dependencies -->
+<link rel="stylesheet" type="text/css" href="/share/res/modules/create-site.css" />
+<link rel="stylesheet" type="text/css" href="/share/res/modules/header/sites.css" />
+<script type="text/javascript" src="/share/res/modules/create-site.js"></script>
+<script type="text/javascript" src="/share/res/modules/header/sites.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/header/header.css";
+      @import "/share/res/modules/about-share.css";
+      @import "/share/res/components/console/license.css";
+   </style>
+<!-- Collaboration Title -->
+   <script type="text/javascript" src="/share/res/components/title/collaboration-title-min.js"></script>
+<!-- Edit Site -->
+   <script type="text/javascript" src="/share/res/modules/edit-site-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/modules/edit-site.css";
+   </style>
+<!-- Wiki Toolbar -->
+   <script type="text/javascript" src="/share/res/components/wiki/toolbar-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/wiki/toolbar.css";
+   </style>
+<!-- Wiki -->
+<link rel="alternate" type="application/wiki" href="/share/page/site/KaraboFramework/wiki-page?title=Getting_Started&amp;action=edit" />
+   <script type="text/javascript" src="/share/res/components/wiki/parser-min.js"></script>
+   <script type="text/javascript" src="/share/res/components/wiki/page-min.js"></script>
+
+<!-- Document Picker for Document links -->
+   <script type="text/javascript" src="/share/res/modules/document-picker/document-picker-min.js"></script>
+   <script type="text/javascript" src="/share/res/components/object-finder/object-finder-min.js"></script>
+
+
+<!-- Wiki Editor -->
+   <script type="text/javascript" src="/share/res/modules/simple-editor-min.js"></script>
+<!-- Tag -->
+   <script type="text/javascript" src="/share/res/modules/taglibrary/taglibrary-min.js"></script>
+<!-- Wiki Versioning -->
+   <script type="text/javascript" src="/share/res/modules/wiki/revert-wiki-version-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/components/wiki/wiki.css";
+      @import "/share/res/modules/document-picker/document-picker.css";
+      @import "/share/res/components/object-finder/object-finder.css";
+      @import "/share/res/modules/simple-editor.css";
+      @import "/share/res/modules/taglibrary/taglibrary.css";
+      @import "/share/res/modules/wiki/revert-wiki-version.css";
+   </style>
+<!-- Footer -->
+   <style type="text/css" media="screen">
+      @import "/share/res/components/footer/footer.css";
+   </style>
+   <script type="text/javascript" src="/share/res/extras/components/wiki/page-parsers-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/video-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/toc-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/table-parser-min.js"></script>
+
+
+<!-- Alfresco.WebPreview  -->
+   <script type="text/javascript" src="/share/res/components/preview/web-preview-min.js"></script>
+
+<!-- Alfresco.WebPreview.Plugins -->
+
+<!-- Alfresco.WebPreviewer.Plugins.WebPreviewer -->
+   <script type="text/javascript" src="/share/res/components/preview/WebPreviewer-min.js"></script>
+   <script type="text/javascript" src="/share/res/js/flash/extMouseWheel-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.FlashFox -->
+   <script type="text/javascript" src="/share/res/components/preview/FlashFox-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.StrobeMediaPlayback -->
+   <script type="text/javascript" src="/share/res/components/preview/StrobeMediaPlayback-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Video -->
+   <script type="text/javascript" src="/share/res/components/preview/Video-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Audio -->
+   <script type="text/javascript" src="/share/res/components/preview/Audio-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Flash -->
+   <script type="text/javascript" src="/share/res/components/preview/Flash-min.js"></script>
+
+<!-- Alfresco.WebPreviewer.Plugins.Image -->
+   <script type="text/javascript" src="/share/res/components/preview/Image-min.js"></script>
+
+<!-- Wiki Rich Content Document Parser -->
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/document-parser-min.js"></script>
+
+   <script type="text/javascript" src="/share/res/extras/components/wiki/prettyprint-parser-min.js"></script>
+   <script type="text/javascript" src="/share/res/extras/modules/prettify/prettify-min.js"></script>
+   <style type="text/css" media="screen">
+      @import "/share/res/extras/components/wiki/wiki-rich-content.css";
+      @import "/share/res/extras/components/wiki/video-parser.css";
+      @import "/share/res/extras/components/wiki/toc-parser.css";
+      @import "/share/res/extras/components/wiki/table-parser.css";
+      @import "/share/res/components/preview/web-preview.css";
+      @import "/share/res/components/preview/WebPreviewerHTML.css";
+      @import "/share/res/components/preview/Audio.css";
+      @import "/share/res/components/preview/Image.css";
+      @import "/share/res/extras/components/wiki/document-parser.css";
+      @import "/share/res/extras/components/wiki/prettyprint-parser.css";
+      @import "/share/res/extras/modules/prettify/prettify.css";
+   </style>
+
+
+   <!-- MSIE CSS fix overrides -->
+   <!--[if lt IE 7]><link rel="stylesheet" type="text/css" href="/share/res/css/ie6.css" /><![endif]-->
+   <!--[if IE 7]><link rel="stylesheet" type="text/css" href="/share/res/css/ie7.css" /><![endif]-->
+
+   <!-- iPad CSS overrides -->
+   <link media="only screen and (max-device-width: 1024px)" rel="stylesheet" type="text/css" href="/share/res/css/ipad.css"/>
+</head>
+
+<body id="Share" class="yui-skin-xfel alfresco-share">
+   <div class="sticky-wrapper">
+      <div id="doc3">
+   <div id="alf-hd">
+<div id="global_x002e_header">
+    <div id="global_x002e_header_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   var global_x002e_header_x0023_default = new Alfresco.component.Header("global_x002e_header_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      siteTitle: "Karabo Framework",
+      minSearchTermLength: 1,
+      tokens:
+      {
+         site: "KaraboFramework",
+         pageid: "wiki-page",
+         userid: "heisenb"
+      }
+   }).setMessages({"message.status.failure": "Couldn't update status.", "message.status.success": "Status successfully updated.", "status.updated": "Last updated: {0}", "status.never-updated": "never", "status.default": "What are you doing?"});
+   Alfresco.util.createTwister.collapsed = "";
+//]]></script>
+<div class="header">
+   <span class="header-left">
+      <span class="logo">
+         <a href="#" onclick="global_x002e_header_x0023_default.showAboutShare(); return false;"><img src="/share/res/themes/xfel/images/app-logo.png" alt="Alfresco Share" /></a>
+      </span>
+      <span class="logo-spacer">&nbsp;</span>
+      <span id="global_x002e_header_x0023_default-appItems" class="app-items hidden"><span id="global_x002e_header_x0023_default-app_my-dashboard" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/my-dashboard.png);">
+      <a title="My Dashboard" templateUri="{userdashboardpage}" href="" tabindex="0" >My Dashboard</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_sites" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/sites.png);">
+      <button title="Sites" tabindex="0">Sites</button>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_people" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/people.png);">
+      <a title="People" templateUri="/people-finder" href="" tabindex="0" >People</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_repository" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/repository.png);">
+      <a title="Repository" templateUri="/repository" href="" tabindex="0" >Repository</a>
+   </span>
+</span>
+      
+<span id="global_x002e_header_x0023_default-app_more" class="yui-button">
+   <span class="first-child" style="background-image: url(/share/res/components/images/header/more.png);">
+      <button title="More..." tabindex="0">More...</button>
+   </span>
+</span>
+<div id="global_x002e_header_x0023_default-appmenu_more" class="yuimenu">
+   <div class="bd">
+      <h6 class="first-of-type">My...</h6>
+      <ul class="first-of-type">
+<li><a style="background-image: url(/share/res/components/images/header/my-tasks.png);" title="My Tasks" templateUri="/my-tasks" href="" tabindex="0" >My Tasks</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-workflows.png);" title="Workflows I've Started" templateUri="/my-workflows" href="" tabindex="0" >Workflows I've Started</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-content.png);" title="My Content" templateUri="/user/user-content" href="" tabindex="0" >My Content</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-sites.png);" title="My Sites" templateUri="/user/user-sites" href="" tabindex="0" >My Sites</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/my-profile.png);" title="My Profile" templateUri="{userprofilepage}" href="" tabindex="0" >My Profile</a>
+</li>
+      </ul>
+   </div>
+</div>
+      
+</span>
+   </span>
+<script type="text/javascript">//<![CDATA[
+   global_x002e_header_x0023_default.setAppItems([ new YAHOO.widget.Button("global_x002e_header_x0023_default-app_my-dashboard"), (function(){ var module = new Alfresco.module.Sites("global_x002e_header_x0023_default-app_sites"); module.setOptions({ siteId: "KaraboFramework" }); return module;})(), new YAHOO.widget.Button("global_x002e_header_x0023_default-app_people"), new YAHOO.widget.Button("global_x002e_header_x0023_default-app_repository"), (function(){ var btn = new YAHOO.widget.Button("global_x002e_header_x0023_default-app_more", { type: "menu", menu: "global_x002e_header_x0023_default-appmenu_more", lazyloadmenu: false }); btn.getMenu().cfg.setProperty("keepopen", true); return btn; })()]);
+//]]></script>
+
+   <span id="global_x002e_header_x0023_default-userItems" class="user-items">
+      <div class="user-items-wrapper">
+<span id="global_x002e_header_x0023_default-user_user" class="yui-button">
+   <span class="first-child" >
+      <button  tabindex="0">Burkhard Heisen</button>
+   </span>
+</span>
+<div id="global_x002e_header_x0023_default-usermenu_user" class="yuimenu">
+   <div class="bd">
+      
+      <ul class="first-of-type">
+<li class="user-menuitem HEADER-MARKER">
+   <a class="avatar" templateUri="{userprofilepage}" href="" tabindex="0"><img src="/share/proxy/alfresco/slingshot/profile/avatar/heisenb" alt="avatar" /></a>
+   <span class="user-status">
+      <textarea id="global_x002e_header_x0023_default-statusText" tabindex="0">What are you doing?</textarea>
+      <div id="global_x002e_header_x0023_default-statusTime" class="user-status-time" title=""></div>
+      <div>
+         <span id="global_x002e_header_x0023_default-submitStatus" class="yui-button yui-push-button">
+            <span class="first-child">
+               <button type="button" tabindex="0" title="Share"><span>Share</span></button>
+            </span>
+         </span>
+      </div>
+   </span>
+</li>   
+<li><a style="background-image: url(/share/res/components/images/header/my-profile.png);" title="My Profile" templateUri="{userprofilepage}" href="" tabindex="0" >My Profile</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/help.png);" title="Help" templateUri="{share-help}" href="" tabindex="0" target="_blank">Help</a>
+</li>
+<li><a style="background-image: url(/share/res/components/images/header/logout.png);" title="Logout" templateUri="/dologout" href="" tabindex="0" >Logout</a>
+</li>
+      </ul>
+   </div>
+</div>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_help" class="yui-button">
+   <span class="first-child" >
+      <a title="Help" templateUri="{share-help}" href="" tabindex="0" target="_blank">Help</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_tutorial" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco Tutorial for XFEL Users (Power Point Presentation)" templateUri="{share-presentation}" href="" tabindex="0" target="_blank">Tutorial</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_user-guide" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco User Guide for XFEL Users (PDF)" templateUri="{share-user-guide}" href="" tabindex="0" target="_blank">User Guide</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_share-faq" class="yui-button">
+   <span class="first-child" >
+      <a title="Alfresco Frequently Asked Questions" templateUri="{share-faq}" href="" tabindex="0" >FAQ</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_imprint" class="yui-button">
+   <span class="first-child" >
+      <a title="Imprint" templateUri="{imprint}" href="" tabindex="0" >Imprint</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_support" class="yui-button">
+   <span class="first-child" >
+      <a title="Problems? Email support" templateUri="{share-support}" href="" tabindex="0" >Support</a>
+   </span>
+</span>
+      <span class="separator">&nbsp;</span>
+<span id="global_x002e_header_x0023_default-user_home" class="yui-button">
+   <span class="first-child" >
+      <a title="European XFEL Home Directory" templateUri="{home}" href="" tabindex="0" >Home</a>
+   </span>
+</span>
+      
+      </div>
+      <div class="search-box">
+         <span id="global_x002e_header_x0023_default-search_more" class="yui-button yui-menu-button">
+            <span class="first-child" style="background-image: url(/share/res/components/images/header/search-menu.png)">
+               <button type="button" title="Search Options..." tabindex="0"></button>
+            </span>
+         </span>
+         <input id="global_x002e_header_x0023_default-searchText" type="text" maxlength="1024" />
+      </div>
+      <div id="global_x002e_header_x0023_default-searchmenu_more" class="yuimenu yui-overlay yui-overlay-hidden">
+         <div class="bd">
+            <ul class="first-of-type">
+               <li><a style="background-image: url(/share/res/components/images/header/advanced-search.png)" title="Advanced Search..." href="/share/page/site/KaraboFramework/advsearch">Advanced Search...</a></li>
+            </ul>
+         </div>
+      </div>
+   </span>
+<script type="text/javascript">//<![CDATA[
+   global_x002e_header_x0023_default.setUserItems([ (function(){ var btn = new YAHOO.widget.Button("global_x002e_header_x0023_default-user_user", { type: "menu", menu: "global_x002e_header_x0023_default-usermenu_user", lazyloadmenu: false }); btn.getMenu().cfg.setProperty("keepopen", true); return btn; })(), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_help"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_tutorial"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_user-guide"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_share-faq"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_imprint"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_support"), new YAHOO.widget.Button("global_x002e_header_x0023_default-user_home")]);
+//]]></script>
+</div>
+<div class="clear"></div>
+    </div>
+
+</div><div id="template_x002e_title_x002e_wiki-page">
+    <div id="template_x002e_title_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.CollaborationTitle("template_x002e_title_x002e_wiki-page_x0023_default").setOptions(
+   {
+      site: "KaraboFramework",
+      siteTitle: "Karabo Framework",
+      user: "heisenb"
+   }).setMessages(
+      {"link.more": "More", "link.become-manager": "Become Site Manager", "message.become-manager-failure": "Failed grant Site Manager access", "link.editSite": "Edit Site Details", "message.leave-failure": "Failed to remove user {0} from site {1}. There must be at least one Site Manager for a site.", "message.become-manager-success": "Site Manager access granted", "link.join": "Join", "message.request-joining": "Requesting to add user {0} to site {1}...", "link.customiseDashboard": "Customize Dashboard", "message.become-manager": "Requesting to grant Site Manager access to site {0}...", "message.leave-site-prompt": "Are you sure you want to permanently leave the site ''{0}''? You will no longer be a member of this site.", "link.actions": "Actions", "header.site": "{0}", "link.leave": "Leave Site", "message.request-join-failure": "Could not make the request to add user {0} to site {1}.", "link.invite": "Invite", "message.leaving": "Removing user {0} from site {1}...", "message.joining": "Adding user {0} to site {1}...", "message.leave": "Leave Site ''{0}''", "message.request-join-success": "Request to join site {1} successfully sent. You will now be returned to your personal dashboard.", "message.join-failure": "Failed to add user {0} to site {1}.", "link.customiseSite": "Customize Site", "link.request-join": "Request to Join"}
+   );
+   Alfresco.constants.DASHLET_RESIZE = true && YAHOO.env.ua.mobile === null;
+//]]></script>
+<div class="page-title theme-bg-color-1 theme-border-1">
+   <div class="title">
+      <h1 class="theme-color-3"><span>Karabo Framework</span></h1>
+   </div>
+   <div class="links title-button">
+      <span class="yui-button yui-link-button">
+         <span class="first-child">
+            <a href="/share/page/site/KaraboFramework/invite" >Invite</a>
+         </span>
+      </span>
+      <input type="button" id="template_x002e_title_x002e_wiki-page_x0023_default-more" name="template_x002e_title_x002e_wiki-page_x0023_default-more" value="More"/>
+      <select id="template_x002e_title_x002e_wiki-page_x0023_default-more-menu">
+         <option value="editSite">Edit Site Details</option>
+         <option value="customiseSite">Customize Site</option>
+         <option value="leaveSite">Leave Site</option>         
+      </select> 
+   </div>
+   <div style="clear: both"></div>
+</div>    </div>
+
+</div><div id="template_x002e_navigation_x002e_wiki-page">
+    <div id="template_x002e_navigation_x002e_wiki-page_x0023_default">
+<div class="site-navigation">
+   <span class="navigation-item"><a href="/share/page/site/KaraboFramework/dashboard" class="theme-color-4">Site Dashboard</a></span>
+      <span class="navigation-separator">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/wiki-page?title=Main_Page" class="active-page theme-color-4">Wiki</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/blog-postlist" class="theme-color-4">Blog</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/documentlibrary" class="theme-color-4">Document Library</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/calendar" class="theme-color-4">Calendar</a></span>
+      <span class="navigation-gap">&nbsp;</span>
+      <span class="navigation-item"><a href="/share/page/site/KaraboFramework/discussions-topiclist" class="theme-color-4">Discussions</a></span>
+   <span class="navigation-separator">&nbsp;</span>
+<span class="navigation-item"><a href="/share/page/site/KaraboFramework/site-members" class="theme-color-4">Members</a></span>
+</div>    </div>
+
+</div>   </div>
+   <div id="bd">
+<div id="template_x002e_toolbar_x002e_wiki-page">
+    <div id="template_x002e_toolbar_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.WikiToolbar("template_x002e_toolbar_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      title: "Getting_Started",
+      showBackLink: true,
+      exists: true
+   }).setMessages(
+      {"link.mainPage": "Main Page", "message.rssfeed": "RSS Feed", "load.fail": "Could not delete page", "button.rename": "Rename", "rename.failure.title": "Error", "panel.confirm.delete-msg": "Are you sure you want to delete this page?", "panel.rename.title": "Rename ", "rename.failure.409": "A wiki page called \"{0}\" already exists. Please choose a different title for this page.", "panel.create.title": "New Page", "panel.rename.footer": "Enter the new name for the page", "panel.confirm.header": "Delete", "panel.create.footer": "Enter a title for the new page", "link.listView": "Wiki Page List", "button.create": "New Page", "rename.failure": "Could Not Rename Page"}
+   );
+//]]></script>
+<div id="template_x002e_toolbar_x002e_wiki-page_x0023_default-body" class="share-toolbar wiki-toolbar flat-button theme-bg-2">
+
+   <div class="navigation-bar theme-bg-1">
+      <div>
+         <span class="forwardLink">
+            <a href="/share/page/site/KaraboFramework/wiki">Wiki Page List</a>
+         </span>
+         <span class="forwardLink">
+            <a href="/share/page/site/KaraboFramework/wiki-page?filter=main&amp;title=Main_Page">Main Page</a>
+         </span>
+      </div>
+   </div>
+
+   <div class="action-bar">
+      <div class="new-page"><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-create-button">New Page</button></div>
+      <div class="separator" >&nbsp;</div>
+      <div class="delete-page" ><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-delete-button">Delete</button></div>
+      <div class="separator" >&nbsp;</div>
+      <div class="rename-page" ><button id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rename-button">Rename</button></div>
+   </div>
+
+   <div class="rss-feed">
+      <div>
+         <a id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rssFeed-button" href="/share/proxy/alfresco-feed/slingshot/wiki/pages/KaraboFramework?format=rss">RSS Feed</a>
+      </div>
+   </div>
+
+   <div id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renamepanel" class="rename-panel">
+      <div class="hd"><label for="template_x002e_toolbar_x002e_wiki-page_x0023_default-renameTo">Rename </label></div>
+      <div class="bd">
+         <form id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renamePageForm" method="post" action="/share/proxy/alfresco/slingshot/wiki/page/KaraboFramework/Getting_Started">
+            <div class="yui-ge">
+               <input type="hidden" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-page" name="page" value="wiki-page" />
+               <div class="yui-u first">
+                  <input type="text" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-renameTo" name="name" value="" size="30" tabindex="0" />
+               </div>
+               <div class="yui-u">
+                  <input type="submit" id="template_x002e_toolbar_x002e_wiki-page_x0023_default-rename-save-button" value="Save" tabindex="0" />
+               </div>
+            </div>
+         </form>
+         <div class="bdft">Enter the new name for the page</div>
+      </div>
+   </div>   
+</div>
+<div class="clear"></div>
+        
+    </div>
+
+</div><div id="template_x002e_wikipage-print_x002e_wiki-page">
+    <div id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default">
+<div id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default-wikiprint" class="yui-u align-right">
+         <span id="template_x002e_wikipage-print_x002e_wiki-page_x0023_default-printButton" class="yui-button yui-push-button print">
+             <span class="first-child">
+                 <button type="button" onClick="window.print()">Print Wiki Page</button>
+             </span>
+         </span>
+</div>
+
+    </div>
+
+</div><div id="template_x002e_wikipage_x002e_wiki-page">
+    <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default">
+<script type="text/javascript">//<![CDATA[
+   new Alfresco.WikiPage("template_x002e_wikipage_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      pageTitle: "Getting_Started",
+      mode: "view",
+      
+      tags: [],
+      pages: ["How_To", "SCPI_Karabo_Devices", "Teststand_setup_and_usage", "SVN_-_tips_and_tricks", "Timestamp_code_examples", "Timestamp", "SVN_Repository_Management", "Karabo_Workshop_Help", "Interaction_via_GUI_", "Device_porting_from_0.1_to_1.0", "Device_porting_from_0.1_to_1.0_(C++)", "Karabo_Devices", "Karabo_script_documentation", "Device-Developer_Documentation", "Other_Tools", "Examples_Karabo_Devices", "Interaction_via_command-line_(IPython_based)", "Application-Developer_Documentation", "Remote_connection_to_Linux_server_X11_session", "Test_stand_primer", "Karathon", "Test_Stand_Setup", "Framework-Developer_Documentation", "State_Machines", "Beckhoff_-_Communication_Protocol", "Beckhoff_-_Communication_protocol_sniffer_", "Configuration", "Getting_Started_-_Device_test_scripts", "Netbeans", "Getting_start_-_Message_Broker", "JMS-Broker", "Getting_Started_-_Message_Broker", "Getting_Started_-_NetBeans", "Getting_Started_-_Local_Broker", "Getting_Started_-_Karabo_Packages", "Getting_Started_-_Karabo_Framework", "Clients_and_User_interfaces", "Software_management", "Integration_into_other_software_systems", "Client_and_User_interfaces", "Scientific_computing", "Logging", "Statistics", "Security", "Central_s", "Central_services", "Real-time_needs", "Data_storage_and_management", "Data_acquisition", "States", "Process_control", "Data_transport", "Data_containers", "Distributed_end_points_and_processes", "Intro", "Downloads", "Design_Concepts", "Feature_Requests", "Documentation", "Getting_Started", "Main_Page"],
+      versions: [
+         {
+            title: "Getting_Started",
+            label: "1.130",
+            versionId: "23d141e5-ad76-4d71-9cdc-2d11c1a80935",
+            createdDate: "2014-12-21T18:11:23.076+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.129",
+            versionId: "037937db-7fc4-4f61-87cb-4d43dbe82ee1",
+            createdDate: "2014-04-22T12:56:41.540+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.128",
+            versionId: "efa02cf6-042f-49b1-bfcc-cb60d7fb28ab",
+            createdDate: "2014-03-11T17:28:09.405+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.127",
+            versionId: "7043107d-dc32-46a0-a478-9dd0d7d88e93",
+            createdDate: "2014-03-11T17:27:11.389+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.126",
+            versionId: "274c82e9-6367-47fe-b4db-b7ba3b87bce6",
+            createdDate: "2014-03-11T17:24:44.504+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.125",
+            versionId: "93bd30e5-8f76-4159-a6b4-2d3db79f88cd",
+            createdDate: "2013-09-18T23:37:54.828+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.124",
+            versionId: "af0bb8bb-537c-4424-a4d4-d9bd7d35aa9a",
+            createdDate: "2013-09-18T23:30:52.506+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.123",
+            versionId: "17070c65-e2e1-49ca-a01c-8bd6bb80a807",
+            createdDate: "2013-09-18T23:28:30.846+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.122",
+            versionId: "0c112951-4095-4b55-b17c-143104bc43c3",
+            createdDate: "2013-09-18T23:25:50.266+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.121",
+            versionId: "654f2b69-5148-47e9-a5dd-aefbb94b361c",
+            createdDate: "2013-09-18T23:24:53.980+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.120",
+            versionId: "e0b118fb-3536-4abc-941e-25cf19242022",
+            createdDate: "2013-09-18T23:22:34.379+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.119",
+            versionId: "5be8ea4d-253b-4dee-9069-0a21b79f454d",
+            createdDate: "2013-08-06T14:56:33.820+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.118",
+            versionId: "681432e9-1b02-40c2-b69d-0d5711e00796",
+            createdDate: "2013-08-06T14:53:17.552+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.117",
+            versionId: "095653a5-da96-4c95-a57f-84abcb201d9d",
+            createdDate: "2013-08-04T19:42:49.543+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.116",
+            versionId: "23446361-7f6a-4966-8452-0bec6c8c06d2",
+            createdDate: "2013-08-02T17:31:28.097+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.115",
+            versionId: "0c9f0663-8b7e-4b59-82f3-24979d701abe",
+            createdDate: "2013-08-02T17:30:12.838+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.114",
+            versionId: "72eca19e-b95d-4550-9612-24a72183cc42",
+            createdDate: "2013-07-23T18:39:06.008+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.113",
+            versionId: "66854538-ad64-4ad6-9768-87bc3e77f982",
+            createdDate: "2013-07-18T16:31:27.283+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.112",
+            versionId: "36610048-b78d-46c0-a127-45c16bcfb352",
+            createdDate: "2013-06-06T18:05:14.295+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.111",
+            versionId: "05d32132-9898-4a39-bf9f-6dcb66d7dc37",
+            createdDate: "2013-03-20T17:28:49.528+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.110",
+            versionId: "18e25802-df4e-4d7b-b59a-f93d77562991",
+            createdDate: "2013-03-13T09:54:25.790+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.109",
+            versionId: "c8ab1d57-790f-45c4-b7ff-dac05c75a299",
+            createdDate: "2013-03-13T09:53:40.149+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.108",
+            versionId: "570ec6b6-2d77-4087-ad7a-6f7497fac2dc",
+            createdDate: "2013-03-13T09:51:48.213+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.107",
+            versionId: "98f016a9-7099-4bff-ad6d-feff9122ee68",
+            createdDate: "2013-03-13T09:49:33.449+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.106",
+            versionId: "c67e3450-bc51-4768-8945-edf0e6a96199",
+            createdDate: "2013-03-13T09:48:43.099+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.105",
+            versionId: "d3affd6a-a9c6-40c6-931f-99592554a741",
+            createdDate: "2013-03-13T09:46:06.144+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.104",
+            versionId: "140527e6-8d34-4a7e-850f-5d75795285dd",
+            createdDate: "2013-03-12T17:53:59.511+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.103",
+            versionId: "d1689d8d-08b9-4c99-a361-12cf8ab98a03",
+            createdDate: "2013-03-12T17:52:30.051+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.102",
+            versionId: "f88e162b-24ba-4399-bbbb-b619d58e15c0",
+            createdDate: "2013-03-12T17:50:39.956+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.101",
+            versionId: "84a9388c-2e37-4722-a8c3-f3b5505525ab",
+            createdDate: "2013-03-12T17:47:03.407+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.100",
+            versionId: "8ed7ada5-44b5-47db-b125-7116c3ce53fc",
+            createdDate: "2013-03-12T17:43:46.112+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.99",
+            versionId: "aad9fdb5-eb38-408f-b675-cd5ad6c8606c",
+            createdDate: "2013-03-12T12:36:16.028+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.98",
+            versionId: "f8bfa3fc-d758-48bb-aa65-b4c965616928",
+            createdDate: "2013-01-07T12:28:44.589+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.97",
+            versionId: "60b5de92-f148-436a-bd52-feb57fc9f3cb",
+            createdDate: "2013-01-07T12:28:07.322+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.96",
+            versionId: "d66f44c5-905e-4a07-ad0c-bcc797f9c3ea",
+            createdDate: "2013-01-07T12:24:53.861+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.95",
+            versionId: "cfab77c6-55d1-4679-902b-f527e058b1d9",
+            createdDate: "2012-12-16T17:17:26.832+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.94",
+            versionId: "ad516b53-2b7c-4c83-9ac3-09a3c826a86f",
+            createdDate: "2012-12-16T16:44:34.319+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.93",
+            versionId: "4831502d-8c8e-4a00-bf8c-1bb58d59489c",
+            createdDate: "2012-12-16T15:02:44.737+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.92",
+            versionId: "15fd8710-b617-4eda-b35d-fd96666b1b1a",
+            createdDate: "2012-12-16T14:55:13.931+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.91",
+            versionId: "6b2767f6-83cb-4bde-b41a-6a80decead49",
+            createdDate: "2012-12-16T14:52:45.198+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.90",
+            versionId: "ccda1ae6-9357-41e9-ba31-dc5036866f1b",
+            createdDate: "2012-12-16T14:50:02.903+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.89",
+            versionId: "ed2eafe7-694d-4af3-8712-3361025ddc43",
+            createdDate: "2012-12-14T12:25:36.427+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.88",
+            versionId: "7983eb9d-8fea-404c-b1d2-138ad761f250",
+            createdDate: "2012-12-14T12:19:34.050+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.87",
+            versionId: "2e935bdb-6b03-4bbe-890f-e49b437d48a8",
+            createdDate: "2012-12-14T12:15:36.398+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.86",
+            versionId: "10276fd8-431d-4162-9656-00efd8e0d8a5",
+            createdDate: "2012-12-14T12:04:23.225+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.85",
+            versionId: "4e97af2e-cd13-44e3-9820-4bf629873c09",
+            createdDate: "2012-12-14T12:03:19.493+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.84",
+            versionId: "3222fcde-bbc9-4486-8431-a923cdb80288",
+            createdDate: "2012-12-14T11:48:15.814+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.83",
+            versionId: "86f8f033-39cc-4c0c-bae8-14996791a6eb",
+            createdDate: "2012-12-14T11:47:07.857+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.82",
+            versionId: "fbbf1394-d4fa-4960-99b1-efb33b2de757",
+            createdDate: "2012-12-14T11:32:28.655+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.81",
+            versionId: "e1d6458d-cfe9-428e-9b64-775b9b064799",
+            createdDate: "2012-12-13T16:36:52.929+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.80",
+            versionId: "f828b04b-7750-4232-a85d-6a2e5cadb653",
+            createdDate: "2012-12-13T09:41:18.566+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.79",
+            versionId: "9f79ef8e-d9d4-4cec-bd52-a17e42b2a3b0",
+            createdDate: "2012-12-13T09:38:12.908+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.78",
+            versionId: "648b2c61-891e-4aa8-8aaf-e4f868b6333c",
+            createdDate: "2012-12-13T09:32:16.047+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.77",
+            versionId: "cc3266e3-55d3-45a5-9998-cc6e270a3f87",
+            createdDate: "2012-12-13T08:47:11.978+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.76",
+            versionId: "b72bdb2c-74d2-4840-b937-7211162bd5e8",
+            createdDate: "2012-12-13T08:46:31.297+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.75",
+            versionId: "cb618799-757c-4fb6-93fe-a5122ec59e03",
+            createdDate: "2012-12-11T14:32:32.148+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.74",
+            versionId: "96d4841d-3032-40b9-99fe-62adc856a354",
+            createdDate: "2012-12-11T14:13:20.840+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.73",
+            versionId: "d8b8542a-773c-40fa-b8cd-a698719e09b2",
+            createdDate: "2012-12-11T14:01:41.234+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.72",
+            versionId: "2e96869f-9705-4e59-9c3e-f6bb7263d32d",
+            createdDate: "2012-12-05T15:47:43.191+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.71",
+            versionId: "6437bf13-8c78-4008-81bf-11db24492cd9",
+            createdDate: "2012-12-05T14:40:09.529+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.70",
+            versionId: "3b7ff3ef-9a14-492b-abe1-e45c288da419",
+            createdDate: "2012-12-04T15:00:16.048+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.69",
+            versionId: "cec056ec-1717-4511-bbd3-ae7356914b05",
+            createdDate: "2012-11-30T13:32:56.831+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.68",
+            versionId: "a9b98962-9b8f-435f-b2ed-2848bd93ef9d",
+            createdDate: "2012-11-23T17:20:47.847+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.67",
+            versionId: "945441ad-e87b-4a21-9d5e-1b548a885390",
+            createdDate: "2012-11-23T17:13:44.281+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.66",
+            versionId: "7ed83502-1f21-459c-91f3-caebd3e61d70",
+            createdDate: "2012-11-23T14:37:25.907+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.65",
+            versionId: "4c47ef7e-ab3f-4387-b909-ec5146abedc3",
+            createdDate: "2012-11-22T19:17:43.467+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.64",
+            versionId: "89203776-d989-4607-942e-8cdd0b52d081",
+            createdDate: "2012-11-14T11:19:55.638+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.63",
+            versionId: "202d3640-9d28-4d40-88de-940f31f79d70",
+            createdDate: "2012-11-14T10:23:00.622+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.62",
+            versionId: "b2ff87b8-0703-4b07-8976-4c550b1d2052",
+            createdDate: "2012-11-09T22:41:58.317+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.61",
+            versionId: "4b3e930b-9de7-4aef-becf-3125f422614a",
+            createdDate: "2012-11-09T22:39:16.976+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.60",
+            versionId: "26dc9866-2693-412e-9834-1204866dbb62",
+            createdDate: "2012-11-08T16:17:12.906+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.59",
+            versionId: "5bc18364-99fd-4bdd-9428-1bde31c92f1f",
+            createdDate: "2012-11-08T16:15:10.073+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.58",
+            versionId: "f6344526-8980-4b83-92be-dde174686526",
+            createdDate: "2012-11-08T16:10:08.823+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.57",
+            versionId: "a0e80d79-e8d6-4e39-af3f-0f8516db87ee",
+            createdDate: "2012-11-08T16:06:54.100+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.56",
+            versionId: "6efe8004-3889-41f7-af01-23f1f180b0c9",
+            createdDate: "2012-11-08T15:28:18.398+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.55",
+            versionId: "e23955ca-4d5d-4de2-9fbe-3ebb07cec9b8",
+            createdDate: "2012-11-08T15:25:01.149+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.54",
+            versionId: "10a4f51a-b01c-40b2-8f02-35594972e9a8",
+            createdDate: "2012-11-08T15:21:15.743+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.53",
+            versionId: "b8a44e78-19b1-4b9a-9865-35c1bf9be0dd",
+            createdDate: "2012-11-08T15:16:20.951+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.52",
+            versionId: "c92d4242-a41f-4fcc-9003-afce7d888f27",
+            createdDate: "2012-11-08T15:12:27.038+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.51",
+            versionId: "4224002f-a5ad-4d55-a0ad-e51dd85902b0",
+            createdDate: "2012-11-08T14:20:07.943+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.50",
+            versionId: "94236e50-900c-4b97-9055-866eca9c1433",
+            createdDate: "2012-11-08T14:15:05.903+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.49",
+            versionId: "87628234-1dae-452f-8dee-3953b32ac9c9",
+            createdDate: "2012-11-08T14:13:24.426+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.48",
+            versionId: "53e6ba2f-bea0-46f4-98a1-74eb1714b55f",
+            createdDate: "2012-11-08T14:11:02.257+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.47",
+            versionId: "7c2d7ae3-6e5c-4926-8646-a20b4852a014",
+            createdDate: "2012-11-08T14:06:44.515+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.46",
+            versionId: "e6abd0e3-ba7c-40c9-bc8c-aca2d26f8a8b",
+            createdDate: "2012-11-08T14:02:59.851+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.45",
+            versionId: "3f972612-87de-4c44-b01a-e76acdb10511",
+            createdDate: "2012-11-08T13:37:22.738+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.44",
+            versionId: "e28a9996-b370-44bf-9840-af26d36640c5",
+            createdDate: "2012-11-08T13:32:08.800+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.43",
+            versionId: "7384c5b3-6256-4e41-8408-40757f88340b",
+            createdDate: "2012-11-08T13:31:08.349+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.42",
+            versionId: "ca97b1c2-b44e-43fe-b83c-d35ed458c569",
+            createdDate: "2012-11-08T13:29:31.968+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.41",
+            versionId: "371e7e9d-6bb9-4908-82af-89eb5dceb032",
+            createdDate: "2012-11-08T13:23:21.697+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.40",
+            versionId: "097f27f0-99b2-4c45-8098-9e3a51c496c4",
+            createdDate: "2012-10-30T17:01:30.485+01:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.39",
+            versionId: "bde2de2f-7f46-4ee5-806b-b65ee92db1ff",
+            createdDate: "2012-10-26T16:31:36.138+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.38",
+            versionId: "143aff7e-46c6-4725-ad3d-4a7432e472ee",
+            createdDate: "2012-10-26T11:48:08.977+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.37",
+            versionId: "d876cedd-eb81-4d26-8cf1-45931a03f221",
+            createdDate: "2012-10-25T17:05:40.826+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.36",
+            versionId: "211af290-54df-4853-a4c5-ad9e1824313a",
+            createdDate: "2012-10-25T16:54:40.085+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.35",
+            versionId: "bde85be8-a182-4958-88f3-45379e932162",
+            createdDate: "2012-10-25T15:14:32.264+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.34",
+            versionId: "33fd725c-1cd5-441b-b1a7-2edacc74a714",
+            createdDate: "2012-10-25T15:13:31.877+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.33",
+            versionId: "ef0b890b-71b3-45ce-bc32-7eed8f3bc32f",
+            createdDate: "2012-10-25T13:17:43.549+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.32",
+            versionId: "e46234d7-1b4a-4057-9e0a-3bc13a2c07db",
+            createdDate: "2012-10-25T10:49:53.868+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.31",
+            versionId: "b316dfe1-8568-46a5-8ae1-fac312556964",
+            createdDate: "2012-10-25T10:19:54.882+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.30",
+            versionId: "e27487fd-f920-4e1d-9f94-f969d6876c26",
+            createdDate: "2012-10-25T09:48:46.851+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.29",
+            versionId: "10a31d53-62b1-4788-9e54-aa39e0e6710c",
+            createdDate: "2012-10-25T09:36:20.746+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.28",
+            versionId: "6e6de381-7fe4-4d55-86db-dd8cc7f0fb26",
+            createdDate: "2012-10-24T17:00:45.501+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.27",
+            versionId: "889fcea3-1d69-4e67-8caf-d1cbfdc65bf6",
+            createdDate: "2012-10-24T16:54:40.418+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.26",
+            versionId: "ddb6f007-00f2-4057-a3cb-b226a69dd007",
+            createdDate: "2012-10-24T16:50:24.018+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.25",
+            versionId: "81068ae9-4915-435b-a10c-ed78a8616fc3",
+            createdDate: "2012-10-16T15:56:38.512+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.24",
+            versionId: "78d86d14-1d9e-4f68-8408-529aa64a8441",
+            createdDate: "2012-10-16T15:56:20.249+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.23",
+            versionId: "ac36fb51-e8e4-44c1-8077-6a3bdfde8b4c",
+            createdDate: "2012-10-16T15:56:04.565+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.22",
+            versionId: "6dc2a4d8-21ec-4193-98a1-522300913401",
+            createdDate: "2012-10-16T15:55:29.874+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.21",
+            versionId: "673df673-ee23-4e38-b564-b4cc21c8090e",
+            createdDate: "2012-10-16T14:05:41.406+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.20",
+            versionId: "c930d84f-f36d-4360-b1e6-963e4c65fc90",
+            createdDate: "2012-10-16T13:59:47.154+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.19",
+            versionId: "9cd00c9b-9dba-4b0b-8253-e4f95c93a683",
+            createdDate: "2012-10-12T22:06:31.384+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.18",
+            versionId: "71f76c8d-7f0b-4e9e-91b8-03477098517f",
+            createdDate: "2012-10-12T16:32:58.563+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.17",
+            versionId: "e12ad85c-0247-4a5b-bfed-ab235429a415",
+            createdDate: "2012-10-12T16:31:01.248+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.16",
+            versionId: "b91b0cdc-f925-49b0-8cc7-a3d5240315dc",
+            createdDate: "2012-10-11T15:06:30.605+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.15",
+            versionId: "fabc88ad-3df6-4aa8-a44f-81d79a7dc93a",
+            createdDate: "2012-10-11T14:35:50.303+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.14",
+            versionId: "d139d371-d711-4426-82ed-0fe694b9fab8",
+            createdDate: "2012-10-11T14:35:35.006+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.13",
+            versionId: "abbf1457-686b-48ab-bc9e-4dc723b54cf8",
+            createdDate: "2012-10-11T14:33:26.898+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.12",
+            versionId: "39d9b064-637b-40f9-bffe-c358d7675d11",
+            createdDate: "2012-10-11T14:31:58.711+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.11",
+            versionId: "1081e38b-b3ce-447c-8608-2020ecc16202",
+            createdDate: "2012-10-11T14:26:34.812+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.10",
+            versionId: "69e37ba4-d991-4029-b26e-4ed01a03cdd8",
+            createdDate: "2012-10-11T14:25:03.368+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.9",
+            versionId: "6b517d44-df4d-415a-a030-5cc2d1ec96a5",
+            createdDate: "2012-10-11T14:24:31.803+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.8",
+            versionId: "2938231f-69f8-496e-bb63-0c862065ffd8",
+            createdDate: "2012-10-11T14:17:04.094+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.7",
+            versionId: "f6321fba-f8b4-48a5-93f5-a5518dfafd4c",
+            createdDate: "2012-10-11T14:13:47.315+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.6",
+            versionId: "c24f2f8f-adcd-433c-a3d8-b60fdae233ce",
+            createdDate: "2012-10-11T14:08:25.329+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.5",
+            versionId: "1f789fdc-d1ac-4557-9e80-56fd750eb8d8",
+            createdDate: "2012-10-11T13:45:43.364+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.4",
+            versionId: "9aad503a-9722-43ff-b7f6-dde7766e61f4",
+            createdDate: "2012-10-11T10:22:19.891+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.3",
+            versionId: "66c9b4ce-6690-4e75-9838-b100a63f9e6e",
+            createdDate: "2012-09-17T12:16:02.213+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.2",
+            versionId: "247d7db1-ad5d-46c0-b67a-d064ee9358fe",
+            createdDate: "2012-09-17T12:15:41.263+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.1",
+            versionId: "4199ef6a-587a-49ff-9484-c913aa2c7296",
+            createdDate: "2012-09-17T12:08:10.258+02:00"
+         },
+         {
+            title: "Getting_Started",
+            label: "1.0",
+            versionId: "63972a65-d2a2-4711-a9ca-7d24ef6c3a23",
+            createdDate: "2012-09-17T12:07:37.224+02:00"
+         }
+      ],
+      locale: "en",
+      permissions:
+      {
+         "create": true,
+         "edit": true,
+         "delete": true
+      }
+   }).setMessages(
+      {"label.earlier": "Earlier", "label.viewVersion": "View version:", "label.versionHistory": "Version History", "section.olderVersion": "Earlier version(s):", "button.revert": "Revert", "message.revertComplete": "The document was reverted. The page will be reloaded.", "section.thisVersion": "This version:", "label.text": "Text", "label.linkedPages": "Linked Pages", "message.saving": "Saving...", "label.createdDate": "Modified on:", "tab.details": "Details", "message.sessionTimeout.text": "Cannot save these changes due to a session timeout. Please copy your changes to the clipboard and refresh the page.", "label.version": "Version", "label.latest": "Latest", "message.sessionTimeout.title": "Session Timeout", "label.shortVersion": "v", "label.creator": "Modifier:", "message.confirm.newerVersion": "A newer version of this page exists. Are you sure you want to save your changes?", "link.revert": "Revert", "tab.edit": "Edit Page", "label.title": "Title:", "tab.view": "View Page"}
+   );    
+//]]></script>
+<div class="yui-g wikipage-bar">
+
+   <div class="title-bar">
+      <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-viewButtons" class="yui-u first pageTitle">Getting Started</div>
+      <div class="yui-u align-right">
+         <span class="theme-color-2">View Page</span>
+         <span class="separator">|</span>
+         <a href="?title=Getting_Started&amp;action=edit" class="tabLabel">Edit Page</a>
+         <span class="separator">|</span>
+         <a href="?title=Getting_Started&amp;action=details" class="tabLabel">Details</a>
+      </div>
+   </div>
+</div>  
+<div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-wikipage" class="wiki-page">       
+   <div class="yui-content" style="background: #FFFFFF;"> 
+      <div id="template_x002e_wikipage_x002e_wiki-page_x0023_default-page" class="rich-content"><p><a href="/share/page/site/KaraboFramework/dashboard">Back to Karabo Framework</a></p>
+<h1>Installation</h1>
+<p>Before you start installing, make sure you know how you want to use Karabo.</p>
+<h2>Package/Plugin development for Karabo (use binary)</h2>
+<p>If you are interested in implementing for example control-, or compute-devices (plugins) for the Karabo system, you can download a recent binary release of the core framework and directly start after its installation.</p>
+<p>Please read here for [[Getting Started - Karabo Packages|more information]].</p>
+<p>&nbsp;</p>
+<h2>Karabo core framework development (compile from sources)</h2>
+<p>If you want to contribute to the core framework developmnent, you will have to build Karabo from sources.</p>
+<p><strong>Participation in the core-framework development needs expert knowledge. </strong></p>
+<p>That is why you should have talked to Burkhard Heisen before you start. Afterwards you can [[Getting Started - Karabo Framework| find more details here]].</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>Developing code - tips, tricks and policies</h1>
+<h2>NetBeans</h2>
+<p>Although technically not required, we strongly recommend the NetBeans IDE for developing code associated to Karabo.</p>
+<p><strong>NOTE: If you are working in the context of the European XFEL GmbH, usage of NetBeans is mandatory!</strong></p>
+<p>[[Getting Started - NetBeans|Read here for more information]].<strong><br /></strong></p>
+<h2>Message Broker</h2>
+<p>Karabo is a distributed system and needs a so-called message-broker for communication aspects.</p>
+<p>[[Getting Started - Message Broker|Read here for more information]].</p>
+<p>&nbsp;</p>
+<h1>Good to know - a link collection<strong> <br /></strong></h1>
+<p><strong>SVN Repository (Versioning)</strong></p>
+<p><a title="https://svnsrv.desy.de/desy/EuXFEL/WP76" href="https://svnsrv.desy.de/desy/EuXFEL/WP76" target="_blank">https://svnsrv.desy.de/desy/EuXFEL/WP76</a>&nbsp; with kerberos authentication</p>
+<p><a href="https://svnsrv.desy.de/basic/EuXFEL/WP76" target="_blank">https://svnsrv.desy.de/basic/EuXFEL/WP76</a>&nbsp; with basic authentication</p>
+<p><strong>&nbsp;</strong></p>
+<p><strong>WebSVN Link (Versioning)</strong></p>
+<p><a title="https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76" href="https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76" target="_blank">https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76</a></p>
+<p><strong><a title="SVN How-to" href="/share/proxy/alfresco/api/node/content/workspace/SpacesStore/b24e732a-1eac-49a3-8830-406f07f7d71a/Subversion.pdf">SVN Repository How-to</a><br /></strong></p>
+<p><strong>&nbsp;</strong></p>
+<p><strong>Issue-Tracking (Redmine)<br /></strong></p>
+<p><a title="https://in.xfel.eu/redmine" href="https://in.xfel.eu/redmine" target="_blank">https://in.xfel.eu/redmine</a> (accessible also from outside European XFEL GmbH)</p>
+<p><strong>&nbsp;</strong></p>
+<p><strong>Continous Integration (Jenkins)</strong></p>
+<p><a title="http://131.169.247.46:8080" href="http://131.169.247.46:8080" target="_blank">http://131.169.247.46:8080</a> (currently only accessible from within European XFEL GmbH)</p>
+<p><strong>&nbsp;</strong></p>
+<p><strong>Download of binary packages</strong></p>
+<p><a title="https://docs.xfel.eu/share/page/site/KaraboFramework/wiki-page?title=Downloads" href="/share/page/site/KaraboFramework/wiki-page?title=Downloads" target="_blank">https://docs.xfel.eu/share/page/site/KaraboFramework/wiki-page?title=Downloads</a><strong><br /></strong></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p></div> 
+   </div>        
+</div>
+    </div>
+
+</div><div id="template_x002e_wikipage-parsers_x002e_wiki-page">
+    <div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default">
+<div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default-wikipage" class="wiki-page preview">
+<h2>Wiki Page Preview</h2>
+<div id="template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default-content" class="rich-content"></div>
+</div>
+<script type="text/javascript">//<![CDATA[
+   new Extras.WikiPageParsers("template_x002e_wikipage-parsers_x002e_wiki-page_x0023_default").setOptions(
+   {
+      siteId: "KaraboFramework",
+      pageTitle: "Getting_Started",
+      mode: "view"
+   }).setMessages(
+      {"label.tocHide": "hide", "label.tocShow": "show", "tinymce.linkTargets.embedNoLink": "Embed preview with no link", "wikipage.preview": "Wiki Page Preview", "tinymce.linkTargets.embed": "Embed preview with link", "button.preview": "Preview", "label.tocHeader": "Contents"}
+   );
+//]]></script>
+    </div>
+
+</div>   </div>
+      </div>
+      <div class="sticky-push"></div>
+   </div>
+
+   <div class="sticky-footer">
+   <div id="alf-ft">
+<div id="global_x002e_footer">
+    <div id="global_x002e_footer_x0023_default">
+<div class="footer footer-ent">
+   <span class="copyright">
+      <img src="/share/components/images/alfresco-share-logo-enterprise.png" alt="Alfresco Enterprise" height="27" width="212" />
+      <span>Alfresco Software, Inc. &copy; 2005-2012 All rights reserved.</span>
+   </span>
+</div>
+    </div>
+
+</div>   </div>
+   </div>
+   <div id="alfresco-yuiloader"></div>
+   <script type="text/javascript">//<![CDATA[
+      Alfresco.util.YUILoaderHelper.loadComponents(true);
+      if (Alfresco.constants.PORTLET)
+      {
+         YUIDom.addClass(document.body, "yui-skin-xfel alfresco-share");
+      }
+   //]]></script>
+</body>
+</html>
