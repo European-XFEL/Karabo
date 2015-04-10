@@ -67,11 +67,13 @@ Method 3: Just compile test (in *build/netbeans/karabo*): ``make build-tests``
 
 
 
-Unit tests for Python bindings
-==============================
+Unit tests for Python bindings (API 1)
+======================================
+
+*To be done by S. Esenov*
 
 
+Unit tests for native Python code (API 2)
+=========================================
 
-
-Unit tests for native Python code
-=================================
+*To be done by S. Esenov*
