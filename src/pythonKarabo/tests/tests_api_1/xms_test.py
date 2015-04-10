@@ -31,22 +31,42 @@ class  Xms_TestCase(unittest.TestCase):
     def setUp(self):
         self.remote = RemoteClient("a")
         self.remote.start()
+        self.ss = SignalSlotable("just_unit_test", "Jms", Hash(), True, False)
 
     def tearDown(self):
+        self.ss = None
         self.remote.stop()
         self.remote.join()
 
-    def test_xms_signal_slotable(self):
+    def callback(self, h):
         try:
-            ss = SignalSlotable("just_unit_test", "Jms", Hash(), True, False)
-            h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
-            (h,) = ss.request("a", "onHashRequest", h).waitForReply(200)
-            del ss
             self.assertEqual(h['a.b.c'], 1)
             self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
             self.assertEqual(h['remote_client'], 'APPROVED!')
         except Exception as e:
-            self.fail("test_xms_signal_slotable exception group 1: " + str(e))
+            self.fail("test_xms_request_async_receive 'callback' exception: " + str(e))
+            
+    def test_xms_request_async_receive(self):
+        try:
+            h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
+            # Asynchronous call 'callback' with 0,...,4 arguments
+            self.ss.request("a", "onHashRequest", h).receiveAsync1(self.callback)
+            time.sleep(0.2)
+        except Exception as e:
+            self.fail("test_xms_request_async_receive exception: " + str(e))
+            
+    def test_xms_request_wait_for_reply(self):
+        try:
+            h = Hash('a.b.c', 1, 'x.y.z', [1,2,3,4,5,6,7])
+            
+            # Synchronous call
+            #(h,) = ss.request("a", "onHashRequest", h).timeout(200).receive1()
+            (h,) = self.ss.request("a", "onHashRequest", h).waitForReply(200)
+            self.assertEqual(h['a.b.c'], 1)
+            self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7])
+            self.assertEqual(h['remote_client'], 'APPROVED!')
+        except Exception as e:
+            self.fail("test_xms_request_wait_for_reply exception: " + str(e))
             
 
 if __name__ == '__main__':
