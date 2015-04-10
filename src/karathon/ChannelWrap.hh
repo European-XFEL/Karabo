@@ -57,42 +57,21 @@ namespace karathon {
         }
 
         static void clear(karabo::net::IOService::Pointer ioserv) {
-            if (!ioserv) return;
-            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
-            if (m_handlers.empty()) return;
-            std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> >::iterator it = m_handlers.find(ioserv.get());
-            if (it == m_handlers.end()) return;
-            std::map<karabo::net::Channel*, karabo::util::Hash>& cmap = it->second;
-            cmap.clear();
-            m_handlers.erase(it);
         }
 
     private:
-        static void registerWaitHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void registerReadHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void registerWriteHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
-        static void registerErrorHandler(karabo::net::Channel::Pointer channel, const bp::object& handler);
 
-        static bp::object getPythonReadHandler(karabo::net::Channel::Pointer channel);
-
-        static void proxyReadSizeInBytesHandler(karabo::net::Channel::Pointer channel, const size_t& size);
-        static void proxyReadStringHandler(karabo::net::Channel::Pointer channel, const std::string& s);
-        static void proxyReadHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
-        static void proxyReadHashVectorHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
-        static void proxyReadHashHashHandler(karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
-        static void proxyWriteCompleteHandler(karabo::net::Channel::Pointer channel);
-        static void proxyWaitCompleteHandler(karabo::net::Channel::Pointer channel, const std::string& id);
-        static void proxyErrorHandler(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
-
-        // I've taken this helper function from Burkhard
-
+        static void proxyReadSizeInBytesHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const size_t& size);
+        static void proxyReadStringHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& s);
+        static void proxyReadHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash);
+        static void proxyReadHashVectorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& hash, const std::vector<char>& v);
+        static void proxyReadHashHashHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::util::Hash& h, const karabo::util::Hash& b);
+        static void proxyWriteCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel);
+        static void proxyWaitCompleteHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const std::string& id);
+        static void proxyErrorHandler(const bp::object& handler, karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& code);
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
         }
-
-    private:
-        static boost::mutex m_changedHandlersMutex;
-        static std::map<karabo::net::IOService*, std::map<karabo::net::Channel*, karabo::util::Hash> > m_handlers;
     };
 
 }

@@ -59,30 +59,18 @@ namespace karathon {
         static void setErrorHandler(const karabo::net::Connection::Pointer& connection, const bp::object& errorHandler);
 
         static void clear(karabo::net::IOService::Pointer ioserv) {
-            if (!ioserv) return;
-            boost::mutex::scoped_lock lock(m_changedHandlersMutex);
-            if (m_handlers.empty()) return;
-            std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::util::Hash> >::iterator it = m_handlers.find(ioserv.get());
-            if (it == m_handlers.end()) return;
-            std::map<karabo::net::Connection*, karabo::util::Hash>& cmap = it->second;
-            cmap.clear();
-            m_handlers.erase(it);
         }
 
     private:
 
-        static void proxyConnectionHandler(karabo::net::Channel::Pointer channel);
-        static void proxyErrorHandler(karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code);
+        static void proxyConnectionHandler(const bp::object& connectionHandler, karabo::net::Channel::Pointer channel);
+        static void proxyErrorHandler(const bp::object& errorHandler, karabo::net::Connection::Pointer connection, const karabo::net::ErrorCode& code);
 
         // I've taken this helper function from Burkhard
 
         static bool hasattr(bp::object obj, const std::string& attrName) {
             return PyObject_HasAttrString(obj.ptr(), const_cast<char*> (attrName.c_str()));
         }
-
-    private:
-        static boost::mutex m_changedHandlersMutex;
-        static std::map<karabo::net::IOService*, std::map<karabo::net::Connection*, karabo::util::Hash> > m_handlers;
     };
 }
 
