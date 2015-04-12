@@ -32,11 +32,14 @@ fi
 # Parse command line
 if [[ -z "$1" ||  $1 = "help" || $1 = "-h" ||  $1 = "-help" || $1 = "--help" ]]; then
     cat <<End-of-help
-Usage: $0 Debug|Release|Clean [flags]
+Usage: $0 Debug|Release|Clean|Clean-All [flags]
 
 Available flags:
   --auto      - Tries to automatically install needed system packages (sudo rights required!)
   --noBundle  - Only installs Karabo, does not create the software bundle
+
+Note: "Clean" cleans all Karabo code (src folder)
+      "Clean-All" additionally cleans all external dependencies (extern folder)
 
 End-of-help
 
@@ -46,10 +49,13 @@ fi
 # Fetch configuration type (Release or Debug)
 if [[ $1 = "Release" || $1 = "Debug" ]]; then
 	CONF=$1
-elif [[ $1 = "Clean" ]]; then
+elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     safeRunCommand "make bundle-clean CONF=Debug"
     safeRunCommand "make bundle-clean CONF=Release"
+    if [[ $1 = "Clean-All" ]]; then 
+	safeRunCommand "make clean-extern"
+    fi
     safeRunCommand "cd $scriptDir/build/netbeans/karabo"
     rm -rf dist build nbproject/Makefile* nbproject/Package* nbproject/private
     safeRunCommand "cd $scriptDir/build/netbeans/karathon"
