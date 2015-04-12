@@ -20,18 +20,18 @@ fi
 if [ -f "VERSION" ]; then
     VERSION=$(cat VERSION)
 else
-    if tmp=$(svn info ../../../ | grep URL); then
+    if tmp=$(svn info ../ | grep URL); then
     
 	VERSION=${tmp##*/}
 	if [ "$VERSION" = "trunk" ]; then
-            tmp=$(svn info ../../../ | grep Revision)
+            tmp=$(svn info ../ | grep Revision)
             VERSION=r${tmp##*: }
 	fi
-    elif tmp=$(jsvn info ../../../ | grep URL)
+    elif tmp=$(jsvn info ../ | grep URL)
     then
 	VERSION=${tmp##*/}
 	if [ "$VERSION" = "trunk" ]; then
-            tmp=$(jsvn info ../../../ | grep Revision)
+            tmp=$(jsvn info ../ | grep Revision)
             VERSION=r${tmp##*: }
 	fi
     else
@@ -42,6 +42,7 @@ fi
 VERSION_MAJ=${VERSION%.*.*}
 VERSION_MIN=${VERSION%.*}
 
+echo "Found version: $VERSION"
 
 function getEmail() {
     
@@ -219,7 +220,7 @@ oldSvnPath=""
 new=0
 checkout=0
 import=0
-install=0
+install_s=0
 uninstall=0
 list=0
 update=0
@@ -1210,151 +1211,105 @@ function updateConfiguration() {
 }
 
 # Rebuild all packages in a given configuration
-# @param $1 configurationName
-# @param $2 buildType [Release|Debug]
-# @param $3 force [force,canSkip]
-# @param $4 package The package from where to start the rebuild
+# @param $1 buildType [Release|Debug]
+# @param $2 force [force,canSkip]
 function rebuildConfiguration() {
-    echo
-    if [ ! -d $etcDir/installed ]; then
-        echo " No configurations seems to be installed."
-        echo " Please install a configuration prior to rebuilding."
-        echo " Type: \"./$0 help install\" for help."
-        exit 1
-    fi
-    configurationName=$1
-    buildType=$2
-    compileFromPackage=$4
+    buildType=$1
     force=n
-    if [[ "x$3" == "xforce" ]]; then
+    if [[ "x$2" == "xforce" ]]; then
         force=y
     fi
+
+    cd $scriptDir/packages
     
-    sortedPackages=( `getSortedArrayOfPackagesToInstall $configurationName ` ) 
-    sortedPackagesNumberOfElements=${#sortedPackages[@]}
-    
-    local idx=-4
-    local max_idx
-    let "max_idx = $sortedPackagesNumberOfElements -4"
-    rowIdx=-1 
-    while [ "$idx" -lt "$max_idx" ]
-    do
-      let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
-      let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
+    for cat in *; do
+	
+	# Skip every non-folder
+	if [ ! -d $cat ]; then
+	    continue
+	fi
+	    
+	# Skip dependency folder
+	if [ "$cat" = "dependencies" ]; then
+	    continue
+	fi
 
-      let "typeIdx = $idx"
-      let "categoryIdx = $idx + 1"
-      let "packageIdx = $idx + 2"
-      let "tagIdx = $idx + 3"
-      
-      local type=${sortedPackages[$typeIdx]}
-      local category=${sortedPackages[$categoryIdx]}
-      local package=${sortedPackages[$packageIdx]}
-      local tag=${sortedPackages[$tagIdx]}
-      
-      if [[ ${type:0:1} == "#" || -z $category ]]; then
-          continue
-      fi            
-      
-      if [[ "$compileFromPackage" != "" ]]; then 
-          if [[ "$package" != "$compileFromPackage" ]]; then
-              continue;
-  #        else 
-  #            compileFromPackage=""
-          fi
-      fi
-      
-      local packagePath=$scriptDir/packages/$category/$package
-      if [ ! -d $packagePath ]; then
-          echo " New package $package appeared in configuration $configurationName"
-          echo " Checking it out ...."
-          checkoutPackage $scriptDir $package $category $tag 0 1 $revision
-      fi
+	local categoryPath=$scriptDir/packages/$cat	    
+	cd $categoryPath
 
-      echo
-      echo " Rebuilding package: \"$package\""
-      echo
+	for pck in *; do
+	    
+	    if [ ! -d $pck ]; then
+		continue
+	    fi
 
-      local deps=( `getArrayOfPackageDependencies $packagePath` ) 
-      local depsNumberOfElements=${#deps[@]}
-      if [ $depsNumberOfElements -gt 0 ]; then
-          echo
-          echo " Rebuilding dependencies for package $package first ... " 
-      else
-          echo
-          echo "  No dependencies to rebuild for package $package"
-      fi
-      
+	    local packagePath=$scriptDir/packages/$cat/$pck
 
-      local idy=0
-      while [ $idy -lt $depsNumberOfElements ]; do
-          let "categoryIdy = $idy + 1"
-          let "packageIdy = $idy + 2"
-          let "tagIdy = $idy + 3"
-          local packageDep=${deps[$packageIdy]}
-          local categoryDep=${deps[$categoryIdy]}
-          local tagDep=${deps[$tagIdy]}
-          echo 
-          echo  "  Rebuilding dependency package $packageDep ..."
-          local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
-          if [ ! -d $packageDepPath ]; then
-              echo " Dependency $packageDep for package $package doesn't exists locally"
-              echo " Checking it out ...."
-              checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
-          fi
-          cd $packageDepPath
-          if [ -e Makefile ]; then
-              if [[ "$force" == "y" ]]; then
-                  make clean
-              fi
-              make -j${numMakeThreads} CONF=$buildType
-              # link is created only for devices(plugins), not for their dependencies
-              #if [ $? -eq 0 ]; then
-              #    cd $scriptDir/run/deviceServer/plugins
-              #    ln -sf $packageDepPath/dist/$buildType/*/*
-              #fi
-          fi
-          cd $scriptDir
-          let "idy = $idy + 4"
-      done
-      echo
-      echo " Rebuilding package $package ..."
-      cd $packagePath
-      if [ -e Makefile ]; then
-          if [[ "$force" == "y" ]]; then
-              make clean
-          fi
-          make -j${numMakeThreads} CONF=$buildType
-          # link only when library.so file exist otherwise explicit '*/*' link created
-          if [ $? -eq 0 ]; then
-              cd $scriptDir/servers/cppDeviceServer/plugins
-              find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
-          fi
-      else
-            cd $scriptDir/servers/pythonDeviceServer/plugins
-            find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
-      fi
-      cd $scriptDir
-     
-            # check if there are any modifications to source code
-#      cd $packagePath
-#            hasModification=$(svn status | grep "M       ")
-#      cd $scriptDir
-            # Performance increase for the case that nothing has changed
-#      if [[ "$canSkip" == "y" && "$hasModification" == "" ]]; then
-#          continue;
-#      else
-#          canSkip=n
-#      fi
-      
-      
+	    echo
+	    echo "  Rebuilding package: \"$pck\""
+
+	    ### Check and, if necessary, rebuild all dependecies
+
+	    local deps=( `getArrayOfPackageDependencies $packagePath` ) 
+	    local depsNumberOfElements=${#deps[@]}
+	    if [ $depsNumberOfElements -gt 0 ]; then		
+		echo " Rebuilding dependencies for package \"$pck\" first ... " 
+		echo
+	    else
+		echo "  Package \"$pck\" has no dependencies to rebuild."
+	    fi
+	    
+	    
+	    local idy=0
+	    while [ $idy -lt $depsNumberOfElements ]; do
+		let "categoryIdy = $idy + 1"
+		let "packageIdy = $idy + 2"
+		let "tagIdy = $idy + 3"
+		local packageDep=${deps[$packageIdy]}
+		local categoryDep=${deps[$categoryIdy]}
+		local tagDep=${deps[$tagIdy]}
+		echo 
+		echo  "  Rebuilding dependency package $packageDep ..."
+		local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
+		if [ ! -d $packageDepPath ]; then
+		    echo " Dependency $packageDep for package $package doesn't exists locally"
+		    echo " Checking it out ...."
+		    checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
+		fi
+		cd $packageDepPath
+		if [ -e Makefile ]; then
+		    if [[ "$force" == "y" ]]; then
+			make clean
+		    fi
+		    make -j${numMakeThreads} CONF=$buildType              
+		fi
+		cd $scriptDir
+		let "idy = $idy + 4"
+	    done
+	    
+	    ### Rebuild package itself
+
+	    cd $packagePath
+	    if [ -e Makefile ]; then
+		if [[ "$force" == "y" ]]; then
+		    make clean
+		fi
+		make -j${numMakeThreads} CONF=$buildType
+		# link only when library.so file exist otherwise explicit '*/*' link created
+		if [ $? -eq 0 ]; then
+		    cd $scriptDir/servers/cppDeviceServer/plugins
+		    find $scriptDir/packages/$cat/$pck/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+		fi
+	    else
+		cd $scriptDir/servers/pythonDeviceServer/plugins
+		find $scriptDir/packages/$cat/$pck/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+	    fi
+
+	    cd $categoryPath
+	    
+	done
     done
-
-    echo
-    echo " Rebuild successful." 
-    echo
-    
-      
+	    
 }
 
 
@@ -1747,9 +1702,9 @@ End-of-help
 
     elif [[ "$1" == "install" ]]; then
         cat <<End-of-help
-install: Install a selected package configuration.
+install-s: Install a selected package configuration (from sources).
 
-usage: install PACKAGE_CONFIGURATION [options]
+usage: install-s PACKAGE_CONFIGURATION [options]
 
 Valid package configurations can be listed using: 
   $0 list configurations
@@ -1760,7 +1715,7 @@ Valid options:
 Examples:
 
 (1) Installation of pnccd packages with build type Release.
-  $0 install pnccd -type Release
+  $0 install-s karabo-demo -type Release
 
 End-of-help
 
@@ -1795,18 +1750,10 @@ End-of-help
     
     elif [[ "$1" == "rebuild" ]]; then
         cat <<End-of-help
-rebuild: rebuilds the packages installed in a given configuration. Dependencies of each package
+rebuild: rebuilds all installed packages. Dependencies of each package
  are rebuilt first, then the package itself. 
 
-usage: rebuild CONFIGURATION_NAME [PACKAGE_NAME] [options]
-
-CONFIGURATION_NAME: the name of the installed configuration to be rebuild. Get the list if available
-                    configurations using $0 list configurations
-
-PACKAGE_NAME : rebuild only given package within installed configuration with its dependencies.
-               List included packages with $0 list installed
-
-If a new package is added to a given configuration it will be checked out and compiled together with its dependencies.
+usage: rebuild [options]
 
 Valid options:
   -type [Debug|Release] : the build type for the individual packages, defaults to Debug 
@@ -1814,21 +1761,15 @@ Valid options:
 
 Examples:
  
-(1) Rebuild pnccd configuration (all packages with their dependencies). If actual recompilation
+(1) Rebuild all installed packages with their dependencies. If actual recompilation
     takes place depends on local modifications (make)
- $0 rebuild  pnccd
+ $0 rebuild
   
-(2) Rebuild pnccd configutation regardless of local modifications
- $0 rebuild pnccd -force
+(2) Rebuild all installed packages with their dependencies regardless of local modifications
+ $0 rebuild -force
 
-(3) Rebuild only package beckhoffMotor in pnccd configuration with its dependencies
- $0 rebuild pnccd beckhoffMotor
-
-(4) Rebuild package beckhoffMotor from pnccd configuration independent of local modifications
- $0 rebuild pnccd beckhoffMotor -force
-
-(5) Rebuild package beckhoffMotor from pnccd configuration independent of local modifications and use "Release" build type
- $0 rebuild pnccd beckhoffMotor -force -type Release
+(3) Rebuild all installed packages with their dependencies regardless of local modifications in "Release" mode
+ $0 rebuild -force -type Release
 
 End-of-help
         
@@ -1928,11 +1869,13 @@ usage: $0 <subcommand> [options]
 Type '$0 help <subcommand>' for help on a specific command
 
 Available subcommands:
+
+  install-b - Install a package configuration (download binary)
+  install-s - Install a package configuration (build from sources)
+  update    - Update (svn) installed packages
+  rebuild   - Rebuild installed packages
   new       - Create a new package
   checkout  - Checkout an existing package (use list to retrieve name)
-  install   - Install a package configuration
-  update    - Update (svn) an installed package configuration
-  rebuild   - Rebuild packages within installed configuration
   list      - Create listings of various type
   tag       - Creates a svn tag for a given package
   branch    - Creates a svn branch for a given package
@@ -2038,9 +1981,9 @@ until [ -z "$1" ]; do
         shift; shift; shift
 
 
-    # Install package configuration
-    elif [ $1 = "install" ]; then
-        install=1
+    # Install package configuration (sources)
+    elif [ $1 = "install-s" ]; then
+        install_s=1
         if [ $# -lt 2 ]; then
             detailedHelp $1
         elif [ $2 = "help" ]; then
@@ -2095,17 +2038,9 @@ until [ -z "$1" ]; do
     # Rebuild suite
     elif [ $1 = "rebuild" ]; then
         rebuild=1
-        if [ $# -lt 2 ]; then
-            detailedHelp $1
-        elif [ $2 = "help" ]; then
+        if [ $2 = "help" ]; then
             detailedHelp $1
         fi
-        configurationName=$2
-        if [[ "$configurationName" == "all" ]]; then
-            echo " $configurationName configuration is not supported"
-            exit 1
-        fi
-        shift;
         until [ -z "$2" ]; do
             if [[ "$2" == "-type" ]]; then
                 if [ -z "$3" ]; then
@@ -2124,7 +2059,8 @@ until [ -z "$1" ]; do
                 forceRebuild="force"
                 shift
             else
-                packageName=$2
+                echo " Invalid option: \"$2\", expecting either -force or -type"
+		exit 1
                 shift;
             fi
         done
@@ -2197,7 +2133,7 @@ done
 
 if [[ "$forget" == "1" ]]; then
     removeContinueBuildInfo
-elif [[ "$install" == "1" ]]; then
+elif [[ "$install_s" == "1" ]]; then
     installConfiguration $configurationName $buildType
 
 elif [[ "$update" == "1" ]]; then
@@ -2230,8 +2166,7 @@ elif [[ "$import" == "1" ]]; then
     importPackage $packageDevPath $packageName $packageCategory $tag
 
 elif [[ "$rebuild" == "1" ]]; then
-    #lowerPackageName=$(toLower $packageName)
-    rebuildConfiguration $configurationName $buildType $forceRebuild $packageName
+    rebuildConfiguration $buildType $forceRebuild
 
 elif [[ "$createTag" == "1" ]]; then
     createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
