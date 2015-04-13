@@ -105,7 +105,7 @@ class Proxy(object):
         self._queues = defaultdict(WeakSet)
         self._deviceId = deviceId
         self._used = 0
-        self._sethash = None
+        self._sethash = {}
         self._sync = sync
 
     @classmethod
@@ -130,17 +130,19 @@ class Proxy(object):
             if not ok:
                 raise KaraboError(msg)
         else:
-            if self._sethash is None:
-                self._device._ss.loop.call_soon_threadsafe(self._update)
-                self._sethash = Hash()
+            update = not self._sethash
             self._sethash[attr.key] = value
+            if update:
+                self._device._ss.loop.call_soon_threadsafe(self._update)
 
     def _update(self):
-        if self._sethash is None:
-            return
-        self._device._ss.emit("call", {self._deviceId: ["slotReconfigure"]},
-                              self._sethash)
-        self._sethash = None
+        hash = Hash()
+        while self._sethash:
+            k, v = self._sethash.popitem()
+            hash[k] = v
+        if hash:
+            self._device._ss.emit("call",
+                                  {self._deviceId: ["slotReconfigure"]}, hash)
 
     def __enter__(self):
         self._used += 1
