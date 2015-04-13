@@ -74,7 +74,7 @@ KARABO_SERVERS="../servers"
 ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer::0:100:yes"
 ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer::0:100:yes"
 ALLINFO[2]="$KARABO_SERVERS/projectServer/startCppServer::0:100:yes"
-#ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2::0:100:yes"
+ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=macroServer:0:100:yes"
 
 
 #####################

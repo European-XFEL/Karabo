@@ -1,6 +1,7 @@
 from asyncio import (async, coroutine, Future, get_event_loop, set_event_loop,
                      Task, TimeoutError)
 import atexit
+from functools import wraps
 import sys
 import threading
 import weakref
@@ -75,6 +76,22 @@ class EventThread(threading.Thread):
         return cls.instance()
 
 
+def _wrapslot(slot, name):
+    if slot.allowedStates is None:
+        slot.allowedStates = ["Idle..."]
+    themethod = slot.themethod
+
+    @wraps(themethod)
+    def wrapper(device):
+        device._lastloop = get_event_loop()
+        device.state = name
+        try:
+            return themethod(device)
+        finally:
+            device.state = "Idle..."
+    slot.themethod = wrapper
+
+
 class Macro(Device):
     subclasses = []
 
@@ -106,9 +123,17 @@ class Macro(Device):
         accessMode=AccessMode.READONLY,
         requiredAccessLevel=AccessLevel.EXPERT)
 
+    @Slot(displayedName="Cancel")
+    def cancel(self):
+        self._lastloop.cancel()
+
+
     @classmethod
     def register(cls, name, dict):
         Macro._subclasses = {}
+        for k, v in dict.items():
+            if isinstance(v, Slot):
+                _wrapslot(v, k)
         super().register(name, dict)
         Macro.subclasses.append(cls)
         cls._monitors = [m for m in (getattr(cls, a) for a in cls._allattrs)
@@ -140,6 +165,7 @@ class Macro(Device):
                 devices.append(d)
         for d in devices:
             async(self._holdDevice(d))
+        self.state = "Idle..."
 
     def _holdDevice(self, d):
         with d:
@@ -151,6 +177,7 @@ class Macro(Device):
     def printToConsole(self, data):
         self.print = data
         self.printno += 1
+        self.update()
 
     @classmethod
     def main(cls):
