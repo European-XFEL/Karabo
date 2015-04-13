@@ -11,6 +11,9 @@
 #ifndef KARABO_XIP_CPUIMAGE_HH
 #define KARABO_XIP_CPUIMAGE_HH
 
+#define cimg_use_jpeg
+#define cimg_use_png
+
 #include <karabo/util/Configurator.hh>
 #include <karabo/io/Input.hh>
 #include <karabo/io/Output.hh>
@@ -1054,8 +1057,7 @@ namespace karabo {
             }
             
             inline CpuImage& load_tiff(std::FILE* const file) {
-                m_header.clear();
-                m_cimg.load_tiff(file);
+                KARABO_NOT_SUPPORTED_EXCEPTION("CpuImage::load_tiff(FILE*) is not supported yet.");
                 return *this;
             }
             
