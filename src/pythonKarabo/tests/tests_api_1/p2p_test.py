@@ -11,15 +11,14 @@ class Server(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
-        #create connection object
+        # create connection object
         self.connection = Connection.create("Tcp", Hash("type", "server", "port", 0))
-        #set up error handler
+        # set up error handler
         self.connection.setErrorHandler(self.onError)
-        #register connect handler for incoming connections
+        # register connect handler for incoming connections
         self.port = self.connection.startAsync(self.onConnect)
-        #extract io service object
+        # extract io service object
         self.ioserv = self.connection.getIOService()
-        #initialize the store (channel.__id__, Hash) used by async write
         print("TCP Async server listening port", self.port)
         
     def onError(self, channel, ec):
@@ -29,10 +28,10 @@ class Server(threading.Thread):
         
     def onConnect(self, channel):
         try:
-            #register connect handler for incoming connections
+            # register connect handler for incoming connections
             self.connection.startAsync(self.onConnect)
             channel.setErrorHandler(self.onError)
-            #register read Hash handler for this channel (client)
+            # register read Hash handler for this channel (client)
             channel.readAsyncHash(self.onReadHash)
         except RuntimeError as e:
             print("TCP Async server onConnect:",str(e))
@@ -75,12 +74,12 @@ class  P2p_TestCase(unittest.TestCase):
     def test_synchronous_client(self):
         # Synchronous TCP client
         try:
-            #create client connection object
+            # create client connection object
             connection = Connection.create("Tcp", Hash("type", "client", "hostname", "localhost", "port", self.server.port))    
-            #connect to the server
+            # connect to the server
             channel = connection.start()
             print("TCP Sync client open connection.")
-            #build hash to send to server
+            # build hash to send to server
             h = Hash("a.b.c", 1, "x.y.z", [1,2,3,4,5], "d", Hash("abc", 'rabbish'))
             print("TCP Sync client send Hash")
             channel.write(h)
