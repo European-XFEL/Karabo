@@ -8,7 +8,8 @@ A more rare usecase is that many remote devices should be accessed, but
 only very simple. This can be achieved by functions which operate directly
 on the deviceId, without going through the hazzle of creating a device
 proxy. """
-from asyncio import coroutine, Future, get_event_loop
+import asyncio
+from asyncio import get_event_loop
 from collections import defaultdict
 from functools import wraps
 from weakref import WeakSet
@@ -57,7 +58,7 @@ class DeviceClientBase(Device):
 
 
 def synchronize(func):
-    coro = coroutine(func)
+    coro = asyncio.coroutine(func)
     @wraps(coro)
     def wrapper(*args, timeout=-1, **kwargs):
         return get_event_loop().sync(coro(*args, **kwargs), timeout)
@@ -170,7 +171,7 @@ class Proxy(object):
         return self
 
 
-class OneShotQueue(Future):
+class OneShotQueue(asyncio.Future):
     """ This is a future that looks like a queue
 
     It may be registered in the list of queues for a property, and is removed
@@ -398,3 +399,12 @@ def updateDevice(device):
     way to receive changes on a device while the device is not connected."""
     yield from device
     return device
+
+
+@synchronize
+def sleep(delay, result=None):
+    """do nothing for *delay* seconds
+
+    This method should be preferred over :func:`time.sleep`, as it is
+    interruptable."""
+    return (yield from asyncio.sleep(delay, result))
