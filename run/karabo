@@ -1010,183 +1010,95 @@ function getSortedArrayOfInstalledPackages(){
 }
 
 
-# Updates from svn all packages found in a given configuration
-# @param $1 configurationName
-# @param $2 package Updates only this package with its dependencies
-function updateConfiguration() {
-    
+# @param $1 packageName ("" if not provided)
+# @param $2 packagecategory ("" if not provided)
+function updateInstalled() {
+
     date=$(date +"%B %d, %Y, %I:%M %p")
     echo " #-------- KARABO PACKAGE UPDATE ($date) --------#" | tee -a $etcDir/update.log
 
-    configurationName=$1
-    updateFromPackageArg=$2
-
-    updateFromPackageArgFlag=n
-    if [[ "$updateFromPackageArg" != "" ]]; then
-        updateFromPackageArgFlag=y
-    fi
-
-    # Initialize update and rebuild modes
-    doUpdate=n
-    svnUpdateConflict=postpone
-
-    sortedPackages=( `getSortedArrayOfPackagesToInstall $configurationName ` ) 
-    sortedPackagesNumberOfElements=${#sortedPackages[@]}
-        
-    local idx=-4
-    local max_idx
-    let "max_idx = $sortedPackagesNumberOfElements - 4"
-    local rowIdx=-1 
-    while [ "$idx" -lt "$max_idx" ]
-    do
-        let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
-        let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
-        let "typeIdx = $idx"
-        let "categoryIdx = $idx + 1"
-        let "packageIdx = $idx + 2"
-        let "tagIdx = $idx + 3"
-      
-        local type=${sortedPackages[$typeIdx]}
-        local category=${sortedPackages[$categoryIdx]}
-        local package=${sortedPackages[$packageIdx]}
-        local tag=${sortedPackages[$tagIdx]}
-      
-        if [[ ${type:0:1} == "#" || -z $category ]]; then
-            continue
-        fi
-     
-        if [[ "$updateFromPackageArgFlag" == "y" ]]; then
-            if [[ "$package" == "$updateFromPackageArg" ]]; then
-                doUpdate=y
-            fi
-        else
-            doUpdate=y
-        fi
-
-        # If update from svn is required
-        if [[ "$doUpdate" == "y" ]]; then
-          # do the update from SVN
-            local packagePath=$scriptDir/packages/$category/$package
-	    
-            if [ ! -d $packagePath ]; then
-                echo " New package $package appeared in configuration $configurationName"
-                echo " New package $package appeared in configuration $configurationName" >> $etcDir/update.log
-                echo " Checking it out ...."
-                echo " Checking it out ...." >> $etcDir/update.log
-                checkoutPackage $scriptDir $package $category $tag 0 1 $revision
-            else
-
-		# Check, wether the tags are still the same
-		cd $packagePath
-		tagLocal=`svn info|grep "Relative URL"`
-		tagLocal=`expr "$tagLocal" : '.*/\(.*/.*\)'`
-		cd $scriptDir
-		if [[ "$tag" != "$tagLocal" ]]; then
-		    echo
-		    echo " Warning:"
-		    echo " Update requires package $package in version $tag"
-		    echo " but it (locally) exists in version $tagLocal"
-		    echo
-		    echo -n " Do you want to change version (old package will be deleted)? [y/n] "
-		    read c
-		    if [ "x$c" == "xy" ]; then 
-			rm -rf $packagePath
-			checkoutPackage $scriptDir $package $category $tag 1 1 $revision
-			echo
-			echo " Package now is in local version $tag"
-		    else
-			echo
-			echo " Nothing done, package is not in sync with configuration file"
-			echo
-			continue			
-		    fi
-		fi
-            
-                echo " Update of package: \"$package\""
-                echo " Update of package: \"$package\"" >> $etcDir/update.log
-                # this complex syntax allows us to obtain return code from svn command
-                # without this syntax return code from tee would be returned
-                status=`((svn update --non-interactive --accept $svnUpdateConflict $packagePath 2>&1 3>&-; echo \$? >&3 ) | \
+    if [[ "$1" != "" ]]; then
+	local packagePath=$scriptDir/packages/$2/$1
+	cd $packagePath
+	echo " Update of package \"$1\" ($2)"
+        echo " Update of package \"$1\" ($2):" >> $etcDir/update.log
+        # this complex syntax allows us to obtain return code from svn command
+        # without this syntax return code from tee would be returned
+        status=`((svn update --non-interactive --accept postpone $packagePath 2>&1 3>&-; echo \$? >&3 ) | \
                           tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1` 
-                rm updateStatus.tmp
-            
-                if [ $status -ne 0 ]; then
+        rm updateStatus.tmp
+        
+        if [ $status -ne 0 ]; then
+            echo "svn update encountered some problems in $packagePath."
+            exit 1
+        fi
+	hasConflicts=$(svn status $packagePath | grep "C       ")
+	if [ "$hasConflicts" != "" ]; then
+	    echo "Interrupted updating packages as the following svn conflicts have been found:"
+	    echo $hasConflicts
+	fi       
+    else
+	cd $scriptDir/packages
+	
+	for cat in *; do
+	    
+	    # Skip every non-folder
+	    if [ ! -d $cat ]; then
+		continue
+	    fi
+	    
+	    local categoryPath=$scriptDir/packages/$cat	    
+	    cd $categoryPath
+	    
+	    for pck in *; do
+		
+		if [ ! -d $pck ]; then
+		    continue
+		fi
+		
+		local packagePath=$scriptDir/packages/$cat/$pck
+		cd $packagePath
+		
+		echo " Update of package \"$pck\" ($cat)"
+		echo " Update of package \"$pck\" ($cat):" >> $etcDir/update.log
+		# this complex syntax allows us to obtain return code from svn command
+		# without this syntax return code from tee would be returned
+		status=`((svn update --non-interactive --accept postpone $packagePath 2>&1 3>&-; echo \$? >&3 ) | \
+                          tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1` 
+		rm updateStatus.tmp
+		
+		if [ $status -ne 0 ]; then
                     echo "svn update encountered some problems in $packagePath."
                     exit 1
-                fi
-	        hasConflicts=$(svn status $packagePath | grep "C       ")
-	        if [ "$hasConflicts" != "" ]; then
-	            echo "The following svn conflicts have been found:"
+		fi
+		hasConflicts=$(svn status $packagePath | grep "C       ")
+		if [ "$hasConflicts" != "" ]; then
+	            echo "Interrupted updating packages as the following svn conflicts have been found:"
 	            echo $hasConflicts
 	            exit 1
-	        fi
-            fi 
-            
-            local deps=( `getArrayOfPackageDependencies $packagePath` )
-            local depsNumberOfElements=${#deps[@]}
-            if [ $depsNumberOfElements -gt 0 ]; then
-                echo
-                echo " Updating dependencies for package $package ... " 
-                echo " Updating dependencies for package $package ... " >> $etcDir/update.log
-            fi
-
-            local idy=0
-            while [ $idy -lt $depsNumberOfElements ]; do
-                let "categoryIdy = $idy + 1"
-                let "packageIdy = $idy + 2"
-                let "tagIdy = $idy + 3"
-                local packageDep=${deps[$packageIdy]}
-                local categoryDep=${deps[$categoryIdy]}
-                local tagDep=${deps[$tagIdy]}
-                local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
-               
-                if [ ! -d $packageDepPath ]; then
-                    echo
-                    echo "  Dependency $packageDep for package $package doesn't exist locally"
-                    echo "  Dependency $packageDep for package $package doesn't exist locally" >> $etcDir/update.log
-                    echo "  Checking it out ..."
-                    echo "  Checking it out ..." >> $etcDir/update.log
-                    checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
-                else
-                    echo 
-                    echo  "  Updating dependency package $packageDep ..."
-                    echo  "  Updating dependency package $packageDep ..." >> $etcDir/update.log
-
-                    # this complex syntax allows us to obtain return code from svn command
-                    # without this syntax return code from tee would be returned
-                    status=`((svn update --non-interactive --accept $svnUpdateConflict $packageDepPath 2>&1 3>&-; echo \$? >&3 ) | \
-                              tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1`
-                    rm updateStatus.tmp
-                    if [ $status -ne 0 ]; then
-                        echo "svn update encountered some problems in $packageDepPath."
-                        exit 1
-                    fi
-	            hasConflicts=$(svn status $packageDepPath | grep "C       ")
-	            if [ "$hasConflicts" != "" ]; then
-	                echo "The following svn conflicts have been found:"
-	                echo $hasConflicts
-	                exit 1
-	            fi
-                fi
-                let "idy = $idy + 4"
-            done
-
-        fi
-             
-    done
-        
+		fi
+		
+		cd $categoryPath
+		
+	    done
+	done
+    fi
+    
     echo
     echo " Update successful." 
     echo " Update information has been written to: $etcDir/update.log"
     echo
+	    
 }
+
+
 
 # Rebuild all packages in a given configuration
 # @param $1 buildType [Release|Debug]
 # @param $2 force [force,canSkip]
 # @param $3 packageName ("" if not provided)
 # @param $4 packagecategory ("" if not provided)
-function rebuildConfiguration() {
+function rebuildInstalled() {
     buildType=$1
     force=$2
     
@@ -1461,33 +1373,46 @@ function listPackages() {
 function listInstalledPackages() {
     
     echo
-    echo " Installed packages (with corresponding category):"
+    echo " Installed packages (name, category, version):"
     echo
 
-    local sortedPackages
-    local sortedPackagesNumberOfElements
-    # Retrieve array of installed packages
-    sortedPackages=( `getSortedArrayOfInstalledPackages ` ) 
-    sortedPackagesNumberOfElements=${#sortedPackages[@]}
+    cd $scriptDir/packages
     
-    local idx=-4
-    local max_idx
-    let "max_idx = sortedPackagesNumberOfElements -4"
-    while [ "$idx" -lt "$max_idx" ]
-    do
-      let "idx = $idx + 4"        
+    for cat in *; do
+	
+	# Skip every non-folder
+	if [ ! -d $cat ]; then
+	    continue
+	fi
+	
+	local categoryPath=$scriptDir/packages/$cat	    
+	cd $categoryPath
+	
+	for pck in *; do
+	    
+	    if [ ! -d $pck ]; then
+		continue
+	    fi
+	    
+	    local packagePath=$scriptDir/packages/$cat/$pck
+	    cd $packagePath
+	    
+	    cd $packagePath
+	    tagLocal=`svn info|grep "URL"`
+	    tagLocal=`expr "$tagLocal" : '.*/\(.*/.*\)'`
+	    dPart=${tagLocal%%/*}
+	    vPart=${tagLocal##*/}
+	    if [ "$vPart" == "trunk" ]; then
+		tagLocal=trunk
+	    fi
 
-      let "categoryIdx = $idx + 1"
-      let "packageIdx = $idx + 2"
-      let "tagIdx = $idx + 3"
-      
-      category=${sortedPackages[$categoryIdx]}
-      package=${sortedPackages[$packageIdx]}
-      
-      echo " $package ($category)"
-    
-   done
-   echo
+	    printf '%25s %15s %20s\n' "$pck" "$cat" "$tagLocal"
+	    
+	    cd $categoryPath
+	    
+	done
+    done
+    echo
 }
 
 
@@ -1725,21 +1650,17 @@ End-of-help
         cat <<End-of-help
 update: updates the currently installed package configurations.
 
-usage: update CONFIGURATION_NAME [PACKAGE_NAME]
+usage: update [PACKAGE_NAME PACKAGE_CATEGORY]
 
-CONFIGURATION_NAME: updates all packages within the installed configuration
-
-PACKAGE_NAME : updates only this package with its dependencies
-
-If a new package is added to a given configuration it will be checked out.
+PACKAGE_NAME PACKAGE_CATEGORY: if provided only this package will be rebuilt
 
 Examples:
 
-(1) Update code from repository for all packages in pnccd configuration with their dependencies
- $0 update pnccd
+(1) Update code from repository for all packages and all dependencies
+ $0 update
 
-(2) Update only beckhoffMotor package within pnccd configuration with its dependencies
- $0 update pnccd beckhoffMotor
+(2) Update only beckhoffMotor package in controlDevices category
+ $0 update beckhoffMotor controlDevices
 
 End-of-help
     
@@ -2021,23 +1942,16 @@ until [ -z "$1" ]; do
     # Update packages
     elif [ $1 = "update" ]; then
         update=1
-        if [ $# -lt 2 ]; then
-            detailedHelp $1
-        elif [ $2 = "help" ]; then
-            detailedHelp $1
-        fi
-        configurationName=$2
-        if [[ "$configurationName" == "all" ]]; then
-            echo " $configurationName configuration is not supported"
-            exit 1
-        fi
-        shift;
-        until [ -z "$2" ]; do
-                packageName=$2
-                echo "update $packageName"
-                shift;
-        done
-        shift
+	if [ -n "$2" ]; then
+	    if [ -z "$3" ]; then
+		echo " Missing option: expecting PACKAGE_CATEGORY"
+		exit 1
+	    fi
+	    packageName=$2
+	    packageCategory=$3
+	    shift; shift
+	fi
+	shift
     # Rebuild suite
     elif [ $1 = "rebuild" ]; then
         rebuild=1
@@ -2144,8 +2058,7 @@ elif [[ "$install_s" == "1" ]]; then
     installConfiguration $configurationName $buildType $forceInstallation
 
 elif [[ "$update" == "1" ]]; then
-    #lowerPackageName=$(toLower $packageName)
-    updateConfiguration $configurationName $packageName
+    updateInstalled $packageName $packageCategory
     
 elif [[ "$list" == "1" ]]; then
     if [[ "$listWhat" == "packages" ]]; then
@@ -2173,7 +2086,7 @@ elif [[ "$import" == "1" ]]; then
     importPackage $packageDevPath $packageName $packageCategory $tag
 
 elif [[ "$rebuild" == "1" ]]; then
-    rebuildConfiguration $buildType $forceRebuild $packageName $packageCategory
+    rebuildInstalled $buildType $forceRebuild $packageName $packageCategory
 
 elif [[ "$createTag" == "1" ]]; then
     createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
