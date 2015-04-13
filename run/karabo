@@ -42,7 +42,7 @@ fi
 VERSION_MAJ=${VERSION%.*.*}
 VERSION_MIN=${VERSION%.*}
 
-echo "Found version: $VERSION"
+#echo "Found version: $VERSION"
 
 function getEmail() {
     
@@ -243,6 +243,7 @@ force=0
 buildType="Debug"
 #svnUpdateConflict="postpone"
 forceRebuild="canSkip"
+forceInstallation=0
 checkLocal="n"  #for update
 clean="n"       #for update
 templateName=""      #for new
@@ -454,7 +455,7 @@ function checkoutPackage() {
         exit 1
     fi
     echo 
-    echo -n " Adding package $package, please wait..."
+    echo -n " Checking out package \"$package\" ($category), please wait..."
     local packagePath=$packageDevPath/packages/$category/$package
     if [ ! -d $packageDevPath/packages ]; then
         mkdir -p $packageDevPath/packages
@@ -462,45 +463,86 @@ function checkoutPackage() {
     if [ ! -d $packageDevPath/packages/$category ]; then
         mkdir -p $packageDevPath/packages/$category
     fi
-    if [ -d $packagePath ]; then
-        if [[ "$force" == "0" ]]; then
-            cd $packagePath
-            #taglocal=`svn info|grep URL|awk -F/ '{print $NF}'`
-	    taglocal=`svn info|grep "Relative URL"`
-	    taglocal=`expr "$taglocal" : '.*/\(.*/.*\)'`
-            cd $scriptDir
-            if [[ "$tag" != "$taglocal" ]]; then
-               echo
-               echo "  Warning:"
-               echo "  You want to check out package $package version $tag"
-               echo "  but it exists already with version $taglocal"
-               echo "  Checkout is skipped, resolve manually"
-               echo
-            else
-               echo
-               echo "  Package $package already exists, skipping "
-               echo
-            fi
-            skip=1
-            #exit 1
-        fi
+
+    # If forced, everything that existed is wiped away
+    if [[ "$force" == "1" ]]; then
+	rm -rf $packagePath
     fi
 
-    if [[ "$isSvn" == "1" && "$skip" == "0" ]]; then
-         # TODO Check if svn rep is accessible
-        svn co -r $revision $svnPath/$category/$package/$tag $packagePath -q
-        echo " done."
-        echo " Package was checked out to $packageDevPath/packages/$category/$package"
-    elif [[ "$isSvn" == "0" && "$skip" == "0" ]]; then
-        svn export -r $revision $svnPath/$category/$package/$tag $packagePath
-        echo " done."
-        echo " Package was exported to $packageDevPath/packages/$category/$package"
-    fi
+    if [ -d $packagePath ]; then
+	
+	# Check, wether the tags are still the same
+	cd $packagePath
+	tagLocal=`svn info|grep "URL"`
+	tagLocal=`expr "$tagLocal" : '.*/\(.*/.*\)'`
+	dPart=${tagLocal%%/*}
+	vPart=${tagLocal##*/}
+	if [ "$vPart" == "trunk" ]; then
+	    tagLocal=trunk
+	fi
+	cd $scriptDir
+	if [[ "$tag" != "$tagLocal" ]]; then
+	    echo
+	    echo " WARNING Package \"$package\" already exists and is in wrong version."
+	    echo "         Installation requires package $package in version $tag"
+	    echo "         but it (locally) exists in version $tagLocal"
+	    echo
+	    echo -n " Do you want to change version (old package will be deleted)? [y/n] "
+	    read c
+	    if [ "x$c" == "xy" ]; then 
+		rm -rf $packagePath
+		if [[ "$isSvn" == "1" ]]; then
+		    svn co -r $revision $svnPath/$category/$package/$tag $packagePath -q
+		else
+		    svn export -r $revision $svnPath/$category/$package/$tag $packagePath
+		fi
+		echo " Package now is in local version $tag."
+	    else
+		echo " Nothing done."
+		return		
+	    fi
+	else
+	    echo
+	    echo " WARNING Package \"$package\" already exists."
+	    echo
+	    echo -n " Do you want to (svn) update the existing package? [y/n] "
+	    read c
+	    if [ "x$c" == "xy" ]; then 
+		status=`((svn update --non-interactive --accept postpone $packagePath 2>&1 3>&-; echo \$? >&3 ) | \
+                          tee -a $etcDir/update.log 1>&2 1>updateStatus.tmp  3>&- ) 3>&1` 
+		rm updateStatus.tmp
+            
+		if [ $status -ne 0 ]; then
+                    echo " ERROR svn update encountered some problems in $packagePath."
+                    exit 1
+		fi
+		hasConflicts=$(svn status $packagePath | grep "C       ")
+		if [ "$hasConflicts" != "" ]; then
+	            echo " The following svn conflicts have been found:"
+	            echo $hasConflicts
+	            exit 1
+		fi	    		
+	    else
+		echo " Nothing done."
+		return
+	    fi
+	fi	
+    else
+	if [[ "$isSvn" == "1" ]]; then
+	    svn co -r $revision $svnPath/$category/$package/$tag $packagePath -q
+	    echo " done."
+            echo " Package was checked out to $packageDevPath/packages/$category/$package"
+	else
+	    svn export -r $revision $svnPath/$category/$package/$tag $packagePath
+	    echo " done."
+            echo " Package was exported to $packageDevPath/packages/$category/$package"
+	fi
+    fi  
 
     # restoring previous svnPath
     svnPath=$oldSvnPath
 
-    echo " Checking for dependencies for package $package ... please wait"
+    echo " Checking dependencies for package $package ... please wait"
     local deps=( `getArrayOfPackageDependencies $packagePath` )
     local depsNumberOfElements=${#deps[@]}
     if [ $depsNumberOfElements -gt 0 ]; then
@@ -800,18 +842,12 @@ function importPackage() {
 # For each package resolves its dependencies separately (one level only)
 # @param $1 configuration The (file-)name of the configuration
 # @param $2 buildType Either "Debug" or "Release"
+# @param $3 force (1 0)
 function installConfiguration() {
     
     configurationName=$1
     buildType=$2
-
-    if [ -h $etcDir/installed/$1 ]; then
-        echo " Configuration \"$1\" is already installed."
-        echo " Use: $0 update and $0 rebuild"
-        echo " to update or rebuild installed configuration"
-        echo
-        exit 1
-    fi
+    force=$3
     
     echo
     echo " Installing configuration \"$1\"..."
@@ -826,87 +862,32 @@ function installConfiguration() {
     local rowIdx=-1
     while [ "$idx" -lt "$max_idx" ]
     do
-      let "idx = $idx + 4"         # These two lines are at the beginning of the loop because of the continue statements
-      let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
-
-      let "typeIdx = $idx"
-      let "categoryIdx = $idx + 1"
-      let "packageIdx = $idx + 2"
-      let "tagIdx = $idx + 3"
-
-      local type=${sortedPackages[$typeIdx]}
-      local category=${sortedPackages[$categoryIdx]}
-      local package=${sortedPackages[$packageIdx]}
-      local tag=${sortedPackages[$tagIdx]}
-
+	# These two lines are at the beginning of the loop because of the continue statements
+	let "idx = $idx + 4"        
+	let "rowIdx = $rowIdx + 1"   # see initialization (-3 and -1)
+	
+	let "typeIdx = $idx"
+	let "categoryIdx = $idx + 1"
+	let "packageIdx = $idx + 2"
+	let "tagIdx = $idx + 3"
+	
+	local type=${sortedPackages[$typeIdx]}
+	local category=${sortedPackages[$categoryIdx]}
+	local package=${sortedPackages[$packageIdx]}
+	local tag=${sortedPackages[$tagIdx]}
+	
         if [[ ${type:0:1} == "#" || -z $category ]]; then
             continue
         fi        
-        
-        echo
-        echo " Checking out package: "$package "from category: "$category
-        #echo svn -q co $fullpath $packagePath
-        checkoutPackage $scriptDir $package $category $tag 0 1 $revision
-        local packagePath=$scriptDir/packages/$category/$package
-        echo " Checking for dependencies for package $package ... please wait"
-        local deps=( `getArrayOfPackageDependencies $packagePath` )
-        local depsNumberOfElements=${#deps[@]} 
-        if [ $depsNumberOfElements -gt 0 ]; then
-            echo
-            echo " Building  dependencies for package $package first ... " 
-        fi
-        local idy=0
-        while [ $idy -lt $depsNumberOfElements ]; do
-            let "categoryIdy = $idy + 1"
-            let "packageIdy = $idy + 2"
-            local packageDep=${deps[$packageIdy]}
-            local categoryDep=${deps[$categoryIdy]}
-            echo 
-            echo  "  Building dependency package $packageDep ..."
-            local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
-            cd $packageDepPath
-            if [ -e Makefile ]; then
-                make -j2 CONF=$buildType
-                # link is created only for devices(plugins), not for their dependencies 
-                #if [ $? -eq 0 ]; then
-                #    cd $scriptDir/run/deviceServer/plugins
-                #    ln -sf $packageDepPath/dist/$buildType/*/*
-                #fi
-            fi
-            cd $scriptDir
-            let "idy = $idy + 4"
-        done
-        echo
-        echo " Building package $package ..."
-        cd $packagePath
-        if [ -e Makefile ]; then
-            make -j2 CONF=$buildType
-            # link only when library.so file exist otherwise explicit '*/*' link created
-            if [ $? -eq 0 ]; then 
-                cd $scriptDir/servers/cppDeviceServer/plugins
-                find $scriptDir/packages/$category/$package/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
-            fi      
-        else
-            cd $scriptDir/servers/pythonDeviceServer/plugins
-            find $scriptDir/packages/$category/$package/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
-        fi
-        cd $scriptDir
+
+	checkoutPackage $scriptDir $package $category $tag $force 1 $revision	
+	buildPackage $package $category $buildType force
+	    
     done
+    
     echo
     echo " No more packages to install"
     echo
-
-    # Test whether installed directory exists
-    if [ ! -d $etcDir/installed ]; then
-        mkdir $etcDir/installed
-    fi
-
-    # Create a softlink
-    cd $etcDir/installed
-    ln -sf ../configurations/$configurationName
-    cd $scriptDir
-  
-
 }
 
 # Return the array of packages to be installed sorted according to svn directory listing
@@ -1033,15 +1014,7 @@ function getSortedArrayOfInstalledPackages(){
 # @param $1 configurationName
 # @param $2 package Updates only this package with its dependencies
 function updateConfiguration() {
-    echo
-    if [ ! -d $etcDir/installed ]; then
-        echo " No configurations seems to be installed."
-        echo " Please install a configuration prior to updating."
-        echo -e " Type: \"$0 help install\" for help.\n"
-        exit 1
-    fi
     
-    #echo "arg1 $1 arg2 $2 arg3 $3 arg4 $4 arg5 $5"
     date=$(date +"%B %d, %Y, %I:%M %p")
     echo " #-------- KARABO PACKAGE UPDATE ($date) --------#" | tee -a $etcDir/update.log
 
@@ -1105,16 +1078,16 @@ function updateConfiguration() {
 
 		# Check, wether the tags are still the same
 		cd $packagePath
-		taglocal=`svn info|grep "Relative URL"`
-		taglocal=`expr "$taglocal" : '.*/\(.*/.*\)'`
+		tagLocal=`svn info|grep "Relative URL"`
+		tagLocal=`expr "$tagLocal" : '.*/\(.*/.*\)'`
 		cd $scriptDir
-		if [[ "$tag" != "$taglocal" ]]; then
+		if [[ "$tag" != "$tagLocal" ]]; then
 		    echo
-		    echo "  Warning:"
-		    echo "  Update requires package $package in version $tag"
-		    echo "  but it (locally) exists in version $taglocal"
+		    echo " Warning:"
+		    echo " Update requires package $package in version $tag"
+		    echo " but it (locally) exists in version $tagLocal"
 		    echo
-		    echo -n "  Do you want to change version (old package will be deleted)? [y/n] "
+		    echo -n " Do you want to change version (old package will be deleted)? [y/n] "
 		    read c
 		    if [ "x$c" == "xy" ]; then 
 			rm -rf $packagePath
@@ -1123,12 +1096,10 @@ function updateConfiguration() {
 			echo " Package now is in local version $tag"
 		    else
 			echo
-			echo "  Nothing done, package is not in sync with configuration file"
+			echo " Nothing done, package is not in sync with configuration file"
 			echo
-			exit 1;
+			continue			
 		    fi
-
-
 		fi
             
                 echo " Update of package: \"$package\""
@@ -1213,11 +1184,15 @@ function updateConfiguration() {
 # Rebuild all packages in a given configuration
 # @param $1 buildType [Release|Debug]
 # @param $2 force [force,canSkip]
+# @param $3 packageName ("" if not provided)
+# @param $4 packagecategory ("" if not provided)
 function rebuildConfiguration() {
     buildType=$1
-    force=n
-    if [[ "x$2" == "xforce" ]]; then
-        force=y
+    force=$2
+    
+    if [[ "$3" != "" ]]; then
+	buildPackage $3 $4 $buildType $force
+	return
     fi
 
     cd $scriptDir/packages
@@ -1243,73 +1218,92 @@ function rebuildConfiguration() {
 		continue
 	    fi
 
-	    local packagePath=$scriptDir/packages/$cat/$pck
+	    #local packagePath=$scriptDir/packages/$cat/$pck
 
-	    echo
-	    echo "  Rebuilding package: \"$pck\""
-
-	    ### Check and, if necessary, rebuild all dependecies
-
-	    local deps=( `getArrayOfPackageDependencies $packagePath` ) 
-	    local depsNumberOfElements=${#deps[@]}
-	    if [ $depsNumberOfElements -gt 0 ]; then		
-		echo " Rebuilding dependencies for package \"$pck\" first ... " 
-		echo
-	    else
-		echo "  Package \"$pck\" has no dependencies to rebuild."
-	    fi
-	    
-	    
-	    local idy=0
-	    while [ $idy -lt $depsNumberOfElements ]; do
-		let "categoryIdy = $idy + 1"
-		let "packageIdy = $idy + 2"
-		let "tagIdy = $idy + 3"
-		local packageDep=${deps[$packageIdy]}
-		local categoryDep=${deps[$categoryIdy]}
-		local tagDep=${deps[$tagIdy]}
-		echo 
-		echo  "  Rebuilding dependency package $packageDep ..."
-		local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
-		if [ ! -d $packageDepPath ]; then
-		    echo " Dependency $packageDep for package $package doesn't exists locally"
-		    echo " Checking it out ...."
-		    checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
-		fi
-		cd $packageDepPath
-		if [ -e Makefile ]; then
-		    if [[ "$force" == "y" ]]; then
-			make clean
-		    fi
-		    make -j${numMakeThreads} CONF=$buildType              
-		fi
-		cd $scriptDir
-		let "idy = $idy + 4"
-	    done
-	    
-	    ### Rebuild package itself
-
-	    cd $packagePath
-	    if [ -e Makefile ]; then
-		if [[ "$force" == "y" ]]; then
-		    make clean
-		fi
-		make -j${numMakeThreads} CONF=$buildType
-		# link only when library.so file exist otherwise explicit '*/*' link created
-		if [ $? -eq 0 ]; then
-		    cd $scriptDir/servers/cppDeviceServer/plugins
-		    find $scriptDir/packages/$cat/$pck/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
-		fi
-	    else
-		cd $scriptDir/servers/pythonDeviceServer/plugins
-		find $scriptDir/packages/$cat/$pck/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
-	    fi
+	    buildPackage $pck $cat $buildType $force        
 
 	    cd $categoryPath
 	    
 	done
     done
 	    
+}
+
+# @param $1 package
+# @param $2 category
+# @param $3 buildType [Release|Debug]
+# @param $4 force [force,canSkip]
+function buildPackage() {
+    
+    local pck=$1
+    local cat=$2
+    local buildType=$3
+    force=n
+    if [[ "x$4" == "xforce" ]]; then
+        force=y
+    fi
+
+    local packagePath=$scriptDir/packages/$cat/$pck
+
+    echo
+    echo " Building package: \"$pck\""
+    
+    ### Check and, if necessary, build all dependecies
+    
+    local deps=( `getArrayOfPackageDependencies $packagePath` ) 
+    local depsNumberOfElements=${#deps[@]}
+    if [ $depsNumberOfElements -gt 0 ]; then		
+	echo " Building dependencies for package \"$pck\" first ... " 
+	echo
+    else
+	echo " Package \"$pck\" has no dependencies to build."
+    fi
+    
+    
+    local idy=0
+    while [ $idy -lt $depsNumberOfElements ]; do
+	let "categoryIdy = $idy + 1"
+	let "packageIdy = $idy + 2"
+	let "tagIdy = $idy + 3"
+	local packageDep=${deps[$packageIdy]}
+	local categoryDep=${deps[$categoryIdy]}
+	local tagDep=${deps[$tagIdy]}
+	echo 
+	echo  "  Building dependency package $packageDep ..."
+	local packageDepPath=$scriptDir/packages/$categoryDep/$packageDep
+	if [ ! -d $packageDepPath ]; then
+	    echo " Dependency $packageDep for package $package doesn't exists locally"
+	    echo " Checking it out ...."
+	    checkoutPackage $scriptDir $packageDep $categoryDep $tagDep 0 1 $revision
+	fi
+	cd $packageDepPath
+	if [ -e Makefile ]; then
+	    if [[ "$force" == "y" ]]; then
+		make clean
+	    fi
+	    make -j${numMakeThreads} CONF=$buildType              
+	fi
+	cd $scriptDir
+	let "idy = $idy + 4"
+    done
+    
+    ### Build package itself
+    
+    cd $packagePath
+    if [ -e Makefile ]; then
+	if [[ "$force" == "y" ]]; then
+	    make clean
+	fi
+	make -j${numMakeThreads} CONF=$buildType
+	# link only when library.so file exist otherwise explicit '*/*' link created
+	if [ $? -eq 0 ]; then
+	    cd $scriptDir/servers/cppDeviceServer/plugins
+	    find $scriptDir/packages/$cat/$pck/dist/$buildType -type f \( -name \*.so -or -name \*.dylib \) -exec ln -sf {} \;
+	fi
+    else
+	cd $scriptDir/servers/pythonDeviceServer/plugins
+	find $scriptDir/packages/$cat/$pck/src -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \;
+    fi    
 }
 
 
@@ -1700,7 +1694,7 @@ Examples:
 
 End-of-help
 
-    elif [[ "$1" == "install" ]]; then
+    elif [[ "$1" == "install-s" ]]; then
         cat <<End-of-help
 install-s: Install a selected package configuration (from sources).
 
@@ -1711,6 +1705,7 @@ Valid package configurations can be listed using:
 
 Valid options:
   -type [Debug|Release] : the build type for the individual packages, defaults to Debug
+  -force:               : existing packages will be overwritten (previous data is lost!)
              
 Examples:
 
@@ -1753,7 +1748,9 @@ End-of-help
 rebuild: rebuilds all installed packages. Dependencies of each package
  are rebuilt first, then the package itself. 
 
-usage: rebuild [options]
+usage: rebuild [PACKAGE_NAME PACKAGE_CATEGORY] [options]
+
+PACKAGE_NAME PACKAGE_CATEGORY: if provided only this package will be rebuilt
 
 Valid options:
   -type [Debug|Release] : the build type for the individual packages, defaults to Debug 
@@ -1770,6 +1767,9 @@ Examples:
 
 (3) Rebuild all installed packages with their dependencies regardless of local modifications in "Release" mode
  $0 rebuild -force -type Release
+
+(4) Rebuild package "helloWorld" of category "testDevices"
+ $0 rebuild helloWorld testDevices
 
 End-of-help
         
@@ -2009,9 +2009,12 @@ until [ -z "$1" ]; do
                     exit 1
                 fi
                 shift; shift
+	    elif [[ "$2" == "-force" ]]; then
+                forceInstallation="1"
+                shift
             else
                 echo " Invalid option: \"$2\""
-                detailedHelp "install"
+                detailedHelp "install-s"
             fi
         done
         shift
@@ -2058,10 +2061,14 @@ until [ -z "$1" ]; do
             elif [[ "$2" == "-force" ]]; then
                 forceRebuild="force"
                 shift
-            else
-                echo " Invalid option: \"$2\", expecting either -force or -type"
-		exit 1
-                shift;
+            else 
+		if [ -z "$3" ]; then
+		    echo " Missing option: expecting PACKAGE_CATEGORY"
+		    exit 1
+		fi
+                packageName=$2
+		packageCategory=$3
+		shift; shift
             fi
         done
         shift
@@ -2134,7 +2141,7 @@ done
 if [[ "$forget" == "1" ]]; then
     removeContinueBuildInfo
 elif [[ "$install_s" == "1" ]]; then
-    installConfiguration $configurationName $buildType
+    installConfiguration $configurationName $buildType $forceInstallation
 
 elif [[ "$update" == "1" ]]; then
     #lowerPackageName=$(toLower $packageName)
@@ -2166,7 +2173,7 @@ elif [[ "$import" == "1" ]]; then
     importPackage $packageDevPath $packageName $packageCategory $tag
 
 elif [[ "$rebuild" == "1" ]]; then
-    rebuildConfiguration $buildType $forceRebuild
+    rebuildConfiguration $buildType $forceRebuild $packageName $packageCategory
 
 elif [[ "$createTag" == "1" ]]; then
     createSvnTag $packageName $packageCategory $svnTagFrom $svnTagName
