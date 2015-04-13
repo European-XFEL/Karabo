@@ -5,10 +5,7 @@ from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
 import collections.abc
 import site
 
-try:
-    dll = CDLL("libopenmqc.so")
-except OSError as e:
-    dll = CDLL(site.getsitepackages()[0] + "/../../libopenmqc.so")
+dll = CDLL("libopenmqc.so")
 
 
 class Error(Exception):
