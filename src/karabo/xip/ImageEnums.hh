@@ -26,6 +26,8 @@ namespace karabo {
                 BAYER,
                 JPEG,
                 PNG,
+                BMP,
+                TIFF,
             };
         }
 
