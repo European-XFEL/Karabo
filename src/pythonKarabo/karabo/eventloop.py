@@ -187,18 +187,30 @@ class NoEventLoop(AbstractEventLoop):
 
     def __init__(self, instance):
         self._instance = instance
+        self._cancelled = False
+        self.task = None
+
+    def cancel(self):
+        self._cancelled = True
+        if self.task is not None:
+            self.task.cancel()
 
     def sync(self, coro, timeout=-1):
+        if self._cancelled:
+            raise CancelledError
         lock = threading.Lock()
         lock.acquire()
-        task = async(coro, loop=self._instance._ss.loop)
-        task.add_done_callback(lambda _: lock.release())
+        self.task = async(coro, loop=self._instance._ss.loop)
+        self.task.add_done_callback(lambda _: lock.release())
         lock.acquire(timeout=timeout)
-        if task.done():
-            return task.result()
-        else:
-            task.cancel()
-            raise TimeoutError
+        try:
+            if self.task.done():
+                return self.task.result()
+            else:
+                self.task.cancel()
+                raise TimeoutError
+        finally:
+            self.task = None
 
     def instance(self):
         return self._instance

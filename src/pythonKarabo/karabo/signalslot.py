@@ -147,7 +147,7 @@ class SignalSlotable(Configurable):
         requiredAccessLevel=AccessLevel.ADMIN)
 
     def __init__(self, configuration):
-        self._sethash = Hash()
+        self._sethash = {"ignore": "this"}
         for k in dir(type(self)):
             if isinstance(getattr(self, k, None), Signal):
                 setattr(self, k, BoundSignal(self, k, getattr(self, k)))
@@ -162,7 +162,7 @@ class SignalSlotable(Configurable):
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
-        self._sethash = None
+        self._sethash = {}
         return loop.create_task(self.run_async(), self)
 
     def slotPing(self, instanceId, rand, track=None):
@@ -282,19 +282,21 @@ class SignalSlotable(Configurable):
 
     def setValue(self, attr, value):
         self.__dict__[attr] = value
-        if self._sethash is None:
-            self._sethash = Hash()
-            self._ss.loop.call_soon_threadsafe(self.update)
+        update = not self._sethash
         self._sethash[attr.key] = value
+        if update:
+            self._ss.loop.call_soon_threadsafe(self.update)
 
     def update(self):
-        if self._sethash is not None:
-            self.signalChanged(self._sethash, self.deviceId)
-            self._sethash = None
+        hash = Hash()
+        while self._sethash:
+            k, v = self._sethash.popitem()
+            hash[k] = v
+        if hash:
+            self.signalChanged(hash, self.deviceId)
 
     def setChildValue(self, key, value):
-        if self._sethash is None:
-            self._sethash = Hash()
+        if not self._sethash:
             self._ss.loop.call_soon_threadsafe(self.update)
         self._sethash[key] = value
 

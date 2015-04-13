@@ -62,6 +62,7 @@ class Remote(Device):
 class Local(Macro):
     @Slot()
     def remotecalls(self):
+        self.nowstate = self.state
         print("superpuper", end="hero")
 
     @Slot()
@@ -254,7 +255,10 @@ class Tests(TestCase):
     def test_remotecalls(self):
         sys.stdout = KaraboStream(sys.stdout)
         try:
+            self.assertEqual(local.state, "Idle...")
             yield from remote.call_local()
+            self.assertEqual(local.nowstate, "remotecalls")
+            self.assertEqual(local.state, "Idle...")
             self.assertEqual(local.print, "hero")
             self.assertEqual(local.printno, 2)
         finally:
