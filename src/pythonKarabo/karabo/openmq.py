@@ -3,9 +3,12 @@ from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
                     c_float, c_double, c_uint, string_at, Structure)
 import collections.abc
+import site
 
-
-dll = CDLL("libopenmqc.so")
+try:
+    dll = CDLL("libopenmqc.so")
+except OSError as e:
+    dll = CDLL(site.getsitepackages()[0] + "/../../libopenmqc.so")
 
 
 class Error(Exception):
