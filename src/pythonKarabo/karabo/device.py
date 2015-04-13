@@ -1,5 +1,5 @@
-__author__="Sergey Esenov <serguei.essenov at xfel.eu>"
-__date__ ="$Jul 30, 2012 9:03:51 PM$"
+__author__ = "Sergey Esenov <serguei.essenov at xfel.eu>"
+__date__ = "$Jul 30, 2012 9:03:51 PM$"
 
 import threading
 import os
@@ -393,7 +393,7 @@ class PythonDevice(NoFsm):
                 format(alias, e))
 
     def aliasHasKey(self, alias):
-        return self.fullSchema.aliasHasKey(key)
+        return self.fullSchema.aliasHasKey(alias)
     
     def keyHasAlias(self, key):
         return self.fullSchema.keyHasAlias(key)
