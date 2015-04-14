@@ -1,13 +1,15 @@
 __author__="luis.maia@xfel.eu"
 __date__ ="April 2, 2014"
 
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from suds.client import Client
 import suds.transport.options # this fixes import of suds. why? Dunno.
 
 class Authenticator(object):
     url = 'https://exfl-tb04.desy.de:8181/XFELWebAuth/Authentication?WSDL'
     softwareDesc = 'Karabo'
-
 
     def __init__(self, username, password, provider, currentIpAddress,
                  brokerHostname, brokerPortNumber, brokerTopic):
