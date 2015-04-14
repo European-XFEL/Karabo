@@ -144,7 +144,7 @@ class  P2p_asyncTestCase(unittest.TestCase):
                 self.assertEqual(h['server'], "APPROVED!")
                 self.assertEqual(h['a.b.c'], 1)
                 self.assertEqual(h['x.y.z'], [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25])
-                self.assertEqual(h['d.abc'], 'rabbish')
+                self.assertEqual(h['d.abc'], 'rubbish')
                 channel.close()
             except Exception as e:
                 self.fail("test_asynchronous_client exception group 1: " + str(e))
