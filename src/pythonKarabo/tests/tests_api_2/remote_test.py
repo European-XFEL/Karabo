@@ -20,6 +20,11 @@ class Superslot(Slot):
         device.value = 22
 
 
+class SuperInteger(Integer):
+    def setter(self, device, value):
+        device.value = 2 * value
+
+
 class Remote(Device):
     value = Integer(defaultValue=7)
     counter = Integer(defaultValue=-1)
@@ -65,6 +70,7 @@ class Remote(Device):
             yield from sleep(0.1)
 
     generic = Superslot()
+    generic_int = SuperInteger()
 
 
 class Local(Device):
@@ -114,6 +120,13 @@ class Local(Device):
     def dogeneric(self):
         d = yield from getDevice("remote")
         yield from d.generic()
+
+    @Slot()
+    @coroutine
+    def dogenericint(self):
+        d = yield from getDevice("remote")
+        d.generic_int = 33
+        yield from d
 
     @Slot()
     @coroutine
@@ -270,6 +283,13 @@ class Tests(TestCase):
         yield from local.dogeneric()
         yield from sleep(0.1)
         self.assertEqual(remote.value, 22)
+
+    @async_tst
+    def test_generic_int(self):
+        remote.value = 7
+        yield from local.dogenericint()
+        yield from sleep(0.1)
+        self.assertEqual(remote.value, 66)
 
     @async_tst
     def test_other(self):
