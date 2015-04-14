@@ -539,10 +539,9 @@ namespace karabo {
                 replyHeader.set("signalFunction", "__reply__");
                 replyHeader.set("slotInstanceIds", "|" + header.get<string>("signalInstanceId") + "|");
                 if (it != m_replies.end()) {
-                    it->second.set("acknowledge", true);
                     m_producerChannel->write(replyHeader, it->second);
                 } else if (!global) {
-                    m_producerChannel->write(replyHeader, karabo::util::Hash("acknowledge", false));
+                    m_producerChannel->write(replyHeader, karabo::util::Hash());
                 }
             }
             if (it != m_replies.end()) {
