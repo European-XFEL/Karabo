@@ -1,0 +1,13 @@
+.idea/
+.exflpcx19154.desy.de_ds01_info
+.exflpcx19154.desy.de_ds02_info
+.exflpcx19154.desy.de_info
+.exflpcx19164.desy.de_ds03_info
+.exflpcx19164.desy.de_info
+.hosts
+.repos
+root@exflpcx19154.desy.de
+root@exflpcx19164.desy.de
+.gitignore~
+config.ini~
+
