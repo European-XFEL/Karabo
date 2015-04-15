@@ -22,6 +22,7 @@
         <itemPath>../../../src/karabo/core/BaseFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/CameraFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/FsmMacros.hh</itemPath>
+        <itemPath>../../../src/karabo/core/MotorInterface.hh</itemPath>
         <itemPath>../../../src/karabo/core/NoFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
@@ -584,6 +585,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2366,6 +2372,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
             tool="3"
             flavor2="0">
