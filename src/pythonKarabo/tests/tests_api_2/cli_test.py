@@ -48,6 +48,7 @@ class Tests(TestCase):
         r = weakref.ref(remote)
         thread = EventThread.instance().thread
         del remote
+        time.sleep(0.1)
         gc.collect()
         self.assertIsNone(r())
         self.assertIsNone(EventThread.instance())
