@@ -1,0 +1,72 @@
+{
+    "schema_version": 1,
+    "generation_date": "2014-05-10T12:00:02.023+02:00",
+    "installation_name": "test1",
+    "karabo_repositories": [
+        "http://exflserv05.desy.de/karabo/karaboFramework/tags",
+	"ftp://karabo:framework@ftp.desy.de/karaboFramework/tags"
+    ],
+    "karabo_packages_repositories": [
+        "http://exflserv05.desy.de/karabo/karaboPackages",
+	"ftp://karabo:framework@ftp.desy.de/karaboPackages"
+    ],
+    "karabo_dependencies_repositories": [
+        "http://exflserv05.desy.de/karabo/karaboDependencies",
+	"ftp://karabo:framework@ftp.desy.de/karaboDependencies"
+    ],
+    "broker": {
+        "hostname": "exfl-broker.desy.de",
+        "port": 7777
+    },
+    "defaults": {
+        "karabo_version": "1.2.3",
+        "login_user": "root",
+        "karabo_user": "krbtest",
+        "run_prefix": "/home/krbtest",
+        "install_prefix": "/opt",
+        "autostart": false
+    },    
+    "hosts": [
+        {
+            "hostname": "exflpcx19154.desy.de",
+            "device_servers": [
+                {
+                    "server_id": "ds01",
+                    "autostart": false,
+                    "plugins": [
+                        {
+                            "version": "0.1.0",
+                            "name": "limaBaslerCamera"
+                        }
+                    ]
+                },
+                {
+                    "server_id": "ds02",
+                    "autostart": false,
+                    "plugins": [
+                        {
+                            "version": "1.2.0",
+                            "name": "adqDigitizer"
+                        }
+                    ]
+                }
+            ]
+
+        },
+        {
+            "hostname": "exflpcx19164.desy.de",
+            "device_servers": [
+                {
+                    "server_id": "ds03",
+                    "autostart": false,
+                    "plugins": [
+                        {
+                            "version": "1.1.0",
+                            "name": "adqDigitizer"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
