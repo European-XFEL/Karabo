@@ -127,7 +127,7 @@ namespace karabo {
         
         struct NDARRAY_ELEMENT : public DataElement<NDARRAY_ELEMENT, NDArray> {
             
-            NDARRAY_ELEMENT(karabo::util::Schema& s) : DataElement(s) {
+            NDARRAY_ELEMENT(karabo::util::Schema& s) : DataElement<NDARRAY_ELEMENT, NDArray>(s) {
             }                        
             
             NDARRAY_ELEMENT& setDimensionScales(const std::string& scales) {
