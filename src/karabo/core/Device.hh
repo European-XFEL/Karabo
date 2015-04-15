@@ -849,7 +849,7 @@ namespace karabo {
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
 
                 if (m_parameters.get<bool>("useTimeserver")) {
-                    // TODO: change this to connect(), once the startup bug is fixed)
+                    KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
                 
