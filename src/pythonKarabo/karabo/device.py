@@ -75,6 +75,14 @@ class PythonDevice(NoFsm):
                         .assignmentOptional().defaultValue(True)
                         .commit()
                         ,
+            BOOL_ELEMENT(expected).key("useTimeserver")
+                        .displayedName("Use Timeserver")
+                        .description("Decides whether to use time and train ID from TimeServer device")
+                        .init()
+                        .expertAccess()
+                        .assignmentOptional().defaultValue(False)
+                        .commit()
+                        ,
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress").description("The progress of the current action")
                     .readOnly().initialValue(0).commit()
@@ -121,6 +129,13 @@ class PythonDevice(NoFsm):
         
         # host & domain names
         self.hostname, dotsep, self.domainname = socket.gethostname().partition('.')
+        
+        # timeserver related
+        self._timeLock = threading.Lock()
+        self._timeId = 0
+        self._timeSec = 0
+        self._timeFrac = 0
+        self._timePeriod = 0
         
         # Setup the validation classes
         self.validatorIntern   = Validator()
@@ -196,8 +211,13 @@ class PythonDevice(NoFsm):
         time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
         self.startFsm()
         with self._stateChangeLock:
-            validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+
+        if self.parameters.get("useTimeserver"):
+            self.log.DEBUG("Connecting to time server")
+            self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick", ConnectionType.TRACK, False)
+
         t.join()
             
     def stopEventLoop(self):
@@ -257,7 +277,7 @@ class PythonDevice(NoFsm):
                 h = pars[0]
                 if type(h) is not Hash:
                     raise TypeError("The only argument should be a Hash")
-                pars = tuple([h, Timestamp()])   # add timestamp
+                pars = tuple([h, self._getActualTimestamp()])   # add timestamp
             
             # key, value or hash, timestamp args
             if len(pars) == 2:
@@ -269,7 +289,7 @@ class PythonDevice(NoFsm):
                     elif type(value) is RawImageData:
                         self._setRawImageData(key, value)
                         return
-                    pars = tuple([Hash(key,value), Timestamp()])
+                    pars = tuple([Hash(key,value), self._getActualTimestamp()])
                 hash, stamp = pars
                 # Check that hash is image's free
                 paths = hash.getPaths()
@@ -300,7 +320,7 @@ class PythonDevice(NoFsm):
                     self._ss.emit("signalChanged", validated, self.deviceid)
        
     def __setitem__(self, key, value):
-        self.set(key, value, Timestamp())
+        self.set(key, value, self._getActualTimestamp())
         
     def get(self,key):
         with self._stateChangeLock:
@@ -325,7 +345,7 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps           = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, Hash())
+        validated = validator.validate(schema, Hash(), self._getActualTimestamp())
         with self._stateChangeLock:
             for path in self._injectedSchema.getPaths():
                 if self.parameters.has(path) and not self.staticSchema.has(path): 
@@ -352,7 +372,7 @@ class PythonDevice(NoFsm):
         rules.injectTimestamps           = True
         validator = Validator()
         validator.setValidationRules(rules)
-        validated = validator.validate(schema, self.parameters)
+        validated = validator.validate(schema, self.parameters, self._getActualTimestamp())
         with self._stateChangeLock:
             for key in self._injectedSchema.getKeys():
                 self.parameters.erase(key)
@@ -464,6 +484,9 @@ class PythonDevice(NoFsm):
     def noStateTransition(self):
         self._ss.emit("signalNoTransition", "No state transition possible", self.deviceid)
         
+    def onTimeUpdate(self, id, sec, frac, period):
+        pass
+        
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
         self._ss.registerSignal("signalChanged", Hash, str)                # changeHash, instanceId
@@ -483,6 +506,9 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)        
+        
+        # timeserver related slots
+        self._ss.registerSlot(self.slotTimeTick)
 
     def triggerError(self, s, d):
         print("The triggerError() function is deprecated, use execute() instead")
@@ -568,6 +594,25 @@ class PythonDevice(NoFsm):
             self._ss.call(self.serverid, "slotDeviceGone", self.deviceid)
             self.stopEventLoop()
    
+    def slotTimeTick(self, id, sec, frac, period):
+        with self._timeLock:
+            self._timeId = id
+            self._timeSec = sec
+            self._timeFrac = frac
+            self._timePeriod = period
+        self.onTimeUpdate(id, sec, frac, period)
+        
+    def _getActualTimestamp(self):
+        epochNow = Epochstamp()
+        id = 0
+        with self._timeLock:
+            if self._timePeriod > 0:
+                epochLastReceived = Epochstamp(self._timeSec, self._timeFrac)
+                duration = epochNow.elapsed(epochLastReceived)
+                nPeriods = int((duration.getTotalSeconds() * 1000000 + duration.getFractions() / 1000) / self._timePeriod)
+                id = self._timeId + nPeriods
+        return Timestamp(epochNow, Trainstamp(int(id)))
+        
     def _getStateDependentSchema(self, state):
         with self._stateDependentSchemaLock:
             if state in self._stateDependentSchema:
