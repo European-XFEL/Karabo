@@ -32,7 +32,9 @@ namespace karathon {
     class SlotWrap : public karabo::xms::Slot {
         
         bp::object m_slotFunction;
-        size_t m_arity;
+        size_t m_arity;             // arity of position arguments, except *args
+        bool   m_varargs;           // flag of *args
+        bool   m_varkeywords;       // flag of **kwargs
 
     public:
 
