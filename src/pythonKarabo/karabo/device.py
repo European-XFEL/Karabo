@@ -30,75 +30,75 @@ class PythonDevice(NoFsm):
     @staticmethod
     def expectedParameters(expected):
         (
-         STRING_ELEMENT(expected).key("compatibility")
-         .displayedName("Compatibility").description("The compatibility of this device to the Karabo framework")
-         .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
-         ,
-         STRING_ELEMENT(expected).key("_serverId_")
-         .displayedName("_ServerID_").description("Do not set this property, it will be set by the device-server")
-         .expertAccess().assignmentInternal().noDefaultValue().init().commit()
-         ,
-         STRING_ELEMENT(expected).key("_deviceId_")
-         .displayedName("_DeviceID_").description("Do not set this property, it will be set by the device-server")
-         .expertAccess().assignmentInternal().noDefaultValue().init().commit()
-         ,
-         INT32_ELEMENT(expected).key("visibility")
-         .displayedName("Visibility").description("Configures who is allowed to see this device at all")
-         .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-         .expertAccess().reconfigurable().commit()
-         ,
-         CHOICE_ELEMENT(expected).key("_connection_")
-         .displayedName("Connection")
-         .description("The connection to the communication layer of the distributed system")
-         .appendNodesOfConfigurationBase(BrokerConnection)
-         .assignmentOptional().defaultValue("Jms")
-         .adminAccess()
-         .init()
-         .commit()
-         , 
-         STRING_ELEMENT(expected).key("classId")
-         .displayedName("ClassID").description("The (factory)-name of the class of this device")
-         .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
-         ,
-         STRING_ELEMENT(expected).key("serverId")
-         .displayedName("ServerID").description("The device-server on which this device is running on")
-         .expertAccess().readOnly().commit()
-         ,
-         STRING_ELEMENT(expected).key("deviceId")
-         .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
-         .readOnly().commit()
-         ,
-         BOOL_ELEMENT(expected).key("archive")
-         .displayedName("Archive")
-         .description("Decides whether the properties of this device will be logged or not")
-         .reconfigurable()
-         .assignmentOptional().defaultValue(True)
-         .commit()
-         ,
-         BOOL_ELEMENT(expected).key("useTimeserver")
-         .displayedName("Use Timeserver")
-         .description("Decides whether to use time and train ID from TimeServer device")
-         .init()
-         .expertAccess()
-         .assignmentOptional().defaultValue(False)
-         .commit()
-         ,
-         INT32_ELEMENT(expected).key("progress")
-         .displayedName("Progress").description("The progress of the current action")
-         .readOnly().initialValue(0).commit()
-         ,
-         STRING_ELEMENT(expected).key("state")
-         .displayedName("State").description("The current state the device is in")
-         .assignmentOptional().defaultValue("uninitialized").readOnly().commit()
-         ,
-         NODE_ELEMENT(expected).key("Logger")
-         .description("Logging settings")
-         .displayedName("Logger")
-         .appendParametersOfConfigurableClass(Logger, "Logger")
-         .expertAccess()
-         .commit()
-         ,
-         )
+            STRING_ELEMENT(expected).key("compatibility")
+                    .displayedName("Compatibility").description("The compatibility of this device to the Karabo framework")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
+                    ,
+            STRING_ELEMENT(expected).key("_serverId_")
+                    .displayedName("_ServerID_").description("Do not set this property, it will be set by the device-server")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    ,
+            STRING_ELEMENT(expected).key("_deviceId_")
+                    .displayedName("_DeviceID_").description("Do not set this property, it will be set by the device-server")
+                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
+                    ,
+            INT32_ELEMENT(expected).key("visibility")
+                    .displayedName("Visibility").description("Configures who is allowed to see this device at all")
+                    .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
+                    .expertAccess().reconfigurable().commit()
+                    ,
+            CHOICE_ELEMENT(expected).key("_connection_")
+                    .displayedName("Connection")
+                    .description("The connection to the communication layer of the distributed system")
+                    .appendNodesOfConfigurationBase(BrokerConnection)
+                    .assignmentOptional().defaultValue("Jms")
+                    .adminAccess()
+                    .init()
+                    .commit()
+                    ,                    
+            STRING_ELEMENT(expected).key("classId")
+                    .displayedName("ClassID").description("The (factory)-name of the class of this device")
+                    .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
+                    ,
+            STRING_ELEMENT(expected).key("serverId")
+                    .displayedName("ServerID").description("The device-server on which this device is running on")
+                    .expertAccess().readOnly().commit()
+                    ,
+            STRING_ELEMENT(expected).key("deviceId")
+                    .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
+                    .readOnly().commit()
+                    ,
+            BOOL_ELEMENT(expected).key("archive")
+                        .displayedName("Archive")
+                        .description("Decides whether the properties of this device will be logged or not")
+                        .reconfigurable()
+                        .assignmentOptional().defaultValue(True)
+                        .commit()
+                        ,
+            BOOL_ELEMENT(expected).key("useTimeserver")
+                        .displayedName("Use Timeserver")
+                        .description("Decides whether to use time and train ID from TimeServer device")
+                        .init()
+                        .expertAccess()
+                        .assignmentOptional().defaultValue(False)
+                        .commit()
+                        ,
+            INT32_ELEMENT(expected).key("progress")
+                    .displayedName("Progress").description("The progress of the current action")
+                    .readOnly().initialValue(0).commit()
+                    ,
+            STRING_ELEMENT(expected).key("state")
+                    .displayedName("State").description("The current state the device is in")
+                    .assignmentOptional().defaultValue("uninitialized").readOnly().commit()
+                    ,
+            NODE_ELEMENT(expected).key("Logger")
+                    .description("Logging settings")
+                    .displayedName("Logger")
+                    .appendParametersOfConfigurableClass(Logger,"Logger")
+                    .expertAccess()
+                    .commit()
+                    ,
+        )
         
     def __init__(self, configuration):
         if configuration is None:
@@ -151,7 +151,7 @@ class PythonDevice(NoFsm):
 
         # Instantiate SignalSlotable object without starting event loop
         try:
-            self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart=False)
+            self._ss = SignalSlotable.create(self.deviceid, "Jms", self.parameters["_connection_.Jms"], autostart = False)
         except RuntimeError as e:
             raise RuntimeError("PythonDevice.__init__: SignalSlotable.create Exception -- {0}".format(str(e)))
         # Setup device logger
@@ -173,7 +173,7 @@ class PythonDevice(NoFsm):
         '''Get SignalSlotable object embedded in PythonDevice instance.'''
         return self._ss
     
-    def loadLogger(self, input):
+    def loadLogger(self,input):
         config = input["Logger"]
 
         # make a copy of additional appenders defined by user
@@ -183,260 +183,260 @@ class PythonDevice(NoFsm):
         if "connection" in input:
             config["appenders[2].Network.connection"] = input["connection"]
 #        print "loadLogger final:\n", config
-    self.logger = Logger.configure(config)
+        self.logger=Logger.configure(config)
         
-def run(self):
-    self.initClassId()
-    self.initSchema()
+    def run(self):
+        self.initClassId()
+        self.initSchema()
             
-    # Create 'info' hash
-    info = Hash("type", "device")
-    info["classId"] = self.classid
-    info["serverId"] = self.serverid
-    info["visibility"] = self["visibility"]
-    info["compatibility"] = self.__class__.__version__
-    info["host"] = self.hostname
-    info["status"] = "ok"
-    info["archive"] = self.get("archive")
-    #... add here more info entries if needed
+        # Create 'info' hash
+        info = Hash("type", "device")
+        info["classId"] = self.classid
+        info["serverId"] = self.serverid
+        info["visibility"] = self["visibility"]
+        info["compatibility"] = self.__class__.__version__
+        info["host"] = self.hostname
+        info["status"] = "ok"
+        info["archive"] = self.get("archive")
+        #... add here more info entries if needed
 
-    self.parameters.set("classId", self.classid)
-    self.parameters.set("deviceId", self.deviceid)
-    self.parameters.set("serverId", self.serverid)
+        self.parameters.set("classId", self.classid)
+        self.parameters.set("deviceId", self.deviceid)
+        self.parameters.set("serverId", self.serverid)
         
-    # Run event loop ( in a thread ) with given info
-    # TODO Make configurable
-    t = threading.Thread(target=self._ss.runEventLoop, args=(20, info))
-    t.start()
-    time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
-    self.startFsm()
-    with self._stateChangeLock:
-        validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
-        self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+        # Run event loop ( in a thread ) with given info
+        # TODO Make configurable
+        t = threading.Thread(target = self._ss.runEventLoop, args = (20, info))
+        t.start()
+        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
+        self.startFsm()
+        with self._stateChangeLock:
+            validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
-    if self.parameters.get("useTimeserver"):
-        self.log.DEBUG("Connecting to time server")
-        self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick", ConnectionType.TRACK, False)
+        if self.parameters.get("useTimeserver"):
+            self.log.DEBUG("Connecting to time server")
+            self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick", ConnectionType.TRACK, False)
 
-    t.join()
+        t.join()
             
-def stopEventLoop(self):
-    self._ss.stopEventLoop()
+    def stopEventLoop(self):
+        self._ss.stopEventLoop()
     
-def __del__(self):
-    ''' PythonDevice destructor '''
-    # Destroying device instance means finishing subprocess runnung a device instancPythonConveyore.
-    # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
-    os._exit(0)   
+    def __del__(self):
+        ''' PythonDevice destructor '''
+        # Destroying device instance means finishing subprocess runnung a device instancPythonConveyore.
+        # Call exit for child processes (os._exit(...)) to shutdown properly a SignalSlotable object
+        os._exit(0)   
 
-def remote(self):
-    if self._client is None:
-        self._client = DeviceClient(self._ss)  # SignalSlotable object for reuse
-    return self._client
+    def remote(self):
+        if self._client is None:
+            self._client = DeviceClient(self._ss)  # SignalSlotable object for reuse
+        return self._client
     
-def _setImage(self, key, image):
-    hash = Hash(key, Hash())
-    image.copyTo(hash[key])
-    hash.setAttribute(key, "image", 1)
-    self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
-    self._ss.emit("signalChanged", hash, self.deviceid)
+    def _setImage(self, key, image):
+        hash = Hash(key, Hash())
+        image.copyTo(hash[key])
+        hash.setAttribute(key, "image", 1)
+        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
+        self._ss.emit("signalChanged", hash, self.deviceid)
     
-def _setRawImageData(self, key, image):
-    hash = Hash(key, image.hash())
-    hash.setAttribute(key, "image", 1)
-    self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
-    self._ss.emit("signalChanged", hash, self.deviceid)
+    def _setRawImageData(self, key, image):
+        hash = Hash(key, image.hash())
+        hash.setAttribute(key, "image", 1)
+        self.parameters.merge(hash, HashMergePolicy.REPLACE_ATTRIBUTES)
+        self._ss.emit("signalChanged", hash, self.deviceid)
         
-def set(self, * args):
-    """
+    def set(self, *args):
+        """
         Updates the state of the device. This function automatically notifies any observers.
         This function supports 3 args: key, value, timestamp or 2 arg: hash, timestamp
         If 1 or more than 3 arguments, it does nothing
         """
-    pars = tuple(args)
-    with self._stateChangeLock:
-        if len(pars) == 0 or len(pars) > 3:
-            raise SyntaxError("Number of parameters is wrong: "
-                              "from 1 to 3 arguments are allowed.")
+        pars = tuple(args)
+        with self._stateChangeLock:
+            if len(pars) == 0 or len(pars) > 3:
+                raise SyntaxError("Number of parameters is wrong: "
+                                  "from 1 to 3 arguments are allowed.")
 
-        # key, value, timestamp args
-        if len(pars) == 3:
-            key, value, stamp = pars
-            if type(stamp) is not Timestamp:
-                raise TypeError("The 3rd argument should be Timestamp")
-            if isCpuImage(value):
-                self._setImage(key, value)
-                return;
-            elif type(value) is RawImageData:
-                self._setRawImageData(key, value)
-                return
-            pars = tuple([Hash(key, value), stamp])
-            
-        # hash args
-        if len(pars) == 1:
-            h = pars[0]
-            if type(h) is not Hash:
-                raise TypeError("The only argument should be a Hash")
-            pars = tuple([h, self._getActualTimestamp()])   # add timestamp
-            
-        # key, value or hash, timestamp args
-        if len(pars) == 2:
-            if type(pars[0]) is not Hash:
-                key, value = pars
+            # key, value, timestamp args
+            if len(pars) == 3:
+                key, value, stamp = pars
+                if type(stamp) is not Timestamp:
+                    raise TypeError("The 3rd argument should be Timestamp")
                 if isCpuImage(value):
                     self._setImage(key, value)
-                    return
+                    return;
                 elif type(value) is RawImageData:
                     self._setRawImageData(key, value)
                     return
-                pars = tuple([Hash(key, value), self._getActualTimestamp()])
-            hash, stamp = pars
-            # Check that hash is image's free
-            paths = hash.getPaths()
-            for key in paths:
-                value = hash[key]
-                if isCpuImage(value):
-                    self._setImage(key, value)    # process images individually
-                    hash.erasePath(key)      # clear hash from images 
-                elif type(value) is RawImageData:
-                    self._setRawImageData(key, value)
-                    hash.erasePath(key)
+                pars = tuple([Hash(key, value), stamp])
+            
+            # hash args
+            if len(pars) == 1:
+                h = pars[0]
+                if type(h) is not Hash:
+                    raise TypeError("The only argument should be a Hash")
+                pars = tuple([h, self._getActualTimestamp()])   # add timestamp
+            
+            # key, value or hash, timestamp args
+            if len(pars) == 2:
+                if type(pars[0]) is not Hash:
+                    key, value = pars
+                    if isCpuImage(value):
+                        self._setImage(key, value)
+                        return
+                    elif type(value) is RawImageData:
+                        self._setRawImageData(key, value)
+                        return
+                    pars = tuple([Hash(key,value), self._getActualTimestamp()])
+                hash, stamp = pars
+                # Check that hash is image's free
+                paths = hash.getPaths()
+                for key in paths:
+                    value = hash[key]
+                    if isCpuImage(value):
+                        self._setImage(key, value)    # process images individually
+                        hash.erasePath(key)      # clear hash from images 
+                    elif type(value) is RawImageData:
+                        self._setRawImageData(key, value)
+                        hash.erasePath(key)
         
-            try:
-                validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
-            except RuntimeError as e:
-                print("Validation Exception (Intern): " + str(e))
-                raise RuntimeError("Validation Exception: " + str(e))
+                try:
+                    validated = self.validatorIntern.validate(self.fullSchema, hash, stamp)
+                except RuntimeError as e:
+                    print("Validation Exception (Intern): " + str(e))
+                    raise RuntimeError("Validation Exception: " + str(e))
 
-            #if self.validatorIntern.hasParametersInWarnOrAlarm():
-            #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
-            #    for key in warnings:
-            #        desc = warnings[key]
-            #        self.log.WARN(desc["message"])
-            #        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
+                #if self.validatorIntern.hasParametersInWarnOrAlarm():
+                #    warnings = self.validatorIntern.getParametersInWarnOrAlarm()
+                #    for key in warnings:
+                #        desc = warnings[key]
+                #        self.log.WARN(desc["message"])
+                #        self._ss.emit("signalNotification", desc["type"], desc["message"], "", self.deviceid)
 
-            if not validated.empty():
-                self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-                self._ss.emit("signalChanged", validated, self.deviceid)
+                if not validated.empty():
+                    self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+                    self._ss.emit("signalChanged", validated, self.deviceid)
        
-def __setitem__(self, key, value):
-    self.set(key, value, self._getActualTimestamp())
+    def __setitem__(self, key, value):
+        self.set(key, value, self._getActualTimestamp())
         
-def get(self, key):
-    with self._stateChangeLock:
+    def get(self,key):
+        with self._stateChangeLock:
+            try:
+                return self.parameters[key]
+            except RuntimeError as e:
+                raise AttributeError(
+                    "Error while retrieving '{}' from device".format(key))
+
+    def __getitem__(self, key):
+        return self.get(key)
+    
+    def getFullSchema(self):
+        return self.fullSchema
+        
+    def updateSchema(self, schema):
+        rules = ValidatorValidationRules()
+        rules.allowAdditionalKeys        = True
+        rules.allowMissingKeys           = True
+        rules.allowUnrootedConfiguration = True
+        rules.injectDefaults             = True
+        rules.injectTimestamps           = True
+        validator = Validator()
+        validator.setValidationRules(rules)
+        validated = validator.validate(schema, Hash(), self._getActualTimestamp())
+        with self._stateChangeLock:
+            for path in self._injectedSchema.getPaths():
+                if self.parameters.has(path) and not self.staticSchema.has(path): 
+                    self.parameters.erase(path)
+            self._stateDependentSchema = {}
+            self._injectedSchema.copy(schema)
+            self.fullSchema.copy(self.staticSchema)
+            self.fullSchema += self._injectedSchema
+            #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
+            #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
+        # notify the distributed system...
+        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+        self.set(validated)
+        self.log.INFO("Schema updated")
+    
+    def appendSchema(self, schema):
+        rules = ValidatorValidationRules()
+        rules.allowAdditionalKeys        = True
+        rules.allowMissingKeys           = True
+        rules.allowUnrootedConfiguration = True
+        rules.injectDefaults             = True
+        rules.injectTimestamps           = True
+        validator = Validator()
+        validator.setValidationRules(rules)
+        validated = validator.validate(schema, self.parameters, self._getActualTimestamp())
+        with self._stateChangeLock:
+            for key in self._injectedSchema.getKeys():
+                self.parameters.erase(key)
+            self._stateDependentSchema = {}
+            self._injectedSchema += schema
+            self.fullSchema.copy(self.staticSchema)
+            self.fullSchema += self._injectedSchema
+            self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
+            self.fullSchema.updateAliasMap()
+        # notify the distributed system...
+        self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
+        self.log.INFO("Schema appended")
+    
+    def setProgress(self, value, associatedText = ""):
+        v = self.progressMin + value / (self.progressMax - self.progressMin)
+        self.set("progress", v)
+            
+    def resetProgress(self):
+        set("progress", self.progressMin)
+    
+    def setProgressRange(self, minimum, maximum):
+        self.progressMin, self.progressMax = minimum, maximum
+    
+    def getAliasFromKey(self, key, aliasReferenceType):
         try:
-            return self.parameters[key]
+            return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
         except RuntimeError as e:
             raise AttributeError(
-                                 "Error while retrieving '{}' from device".format(key))
+                "Error while retrieving alias from parameter ({}): {}".
+                format(key, e))
 
-def __getitem__(self, key):
-    return self.get(key)
+    def getKeyFromAlias(self, alias):
+        try:
+            return self.fullSchema.getKeyFromAlias(alias)
+        except RuntimeError as e:
+            raise AttributeError(
+                "Error while retrieving parameter from alias ({}): {}".
+                format(alias, e))
+
+    def aliasHasKey(self, alias):
+        return self.fullSchema.aliasHasKey(alias)
     
-def getFullSchema(self):
-    return self.fullSchema
+    def keyHasAlias(self, key):
+        return self.fullSchema.keyHasAlias(key)
         
-def updateSchema(self, schema):
-    rules = ValidatorValidationRules()
-    rules.allowAdditionalKeys        = True
-    rules.allowMissingKeys           = True
-    rules.allowUnrootedConfiguration = True
-    rules.injectDefaults             = True
-    rules.injectTimestamps           = True
-    validator = Validator()
-    validator.setValidationRules(rules)
-    validated = validator.validate(schema, Hash(), self._getActualTimestamp())
-    with self._stateChangeLock:
-        for path in self._injectedSchema.getPaths():
-            if self.parameters.has(path) and not self.staticSchema.has(path): 
-                self.parameters.erase(path)
-        self._stateDependentSchema = {}
-        self._injectedSchema.copy(schema)
-        self.fullSchema.copy(self.staticSchema)
-        self.fullSchema += self._injectedSchema
-        #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        #validated = self.validatorIntern.validate(self.fullSchema, self.parameters)
-        #self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        self.fullSchema.updateAliasMap()
-    # notify the distributed system...
-    self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
-    self.set(validated)
-    self.log.INFO("Schema updated")
+    def getValueType(self, key):
+        return self.fullSchema.getValueType(key)
     
-def appendSchema(self, schema):
-    rules = ValidatorValidationRules()
-    rules.allowAdditionalKeys        = True
-    rules.allowMissingKeys           = True
-    rules.allowUnrootedConfiguration = True
-    rules.injectDefaults             = True
-    rules.injectTimestamps           = True
-    validator = Validator()
-    validator.setValidationRules(rules)
-    validated = validator.validate(schema, self.parameters, self._getActualTimestamp())
-    with self._stateChangeLock:
-        for key in self._injectedSchema.getKeys():
-            self.parameters.erase(key)
-        self._stateDependentSchema = {}
-        self._injectedSchema += schema
-        self.fullSchema.copy(self.staticSchema)
-        self.fullSchema += self._injectedSchema
-        self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
-        self.fullSchema.updateAliasMap()
-    # notify the distributed system...
-    self._ss.emit("signalSchemaUpdated", self.fullSchema, self.deviceid)
-    self.log.INFO("Schema appended")
+    def getCurrentConfiguration(self, tags = ""):
+        if tags == "":
+            return self.parameters
+        with self._stateChangeLock:
+            return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
     
-def setProgress(self, value, associatedText=""):
-    v = self.progressMin + value / (self.progressMax - self.progressMin)
-    self.set("progress", v)
-            
-def resetProgress(self):
-    set("progress", self.progressMin)
+    def filterByTags(self, configuration, tags):
+        return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
     
-def setProgressRange(self, minimum, maximum):
-    self.progressMin, self.progressMax = minimum, maximum
+    def getServerId(self):
+        return self.serverid
     
-def getAliasFromKey(self, key, aliasReferenceType):
-    try:
-        return self.fullSchema.getAliasFromKey(key, aliasReferenceType)
-    except RuntimeError as e:
-        raise AttributeError(
-                             "Error while retrieving alias from parameter ({}): {}".
-                             format(key, e))
-
-def getKeyFromAlias(self, alias):
-    try:
-        return self.fullSchema.getKeyFromAlias(alias)
-    except RuntimeError as e:
-        raise AttributeError(
-                             "Error while retrieving parameter from alias ({}): {}".
-                             format(alias, e))
-
-def aliasHasKey(self, alias):
-    return self.fullSchema.aliasHasKey(alias)
+    def getAvailableInstances(self):
+        return self._ss.getAvailableInstances()
     
-def keyHasAlias(self, key):
-    return self.fullSchema.keyHasAlias(key)
-        
-def getValueType(self, key):
-    return self.fullSchema.getValueType(key)
-    
-def getCurrentConfiguration(self, tags=""):
-    if tags == "":
-        return self.parameters
-    with self._stateChangeLock:
-        return HashFilter.byTag(self.fullSchema, self.parameters, tags, " ,;")
-    
-def filterByTags(self, configuration, tags):
-    return HashFilter.byTag(self.fullSchema, configuration, tags, " ,;")
-    
-def getServerId(self):
-    return self.serverid
-    
-def getAvailableInstances(self):
-    return self._ss.getAvailableInstances()
-    
-# In C++: the following functions are protected
+    # In C++: the following functions are protected
     
     def errorFoundAction(self, shortMessage, detailedMessage):
         self.log.ERROR("Error Found Action: {} -- {}".format(shortMessage, detailedMessage))
@@ -514,7 +514,7 @@ def getAvailableInstances(self):
         print("The triggerError() function is deprecated, use execute() instead")
         self.exceptionFound(s, d)
         
-    def execute(self, command, * args):
+    def execute(self, command, *args):
         if len(args) == 0:
             self._ss.call("", command)
         elif len(args) == 1:
@@ -527,7 +527,7 @@ def getAvailableInstances(self):
             self._ss.call("", command, args[0], args[1], args[2], args[3])
         else:
             raise AttributeError(
-                                 "Number of command parameters should not exceed 4")
+                "Number of command parameters should not exceed 4")
           
     
     def slotGetConfiguration(self):
@@ -543,9 +543,8 @@ def getAvailableInstances(self):
             try:
                 self.preReconfigure(validated)
                 self._applyReconfiguration(validated)
-            except:
-                e = sys.exc_info()[0]
-                print("PythonDevice.slotReconfigure exception:", str(e))
+            except Exception as e:
+                print("PythonDevice.slotReconfigure Exception:", str(e))
                 self.errorFound("Python Exception happened", str(e))
                 self._ss.reply(False, str(e))
                 return
@@ -561,7 +560,7 @@ def getAvailableInstances(self):
             errorText = str(e) + " in state: \"" + currentState + "\""
             return (False, errorText, unvalidated)
         self.log.DEBUG("Validated reconfiguration:\n{}".format(validated))
-        return (True, "", validated)
+        return (True,"",validated)
     
     def _applyReconfiguration(self, reconfiguration):
         with self._stateChangeLock:
