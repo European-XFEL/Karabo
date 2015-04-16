@@ -75,8 +75,10 @@
     </logicalFolder>
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karathon/PyXmsSignalSlotable.cc</itemPath>
+      <itemPath>../../../src/karathon/SignalSlotableWrap.cc</itemPath>
       <itemPath>../../../src/karathon/SignalSlotableWrap.hh</itemPath>
       <itemPath>../../../src/karathon/SignalWrap.hh</itemPath>
+      <itemPath>../../../src/karathon/SlotWrap.cc</itemPath>
       <itemPath>../../../src/karathon/SlotWrap.hh</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -98,7 +100,7 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
-      </logicalFolder>
+  </logicalFolder>
   <sourceRootList>
     <Elem>../../../src/karathon</Elem>
   </sourceRootList>
@@ -411,6 +413,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
       <item path="../../../src/karathon/SignalSlotableWrap.hh"
             ex="false"
             tool="3"
@@ -420,6 +432,13 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SlotWrap.cc" ex="false" tool="1" flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
       </item>
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
       </item>
@@ -798,6 +817,16 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karathon/SignalSlotableWrap.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+        <ccTool>
+          <preprocessorList>
+            <Elem>NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
       <item path="../../../src/karathon/SignalSlotableWrap.hh"
             ex="false"
             tool="3"
@@ -807,6 +836,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../../../src/karathon/SlotWrap.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karathon/SlotWrap.hh" ex="false" tool="3" flavor2="0">
       </item>

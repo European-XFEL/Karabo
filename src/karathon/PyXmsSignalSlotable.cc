@@ -58,6 +58,9 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("receiveAsync3"
                  , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy3)
                  , (bp::arg("replyCallback")))
+            .def("receiveAsync4"
+                 , (void(SignalSlotableWrap::RequestorWrap::*)(const bp::object&))(&SignalSlotableWrap::RequestorWrap::receiveAsyncPy4)
+                 , (bp::arg("replyCallback")))
     
             // The following functions are "similar" C++ API. They work but considered not useful: use waitForReply 
             //.def("timeout", (&SignalSlotableWrap::RequestorWrap::timeoutPy), (bp::arg("milliseconds")))

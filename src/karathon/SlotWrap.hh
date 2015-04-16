@@ -32,126 +32,31 @@ namespace karathon {
     class SlotWrap : public karabo::xms::Slot {
         
         bp::object m_slotFunction;
+        size_t m_arity;
 
     public:
 
-        SlotWrap(const std::string& slotFunction) : karabo::xms::Slot(slotFunction) {
-        }
+        SlotWrap(const std::string& slotFunction);
 
-        virtual ~SlotWrap() {
-        }
-
-        void registerSlotFunction(const bp::object& slotHandler) {
-            m_slotFunction = slotHandler;
-        }
+        virtual ~SlotWrap();
+        
+        void registerSlotFunction(const bp::object& slotHandler);
 
     private: // function
 
-        void doCallRegisteredSlotFunctions(const karabo::util::Hash& body) {
+        void doCallRegisteredSlotFunctions(const karabo::util::Hash& body);
 
-            ScopedGILAcquire gil;
+        bool callFunction0(const karabo::util::Hash& body);
 
-            //size_t arity = body.size();
-            size_t arity = 0; // body.size()
-            for (karabo::util::Hash::const_iterator it = body.begin(); it != body.end(); it++) {
-                std::string key = it->getKey();
-                if (key == "a1" || key == "a2" || key == "a3" || key == "a4") arity++;
-            }
+        bool callFunction1(const karabo::util::Hash& body);
 
-            switch (arity) {
-                case 4:
-                    if (callFunction4(body)) break;
-                case 3:
-                    if (callFunction3(body)) break;
-                case 2:
-                    if (callFunction2(body)) break;
-                case 1:
-                    if (callFunction1(body)) break;
-                case 0:
-                    if (callFunction0(body)) break;
-                    throw KARABO_LOGIC_EXCEPTION("TypeError exception happened \"somewhere\" in Python code");
-                default:
-                    throw KARABO_SIGNALSLOT_EXCEPTION("Too many arguments send to python slot (max 4 are currently supported");
-            }
-        }
+        bool callFunction2(const karabo::util::Hash& body);
 
-        bool callFunction0(const karabo::util::Hash& body) {
-            try {
-                m_slotFunction();
-            } catch (const bp::error_already_set&) {
-                PyErr_Print();
-                return false;
-            }
-            return true;
-        }
+        bool callFunction3(const karabo::util::Hash& body);
 
-        bool callFunction1(const karabo::util::Hash& body) {
-            bp::object a1 = HashWrap::get(body, "a1");
-            try {
-                m_slotFunction(a1);
-            } catch (const bp::error_already_set&) {
-                tryToPrint();
-                return false;
-            }
-            return true;
-        }
+        bool callFunction4(const karabo::util::Hash& body);
 
-        bool callFunction2(const karabo::util::Hash& body) {
-            bp::object a1 = HashWrap::get(body, "a1");
-            bp::object a2 = HashWrap::get(body, "a2");
-            try {
-                m_slotFunction(a1, a2);
-            } catch (const bp::error_already_set&) {
-                tryToPrint();
-                return false;
-            }
-            return true;
-        }
-
-        bool callFunction3(const karabo::util::Hash& body) {
-            bp::object a1 = HashWrap::get(body, "a1");
-            bp::object a2 = HashWrap::get(body, "a2");
-            bp::object a3 = HashWrap::get(body, "a3");
-            try {
-                m_slotFunction(a1, a2, a3);
-            } catch (const bp::error_already_set&) {
-                tryToPrint();
-                return false;
-            }
-            return true;
-        }
-
-        bool callFunction4(const karabo::util::Hash& body) {
-            bp::object a1 = HashWrap::get(body, "a1");
-            bp::object a2 = HashWrap::get(body, "a2");
-            bp::object a3 = HashWrap::get(body, "a3");
-            bp::object a4 = HashWrap::get(body, "a4");
-            try {
-                m_slotFunction(a1, a2, a3, a4);
-            } catch (const bp::error_already_set&) {
-                tryToPrint();
-                return false;
-            }
-            return true;
-        }
-
-        void tryToPrint() {
-            PyObject *e, *v, *t;
-            bool printing = true;
-
-            // get the error indicators
-            PyErr_Fetch(&e, &v, &t); // ref count incremented
-
-            if (PyErr_GivenExceptionMatches(e, PyExc_TypeError))
-                printing = false;
-
-            // we reset it for later processing
-            PyErr_Restore(e, v, t); // ref count decremented
-            if (printing)
-                PyErr_Print();
-            else
-                PyErr_Clear();
-        }
+        void tryToPrint();
     };
 }
 
