@@ -112,7 +112,8 @@ class ParameterTreeWidget(QTreeWidget):
             return [ ]
 
         return [(box, editableComponent.widgetFactory.value)
-                for box in editableComponent.boxes]
+                for box in editableComponent.boxes
+                if box.isAccessible() and box.isAllowed()]
 
 
     def applyRemoteChanges(self, item):
