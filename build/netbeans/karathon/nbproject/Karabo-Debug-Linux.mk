@@ -61,6 +61,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
 	${OBJECTDIR}/_ext/381567218/PythonInputHandler.o \
 	${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o \
+	${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o \
+	${OBJECTDIR}/_ext/381567218/SlotWrap.o \
 	${OBJECTDIR}/_ext/381567218/Wrapper.o \
 	${OBJECTDIR}/_ext/381567218/karathon.o \
 	${OBJECTDIR}/_ext/381567218/p2pbinding.o
@@ -227,6 +229,16 @@ ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o: ../../../src/karathon/PythonO
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ../../../src/karathon/PythonOutputHandler.cc
+
+${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o: ../../../src/karathon/SignalSlotableWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o ../../../src/karathon/SignalSlotableWrap.cc
+
+${OBJECTDIR}/_ext/381567218/SlotWrap.o: ../../../src/karathon/SlotWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap.o ../../../src/karathon/SlotWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -601,6 +613,32 @@ ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o: ${OBJECTDIR}/_ext/3815
 	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o ../../../src/karathon/PythonOutputHandler.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PythonOutputHandler.o ${OBJECTDIR}/_ext/381567218/PythonOutputHandler_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/SignalSlotableWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o ../../../src/karathon/SignalSlotableWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap_nomain.o ../../../src/karathon/SignalSlotableWrap.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/SlotWrap.o ../../../src/karathon/SlotWrap.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/SlotWrap.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -g -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o ../../../src/karathon/SlotWrap.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/SlotWrap.o ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/Wrapper_nomain.o: ${OBJECTDIR}/_ext/381567218/Wrapper.o ../../../src/karathon/Wrapper.cc 
