@@ -31,10 +31,18 @@ class Runner(object):
     
     def parseCommandLine(self, args):
         try:
-            if len(args) == 1:
+            # Check if autoloading needed
+            autoload = False
+            autoLoadFileName = "autoload.xml"
+            if os.path.exists(autoLoadFileName):
+                autoload = True;
+                
+            if len(args) == 1 and not autoload:
                 self.showUsage(args[0])
                 return Hash()
-            firstArg = args[1]
+            firstArg = ""
+            if len(args) > 1:
+                firstArg = args[1]
             if firstArg[0:2] == "--":
                 self.processOption(firstArg[2:], args)
                 return Hash()
@@ -44,17 +52,21 @@ class Runner(object):
             if firstArg == "help":
                 self.processOption(firstArg, args)
                 return Hash()
+            
             configuration = Hash()
+            if autoload:
+                # auto load configuration "autoload.xml"
+                autoLoadFileName = "autoload.xml"
+                if os.path.exists(autoLoadFileName):
+                    tmp = Hash()
+                    loadFromFile(tmp, autoLoadFileName)
+                    configuration += tmp
+            
             for a in args[1:]:
                 tmp = Hash()
                 self.readToken(a, tmp)
                 configuration += tmp
-            # auto load configuration "autoload.xml"
-            autoLoadFileName = "autoload.xml"
-            if os.path.exists(autoLoadFileName):
-                tmp = Hash()
-                loadFromFile(tmp, autoLoadFileName)
-                configuration += tmp
+            
             saveToFile(configuration, "lastConfiguration.xml")
             return configuration
         except Exception as e:
