@@ -92,11 +92,8 @@ class DisplayCommand(DisplayWidget):
     @pyqtSlot()
     def update(self):
         for item in self.actions:
-            descr = item.box.descriptor
-            if descr is None or descr.allowedStates is None:
-                continue
-            item.action.setEnabled(item.box.configuration.value.state in
-                                   descr.allowedStates)
+            item.action.setEnabled(item.box.isAllowed() and
+                                   item.box.isAccessible())
         for a in self.button.actions():
             if a.isEnabled():
                 self.button.setDefaultAction(a)
