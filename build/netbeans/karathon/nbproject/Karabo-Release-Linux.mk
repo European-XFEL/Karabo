@@ -238,7 +238,7 @@ ${OBJECTDIR}/_ext/381567218/SignalSlotableWrap.o: ../../../src/karathon/SignalSl
 ${OBJECTDIR}/_ext/381567218/SlotWrap.o: ../../../src/karathon/SlotWrap.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap.o ../../../src/karathon/SlotWrap.cc
+	$(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap.o ../../../src/karathon/SlotWrap.cc
 
 ${OBJECTDIR}/_ext/381567218/Wrapper.o: ../../../src/karathon/Wrapper.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -636,7 +636,7 @@ ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o: ${OBJECTDIR}/_ext/381567218/SlotW
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o ../../../src/karathon/SlotWrap.cc;\
+	    $(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o ../../../src/karathon/SlotWrap.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/SlotWrap.o ${OBJECTDIR}/_ext/381567218/SlotWrap_nomain.o;\
 	fi

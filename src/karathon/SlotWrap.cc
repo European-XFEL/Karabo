@@ -20,6 +20,8 @@ namespace karathon {
 
         m_slotFunction = slotHandler;
         m_arity = 0;
+        m_varargs = false;
+        m_varkeywords = false;
 
         PyObject* function_object = NULL;
         // We expect either the function or the method to be given...
@@ -31,7 +33,11 @@ namespace karathon {
         } else
             throw KARABO_PARAMETER_EXCEPTION("The argument is neither the function not the method.");
         PyCodeObject* pycode = reinterpret_cast<PyCodeObject*> (PyFunction_GetCode(function_object));
-        if (pycode) m_arity = pycode->co_argcount - m_arity; // Subtract "self"
+        if (pycode) {
+            m_arity = pycode->co_argcount - m_arity; // Subtract "self" if any
+            if (pycode->co_flags && CO_VARARGS) m_varargs = true;
+            if (pycode->co_flags && CO_VARKEYWORDS) m_varkeywords = true;
+        }
     }
 
 
