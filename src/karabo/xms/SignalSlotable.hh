@@ -19,10 +19,12 @@
 #include <karabo/util/Configurator.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
-#include <karabo/io/Input.hh>
+//#include <karabo/io/Input.hh>
 //#include <karabo/io/Output.hh>
 
 #include "OutputChannel.hh"
+#include "InputChannel.hh"
+
 #include "Signal.hh"
 #include "Slot.hh"
 
@@ -351,7 +353,7 @@ namespace karabo {
             typedef boost::function<bool (const std::string& /*slotFunction*/, std::string& /*errorMessage*/) > SlotCallGuardHandler;
             typedef boost::function<void (float /*brokerLatency*/, float /*processingLatency*/, unsigned int /*queueSize*/) > UpdatePerformanceStatisticsHandler;
 
-            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
+            typedef std::map<std::string, InputChannel::Pointer> InputChannels;
             typedef std::map<std::string, OutputChannel::Pointer> OutputChannels;
 
             std::string m_instanceId;
@@ -1156,23 +1158,27 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             bool disconnectChannels(std::string outputInstanceId, const std::string& outputName, std::string inputInstanceId, const std::string& inputName, const bool isVerbose = false);
 
-            template <class InputType>
-            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input,
-                    const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
-                    const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
-                using namespace karabo::util;
-                karabo::io::AbstractInput::Pointer channel = InputType::createNode(name, "Network", input);
-                channel->setInstanceId(m_instanceId);
-                channel->setInputHandlerType("c++", std::string(typeid (InputType).name()));
-                if (!onInputAvailableHandler.empty()) {
-                    channel->registerIOEventHandler(onInputAvailableHandler);
-                }
-                if (!onEndOfStreamEventHandler.empty()) {
-                    channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
-                }
-                m_inputChannels[name] = channel;
-                return boost::static_pointer_cast<InputType >(channel);
-            }
+//            template <class InputType>
+//            boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash input,
+//                    const boost::function<void (const typename InputType::Pointer&) >& onInputAvailableHandler = boost::function<void (const typename InputType::Pointer&) >(),
+//                    const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>()) {
+//                using namespace karabo::util;
+//                karabo::io::AbstractInput::Pointer channel = InputType::createNode(name, "Network", input);
+//                channel->setInstanceId(m_instanceId);
+//                channel->setInputHandlerType("c++", std::string(typeid (InputType).name()));
+//                if (!onInputAvailableHandler.empty()) {
+//                    channel->registerIOEventHandler(onInputAvailableHandler);
+//                }
+//                if (!onEndOfStreamEventHandler.empty()) {
+//                    channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+//                }
+//                m_inputChannels[name] = channel;
+//                return boost::static_pointer_cast<InputType >(channel);
+//            }
+            
+            virtual InputChannel::Pointer createInputChannel(const std::string& name, const karabo::util::Hash& config, 
+            const boost::function<void () >& onInputAvailableHandler = boost::function<void () >(),
+            const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>());
 
             virtual OutputChannel::Pointer createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
 

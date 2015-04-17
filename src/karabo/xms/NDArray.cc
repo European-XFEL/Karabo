@@ -12,6 +12,8 @@ using namespace karabo::util;
 namespace karabo {
     namespace xms {
 
+        
+        KARABO_REGISTER_FOR_CONFIGURATION(Data, NDArray)
 
         // Output Schema (i.e. describes how to fill for sending)
         void NDArray::expectedParameters(karabo::util::Schema& s) {

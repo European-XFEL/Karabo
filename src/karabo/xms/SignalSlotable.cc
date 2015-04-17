@@ -207,7 +207,7 @@ namespace karabo {
                 m_brokerLatency.first += (getEpochMillis() - header->get<long long>("MQTimestamp"));
                 m_brokerLatency.second++;
             }
-            
+
 
             // Check whether this message is a reply
             if (header->has("replyFrom")) {
@@ -404,7 +404,7 @@ namespace karabo {
             while (tryToPopEvent(event)) {
 
                 try {
-                    
+
                     /* Header and body are shared pointers               
                      * By now the event variable keeps the only reference to them and hence the objects alive
                      * In the next while loop header and body will be destructed
@@ -412,9 +412,9 @@ namespace karabo {
                      */
                     const Hash& header = *(event.first);
                     const Hash& body = *(event.second);
-                    
+
                     // Collect performance statistics
-                    {                        
+                    {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
                         m_processingLatency.first += (getEpochMillis() - header.get<long long>("MQTimestamp"));
                         m_processingLatency.second++;
@@ -1689,26 +1689,26 @@ namespace karabo {
                             cleanSignalsAndStopTracking(it->getKey());
                         }
                     }
-                    
+
                     // This thread is used as a "Trittbrett" for slowly updating latency information and queue sizes
-                     if (m_updatePerformanceStatistics) {
+                    if (m_updatePerformanceStatistics) {
                         boost::mutex::scoped_lock lock(m_latencyMutex);
                         float blAve = -1;
                         float plAve = -1;
                         if (m_brokerLatency.second > 0) {
-                            blAve = m_brokerLatency.first / (float)m_brokerLatency.second;                           
+                            blAve = m_brokerLatency.first / (float) m_brokerLatency.second;
                         }
                         if (m_processingLatency.second > 0) {
-                            plAve = m_processingLatency.first / (float)m_processingLatency.second;
-                        }                        
-                        
+                            plAve = m_processingLatency.first / (float) m_processingLatency.second;
+                        }
+
                         // Call handler
-                        m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int>(m_eventQueue.size()));
-                        
+                        m_updatePerformanceStatistics(blAve, plAve, static_cast<unsigned int> (m_eventQueue.size()));
+
                         // Reset statistics
                         m_brokerLatency.first = m_brokerLatency.second = 0;
                         m_processingLatency.first = m_processingLatency.second = 0;
-                     }
+                    }
 
                     // We are sleeping thrice as long as the count-down ticks (which ticks in seconds)
                     boost::this_thread::sleep(boost::posix_time::seconds(3));
@@ -1756,6 +1756,22 @@ namespace karabo {
             }
         }
         
+        
+        InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void()>& onInputAvailableHandler, const boost::function<void()>& onEndOfStreamEventHandler) {
+            InputChannel::Pointer channel = Configurator<InputChannel>::create("Network", config);
+            channel->setInstanceId(m_instanceId);
+            if (onInputAvailableHandler) {
+                channel->registerIOEventHandler(onInputAvailableHandler);
+            }
+            if (onEndOfStreamEventHandler) {
+                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
+            }
+            m_inputChannels[name] = channel;
+            return channel;
+        }
+
+
+
         OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
             OutputChannel::Pointer channel = Configurator<OutputChannel>::create("Network", config);
             channel->setInstanceId(m_instanceId);
@@ -1765,7 +1781,6 @@ namespace karabo {
             m_outputChannels[name] = channel;
             return channel;
         }
-
 
 
         Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash & hash) const {
@@ -1786,37 +1801,37 @@ namespace karabo {
         void SignalSlotable::connectInputChannels() {
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
-                AbstractInput::Pointer channel = it->second;
-                if (channel->needsDeviceConnection()) {
-                    // Loop connected outputs
-                    std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-                    for (size_t j = 0; j < outputChannels.size(); ++j) {
-                        const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
-                        const std::string& channelId = outputChannels[j].get<string > ("channelId");
-                        bool channelExists = false;
-                        karabo::util::Hash reply;
-                        int sleep = 1;
-                        int trials = 8;
-                        while ((trials--) > 0) {
-                            try {
-                                this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
-                            } catch (karabo::util::TimeoutException&) {
-                                karabo::util::Exception::clearTrace();
-                                std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
-                                std::cout << "Trying again in " << sleep << " seconds." << std::endl;
-                                boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                                sleep += 2;
-                                continue;
-                            }
-                            break;
+                InputChannel::Pointer channel = it->second;
+
+                // Loop connected outputs
+                std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+                for (size_t j = 0; j < outputChannels.size(); ++j) {
+                    const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
+                    const std::string& channelId = outputChannels[j].get<string > ("channelId");
+                    bool channelExists = false;
+                    karabo::util::Hash reply;
+                    int sleep = 1;
+                    int trials = 8;
+                    while ((trials--) > 0) {
+                        try {
+                            this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
+                        } catch (karabo::util::TimeoutException&) {
+                            karabo::util::Exception::clearTrace();
+                            std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
+                            std::cout << "Trying again in " << sleep << " seconds." << std::endl;
+                            boost::this_thread::sleep(boost::posix_time::seconds(sleep));
+                            sleep += 2;
+                            continue;
                         }
-                        if (channelExists) {
-                            channel->connect(reply); // Synchronous
-                        } else {
-                            throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
-                        }
+                        break;
+                    }
+                    if (channelExists) {
+                        channel->connect(reply); // Synchronous
+                    } else {
+                        throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
                     }
                 }
+
             }
         }
 
@@ -1824,7 +1839,7 @@ namespace karabo {
         karabo::util::Hash SignalSlotable::slotGetOutputChannelInformation(const std::string& ioChannelId, const int& processId) {
             OutputChannels::const_iterator it = m_outputChannels.find(ioChannelId);
             if (it != m_outputChannels.end()) {
-                karabo::util::Hash h(it->second->getInformation());               
+                karabo::util::Hash h(it->second->getInformation());
                 if (processId == static_cast<int> (getpid())) {
                     h.set("memoryLocation", "local");
                 } else {
@@ -1913,7 +1928,7 @@ namespace karabo {
                 popReceivedReply(replyId, header, body);
             }
             return result;
-        }       
+        }
 
 
         void SignalSlotable::registerPerformanceStatisticsHandler(const UpdatePerformanceStatisticsHandler& updatePerformanceStatisticsHandler) {
