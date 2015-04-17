@@ -344,6 +344,8 @@
     <logicalFolder name="f6" displayName="xms" projectFiles="true">
       <itemPath>../../../src/karabo/xms/Data.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Data.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/InputChannel.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/InputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.hh</itemPath>
       <itemPath>../../../src/karabo/xms/NDArray.cc</itemPath>
@@ -2066,6 +2068,16 @@
       <item path="../../../src/karabo/xms/Data.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Data.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/InputChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/InputChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
@@ -3875,6 +3887,16 @@
       <item path="../../../src/karabo/xms/Data.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Data.hh" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/InputChannel.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/InputChannel.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/Memory.cc" ex="false" tool="1" flavor2="0">
       </item>
