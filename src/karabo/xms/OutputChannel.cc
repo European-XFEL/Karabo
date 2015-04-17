@@ -54,6 +54,10 @@ namespace karabo {
                     .metricPrefix(MetricPrefix::MEGA)
                     .assignmentOptional().defaultValue(-1)
                     .commit();
+
+            NODE_ELEMENT(expected).key("schema")
+                    .displayedName("Data Schema")
+                    .commit();
         }
 
 
