@@ -139,7 +139,8 @@ function setSvnPath() {
     echo
     echo $user > ${HOME}/.karabo/karaboPackagesSvnPath
 
-    defaultDepsSvn=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+    #defaultDepsSvn=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+    defaultDepsSvn=https://svnsrv.desy.de/desy/EuXFEL/karaboPackages
     isCorrect=0
     read -e -p "Please enter the path to Karabo Dependencies SVN repository [$defaultDepsSvn]: " user
     if [ -z "$user" ]; then
