@@ -149,6 +149,15 @@ class Device(BaseDevice, BaseConfiguration):
                     self.status = "noplugin"
                 else:
                     self.status = "offline"
+            if conf.classId is None and conf.serverId is None:
+                conf.classId = self.classId
+                conf.serverId = self.serverId
+                if conf.descriptor is None:
+                    cls = manager.getClass(self.serverId, self.classId)
+                    if cls.descriptor is None:
+                        cls.signalNewDescriptor.connect(conf.onClassDescriptor)
+                    else:
+                        conf.descriptor = cls.descriptor
         else:
             if (conf.classId == self.classId and
                     conf.serverId == self.serverId):

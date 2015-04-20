@@ -143,6 +143,13 @@ class Configuration(Box):
         else:
             self.signalStatusChanged.emit(self, self.status, self.error)
 
+    def onClassDescriptor(self, box):
+        """this is connected to the (supposed) class of an offline device.
+        Set the class descriptor only if we don't already have one."""
+        if self.descriptor is None:
+            self.descriptor = box.descriptor
+        if self.descriptor is not None:
+            box.signalNewDescriptor.disconnect(self.onClassDescriptor)
 
     def getBox(self, path):
         box = self
