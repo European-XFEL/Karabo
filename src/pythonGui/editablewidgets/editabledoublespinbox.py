@@ -105,13 +105,14 @@ class IntValidator(QValidator):
         if not (input.isdigit() or input[0] in '+-' and input[1:].isdigit()):
             return self.Invalid, input, pos
 
-        if self.min >= 0 and input.startswith('-'):
+        if self.min is not None and self.min >= 0 and input.startswith('-'):
             return self.Invalid, input, pos
 
-        if self.max < 0 and input.startswith('+'):
+        if self.max is not None and self.max < 0 and input.startswith('+'):
             return self.Invalid, input, pos
 
-        if self.min <= int(input) <= self.max:
+        if ((self.min is None or self.min <= int(input)) and
+                (self.max is None or int(input) <= self.max)):
             return self.Acceptable, input, pos
         else:
             return self.Intermediate, input, pos
