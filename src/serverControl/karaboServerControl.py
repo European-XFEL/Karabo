@@ -52,7 +52,7 @@ broker_hostname = ""
 broker_port = ""
 
 config_file = os.path.expanduser(
-    '~/PycharmProjects/gitServerControl/config.ini')
+    '~/PycharmProjects/karabo/src/serverControl/config.ini')
 config_filename = "config.ini"
 config = configparser.ConfigParser()
 config.read(config_file)
