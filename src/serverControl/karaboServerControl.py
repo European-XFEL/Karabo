@@ -48,8 +48,7 @@ private_key_path = "/home/kumarm/.ssh/id_rsa"
 
 json_as_dict = {}
 installation_name = ""
-broker_hostname = ""
-broker_port = ""
+broker_hosts = ""
 
 config_file = os.path.expanduser(
     '~/PycharmProjects/karabo/src/serverControl/config.ini')
@@ -431,8 +430,8 @@ def do_sanity_checks_on_json_file():
     logging.debug("DEBUG: successfully resolved all hostnames..")
 
     # ensure broker hostname can be resolved
-    broker_host_name = json_as_dict[broker_str][hostname_str]
-    if not is_hostname_resolvable(broker_host_name):
+    broker_hosts = json_as_dict[broker_str][hosts_str]
+    if not is_hostname_resolvable(broker_hosts.split(':')[0]):
         logging.error("ERROR: broker hostname could not be resolved. Exiting.")
         return False
     else:
@@ -995,17 +994,13 @@ def install_all():
             ",".join(all_plugins_long_names_for_one_host_list)
         global installation_name
         installation_name = json_as_dict[installation_name_str]
-        global broker_hostname
-        broker_hostname = json_as_dict[broker_str][hostname_str]
-        global broker_port
-        broker_port = json_as_dict[broker_str][port_str]
-        broker_port = str(broker_port)
+        global broker_hosts
+        broker_hosts = json_as_dict[broker_str][hosts_str]
 
         # write host info
         with open(one_host_info_filename, 'a') as file:
             file.write("installation_name=" + installation_name + "\n")
-            file.write("broker_hostname=" + broker_hostname + "\n")
-            file.write("broker_port=" + broker_port + "\n")
+            file.write("broker_hosts=" + broker_hosts + "\n")
             file.write("install_prefix=" + one_install_prefix + "\n")
             file.write("run_prefix=" + one_run_prefix + "\n")
             file.write("karabo_user=" + one_karabo_user + "\n")
@@ -1269,18 +1264,11 @@ __SCHEMA__ = {1: '''\
             "broker": {
                 "description":"Karabo broker. Note: Topic name is defined by installation_name.",
                 "type":"object",
-                "required": ["hostname","port"],
+                "required": ["hosts"],
                 "properties":{
-                    "hostname": {
-                        "description":"Hostname running broker instance",
-                        "type":"string",
-                        "format": "hostname"
-                    },
-                    "port": {
-                        "description":"Broker port",
-                        "type":"integer",
-                        "minimum": 1024,
-                        "maximum": 49151
+                    "hosts": {
+                        "description":"Hosts running broker instance with port",
+                        "type":"string"
                     }
                 },
                 "additionalProperties": false
@@ -1300,8 +1288,7 @@ __SCHEMA__ = {1: '''\
                     },
                     "karabo_version": {
                         "description": "Default version of the karaboFramework",
-                        "type":"string",
-                        "$ref": "#/definitions/version"
+                        "type":"string"
                     },
                     "karabo_user": {
                         "description": "Default user who owns the run directories and device server processes",

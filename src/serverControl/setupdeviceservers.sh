@@ -16,17 +16,19 @@ INFO_SUFFIX=$( grep info_suffix ${CONFIG_FILE} | cut -d'=' -f2 | tr -d ' ')
 host=$( hostname -f)
 HOST_INFO_FILE=".${host}_${INFO_SUFFIX}"
 INSTALLATION_NAME=$( grep installation_name ${HOST_INFO_FILE} | cut -d'=' -f2)
-BROKER_HOSTNAME=$( grep broker_hostname ${HOST_INFO_FILE} | cut -d'=' -f2)
-BROKER_PORT=$( grep broker_port ${HOST_INFO_FILE} | cut -d'=' -f2)
+BROKER_HOSTS=$( grep broker_hosts ${HOST_INFO_FILE} | cut -d'=' -f2)
 RUN_PREFIX=$( grep run_prefix ${HOST_INFO_FILE} | cut -d'=' -f2)
 INSTALL_PREFIX=$( grep install_prefix ${HOST_INFO_FILE} | cut -d'=' -f2)
 KARABO_USER=$( grep karabo_user ${HOST_INFO_FILE} | cut -d'=' -f2)
 DEVICE_SERVER_IDS_LIST=$( grep ds_ids ${HOST_INFO_FILE} | cut -d'=' -f2)
 KARABO_RUN=$( grep karaboRun ${CONFIG_FILE} | cut -d'=' -f2)
 
+BROKER_HOSTNAME=$(echo ${BROKER_HOSTS} | cut -d':' -f1 )
+BROKER_PORT=$(echo ${BROKER_HOSTS} | cut -d':' -f2)
+
 ###### copy bin directory from karaboRun to inside run directory
 ANY_KARABO=$( grep karabo_fws ${HOST_INFO_FILE} | cut -d'=' -f2 | cut -d',' -f1)
-mkdir ${RUN_PREFIX}/${INSTALLATION_NAME}/bin
+if [[ ! -d ${RUN_PREFIX}/${INSTALLATION_NAME}/bin ]]; then mkdir ${RUN_PREFIX}/${INSTALLATION_NAME}/bin; fi
 cp ${INSTALL_PREFIX}/${ANY_KARABO}/${KARABO_RUN}/bin/* ${RUN_PREFIX}/${INSTALLATION_NAME}/bin/
 
 IFS=',' read -a ds_ids_array <<< "${DEVICE_SERVER_IDS_LIST}"

@@ -15,8 +15,7 @@
 	"ftp://karabo:framework@ftp.desy.de/karaboDependencies"
     ],
     "broker": {
-        "hostname": "exfl-broker.desy.de",
-        "port": 7777
+        "hosts": "exfl-broker.desy.de:7777"
     },
     "defaults": {
         "karabo_version": "1.3",
