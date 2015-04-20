@@ -22,6 +22,12 @@ RUN_PREFIX=$( grep run_prefix ${HOST_INFO_FILE} | cut -d'=' -f2)
 INSTALL_PREFIX=$( grep install_prefix ${HOST_INFO_FILE} | cut -d'=' -f2)
 KARABO_USER=$( grep karabo_user ${HOST_INFO_FILE} | cut -d'=' -f2)
 DEVICE_SERVER_IDS_LIST=$( grep ds_ids ${HOST_INFO_FILE} | cut -d'=' -f2)
+KARABO_RUN=$( grep karaboRun ${CONFIG_FILE} | cut -d'=' -f2)
+
+###### copy bin directory from karaboRun to inside run directory
+ANY_KARABO=$( grep karabo_fws ${HOST_INFO_FILE} | cut -d'=' -f2 | cut -d',' -f1)
+mkdir ${RUN_PREFIX}/${INSTALLATION_NAME}/bin
+cp ${INSTALL_PREFIX}/${ANY_KARABO}/${KARABO_RUN}/bin/* ${RUN_PREFIX}/${INSTALLATION_NAME}/bin/
 
 IFS=',' read -a ds_ids_array <<< "${DEVICE_SERVER_IDS_LIST}"
 for one_ds_id in ${ds_ids_array[@]}
