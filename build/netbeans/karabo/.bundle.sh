@@ -130,7 +130,8 @@ else
 
     # Copying 'extern' has resulted in changing python interpreter path for scripts in 'bin' directory
     # <-- replace 1st line by proper interp path
-    [ -f $PACKAGEDIR/extern/bin/ipython3 ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3
+    [ -f $PACKAGEDIR/extern/bin/ipython ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython
+    [ -f $PACKAGEDIR/extern/bin/ipython3 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3
     [ -f $PACKAGEDIR/extern/bin/ipython3.4-config ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3.4-config
     [ -f $PACKAGEDIR/extern/bin/2to3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/2to3
     [ -f $PACKAGEDIR/extern/bin/cygdb ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/cygdb
