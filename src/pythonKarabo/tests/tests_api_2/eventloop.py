@@ -9,7 +9,7 @@ def async_tst(f):
     def wrapper(self, *args, **kwargs):
         coro = coroutine(f)
         loop.run_until_complete(wait_for(loop.create_task(
-            coro(self, *args, **kwargs), self.instance), 15))
+            coro(self, *args, **kwargs), self.instance), 30))
     return wrapper
 
 
@@ -17,7 +17,7 @@ def sync_tst(f):
     @wraps(f)
     def wrapper(self, *args):
         loop.run_until_complete(wait_for(loop.create_task(
-            loop.start_thread(f, self, *args), self.instance), 15))
+            loop.start_thread(f, self, *args), self.instance), 30))
     return wrapper
 
 
