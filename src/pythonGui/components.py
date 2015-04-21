@@ -179,8 +179,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(box)(
-                                        box, self.__compositeWidget)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
         super(EditableNoApplyComponent, self).__init__(parent)
@@ -235,21 +234,6 @@ class EditableNoApplyComponent(BaseComponent):
 
     def removeKey(self, key):
         pass
-
-
-    def changeWidget(self, factory, proxyWidget, alias):
-        self.__initParams['value'] = self.value
-
-        oldWidget = self.widgetFactory.widget
-        oldWidget.deleteLater()
-        self.widgetFactory = factory.getClass(alias)(**self.__initParams)
-        self.widgetFactory.setReadOnly(False)
-        proxyWidget.setWidget(self.widgetFactory.widget)
-        self.widgetFactory.widget.show()
-
-        # Refresh new widget...
-        for key in self.widgetFactory.keys:
-            Network().onGetDeviceConfiguration(key)
 
 
     def onEditingFinished(self, box, value):
@@ -375,21 +359,18 @@ class EditableApplyLaterComponent(BaseComponent):
     def removeKey(self, key):
         pass
 
-
-    def changeWidget(self, factory, alias):
+    def changeWidget(self, factory):
         oldWidget = self.widgetFactory.widget
-        self.widgetFactory = factory.getClass(alias)(
-            self.box, oldWidget.parent())
-        self.__currentDisplayValue = None
+        oldFactory = self.widgetFactory
+        self.widgetFactory.setParent(None)
+        self.widgetFactory = factory(oldFactory.boxes[0], oldWidget.parent())
         self.widgetFactory.setReadOnly(False)
-        self.connectWidget(self.box)
+        self.connectWidget(self.boxes[0])
         oldWidget.parent().layout().insertWidget(0, self.widgetFactory.widget)
         oldWidget.setParent(None)
         self.widgetFactory.widget.show()
-
-        for c in {b.configuration for b in self.widgetFactory.boxes}:
-            c.refresh()
-
+        if self.boxes[0].hasValue():
+            self.widgetFactory.valueChanged(self.boxes[0], self.boxes[0].value)
 
     # Slot called when changes need to be sent to Manager
     def onApplyClicked(self):
@@ -499,8 +480,7 @@ class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent):
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(box)(
-                                                    box, parent)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, parent)
         super(ChoiceComponent, self).__init__(parent)
