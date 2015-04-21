@@ -419,7 +419,8 @@ class Schema(hashmod.Descriptor):
         copy = ['description', 'defaultValue', 'displayType', 'assignment',
                 'alias', 'allowedStates', 'tags', 'options', 'minInc', 'maxInc',
                 'minExc', 'maxExc', 'minSize', 'maxSize', 'warnLow',
-                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy']
+                'warnHigh', 'alarmLow', 'alarmHigh', 'archivePolicy',
+                'relativeError', 'absoluteError']
         for a in copy:
             setattr(self, a, attrs.get(a))
         self.displayedName = attrs.get('displayedName', self.displayedName)
