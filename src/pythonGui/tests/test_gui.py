@@ -12,6 +12,7 @@ import widget
 from karabo.hash import Hash, XMLParser
 from karabo.hashtypes import Integer, Schema_
 from karabo.enums import AccessLevel
+from karabo.project import ProjectAccess
 from itertools import count
 
 from os import path
@@ -173,8 +174,8 @@ class Tests(TestCase):
 
     def project(self):
         net.called = [ ]
-        Manager().projectTopology.projectOpen(path.join(self.directory,
-                                                        "project.krb"))
+        Manager().projectTopology.projectOpen(
+            path.join(self.directory, "project.krb"), ProjectAccess.LOCAL)
         self.assertCalled("onGetDeviceSchema")
 
         root = Manager().projectTopology.invisibleRootItem()
@@ -193,9 +194,11 @@ class Tests(TestCase):
 
         self.assertEqual(Manager().deviceData["testdevice"].visible, 4)
 
-        Manager().projectTopology.projectSaveAs("/tmp/test.krb")
+        Manager().projectTopology.projectSaveAs("/tmp/test.krb",
+                                                ProjectAccess.LOCAL)
         Manager().projectTopology.onCloseProject()
-        Manager().projectTopology.projectOpen("/tmp/test.krb")
+        Manager().projectTopology.projectOpen("/tmp/test.krb",
+                                              ProjectAccess.LOCAL)
 
 
     def stop(self):
