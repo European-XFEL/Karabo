@@ -642,6 +642,7 @@ class ChoiceOfNodes(Schema):
         item.editableComponent = component(factory, box, treeWidget)
         self.completeItem(treeWidget, item, box, isClass)
 
+        children = []
         for i in range(item.childCount()):
             child = item.child(i)
 
@@ -656,7 +657,8 @@ class ChoiceOfNodes(Schema):
                     child.setHidden(True)
 
             if item.editableComponent is not None:
-                item.editableComponent.widgetFactory.addItem(child)
+                children.append(child)
+        item.editableComponent.widgetFactory.childItemList = children
 
         # Trigger change of combobox
         item.editableComponent.widgetFactory.valueChanged(box, box.current)
