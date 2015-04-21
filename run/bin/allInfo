@@ -95,5 +95,5 @@ ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServ
 # User Interfaces #
 ###################
 
-#ALLINFO[30]="startGui::0:100:no"
-#ALLINFO[31]="startCli::0:100:no"
+#ALLINFO[30]="./startGui::0:100:no"
+#ALLINFO[31]="./startCli::0:100:no"
