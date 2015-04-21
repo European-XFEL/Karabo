@@ -638,7 +638,8 @@ class ChoiceOfNodes(Schema):
         else:
             component = ChoiceComponent
 
-        item.editableComponent = component(None, box, treeWidget)
+        factory = EditableWidget.getClass(box)(box, treeWidget)
+        item.editableComponent = component(factory, box, treeWidget)
         self.completeItem(treeWidget, item, box, isClass)
 
         for i in range(item.childCount()):
