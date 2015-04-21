@@ -179,8 +179,7 @@ class EditableNoApplyComponent(BaseComponent):
 
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(box)(
-                                        box, self.__compositeWidget)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, self.__compositeWidget)
         super(EditableNoApplyComponent, self).__init__(parent)
@@ -481,8 +480,7 @@ class ChoiceComponent(BaseComponent):
     def __init__(self, classAlias, box, parent):
         W = Widget.widgets.get(classAlias)
         if W is None:
-            self.widgetFactory = EditableWidget.getClass(box)(
-                                                    box, parent)
+            self.widgetFactory = classAlias
         else:
             self.widgetFactory = W(box, parent)
         super(ChoiceComponent, self).__init__(parent)
