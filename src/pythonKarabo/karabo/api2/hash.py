@@ -114,6 +114,9 @@ class Integer(Simple, Enumable):
 
 
 class Number(Simple):
+    absoluteError = Attribute()
+    relativeError = Attribute()
+
     def getMinMax(self):
         info = np.finfo(self.numpy)
         min = self.minExc
