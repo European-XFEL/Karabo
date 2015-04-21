@@ -42,9 +42,9 @@ class EditableChoiceElement(EditableWidget):
 
         self.widget.installEventFilter(self)
         self.widget.currentIndexChanged.connect(self.onEditingFinished)
-        
-        self.childItemList = []
-        
+
+        self.childItemList = None  # set by schema.ChoiceOfNodes.item
+
     def eventFilter(self, object, event):
         # Block wheel event on QComboBox
         if event.type() == QEvent.Wheel and object == self.widget:
@@ -52,14 +52,10 @@ class EditableChoiceElement(EditableWidget):
         return False
 
 
-    def typeChange(self, box):
+    def typeChanged(self, box):
         for k, v in box.descriptor.dict.items():
             if isinstance(v, Descriptor):
                 self.widget.addItem(v.displayedName)
-
-    def addItem(self, itemToBeAdded):
-        self.childItemList.append(itemToBeAdded)
-
 
     @property
     def value(self):
@@ -105,11 +101,12 @@ class EditableChoiceElement(EditableWidget):
 
         with SignalBlocker(self.widget):
             self.widget.setCurrentIndex(index)
-        self._updateChoiceItems(index)
+        if self.childItemList is not None:
+            self._updateChoiceItems(index)
 
 
     def onEditingFinished(self, index):
-        if 0 <= index < len(self.childItemList):
+        if self.childItemList is not None:
             self._updateChoiceItems(index)
         EditableWidget.onEditingFinished(self, self.value)
 
