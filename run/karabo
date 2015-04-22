@@ -38,6 +38,8 @@ else
 	VERSION=$(git rev-parse --short HEAD)
     fi
 fi
+#set temporary for testing
+#VERSION=1.2.3
     
 VERSION_MAJ=${VERSION%.*.*}
 VERSION_MIN=${VERSION%.*}
@@ -214,6 +216,15 @@ if [ "$numCores" -eq "0" ]; then
   numCores=1
   numMakeThreads=1
 fi
+MACHINE=$(uname -m)
+if [ "$OS" = "Linux" ]; then
+    DISTRO_ID=( $(lsb_release -is) )
+    DISTRO_RELEASE=$(lsb_release -rs)
+    if [ "$DISTRO_ID" = "Scientific" ]; then
+       DISTRO_RELEASE=${DISTRO_RELEASE%%\.*}
+    fi
+fi
+
 
 oldSvnPath=""
 
@@ -1220,6 +1231,317 @@ function buildPackage() {
 }
 
 
+
+function installPluginsAndDeps() {
+
+    configurationName=$1
+    buildType=$2
+    force=$3
+
+    binInstallDir=$scriptDir/pkg-bin
+
+    pluginList="`cat $etcDir/configurations/$configurationName 2>/dev/null | grep -v "^#" | grep -v "^$" | awk '{sub(/tags\//, "", $4);sub(/branches\//, "", $4);split($4, a, "-");printf "%s %s ", $3, a[1]}'`"
+    if [[ -n $pluginList ]]; then
+        echo "Installing plugins: $pluginList in:"
+        echo "$binInstallDir"
+        echo "using karabo framework from $karaboFramework"
+    fi
+
+
+    depList=''
+
+    allPlugins=($pluginList)
+    allPluginsNumberOfElements=${#allPlugins[@]}
+    j=0
+    while [ $j -lt $allPluginsNumberOfElements ]; do
+        let "nameJ = $j"
+        let "versionJ = $j + 1"
+        pluginName=${allPlugins[$nameJ]}
+        pluginVersion=${allPlugins[$versionJ]}
+        tmpDepList=''
+        installPlugin tmpDepList $pluginName $pluginVersion
+
+        #echo "tmpdeplist: $tmpDepList"
+        depList="$depList $tmpDepList"
+        #echo "deplist: $depList"
+
+        let "j = $j + 2"
+
+    done
+    if [[ -n depList ]]; then
+        echo "deps to be installed: $depList"
+    fi
+    allDeps=($depList)
+    allDepsNumberOfElements=${#allDeps[@]}
+    j=0
+    while [ $j -lt $allDepsNumberOfElements ]; do
+        let "depJ = $j"
+        let "versionJ = $j + 1"
+        depName=${allDeps[$depJ]}
+        depVersion=${allDeps[$versionJ]}
+        installDep $depName $depVersion
+
+
+        let "j = $j + 2"
+    done
+
+
+}
+
+
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+function installPlugin () {
+
+    _outvar=$1
+    pluginName=$2
+    pluginVersion=$3
+    echo "Installing $pluginName $pluginVersion in $binInstallDir"
+
+
+    pluginInstallScript=$pluginName-$pluginVersion-${VERSION}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+
+    # check if installed already
+    if [ -d $binInstallDir/$pluginName-$pluginVersion-${VERSION} ]; then
+       echo "plugin $pluginName-$pluginVersion-${VERSION} already installed"
+       eval $_outvar=''
+       return 2
+    fi
+
+
+    getRepoList
+    echo repolist: $KARABOREPOLIST
+    repoList=$(fixRepoList  karabo-${VERSION} $KARABOREPOLIST)
+    [ ! -d $scriptDir/downloads ] && mkdir $scriptDir/downloads 
+    pushd $scriptDir/downloads
+    if [ ! -e $pluginInstallScript ]; then
+        getFromRepo $pluginInstallScript $repoList
+        if [ $? -ne 0 ]; then
+           echo "cannot get plugin installation script $pluginInstallScript from any repo"
+           eval $_outvar=''
+           popd
+           return 1
+        fi
+    else
+        echo "plugin $pluginInstallScript already downloaded"
+    fi
+
+
+
+    chmod +x $pluginInstallScript
+    ./$pluginInstallScript --prefix=$binInstallDir
+
+    if [ $? -ne 0 ]; then
+       echo "plugin $pluginInstallScript installation error"
+       eval $_outvar=''
+       popd
+       return 1
+    fi
+
+    popd
+
+    if [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.so` ]; then
+        ( cd $scriptDir/servers/cppDeviceServer/plugins; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1  -type f -name \*.so -exec ln -sf {} \; )
+    elif [ `find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -name \*.py` ]; then
+        ( cd $scriptDir/servers/pythonDeviceServer/plugins; find $binInstallDir/$pluginName-$pluginVersion-${VERSION} -maxdepth 1 -type f -not -name main.py -name \*.py -exec grep -q 'class.*(.*Python.*Device' {} \; -exec ln -sf {} \; )
+    fi
+    dependsPath=$binInstallDir/$pluginName-$pluginVersion-${VERSION}/DEPENDS
+
+    #allDeps="`cat $DEPENDSPATH 2>/dev/null | grep -v "^#" | grep -v "^$" | awk '{print $3, $4}'`"
+    allDeps="`cat $dependsPath 2>/dev/null | grep -v "^#" | grep -v "^$" | awk '{sub(/tags\//, "", $4);sub(/branches\//, "", $4);split($4, a, "-");printf "%s %s ", $3, a[1]}'`"
+    if [[ -n $allDeps ]]; then
+       echo "plugin $pluginName has deps: $allDeps"
+    fi
+    eval $_outvar=\$allDeps
+
+
+}
+
+
+function installDep () {
+
+    depName=$1
+    depVersion=$2
+
+
+    depInstallScript=$depName-$depVersion-${VERSION}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
+    # check if already installed HOW???
+
+    getRepoList
+    repoList=$(fixRepoList  karabo-${VERSION} $KARABOREPOLIST)
+    [ ! -d $scriptDir/downloads ] && mkdir $scriptDir/downloads
+
+    pushd $scriptDir/downloads
+
+    if [ ! -e $depInstallScript ]; then
+        getFromRepo $depInstallScript $repoList
+        if [ $? -ne 0 ]; then
+           echo "cannot get dep installation script $depInstallScript from any repo"
+           popd
+           return 1
+        fi
+    else
+        echo "dependency $depInstallScript already downloaded"
+    fi
+    chmod +x $depInstallScript
+    ./$depInstallScript --prefix=$karaboFramework/extern
+
+    if  [ $? -ne 0 ]; then
+       echo "dep $depInstallScript installation error"
+       popd
+       return 1
+    fi
+    popd
+
+}
+
+
+function getRepoList() {
+    if [ -z "$KARABOREPOLIST" ]; then
+        if [ -e $HOME/.karabo/karaboRepoList ]; then
+            KARABOREPOLIST=$(cat $HOME/.karabo/karaboRepoList)
+        else
+          echo "WARNING Could not find $HOME/.karabo/karaboRepoList. Setting default one."
+          KARABOREPOLIST="http://exflserv05.desy.de/karabo/karaboPackages http://exflserv05.desy.de/karabo/karaboDependencies"
+          echo $KARABOREPOLIST
+          echo $KARABOREPOLIST > ${HOME}/.karabo/karaboRepoList
+#          exit 1
+        fi
+    fi
+    #repoList=$KARABOREPOLIST
+
+}
+
+
+function setRepoList() {
+    defaultRepoList="http://exflserv05.desy.de/karabo/karaboPackages http://exflserv05.desy.de/karabo/karaboDependencies"
+    isCorrect=1
+    read -e -p "Please enter the list of url to plugins and dependencies repository [$defaultRepoList]: " user
+    if [ -z "$user" ]; then
+        user=$defaultRepoList
+    fi
+    falseRepo=''
+    for repo in $user; do
+
+        proto=${repo%%:*}
+        case $proto in
+            http)
+            curl -Ifs -o /dev/null $repo
+            if [ $? -ne 0 ];then
+               isCorrect=0
+               falseRepo="$falseRepo $repo"
+            fi
+            ;;
+        ftp)
+            curl -Ifs -o -u karabo:framework /dev/null $repo
+            if [ $? -ne 0 ];then
+               isCorrect=0
+               falseRepo="$falseRepo $repo"
+            fi
+            ;;
+        file)
+            curl -Ifs -o /dev/null $repo
+            if [ $? -ne 0 ];then
+               isCorrect=0
+               falseRepo="$falseRepo $repo"
+            fi
+            echo curl -f -s -O $repo/$file
+            ;;
+        *)
+            echo $repo not supported
+            isCorrect=0
+            falseRepo="$falseRepo $repo"
+        esac
+    done
+
+
+    if [[ "$isCorrect" == "0" ]]; then
+        echo
+        echo " URL \"$falseRepo\" not supported, could not be found or you don't have appropiate credentials."
+        echo
+        exit 1
+    fi
+    echo
+    echo "The list of repositories is stored in ${HOME}/.karabo/karaboRepoList"
+    echo
+    echo $user > ${HOME}/.karabo/karaboRepoList
+
+}
+
+function fixRepoList () {
+
+postfix=$1
+shift
+list="$@"
+tmplist=""
+for repo in $list; do
+    tmplist="$tmplist $repo/$postfix"
+done
+echo "$tmplist"
+
+
+}
+
+
+
+function getFromRepo () {
+
+file=$1
+shift
+repoList="$@"
+gotFile=0
+for repo in $repoList; do
+    proto=${repo%%:*}
+    case $proto in
+        http)
+            echo curl -f -s -O $repo/$file
+            curl -f -s -O $repo/$file
+            if [ $? -eq 0 ]; then
+                gotFile=1
+                echo got file
+                break
+            fi
+            ;;
+        ftp)
+            echo curl -f -s -O $repo/$file
+            curl -f -s -O -u karabo:framework $repo/$file
+            if [ $? -eq 0 ]; then
+                gotFile=1
+                echo got file
+                break
+            fi
+            ;;
+        file)
+            echo curl -f -s -O $repo/$file
+            curl -f -s -O $repo/$file
+            if [ $? -eq 0 ]; then
+                gotFile=1
+                echo got file
+                break
+            fi
+            ;;
+        *)
+            echo $repo not supported
+    esac
+done
+if [ $gotFile -eq 0 ]; then
+    echo "file not found"
+    return 1
+fi
+
+
+
+}
+
+
+
 function refreshAllPackagesFromSvn() {
 
    supress=0
@@ -1760,6 +2082,18 @@ usage: setsvn   (then press Enter to get default paths)
 
 End-of-help
 
+    elif [[ "$1" == "setrepo" ]]; then
+        cat <<End-of-help
+setrepo: sets interactively url list to binary repositories containing installation scripts for plugins and dependencies
+
+usage: setrepo   (press Enter to get default list)
+
+Examples: this urls can be used:  http://, ftp://, file://
+          http://exflserv05.desy.de/karabo/karaboPackages
+          ftp://ftp.desy.de/karaboPackages
+          file:///local/path/to/repository
+End-of-help
+
     fi
     exit 0
 }
@@ -1802,6 +2136,7 @@ Available subcommands:
   tag       - Creates a svn tag for a given package
   branch    - Creates a svn branch for a given package
   setsvn    - Sets karabo svn repository path
+  setrepo   - Sets url list to binary repositories
   import    - Imports local project into repository 
 
 End-of-help
@@ -1940,6 +2275,43 @@ until [ -z "$1" ]; do
             fi
         done
         shift
+    # Install package configuration (binary)
+    elif [ $1 = "install-b" ]; then
+        install_b=1
+        if [ $# -lt 2 ]; then
+            detailedHelp $1
+        elif [ $2 = "help" ]; then
+            detailedHelp $1
+        fi
+        configurationName=$2
+	if [[ "$configurationName" == "all" ]]; then
+            echo " $configurationName configuration is not supported"
+            exit 1
+	fi
+        shift;
+        until [ -z "$2" ]; do
+            if [[ "$2" == "-type" ]]; then
+                if [ -z "$3" ]; then
+                    echo " Missing option, expecting either Debug or Release"
+                    exit 1
+                fi
+                buildType=$3;
+                echo "Build Type: $buildType"
+                # valid options
+                if [[ "$buildType" != "Debug" && "$buildType" != "Release" ]]; then
+                    echo " Invalid option: \"$3\", expecting either Debug or Release"
+                    exit 1
+                fi
+                shift; shift
+	    elif [[ "$2" == "-force" ]]; then
+                forceInstallation="1"
+                shift
+            else
+                echo " Invalid option: \"$2\""
+                detailedHelp "install-s"
+            fi
+        done
+        shift
     # Update packages
     elif [ $1 = "update" ]; then
         update=1
@@ -2043,6 +2415,10 @@ until [ -z "$1" ]; do
     elif [ $1 = "setsvn" ]; then
         setSvn=1
         shift
+    # Set repository list
+    elif [ $1 = "setrepo" ]; then
+        setRepo=1
+        shift
     else
         echo "  Invalid option: $1"
         exit 1
@@ -2057,6 +2433,8 @@ if [[ "$forget" == "1" ]]; then
     removeContinueBuildInfo
 elif [[ "$install_s" == "1" ]]; then
     installConfiguration $configurationName $buildType $forceInstallation
+elif [[ "$install_b" == "1" ]]; then
+    installPluginsAndDeps $configurationName $buildType $forceInstallation
 
 elif [[ "$update" == "1" ]]; then
     updateInstalled $packageName $packageCategory
@@ -2096,6 +2474,8 @@ elif [[ "$createBranch" == "1" ]]; then
     createSvnBranch $packageName $packageCategory $svnBranchName
 elif [[ "$setSvn" == "1" ]]; then
     setSvnPath
+elif [[ "$setRepo" == "1" ]]; then
+    setRepoList
 elif [[ "$updateProjectFiles" == "1" ]]; then
     updateProject $packageDevPath $packageName $packageCategory 
 
