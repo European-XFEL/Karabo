@@ -48,6 +48,10 @@
                             "name": "adqDigitizer"
                         }
                     ]
+                },
+                {
+                    "server_id": "dataLogger",
+                    "autostart": false
                 }
             ]
 
