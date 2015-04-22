@@ -658,7 +658,10 @@ class PythonDevice(NoFsm):
 def launchPythonDevice():
     script, modname, classid, xmlfile = tuple(sys.argv)
     config = PythonDevice.loadConfiguration(xmlfile)
-   
+    srcdir = os.path.dirname(script)
+    if srcdir not in sys.path:
+        sys.path.append(srcdir)
+        
     try:
         device = Configurator(PythonDevice).create(classid, config)
         device.run()

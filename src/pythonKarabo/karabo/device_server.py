@@ -363,6 +363,16 @@ class DeviceServer(object):
             self.scanning = True
             self.pluginThread.start()
     
+    def import_plugin(self, modname):
+        script = os.path.realpath(self.pluginLoader.getPluginDirectory() + "/" + modname + ".py")
+        try:
+            savedSysPath = copy.copy(sys.path)
+            sys.path.append(os.path.dirname(script))
+            module = __import__(modname)
+        finally:
+            sys.path = copy.copy(savedSysPath)
+        return module
+        
     def scanPlugins(self):
         self.blacklist = []
         self.availableModules = dict()
@@ -374,7 +384,7 @@ class DeviceServer(object):
                 if name in self.availableModules:
                     continue
                 try:
-                    module = __import__(name)
+                    module = self.import_plugin(name)
                 except ImportError as e:
                     self.log.WARN("scanPlugins: Cannot import module {} -- {}".format(name,e))
                     continue
@@ -463,7 +473,7 @@ class DeviceServer(object):
         try:
             pluginDir = self.pluginLoader.getPluginDirectory()
             modname = self.availableDevices[classid]["module"]
-            module = __import__(modname)
+            module = self.import_plugin(modname)
             UserDevice = getattr(module, classid)
             schema = UserDevice.getSchema(classid)
             validator = Validator()
@@ -477,7 +487,7 @@ class DeviceServer(object):
                 raise RuntimeError("Access to {}._deviceId_ failed".
                                    format(classid))
             script = os.path.realpath(pluginDir + "/" + modname + ".py")
-            filename = "/tmp/{}.().configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
+            filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
             while os.path.isfile(filename):
                 self.seqnum += 1
                 filename = "/tmp/{}.{}.configuration_{}_{}.xml".format(modname, classid, self.pid, self.seqnum)
@@ -519,7 +529,7 @@ class DeviceServer(object):
         try:
             pluginDir = self.pluginLoader.getPluginDirectory()
             modname = self.availableDevices[classid]["module"]
-            module = __import__(modname)
+            module = self.import_plugin(modname)
             userDevice = getattr(module, classid)
             schema = userDevice.getSchema(classid)
             validator = Validator()
