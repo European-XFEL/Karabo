@@ -43,6 +43,8 @@ installation_name_str = "installation_name"
 karabo_fw_repositories_str = "karabo_repositories"
 karabo_packages_repositories_str = "karabo_packages_repositories"
 karabo_dependencies_repositories_str = "karabo_dependencies_repositories"
+data_logger_str = "dataLogger"
+configuration_str = "configuration"
 
 private_key_path = "/home/kumarm/.ssh/id_rsa"
 
@@ -649,6 +651,15 @@ def get_map_device_server_id_to_plugin_long_names():
             device_server_id = one_device_server[server_id_str]
             all_plugin_long_names_as_set = set()
 
+            # for special device servers treat them separately
+            if device_server_id == data_logger_str:
+                all_plugin_long_names_as_set = set()
+                logging.debug("DEBUG: found dataLogger device server..")
+                # add (device server id -> plugins) to map
+                map_device_server_id_to_plugin_long_names[device_server_id] = \
+                    all_plugin_long_names_as_set
+                continue
+
             if karabo_fw_version_str in one_device_server:
                 karabo_fw_version = one_device_server[karabo_fw_version_str]
             else:
@@ -677,6 +688,31 @@ def get_map_device_server_id_to_plugin_long_names():
     return map_device_server_id_to_plugin_long_names
 
 
+def get_map_device_server_id_to_configuration():
+    """
+
+    :return:
+    """
+    map_device_server_id_to_configuration = {}
+
+    hosts_as_dict = json_as_dict[hosts_str]
+    for one_host in hosts_as_dict:
+        device_servers_as_dict = one_host[device_servers_str]
+
+        for one_device_server in device_servers_as_dict:
+            device_server_id = one_device_server[server_id_str]
+            configuration_value = ""
+
+            if configuration_str in one_device_server:
+                configuration_value = one_device_server[configuration_str]
+
+            # add to map
+            map_device_server_id_to_configuration[device_server_id] = \
+                configuration_value
+
+    return map_device_server_id_to_configuration
+
+
 def get_map_hostname_to_plugin_long_names():
     """
     map of one hostname to all plugins for this host.
@@ -701,6 +737,11 @@ def get_map_hostname_to_plugin_long_names():
                 karabo_fw_version = one_device_server[karabo_fw_version_str]
             else:
                 karabo_fw_version = default_karabo_version
+
+            # for special device servers, no plugins exist
+            device_server_id = one_device_server[server_id_str]
+            if device_server_id == data_logger_str:
+                continue
 
             for one_plugin in one_device_server[plugins_str]:
                 plugin_name = one_plugin[name_str]
@@ -1028,11 +1069,16 @@ def install_all():
                 list(all_plugins_long_names_for_one_ds_set)
             all_plugins_long_names_for_one_ds_csv =\
                 ",".join(all_plugins_long_names_for_one_ds_list)
+
+            configuration_value =\
+                get_map_device_server_id_to_configuration()[one_ds_id]
+
             with open(one_host_one_ds_id_info_filename, 'a') as file:
                 file.write("plugins=" + all_plugins_long_names_for_one_ds_csv +
                            "\n")
                 file.write("karabo_user=" + one_karabo_user + "\n")
                 file.write("karabo_fw=" + karabo_fw_version + "\n")
+                file.write("configuration=" + configuration_value)
 
             # copy files from server to remote
             sftp_client.put("{}/{}".format(os.getcwd(),
@@ -1332,7 +1378,7 @@ __SCHEMA__ = {1: '''\
                         "device_servers": {
                             "description": "List of device servers on this host",
                             "type":"array",
-                            "required": ["server_id", "plugins"],
+                            "required": ["server_id"],
                             "items": {
                                 "type":"object",
                                 "properties":{
