@@ -3,6 +3,14 @@
 # allRestart restarts those ALLINFO applications which have died
 # author: CY 16.1.2013
 
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd ${scriptDir}
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to ${scriptDir}"
+    exit 1;
+fi
+
 foo="./.allInfo"
 if [ ! -e $foo ]; then
     echo "ERROR no previous allStart"
