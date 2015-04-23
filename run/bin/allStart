@@ -55,7 +55,7 @@ do
         echo "INFO $exe running, not restarting"
     else 
         target=$exe
-        title=${exe##[./]*/}
+        title=$exe
         options="-T $title -sb -rightbar -sl $scroll"
 	display=""
 	if [ -n "$XUSE" ] && [ "$xuse" = "yes" ]; then

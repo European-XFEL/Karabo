@@ -18,7 +18,4 @@ if [ -z $KARABO ]; then
     fi
 fi
 
-until $KARABO/bin/karabo-pythondeviceserver "$@"; do
-    echo "ERROR Karabo server went down with signal $?, respawning..."
-    sleep 5
-done
+$KARABO/bin/karabo-pythondeviceserver "$@"
