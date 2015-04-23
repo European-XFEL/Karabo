@@ -40,6 +40,7 @@ class BulkNotifications(object):
 
 class Configuration(Box):
     signalStatusChanged = pyqtSignal(object, str, bool)
+    signalInitReply = pyqtSignal(bool, str)
 
 
     def __init__(self, id, type, descriptor=None):

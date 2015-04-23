@@ -85,7 +85,9 @@ namespace karabo {
 
             void onExecute(const karabo::util::Hash& info);
 
-            void onInitDevice(const karabo::util::Hash& info);
+            void onInitDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
+
+            void replyInit(karabo::net::Channel::Pointer channel, const std::string& deviceId, bool ok, const std::string &error);
 
             void onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 

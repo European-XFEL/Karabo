@@ -399,6 +399,10 @@ class _Manager(QObject):
             v.updateStatus()
         self.projectTopology.updateNeeded()
 
+    def handle_replyInit(self, deviceId, ok, error):
+        device = self.deviceData.get(deviceId)
+        if device is not None:
+            device.signalInitReply.emit(ok, error)
 
     def handle_instanceNew(self, topologyEntry):
         """ This function gets the configuration for a new instance.

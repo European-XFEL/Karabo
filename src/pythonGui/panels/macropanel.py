@@ -47,12 +47,6 @@ class MacroPanel(QSplitter):
         self.already_connected = set()
         for k in macro.instances:
             self.connect(k)
-        ms = getDevice("macroServer")
-        ms.boxvalue.startingError.signalUpdateComponent.connect(
-            self.startingError)
-        ms.addVisible()
-        self.destroyed.connect(ms.removeVisible)
-
 
     def setupToolBars(self, tb, parent):
         tb.addAction(icons.start, "Run", self.onRun)
@@ -79,18 +73,15 @@ class MacroPanel(QSplitter):
         self.console.insertPlainText(box.configuration.value.print)
 
 
-    def startingError(self, box, value, ts):
-        if (getDevice("macroServer").value.startingDevice ==
-                self.macro.instanceId):
-            self.console.moveCursor(QTextCursor.End)
-            self.console.insertPlainText(value)
+    def initReply(self, ok, error):
+        self.console.moveCursor(QTextCursor.End)
+        self.console.insertPlainText(error)
 
 
     def onRun(self):
         self.console.clear()
         try:
             compile(self.edit.toPlainText(), self.macro.name, "exec")
-            self.macro.run()
         except SyntaxError as e:
             if e.filename[7:-3] == self.macro.name:
                 c = self.edit.textCursor()
@@ -102,6 +93,10 @@ class MacroPanel(QSplitter):
                                 "{}\n{}{}^\nin {} line {}".format(
                                 e.msg, e.text, " " * e.offset, e.filename,
                                 e.lineno))
+        else:
+            getDevice(self.macro.instanceId).signalInitReply.connect(
+                self.initReply)
+            self.macro.run()
 
 
     def onSave(self):
