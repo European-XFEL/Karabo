@@ -24,7 +24,7 @@ from subprocess import Popen, PIPE
 import karabo
 
 from karabo.python_loader import PluginLoader
-from karabo.python_device import Device
+from karabo.python_device import Device, SignalSlotable
 from karabo.hash import Hash, BinaryParser, BinaryWriter, XMLParser, saveToFile
 from karabo.hashtypes import Schema, String, Int32
 from karabo import hashtypes
@@ -39,7 +39,7 @@ import karabo.metamacro  # add a default Device MetaMacro
 import karabo.ipython
 
 
-class DeviceServer(Device):
+class DeviceServer(SignalSlotable):
     '''
     Device server serves as a launcher of python devices. It scans
     the 'plugins' directory for new plugins (python scripts) available
@@ -47,6 +47,7 @@ class DeviceServer(Device):
     communicates XSD form of schema of user devices and starts such
     devices as separate process if user push "Initiate" button in GUI.
     '''
+    __version__ = "1.3"
 
     serverId = String(
         displayedName="Server ID",
@@ -68,15 +69,10 @@ class DeviceServer(Device):
         assignment=Assignment.OPTIONAL, defaultValue="plugins",
         displayType="directory", requiredAccessLevel=AccessLevel.EXPERT)
 
-    startingDevice = String(
-        displayedName="Starting Device",
-        description="The name of the device we are currently trying to start",
-        defaultValue="", accessMode=AccessMode.READONLY)
-
-    startingError = String(
-        displayedName="Errors of starting device",
-        description="The errors the currently starting device raised",
-        defaultValue="", accessMode=AccessMode.READONLY)
+    log = Node(Logger,
+               description="Logging settings",
+               displayedName="Logger",
+               requiredAccessLevel=AccessLevel.EXPERT)
 
     instanceCountPerDeviceServer = { }
 
@@ -136,6 +132,8 @@ class DeviceServer(Device):
                                     "%d{%F %H:%M:%S} | %p | %c | %m"))))])
 
     def run(self):
+        self.log.setBroker(self._ss)
+        self.logger = self.log.logger
         super().run()
         self.log.INFO("Starting Karabo DeviceServer on host: {}".
                       format(self.hostname))
@@ -145,8 +143,6 @@ class DeviceServer(Device):
         sys.stdout = KaraboStream(sys.stdout)
         sys.stderr = KaraboStream(sys.stderr)
 
-    def initInfo(self):
-        super().initInfo()
         info = self.info
         info["type"] = "server"
         info["serverId"] = self.serverId
