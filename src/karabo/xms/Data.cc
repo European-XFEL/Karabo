@@ -12,14 +12,20 @@ using namespace karabo::util;
 
 namespace karabo {
   namespace xms {
+      
+      KARABO_REGISTER_FOR_CONFIGURATION(Data)
         
         void Data::expectedParameters(karabo::util::Schema& expected) {
             
-            UINT32_ELEMENT(expected).key("id")
-                    .description("The ID of this data token")
-                    .displayedName("ID")
-                    .assignmentOptional().noDefaultValue()
-                    .commit();
+          // HASH_ELEMENT(expected).key("header")
+          
+//           UINT32_ELEMENT(expected).key("id")
+//                    .description("The ID of this data token")
+//                    .displayedName("ID")
+//                    .readOnly()
+//                    .commit();
+//            
+//            
             
             // Creation date
             
@@ -33,25 +39,35 @@ namespace karabo {
 
         }
         
-        /**
-         * This constructor should be used during if data was received from network
-         * TODO: Improve the Configurator factory to call constructors with Hash::Pointer
-         * TODO: Improve the validator for copy-free validation
-         * NOTE: For the time being an expensive copy is made here
-        **/
-        Data::Data(const karabo::util::Hash& config) : m_hash(new Hash(config)) {
-
+       
+        Data::Data(const karabo::util::Hash& config) : m_hash(new Hash(config)) {           
         }
         
-        void Data::setId(unsigned int i) {
-            m_hash->set("id", i);
+        Data::Data(const karabo::util::Hash::Pointer& hash) : m_hash(hash) {
+            
         }
+        
+        Data::Data(const Data& other) {
+            m_hash = Hash::Pointer(new Hash(*other.m_hash));
+        }      
+                        
+        void Data::setNode(const std::string& key, const Data& data) {
+            m_hash->set(key, data.hash());
+        }
+
                 
-        const karabo::util::Hash::Pointer& Data::getHashPointer() const {
+        const karabo::util::Hash::Pointer& Data::hash() const {
             return m_hash;
         }
         
-        
+        std::ostream& operator<<(std::ostream& os, const Data& data) {
+            try {
+                cout << *data.m_hash;
+            } catch (...) {
+                KARABO_RETHROW;
+            }
+            return os;
+        }                
         
     }
 }

@@ -22,7 +22,7 @@
 
 namespace karabo {
     namespace util {
-
+        
         class ImageElement : public GenericElement<ImageElement> {
 
         protected:

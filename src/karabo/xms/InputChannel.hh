@@ -36,10 +36,10 @@ namespace karabo {
             typedef Memory<karabo::util::Hash> MemoryType;
             
             // Callback on available data
-            boost::function<void () > m_dataAvailableHandler;
+            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_dataAvailableHandler;
             
             // Callback on end-of-stream
-            boost::function<void () > m_endOfStreamHandler;
+            boost::function<void (const boost::shared_ptr<InputChannel>&) > m_endOfStreamHandler;
             
             std::string m_instanceId;
 
@@ -71,7 +71,7 @@ namespace karabo {
             
         public:
 
-            KARABO_CLASSINFO(InputChannel, "Network", "1.0")
+            KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
            
             /**
              * Necessary method as part of the factory/configuration system
@@ -98,9 +98,9 @@ namespace karabo {
 
             const std::string& getInstanceId() const;
             
-            void registerIOEventHandler(const boost::function<void ()>& ioEventHandler); 
+            void registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler); 
 
-            void registerEndOfStreamEventHandler(const boost::function<void ()>& endOfStreamEventHandler);
+            void registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler);
             
             void triggerIOEvent();
             

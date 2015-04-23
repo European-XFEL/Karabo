@@ -1757,8 +1757,13 @@ namespace karabo {
         }
         
         
-        InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void()>& onInputAvailableHandler, const boost::function<void()>& onEndOfStreamEventHandler) {
-            InputChannel::Pointer channel = Configurator<InputChannel>::create("Network", config);
+        InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config, 
+                const boost::function<void(const InputChannel::Pointer&)>& onInputAvailableHandler, 
+                const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
+            if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
+            Hash channelConfig = config.get<Hash>(channelName);
+            if (channelConfig.has("schema")) channelConfig.erase("schema");
+            InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", config.get<Hash>(channelName));
             channel->setInstanceId(m_instanceId);
             if (onInputAvailableHandler) {
                 channel->registerIOEventHandler(onInputAvailableHandler);
@@ -1766,21 +1771,32 @@ namespace karabo {
             if (onEndOfStreamEventHandler) {
                 channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
             }
-            m_inputChannels[name] = channel;
+            m_inputChannels[channelName] = channel;
             return channel;
         }
 
 
 
-        OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
-            OutputChannel::Pointer channel = Configurator<OutputChannel>::create("Network", config);
+        OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, 
+                const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
+            if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
+            Hash channelConfig = config.get<Hash>(channelName);
+            if (channelConfig.has("schema")) channelConfig.erase("schema");
+            OutputChannel::Pointer channel = Configurator<OutputChannel>::create("OutputChannel", channelConfig);
             channel->setInstanceId(m_instanceId);
             if (onOutputPossibleHandler) {
                 channel->registerIOEventHandler(onOutputPossibleHandler);
             }
-            m_outputChannels[name] = channel;
+            m_outputChannels[channelName] = channel;
             return channel;
         }
+        
+        
+        Data SignalSlotable::createDataObject(const std::string& channelName, const karabo::util::Hash& config) {
+            if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
+            return Data(config.get<Hash>(channelName + ".schema"));
+        }
+
 
 
         Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash & hash) const {

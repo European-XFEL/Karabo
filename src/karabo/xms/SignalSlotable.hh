@@ -19,11 +19,10 @@
 #include <karabo/util/Configurator.hh>
 #include <karabo/log/Logger.hh>
 #include <karabo/net/BrokerConnection.hh>
-//#include <karabo/io/Input.hh>
-//#include <karabo/io/Output.hh>
 
 #include "OutputChannel.hh"
 #include "InputChannel.hh"
+#include "Data.hh"
 
 #include "Signal.hh"
 #include "Slot.hh"
@@ -1176,11 +1175,13 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 //                return boost::static_pointer_cast<InputType >(channel);
 //            }
             
-            virtual InputChannel::Pointer createInputChannel(const std::string& name, const karabo::util::Hash& config, 
-            const boost::function<void () >& onInputAvailableHandler = boost::function<void () >(),
-            const boost::function<void ()>& onEndOfStreamEventHandler = boost::function<void ()>());
+            virtual InputChannel::Pointer createInputChannel(const std::string& channelName, const karabo::util::Hash& config, 
+            const boost::function<void (const InputChannel::Pointer&) >& onInputAvailableHandler = boost::function<void (const InputChannel::Pointer&) >(),
+            const boost::function<void (const InputChannel::Pointer&)>& onEndOfStreamEventHandler = boost::function<void (const InputChannel::Pointer&)>());
 
-            virtual OutputChannel::Pointer createOutputChannel(const std::string& name, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
+            virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
+            
+            virtual Data createDataObject(const std::string& channelName, const karabo::util::Hash& config);
 
             const InputChannels& getInputChannels() const {
                 return m_inputChannels;
