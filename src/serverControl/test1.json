@@ -50,8 +50,9 @@
                     ]
                 },
                 {
-                    "server_id": "dataLogger",
-                    "autostart": false
+                    "server_id": "dataLoggerServer",
+                    "autostart": false,
+		    "configuration": "someStringHere"
                 }
             ]
 
