@@ -47,17 +47,7 @@ namespace karabo {
                     const size_t size,
                     const bool copy = true,
                     const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                    const bool isBigEndian = karabo::util::isBigEndian()) : Data() {
-                setData(data, size, copy);
-                if (dimensions.size() == 0) {
-                    setDimensions(karabo::util::Dims(size));
-                } else {
-                    setDimensions(dimensions);
-                    std::vector<unsigned long long> offsets(dimensions.rank(), 0);
-                }
-                setIsBigEndian(isBigEndian);
-                m_hash->set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
-            }
+                    const bool isBigEndian = karabo::util::isBigEndian());
 
 
 
@@ -105,7 +95,6 @@ namespace karabo {
 
             const std::string& getDataType() const;
 
-
             void setIsBigEndian(const bool isBigEndian);
 
             bool isBigEndian() const;
@@ -114,7 +103,7 @@ namespace karabo {
             
             //void setDimensionScales(const std::string& scales);
 
-        private:
+        protected:
 
 
             bool dataIsCopy() const;
@@ -133,6 +122,10 @@ namespace karabo {
             NDARRAY_ELEMENT& setDimensionScales(const std::string& scales) {
                 return setDefaultValue("dimScales", scales);
             }
+            
+            NDARRAY_ELEMENT& setDimensions(const std::string& dimensions) {
+                return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
+            }                        
         };
     }
 }

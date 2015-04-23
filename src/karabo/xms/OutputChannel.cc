@@ -9,6 +9,7 @@
  */
 
 #include "OutputChannel.hh"
+#include "Data.hh"
 
 using namespace karabo::util;
 using namespace karabo::io;
@@ -53,11 +54,7 @@ namespace karabo {
                     .unit(Unit::BYTE)
                     .metricPrefix(MetricPrefix::MEGA)
                     .assignmentOptional().defaultValue(-1)
-                    .commit();
-
-            NODE_ELEMENT(expected).key("schema")
-                    .displayedName("Data Schema")
-                    .commit();
+                    .commit();           
         }
 
 
@@ -361,6 +358,12 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_nextInputMutex);
             InputChannelQueue::iterator it = std::find(m_shareNext.begin(), m_shareNext.end(), instanceId);
             if (it != m_shareNext.end()) m_shareNext.erase(it);
+        }
+
+
+        void OutputChannel::pushCopyNext(const std::string& info) {
+            boost::mutex::scoped_lock lock(m_nextInputMutex);
+            m_copyNext.push_back(info);
         }
 
 
