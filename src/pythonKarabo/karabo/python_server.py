@@ -194,43 +194,25 @@ class DeviceServer(Device):
     def endErrorAction(self):
         pass
 
-    @coroutine
-    def launch(self, cls, config, deviceId):
-        self.startingDevice = deviceId
-        self.startingError = ""
-        try:
-            obj = cls(config)
-            yield from obj.startInstance()
-        except Exception as e:
-            self.startingDevice = deviceId
-            self.startingError = traceback.format_exc()
-            self.logger.exception("could not start device {}".format(cls))
-        finally:
-            self.startingDevice = ""
-            self.startingError = ""
-
     @slot
     def slotStartDevice(self, hash):
         config = Hash()
 
         if 'classId' in hash:
-            classid, deviceid, config = self.parseNew(hash)
+            classId, deviceId, config = self.parseNew(hash)
         else:
-            classid, deviceid, config = self.parseOld(hash)
+            classId, deviceId, config = self.parseOld(hash)
         config["Logger"] = self.loggerConfiguration
 
-        # create temporary instance to check the configuration parameters are valid
         try:
-            pluginDir = self.pluginLoader.pluginDirectory
-            cls = Device.subclasses[classid]
-            self.deviceInstanceMap[deviceid] = async(
-                self.launch(cls, config, deviceid))
-            return (True, deviceid)
+            cls = Device.subclasses[classId]
+            obj = cls(config)
+            self.deviceInstanceMap[deviceId] = obj.startInstance()
+            return True, '"{}" started'.format(deviceId)
         except Exception as e:
-            self.log.WARN("Wrong input configuration for class '{}': {}".
-                          format(classid, e))
-            raise
-            return
+            self.logger.exception('could not start device "{}" of class "{}"'.
+                                  format(deviceId, classId))
+            return False, traceback.format_exc()
 
     def parseNew(self, hash):
         classid = hash['classId']
