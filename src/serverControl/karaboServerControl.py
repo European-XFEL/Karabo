@@ -43,7 +43,7 @@ installation_name_str = "installation_name"
 karabo_fw_repositories_str = "karabo_repositories"
 karabo_packages_repositories_str = "karabo_packages_repositories"
 karabo_dependencies_repositories_str = "karabo_dependencies_repositories"
-data_logger_str = "dataLogger"
+data_logger_str = "dataLoggerServer"
 configuration_str = "configuration"
 
 private_key_path = "/home/kumarm/.ssh/id_rsa"
@@ -654,7 +654,7 @@ def get_map_device_server_id_to_plugin_long_names():
             # for special device servers treat them separately
             if device_server_id == data_logger_str:
                 all_plugin_long_names_as_set = set()
-                logging.debug("DEBUG: found dataLogger device server..")
+                logging.debug("DEBUG: found dataLoggerServer device server..")
                 # add (device server id -> plugins) to map
                 map_device_server_id_to_plugin_long_names[device_server_id] = \
                     all_plugin_long_names_as_set
