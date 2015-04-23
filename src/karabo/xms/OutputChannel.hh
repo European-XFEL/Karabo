@@ -20,6 +20,7 @@
 
 #include "Statics.hh"
 #include "Memory.hh"
+#include "Data.hh"
 
 
 /**
@@ -103,7 +104,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(OutputChannel, "Network", "1.0");                        
+            KARABO_CLASSINFO(OutputChannel, "OutputChannel", "1.0");                        
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -144,6 +145,14 @@ namespace karabo {
                 MemoryType::write(data, m_channelId, m_chunkId);
             }
             
+            void write(const Data& data) {
+                MemoryType::write(data.hash(), m_channelId, m_chunkId);
+            }                        
+            
+            void update();
+            
+            void signalEndOfStream();
+            
         private:
 
             void onTcpConnect(TcpChannelPointer channel);
@@ -175,10 +184,7 @@ namespace karabo {
 
             void eraseSharedInput(const std::string& instanceId);
 
-            void pushCopyNext(const std::string& info) {
-                boost::mutex::scoped_lock lock(m_nextInputMutex);
-                m_copyNext.push_back(info);
-            }
+            void pushCopyNext(const std::string& info);
 
             std::string popCopyNext();
 
@@ -188,10 +194,6 @@ namespace karabo {
             
             // TODO Check if needed
             bool canCompute() const;
-
-            void update();
-
-            void signalEndOfStream();
 
             void registerWritersOnChunk(unsigned int chunkId);
 

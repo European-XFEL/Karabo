@@ -129,12 +129,12 @@ namespace karabo {
         }
 
 
-        void InputChannel::registerIOEventHandler(const boost::function<void ()>& ioEventHandler) {
+        void InputChannel::registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler) {
             m_dataAvailableHandler = ioEventHandler;
         }
 
 
-        void InputChannel::registerEndOfStreamEventHandler(const boost::function<void ()>& endOfStreamEventHandler) {
+        void InputChannel::registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler) {
             m_endOfStreamHandler = endOfStreamEventHandler;
         }
 
@@ -329,14 +329,14 @@ namespace karabo {
 
         void InputChannel::triggerIOEvent() {
             if (m_dataAvailableHandler) {
-                m_dataAvailableHandler();
+                m_dataAvailableHandler(shared_from_this());
             }
         }
 
 
         void InputChannel::triggerEndOfStreamEvent() {
             if (m_endOfStreamHandler) {
-                m_endOfStreamHandler();
+                m_endOfStreamHandler(shared_from_this());
             }
         }
 

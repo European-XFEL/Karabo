@@ -25,8 +25,8 @@ class Item(QWidget, Loadable):
 
     WIDTH = 5
     CHANNEL_LENGTH = 20
-    INPUT = "Input"
-    OUTPUT = "Output"
+    INPUT = "InputChannel"
+    OUTPUT = "OutputChannel"
     
 
     def __init__(self, scene, proxy):

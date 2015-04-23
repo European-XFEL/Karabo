@@ -19,6 +19,7 @@ namespace karabo {
         void NDArray::expectedParameters(karabo::util::Schema& s) {
             
             VECTOR_CHAR_ELEMENT(s).key("data")
+                    .displayedName("Data")
                     .description("Pixel array")
                     .readOnly()
                     .commit();            
@@ -56,6 +57,10 @@ namespace karabo {
 
 
         NDArray::NDArray(const karabo::util::Hash& config) : Data(config) {
+        }
+        
+        NDArray::NDArray(const karabo::util::Hash::Pointer& data) : Data(data) {
+            
         }
 
 
