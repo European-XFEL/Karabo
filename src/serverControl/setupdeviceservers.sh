@@ -38,15 +38,71 @@ for one_ds_id in ${ds_ids_array[@]}
         one_ds_id_dir="${RUN_PREFIX}/${INSTALLATION_NAME}/${one_ds_id}"
         if [[ ! -d ${one_ds_id_dir} ]]; then mkdir -p ${one_ds_id_dir}; fi
 
+        serverid_xml_file="${one_ds_id_dir}/serverId.xml"
+        if [[ ! -e ${serverid_xml_file} ]]; then touch ${serverid_xml_file}; fi
+        echo ${one_ds_id} > ${serverid_xml_file}
+
         # if server is dataLoggerServer, then do some things
         # elif its guiServer do something
         # elif its macroServer do something
         # else do something
         if [[ ${one_ds_id} = "dataLoggerServer" ]]; then
             echo "dataLoggerServer found"
-            serverid_xml_file="${one_ds_id_dir}/serverId.xml"
-            if [[ ! -e ${serverid_xml_file} ]]; then touch ${serverid_xml_file}; fi
-            echo ${one_ds_id} > ${serverid_xml_file}
+
+            DS_ID_INFO_FILE=".${host}_${one_ds_id}_${INFO_SUFFIX}"
+            KARABO_FW=$(grep karabo_fw ${DS_ID_INFO_FILE} | cut -d'=' -f2)
+
+            #create autoload.xml
+            cat > ${one_ds_id_dir}/autoload.xml <<End-of-file
+<?xml version="1.0"?>
+<DeviceServer>
+  <autoStart>
+    <KRB_Item>
+      <DataLoggerManager>
+      </DataLoggerManager>
+    </KRB_Item>
+  </autoStart>
+  <scanPlugins KRB_Type="STRING">false</scanPlugins>
+  <serverId KRB_Type="STRING">Karabo_DataLoggerServer</serverId>
+  <visibility>4</visibility>
+  <Logger><priority>INFO</priority></Logger>
+</DeviceServer>
+End-of-file
+
+            #create startup script
+            cat > ${one_ds_id_dir}/startCppServer <<End-of-file
+#!/bin/bash
+#
+# This file was automatically generated. Do not edit.
+#
+
+KARABO=${INSTALL_PREFIX}/${KARABO_FW}
+
+# Make sure the script runs in this directory
+scriptDir=$(dirname `[[ $0 = /* ]] && echo "$0" || echo "$PWD/${0#./}"`)
+cd \${scriptDir}
+
+if [ $? -ne 0 ]; then
+    echo "ERROR Could not change directory to \${scriptDir}"
+    exit 1;
+fi
+
+# Make sure Karabo is installed
+if [ -z \${KARABO} ]; then
+    if [ -e $HOME/.karabo/karaboFramework ]; then
+        KARABO=$(cat $HOME/.karabo/karaboFramework)
+    else
+      echo "ERROR Could not find karaboFramework. Make sure you have installed the karaboFramework."
+      exit 1
+    fi
+fi
+
+until \${KARABO}/bin/karabo-deviceserver "$@"; do
+    echo "ERROR Karabo server went down with signal $?, respawning..."
+    sleep 5
+done
+
+End-of-file
 
         elif [[ ${one_ds_id} = "guiServer" ]]; then
             echo "guiServer found"
@@ -55,12 +111,11 @@ for one_ds_id in ${ds_ids_array[@]}
         else
             echo "some other device server"
 
+            # create autoload.xml
+
+            # setup device server
             one_ds_plugins_dir="${one_ds_id_dir}/plugins"
             if [[ ! -d ${one_ds_plugins_dir} ]]; then mkdir ${one_ds_plugins_dir}; fi
-
-            serverid_xml_file="${one_ds_id_dir}/serverId.xml"
-            if [[ ! -e ${serverid_xml_file} ]]; then touch ${serverid_xml_file}; fi
-            echo ${one_ds_id} > ${serverid_xml_file}
 
             ####### clean all old links, if any
             if [ "$(ls -A ${one_ds_plugins_dir})" ]; then find ${one_ds_plugins_dir} -maxdepth 1 -type l -exec rm -f {} \;; fi #should be two semi-colons, it is not a typo!!
@@ -103,7 +158,8 @@ export KARABO_BROKER_PORT=${BROKER_PORT}
 export KARABO_BROKER_TOPIC=${INSTALLATION_NAME}
 KARABO=${INSTALL_PREFIX}/${karabo_fw}
 SERVER_ID=${one_ds_id}
-ARGS="DeviceServer.serverId=${one_ds_id}"
+# should take config from json file
+ARGS=""
 
 failed=0
 failedmod10=0
