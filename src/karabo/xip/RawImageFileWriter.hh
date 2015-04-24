@@ -13,6 +13,7 @@
 #include "CImg.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <karabo/io/Output.hh>
 #include <karabo/util/PathElement.hh>
@@ -68,132 +69,259 @@ namespace karabo {
             virtual ~RawImageFileWriter() {
             };
 
-            void write(const RawImageData& image) {
-                
-                bool writeImageInfo;
-                const char* data = image.getDataPointer();
-                int encoding = image.getEncoding();
-                size_t size = image.getByteSize();
+            void write(const RawImageData& image) {                
                 std::string extension = m_filename.extension().string();
-                
-                if (encoding == karabo::xip::Encoding::JPEG || encoding == karabo::xip::Encoding::PNG ||
-                        encoding == karabo::xip::Encoding::BMP || encoding == karabo::xip::Encoding::TIFF) {
-                    // RawImageData contains image as JPEG, PNG, BMP or TIFF
+                boost::algorithm::to_lower(extension);
 
-                    bool convertThenWrite = true; // Assume by default that image needs format conversion
-                    cimg_library::CImg<unsigned char> cImg;
-                    
-                    if (encoding == karabo::xip::Encoding::JPEG) {
-                        // RawImageData is JPEG image
+                const char* data = image.getDataPointer();
+                karabo::util::Dims dims = image.getDimensions();
+                size_t size = image.getByteSize();
+                int encoding = image.getEncoding();
+                int channelSpace = image.getChannelSpace();
 
-                        if (extension==".jpg" || extension==".JPG" || extension==".jpeg" || extension==".JPEG") {
-                            // Target file is also JPEG -> write data to file _directly_
-                            convertThenWrite = false;
+                bool rawImageFile = false;
+                karabo::util::Hash imageInfo;
+                if (extension==".raw" || extension==".rgb") {
+                    rawImageFile = true;
+                    imageInfo += image.hash();
+                    imageInfo.erase("data");
+		}
+
+#define _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding) { \
+    FILE* stream = fmemopen((void*)data, size, "r"); /* Open memory as stream */ \
+    \
+    if (encoding==karabo::xip::Encoding::JPEG) { \
+        cImg.load_jpeg(stream); \
+    } else if (encoding==karabo::xip::Encoding::PNG) { \
+        cImg.load_png(stream); \
+    } else if (encoding==karabo::xip::Encoding::BMP) { \
+        cImg.load_bmp(stream); \
+    } else if (encoding==karabo::xip::Encoding::GRAY) {	\
+        cImg.load_raw(stream, dims.x1(), dims.x2(), 1, 1); \
+    } else if (encoding==karabo::xip::Encoding::RGB) { \
+        cImg.load_rgb(stream, dims.x1(), dims.x2()); \
+    } else if (encoding==karabo::xip::Encoding::RGBA) { \
+        cImg.load_rgba(stream, dims.x1(), dims.x2()); \
+    } else { \
+        KARABO_NOT_SUPPORTED_EXCEPTION("RawImageFileWriter::write(const RawImageData&) is not supported yet" \
+            "for encoding " + karabo::util::toString(encoding)); \
+    } \
+    \
+    fclose(stream); \
+}
+
+#define _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, filename) { \
+    std::ofstream imageFile(filename.c_str(), std::ios::out); \
+    \
+    if (imageFile.is_open()) { \
+        /* Write binary data to file */ \
+        imageFile.write(data, size); \
+        imageFile.close(); \
+    } \
+    if (rawImageFile) { \
+        boost::filesystem::path infoFilename(filename); \
+        std::ofstream infoFile(infoFilename.replace_extension(".info").c_str(), std::ios::out); \
+         \
+        if (infoFile.is_open()) { \
+            /* Write image info to file */ \
+            infoFile << imageInfo; \
+            infoFile.close(); \
+        } \
+    } \
+}
+
+#define _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename) \
+{ \
+    if (rawImageFile) { \
+        /* Output file will contain raw pixel values */ \
+         \
+        if (cImg.spectrum()==1) \
+            /* Dump GRAYSCALE data */ \
+            cImg.save_raw(filename.c_str()); \
+        else if (cImg.spectrum()==3) \
+            /* Dump RGB data */ \
+            cImg.save_rgb(filename.c_str()); \
+        else if (cImg.spectrum()==4) \
+            /* Dump RGBA data */ \
+            cImg.save_rgba(filename.c_str()); \
+        else { \
+	  KARABO_NOT_SUPPORTED_EXCEPTION("RawImageFileWriter::write(const RawImageData&) cannot write image, channel number  = " + karabo::util::toString(cImg.spectrum())); \
+            return; \
+        } \
+        boost::filesystem::path infoFilename(filename); \
+        std::ofstream infoFile(infoFilename.replace_extension(".info").c_str(), std::ios::out); \
+         \
+        if (infoFile.is_open()) { \
+            /* Write image info to file */ \
+            infoFile << imageInfo; \
+            infoFile.close(); \
+        } \
+         \
+    } else { \
+        /* Let CImg write image file according to extension */ \
+        cImg.save(filename.c_str()); \
+    } \
+ }
+
+#define _KARABO_XIP_CREATE_CIMG_WRITE_TO_FILE(data, dims, size, encoding, channelSpace, imageInfo, rawImageFile, filename) \
+{ \
+    switch(channelSpace) { \
+        case karabo::xip::ChannelSpace::u_8_1: \
+        { \
+            cimg_library::CImg<unsigned char> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::s_8_1: \
+        { \
+            cimg_library::CImg<signed char> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::u_10_2: \
+        case karabo::xip::ChannelSpace::u_12_2: \
+        case karabo::xip::ChannelSpace::u_16_2: \
+        { \
+            cimg_library::CImg<unsigned short> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::s_10_2: \
+        case karabo::xip::ChannelSpace::s_12_2: \
+        case karabo::xip::ChannelSpace::s_16_2: \
+        { \
+            cimg_library::CImg<short> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::u_32_4: \
+        { \
+            cimg_library::CImg<unsigned int> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::s_32_4: \
+        { \
+            cimg_library::CImg<int> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::u_64_8: \
+        { \
+            cimg_library::CImg<unsigned long long> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::s_64_8: \
+        { \
+            cimg_library::CImg<long long> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::f_32_4: \
+        { \
+            cimg_library::CImg<float> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        case karabo::xip::ChannelSpace::f_64_8: \
+        { \
+            cimg_library::CImg<double> cImg; \
+            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding); \
+            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, filename); \
+            break; \
+        } \
+        default: \
+            break; \
+    } \
+} \
+
+                switch (encoding) {
+                    case karabo::xip::Encoding::GRAY:
+                        if (extension==".raw") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
                         } else {
-                            FILE* stream = fmemopen((void*)data, size, "r");
-                            cImg.load_jpeg(stream);
+       	                    _KARABO_XIP_CREATE_CIMG_WRITE_TO_FILE(data, dims, size, encoding, channelSpace, imageInfo, rawImageFile, m_filename);
                         }
+                        break;
 
-                    } else if (encoding == karabo::xip::Encoding::PNG) {
-                        // RawImageData is PNG image
-
-                        if (extension==".png" || extension==".PNG") {
-                            // Target file is also PNG -> write data to file _directly_
-                            convertThenWrite = false;
+                    case karabo::xip::Encoding::RGB:
+                        if (extension==".raw" || extension==".rgb") {                            
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
                         } else {
-                            FILE* stream = fmemopen((void*)data, size, "r");
-                            cImg.load_png(stream);
+       	                    _KARABO_XIP_CREATE_CIMG_WRITE_TO_FILE(data, dims, size, encoding, channelSpace, imageInfo, rawImageFile, m_filename);
                         }
-                    } else if (encoding == karabo::xip::Encoding::BMP) {
-                        // RawImageData is BMP image
+                        break;
 
-                        if (extension==".bmp" || extension==".BMP") {
-                            // Target file is also BMP -> write data to file _directly_
-                            convertThenWrite = false;
+                    case karabo::xip::Encoding::RGBA:
+                        if (extension==".raw" || extension==".rgba") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
                         } else {
-                            FILE* stream = fmemopen((void*)data, size, "r");
-                            cImg.load_bmp(stream);
+       	                    _KARABO_XIP_CREATE_CIMG_WRITE_TO_FILE(data, dims, size, encoding, channelSpace, imageInfo, rawImageFile, m_filename);
                         }
-                    } else {
-                        // RawImageData is TIFF image
-                        
-                        if (extension==".tif" || extension==".TIF" || extension==".tiff" || extension==".TIFF") {
-                            // Target file is also TIFF -> write data to file _directly_
-                            convertThenWrite = false;
+                        break;
+
+//                    case karabo::xip::Encoding::BGR: // TODO
+
+//                    case karabo::xip::Encoding::BGRA: // TODO
+
+                    case karabo::xip::Encoding::JPEG:
+                        if (extension==".jpg" || extension==".jpeg") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
                         } else {
-                            KARABO_NOT_SUPPORTED_EXCEPTION("RawImageFileWriter::write(const RawImageData&) not support yet TIFF conversion");
+                            cimg_library::CImg<unsigned char> cImg;
+                            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding);
+                            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, m_filename);
                         }
-                        
-                    }
-                    
-                    if (convertThenWrite) {
-                        cImg.save(m_filename.c_str());
-                    } else {
-                        std::ofstream imageFile(m_filename.c_str(), std::ios::out);
+                        break;
 
-                        if (imageFile.is_open()) {
-                            imageFile.write(data, size);
-                            imageFile.close();
+                    case karabo::xip::Encoding::PNG:
+                        if (extension==".png") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
+                        } else {
+                            cimg_library::CImg<unsigned char> cImg;
+                            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding);
+                            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, m_filename);
                         }
-                        
-                    }
-                    
-                } else if (encoding == karabo::xip::Encoding::GRAY ||
-                        encoding == karabo::xip::Encoding::RGB || encoding == karabo::xip::Encoding::RGBA ||
-                        encoding == karabo::xip::Encoding::BGR || encoding == karabo::xip::Encoding::BGRA) {
-                    
-                    karabo::util::Dims dims = image.getDimensions();
-                    karabo::util::Types::ReferenceType imType = karabo::xip::FromChannelSpace::from(image.getChannelSpace());
+                        break;
 
-                    #define _KARABO_CREATE_AND_WRITE_CIMG(inType, castType) \
-                        case karabo::util::Types::inType: \
-                        { \
-                            cimg_library::CImg<castType> cImg; \
-                            cImg.assign(dims.toVector()[0], dims.toVector()[1], 1, dims.toVector()[2], (const castType)(data[0])); \
-                            cImg.save(m_filename.string().c_str()); \
-                            break; \
+                    case karabo::xip::Encoding::BMP:
+                        if (extension==".bmp") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
+                        } else {
+                            cimg_library::CImg<unsigned char> cImg;
+                            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding);
+                            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, m_filename);
                         }
-                    
-                    switch(imType) {
-                        _KARABO_CREATE_AND_WRITE_CIMG(CHAR, char);
-                        _KARABO_CREATE_AND_WRITE_CIMG(INT8, signed char);
-                        _KARABO_CREATE_AND_WRITE_CIMG(UINT8, unsigned char);
-                        _KARABO_CREATE_AND_WRITE_CIMG(INT16, short);
-                        _KARABO_CREATE_AND_WRITE_CIMG(UINT16, unsigned short);
-                        _KARABO_CREATE_AND_WRITE_CIMG(INT32, int);
-                        _KARABO_CREATE_AND_WRITE_CIMG(UINT32, unsigned int);
-                        _KARABO_CREATE_AND_WRITE_CIMG(INT64, long long);
-                        _KARABO_CREATE_AND_WRITE_CIMG(UINT64, unsigned long long);
-                        _KARABO_CREATE_AND_WRITE_CIMG(FLOAT, float);
-                        _KARABO_CREATE_AND_WRITE_CIMG(DOUBLE, double);
-                        default:
-                            break;
-                    }
-                
-                } else {
-                    KARABO_NOT_SUPPORTED_EXCEPTION("RawImageFileWriter::write(const RawImageData&) is not supported yet"
-                            "for this encoding.");
-                }
-                
-                if (extension==".raw" || extension==".RAW")
-                    // In case of output as "raw" data, image info will be written to additional file
-                    writeImageInfo = true;
-                else
-                    writeImageInfo = false;
-                
-                if (writeImageInfo) {
-                    boost::filesystem::path infoFilename(m_filename);
-                    std::ofstream infoFile(infoFilename.replace_extension(".info").c_str(), std::ios::out);
-                    karabo::util::Hash imageInfo(image.hash());
-                    imageInfo.erase("data"); // image itself will not be written to info file
-                    
-                    if (infoFile.is_open()) {
-                        infoFile << imageInfo;
-                        infoFile.close();
-                    }
-                }
+                        break;
+
+                    case karabo::xip::Encoding::TIFF:
+                       if (extension==".tif" || extension==".tiff") {
+       	                    _KARABO_XIP_WRITE_DATA_TO_FILE(data, size, imageInfo, rawImageFile, m_filename);
+                        } else {
+                            cimg_library::CImg<unsigned char> cImg;
+                            _KARABO_XIP_LOAD_DATA_TO_CIMG(cImg, data, dims, size, encoding);
+                            _KARABO_XIP_WRITE_CIMG_TO_FILE(cImg, imageInfo, rawImageFile, m_filename);
+                        }
+                        break;
+
+                    default:
+                        KARABO_NOT_SUPPORTED_EXCEPTION("RawImageFileWriter::write(const RawImageData&) is not"
+			    " supported yet for encoding " + karabo::util::toString(encoding));
+                        break;
+		}
                 
             }
+
         };
     } /* namespace xip */
 } /* namespace karabo */
