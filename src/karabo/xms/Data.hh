@@ -25,23 +25,25 @@ namespace karabo {
             static void expectedParameters(karabo::util::Schema& expected);
 
 
-            Data();                      
+            Data();
 
             /**
              * Configuration constructor (for later writing)
              */
             Data(const karabo::util::Hash& config);
-            
+
             Data(const Data& other);
-            
+
             /**
              * Constructor for receiving
              * @param hash
              */
             Data(const karabo::util::Hash::Pointer& hash);
 
+            virtual ~Data();
+            
             void setNode(const std::string& key, const Data& data);
-                        
+
             template <class T>
             T getNode(const std::string& key) {
                 if (m_hash->is<karabo::util::Hash>(key)) {
@@ -52,28 +54,28 @@ namespace karabo {
                     return m_hash->get<karabo::util::Hash::Pointer>(key);
                 }
             }
-            
+
             template <class T>
             void set(const std::string& key, const T& value) {
                 // user setp ??
                 // Protect using nested calls by changing the separator
                 m_hash->set(key, value, '*');
             }
-            
+
             template <class T>
             T& get(const std::string& key) {
                 // use getp ??
                 // Protect using nested calls by changing the separator
                 return m_hash->get<T>(key, '*');
             }
-            
+
             template <class T>
             const T& get(const std::string& key) {
                 return m_hash->get<T>(key);
-            }            
-            
+            }
+
             const karabo::util::Hash::Pointer& hash() const;
-            
+
             /**
              * Serialize a hash to standard std::ostream object
              * @param visitor
@@ -91,7 +93,7 @@ namespace karabo {
 
             DataElement(karabo::util::Schema& s) : m_schema(s) {
 
-            }                     
+            }
 
             Derived& key(const std::string& key) {
                 using namespace karabo::util;
@@ -117,7 +119,7 @@ namespace karabo {
                 // Dummy function (commit was never really needed... :-()
             }
 
-        };                   
+        };
     }
 }
 

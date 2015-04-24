@@ -49,7 +49,9 @@ namespace karabo {
                     const karabo::util::Dims& dimensions = karabo::util::Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
 
-
+            
+            virtual ~NDArray();
+            
 
             const char* getDataPointer() const;
 
