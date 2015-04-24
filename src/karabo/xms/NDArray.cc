@@ -12,17 +12,17 @@ using namespace karabo::util;
 namespace karabo {
     namespace xms {
 
-        
+
         KARABO_REGISTER_FOR_CONFIGURATION(Data, NDArray)
 
         // Output Schema (i.e. describes how to fill for sending)
         void NDArray::expectedParameters(karabo::util::Schema& s) {
-            
+
             VECTOR_CHAR_ELEMENT(s).key("data")
                     .displayedName("Data")
                     .description("Pixel array")
                     .readOnly()
-                    .commit();            
+                    .commit();
             STRING_ELEMENT(s).key("dataType")
                     .displayedName("Type")
                     .description("Describes the underlying data type")
@@ -37,7 +37,7 @@ namespace karabo {
                     .displayedName("Dimension Types")
                     .description("Any dimension should have an enumerated type")
                     .readOnly()
-                    .commit();            
+                    .commit();
             STRING_ELEMENT(s).key("dimScales")
                     .displayedName("Dimension Scales")
                     .description("")
@@ -52,15 +52,18 @@ namespace karabo {
 
 
         NDArray::NDArray() : Data() {
-
         }
 
 
         NDArray::NDArray(const karabo::util::Hash& config) : Data(config) {
         }
-        
+
+
         NDArray::NDArray(const karabo::util::Hash::Pointer& data) : Data(data) {
-            
+        }
+
+
+        NDArray::~NDArray() {
         }
 
 
@@ -80,7 +83,8 @@ namespace karabo {
             ensureDataOwnership();
             return m_hash->get<std::vector<char> >("data");
         }
-        
+
+
         void NDArray::ensureDataOwnership() {
             if (!dataIsCopy()) {
                 setData(getDataPointer(), getByteSize());
@@ -118,34 +122,35 @@ namespace karabo {
             if (!m_hash->has("dimTypes")) {
                 m_hash->set("dimTypes", vector<int>(dimensions.rank(), Dimension::UNDEFINED));
             }
-        }   
+        }
 
 
         const std::string& NDArray::getDataType() const {
             return m_hash->get<string>("dataType");
         }
-        
-         void NDArray::setIsBigEndian(const bool isBigEndian) {
+
+
+        void NDArray::setIsBigEndian(const bool isBigEndian) {
             m_hash->set<bool>("isBigEndian", isBigEndian);
         }
 
 
         bool NDArray::isBigEndian() const {
             return m_hash->get<bool>("isBigEndian");
-        }                      
+        }
 
-//        void NDArray::setDimensionScales(const std::map<int, std::vector<std::string> >& scales) {
-//            string serialized;
-//            for (map<int, vector<string> >::const_iterator it = scales.begin(); it != scales.end(); ++it) {
-//                serialized += karabo::util::toString(it->first);
-//                serialized += ":[";
-//                const vector<string>& tmp = it->second;
-//                for (size_t j = 0; j < tmp.size(); ++j) {
-//                    if (j > 0 ) serialized += "," + tmp[j];
-//                }
-//                serialized += "]";
-//            }
-//            m_hash->set("dimScales", serialized);          
-//        }
+        //        void NDArray::setDimensionScales(const std::map<int, std::vector<std::string> >& scales) {
+        //            string serialized;
+        //            for (map<int, vector<string> >::const_iterator it = scales.begin(); it != scales.end(); ++it) {
+        //                serialized += karabo::util::toString(it->first);
+        //                serialized += ":[";
+        //                const vector<string>& tmp = it->second;
+        //                for (size_t j = 0; j < tmp.size(); ++j) {
+        //                    if (j > 0 ) serialized += "," + tmp[j];
+        //                }
+        //                serialized += "]";
+        //            }
+        //            m_hash->set("dimScales", serialized);          
+        //        }
     }
 }
