@@ -593,6 +593,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../../../src/karabo/core/MotorInterface.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../../../src/karabo/core/NoFsm.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/OkErrorFsm.hh"
@@ -2391,6 +2396,11 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/core/GuiServerDevice.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/MotorInterface.hh"
             ex="false"
             tool="3"
             flavor2="0">
