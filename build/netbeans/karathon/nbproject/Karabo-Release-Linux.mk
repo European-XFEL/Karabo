@@ -57,6 +57,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/381567218/PyXipImage.o \
 	${OBJECTDIR}/_ext/381567218/PyXipRawImageData.o \
 	${OBJECTDIR}/_ext/381567218/PyXipStatistics.o \
+	${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o \
 	${OBJECTDIR}/_ext/381567218/PyXmsSlotElement.o \
 	${OBJECTDIR}/_ext/381567218/PythonInputHandler.o \
@@ -209,6 +210,11 @@ ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o: ../../../src/karathon/PyXipStatis
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o ../../../src/karathon/PyXipStatistics.cc
+
+${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o: ../../../src/karathon/PyXmsInputOutputChannel.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o ../../../src/karathon/PyXmsInputOutputChannel.cc
 
 ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o: ../../../src/karathon/PyXmsSignalSlotable.cc 
 	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
@@ -561,6 +567,19 @@ ${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o: ${OBJECTDIR}/_ext/38156721
 	    $(COMPILE.cc) -O2 -Wall -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o ../../../src/karathon/PyXipStatistics.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXipStatistics.o ${OBJECTDIR}/_ext/381567218/PyXipStatistics_nomain.o;\
+	fi
+
+${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o ../../../src/karathon/PyXmsInputOutputChannel.cc 
+	${MKDIR} -p ${OBJECTDIR}/_ext/381567218
+	@NMOUTPUT=`${NM} ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o`; \
+	if (echo "$$NMOUTPUT" | ${GREP} '|main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T main$$') || \
+	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
+	then  \
+	    ${RM} "$@.d";\
+	    $(COMPILE.cc) -O2 -Wall -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -I../../../src -I${KARABO}/include -I${KARABO}/extern/include/hdf5 -I${KARABO}/extern/include/python3.4 -I${KARABO}/extern/lib/python3.4/site-packages/numpy/core/include -I${KARABO}/extern/include `pkg-config --cflags karathonDependencies-${CND_PLATFORM}`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel_nomain.o ../../../src/karathon/PyXmsInputOutputChannel.cc;\
+	else  \
+	    ${CP} ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel.o ${OBJECTDIR}/_ext/381567218/PyXmsInputOutputChannel_nomain.o;\
 	fi
 
 ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable_nomain.o: ${OBJECTDIR}/_ext/381567218/PyXmsSignalSlotable.o ../../../src/karathon/PyXmsSignalSlotable.cc 
