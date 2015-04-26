@@ -93,7 +93,7 @@ namespace karabo {
 
             void setDimensions(const karabo::util::Dims& dims);
 
-            void setDimensionTypes(const std::vector<int>& dimTypes);
+            //void setDimensionTypes(const std::vector<int>& dimTypes);
 
             const std::string& getDataType() const;
 
@@ -101,7 +101,7 @@ namespace karabo {
 
             bool isBigEndian() const;
 
-            const std::vector<std::vector<std::string> >& getDimensionScales() const;
+            //const std::vector<std::vector<std::string> >& getDimensionScales() const;
             
             //void setDimensionScales(const std::string& scales);
 
