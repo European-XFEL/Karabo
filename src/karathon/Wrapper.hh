@@ -333,7 +333,7 @@ namespace karathon {
         }
 
         static bp::object toObject(const boost::any& operand, bool numpyFlag = false);
-        static void toAny(const bp::object& operand, boost::any& any);
+        static karabo::util::Types::ReferenceType toAny(const bp::object& operand, boost::any& any);
 
         static bp::object fromStdVectorToPyListNone(const std::vector<karabo::util::CppNone>& v) {
             bp::list pylist;

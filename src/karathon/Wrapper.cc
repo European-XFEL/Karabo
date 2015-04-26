@@ -219,10 +219,14 @@ namespace karathon {
                 return bp::object(boost::shared_ptr<karabo::xip::RawImageData>(new karabo::xip::RawImageData(raw)));
             } else if (operand.type() == typeid (karabo::util::Hash)) {
                 return bp::object(boost::any_cast<karabo::util::Hash>(operand));
+            } else if (operand.type() == typeid (karabo::util::Hash::Pointer)) {
+                return bp::object(boost::any_cast<karabo::util::Hash::Pointer>(operand));
             } else if (operand.type() == typeid (karabo::util::Schema)) {
                 return bp::object(boost::any_cast<karabo::util::Schema>(operand));
             } else if (operand.type() == typeid (std::vector<karabo::util::Hash>)) {
                 return bp::object(boost::any_cast<std::vector<karabo::util::Hash> >(operand));
+            } else if (operand.type() == typeid (std::vector<karabo::util::Hash::Pointer>)) {
+                return bp::object(boost::any_cast<std::vector<karabo::util::Hash::Pointer> >(operand));
             } else if (operand.type() == typeid (bp::object) && hasattr(boost::any_cast<bp::object >(operand), "__name__")) {
                 return boost::any_cast<bp::object >(operand);
             }
@@ -233,15 +237,15 @@ namespace karathon {
         return bp::object();   // make compiler happy -- we never reach this statement
     }
 
-    void Wrapper::toAny(const bp::object& obj, boost::any& any) {
+    karabo::util::Types::ReferenceType Wrapper::toAny(const bp::object& obj, boost::any& any) {
         if (obj.ptr() == Py_None) {
             any = karabo::util::CppNone();
-            return;
+            return karabo::util::Types::NONE;
         }
         if (PyBool_Check(obj.ptr())) {
             bool b = bp::extract<bool>(obj);
             any = b;
-            return;
+            return karabo::util::Types::BOOL;
         }
         if (PyLong_Check(obj.ptr())) {
             try {
@@ -254,66 +258,79 @@ namespace karathon {
                         any = static_cast<long long> (bp::extract<long long>(obj));
                     } catch (...) {
                         any = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj));
+                        return karabo::util::Types::UINT64;
                     }
+                    return karabo::util::Types::INT64;
                 }
+                return karabo::util::Types::UINT32;
             }
-            return;
+            return karabo::util::Types::INT32;
         }
         if (PyFloat_Check(obj.ptr())) {
             double b = bp::extract<double>(obj);
             any = b;
-            return;
+            return karabo::util::Types::DOUBLE;
         }
         if (PyUnicode_Check(obj.ptr())) {
             Py_ssize_t size;
             const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
             string b(data, size);
             any = b;
-            return;
+            return karabo::util::Types::STRING;
         }
         if (PyBytes_Check(obj.ptr())) {
             size_t size = PyBytes_Size(obj.ptr());
             char* data = PyBytes_AsString(obj.ptr());
             std::vector<char> b(data, data + size);
             any = b;
-            return;
+            return karabo::util::Types::VECTOR_CHAR;
         }
         if (PyByteArray_Check(obj.ptr())) {
             size_t size = PyByteArray_Size(obj.ptr());
             char* data = PyByteArray_AsString(obj.ptr());
             std::vector<char> b(data, data + size);
             any = b;
-            return;
+            return karabo::util::Types::VECTOR_CHAR;
         }
         if (bp::extract<char* const>(obj).check()) {
             char* const b = bp::extract<char* const>(obj);
             any = b;
-            return;
+            return karabo::util::Types::PTR_CHAR;
         }
         if (bp::extract<wchar_t* const>(obj).check()) {
             wchar_t* const b = bp::extract<wchar_t* const>(obj);
             any = b;
-            return;
+            return karabo::util::Types::PTR_CHAR;       //TODO: Define WCHAR and PTR_WCHAR. Check with Burkhard and Martin
         }
         if (bp::extract<std::vector<std::string> >(obj).check()) {
             std::vector<std::string> const b = bp::extract<std::vector<std::string> >(obj);
             any = b;
-            return;
+            return karabo::util::Types::VECTOR_STRING;
         }
         if (bp::extract<karabo::util::Hash>(obj).check()) {
             karabo::util::Hash h = bp::extract<karabo::util::Hash>(obj);
             any = h;
-            return;
+            return karabo::util::Types::HASH;
+        }
+        if (bp::extract<karabo::util::Hash::Pointer>(obj).check()) {
+            karabo::util::Hash::Pointer h = bp::extract<karabo::util::Hash::Pointer>(obj);
+            any = h;
+            return karabo::util::Types::HASH_POINTER;
         }
         if (bp::extract<karabo::util::Schema>(obj).check()) {
             karabo::util::Schema s = bp::extract<karabo::util::Schema>(obj);
             any = s;
-            return;
+            return karabo::util::Types::SCHEMA;
         }
         if (bp::extract<std::vector<karabo::util::Hash> >(obj).check()) {
             std::vector<karabo::util::Hash> vhash = bp::extract<std::vector<karabo::util::Hash> >(obj);
             any = vhash;
-            return;
+            return karabo::util::Types::VECTOR_HASH;
+        }
+        if (bp::extract<std::vector<karabo::util::Hash::Pointer> >(obj).check()) {
+            std::vector<karabo::util::Hash::Pointer> vhash = bp::extract<std::vector<karabo::util::Hash::Pointer> >(obj);
+            any = vhash;
+            return karabo::util::Types::VECTOR_HASH_POINTER;
         }
         if (PyArray_Check(obj.ptr())) {
             PyArrayObject* arr = reinterpret_cast<PyArrayObject*>(obj.ptr());
@@ -328,35 +345,35 @@ namespace karathon {
                     bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
                     std::vector<bool> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_BOOL;
                 }
                 case NPY_SHORT:
                 {
                     short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
                     std::vector<short> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_INT16;
                 }
                 case NPY_USHORT:
                 {
                     unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
                     std::vector<unsigned short> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_UINT16;
                 }
                 case NPY_INT:
                 {
                     int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
                     std::vector<int> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_INT32;
                 }
                 case NPY_UINT:
                 {
                     unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
                     std::vector<unsigned int> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_UINT32;
                 }
                 case NPY_LONG:
                 {
@@ -368,7 +385,7 @@ namespace karathon {
                         std::vector<long long> v(data, data + nelems);
                         any = v;
                     }
-                    break;
+                    return karabo::util::Types::VECTOR_INT64;
                 }
                 case NPY_ULONG:
                 {
@@ -382,53 +399,53 @@ namespace karathon {
                     }
                     std::vector<unsigned long long> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_UINT64;
                 }
                 case NPY_LONGLONG:
                 {
                     long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
                     std::vector<long long> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_INT64;
                 }
                 case NPY_ULONGLONG:
                 {
                     unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
                     std::vector<unsigned long long> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_UINT64;
                 }
                 case NPY_FLOAT:
                 {
                     float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
                     std::vector<float> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_FLOAT;
                 }
                 case NPY_DOUBLE:
                 {
                     double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
                     std::vector<double> v(data, data + nelems);
                     any = v;
-                    break;
+                    return karabo::util::Types::VECTOR_DOUBLE;
                 }
                 default:
                     break;
             }
-            return;
+            return karabo::util::Types::NONE;
         }
         if (PyList_Check(obj.ptr())) {
             bp::ssize_t size = bp::len(obj);
             if (size == 0) {
                 any = std::vector<std::string>();
-                return;
+                return karabo::util::Types::VECTOR_STRING;
             }
             bp::object list0 = obj[0];
             if (list0.ptr() == Py_None) {
                 std::vector<karabo::util::CppNone> v;
                 for (bp::ssize_t i = 0; i < size; ++i) v.push_back(karabo::util::CppNone());
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_NONE;
             }
             if (PyBool_Check(list0.ptr())) {
                 std::vector<bool> v(size); // Special case here
@@ -436,15 +453,42 @@ namespace karathon {
                     v[i] = bp::extract<bool>(obj[i]);
                 }
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_BOOL;
             }
             if (PyLong_Check(list0.ptr())) {
-                std::vector<int> v(size);
-                for (bp::ssize_t i = 0; i < size; ++i) {
-                    v[i] = bp::extract<int>(obj[i]);
+                try {
+                    std::vector<int> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = static_cast<int> (bp::extract<int>(obj[i]));
+                    }
+                    any = v;
+                    return karabo::util::Types::VECTOR_INT32;
+                } catch (...) {
+                    try {
+                        std::vector<unsigned int> v(size);
+                        for (bp::ssize_t i = 0; i < size; ++i) {
+                            v[i] = static_cast<unsigned int> (bp::extract<unsigned int>(obj[i]));
+                        }
+                        any = v;
+                        return karabo::util::Types::VECTOR_UINT32;
+                    } catch (...) {
+                        try {
+                            std::vector<long long> v(size);
+                            for (bp::ssize_t i = 0; i < size; ++i) {
+                                v[i] = static_cast<long long> (bp::extract<long long>(obj[i]));
+                            }
+                            any = v;
+                            return karabo::util::Types::VECTOR_INT64;
+                        } catch (...) {
+                            std::vector<unsigned long long> v(size);
+                            for (bp::ssize_t i = 0; i < size; ++i) {
+                                v[i] = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj[i]));
+                            }
+                            any = v;
+                            return karabo::util::Types::VECTOR_UINT64;
+                        }
+                    }
                 }
-                any = v;
-                return;
             }
             if (PyFloat_Check(list0.ptr())) {
                 std::vector<double> v(size);
@@ -452,7 +496,7 @@ namespace karathon {
                     v[i] = bp::extract<double>(obj[i]);
                 }
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_DOUBLE;
             }
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
@@ -462,7 +506,7 @@ namespace karathon {
                     v[i] = string(data, size);
                 }
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_STRING;
             }
             if (bp::extract<karabo::util::Hash>(list0).check()) {
                 std::vector<karabo::util::Hash> v(size);
@@ -470,7 +514,15 @@ namespace karathon {
                     v[i] = bp::extract<karabo::util::Hash>(obj[i]);
                 }
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_HASH;
+            }
+            if (bp::extract<karabo::util::Hash::Pointer>(list0).check()) {
+                std::vector<karabo::util::Hash::Pointer> v(size);
+                for (bp::ssize_t i = 0; i < size; ++i) {
+                    v[i] = bp::extract<karabo::util::Hash::Pointer>(obj[i]);
+                }
+                any = v;
+                return karabo::util::Types::VECTOR_HASH_POINTER;
             }
             if (bp::extract<karabo::util::Schema>(list0).check()) {
                 std::vector<karabo::util::Schema> v(size);
@@ -478,12 +530,12 @@ namespace karathon {
                     v[i] = bp::extract<karabo::util::Schema>(obj[i]);
                 }
                 any = v;
-                return;
+                return karabo::util::Types::VECTOR_SCHEMA;
             }
         }
         if (hasattr(obj, "__name__")) {// python function
             any = obj;
-            return;
+            return karabo::util::Types::ANY;
         }
         throw KARABO_PYTHON_EXCEPTION("Python type can not be mapped into Hash");
     }
