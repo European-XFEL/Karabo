@@ -173,7 +173,7 @@ namespace karabo {
 
             void toLittleEndian();
 
-            void toRGBAPremultiplied();
+            KARABO_DEPRECATED void toRGBAPremultiplied();
             
             const RawImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
             
