@@ -317,7 +317,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::stopEventLoop() {
+     void SignalSlotable::stopEventLoop() {
 
             // Finish the outer while loop
             m_runEventLoop = false;
@@ -489,7 +489,7 @@ namespace karabo {
                                             bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
                                             if (!ok) {
                                                 std::cout << "Rejected local slot: " << slotFunction << std::endl;
-                                                //sendErrorHappenedReply(header, errorMessage);
+                                                sendPotentialReply(header, false);                                               
                                                 continue;
                                             }
                                         }
@@ -541,6 +541,7 @@ namespace karabo {
                 if (it != m_replies.end()) {
                     m_producerChannel->write(replyHeader, it->second);
                 } else if (!global) {
+                    // Inject an empty reply, in case the no one was provided in the slot body                    
                     m_producerChannel->write(replyHeader, karabo::util::Hash());
                 }
             }
