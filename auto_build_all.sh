@@ -69,7 +69,7 @@ elif [[ $1 = "Clean" || $1 = "Clean-All" ]]; then
     exit 0
 else
 	echo
-	echo "Invalid option supplied. Allowed options: Release|Debug|Clean"
+	echo "Invalid option supplied. Allowed options: Release|Debug|Clean|Clean-All"
 	echo
     exit 1
 fi
