@@ -681,7 +681,7 @@ class WorkflowConnection(QWidget):
     def _updateProxyGeometry(self):
         rect = self.curve.boundingRect()
         rect = QRect(self.topLeft.x(), self.topLeft.y(),
-                     rect.width(), rect.height())
+                     max(1, rect.width()), max(1, rect.height()))
         self.proxy.set_geometry(rect)
 
 
