@@ -898,9 +898,9 @@ namespace karabo {
                         if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                             std::ostringstream msg;
                             msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " 
-                                    << "\"" << currentState << "\" of " << "\"" << m_deviceId << "\"" 
-                                    << "Allowed commands are: " << karabo::util::toString(allowedStates);
+                                    << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
                             errorMessage = msg.str();
+                            reply(errorMessage);
                             return false;
                         }
                     }
