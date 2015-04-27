@@ -1755,10 +1755,10 @@ namespace karabo {
                 m_trackedComponents.erase(instanceId);
             }
         }
-        
-        
-        InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config, 
-                const boost::function<void(const InputChannel::Pointer&)>& onInputAvailableHandler, 
+
+
+        InputChannel::Pointer SignalSlotable::createInputChannel(const std::string& channelName, const karabo::util::Hash& config,
+                const boost::function<void(const InputChannel::Pointer&)>& onInputAvailableHandler,
                 const boost::function<void(const InputChannel::Pointer&)>& onEndOfStreamEventHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
@@ -1776,8 +1776,7 @@ namespace karabo {
         }
 
 
-
-        OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, 
+        OutputChannel::Pointer SignalSlotable::createOutputChannel(const std::string& channelName, const karabo::util::Hash& config,
                 const boost::function<void (const OutputChannel::Pointer&)>& onOutputPossibleHandler) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
@@ -1790,13 +1789,12 @@ namespace karabo {
             m_outputChannels[channelName] = channel;
             return channel;
         }
-        
-        
+
+
         Data SignalSlotable::createDataObject(const std::string& channelName, const karabo::util::Hash& config) {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             return Data(config.get<Hash>(channelName + ".schema"));
         }
-
 
 
         Hash SignalSlotable::prepareConnectionNotAvailableInformation(const karabo::util::Hash & hash) const {
@@ -1813,41 +1811,42 @@ namespace karabo {
             return result;
         }
 
-
         void SignalSlotable::connectInputChannels() {
             // Loop channels
             for (InputChannels::const_iterator it = m_inputChannels.begin(); it != m_inputChannels.end(); ++it) {
-                InputChannel::Pointer channel = it->second;
-
-                // Loop connected outputs
-                std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
-                for (size_t j = 0; j < outputChannels.size(); ++j) {
-                    const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
-                    const std::string& channelId = outputChannels[j].get<string > ("channelId");
-                    bool channelExists = false;
-                    karabo::util::Hash reply;
-                    int sleep = 1;
-                    int trials = 8;
-                    while ((trials--) > 0) {
-                        try {
-                            this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
-                        } catch (karabo::util::TimeoutException&) {
-                            karabo::util::Exception::clearTrace();
-                            std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
-                            std::cout << "Trying again in " << sleep << " seconds." << std::endl;
-                            boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                            sleep += 2;
-                            continue;
-                        }
-                        break;
+                connectInputChannel(it->second);
+            }
+        }
+        
+                
+        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel) {
+            // Loop connected outputs
+            std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
+            for (size_t j = 0; j < outputChannels.size(); ++j) {
+                const std::string& instanceId = outputChannels[j].get<string > ("instanceId");
+                const std::string& channelId = outputChannels[j].get<string > ("channelId");
+                bool channelExists = false;
+                karabo::util::Hash reply;
+                int sleep = 1;
+                int trials = 8;
+                while ((trials--) > 0) {
+                    try {
+                        this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
+                    } catch (karabo::util::TimeoutException&) {
+                        karabo::util::Exception::clearTrace();
+                        std::cout << "Could not find instanceId \"" + instanceId + "\" for IO connection" << std::endl;
+                        std::cout << "Trying again in " << sleep << " seconds." << std::endl;
+                        boost::this_thread::sleep(boost::posix_time::seconds(sleep));
+                        sleep += 2;
+                        continue;
                     }
-                    if (channelExists) {
-                        channel->connect(reply); // Synchronous
-                    } else {
-                        throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
-                    }
+                    break;
                 }
-
+                if (channelExists) {
+                    channel->connect(reply); // Synchronous
+                } else {
+                    throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + channelId + "\" on instanceId \"" + instanceId + "\"");
+                }
             }
         }
 

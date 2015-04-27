@@ -1190,6 +1190,8 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             const OutputChannels& getOutputChannels() const {
                 return m_outputChannels;
             }
+            
+            void connectInputChannel(const InputChannel::Pointer& channel);
 
             void connectInputChannels();
 

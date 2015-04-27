@@ -13,6 +13,7 @@
 #include <karabo/core/ProjectManager.hh>
 #include <karabo/net/Channel.hh>
 #include <karabo/net/Connection.hh>
+#include <karabo/xms/InputChannel.hh>
 
 #include "Device.hh"
 #include "OkErrorFsm.hh"
@@ -31,7 +32,7 @@ namespace karabo {
             karabo::net::Channel::Pointer channel;
 	    };
 
-        typedef std::multimap<karabo::io::Input<karabo::util::Hash>::Pointer, NetworkConnection> NetworkMap;
+        typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
 
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
@@ -85,9 +86,7 @@ namespace karabo {
 
             void onExecute(const karabo::util::Hash& info);
 
-            void onInitDevice(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
-
-            void replyInit(karabo::net::Channel::Pointer channel, const std::string& deviceId, bool ok, const std::string &error);
+            void onInitDevice(const karabo::util::Hash& info);
 
             void onGetDeviceConfiguration(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
@@ -109,7 +108,7 @@ namespace karabo {
 
             void onSubscribeNetwork(karabo::net::Channel::Pointer channel, const karabo::util::Hash& info);
 
-            void onNetworkData(const karabo::io::Input<karabo::util::Hash>::Pointer &input);
+            void onNetworkData(const karabo::xms::InputChannel::Pointer& input);
             
             void onGetAvailableProjects(karabo::net::Channel::Pointer channel);
             

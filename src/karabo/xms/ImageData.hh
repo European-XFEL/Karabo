@@ -112,7 +112,7 @@ namespace karabo {
              * Constructs from a hash that has to follow the correct format
              * @param imageHash
              */              
-            ImageData(karabo::util::Hash& hash);
+            ImageData(const karabo::util::Hash& hash);
             
             ImageData(karabo::util::Hash::Pointer& hash);
 
@@ -176,6 +176,31 @@ namespace karabo {
                 }
             }
         };
+        
+         struct ImageDataElement : public DataElement<ImageDataElement, ImageData> {
+            
+            ImageDataElement(karabo::util::Schema& s) : DataElement(s) {
+            }
+            
+            ImageDataElement& setDimensionScales(const std::string& scales) {
+                return setDefaultValue("dimScales", scales);
+            }
+            
+            ImageDataElement& setDimensions(const std::string& dimensions) {
+                return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
+            }                  
+            
+            ImageDataElement& setEncoding(const EncodingType& encoding) {
+                return setDefaultValue("encoding", (int)encoding);
+            }
+            
+            ImageDataElement& setChannelSpace(const ChannelSpaceType& channelSpace) {
+                return setDefaultValue("channelSpace", (int)channelSpace);
+            }                        
+        };
+        
+        typedef ImageDataElement IMAGEDATA_ELEMENT;
+        
     }
 }
 

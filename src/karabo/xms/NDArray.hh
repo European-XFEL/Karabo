@@ -116,19 +116,21 @@ namespace karabo {
         };
         
         
-        struct NDARRAY_ELEMENT : public DataElement<NDARRAY_ELEMENT, NDArray> {
+        struct NDArrayElement : public DataElement<NDArrayElement, NDArray> {
             
-            NDARRAY_ELEMENT(karabo::util::Schema& s) : DataElement<NDARRAY_ELEMENT, NDArray>(s) {
+            NDArrayElement(karabo::util::Schema& s) : DataElement<NDArrayElement, NDArray>(s) {
             }                        
             
-            NDARRAY_ELEMENT& setDimensionScales(const std::string& scales) {
+            NDArrayElement& setDimensionScales(const std::string& scales) {
                 return setDefaultValue("dimScales", scales);
             }
             
-            NDARRAY_ELEMENT& setDimensions(const std::string& dimensions) {
+            NDArrayElement& setDimensions(const std::string& dimensions) {
                 return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
             }                        
         };
+        
+        typedef NDArrayElement NDARRAY_ELEMENT;
     }
 }
 

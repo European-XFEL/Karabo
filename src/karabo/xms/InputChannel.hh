@@ -17,6 +17,7 @@
 #include <karabo/io.hpp>
 #include <karabo/log.hpp>
 #include <karabo/util.hpp>
+#include "Data.hh"
 #include "Memory.hh"
 
 /**
@@ -115,11 +116,17 @@ namespace karabo {
              */
             std::vector<karabo::util::Hash> getConnectedOutputChannels();
 
-            void read(karabo::util::Hash& data, size_t idx);
-
-            size_t size() {
-                return MemoryType::size(m_channelId, m_activeChunk);
+            void read(karabo::util::Hash& data, size_t idx = 0);
+            
+            karabo::util::Hash::Pointer read(size_t idx = 0);
+                        
+            template <class T>
+            T readData(size_t idx = 0) {
+                boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+                return T(MemoryType::read(idx, m_channelId, m_activeChunk));
             }
+
+            size_t size();
 
             unsigned int getMinimumNumberOfData() const;
 

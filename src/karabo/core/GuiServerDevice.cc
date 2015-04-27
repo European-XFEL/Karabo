@@ -14,6 +14,7 @@ using namespace karabo::core;
 using namespace karabo::net;
 using namespace karabo::io;
 using namespace karabo::xip;
+using namespace karabo::xms;
 
 #define DATALOGGER_PREFIX "DataLogger-"
 #define DATALOGREADER_PREFIX "DataLogReader-"
@@ -186,7 +187,7 @@ namespace karabo {
                     } else if (type == "getClassSchema") {
                         onGetClassSchema(channel, info);
                     } else if (type == "initDevice") {
-                        onInitDevice(channel, info);
+                        onInitDevice(info);
                     } else if (type == "killServer") {
                         onKillServer(info);
                     } else if (type == "killDevice") {
@@ -273,32 +274,16 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onInitDevice(Channel::Pointer channel, const Hash& hash) {
+        void GuiServerDevice::onInitDevice(const karabo::util::Hash& hash) {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice";
+                cout << hash << endl;
                 string serverId = hash.get<string > ("serverId");                
                 KARABO_LOG_INFO << "Incoming request to start device instance on server " << serverId;
-                request(serverId, "slotStartDevice", hash)
-                        .receiveAsync<bool, string>(boost::bind(&GuiServerDevice::replyInit, this, channel, hash.get<string>("deviceId"), _1, _2));
+                call(serverId, "slotStartDevice", hash);
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
-            }
-        }
-
-
-        void GuiServerDevice::replyInit(Channel::Pointer channel, const string& deviceId, bool ok, const string &error) {
-            try {
-                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting device init reponse";
-
-                Hash h("type", "replyInit", "ok", ok, "deviceId", deviceId,
-                       "error", error);
-
-                boost::mutex::scoped_lock lock(m_channelMutex);
-                channel->write(h);  // send back to requestor
-
-            } catch (const Exception& e) {
-                KARABO_LOG_ERROR << "Problem in replyInit " << e.userFriendlyMsg();
             }
         }
 
@@ -493,16 +478,16 @@ namespace karabo {
 	void GuiServerDevice::onSubscribeNetwork(Channel::Pointer channel, const karabo::util::Hash& info) {
 	    try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onSubscribeNetwork";
-                string name = info.get<string>("channelName");
+                string channelName = info.get<string>("channelName");
 		bool subscribe = info.get<bool>("subscribe");
 		NetworkMap::iterator iter;
 		boost::mutex::scoped_lock lock(m_networkMutex);
 
 		for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
-		    if (name == iter->second.name) {
+		    if (channelName == iter->second.name) {
 			if (subscribe) {
 			    NetworkConnection nc;
-			    nc.name = name;
+			    nc.name = channelName;
 			    nc.channel = channel;
 			    m_networkConnections.insert(NetworkMap::value_type(iter->first, nc));
 			    return;
@@ -516,28 +501,16 @@ namespace karabo {
 		}
 
 		if (!subscribe) {
-		    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << name;
+		    KARABO_LOG_FRAMEWORK_DEBUG << "trying to unsubscribe from non-subscribed channel " << channelName;
 		}
 
-		Hash h;
-		vector<string> v(1);
-		v[0] = name;
-		h.set("connectedOutputChannels", v);
-		Input<Hash>::Pointer input = Input<Hash>::create("Network", h);
+		Hash h("connectedOutputChannels", channelName, "dataDistribution", "copy", "onSlowness", "drop");                
+		InputChannel::Pointer input = Configurator<InputChannel>::create("InputChannel", h);                
 		input->setInstanceId(m_instanceId);
-		input->setInputHandlerType("C++", string(typeid(Input<Hash>).name()));
-		boost::function<void (const Input<Hash>::Pointer&)> handler = boost::bind(&GuiServerDevice::onNetworkData, this, _1);
-		input->registerIOEventHandler(handler);
-		h = input->getConnectedOutputChannels()[0];
-		bool channelExists;
-		request(h.get<string>("instanceId"), "slotGetOutputChannelInformation", h.get<string>("channelId"), static_cast<int>(getpid())).timeout(1000).receive(channelExists, h);
-		if (channelExists) {
-		    input->connect(h);
-		} else {
-		    throw KARABO_IO_EXCEPTION("Could not find outputChannel \"" + name + "\"");
-		}
+                input->registerIOEventHandler(boost::bind(&GuiServerDevice::onNetworkData, this, _1));
+                connectInputChannel(input);
 		NetworkConnection nc;
-		nc.name = name;
+		nc.name = channelName;
 		nc.channel = channel;
 		m_networkConnections.insert(NetworkMap::value_type(input, nc));
 	    } catch (const Exception &e) {
@@ -546,23 +519,25 @@ namespace karabo {
 	}
 
 
-	void GuiServerDevice::onNetworkData(const Input<Hash>::Pointer &input) {
+	void GuiServerDevice::onNetworkData(const InputChannel::Pointer& input) {
 	    try {
                 KARABO_LOG_FRAMEWORK_DEBUG << "onNetworkData";
-		Hash data;
-		input->read(data);
+                
+                for (size_t i = 0; i < input->size(); ++i) {
+                    Hash::Pointer data = input->read(i);
 
-		boost::mutex::scoped_lock lock(m_networkMutex);
-		pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
-		for (; range.first != range.second; range.first++) {
-                    Hash h("type", "networkData", "name", range.first->second.name, "data", data);
-		    range.first->second.channel->write(h);
-		}
-		input->update();
-	    } catch (const Exception &e) {
-		KARABO_LOG_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
-	    }
-	}
+                    boost::mutex::scoped_lock lock(m_networkMutex);
+                    pair<NetworkMap::iterator, NetworkMap::iterator> range = m_networkConnections.equal_range(input);
+                    for (; range.first != range.second; range.first++) {
+                        Hash h("type", "networkData", "name", range.first->second.name, "data", data);
+                        range.first->second.channel->write(h);
+                    }
+                    input->update();
+                }
+            } catch (const Exception &e) {
+                KARABO_LOG_ERROR << "Problem in onNetworkData: " << e.userFriendlyMsg();
+            }
+        }
         
         
         void GuiServerDevice::onGetAvailableProjects(karabo::net::Channel::Pointer channel) {

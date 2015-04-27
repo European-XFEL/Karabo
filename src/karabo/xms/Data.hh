@@ -92,14 +92,14 @@ namespace karabo {
         public:
 
             DataElement(karabo::util::Schema& s) : m_schema(s) {
-
+                m_key = Described::classInfo().getClassId();
             }
 
             Derived& key(const std::string& key) {
                 using namespace karabo::util;
                 m_key = key;
                 NODE_ELEMENT(m_schema).key(m_key)
-                        .appendParametersOf<Described>()
+                        .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
                         .commit();
 
                 return *(static_cast<Derived*> (this));

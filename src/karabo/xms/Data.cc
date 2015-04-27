@@ -14,8 +14,6 @@ namespace karabo {
     namespace xms {
 
 
-        KARABO_REGISTER_FOR_CONFIGURATION(Data)
-
         void Data::expectedParameters(karabo::util::Schema& expected) {
 
             // HASH_ELEMENT(expected).key("header")
