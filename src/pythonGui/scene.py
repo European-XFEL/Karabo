@@ -26,7 +26,7 @@ from widget import DisplayWidget, EditableWidget
 
 from PyQt4.QtCore import (pyqtSignal, Qt, QByteArray, QEvent, QSize, QRect, QLine,
                           QFileInfo, QBuffer, QIODevice, QMimeData, QRectF,
-                          QPoint)
+                          QPoint, QPointF)
 from PyQt4.QtGui import (QAction, QApplication, QBoxLayout, QBrush, QColor,
                          QDialog, QDialogButtonBox, QFrame, QLabel, QLayout,
                          QKeySequence, QMenu,QMessageBox, QPalette, QPainter,
@@ -332,14 +332,20 @@ class Select(Action):
             elif self.resize:
                 og = self.resize_item.geometry()
                 g = QRect(og)
+                posX, posY = event.pos().x(), event.pos().y()
+                trans = QPointF()
                 if "t" in self.resize:
-                    g.setTop(event.pos().y())
+                    trans.setY((posY - g.top()) / 2)
+                    g.setTop(posY)
                 elif "b" in self.resize:
-                    g.setBottom(event.pos().y())
+                    trans.setY((posY - g.bottom()) / 2)
+                    g.setBottom(posY)
                 if "l" in self.resize:
-                    g.setLeft(event.pos().x())
+                    trans.setX((posX - g.left()) / 2)
+                    g.setLeft(posX)
                 elif "r" in self.resize:
-                    g.setRight(event.pos().x())
+                    trans.setX((posX - g.right()) / 2)
+                    g.setRight(posX)
                 min = self.resize_item.minimumSize()
                 max = self.resize_item.maximumSize()
                 if (not min.width() <= g.size().width() <= max.width() or
@@ -347,6 +353,13 @@ class Select(Action):
                     min.width() <= og.size().width() <= max.width() and
                     min.height() <= og.size().height() <= max.height()):
                     return
+
+                for c in chain(parent.ilayout, parent.ilayout.shapes):
+                    # Update WorkflowConnections, if Item moves
+                    if (c.selected and isinstance(c, ProxyWidget)
+                            and isinstance(c.widget, Item)):
+                        c.widget.updateConnectionsNeeded(parent, trans)
+
                 self.resize_item.set_geometry(g)
                 parent.ilayout.update()
                 parent.setModified()
