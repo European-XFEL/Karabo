@@ -34,7 +34,6 @@ namespace karabo {
          * The DeviceOutput class.
          */
         class OutputChannel : public boost::enable_shared_from_this<OutputChannel> {
-            
             typedef boost::shared_ptr<karabo::net::Channel> TcpChannelPointer;
 
             /*
@@ -58,12 +57,12 @@ namespace karabo {
             typedef std::map<TcpChannelPointer, unsigned int> TcpChannelPointer2ChunkId;
 
             typedef Memory<karabo::util::Hash> MemoryType;
-            
+
             // Callback on available input
             boost::function<void (const boost::shared_ptr<OutputChannel>&) > m_ioEventHandler;
 
             std::string m_instanceId;
-            
+
             // Server related
             std::string m_hostname;
             unsigned int m_ownPort;
@@ -104,7 +103,7 @@ namespace karabo {
 
         public:
 
-            KARABO_CLASSINFO(OutputChannel, "OutputChannel", "1.0");                        
+            KARABO_CLASSINFO(OutputChannel, "OutputChannel", "1.0");
 
             /**
              * Necessary method as part of the factory/configuration system
@@ -117,15 +116,15 @@ namespace karabo {
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
             OutputChannel(const karabo::util::Hash& config);
-            
+
             virtual ~OutputChannel();
-                        
+
             void setInstanceId(const std::string& instanceId);
 
             const std::string& getInstanceId() const;
-                        
+
             void registerIOEventHandler(const boost::function<void (const OutputChannel::Pointer&)>& ioEventHandler);
-            
+
 
             karabo::util::Hash getInformation() const;
 
@@ -133,10 +132,10 @@ namespace karabo {
              * This interface will make an (possibly expensive) copy of your data
              * @param data
              */
-            void write(const karabo::util::Hash& data) {                
+            void write(const karabo::util::Hash& data) {
                 MemoryType::write(boost::shared_ptr<karabo::util::Hash>(new karabo::util::Hash(data)), m_channelId, m_chunkId);
             }
-            
+
             /**
              * This function will use the data as pointer and does not copy
              * @param data
@@ -144,15 +143,15 @@ namespace karabo {
             void write(const boost::shared_ptr<karabo::util::Hash>& data) {
                 MemoryType::write(data, m_channelId, m_chunkId);
             }
-            
+
             void write(const Data& data) {
                 MemoryType::write(data.hash(), m_channelId, m_chunkId);
-            }                        
-            
+            }
+
             void update();
-            
+
             void signalEndOfStream();
-            
+
         private:
 
             void onTcpConnect(TcpChannelPointer channel);
@@ -167,7 +166,7 @@ namespace karabo {
             void onTcpChannelRead(TcpChannelPointer channel, const karabo::util::Hash& message);
 
             void onInputAvailable(const std::string& instanceId);
-            
+
             void triggerIOEvent();
 
             void onInputGone(const TcpChannelPointer& channel);
@@ -191,7 +190,7 @@ namespace karabo {
             bool hasCopyInput(const std::string& instanceId);
 
             void eraseCopyInput(const std::string& instanceId);
-            
+
             // TODO Check if needed
             bool canCompute() const;
 
@@ -213,6 +212,47 @@ namespace karabo {
 
             void copyRemote(const unsigned int& chunkId, const InputChannelInfo & channelInfo);
         };
+
+        class OutputChannelElement {
+            karabo::util::NodeElement m_outputChannel;
+            karabo::util::NodeElement m_dataSchema;
+
+        public:
+
+            OutputChannelElement(karabo::util::Schema& s) : m_outputChannel(s), m_dataSchema(s) {
+                m_outputChannel.appendParametersOf<OutputChannel>();                
+            }
+
+            OutputChannelElement& key(const std::string& key) {
+                m_outputChannel.key(key);
+                m_dataSchema.key(key + ".schema");
+                return *(static_cast<OutputChannelElement*> (this));
+            }
+            
+            OutputChannelElement& displayedName(const std::string& name) {
+                m_outputChannel.displayedName(name);
+                return *(static_cast<OutputChannelElement*> (this));
+            }
+            
+            OutputChannelElement& description(const std::string& description) {
+                m_outputChannel.description(description);
+                return *(static_cast<OutputChannelElement*> (this));
+            }
+            
+            OutputChannelElement& dataSchema(const karabo::util::Schema& schema) {
+                m_dataSchema.appendSchema(schema);
+                return *(static_cast<OutputChannelElement*> (this));
+            }
+
+            void commit() {
+                m_outputChannel.commit();
+                m_dataSchema.commit();
+            }
+
+        };
+        
+        typedef OutputChannelElement OUTPUT_CHANNEL_ELEMENT;
+        typedef OutputChannelElement OUTPUT_CHANNEL;
 
     }
 }

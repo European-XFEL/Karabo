@@ -148,7 +148,15 @@ namespace karabo {
             boost::mutex::scoped_lock lock(m_swapBuffersMutex);
             MemoryType::read(data, idx, m_channelId, m_activeChunk);
         }
-
+        
+        karabo::util::Hash::Pointer InputChannel::read(size_t idx) {
+            boost::mutex::scoped_lock lock(m_swapBuffersMutex);
+            return MemoryType::read(idx, m_channelId, m_activeChunk);
+        }              
+        
+        size_t InputChannel::size() {
+            return MemoryType::size(m_channelId, m_activeChunk);
+        }
 
         unsigned int InputChannel::getMinimumNumberOfData() const {
             return m_minData;

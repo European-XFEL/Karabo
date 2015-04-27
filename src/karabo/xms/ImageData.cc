@@ -15,29 +15,26 @@ using namespace karabo::util;
 
 namespace karabo {
     namespace xms {
-        
+                
+        KARABO_REGISTER_FOR_CONFIGURATION(Data, NDArray, ImageData)
         
         void ImageData::expectedParameters(karabo::util::Schema& s) {
             
-            //VECTOR_UINT64_ELEMENT(s).key("imageIds")
-            
             VECTOR_UINT32_ELEMENT(s).key("roiOffsets")
-                    .displayedName("Dimensions")
-                    .description("The length of the array reflects total dimensionality and each element the extension in this dimension")
-                    .readOnly()
+                    .displayedName("ROI Offsets")
+                    .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
+                    .readOnly()                        
                     .commit();
-            
             INT32_ELEMENT(s).key("encoding")
                     .displayedName("Encoding")
                     .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
-                    .readOnly()
+                    .readOnly()                       
                     .commit();
-            
             INT32_ELEMENT(s).key("channelSpace")
                     .displayedName("Channel space")
                     .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
-                    .readOnly()
-                    .commit();                        
+                    .readOnly()                      
+                    .commit();
         }
 
 
@@ -45,7 +42,7 @@ namespace karabo {
         }
 
 
-        ImageData::ImageData(karabo::util::Hash& hash) : NDArray(hash) {
+        ImageData::ImageData(const karabo::util::Hash& hash) : NDArray(hash) {
         }      
 
         ImageData::~ImageData() {           
