@@ -8,6 +8,8 @@
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
 
+#include <karabo/util.hpp>
+
 #include <boost/shared_array.hpp>
 
 #include "HashBinarySerializer.hh"
@@ -22,6 +24,21 @@ namespace karabo {
     namespace io {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BinarySerializer<Hash>, HashBinarySerializer);
+
+
+        void HashBinarySerializer::expectedParameters(karabo::util::Schema& expected) {
+            BOOL_ELEMENT(expected).key("nodesAsSharedPtr")
+                    .description("If true, nested hashes will be stored as shared pointers during de-serialization")
+                    .displayedName("NodesAsSharedPtr")
+                    .assignmentOptional().defaultValue(false)
+                    .expertAccess()
+                    .commit();
+        }
+
+
+        HashBinarySerializer::HashBinarySerializer(const karabo::util::Hash& input) {
+            input.get("nodesAsSharedPtr", m_nodesAsSharedPtr);
+        }
 
 
         void HashBinarySerializer::writeHash(const Hash& hash, std::ostream& os) {
@@ -39,13 +56,33 @@ namespace karabo {
 
         void HashBinarySerializer::writeNode(const Hash::Node& element, std::ostream& os) {
             writeKey(os, element.getKey());
-            writeType(os, element.getType());
-            writeAttributes(element.getAttributes(), os);
-            if (element.getType() == Types::HASH) {
+            if (element.is<Hash>()) {
+                writeType(os, Types::HASH);
+                writeAttributes(element.getAttributes(), os);
                 writeHash(element.getValue<Hash > (), os);
-            } else if (element.getType() == Types::HASH_POINTER) {
+            } else if (element.is<Hash::Pointer>()) {
+                writeType(os, Types::HASH);
+                writeAttributes(element.getAttributes(), os);
                 writeHash(*(element.getValue<Hash::Pointer > ()), os);
+            } else if (element.is<vector<Hash> >()) {
+                writeType(os, Types::VECTOR_HASH);
+                writeAttributes(element.getAttributes(), os);
+                const vector<Hash>& tmp = element.getValue<vector<Hash> >();
+                writeSize(os, tmp.size());
+                for (size_t i = 0; i < tmp.size(); ++i) {
+                    writeHash(tmp[i], os);
+                }   
+            } else if (element.is<vector<Hash::Pointer> >()) {
+                writeType(os, Types::VECTOR_HASH);
+                writeAttributes(element.getAttributes(), os);
+                const vector<Hash::Pointer>& tmp = element.getValue<vector<Hash::Pointer> >();
+                writeSize(os, tmp.size());
+                for (size_t i = 0; i < tmp.size(); ++i) {
+                    writeHash(*(tmp[i]), os);
+                }       
             } else {
+                writeType(os, element.getType());
+                writeAttributes(element.getAttributes(), os);
                 writeAny(element.getValueAsAny(), element.getType(), os);
             }
         }
@@ -76,11 +113,8 @@ namespace karabo {
 
         void HashBinarySerializer::writeAny(const boost::any& value, const Types::ReferenceType type, std::ostream& os) {
             switch (Types::category(type)) {
-                case Types::HASH: // BH: Can this ever happen, I think not!
                 case Types::SCHEMA:
                 case Types::SIMPLE: return writeSingleValue(os, value, type);
-                case Types::VECTOR_HASH:
-                case Types::VECTOR_HASH_POINTER:
                 case Types::SEQUENCE: return writeSequence(os, value, type);
                 case Types::RAW_ARRAY: return writeRawArray(os, value, type);
                 default:
@@ -105,9 +139,7 @@ namespace karabo {
                 case Types::BOOL: return writeSingleValue(os, boost::any_cast<const bool&>(value));
                 case Types::COMPLEX_FLOAT: return writeSingleValue(os, boost::any_cast<const std::complex<float>& >(value));
                 case Types::COMPLEX_DOUBLE: return writeSingleValue(os, boost::any_cast<const std::complex<double>& >(value));
-                case Types::STRING: return writeSingleValue(os, boost::any_cast<const std::string& > (value)); //
-                case Types::HASH: return writeSingleValue(os, boost::any_cast<const Hash& > (value));
-                case Types::HASH_POINTER: return writeSingleValue(os, boost::any_cast<const Hash::Pointer& > (value));
+                case Types::STRING: return writeSingleValue(os, boost::any_cast<const std::string& > (value)); //               
                 case Types::SCHEMA: return writeSingleValue(os, boost::any_cast<const Schema& >(value));
                 case Types::NONE: return writeSingleValue(os, boost::any_cast<const CppNone&>(value));
                 default:
@@ -133,18 +165,7 @@ namespace karabo {
         template<>
         void HashBinarySerializer::writeSingleValue(std::ostream& os, const std::complex<double>& value) {
             return writeComplexValue(os, value);
-        }
-
-
-        template<>
-        void HashBinarySerializer::writeSingleValue(std::ostream& os, const Hash& hash) {
-            writeHash(hash, os);
-        }
-        
-        template<>
-        void HashBinarySerializer::writeSingleValue(std::ostream& os, const Hash::Pointer& hash) {
-            writeHash(*hash, os);
-        }
+        }       
 
 
         template<>
@@ -180,9 +201,7 @@ namespace karabo {
                 case Types::VECTOR_FLOAT: return writeSequenceBulk(os, boost::any_cast<const vector <float>& >(value));
                 case Types::VECTOR_DOUBLE: return writeSequenceBulk(os, boost::any_cast<const vector <double>& >(value));
                 case Types::VECTOR_COMPLEX_FLOAT: return writeSequence(os, boost::any_cast<const vector <std::complex<float> >& >(value));
-                case Types::VECTOR_COMPLEX_DOUBLE: return writeSequence(os, boost::any_cast<const vector <std::complex<double> >& >(value));
-                case Types::VECTOR_HASH: return writeSequence(os, boost::any_cast<const vector <Hash >& >(value));
-                case Types::VECTOR_HASH_POINTER: return writeSequence(os, boost::any_cast<const vector <Hash::Pointer >& >(value));
+                case Types::VECTOR_COMPLEX_DOUBLE: return writeSequence(os, boost::any_cast<const vector <std::complex<double> >& >(value));            
                 case Types::VECTOR_STRING: return writeSequence(os, boost::any_cast<const vector <std::string>& >(value));
                 case Types::VECTOR_BOOL: return writeSequence(os, boost::any_cast < const vector <bool>& >(value));
                 case Types::VECTOR_NONE: return writeSequence(os, boost::any_cast < const vector <CppNone>& >(value));
@@ -233,11 +252,35 @@ namespace karabo {
             readAttributes(element.getAttributes(), is);
 
             if (type == Types::HASH) {
-                element.getValueAsAny() = Hash();              
-            } else if (type == Types::HASH_POINTER) {
-                element.getValueAsAny() = Hash::Pointer(new Hash());                
+                if (m_nodesAsSharedPtr) {
+                    element.setValue(Hash::Pointer(new Hash()));
+                    Hash& tmp = *(element.getValue<Hash::Pointer>());
+                    readHash(tmp, is);
+                } else {
+                    element.setValue(Hash());
+                    Hash& tmp = element.getValue<Hash>();
+                    readHash(tmp, is);
+                }
+            } else if (type == Types::VECTOR_HASH) {
+                unsigned size = readSize(is);
+                if (m_nodesAsSharedPtr) {
+                    element.setValue(std::vector<Hash::Pointer > ());
+                    std::vector<Hash::Pointer>& result = element.getValue<std::vector<Hash::Pointer > >();
+                    result.resize(size, Hash::Pointer(new Hash()));
+                    for (unsigned i = 0; i < size; ++i) {
+                        readHash(*(result[i]), is);
+                    }
+                } else {
+                    element.setValue(std::vector<Hash > ());
+                    std::vector<Hash>& result = element.getValue<std::vector<Hash > >();
+                    result.resize(size);
+                    for (unsigned i = 0; i < size; ++i) {
+                        readHash(result[i], is);
+                    }
+                }
+            } else {
+                readAny(element.getValueAsAny(), type, is);
             }
-            readAny(element.getValueAsAny(), type, is);            
         }
 
 
@@ -260,33 +303,7 @@ namespace karabo {
                     return;
                 case Types::RAW_ARRAY:
                 case Types::SEQUENCE: readSequence(is, value, type);
-                    return;
-                case Types::HASH:
-                    readHash(boost::any_cast<Hash& > (value), is);
-                    return;                    
-                case Types::HASH_POINTER:
-                    readHash(*(boost::any_cast<Hash::Pointer& > (value)), is);
-                    return;
-                case Types::VECTOR_HASH:
-                {
-                    unsigned size = readSize(is);
-                    value = std::vector<Hash > (size);
-                    std::vector<Hash>& result = boost::any_cast<std::vector<Hash>& >(value);
-                    for (unsigned i = 0; i < size; ++i) {
-                        readHash(result[i], is);
-                    }
-                    return;
-                }
-                case Types::VECTOR_HASH_POINTER:
-                {
-                    unsigned size = readSize(is);
-                    value = std::vector<Hash::Pointer > (size, Hash::Pointer(new Hash()));
-                    std::vector<Hash::Pointer>& result = boost::any_cast<std::vector<Hash::Pointer>& >(value);
-                    for (unsigned i = 0; i < size; ++i) {
-                        readHash(*(result[i]), is);
-                    }
-                    return;
-                }
+                    return;               
                 default:
                     throw KARABO_IO_EXCEPTION("Could not properly categorize value \"" + Types::to<ToLiteral>(type) + "\" for reading from archive");
             }
@@ -327,22 +344,6 @@ namespace karabo {
         std::complex<float> HashBinarySerializer::readSingleValue(std::istream& is) {
             return readComplexValue<float> (is);
         }
-
-
-//        template<>
-//        Hash HashBinarySerializer::readSingleValue(std::istream& is) {
-//            Hash hash;
-//            read(hash, is);
-//            return hash;
-//        }
-//
-//
-//        template<>
-//        Hash::Pointer HashBinarySerializer::readSingleValue(std::istream& is) {
-//            Hash::Pointer hash(new Hash());
-//            read(*hash, is);
-//            return hash;
-//        }
 
 
         template<>
