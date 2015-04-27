@@ -181,6 +181,8 @@ void HashBinarySerializer_Test::testSerialization() {
     }
     
     {
+        
+        p = BinarySerializer<Hash>::create("Bin", Hash("nodesAsSharedPtr", true));
         vector<char> archive1;
         vector<char> archive2;
                
