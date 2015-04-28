@@ -7,6 +7,7 @@
  */
 #include <boost/python.hpp>
 
+#include <karabo/util/Dims.hh>
 #include <karabo/xip/RawImageData.hh>
 #include <boost/python/make_constructor.hpp>
 #include "RawImageDataWrap.hh"
@@ -33,6 +34,8 @@ void exportPyXipRawImageData() {
             .value("BAYER", karabo::xip::Encoding::BAYER)
             .value("JPEG", karabo::xip::Encoding::JPEG)
             .value("PNG", karabo::xip::Encoding::PNG)
+            .value("BMP", karabo::xip::Encoding::BMP)
+            .value("TIFF", karabo::xip::Encoding::TIFF)
             .export_values()
             ;
 
@@ -92,7 +95,8 @@ void exportPyXipRawImageData() {
             .def("__init__", bp::make_constructor(&RawImageDataWrap::make, bp::default_call_policies(),
                                                   (bp::arg("ndarray"),
                                                   bp::arg("copy") = true,
-                                                  bp::arg("encoding") = karabo::xip::Encoding::GRAY,
+                                                  bp::arg("dimensions") = karabo::util::Dims(0),
+                                                  bp::arg("encoding") = karabo::xip::Encoding::UNDEFINED,
                                                   bp::arg("isBigEndian") = karabo::util::isBigEndian())))
                                                   
 
@@ -102,6 +106,7 @@ void exportPyXipRawImageData() {
             .def("getSize", &RawImageDataWrap::getSize)
             .def("getByteSize", &RawImageDataWrap::getByteSize)
             .def("getDimensions", &RawImageDataWrap::getDimensionsPy)
+            .def("setDimensions", &RawImageDataWrap::setDimensionsPy, (bp::arg("dimensions")))
             .def("getROIOffsets", &RawImageDataWrap::getROIOffsetsPy)
             .def("setROIOffsets", &RawImageDataWrap::setROIOffsetsPy, (bp::arg("offsets")))
             .def("getEncoding", &RawImageDataWrap::getEncoding)
@@ -115,5 +120,6 @@ void exportPyXipRawImageData() {
             .def("setGeometry", &RawImageDataWrap::setGeometryPy, bp::arg("geometry"))
             .def("hash", (const Hash & (RawImageData::*)() const) (&RawImageData::hash), bp::return_internal_reference<>())
             .def("toRGBAPremultiplied", &RawImageDataWrap::toRGBAPremultiplied)
+            .def("write", &RawImageDataWrap::writePy, (bp::arg("filename"), bp::arg("enableAppendMode") = false))
             ;
 }
