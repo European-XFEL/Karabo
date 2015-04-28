@@ -55,7 +55,7 @@ namespace karabo {
             }
             
             NodeElement& appendSchema(const Schema& schema) {
-                this->m_node->template setValue<Hash >(schema.getParameterHash());
+                this->m_node->setValue<Hash >(schema.getParameterHash());
                 return *this;
             }
 
