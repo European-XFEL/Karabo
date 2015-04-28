@@ -5,7 +5,7 @@
 # AUTHOR: Mayank Kumar <mayank.kumar@xfel.eu>
 # CREATED: Apr 28, 2015
 
-echo "connection opened: (start all device servers script)"
+echo "connection opened: (stop all device servers script)"
 
 os_name=$(lsb_release -is)
 os_version=$(lsb_release -rs)
@@ -20,9 +20,9 @@ HOST_INFO_FILE=".${host}_${INFO_SUFFIX}"
 INSTALLATION_NAME=$( grep installation_name ${HOST_INFO_FILE} | cut -d'=' -f2)
 RUN_PREFIX=$( grep run_prefix ${HOST_INFO_FILE} | cut -d'=' -f2)
 
-all_start_script="${RUN_PREFIX}/${INSTALLATION_NAME}/bin/allStart.sh"
-bash ${all_start_script}
+all_stop_script="${RUN_PREFIX}/${INSTALLATION_NAME}/bin/allStop.sh"
+bash ${all_stop_script}
 
-echo "connection closed: (start all device servers script)"
+echo "connection closed: (stop all device servers script)"
 
 exit 0
