@@ -12,27 +12,14 @@
 __all__ = ["NotificationPanel"]
 
 
+from docktabwindow import Dockable
 from manager import Manager
 from logwidget import LogWidget
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
 
-class NotificationPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    # 
-    #def setupActions(self):
-    #    pass
-    #def setupToolBar(self, toolBar):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-    
+class NotificationPanel(Dockable, QWidget):
     def __init__(self):
         super(NotificationPanel, self).__init__()
 
@@ -43,25 +30,7 @@ class NotificationPanel(QWidget):
         mainLayout.addWidget(self.__logWidget)
         
         Manager().signalNotificationAvailable.connect(self.onNotificationAvailable)
-
-
-    def setupActions(self):
-        pass
-    
-    def setupToolBars(self, toolBar, parent):
-        pass
-
-
     def onNotificationAvailable(self, timestamp, type, shortMessage, detailedMessage, deviceId):
         # Change notification string to logwidget style string
         data = timestamp + " | " + type + " | " + deviceId + " | " + shortMessage + detailedMessage + "#"
         self.__logWidget.addNotificationMessage(data)
-
-
-    # virtual function
-    def onUndock(self):
-        pass
-
-    # virtual function
-    def onDock(self):
-        pass

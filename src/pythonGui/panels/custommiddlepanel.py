@@ -12,6 +12,7 @@
 __all__ = ["CustomMiddlePanel"]
 
 
+from docktabwindow import Dockable
 import icons
 from network import Network
 from toolbar import ToolBar
@@ -20,20 +21,7 @@ from PyQt4.QtCore import pyqtSignal, Qt
 from PyQt4.QtGui import (QAction, QPalette, QSizePolicy, QScrollArea, QWidget)
 
 
-class CustomMiddlePanel(QScrollArea):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
+class CustomMiddlePanel(Dockable, QScrollArea):
     signalClosed = pyqtSignal()
 
 
