@@ -118,10 +118,10 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     def listOfNodes(cls, **kwargs):
         return ListOfNodes(cls, **kwargs)
 
-    def setValue(self, key, value):
+    def setValue(self, descriptor, value):
         if self._parent is not None:
-            self._parent.setChildValue(self._key + "." + key.key, value)
-        self.__dict__[key] = value
+            self._parent.setChildValue(self._key + "." + descriptor.key, value)
+        self.__dict__[descriptor.key] = value
 
     def setChildValue(self, key, value):
         if self._parent is not None:
