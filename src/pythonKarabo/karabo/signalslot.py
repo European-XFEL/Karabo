@@ -281,7 +281,7 @@ class SignalSlotable(Configurable):
                       self.deviceId, self.info)
 
     def setValue(self, attr, value):
-        self.__dict__[attr] = value
+        self.__dict__[attr.key] = value
         update = not self._sethash
         self._sethash[attr.key] = value
         if update:

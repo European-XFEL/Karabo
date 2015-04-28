@@ -117,7 +117,7 @@ class Proxy(object):
         for k, v, a in hash.iterall():
             d = getattr(type(self), k, None)
             if d is not None:
-                self.__dict__[d] = v
+                self.__dict__[d.key] = v
                 for q in self._queues[k]:
                     q.put_nowait(v)
         for q in self._queues[None]:
