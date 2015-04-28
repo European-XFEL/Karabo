@@ -10,8 +10,6 @@ echo "connection opened: (setup device servers bash script)"
 CONFIG_FILE=config.ini
 DOWNLOAD_PARENT_DIR=$( grep download_parent_dir ${CONFIG_FILE} | cut -d '=' -f2 | tr -d ' ')
 INSTALLED_PKGS_FILE=$( grep installed_pkgs_file ${CONFIG_FILE} | cut -d '=' -f2 | tr -d ' ')
-SIMPLIFIED_DATA_FILE=$( grep simplified_data_file ${CONFIG_FILE} | cut -d '=' -f2 | tr -d ' ')
-DEVICE_SERVER_IDS_FILE=$( grep device_server_ids_file ${CONFIG_FILE} | cut -d '=' -f2 | tr -d ' ')
 INFO_SUFFIX=$( grep info_suffix ${CONFIG_FILE} | cut -d'=' -f2 | tr -d ' ')
 KARABO_RUN=$( grep karaboRun ${CONFIG_FILE} | cut -d'=' -f2 | tr -d ' ')
 host=$( hostname -f)
@@ -266,7 +264,7 @@ until \${KARABO}/bin/karabo-${server_type}deviceserver \${ARGS} "\$@"; do
 done
 
 End-of-file
-            chmod +x ${one_ds_id_dir}/start${server_type^}DeviceServer
+            chmod +x ${one_ds_id_dir}/start${device_server_name}
             echo "ALLINFO[${counter}]=\${KARABO_SERVERS}/${one_ds_id}/start${device_server_name}:${special_argument}:0:100:yes" >> ${RUN_PREFIX}/${INSTALLATION_NAME}/bin/allInfo
         fi
         counter=$((counter+1))
