@@ -9,7 +9,7 @@
    widgets.
 """
 
-__all__ = ["DockTabWindow"]
+__all__ = ["DockTabWindow", "Dockable"]
 
 
 import icons
@@ -18,6 +18,18 @@ from toolbar import ToolBar
 from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout,
                          QTabWidget, QVBoxLayout)
+
+
+class Dockable:
+    def onDock(self):
+        pass
+
+    def onUndock(self):
+        pass
+
+    def setupToolBars(self, toolbar, widget):
+        pass
+
 
 class DockTabWindow(QTabWidget):
 

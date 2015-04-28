@@ -12,27 +12,13 @@
 __all__ = ["NavigationPanel"]
 
 
+from docktabwindow import Dockable
 from manager import Manager
 from navigationtreeview import NavigationTreeView
 
 from PyQt4.QtGui import QVBoxLayout, QWidget
 
-class NavigationPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-
-
+class NavigationPanel(Dockable, QWidget):
     def __init__(self):
         super(NavigationPanel, self).__init__()
         
@@ -47,19 +33,6 @@ class NavigationPanel(QWidget):
         mainLayout.setContentsMargins(5,5,5,5)
         mainLayout.addWidget(self.twNavigation)
 
-        self.setupActions()
-
-
-### initializations ###
-    def setupActions(self):
-        pass
-
-
-    def setupToolBars(self, toolBar, parent):
-        pass
-
-
-### slots ###
     def onResetPanel(self):
         """
         This slot is called when the panel needs a reset which means the last
@@ -79,14 +52,3 @@ class NavigationPanel(QWidget):
    
     def onGlobalAccessLevelChanged(self):
         self.twNavigation.model().globalAccessLevelChanged()
-
-
-    # virtual function
-    def onUndock(self):
-        pass
-
-
-    # virtual function
-    def onDock(self):
-        pass
-

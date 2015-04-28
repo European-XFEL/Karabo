@@ -12,6 +12,7 @@
 __all__ = ["LoggingPanel"]
 
 
+from docktabwindow import Dockable
 import icons
 from manager import Manager
 from logwidget import LogWidget
@@ -19,22 +20,7 @@ from logwidget import LogWidget
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
-class LoggingPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-
-
+class LoggingPanel(Dockable, QWidget):
     def __init__(self):
         super(LoggingPanel, self).__init__()
 
@@ -66,14 +52,3 @@ class LoggingPanel(QWidget):
     def setupToolBars(self, toolBar, parent):
         toolBar.addAction(self.__acSaveLog)
         toolBar.addAction(self.__acClearLog)
-        
-    
-    # virtual function
-    def onUndock(self):
-        pass
-
-
-    # virtual function
-    def onDock(self):
-        pass
-
