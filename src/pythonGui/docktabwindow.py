@@ -15,7 +15,7 @@ __all__ = ["DockTabWindow", "Dockable"]
 import icons
 from toolbar import ToolBar
 
-from PyQt4.QtCore import pyqtSignal
+from PyQt4.QtCore import pyqtSignal, pyqtSlot
 from PyQt4.QtGui import (QAction, QCursor, QFrame, QHBoxLayout,
                          QTabWidget, QVBoxLayout)
 
@@ -30,6 +30,9 @@ class Dockable:
     def setupToolBars(self, toolbar, widget):
         pass
 
+    def notifyTabVisible(self, visible):
+        pass
+
 
 class DockTabWindow(QTabWidget):
 
@@ -39,6 +42,8 @@ class DockTabWindow(QTabWidget):
         self.setParent(parent)
         self.setWindowTitle(title)
         self.divWidgetList = []
+        self.lastWidget = None
+        self.currentChanged.connect(self.onCurrentChanged)
 
 #        self.setStyleSheet("QTabWidget {border-style: solid;"
 #                                       "border: 1px solid gray;"
@@ -125,6 +130,18 @@ class DockTabWindow(QTabWidget):
 
             self.setCurrentIndex(index)
             self.show()
+
+    @pyqtSlot(int)
+    def onCurrentChanged(self, index):
+        cw = self.currentWidget()
+        if cw is self.lastWidget:
+            return
+
+        if self.lastWidget is not None:
+            self.lastWidget.dockableWidget.notifyTabVisible(False)
+        if cw is not None:
+            cw.dockableWidget.notifyTabVisible(True)
+        self.lastWidget = cw
 
 
 class DivWidget(QFrame):
