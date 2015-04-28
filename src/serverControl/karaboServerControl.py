@@ -1165,7 +1165,32 @@ def start_main(args):
     :param args:
     :return:
     """
-    return 0
+
+    json_filename = args.jsonfile
+    logging.debug("DEBUG: sub-command: install " + json_filename)
+
+    #### validate input json file, like always
+    if not validate_main(args):
+        logging.error("ERROR: validation failed. Exiting.")
+        return False
+
+    #### start all device servers
+    if not start_all():
+        logging.error("ERROR: failed to start all device servers. Exiting.")
+        return False
+
+    return True
+
+
+def start_all():
+    """
+
+    :return:
+    """
+
+    os.system("bash pssh2.sh")
+
+    return True
 
 
 ################################################################################
