@@ -111,14 +111,11 @@ with basic authentication
 
 [https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76](https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76 "https://svnsrv.desy.de/k5websvn/wsvn/EuXFEL.WP76")
 
-**[SVN Repository
-How-to](/share/proxy/alfresco/api/node/content/workspace/SpacesStore/b24e732a-1eac-49a3-8830-406f07f7d71a/Subversion.pdf "SVN How-to")\
-**
+**[SVN Repository How-to](/share/proxy/alfresco/api/node/content/workspace/SpacesStore/b24e732a-1eac-49a3-8830-406f07f7d71a/Subversion.pdf "SVN How-to")**
 
 ** **
 
-**Issue-Tracking (Redmine)\
-**
+**Issue-Tracking (Redmine)**
 
 [https://in.xfel.eu/redmine](https://in.xfel.eu/redmine "https://in.xfel.eu/redmine")
 (accessible also from outside European XFEL GmbH)

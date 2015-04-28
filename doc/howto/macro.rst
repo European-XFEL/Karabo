@@ -140,7 +140,7 @@ into the usual Celsius scale.
 
 
 Timeouts and errors
-==================-
+===================
 
 While the code above looks quite simple, the things that are happening under
 the hood are quite complex and deserve some attention. The first thing to be
@@ -180,7 +180,7 @@ Or if you are using strings for addressing::
 *TODO: Show some examples for possible exceptions*
 
 Non-blocking operations
-======================-
+=======================
 
 While most of the time the blocking, sequencing like behaviour of dealing with
 devices is exactly what you want and anyways the safest way to perform the

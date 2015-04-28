@@ -35,7 +35,7 @@ Burkhard Heisen
     Search...](/share/page/site/KaraboFramework/advsearch "Advanced Search...")
 
 Karabo Framework {.theme-color-3}
-================
+=================================
 
 [Invite](/share/page/site/KaraboFramework/invite) Edit Site Details
 Customize Site Leave Site
