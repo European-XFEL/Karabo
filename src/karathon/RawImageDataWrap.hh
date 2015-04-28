@@ -2,7 +2,8 @@
  * $Id$
  *
  * Author: <irina.kozlova@xfel.eu>
- * Modified by: <sergey.esenov@xfel.eu>, <burkhard.heisen@xfel.eu>
+ * Modified by: <sergey.esenov@xfel.eu>, <burkhard.heisen@xfel.eu>,
+ *              <andrea.parenti@xfel.eu>
  *
  * Copyright (C) European XFEL GmbH Hamburg. All rights reserved.
  */
@@ -37,8 +38,8 @@ namespace karathon {
         //        }
 
         RawImageDataWrap(bp::object& obj,
-                const karabo::util::Dims& dimensions,
                 const bool copy,
+                const karabo::util::Dims& dimensions,
                 const karabo::xip::EncodingType encoding,
                 const karabo::xip::ChannelSpaceType channelSpace,
                 const bool isBigEndian) {
@@ -69,7 +70,8 @@ namespace karathon {
 
         RawImageDataWrap(bp::object& obj,
                 const bool copy = true,
-                const karabo::xip::EncodingType encoding = karabo::xip::Encoding::GRAY,
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const karabo::xip::EncodingType encoding = karabo::xip::Encoding::UNDEFINED,
                 const bool isBigEndian = karabo::util::isBigEndian()) {
 
 
@@ -81,32 +83,58 @@ namespace karathon {
             // Data pointer and size
             char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
             size_t size = PyArray_NBYTES(arr);
-
-            // Dimensions (shape)
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
+
+            // Encoding
+            karabo::xip::EncodingType _encoding = encoding;
+            if (encoding == karabo::xip::Encoding::UNDEFINED) {
+                // No encoding info -> try to guess it from ndarray shape
+               if (rank == 2)
+                   _encoding = karabo::xip::Encoding::GRAY;
+               else if (rank == 3 && shapes[2] == 3)
+                   _encoding = karabo::xip::Encoding::RGB;
+               else if (rank == 3 && shapes[2] == 4)
+                   _encoding = karabo::xip::Encoding::RGBA;
+            }
+
+            // Dimensions (shape)
             std::vector<unsigned long long> tmp(rank);
-            if (encoding == karabo::xip::Encoding::RGB || encoding == karabo::xip::Encoding::RGBA ||
-                encoding == karabo::xip::Encoding::BGR || encoding == karabo::xip::Encoding::BGRA ||
-                encoding == karabo::xip::Encoding::CMYK || encoding == karabo::xip::Encoding::YUV) {
-                // Color images
+            karabo::util::Dims _dimensions;
+
+            if (_encoding == karabo::xip::Encoding::RGB || _encoding == karabo::xip::Encoding::RGBA ||
+                _encoding == karabo::xip::Encoding::BGR || _encoding == karabo::xip::Encoding::BGRA ||
+                _encoding == karabo::xip::Encoding::CMYK || _encoding == karabo::xip::Encoding::YUV) {
+                // Color images -> use ndarray dimensions
 
                 if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
 
                 tmp[2] = shapes[2]; // Number of channels
                 tmp[1] = shapes[0]; // Image height
                 tmp[0] = shapes[1]; // Image width
-            } else if (encoding == karabo::xip::Encoding::GRAY) {
-                // Gray-scale images
+
+                _dimensions.fromVector(tmp);
+            } else if (_encoding == karabo::xip::Encoding::GRAY) {
+                // Gray-scale images -> use ndarray dimensions
+
+                if ( (rank != 2) && !((rank == 3) && (tmp[2] == 1)) )
+                    throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
+
                 for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
+
+                _dimensions.fromVector(tmp);
+            } else if (_encoding == karabo::xip::Encoding::JPEG || _encoding == karabo::xip::Encoding::PNG || 
+                _encoding == karabo::xip::Encoding::BMP || _encoding == karabo::xip::Encoding::TIFF ) {
+                // JPEG, PNG, BMP, TIFF -> cannot use ndarray dimensions, use therefore input parameter
+
+                _dimensions = dimensions;
             } else {
                 // Other encodings. Likely it will need to be fixed!
                 // getDataPy(RawImageData&) will need to be changed accordingly!!!
                 for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
-            }
 
-            karabo::util::Dims dimensions;
-            dimensions.fromVector(tmp);
+                _dimensions.fromVector(tmp);
+            }
 
             // ChannelSpace
             PyArray_Descr* dtype = PyArray_DESCR(arr);
@@ -117,15 +145,15 @@ namespace karathon {
             // We need to fix the type here
             m_hash.set("type", karabo::util::Types::convert<FromNumpy, karabo::util::ToLiteral>(dtype->type_num));
 
-            if (dimensions.size() == 0) {
+            if (_dimensions.size() == 0) {
                 setDimensions(karabo::util::Dims(size));
                 setROIOffsets(karabo::util::Dims(0));
             } else {
-                setDimensions(dimensions);
-                std::vector<unsigned long long> offsets(dimensions.rank(), 0);
+                setDimensions(_dimensions);
+                std::vector<unsigned long long> offsets(_dimensions.rank(), 0);
                 setROIOffsets(karabo::util::Dims(offsets));
             }
-            setEncoding(encoding);
+            setEncoding(_encoding);
             if (channelSpace == karabo::xip::ChannelSpace::UNDEFINED) setChannelSpace(channelSpace);
             else setChannelSpace(channelSpace);
             setIsBigEndian(isBigEndian);
@@ -134,15 +162,16 @@ namespace karathon {
 
         static boost::shared_ptr<RawImageData> make(bp::object& obj,
                 const bool copy = true,
-                const karabo::xip::EncodingType encoding = karabo::xip::Encoding::GRAY,
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const karabo::xip::EncodingType encoding = karabo::xip::Encoding::UNDEFINED,
                 const bool isBigEndian = karabo::util::isBigEndian()) {
-            return boost::shared_ptr<RawImageDataWrap>(new RawImageDataWrap(obj, copy, encoding, isBigEndian));
+            return boost::shared_ptr<RawImageDataWrap>(new RawImageDataWrap(obj, copy, dimensions, encoding, isBigEndian));
         }
 
         RawImageDataWrap(karabo::util::Hash& hash, bool copiesHash = true) : karabo::xip::RawImageData(hash, copiesHash) {
         }
 
-        static void setDimensionsPy(RawImageData& self, PyArrayObject* arr) {
+        static void _setDimensionsPy(RawImageData& self, PyArrayObject* arr) {
             // Dimensions (shape)
             int rank = PyArray_NDIM(arr);
             npy_intp* shapes = PyArray_DIMS(arr);
@@ -153,17 +182,17 @@ namespace karathon {
             self.setDimensions(dims);
         }
 
+        static void _setChannelSpacePy(RawImageData& self, PyArrayObject* arr) {
+            PyArray_Descr* dtype = PyArray_DESCR(arr);
+            int channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
+            self.setChannelSpace(channelSpace);
+        }
+
         static void setROIOffsetsPy(RawImageData& self, const bp::object& offsets) {
             std::vector<unsigned long long> vec = Wrapper::fromPyListToStdVector<unsigned long long>(offsets);
             karabo::util::Dims dims;
             dims.fromVector(vec);
             self.setROIOffsets(dims);
-        }
-
-        static void setChannelSpacePy(RawImageData& self, PyArrayObject* arr) {
-            PyArray_Descr* dtype = PyArray_DESCR(arr);
-            int channelSpace = karabo::util::Types::convert<FromNumpy, karabo::xip::ToChannelSpace>(dtype->type_num);
-            self.setChannelSpace(channelSpace);
         }
 
         static void setDataPy(RawImageData& self, const bp::object& obj, const bool copy = true) {
@@ -172,8 +201,8 @@ namespace karathon {
                 PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
 
                 // Adjust dimensions and channelSpace
-                RawImageDataWrap::setDimensionsPy(self, arr);
-                RawImageDataWrap::setChannelSpacePy(self, arr);
+                RawImageDataWrap::_setDimensionsPy(self, arr);
+                RawImageDataWrap::_setChannelSpacePy(self, arr);
 
                 // Data pointer and size          
                 size_t size = PyArray_NBYTES(arr);
@@ -207,8 +236,17 @@ namespace karathon {
               shape[1] = dims[0]; // Image width
             } else if (encoding == karabo::xip::Encoding::GRAY) {
                 // Gray-scale images
+
                 std::reverse(dims.begin(), dims.end()); // REVERSING
                 for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
+            } else if (encoding == karabo::xip::Encoding::JPEG || encoding == karabo::xip::Encoding::PNG || 
+                encoding == karabo::xip::Encoding::BMP || encoding == karabo::xip::Encoding::TIFF ) {
+                // JPEG, PNG, BMP, TIFF
+
+                // Image is not stored as pixel values => byteSize _is_not_ height*width*bytesPerPixel!
+                shape[0] = self.getByteSize();
+                for (size_t i = 1; i < dims.size(); ++i) shape[i] = 1;
+
             } else {
                 // Other encodings. Likely it will need to be fixed!
                 std::reverse(dims.begin(), dims.end()); // REVERSING
@@ -226,6 +264,13 @@ namespace karathon {
         static bp::object getDimensionsPy(const RawImageData& self) {
             karabo::util::Dims d = self.getDimensions();
             return karathon::Wrapper::fromStdVectorToPyList(d.toVector());
+        }
+
+       static void setDimensionsPy(RawImageData& self, const bp::object& dimensions) {
+            std::vector<unsigned long long> vec = Wrapper::fromPyListToStdVector<unsigned long long>(dimensions);
+            karabo::util::Dims d;
+            d.fromVector(vec);
+            self.setDimensions(d);
         }
 
         static bp::object getROIOffsetsPy(const RawImageData& self) {
@@ -254,6 +299,10 @@ namespace karathon {
         static void setGeometryPy(RawImageData& self, const bp::object & obj){
             const DetectorGeometryWrap & g = bp::extract<DetectorGeometryWrap>(obj);
             self.setGeometry(g.toHash());
+        }
+
+        static void writePy(RawImageData& self, const std::string& filename, const bool enableAppendMode = false){
+	  self.write(filename, enableAppendMode);
         }
         
     };
