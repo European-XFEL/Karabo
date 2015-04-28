@@ -11,28 +11,14 @@
 
 __all__ = ["DocumentationPanel"]
 
-
 from PyQt4.QtCore import QUrl
 from PyQt4.QtGui import QTabWidget, QVBoxLayout, QWidget
 from PyQt4.QtWebKit import QWebPage, QWebView
 
-
-class DocumentationPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
+from docktabwindow import Dockable
 
 
+class DocumentationPanel(Dockable, QWidget):
     def __init__(self):
         super(DocumentationPanel, self).__init__()
 
@@ -73,15 +59,3 @@ class DocumentationPanel(QWidget):
         toolBar.addAction(self.acStopReport)
         
         self._setReportActionsVisible(True)
-
-
-### slots ###
-    # virtual function
-    def onUndock(self):
-        pass
-
-
-    # virtual function
-    def onDock(self):
-        pass
-

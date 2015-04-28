@@ -12,7 +12,7 @@
 __all__ = ["ConfigurationPanel"]
 
 
-from docktabwindow import DockTabWindow
+from docktabwindow import DockTabWindow, Dockable
 from .documentationpanel import DocumentationPanel
 import icons
 from manager import Manager
@@ -28,22 +28,7 @@ from PyQt4.QtGui import (QAction, QHBoxLayout, QLabel, QMenu,
 
 import os.path
 
-class ConfigurationPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-
-
+class ConfigurationPanel(Dockable, QWidget):
     def __init__(self):
         super(ConfigurationPanel, self).__init__()
         
@@ -714,14 +699,10 @@ class ConfigurationPanel(QWidget):
     def onOpenFromProject(self):
         self.twNavigation.onOpenFromProject()
 
-
-    # virtual function
     def onUndock(self):
         self.twNavigation.show()
         self.twProject.show()
 
-
-    # virtual function
     def onDock(self):
         self.twNavigation.hide()
         self.twProject.hide()
