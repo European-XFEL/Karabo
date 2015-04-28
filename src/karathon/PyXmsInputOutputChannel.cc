@@ -15,6 +15,7 @@
 #include "ScopedGILRelease.hh"
 #include "Wrapper.hh"
 #include "DimsWrap.hh"
+#include "FromNumpy.hh"
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -51,20 +52,80 @@ namespace karathon {
     };
 
 
-    struct NDArrayWrap {
+    struct NDArrayWrap : public karabo::xms::NDArray {
 
 
-//        static bp::object getDataPointer(const boost::shared_ptr<karabo::xms::NDArray>& self) {
-//            return Wrapper::toObject(self->getDataPointer());
-//        }
+        NDArrayWrap() : NDArray() {
+        }
 
 
-        static bp::object getData(const boost::shared_ptr<karabo::xms::NDArray>& self) {
+        NDArrayWrap(const karabo::util::Hash& config) : NDArray(config) {
+        }
+
+
+        NDArrayWrap(const karabo::util::Hash::Pointer& data) : NDArray(data) {
+        }
+
+
+        NDArrayWrap(const bp::object& obj, const bool copy = true,
+                    const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                    const bool isBigEndian = karabo::util::isBigEndian()) {
+
+            using namespace karabo::util;
+
+            if (!PyArray_Check(obj.ptr()))
+                throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'numpy array'");
+
+            // Get a contiguous copy of the array (or just a reference if already contiguous)
+            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+            PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+
+            // Data pointer and size
+            char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
+            size_t size = PyArray_NBYTES(arr);
+            PyArray_Descr* dtype = PyArray_DESCR(arr);
+
+            setData(data, size, copy);
+
+            // We need to fix the type here, because setData has set the type based on type of data argument
+            m_hash->set("dataType", Types::convert<FromNumpy, ToLiteral>(dtype->type_num));
+
+            // Dimensions (shape)
+            int rank = PyArray_NDIM(arr);
+            npy_intp* shapes = PyArray_SHAPE(arr);
+            std::vector<unsigned long long> tmp(rank);
+            for (int i = 0; i < rank; i++) {
+                tmp[i] = shapes[i];
+            }
+            
+            if (dimensions.size() == 0) {
+                Dims dmsFromShape;
+                dmsFromShape.fromVector(tmp);
+                if (dmsFromShape.size() == 0)
+                    setDimensions(Dims(size));
+                else
+                    setDimensions(dmsFromShape);
+            } else {
+                setDimensions(dimensions);
+            }
+
+            setIsBigEndian(isBigEndian);
+        }
+
+
+        static boost::shared_ptr<NDArray> make(bp::object& obj, const bool copy = true,
+                                               const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                                               const bool isBigEndian = karabo::util::isBigEndian()) {
+            return boost::shared_ptr<NDArrayWrap>(new NDArrayWrap(obj, copy, dimensions, isBigEndian));
+        }
+
+
+        static bp::object getDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
             return Wrapper::fromStdVectorToPyBytes(self->getData());
         }
 
 
-        static void setData(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& data, const bool copy) {
+        static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& data, const bool copy) {
             boost::any a;
             Wrapper::toAny(data, a);
             if (a.type() == typeid (std::vector<bool>))
@@ -108,13 +169,13 @@ namespace karathon {
         }
 
 
-        static bp::object getDimensions(const boost::shared_ptr<karabo::xms::NDArray>& self) {
+        static bp::object getDimensionsPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
             karabo::util::Dims dims = self->getDimensions();
             return Wrapper::fromStdVectorToPyList(dims.toVector());
         }
 
 
-        static void setDimensions(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj) {
+        static void setDimensionsPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj) {
             if (bp::extract<karathon::DimsWrap>(obj).check()) {
                 self->setDimensions(static_cast<karabo::util::Dims> (bp::extract<karathon::DimsWrap>(obj)));
                 return;
@@ -151,6 +212,19 @@ namespace karathon {
         //            }
         //            return result;
         //        }
+    };
+
+
+    struct NDArrayElementWrap {
+
+
+        static karabo::xms::NDArrayElement& setDefaultValue(const boost::shared_ptr<karabo::xms::NDArrayElement>& self,
+                                                            const std::string& subKey,
+                                                            const bp::object& defaultValue) {
+            boost::any anyValue;
+            karathon::Wrapper::toAny(defaultValue, anyValue);
+            return self->setDefaultValue(subKey, anyValue);
+        }
     };
 
 
@@ -282,19 +356,22 @@ void exportPyXmsInputOutputChannel() {
 
                 .def(bp::init<const Hash::Pointer&>())
 
-                //.def("getDataPointer", &karathon::NDArrayWrap().getDataPointer)
+                .def("__init__", bp::make_constructor(&karathon::NDArrayWrap::make,
+                                                      bp::default_call_policies(),
+                                                      (bp::arg("ndarray"),
+                                                      bp::arg("copyFlag") = true,
+                                                      bp::arg("dims_obj") = karabo::util::Dims(),
+                                                      bp::arg("isBigEndian") = karabo::util::isBigEndian())))
 
-                //.def("getByteSize", &NDArray::getByteSize)
+                .def("getData", &karathon::NDArrayWrap::getDataPy)
 
-                .def("getData", &karathon::NDArrayWrap().getData)
+                .def("setData", &karathon::NDArrayWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag")))
 
-                .def("setData", &karathon::NDArrayWrap().setData, (bp::arg("data"), bp::arg("copy_flag")))
+                .def("getDimensions", &karathon::NDArrayWrap::getDimensionsPy)
 
-                .def("getDimensions", &karathon::NDArrayWrap().getDimensions)
+                .def("setDimensions", &karathon::NDArrayWrap::setDimensionsPy, (bp::arg("dims")))
 
-                .def("setDimensions", &karathon::NDArrayWrap().setDimensions, (bp::arg("dims")))
-
-                //.def("setDimensionTypes", &karathon::NDArrayWrap().setDimensionTypes, (bp::arg("listOfDimTypes")))
+                //.def("setDimensionTypes", &karathon::NDArrayWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
 
                 .def("getDataType", &NDArray::getDataType, bp::return_value_policy<bp::copy_const_reference > ())
 
@@ -302,9 +379,33 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("isBigEndian", &NDArray::isBigEndian)
 
-                //.def("getDimensionScales", &karathon::NDArrayWrap().getDimensionScales)
+                //.def("getDimensionScales", &karathon::NDArrayWrap::getDimensionScalesPy)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(NDArray)
+                //KARABO_PYTHON_FACTORY_CONFIGURATOR(NDArray)
+                ;
+    }
+
+    {
+        bp::implicitly_convertible< Schema &, NDArrayElement >();
+        bp::class_<NDArrayElement> ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+
+                .def("key", &NDArrayElement::key
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
+
+                .def("setDefaultValue", &karathon::NDArrayElementWrap().setDefaultValue
+                     , (bp::arg("subKey"), bp::arg("defaultValue"))
+                     , bp::return_internal_reference<> ())
+
+                .def("commit", &NDArrayElement::commit, bp::return_internal_reference<> ())
+
+                .def("setDimensionScales", &NDArrayElement::setDimensionScales
+                     , (bp::arg("scales"))
+                     , bp::return_internal_reference<> ())
+
+                .def("setDimensions", &NDArrayElement::setDimensions
+                     , (bp::arg("dimensions"))
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
