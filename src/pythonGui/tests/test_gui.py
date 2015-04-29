@@ -1,4 +1,6 @@
 from unittest import TestCase, main
+
+from docktabwindow import Dockable
 import gui
 from PyQt4.QtCore import QObject, QMimeData, QPoint, Qt, pyqtSignal
 from PyQt4.QtGui import QDropEvent, QWidget
@@ -18,6 +20,11 @@ from itertools import count
 from os import path
 import sys
 import traceback
+
+
+class DockableWidget(Dockable, QWidget):
+    pass
+
 
 class Network(QObject):
     signalServerConnectionChanged = pyqtSignal(bool)
@@ -261,13 +268,22 @@ class Tests(TestCase):
         self.assertTrue(panel.pbApplyAll.isEnabled())
         self.assertEqual(testdevice.value.targetSpeed, 1.5)
 
-        net.called = [ ]
-        scene.clean()
+        net.called = []
+        w = DockableWidget()
+        gui.window.middleTab.addDockableTab(w, "nix")
+        gui.window.middleTab.setCurrentIndex(1)
+        self.assertFalse(scene.tabVisible)
         self.assertEqual(len(net.called), 2)
         self.assertEqual(net.called[0][0], "onStopMonitoringDevice")
         self.assertEqual(net.called[1][0], "onStopMonitoringDevice")
         self.assertEqual(testdevice.visible, 0)
-        self.assertEqual(Manager().deviceData["incompatible"].visible, 0)
+
+        net.called = []
+        gui.window.middleTab.setCurrentIndex(0)
+        self.assertTrue(scene.tabVisible)
+        self.assertEqual(len(net.called), 1)
+        self.assertEqual(testdevice.visible, 6)
+        self.assertEqual(Manager().deviceData["incompatible"].visible, 2)
 
 
     def test_gui(self):
