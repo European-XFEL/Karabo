@@ -510,7 +510,6 @@ class ProxyWidget(QWidget):
         if self.layout().count() > 1:
             self.layout().takeAt(0)
         self.layout().insertWidget(0, widget)
-        widget.setParent(widget.parent()) # see Layout.addWidget
         self.widget = widget
 
 
