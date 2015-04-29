@@ -17,5 +17,6 @@
 #include "xms/InputChannel.hh"
 #include "xms/Data.hh"
 #include "xms/NDArray.hh"
+#include "xms/ImageData.hh"
 #endif
 
