@@ -17,8 +17,8 @@ class  RawImageData_TestCase(unittest.TestCase):
             self.assertEqual(image.size, 1048576)
             image = image.reshape(1024, 1024)
             
-            # params: numpy array, optional copy flag (True), optional encoding (EncodingType.GRAY), optional endianness (CPU endianness)
-            rdata = RawImageData(image, True, EncodingType.GRAY)
+            # params: numpy array, optional copy flag (True), optional dimensions (guessed from ndarray), optional encoding (guessed from ndarray), optional endianness (CPU endianness)
+            rdata = RawImageData(image)
             
             self.assertEqual(rdata.getData().size, 1048576)
             self.assertEqual(rdata.getByteSize(), 4194304)
