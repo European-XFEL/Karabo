@@ -17,16 +17,17 @@
 namespace karathon {
 
     class DimsWrap : public karabo::util::Dims {
-
     public:
 
         DimsWrap() : karabo::util::Dims() {
         }
 
-        DimsWrap(bp::list list) : karabo::util::Dims( convertFromListToVector(list) ){            
+        DimsWrap(const std::vector<unsigned long long>& vec) : karabo::util::Dims(vec) {
         }
-        
-        
+
+        DimsWrap(bp::list list) : karabo::util::Dims(convertFromListToVector(list)) {
+        }
+
         DimsWrap(unsigned long long xSize) : karabo::util::Dims(xSize) {
         }
 
@@ -43,23 +44,23 @@ namespace karathon {
         bp::object toVectorPy() {
             return Wrapper::fromStdVectorToPyList(this->toVector());
         }
-        
+
         bp::object toArrayPy() {
             return Wrapper::fromStdVectorToPyArray(this->toVector());
         }
 
     private:
-        
-        std::vector<unsigned long long> convertFromListToVector(bp::list& dims){            
-            std::vector<unsigned long long> vec(bp::len(dims),0);
-            for(int i = 0; i < bp::len(dims); ++i){
-              vec[i] = bp::extract<unsigned long long>(dims[i]);
+
+        std::vector<unsigned long long> convertFromListToVector(bp::list& dims) {
+            std::vector<unsigned long long> vec(bp::len(dims), 0);
+            for (int i = 0; i < bp::len(dims); ++i) {
+                vec[i] = bp::extract<unsigned long long>(dims[i]);
             }
             return vec;
         }
     };
 
-} 
+}
 
 
 #endif	/* KARATHON_DIMSWRAP_HH */
