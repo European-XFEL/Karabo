@@ -282,10 +282,23 @@ def getDevice(deviceId, *, sync=None, timeout=-1):
 
         with getDevice("someDevice") as device:
             # do something with device
+
+    On the command line, you might prefer using :func:`connectDevice`.
     """
     if sync is None:
         sync = get_event_loop().sync_set
     return _getDevice(deviceId, sync=sync, timeout=timeout)
+
+
+def connectDevice(deviceId):
+    """get and connect a device proxy for the device *deviceId*
+
+    This is a shortcut of :func:`getDevice` for the command line, which
+    also connects the proxy for updates of its parameters.
+
+    As with statements on the command line are cumbersome, this function
+    gets a device an connects it, until it is not used anymore."""
+    return getDevice(deviceId).__enter__()
 
 
 def getDevices(serverId=None):
