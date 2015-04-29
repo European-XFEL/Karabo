@@ -15,39 +15,46 @@ using namespace karabo::util;
 
 namespace karabo {
     namespace xms {
-                
+
+
         KARABO_REGISTER_FOR_CONFIGURATION(Data, NDArray, ImageData)
-        
+
         void ImageData::expectedParameters(karabo::util::Schema& s) {
-            
+
             VECTOR_UINT32_ELEMENT(s).key("roiOffsets")
                     .displayedName("ROI Offsets")
                     .description("Describes the offset of the Region-of-Interest; it will contain zeros if the image has no ROI defined")
-                    .readOnly()                        
+                    .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("encoding")
                     .displayedName("Encoding")
                     .description("Describes the color space of pixel encoding of the data (e.g. GRAY, RGB, JPG, PNG etc.")
-                    .readOnly()                       
+                    .readOnly()
                     .commit();
             INT32_ELEMENT(s).key("channelSpace")
                     .displayedName("Channel space")
                     .description("Describes the channel encoding, i.e. signed/unsigned/floating point, bits per channel and bytes per pixel")
-                    .readOnly()                      
+                    .readOnly()
                     .commit();
         }
 
 
-        ImageData::ImageData()  {           
+        ImageData::ImageData() {
         }
 
 
         ImageData::ImageData(const karabo::util::Hash& hash) : NDArray(hash) {
-        }      
-
-        ImageData::~ImageData() {           
         }
-      
+
+
+        ImageData::ImageData(const karabo::util::Hash::Pointer& data) : NDArray(data) {
+        }
+
+
+        ImageData::~ImageData() {
+        }
+
+
         karabo::util::Dims ImageData::getROIOffsets() const {
             return karabo::util::Dims(m_hash->get<std::vector<unsigned long long> >("roiOffsets"));
         }
@@ -55,7 +62,7 @@ namespace karabo {
 
         void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
             m_hash->set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
-        }       
+        }
 
 
         int ImageData::getEncoding() const {
@@ -67,7 +74,7 @@ namespace karabo {
             m_hash->set<int>("encoding", encoding);
         }
 
-      
+
         int ImageData::getChannelSpace() const {
             return m_hash->get<int>("channelSpace");
         }
@@ -76,6 +83,7 @@ namespace karabo {
         void ImageData::setChannelSpace(const int channelSpace) {
             m_hash->set<int>("channelSpace", channelSpace);
         }
+
 
         void ImageData::swapEndianess() {
             ensureDataOwnership();
@@ -120,22 +128,23 @@ namespace karabo {
             if (isBigEndian()) {
                 swapEndianess();
                 setIsBigEndian(false);
-            }            
+            }
         }
-        
+
+
         void ImageData::toBigEndian() {
             if (!isBigEndian()) {
                 swapEndianess();
                 setIsBigEndian(true);
             }
         }
-        
-//        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
-//            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);
-//            karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
-//            out->write(*this);
-//            return *this;
-//        }
+
+        //        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
+        //            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);
+        //            karabo::io::Output<ImageData >::Pointer out = karabo::io::Output<ImageData >::create(h);
+        //            out->write(*this);
+        //            return *this;
+        //        }
 
     }
 }

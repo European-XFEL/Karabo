@@ -61,7 +61,7 @@ namespace karabo {
 
         NDArray::NDArray(const karabo::util::Hash::Pointer& data) : Data(data) {
         }
-
+              
 
         NDArray::~NDArray() {
         }

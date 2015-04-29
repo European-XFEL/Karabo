@@ -36,7 +36,7 @@ namespace karabo {
              * Configuration constructor
              * This constructor should be used for filling in data that is going to be sent
              */
-            NDArray(const karabo::util::Hash& config);
+            NDArray(const karabo::util::Hash& config);                      
             
             
             NDArray(const karabo::util::Hash::Pointer& data);                           
@@ -48,7 +48,7 @@ namespace karabo {
                     const bool copy = true,
                     const karabo::util::Dims& dimensions = karabo::util::Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
-
+                     
             
             virtual ~NDArray();
             

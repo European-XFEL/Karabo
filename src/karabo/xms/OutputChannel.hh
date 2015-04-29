@@ -243,7 +243,7 @@ namespace karabo {
                 m_dataSchema.appendSchema(schema);
                 return *(static_cast<OutputChannelElement*> (this));
             }
-
+            
             void commit() {
                 m_outputChannel.commit();
                 m_dataSchema.commit();

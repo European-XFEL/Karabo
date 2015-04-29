@@ -112,9 +112,9 @@ namespace karabo {
              * Constructs from a hash that has to follow the correct format
              * @param imageHash
              */              
-            ImageData(const karabo::util::Hash& hash);
+            ImageData(const karabo::util::Hash& hash);                       
             
-            ImageData(karabo::util::Hash::Pointer& hash);
+            ImageData(const karabo::util::Hash::Pointer& data);
 
             virtual ~ImageData();  
             
@@ -200,6 +200,7 @@ namespace karabo {
         };
         
         typedef ImageDataElement IMAGEDATA_ELEMENT;
+        typedef ImageDataElement IMAGEDATA;
         
     }
 }
