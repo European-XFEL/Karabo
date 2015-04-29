@@ -11,13 +11,14 @@
 
 __all__ = ["ScriptingPanel"]
 
+from docktabwindow import Dockable
 from ipythonwidget import IPythonWidget
 from network import network
 
 from PyQt4.QtGui import QAction, QVBoxLayout, QWidget
 
 
-class ScriptingPanel(QWidget):
+class ScriptingPanel(Dockable, QWidget):
     def __init__(self):
         super(ScriptingPanel, self).__init__()
         
@@ -58,14 +59,3 @@ class ScriptingPanel(QWidget):
             self.mainLayout.removeWidget(self.console)
             self.console.setParent(None)
             self.console = None
-
-
-    # virtual function
-    def onUndock(self):
-        pass
-
-
-    # virtual function
-    def onDock(self):
-        pass
-

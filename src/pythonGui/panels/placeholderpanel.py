@@ -12,25 +12,12 @@ __all__ = ["PlaceholderPanel"]
 
 import sys
 
+from docktabwindow import Dockable
+
 from PyQt4.QtGui import QLabel, QVBoxLayout, QWidget
 
 
-class PlaceholderPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    #
-    #def setupActions(self):
-    #    pass
-    #def setupToolBars(self, standardToolBar, parent):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-    
-    
+class PlaceholderPanel(Dockable, QWidget):
     def __init__(self, widget=None):
         super(PlaceholderPanel, self).__init__()
 
@@ -44,22 +31,3 @@ class PlaceholderPanel(QWidget):
 
         #self.setupActions()
         self.setLayout(vLayout)
-
-
-    def setupToolBars(self, standardToolBar, parent):
-        pass
-
-
-    def setupActions(self):
-        pass
-
-
-# slots
-    # virtual function
-    def onUndock(self):
-        pass
-
-
-    # virtual function
-    def onDock(self):
-        pass
