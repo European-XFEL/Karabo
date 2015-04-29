@@ -61,7 +61,7 @@ namespace karabo {
 
         NDArray::NDArray(const karabo::util::Hash::Pointer& data) : Data(data) {
         }
-              
+
 
         NDArray::~NDArray() {
         }
@@ -125,6 +125,11 @@ namespace karabo {
         }
 
 
+        void NDArray::setDimensionTypes(const std::vector<int>& dimTypes) {
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
+        }
+
+
         const std::string& NDArray::getDataType() const {
             return m_hash->get<string>("dataType");
         }
@@ -139,6 +144,16 @@ namespace karabo {
             return m_hash->get<bool>("isBigEndian");
         }
 
+
+        const std::vector<std::vector<std::string> >& NDArray::getDimensionScales() const {
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
+        }
+
+
+        void NDArray::setDimensionScales(const std::string& scales) {
+            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
+        }
+        
         //        void NDArray::setDimensionScales(const std::map<int, std::vector<std::string> >& scales) {
         //            string serialized;
         //            for (map<int, vector<string> >::const_iterator it = scales.begin(); it != scales.end(); ++it) {
@@ -150,7 +165,7 @@ namespace karabo {
         //                }
         //                serialized += "]";
         //            }
-        //            m_hash->set("dimScales", serialized);          
+        //            m_hash->set("dimScales", serialized);
         //        }
     }
 }
