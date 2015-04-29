@@ -37,9 +37,7 @@ class Dockable:
 class DockTabWindow(QTabWidget):
 
     def __init__(self, title, parent):
-        super(DockTabWindow, self).__init__()
-        
-        self.setParent(parent)
+        super(DockTabWindow, self).__init__(parent)
         self.setWindowTitle(title)
         self.divWidgetList = []
         self.lastWidget = None
@@ -55,12 +53,7 @@ class DockTabWindow(QTabWidget):
         """
         This function gets a DockTabWindow, a label and optionally an icon.
         """
-        divWidget = DivWidget(dockWidget, label, icon)
-
-        divWidget.docked.connect(dockWidget.onDock)
-        divWidget.docked.connect(self.onDock)
-        divWidget.undocked.connect(self.onUndock)
-        divWidget.undocked.connect(dockWidget.onUndock)
+        divWidget = DivWidget(self, dockWidget, label, icon)
 
         index = self.addTab(divWidget, label)
         divWidget.index = index
@@ -104,25 +97,22 @@ class DockTabWindow(QTabWidget):
         self.updateTabsClosable()
 
 
-    def onUndock(self):
-        currentDivWidget = self.currentWidget()
-        if (currentDivWidget is not None) and (currentDivWidget.parent() is not None):
-            self.removeTab(currentDivWidget.index)
-            currentDivWidget.setParent(None)
-            currentDivWidget.move(QCursor.pos())
-            currentDivWidget.show()
+    def onUndock(self, div):
+        if div.parent() is not None:
+            self.removeTab(div.index)
+            div.setParent(None)
+            div.move(QCursor.pos())
+            div.show()
 
             if self.count() == 0:
                 self.hide()
 
-
-    def onDock(self):
-        divWidget = self.sender()
-        if (divWidget is not None) and (divWidget.parent() is None):
-            if divWidget.hasIcon() == True:
-                index = self.insertTab(divWidget.index, divWidget, divWidget.icon, divWidget.label)
+    def onDock(self, div):
+        if div.parent() is None:
+            if div.hasIcon():
+                index = self.insertTab(div.index, div, div.icon, div.label)
             else:
-                index = self.insertTab(divWidget.index, divWidget, divWidget.label)
+                index = self.insertTab(div.index, div, div.label)
 
             for i in range(self.count()):
                 if self.widget(i) is not None:
@@ -148,7 +138,7 @@ class DivWidget(QFrame):
     docked = pyqtSignal()
     undocked = pyqtSignal()
 
-    def __init__(self, dockableWidget, label, icon=None):
+    def __init__(self, dockWindow, dockableWidget, label, icon=None):
         super(DivWidget, self).__init__()
 
         self.setFrameStyle(QFrame.Box | QFrame.Plain)
@@ -158,6 +148,7 @@ class DivWidget(QFrame):
         self.label = label
         self.doesDockOnClose = True
         self.dockableWidget = dockableWidget
+        self.dockWindow = dockWindow
 
         self.icon = icon
 
@@ -229,23 +220,14 @@ class DivWidget(QFrame):
         if self.icon is not None:
             self.setWindowIcon(self.icon)
         self.setWindowTitle(self.label)
-        self.undocked.emit()
-
+        self.dockWindow.onUndock(self)
+        self.dockableWidget.onUndock()
 
     def onDock(self):
         self.acDock.setVisible(False)
         self.acUndock.setVisible(True)
-        self.docked.emit()
-
-
-    def onIndexChanged(self, index):
-        #TODO: change index, if tab is removed
-        print("onIndexChanged", index)
-        self.index = index
-
+        self.dockWindow.onDock(self)
+        self.dockableWidget.onDock()
 
     def hasIcon(self):
-        if self.icon is None:
-            return False
-
-        return True
+        return self.icon is not None
