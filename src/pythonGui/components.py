@@ -76,8 +76,6 @@ class BaseComponent(Loadable, QObject):
         layout.loadPosition(elem, parent)
         for b in boxes[1:]:
             component.addBox(b)
-        for b in boxes:
-            b.addVisible()
         component.widgetFactory.load(elem)
         elem.clear()
         return component

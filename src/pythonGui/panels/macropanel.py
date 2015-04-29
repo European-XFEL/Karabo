@@ -10,6 +10,7 @@
 __all__ = ["MacroPanel"]
 
 
+from docktabwindow import Dockable
 import icons
 from manager import getDevice
 from util import getSaveFileName
@@ -20,7 +21,7 @@ from PyQt4.QtGui import (QTextEdit, QPlainTextEdit, QMessageBox,
 
 from IPython.qt.console.pygments_highlighter import PygmentsHighlighter
 
-class MacroPanel(QSplitter):
+class MacroPanel(Dockable, QSplitter):
     signalSave = pyqtSignal(str, str)
 
 
@@ -110,11 +111,3 @@ class MacroPanel(QSplitter):
 
     def onMacroChanged(self):
         self.macro.project.setModified(True)
-
-
-    def onDock(self):
-        pass
-
-
-    def onUndock(self):
-        pass

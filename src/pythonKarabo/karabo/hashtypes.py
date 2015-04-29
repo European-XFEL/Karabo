@@ -174,10 +174,10 @@ class Descriptor(object):
         if instance is None:
             return self
         else:
-            if self not in instance.__dict__:
+            if self.key not in instance.__dict__:
                 raise AttributeError(
                     "attribute '{}' has not been set".format(self.key))
-            return instance.__dict__[self]
+            return instance.__dict__[self.key]
 
 
     def __set__(self, instance, value):

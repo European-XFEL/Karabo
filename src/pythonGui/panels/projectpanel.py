@@ -11,6 +11,7 @@
 
 __all__ = ["ProjectPanel"]
 
+from docktabwindow import Dockable
 from projecttreeview import ProjectTreeView
 import icons
 import manager
@@ -19,21 +20,7 @@ from PyQt4.QtCore import pyqtSignal
 from PyQt4.QtGui import (QAction, QVBoxLayout, QWidget)
 
 
-class ProjectPanel(QWidget):
-    ##########################################
-    # Dockable widget class used in DivWidget
-    # Requires following interface:
-    # 
-    #def setupActions(self):
-    #    pass
-    #def setupToolBar(self, toolBar):
-    #    pass
-    #def onUndock(self):
-    #    pass
-    #def onDock(self):
-    #    pass
-    ##########################################
-
+class ProjectPanel(Dockable, QWidget):
     signalAddScene = pyqtSignal(object) # scene
     signalRemoveScene = pyqtSignal(object) # scene
     signalRenameScene = pyqtSignal(object) # scene
@@ -121,13 +108,3 @@ class ProjectPanel(QWidget):
 
     def onResetPanel(self):
         self.closeAllProjects()
-
-
-    def onUndock(self):
-        pass
-
-
-    def onDock(self):
-        pass
-
-
