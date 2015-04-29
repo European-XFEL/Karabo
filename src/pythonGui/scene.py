@@ -1015,6 +1015,7 @@ class Scene(QSvgWidget):
         self.tree = ElementTree.ElementTree(ElementTree.Element(ns_svg + "svg"))
 
         self.designMode = designMode
+        self.tabVisible = False
 
         self.setFocusPolicy(Qt.StrongFocus)
         self.setAcceptDrops(True)
@@ -1100,18 +1101,34 @@ class Scene(QSvgWidget):
         self.inner.setLayout(FixedLayout())
         self.layout().addWidget(self.inner)
 
+    def setTabVisible(self, visible):
+        """sets whether this scene is visible
 
-    def clean(self):
-        """Remove all child widgets"""
+        this method manages the visibilities of the boxes in this scene."""
+        if self.tabVisible == visible:
+            return
+
         for c in self.inner.children():
             if isinstance(c, ProxyWidget):
                 if c.component is not None:
                     for b in c.component.boxes:
-                        b.removeVisible()
-                
+                        if visible:
+                            b.addVisible()
+                        else:
+                            b.removeVisible()
+
                 if isinstance(c.widget, Item):
-                    c.widget.getObject().removeVisible()
-            #c.setParent(None)
+                    obj = c.widget.getObject()
+                    if visible:
+                        obj.addVisible()
+                    else:
+                        obj.removeVisible()
+
+        self.tabVisible = visible
+
+    def clean(self):
+        """Remove all child widgets"""
+        self.setTabVisible(False)
         self.inner.setParent(None)
         self.inner = QWidget(self)
         self.layout().addWidget(self.inner)
@@ -1123,8 +1140,10 @@ class Scene(QSvgWidget):
         """
         self.tree = ElementTree.parse(BytesIO(xmlString))
         root = self.tree.getroot()
+        visible = self.tabVisible
         self.clean()
         FixedLayout.load(root, widget=self.inner)
+        self.setTabVisible(visible)
         self.resize(int(root.get('width', 1024)), int(root.get('height', 768)))
         self.layout().setGeometry(self.geometry())
         self.ilayout.setGeometry(self.inner.geometry())
@@ -1389,7 +1408,8 @@ class Scene(QSvgWidget):
                     proxy.setWidget(displayComponent.widget)
                     layout.addWidget(proxy)
                     proxy.show()
-                    realbox.addVisible()
+                    if self.tabVisible:  # just to be sure
+                        realbox.addVisible()
 
                     unit = (box.descriptor.metricPrefixSymbol +
                             box.descriptor.unitSymbol)
@@ -1408,7 +1428,8 @@ class Scene(QSvgWidget):
                     editableComponent = EditableApplyLaterComponent(
                         factory, realbox, proxy)
 
-                    realbox.addVisible()
+                    if self.tabVisible:
+                        realbox.addVisible()
                     proxy.setComponent(editableComponent)
                     proxy.setWidget(editableComponent.widget)
                     layout.addWidget(proxy)
@@ -1474,9 +1495,10 @@ class Scene(QSvgWidget):
                     # Create scene item associated with device group
                     proxy = ProxyWidget(self.inner)
                     workflowItem = WorkflowGroupItem(object, self, proxy)
-                
-                object.addVisible()
-                
+
+                if self.tabVisible:
+                    object.addVisible()
+
                 rect = workflowItem.boundingRect()
                 proxy.setWidget(workflowItem)
                 object.signalStatusChanged.connect(proxy.showStatus)

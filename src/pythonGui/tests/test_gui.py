@@ -226,6 +226,7 @@ class Tests(TestCase):
 
     def scene(self):
         scene = Manager().projectTopology.projects[0].scenes[0]
+        self.assertTrue(scene.tabVisible)
         Manager().handle_deviceSchema("testdevice", self.testschema)
         testdevice = Manager().deviceData["testdevice"]
         Manager().handle_deviceConfiguration("testdevice", self.testconfiguration)
@@ -238,9 +239,9 @@ class Tests(TestCase):
         mime.setData("sourceType", "ParameterTreeWidget")
         de = DropEvent(QPoint(100, 100), Qt.CopyAction, mime, Qt.LeftButton,
                        Qt.NoModifier, QDropEvent.Drop)
-#        self.assertEqual(testdevice.visible, 4)
+        self.assertEqual(testdevice.visible, 4)
         scene.dropEvent(de)
-#        self.assertEqual(testdevice.visible, 6)
+        self.assertEqual(testdevice.visible, 6)
 
         self.assertEqual(TestWidget.instance.value, 0.5)
         testdevice.dispatchUserChanges(dict(targetSpeed=3.5))

@@ -30,7 +30,6 @@ class CustomMiddlePanel(Dockable, QScrollArea):
 
         # Reference to underlying scene object
         self.scene = scene
-        self.scene.setParent(self)
         self.scene.designMode = isConnectedToServer
         self.setWidget(self.scene)
         
@@ -92,8 +91,11 @@ class CustomMiddlePanel(Dockable, QScrollArea):
         self.__acDesignMode.setStatusTip(text)
         self.scene.designMode = isChecked
 
+    def notifyTabVisible(self, visible):
+        self.scene.setTabVisible(visible)
 
     def onUndock(self):
+        self.scene.setTabVisible(True)
         osize = self.scene.size()
         self.setWidgetResizable(True)
         self.parent().resize(osize - self.scene.size() + self.parent().size())
