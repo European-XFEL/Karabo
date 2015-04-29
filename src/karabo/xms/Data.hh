@@ -13,9 +13,11 @@ namespace karabo {
     namespace xms {
 
         class Data {
+            
         protected:
 
             karabo::util::Hash::Pointer m_hash;
+            
 
 
         public:
@@ -27,19 +29,22 @@ namespace karabo {
 
             Data();
 
+            
             /**
              * Configuration constructor (for later writing)
              */
             Data(const karabo::util::Hash& config);
 
             Data(const Data& other);
+            
+            Data(const std::string& channelName, const karabo::util::Hash& config);
 
             /**
              * Constructor for receiving
              * @param hash
              */
             Data(const karabo::util::Hash::Pointer& hash);
-
+            
             virtual ~Data();
             
             void setNode(const std::string& key, const Data& data);
@@ -76,10 +81,6 @@ namespace karabo {
 
             const karabo::util::Hash::Pointer& hash() const;
 
-            /**
-             * Serialize a hash to standard std::ostream object
-             * @param visitor
-             */
             friend std::ostream& operator<<(std::ostream& os, const Data& data);
 
         };
@@ -100,14 +101,18 @@ namespace karabo {
                 m_key = key;
                 NODE_ELEMENT(m_schema).key(m_key)
                         .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
-                        .commit();
-
+                        .commit();                
                 return *(static_cast<Derived*> (this));
             }
 
             template <class T>
             Derived& setDefaultValue(const std::string& subKey, const T& defaultValue) {
                 using namespace karabo::util;
+                if (m_schema.empty()) {
+                    NODE_ELEMENT(m_schema).key(m_key)
+                        .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
+                        .commit();      
+                }
                 OVERWRITE_ELEMENT(m_schema).key(m_key + "." + subKey)
                         .setNewDefaultValue(defaultValue)
                         .commit();
@@ -116,7 +121,12 @@ namespace karabo {
             }
 
             void commit() {
-                // Dummy function (commit was never really needed... :-()
+                using namespace karabo::util;
+                if (m_schema.empty()) {
+                    NODE_ELEMENT(m_schema).key(m_key)
+                            .appendParametersOfConfigurableClass<Data>(Described::classInfo().getClassId())
+                            .commit();      
+                }
             }
 
         };

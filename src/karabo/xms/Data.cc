@@ -43,6 +43,14 @@ namespace karabo {
         }
 
 
+        Data::Data(const std::string& channelName, const karabo::util::Hash& config) {
+            if (!config.has(channelName)) {
+                throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
+            }
+            m_hash = Hash::Pointer(new Hash(config.get<Hash>(channelName + ".schema")));
+        }
+
+
         Data::Data(const karabo::util::Hash::Pointer& hash) : m_hash(hash) {
         }
 

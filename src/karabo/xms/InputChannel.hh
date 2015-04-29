@@ -29,19 +29,18 @@ namespace karabo {
 
         /**
          * The InputChannel class.
-         */       
+         */
         class InputChannel : public boost::enable_shared_from_this<InputChannel> {
-            
             typedef std::set<karabo::net::Connection::Pointer> TcpConnections;
             typedef std::map<std::string /*host + port*/, karabo::net::Channel::Pointer> TcpChannels;
             typedef Memory<karabo::util::Hash> MemoryType;
-            
+
             // Callback on available data
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_dataAvailableHandler;
-            
+
             // Callback on end-of-stream
             boost::function<void (const boost::shared_ptr<InputChannel>&) > m_endOfStreamHandler;
-            
+
             std::string m_instanceId;
 
             std::vector<karabo::util::Hash> m_connectedOutputChannels;
@@ -69,44 +68,44 @@ namespace karabo {
 
             // Tracks channels that send EOS
             std::set<karabo::net::Channel::Pointer> m_eosChannels;
-            
+
         public:
 
             KARABO_CLASSINFO(InputChannel, "InputChannel", "1.0")
-           
+
             /**
              * Necessary method as part of the factory/configuration system
              * @param expected [out] Description of expected parameters for this object (Schema)
              */
             static void expectedParameters(karabo::util::Schema& expected);
-            
-            
+
+
 
             /**
              * If this object is constructed using the factory/configuration system this method is called
              * @param input Validated (@see expectedParameters) and default-filled configuration
              */
             InputChannel(const karabo::util::Hash& config);
-            
-             virtual ~InputChannel();
+
+            virtual ~InputChannel();
 
 
-            
+
 
             void reconfigure(const karabo::util::Hash& config);
-            
+
             void setInstanceId(const std::string& instanceId);
 
             const std::string& getInstanceId() const;
-            
-            void registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler); 
+
+            void registerIOEventHandler(const boost::function<void (const Self::Pointer&)>& ioEventHandler);
 
             void registerEndOfStreamEventHandler(const boost::function<void (const Self::Pointer&)>& endOfStreamEventHandler);
-            
+
             void triggerIOEvent();
-            
+
             void triggerEndOfStreamEvent();
-            
+
             /**
              * Returns a vector of currently connected output channels
              * Each Hash in the vector has the following structure:
@@ -117,9 +116,9 @@ namespace karabo {
             std::vector<karabo::util::Hash> getConnectedOutputChannels();
 
             void read(karabo::util::Hash& data, size_t idx = 0);
-            
+
             karabo::util::Hash::Pointer read(size_t idx = 0);
-                        
+
             template <class T>
             T readData(size_t idx = 0) {
                 boost::mutex::scoped_lock lock(m_swapBuffersMutex);
@@ -159,13 +158,54 @@ namespace karabo {
             void notifyOutputChannelForPossibleRead(const karabo::net::Channel::Pointer& channel);
 
             bool respondsToEndOfStream();
-            
+
             void parseOutputChannelConfiguration(const karabo::util::Hash& config);
 
         private: // functions
 
             bool needsDeviceConnection() const;
         };
+
+        class InputChannelElement {
+            karabo::util::NodeElement m_inputChannel;
+            karabo::util::NodeElement m_dataSchema;
+
+        public:
+
+            InputChannelElement(karabo::util::Schema& s) : m_inputChannel(s), m_dataSchema(s) {
+                m_inputChannel.appendParametersOf<InputChannel>();
+            }
+
+            InputChannelElement& key(const std::string& key) {
+                m_inputChannel.key(key);
+                m_dataSchema.key(key + ".schema");
+                return *(static_cast<InputChannelElement*> (this));
+            }
+
+            InputChannelElement& displayedName(const std::string& name) {
+                m_inputChannel.displayedName(name);
+                return *(static_cast<InputChannelElement*> (this));
+            }
+
+            InputChannelElement& description(const std::string& description) {
+                m_inputChannel.description(description);
+                return *(static_cast<InputChannelElement*> (this));
+            }
+
+            InputChannelElement& dataSchema(const karabo::util::Schema& schema) {
+                m_dataSchema.appendSchema(schema);
+                return *(static_cast<InputChannelElement*> (this));
+            }
+
+            void commit() {
+                m_inputChannel.commit();
+                m_dataSchema.commit();
+            }
+
+        };
+
+        typedef InputChannelElement INPUT_CHANNEL_ELEMENT;
+        typedef InputChannelElement INPUT_CHANNEL;
 
 
     }
