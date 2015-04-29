@@ -179,7 +179,7 @@ namespace karabo {
         
          struct ImageDataElement : public DataElement<ImageDataElement, ImageData> {
             
-            ImageDataElement(karabo::util::Schema& s) : DataElement(s) {
+            ImageDataElement(karabo::util::Schema& s) : DataElement<ImageDataElement, ImageData>(s) {
             }
             
             ImageDataElement& setDimensionScales(const std::string& scales) {
