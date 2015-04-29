@@ -412,6 +412,19 @@ namespace karathon {
     };
 
 
+    struct ImageDataElementWrap {
+
+
+        static karabo::xms::ImageDataElement& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
+                                                            const std::string& subKey,
+                                                            const bp::object& defaultValue) {
+            boost::any anyValue;
+            karathon::Wrapper::toAny(defaultValue, anyValue);
+            return self->setDefaultValue(subKey, anyValue);
+        }
+    };
+    
+    
     struct OutputChannelWrap {
 
 
@@ -686,6 +699,38 @@ void exportPyXmsInputOutputChannel() {
     }
 
     {
+        bp::implicitly_convertible< Schema &, ImageDataElement >();
+        bp::class_<ImageDataElement> ("IMAGEDATA", bp::init<Schema & >((bp::arg("expected"))))
+
+                .def("key", &ImageDataElement::key
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
+
+                .def("setDefaultValue", &karathon::ImageDataElementWrap().setDefaultValue
+                     , (bp::arg("subKey"), bp::arg("defaultValue"))
+                     , bp::return_internal_reference<> ())
+
+                .def("commit", &ImageDataElement::commit, bp::return_internal_reference<> ())
+
+                .def("setDimensionScales", &ImageDataElement::setDimensionScales
+                     , (bp::arg("scales"))
+                     , bp::return_internal_reference<> ())
+
+                .def("setDimensions", &ImageDataElement::setDimensions
+                     , (bp::arg("dimensions"))
+                     , bp::return_internal_reference<> ())
+        
+                .def("setEncoding", &ImageDataElement::setEncoding
+                    , (bp::arg("encoding"))
+                    , bp::return_internal_reference<> ())
+        
+                .def("setChannelSpace", &ImageDataElement::setChannelSpace
+                    , (bp::arg("channelSpace"))
+                    , bp::return_internal_reference<> ())
+                ;
+    }
+
+    {
         bp::class_<OutputChannel, boost::shared_ptr<OutputChannel>, boost::noncopyable >("OutputChannel", bp::no_init)
 
                 .def("setInstanceId", &OutputChannel::setInstanceId, (bp::arg("instanceId")))
@@ -705,6 +750,31 @@ void exportPyXmsInputOutputChannel() {
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel)
                 ;
 
+    }
+
+    {
+        bp::implicitly_convertible< Schema &, OutputChannelElement >();
+        bp::class_<OutputChannelElement> ("OUTPUT_CHANNEL", bp::init<Schema & >((bp::arg("expected"))))
+
+                .def("key", &OutputChannelElement::key
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
+
+                .def("displayedName", &OutputChannelElement::displayedName
+                     , (bp::arg("name"))
+                     , bp::return_internal_reference<> ())
+
+                .def("description", &OutputChannelElement::description
+                     , (bp::arg("description"))
+                     , bp::return_internal_reference<> ())
+
+                .def("dataSchema", &OutputChannelElement::dataSchema
+                     , (bp::arg("schema"))
+                     , bp::return_internal_reference<> ())
+
+                .def("commit", &OutputChannelElement::commit, bp::return_internal_reference<> ())
+        
+                ;
     }
 
     {
@@ -741,6 +811,31 @@ void exportPyXmsInputOutputChannel() {
                 .def("update", &karathon::InputChannelWrap().update)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel)
+                ;
+    }
+
+    {
+        bp::implicitly_convertible< Schema &, InputChannelElement >();
+        bp::class_<InputChannelElement> ("INPUT_CHANNEL", bp::init<Schema & >((bp::arg("expected"))))
+
+                .def("key", &InputChannelElement::key
+                     , (bp::arg("key"))
+                     , bp::return_internal_reference<> ())
+
+                .def("displayedName", &InputChannelElement::displayedName
+                     , (bp::arg("name"))
+                     , bp::return_internal_reference<> ())
+
+                .def("description", &InputChannelElement::description
+                     , (bp::arg("description"))
+                     , bp::return_internal_reference<> ())
+
+                .def("dataSchema", &InputChannelElement::dataSchema
+                     , (bp::arg("schema"))
+                     , bp::return_internal_reference<> ())
+
+                .def("commit", &InputChannelElement::commit, bp::return_internal_reference<> ())
+        
                 ;
     }
 }
