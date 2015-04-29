@@ -173,7 +173,7 @@ class Client(object):
         for k, v in hash.iteritems():
             a = getattr(type(self), k, None)
             if a is not None:
-                self.__dict__[a] = v
+                self.__dict__[a.key] = v
                 for f in self._futures.get(a, []):
                     f.set_result(v)
 

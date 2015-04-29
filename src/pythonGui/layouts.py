@@ -211,7 +211,7 @@ class FixedLayout(Layout, QLayout):
             p = stack.pop()
             if isinstance(p, Layout):
                 stack.extend(p)
-            else:
+            elif p.scene.tabVisible:
                 if p.component is not None:
                     for b in p.component.boxes:
                         b.removeVisible()
@@ -452,6 +452,9 @@ class ProxyWidget(QWidget):
         self.layout().addWidget(self.marker)
         self.widget = None
 
+    @property
+    def scene(self):
+        return self.parent().parent()
 
     def setComponent(self, component):
         self.component = component
@@ -507,7 +510,6 @@ class ProxyWidget(QWidget):
         if self.layout().count() > 1:
             self.layout().takeAt(0)
         self.layout().insertWidget(0, widget)
-        widget.setParent(widget.parent()) # see Layout.addWidget
         self.widget = widget
 
 
@@ -518,7 +520,7 @@ class ProxyWidget(QWidget):
         self.adjustSize()
 
     def contextMenuEvent(self, event):
-        if not self.parent().parent().designMode:
+        if not self.scene.designMode:
             return
         QMenu.exec_(self.widget.actions() + self.actions(),
                     event.globalPos(), None, self)
@@ -542,7 +544,7 @@ class ProxyWidget(QWidget):
 
     def translate(self, pos):
         self.fixed_geometry.translate(pos)
-        self.parent().layout().update()
+        self.scene.update()
 
 
     def set_geometry(self, rect):
@@ -556,6 +558,7 @@ class ProxyWidget(QWidget):
         for item in source.selectedItems():
             if (self.component is not None and
                     self.component.addBox(item.box)):
-                item.box.addVisible()
+                if self.scene.tabVisible:
+                    item.box.addVisible()
                 event.accept()
 
