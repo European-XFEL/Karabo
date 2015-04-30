@@ -14,6 +14,7 @@ from collections import defaultdict
 from functools import wraps
 from weakref import WeakSet
 
+from karabo import KaraboError
 from karabo.hash import Hash
 from karabo.hashtypes import Slot, Type
 from karabo.signalslot import slot
@@ -345,18 +346,54 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
     configuration.update(kwargs)
     h = Hash("classId", classId, "deviceId", deviceId,
              "configuration", configuration)
-    yield from get_instance().call(serverId, "slotStartDevice", h)
+    ok, msg = yield from get_instance().call(serverId, "slotStartDevice", h)
+    if not ok:
+        raise KaraboError(msg)
+    return msg
 
 
 @synchronize
-def set(device, **kwargs):
+def instantiateNoWait(serverId, classId, deviceId="", configuration=Hash(),
+                **kwargs):
+    """Instantiate and configure a device on a running server
+
+    Non-waiting version of :func:`instantiate`"""
+    configuration.update(kwargs)
+    h = Hash("classId", classId, "deviceId", deviceId,
+             "configuration", configuration)
+    get_instance()._ss.emit("call", {serverId: ["slotStartDevice"]}, h)
+
+
+@synchronize
+def shutdown(device):
+    """shut down the given device
+
+    *deviceId* may be a device proxy, or just the id of a device"""
+    if isinstance(device, Proxy):
+        device = device._deviceId
+    ok = yield from get_instance().call(device, "slotKillDevice")
+    return ok
+
+
+@synchronize
+def shutdownNoWait(device):
+    """shut down the given device
+
+    not waiting version of :func:`shutdown`"""
+    if isinstance(device, Proxy):
+        device = device._deviceId
+    get_instance()._ss.emit("call", {device: ["slotKillDevice"]})
+
+
+@synchronize
+def setWait(device, **kwargs):
     """Set properties of a device
 
     device may either be a device proxy as returned by :func:`getDevice`, or
     simply the deviceId as a string. Add the properties to be set as keyword
     arguments, as in::
 
-        set("someDevice", speed=3, position=5)
+        setWait("someDevice", speed=3, position=5)
 
     Note that for proxy devices this method is normally not necessary,
     you may just write::
@@ -402,6 +439,15 @@ def executeNoWait(device, slot):
     if isinstance(device, Proxy):
         device = device._deviceId
     get_instance()._ss.emit("call", {device: [slot]})
+
+
+@synchronize
+def execute(device, slot):
+    """execute a slot and wait until it finishes"""
+    if isinstance(device, Proxy):
+        device = device._deviceId
+    assert isinstance(slot, str)
+    yield from get_instance().call("device", slot)
 
 
 @synchronize
