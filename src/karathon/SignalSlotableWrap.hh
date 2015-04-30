@@ -11,7 +11,7 @@
 
 #include <boost/python.hpp>
 #include <boost/function.hpp>
-#include <karabo/xms/SignalSlotable.hh>
+#include <karabo/xms.hpp>
 #include <iostream>
 #include "SignalWrap.hh"
 #include "SlotWrap.hh"
@@ -219,9 +219,9 @@ namespace karathon {
             storeSignal(funcName, s, f);
         }
 
-//        SignalSlotableWrap::RequestorWrap timeoutPy(const int& milliseconds) {
-//            return SignalSlotableWrap::RequestorWrap(this).timeoutPy0(milliseconds);
-//        }
+        //        SignalSlotableWrap::RequestorWrap timeoutPy(const int& milliseconds) {
+        //            return SignalSlotableWrap::RequestorWrap(this).timeoutPy0(milliseconds);
+        //        }
 
         SignalSlotableWrap::RequestorWrap requestPy0(std::string instanceId, const std::string& functionName) {
             if (instanceId.empty()) instanceId = m_instanceId;
@@ -355,41 +355,41 @@ namespace karathon {
                                                                            a1, a2, a3, a4);
         }
 
-//        void receiveAsyncPy0(const bp::object& replyCallback) {
-//            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy(replyCallback);
-//        }
-//
-//        void receiveAsyncPy1(const bp::object& replyCallback) {
-//            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy1(replyCallback);
-//        }
-//
-//        void receiveAsyncPy2(const bp::object& replyCallback) {
-//            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy2(replyCallback);
-//        }
-//
-//        void receiveAsyncPy3(const bp::object& replyCallback) {
-//            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy3(replyCallback);
-//        }
-//
-//        void receivePy() {
-//            SignalSlotableWrap::RequestorWrap(this).receivePy();
-//        }
-//
-//        void receivePy1(bp::object& a1) {
-//            SignalSlotableWrap::RequestorWrap(this).receivePy(a1);
-//        }
-//
-//        void receivePy2(bp::object& a1, bp::object& a2) {
-//            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2);
-//        }
-//
-//        void receivePy3(bp::object& a1, bp::object& a2, bp::object& a3) {
-//            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2, a3);
-//        }
-//
-//        void receivePy4(bp::object& a1, bp::object& a2, bp::object& a3, bp::object& a4) {
-//            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2, a3, a4);
-//        }
+        //        void receiveAsyncPy0(const bp::object& replyCallback) {
+        //            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy(replyCallback);
+        //        }
+        //
+        //        void receiveAsyncPy1(const bp::object& replyCallback) {
+        //            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy1(replyCallback);
+        //        }
+        //
+        //        void receiveAsyncPy2(const bp::object& replyCallback) {
+        //            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy2(replyCallback);
+        //        }
+        //
+        //        void receiveAsyncPy3(const bp::object& replyCallback) {
+        //            SignalSlotableWrap::RequestorWrap(this).receiveAsyncPy3(replyCallback);
+        //        }
+        //
+        //        void receivePy() {
+        //            SignalSlotableWrap::RequestorWrap(this).receivePy();
+        //        }
+        //
+        //        void receivePy1(bp::object& a1) {
+        //            SignalSlotableWrap::RequestorWrap(this).receivePy(a1);
+        //        }
+        //
+        //        void receivePy2(bp::object& a1, bp::object& a2) {
+        //            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2);
+        //        }
+        //
+        //        void receivePy3(bp::object& a1, bp::object& a2, bp::object& a3) {
+        //            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2, a3);
+        //        }
+        //
+        //        void receivePy4(bp::object& a1, bp::object& a2, bp::object& a3, bp::object& a4) {
+        //            SignalSlotableWrap::RequestorWrap(this).receivePy(a1, a2, a3, a4);
+        //        }
 
         void replyPy0() {
             registerReply(karabo::util::Hash());
@@ -425,99 +425,67 @@ namespace karathon {
             registerReply(reply);
         }
 
-        //        template <class T>
-        //        boost::shared_ptr<karabo::io::Input<T> > registerInputChannel(const std::string& name,
-        //                const std::string& type,
-        //                const karabo::util::Hash& config,
-        //                const bp::object& onRead,
-        //                const bp::object& onEndOfStream) {
-        //
-        //            karabo::io::AbstractInput::Pointer channel = karabo::io::Input<T>::create(type, config);
-        //            channel->setInstanceId(m_instanceId);
-        //            channel->setInputHandlerType("python", std::string(typeid (typename karabo::io::Input<T>).name()));
-        //            if (onRead != bp::object()) {
-        //                channel->registerIOEventHandler(onRead);
-        //            }
-        //            if (onEndOfStream != bp::object()) {
-        //                channel->registerEndOfStreamEventHandler(onEndOfStream);
-        //            }
-        //            m_inputChannels[name] = channel;
-        //            return boost::static_pointer_cast<karabo::io::Input<T> >(channel);
-        //
-        //        }
-        //
-        //        template <class T>
-        //        boost::shared_ptr<karabo::io::Output<T> > registerOutputChannel(const std::string& name,
-        //                const std::string& type,
-        //                const karabo::util::Hash& config,
-        //                const bp::object& onOutputPossibleHandler) {
-        //            using namespace karabo::util;
-        //
-        //            karabo::io::AbstractOutput::Pointer channel = karabo::io::Output<T>::create(type, config);
-        //
-        //            channel->setInstanceId(m_instanceId);
-        //            channel->setOutputHandlerType("python");
-        //            if (onOutputPossibleHandler != bp::object()) {
-        //                channel->registerIOEventHandler(onOutputPossibleHandler);
-        //            }
-        //            m_outputChannels[name] = channel;
-        //            return boost::static_pointer_cast<karabo::io::Output<T> >(channel);
-        //        }
-        //
-        //        template <class InputType>
-        //        boost::shared_ptr<InputType > createInputChannel(const std::string& name, const karabo::util::Hash& input,
-        //                const bp::object& onInputAvailableHandler, const bp::object& onEndOfStreamEventHandler) {
-        //            using namespace karabo::util;
-        //
-        //            karabo::io::AbstractInput::Pointer channel = InputType::createChoice(name, input);
-        //
-        //            channel->setInstanceId(m_instanceId);
-        //            channel->setInputHandlerType("python", std::string(typeid (InputType).name()));
-        //            if (onInputAvailableHandler != bp::object()) {
-        //                channel->registerIOEventHandler(onInputAvailableHandler);
-        //            }
-        //            if (onEndOfStreamEventHandler != bp::object()) {
-        //                channel->registerEndOfStreamEventHandler(onEndOfStreamEventHandler);
-        //            }
-        //            m_inputChannels[name] = channel;
-        //            return boost::static_pointer_cast<InputType >(channel);
-        //        }
-        //
-        //        template <class OutputType>
-        //        boost::shared_ptr<OutputType > createOutputChannel(const std::string& name, const karabo::util::Hash& input,
-        //                const bp::object& onOutputPossibleHandler) {
-        //            using namespace karabo::util;
-        //
-        //            karabo::io::AbstractOutput::Pointer channel = OutputType::createChoice(name, input);
-        //
-        //            channel->setInstanceId(m_instanceId);
-        //            channel->setOutputHandlerType("python");
-        //            if (onOutputPossibleHandler != bp::object()) {
-        //                channel->registerIOEventHandler(onOutputPossibleHandler);
-        //            }
-        //            m_outputChannels[name] = channel;
-        //            return boost::static_pointer_cast<OutputType>(channel);
-        //        }
-        //
-        //        bp::object getInputChannels() {
-        //            typedef std::map<std::string, karabo::io::AbstractInput::Pointer> InputChannels;
-        //            const InputChannels& ichannels = karabo::xms::SignalSlotable::getInputChannels();
-        //            bp::dict d;
-        //            for (InputChannels::const_iterator it = ichannels.begin(); it != ichannels.end(); ++it) {
-        //                d[it->first] = bp::object(it->second);
-        //            }
-        //            return bp::object(d);
-        //        }
-        //
-        //        bp::object getOutputChannels() {
-        //            typedef std::map<std::string, karabo::io::AbstractOutput::Pointer> OutputChannels;
-        //            const OutputChannels& ochannels = karabo::xms::SignalSlotable::getOutputChannels();
-        //            bp::dict d;
-        //            for (OutputChannels::const_iterator it = ochannels.begin(); it != ochannels.end(); ++it) {
-        //                d[it->first] = bp::object(it->second);
-        //            }
-        //            return bp::object(d);
-        //        }
+        karabo::xms::OutputChannel::Pointer
+        createOutputChannelPy(const std::string& channelName,
+                              const karabo::util::Hash& config,
+                              const bp::object& onOutputPossibleHandler = bp::object()) {
+            return createOutputChannel(channelName,
+                                       config,
+                                       boost::bind(&SignalSlotableWrap::proxyOnOutputPossibleHandler,
+                                                   this, onOutputPossibleHandler, _1));
+        }
+
+        void proxyOnOutputPossibleHandler(const bp::object& handler,
+                                          const karabo::xms::OutputChannel::Pointer& channel) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(channel));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        karabo::xms::InputChannel::Pointer
+        createInputChannelPy(const std::string& channelName,
+                             const karabo::util::Hash& config,
+                             const bp::object& onInputAvailableHandler = bp::object(),
+                             const bp::object& onEndOfStreamEventHandler = bp::object()) {
+            return createInputChannel(channelName,
+                                      config,
+                                      boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler,
+                                                  this, onInputAvailableHandler, _1),
+                                      boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler,
+                                                  this, onEndOfStreamEventHandler, _1));
+        }
+
+        void proxyOnInputAvailableHandler(const bp::object& handler,
+                                          const karabo::xms::InputChannel::Pointer& channel) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(channel));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
+
+        void proxyOnEndOfStreamEventHandler(const bp::object& handler,
+                                            const karabo::xms::InputChannel::Pointer& channel) {
+            ScopedGILAcquire gil;
+            try {
+                if (handler) handler(bp::object(channel));
+            } catch (const bp::error_already_set& e) {
+                if (PyErr_Occurred()) PyErr_Print();
+                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+            } catch (...) {
+                KARABO_RETHROW
+            }
+        }
 
         bp::object getBrokerHost() {
             return bp::object(getConnection()->getBrokerHostname() + ":" + karabo::util::toString(getConnection()->getBrokerPort()));
