@@ -7,8 +7,9 @@ from asyncio import set_event_loop
 import IPython
 
 from karabo.device_client import (
-    getDevice, waitUntil, waitUntilNew, setNoWait, executeNoWait,
-    DeviceClientBase, getDevices, getClasses, getServers, instantiate)
+    getDevice, waitUntil, waitUntilNew, setWait, setNoWait, execute,
+    executeNoWait, DeviceClientBase, getDevices, getClasses, getServers,
+    instantiate, connectDevice, shutdown)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
 
@@ -38,6 +39,6 @@ ip = IPython.get_ipython()
 ip.set_hook("complete_command", completer, re_key=".*getDevice")
 
 
-__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setNoWait",
-           "executeNoWait", "getDevices", "getClasses", "getServers",
-           "instantiate"]
+__all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
+       "execute", "executeNoWait", "getDevices", "getClasses",
+       "getServers", "instantiate", "connectDevice", "shutdown"]
