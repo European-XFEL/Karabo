@@ -3,6 +3,7 @@
 import karabo
 
 from asyncio import set_event_loop
+import re
 
 import IPython
 
@@ -29,14 +30,37 @@ class DeviceClient(Macro, DeviceClientBase):
                 raise AttributeError('Unknown device "{}"'.format(name))
 
 
-def completer(self, line):
-    return list(devices.systemTopology["device"])
-
 devices = DeviceClient()
 set_event_loop(NoEventLoop(devices))
 
 ip = IPython.get_ipython()
-ip.set_hook("complete_command", completer, re_key=".*getDevice")
+
+
+def device_completer(self, line):
+    return list(devices.systemTopology["device"])
+
+
+def server_completer(self, line):
+    return list(devices.systemTopology["server"])
+
+
+first_param = re.compile("\"[^\"]*\"|'[^']*'")
+
+def class_completer(self, line):
+    param = first_param.search(line.line)
+    if param:
+        return devices.systemTopology["server"][param.group(0)[1:-1],
+                                                "deviceClasses"]
+    return []
+
+
+ip.set_hook("complete_command", device_completer,
+            re_key=".*((get|connect)Device|execute(NoWait)?|"
+                   "set(No)?Wait|shutdown)")
+ip.set_hook("complete_command", server_completer,
+            re_key=".*instantiate")
+ip.set_hook("complete_command", class_completer,
+            re_key=".*instantiate\([\"'].*[\"'],")
 
 
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
