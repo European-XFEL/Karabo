@@ -523,6 +523,8 @@ void exportPyXmsInputOutputChannel() {
         bp::class_<Data, boost::shared_ptr<Data> >("Data", bp::init<>())
 
                 .def(bp::init<const Hash&>())
+        
+                .def(bp::init<const string&, const Hash&>())
 
                 .def(bp::init<const Hash::Pointer&>())
 
