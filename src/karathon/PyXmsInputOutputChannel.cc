@@ -49,6 +49,10 @@ namespace karathon {
         static bp::object hash(const boost::shared_ptr<karabo::xms::Data>& self) {
             return Wrapper::toObject(self->hash());
         }
+        
+        static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self) {
+            return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(*self));
+        }
     };
 
 
@@ -543,6 +547,10 @@ void exportPyXmsInputOutputChannel() {
                 .def(bp::self_ns::str(bp::self))
 
                 .def(bp::self_ns::repr(bp::self))
+
+                .def("__copy__", &karathon::DataWrap().copy)
+
+                .def("__deepcopy__", &karathon::DataWrap().copy)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(Data)
                 ;
