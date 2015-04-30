@@ -353,6 +353,18 @@ def instantiate(serverId, classId, deviceId="", configuration=Hash(),
 
 
 @synchronize
+def instantiateNoWait(serverId, classId, deviceId="", configuration=Hash(),
+                **kwargs):
+    """Instantiate and configure a device on a running server
+
+    Non-waiting version of :func:`instantiate`"""
+    configuration.update(kwargs)
+    h = Hash("classId", classId, "deviceId", deviceId,
+             "configuration", configuration)
+    get_instance()._ss.emit("call", {serverId: ["slotStartDevice"]}, h)
+
+
+@synchronize
 def shutdown(device):
     """shut down the given device
 
@@ -361,6 +373,16 @@ def shutdown(device):
         device = device._deviceId
     ok = yield from get_instance().call(device, "slotKillDevice")
     return ok
+
+
+@synchronize
+def shutdownNoWait(device):
+    """shut down the given device
+
+    not waiting version of :func:`shutdown`"""
+    if isinstance(device, Proxy):
+        device = device._deviceId
+    get_instance()._ss.emit("call", {device: ["slotKillDevice"]})
 
 
 @synchronize
