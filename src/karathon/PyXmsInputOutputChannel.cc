@@ -34,16 +34,6 @@ namespace karathon {
         }
 
 
-        static karabo::xms::NDArray getNodeAsNDArray(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
-            return self->getNode<karabo::xms::NDArray>(key);
-        }
-
-
-        static karabo::xms::ImageData getNodeAsImageData(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
-            return self->getNode<karabo::xms::ImageData>(key);
-        }
-
-
         static bp::object get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
             return Wrapper::toObject(self->hash()->getNode(key).getValueAsAny());
         }
@@ -796,10 +786,6 @@ void exportPyXmsInputOutputChannel() {
                 .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
 
                 .def("getNode", &karathon::DataWrap().getNode, (bp::arg("key")))
-
-                .def("getNodeAsNDArray", &karathon::DataWrap().getNodeAsNDArray, (bp::arg("key")))
-
-                .def("getNodeAsImageData", &karathon::DataWrap().getNodeAsImageData, (bp::arg("key")))
 
                 .def("get", &karathon::DataWrap().get, (bp::arg("key")))
 
