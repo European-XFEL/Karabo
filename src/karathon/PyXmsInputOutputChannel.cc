@@ -33,13 +33,16 @@ namespace karathon {
             return self->getNode<karabo::util::Hash::Pointer>(key);
         }
 
+
         static karabo::xms::NDArray getNodeAsNDArray(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
             return self->getNode<karabo::xms::NDArray>(key);
         }
 
+
         static karabo::xms::ImageData getNodeAsImageData(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
             return self->getNode<karabo::xms::ImageData>(key);
         }
+
 
         static bp::object get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
             return Wrapper::toObject(self->hash()->getNode(key).getValueAsAny());
@@ -56,7 +59,8 @@ namespace karathon {
         static bp::object hash(const boost::shared_ptr<karabo::xms::Data>& self) {
             return Wrapper::toObject(self->hash());
         }
-        
+
+
         static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self) {
             return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(*self));
         }
@@ -67,8 +71,8 @@ namespace karathon {
 
 
         NDArrayWrap(const bp::object& obj, const bool copy = true,
-                    const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                    const bool isBigEndian = karabo::util::isBigEndian()) {
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const bool isBigEndian = karabo::util::isBigEndian()) {
 
             using namespace karabo::util;
 
@@ -113,8 +117,8 @@ namespace karathon {
 
 
         static boost::shared_ptr<NDArray> make(bp::object& obj, const bool copy = true,
-                                               const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                                               const bool isBigEndian = karabo::util::isBigEndian()) {
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const bool isBigEndian = karabo::util::isBigEndian()) {
             return boost::shared_ptr<NDArrayWrap>(new NDArrayWrap(obj, copy, dimensions, isBigEndian));
         }
 
@@ -124,47 +128,167 @@ namespace karathon {
         }
 
 
-        static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& data, const bool copy) {
-            boost::any a;
-            Wrapper::toAny(data, a);
-            if (a.type() == typeid (std::vector<bool>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: VECTOR_BOOL"); //self->setData(boost::any_cast<std::vector<bool> >(a), copy);
-            else if (a.type() == typeid (std::vector<char>))
-                self->setData(boost::any_cast<std::vector<char> >(a), copy);
-            else if (a.type() == typeid (std::vector<signed char>))
-                self->setData(boost::any_cast < std::vector<signed char> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned char>))
-                self->setData(boost::any_cast<std::vector<unsigned char> >(a), copy);
-            else if (a.type() == typeid (std::vector<short>))
-                self->setData(boost::any_cast<std::vector<short> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned short>))
-                self->setData(boost::any_cast<std::vector<unsigned short> >(a), copy);
-            else if (a.type() == typeid (std::vector<int>))
-                self->setData(boost::any_cast<std::vector<int> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned int>))
-                self->setData(boost::any_cast<std::vector<unsigned int> >(a), copy);
-            else if (a.type() == typeid (std::vector<long long>))
-                self->setData(boost::any_cast<std::vector<long long> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned long long>))
-                self->setData(boost::any_cast<std::vector<unsigned long long> >(a), copy);
-            else if (a.type() == typeid (std::vector<float>))
-                self->setData(boost::any_cast<std::vector<float> >(a), copy);
-            else if (a.type() == typeid (std::vector<double>))
-                self->setData(boost::any_cast<std::vector<double> >(a), copy);
-            else if (a.type() == typeid (std::vector<std::string>))
-                self->setData(boost::any_cast<std::vector<std::string> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::CppNone>))
-                self->setData(boost::any_cast<std::vector<karabo::util::CppNone> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::xip::RawImageData>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: RawImageData"); //self->setData(boost::any_cast<std::vector<karabo::xip::RawImageData> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Hash>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Hash"); //self->setData(boost::any_cast<std::vector<karabo::util::Hash> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Hash::Pointer>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Hash::Pointer"); //self->setData(boost::any_cast<std::vector<karabo::util::Hash::Pointer> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Schema>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Schema"); //self->setData(boost::any_cast<std::vector<karabo::util::Schema> >(a), copy);
-            else
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+        static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj, const bool copy) {
+            if (PyBytes_Check(obj.ptr())) {
+                size_t size = PyBytes_Size(obj.ptr());
+                char* data = PyBytes_AsString(obj.ptr());
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyByteArray_Check(obj.ptr())) {
+                size_t size = PyByteArray_Size(obj.ptr());
+                char* data = PyByteArray_AsString(obj.ptr());
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyUnicode_Check(obj.ptr())) {
+                Py_ssize_t size;
+                const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyArray_Check(obj.ptr())) {
+                PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+                int nd = PyArray_NDIM(arr);
+                npy_intp* shapes = PyArray_DIMS(arr);
+                int nelems = 1;
+                for (int i = 0; i < nd; i++) nelems *= shapes[i];
+                PyArray_Descr* dtype = PyArray_DESCR(arr);
+                switch (dtype->type_num) {
+                    case NPY_BOOL:
+                    {
+                        bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_SHORT:
+                    {
+                        short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_USHORT:
+                    {
+                        unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_INT:
+                    {
+                        int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_UINT:
+                    {
+                        unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_LONG:
+                    {
+                        if (dtype->elsize == 4) {
+                            int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        } else {
+                            long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        }
+                        return;
+                    }
+                    case NPY_ULONG:
+                    {
+                        if (dtype->elsize == 4) {
+                            unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        } else {
+                            unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        }
+                        return;
+                    }
+                    case NPY_LONGLONG:
+                    {
+                        long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_ULONGLONG:
+                    {
+                        unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_FLOAT:
+                    {
+                        float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_DOUBLE:
+                    {
+                        double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    default:
+                        std::cout << "ndarray dtype = " << dtype->type_num << std::endl;
+                        break;
+                }
+                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type in numpy.ndarray");
+            }
+            if (PyList_Check(obj.ptr())) {
+                bp::ssize_t size = bp::len(obj);
+                if (size == 0) {
+                    self->setData((char*) 0, 0);
+                    return;
+                }
+                bp::object list0 = obj[0];
+                if (PyLong_Check(list0.ptr())) {
+                    try {
+                        std::vector<int> v(size);
+                        for (bp::ssize_t i = 0; i < size; ++i) {
+                            v[i] = static_cast<int> (bp::extract<int>(obj[i]));
+                        }
+                        self->setData(v, copy);
+                        return;
+                    } catch (...) {
+                        try {
+                            std::vector<unsigned int> v(size);
+                            for (bp::ssize_t i = 0; i < size; ++i) {
+                                v[i] = static_cast<unsigned int> (bp::extract<unsigned int>(obj[i]));
+                            }
+                            self->setData(v, copy);
+                            return;
+                        } catch (...) {
+                            try {
+                                std::vector<long long> v(size);
+                                for (bp::ssize_t i = 0; i < size; ++i) {
+                                    v[i] = static_cast<long long> (bp::extract<long long>(obj[i]));
+                                }
+                                self->setData(v, copy);
+                                return;
+                            } catch (...) {
+                                std::vector<unsigned long long> v(size);
+                                for (bp::ssize_t i = 0; i < size; ++i) {
+                                    v[i] = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj[i]));
+                                }
+                                self->setData(v, copy);
+                                return;
+                            }
+                        }
+                    }
+                }
+                if (PyFloat_Check(list0.ptr())) {
+                    std::vector<double> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<double>(obj[i]);
+                    }
+                    self->setData(v, copy);
+                    return;
+                }
+            }
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
         }
 
 
@@ -177,9 +301,14 @@ namespace karathon {
         static void setDimensionsPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj) {
             if (bp::extract<karathon::DimsWrap>(obj).check()) {
                 self->setDimensions(static_cast<karabo::util::Dims> (bp::extract<karathon::DimsWrap>(obj)));
-                return;
-            }
-            throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+            } else if (bp::extract<bp::list>(obj).check()) {
+                karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+                self->setDimensions(dims);
+            } else if (bp::extract<bp::tuple>(obj).check()) {
+                karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
+                self->setDimensions(dims);
+            } else
+                throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
         }
 
 
@@ -194,8 +323,8 @@ namespace karathon {
             } else
                 throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
         }
-        
-        
+
+
         static bp::object getDimensionScalesPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
             const std::vector<std::vector<std::string> >& scales = self->getDimensionScales();
             bp::list pylist;
@@ -215,8 +344,8 @@ namespace karathon {
 
 
         static karabo::xms::NDArrayElement& setDefaultValue(const boost::shared_ptr<karabo::xms::NDArrayElement>& self,
-                                                            const std::string& subKey,
-                                                            const bp::object& defaultValue) {
+                const std::string& subKey,
+                const bp::object& defaultValue) {
             boost::any anyValue;
             karathon::Wrapper::toAny(defaultValue, anyValue);
             return self->setDefaultValue(subKey, anyValue);
@@ -228,9 +357,9 @@ namespace karathon {
 
 
         ImageDataWrap(const bp::object& obj, const bool copy = true,
-                      const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                      const karabo::xms::EncodingType encoding = karabo::xms::Encoding::GRAY,
-                      const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED) {
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const karabo::xms::EncodingType encoding = karabo::xms::Encoding::GRAY,
+                const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED) {
 
             using namespace karabo::util;
             using namespace karabo::xms;
@@ -322,9 +451,9 @@ namespace karathon {
 
 
         static boost::shared_ptr<ImageData> make(bp::object& obj, const bool copy = true,
-                                                 const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                                                 const karabo::xms::EncodingType encoding = karabo::xms::Encoding::GRAY,
-                                                 const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED) {
+                const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                const karabo::xms::EncodingType encoding = karabo::xms::Encoding::GRAY,
+                const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED) {
             return boost::shared_ptr<ImageDataWrap>(new ImageDataWrap(obj, copy, dimensions, encoding, channelSpace));
         }
 
@@ -334,47 +463,166 @@ namespace karathon {
         }
 
 
-        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& data, const bool copy) {
-            boost::any a;
-            Wrapper::toAny(data, a);
-            if (a.type() == typeid (std::vector<bool>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: VECTOR_BOOL"); //self->setData(boost::any_cast<std::vector<bool> >(a), copy);
-            else if (a.type() == typeid (std::vector<char>))
-                self->setData(boost::any_cast<std::vector<char> >(a), copy);
-            else if (a.type() == typeid (std::vector<signed char>))
-                self->setData(boost::any_cast < std::vector<signed char> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned char>))
-                self->setData(boost::any_cast<std::vector<unsigned char> >(a), copy);
-            else if (a.type() == typeid (std::vector<short>))
-                self->setData(boost::any_cast<std::vector<short> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned short>))
-                self->setData(boost::any_cast<std::vector<unsigned short> >(a), copy);
-            else if (a.type() == typeid (std::vector<int>))
-                self->setData(boost::any_cast<std::vector<int> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned int>))
-                self->setData(boost::any_cast<std::vector<unsigned int> >(a), copy);
-            else if (a.type() == typeid (std::vector<long long>))
-                self->setData(boost::any_cast<std::vector<long long> >(a), copy);
-            else if (a.type() == typeid (std::vector<unsigned long long>))
-                self->setData(boost::any_cast<std::vector<unsigned long long> >(a), copy);
-            else if (a.type() == typeid (std::vector<float>))
-                self->setData(boost::any_cast<std::vector<float> >(a), copy);
-            else if (a.type() == typeid (std::vector<double>))
-                self->setData(boost::any_cast<std::vector<double> >(a), copy);
-            else if (a.type() == typeid (std::vector<std::string>))
-                self->setData(boost::any_cast<std::vector<std::string> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::CppNone>))
-                self->setData(boost::any_cast<std::vector<karabo::util::CppNone> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::xip::RawImageData>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: RawImageData"); //self->setData(boost::any_cast<std::vector<karabo::xip::RawImageData> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Hash>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Hash"); //self->setData(boost::any_cast<std::vector<karabo::util::Hash> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Hash::Pointer>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Hash::Pointer"); //self->setData(boost::any_cast<std::vector<karabo::util::Hash::Pointer> >(a), copy);
-            else if (a.type() == typeid (std::vector<karabo::util::Schema>))
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type: Schema"); //self->setData(boost::any_cast<std::vector<karabo::util::Schema> >(a), copy);
-            else
-                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+        static void setDataPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj, const bool copy) {
+            if (PyBytes_Check(obj.ptr())) {
+                size_t size = PyBytes_Size(obj.ptr());
+                char* data = PyBytes_AsString(obj.ptr());
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyByteArray_Check(obj.ptr())) {
+                size_t size = PyByteArray_Size(obj.ptr());
+                char* data = PyByteArray_AsString(obj.ptr());
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyUnicode_Check(obj.ptr())) {
+                Py_ssize_t size;
+                const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
+                self->setData(data, size, copy);
+                return;
+            }
+            if (PyArray_Check(obj.ptr())) {
+                PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+                int nd = PyArray_NDIM(arr);
+                npy_intp* shapes = PyArray_DIMS(arr);
+                int nelems = 1;
+                for (int i = 0; i < nd; i++) nelems *= shapes[i];
+                PyArray_Descr* dtype = PyArray_DESCR(arr);
+                switch (dtype->type_num) {
+                    case NPY_BOOL:
+                    {
+                        bool* data = reinterpret_cast<bool*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_SHORT:
+                    {
+                        short* data = reinterpret_cast<short*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_USHORT:
+                    {
+                        unsigned short* data = reinterpret_cast<unsigned short*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_INT:
+                    {
+                        int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_UINT:
+                    {
+                        unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_LONG:
+                    {
+                        if (dtype->elsize == 4) {
+                            int* data = reinterpret_cast<int*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        } else {
+                            long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        }
+                        return;
+                    }
+                    case NPY_ULONG:
+                    {
+                        if (dtype->elsize == 4) {
+                            unsigned int* data = reinterpret_cast<unsigned int*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        } else {
+                            unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
+                            self->setData(data, nelems, copy);
+                        }
+                        return;
+                    }
+                    case NPY_LONGLONG:
+                    {
+                        long long* data = reinterpret_cast<long long*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_ULONGLONG:
+                    {
+                        unsigned long long* data = reinterpret_cast<unsigned long long*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_FLOAT:
+                    {
+                        float* data = reinterpret_cast<float*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    case NPY_DOUBLE:
+                    {
+                        double* data = reinterpret_cast<double*> (PyArray_DATA(arr));
+                        self->setData(data, nelems, copy);
+                        return;
+                    }
+                    default:
+                        break;
+                }
+                throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type in numpy.ndarray");
+            }
+            if (PyList_Check(obj.ptr())) {
+                bp::ssize_t size = bp::len(obj);
+                if (size == 0) {
+                    self->setData((char*) 0, 0);
+                    return;
+                }
+                bp::object list0 = obj[0];
+                if (PyLong_Check(list0.ptr())) {
+                    try {
+                        std::vector<int> v(size);
+                        for (bp::ssize_t i = 0; i < size; ++i) {
+                            v[i] = static_cast<int> (bp::extract<int>(obj[i]));
+                        }
+                        self->setData(v, copy);
+                        return;
+                    } catch (...) {
+                        try {
+                            std::vector<unsigned int> v(size);
+                            for (bp::ssize_t i = 0; i < size; ++i) {
+                                v[i] = static_cast<unsigned int> (bp::extract<unsigned int>(obj[i]));
+                            }
+                            self->setData(v, copy);
+                            return;
+                        } catch (...) {
+                            try {
+                                std::vector<long long> v(size);
+                                for (bp::ssize_t i = 0; i < size; ++i) {
+                                    v[i] = static_cast<long long> (bp::extract<long long>(obj[i]));
+                                }
+                                self->setData(v, copy);
+                                return;
+                            } catch (...) {
+                                std::vector<unsigned long long> v(size);
+                                for (bp::ssize_t i = 0; i < size; ++i) {
+                                    v[i] = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj[i]));
+                                }
+                                self->setData(v, copy);
+                                return;
+                            }
+                        }
+                    }
+                }
+                if (PyFloat_Check(list0.ptr())) {
+                    std::vector<double> v(size);
+                    for (bp::ssize_t i = 0; i < size; ++i) {
+                        v[i] = bp::extract<double>(obj[i]);
+                    }
+                    self->setData(v, copy);
+                    return;
+                }
+            }
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
         }
 
 
@@ -389,6 +637,9 @@ namespace karathon {
                 self->setDimensions(bp::extract<karabo::util::Dims>(obj));
             } else if (bp::extract<bp::list>(obj).check()) {
                 karabo::util::Dims dims(Wrapper::fromPyListToStdVector<unsigned long long>(obj));
+                self->setDimensions(dims);
+            } else if (bp::extract<bp::tuple>(obj).check()) {
+                karabo::util::Dims dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(obj));
                 self->setDimensions(dims);
             } else
                 throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
@@ -427,15 +678,15 @@ namespace karathon {
 
 
         static karabo::xms::ImageDataElement& setDefaultValue(const boost::shared_ptr<karabo::xms::ImageDataElement>& self,
-                                                            const std::string& subKey,
-                                                            const bp::object& defaultValue) {
+                const std::string& subKey,
+                const bp::object& defaultValue) {
             boost::any anyValue;
             karathon::Wrapper::toAny(defaultValue, anyValue);
             return self->setDefaultValue(subKey, anyValue);
         }
     };
-    
-    
+
+
     struct OutputChannelWrap {
 
 
@@ -445,17 +696,18 @@ namespace karathon {
 
 
         static void write(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
-            boost::any any;
-            Wrapper::toAny(data, any);
-            if (any.type() == typeid (karabo::util::Hash)) {
+            if (bp::extract<karabo::xms::ImageData>(data).check()) {
                 ScopedGILRelease nogil;
-                self->write(boost::any_cast<karabo::util::Hash>(any));
-            } else if (any.type() == typeid (boost::shared_ptr<karabo::util::Hash>)) {
+                self->write(bp::extract<karabo::xms::ImageData>(data));
+            } else if (bp::extract<karabo::xms::NDArray>(data).check()) {
                 ScopedGILRelease nogil;
-                self->write(boost::any_cast<boost::shared_ptr<karabo::util::Hash> >(any));
-            } else if (any.type() == typeid (karabo::xms::Data)) {
+                self->write(bp::extract<karabo::xms::NDArray>(data));
+            } else if (bp::extract<karabo::xms::Data>(data).check()) {
                 ScopedGILRelease nogil;
-                self->write(boost::any_cast<karabo::xms::Data>(any));
+                self->write(bp::extract<karabo::xms::Data>(data));
+            } else if (bp::extract<karabo::util::Hash::Pointer>(data).check()) {
+                ScopedGILRelease nogil;
+                self->write(bp::extract<karabo::util::Hash::Pointer>(data));
             } else
                 throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
         }
@@ -534,7 +786,7 @@ void exportPyXmsInputOutputChannel() {
         bp::class_<Data, boost::shared_ptr<Data> >("Data", bp::init<>())
 
                 .def(bp::init<const Hash&>())
-        
+
                 .def(bp::init<const string&, const Hash&>())
 
                 .def(bp::init<const Hash::Pointer&>())
@@ -568,7 +820,7 @@ void exportPyXmsInputOutputChannel() {
     }
 
     {
-        bp::class_<NDArray, boost::shared_ptr<NDArray> >("NDArray", bp::init<>())
+        bp::class_<NDArray, boost::shared_ptr<NDArray>, bp::bases<Data> >("NDArray", bp::init<>())
 
                 .def(bp::init<const Hash&>())
 
@@ -577,13 +829,13 @@ void exportPyXmsInputOutputChannel() {
                 .def("__init__", bp::make_constructor(&karathon::NDArrayWrap::make,
                                                       bp::default_call_policies(),
                                                       (bp::arg("ndarray"),
-                                                      bp::arg("copyFlag") = true,
+                                                      bp::arg("copyFlag"),
                                                       bp::arg("dims_obj") = karabo::util::Dims(),
                                                       bp::arg("isBigEndian") = karabo::util::isBigEndian())))
 
                 .def("getData", &karathon::NDArrayWrap::getDataPy)
 
-                .def("setData", &karathon::NDArrayWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag")))
+                .def("setData", &karathon::NDArrayWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag") = true))
 
                 .def("getDimensions", &karathon::NDArrayWrap::getDimensionsPy)
 
@@ -598,7 +850,7 @@ void exportPyXmsInputOutputChannel() {
                 .def("isBigEndian", &NDArray::isBigEndian)
 
                 .def("getDimensionScales", &karathon::NDArrayWrap::getDimensionScalesPy)
-                
+
                 .def("setDimensionScales", &NDArray::setDimensionScales, (bp::arg("scales")))
 
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(NDArray)
@@ -607,7 +859,7 @@ void exportPyXmsInputOutputChannel() {
 
     {
         bp::implicitly_convertible< Schema &, NDArrayElement >();
-        bp::class_<NDArrayElement> ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+        bp::class_<NDArrayElement /*, bp::bases<DataElement<NDArrayElement, NDArray> >*/ > ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
 
                 .def("key", &NDArrayElement::key
                      , (bp::arg("key"))
@@ -669,7 +921,7 @@ void exportPyXmsInputOutputChannel() {
                 .export_values()
                 ;
 
-        bp::class_<ImageData, boost::shared_ptr<ImageData> >("ImageData", bp::init<>())
+        bp::class_<ImageData, boost::shared_ptr<ImageData>, bp::bases<NDArray> >("ImageData", bp::init<>())
 
                 .def(bp::init<const Hash&>())
 
@@ -678,14 +930,14 @@ void exportPyXmsInputOutputChannel() {
                 .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make,
                                                       bp::default_call_policies(),
                                                       (bp::arg("ndarray"),
-                                                      bp::arg("copyFlag") = true,
+                                                      bp::arg("copyFlag"),
                                                       bp::arg("dims_obj") = karabo::util::Dims(),
                                                       bp::arg("encoding") = karabo::xms::Encoding::GRAY,
                                                       bp::arg("channelSpace") = karabo::xms::ChannelSpace::UNDEFINED)))
 
                 .def("getData", &karathon::ImageDataWrap::getDataPy)
 
-                .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag")))
+                .def("setData", &karathon::ImageDataWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag") = true))
 
                 .def("getDimensions", &karathon::ImageDataWrap::getDimensionsPy)
 
@@ -721,7 +973,7 @@ void exportPyXmsInputOutputChannel() {
 
     {
         bp::implicitly_convertible< Schema &, ImageDataElement >();
-        bp::class_<ImageDataElement> ("IMAGEDATA", bp::init<Schema & >((bp::arg("expected"))))
+        bp::class_<ImageDataElement /*, bp::bases<DataElement<ImageDataElement, ImageData> >*/ > ("IMAGEDATA", bp::init<Schema & >((bp::arg("expected"))))
 
                 .def("key", &ImageDataElement::key
                      , (bp::arg("key"))
@@ -740,14 +992,14 @@ void exportPyXmsInputOutputChannel() {
                 .def("setDimensions", &ImageDataElement::setDimensions
                      , (bp::arg("dimensions"))
                      , bp::return_internal_reference<> ())
-        
+
                 .def("setEncoding", &ImageDataElement::setEncoding
-                    , (bp::arg("encoding"))
-                    , bp::return_internal_reference<> ())
-        
+                     , (bp::arg("encoding"))
+                     , bp::return_internal_reference<> ())
+
                 .def("setChannelSpace", &ImageDataElement::setChannelSpace
-                    , (bp::arg("channelSpace"))
-                    , bp::return_internal_reference<> ())
+                     , (bp::arg("channelSpace"))
+                     , bp::return_internal_reference<> ())
                 ;
     }
 
@@ -794,7 +1046,7 @@ void exportPyXmsInputOutputChannel() {
                      , bp::return_internal_reference<> ())
 
                 .def("commit", &OutputChannelElement::commit, bp::return_internal_reference<> ())
-        
+
                 ;
     }
 
@@ -856,7 +1108,7 @@ void exportPyXmsInputOutputChannel() {
                      , bp::return_internal_reference<> ())
 
                 .def("commit", &InputChannelElement::commit, bp::return_internal_reference<> ())
-        
+
                 ;
     }
 }

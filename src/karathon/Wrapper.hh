@@ -322,12 +322,24 @@ namespace karathon {
 
         template<class T>
         static std::vector<T> fromPyListToStdVector(const bp::object & obj) {
-            const bp::list& l = bp::extract<bp::list > (obj);
-            bp::ssize_t size = bp::len(l);
+            const bp::list& lst = bp::extract<bp::list > (obj);
+            bp::ssize_t size = bp::len(lst);
 
             std::vector<T> v(size);
             for (bp::ssize_t i = 0; i < size; ++i) {
-                v[i] = bp::extract<T > (obj[i]);
+                v[i] = bp::extract<T > (lst[i]);
+            }
+            return v;
+        }
+
+        template<class T>
+        static std::vector<T> fromPyTupleToStdVector(const bp::object & obj) {
+            const bp::tuple& tpl = bp::extract<bp::tuple > (obj);
+            bp::ssize_t size = bp::len(tpl);
+
+            std::vector<T> v(size);
+            for (bp::ssize_t i = 0; i < size; ++i) {
+                v[i] = bp::extract<T > (tpl[i]);
             }
             return v;
         }
