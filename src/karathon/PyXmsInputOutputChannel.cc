@@ -707,12 +707,12 @@ namespace karathon {
     struct OutputChannelWrap {
 
 
-        static void registerIOEventHandler(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
+        static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
         }
 
 
-        static void write(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
+        static void writePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self, const bp::object& data) {
             if (bp::extract<karabo::xms::ImageData>(data).check()) {
                 ScopedGILRelease nogil;
                 self->write(bp::extract<karabo::xms::ImageData>(data));
@@ -730,13 +730,13 @@ namespace karathon {
         }
 
 
-        static void update(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
+        static void updatePy(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
             ScopedGILRelease nogil;
             self->update();
         }
 
 
-        static void signalEndOfStream(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
+        static void signalEndOfStreamPy(const boost::shared_ptr<karabo::xms::OutputChannel>& self) {
             ScopedGILRelease nogil;
             self->signalEndOfStream();
         }
@@ -746,22 +746,22 @@ namespace karathon {
     struct InputChannelWrap {
 
 
-        static void registerIOEventHandler(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
+        static void registerIOEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
             self->registerIOEventHandler(handler);
         }
 
 
-        static void registerEndOfStreamEventHandler(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
+        static void registerEndOfStreamEventHandlerPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const bp::object& handler) {
             self->registerEndOfStreamEventHandler(handler);
         }
 
 
-        static bp::object getConnectedOutputChannels(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
+        static bp::object getConnectedOutputChannelsPy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
             return Wrapper::toObject(self->getConnectedOutputChannels());
         }
 
 
-        static bp::object read(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx) {
+        static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx) {
             karabo::util::Hash hash;
             {
                 ScopedGILRelease nogil;
@@ -771,19 +771,19 @@ namespace karathon {
         }
 
 
-        static void connect(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo) {
+        static void connectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo) {
             ScopedGILRelease nogil;
             self->connect(outputChannelInfo);
         }
 
 
-        static void disconnect(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo) {
+        static void disconnectPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, const karabo::util::Hash& outputChannelInfo) {
             ScopedGILRelease nogil;
             self->disconnect(outputChannelInfo);
         }
 
 
-        static void update(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
+        static void updatePy(const boost::shared_ptr<karabo::xms::InputChannel>& self) {
             ScopedGILRelease nogil;
             self->update();
         }
@@ -1025,15 +1025,15 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("getInstanceId", &OutputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
 
-                .def("registerIOEventHandler", &karathon::OutputChannelWrap().registerIOEventHandler)
+                .def("registerIOEventHandler", &karathon::OutputChannelWrap().registerIOEventHandlerPy)
 
                 .def("getInformation", &OutputChannel::getInformation)
 
-                .def("write", &karathon::OutputChannelWrap().write, (bp::arg("data")))
+                .def("write", &karathon::OutputChannelWrap().writePy, (bp::arg("data")))
 
-                .def("update", &karathon::OutputChannelWrap().update)
+                .def("update", &karathon::OutputChannelWrap().updatePy)
 
-                .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStream)
+                .def("signalEndOfStream", &karathon::OutputChannelWrap().signalEndOfStreamPy)
 
                 KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel)
                 ;
@@ -1074,31 +1074,31 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("getInstanceId", &InputChannel::getInstanceId, bp::return_value_policy<bp::copy_const_reference > ())
 
-                .def("registerIOEventHandler", &karathon::InputChannelWrap().registerIOEventHandler)
+                .def("registerIOEventHandler", &karathon::InputChannelWrap().registerIOEventHandlerPy)
 
-                .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandler)
+                .def("registerEndOfStreamEventHandler", &karathon::InputChannelWrap().registerEndOfStreamEventHandlerPy)
 
                 .def("triggerIOEvent", &InputChannel::triggerIOEvent)
 
                 .def("triggerEndOfStreamEvent", &InputChannel::triggerEndOfStreamEvent)
 
-                .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannels)
+                .def("getConnectedOutputChannels", &karathon::InputChannelWrap().getConnectedOutputChannelsPy)
 
-                .def("read", &karathon::InputChannelWrap().read, (bp::arg("idx")))
+                .def("read", &karathon::InputChannelWrap().readPy, (bp::arg("idx")))
 
                 .def("size", &InputChannel::size)
 
                 .def("getMinimumNumberOfData", &InputChannel::getMinimumNumberOfData)
 
-                .def("connect", &karathon::InputChannelWrap().connect, (bp::arg("outputChannelInfo")))
+                .def("connect", &karathon::InputChannelWrap().connectPy, (bp::arg("outputChannelInfo")))
 
-                .def("disconnect", &karathon::InputChannelWrap().disconnect, (bp::arg("outputChannelInfo")))
+                .def("disconnect", &karathon::InputChannelWrap().disconnectPy, (bp::arg("outputChannelInfo")))
 
                 .def("canCompute", &InputChannel::canCompute)
 
-                .def("update", &karathon::InputChannelWrap().update)
+                .def("update", &karathon::InputChannelWrap().updatePy)
 
-                KARABO_PYTHON_FACTORY_CONFIGURATOR(OutputChannel)
+                KARABO_PYTHON_FACTORY_CONFIGURATOR(InputChannel)
                 ;
     }
 
