@@ -636,6 +636,33 @@ namespace karathon {
         }
 
 
+        static void setDimensionTypesPy(const boost::shared_ptr<karabo::xms::ImageData>& self, const bp::object& obj) {
+            if (bp::extract<bp::list>(obj).check()) {
+                bp::ssize_t size = bp::len(obj);
+                std::vector<int> dimTypes(size);
+                for (int i = 0; i < size; i++) {
+                    dimTypes[i] = bp::extract<int>(obj[i]);
+                }
+                self->setDimensionTypes(dimTypes);
+            } else
+                throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
+        }
+
+
+        static bp::object getDimensionScalesPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
+            const std::vector<std::vector<std::string> >& scales = self->getDimensionScales();
+            bp::list pylist;
+            for (size_t i = 0; i < scales.size(); i++) {
+                bp::list pyraw;
+                for (size_t j = 0; j < scales[i].size(); j++) {
+                    pyraw.append(bp::str(scales[i][j]));
+                }
+                pylist.append(pyraw);
+            }
+            return pylist;
+        }
+
+
         static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
             karabo::util::Dims offsets = self->getROIOffsets();
             return Wrapper::fromStdVectorToPyList(offsets.toVector());
@@ -845,7 +872,7 @@ void exportPyXmsInputOutputChannel() {
 
     {
         bp::implicitly_convertible< Schema &, NDArrayElement >();
-        bp::class_<NDArrayElement /*, bp::bases<DataElement<NDArrayElement, NDArray> >*/ > ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
+        bp::class_<NDArrayElement > ("NDARRAY_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
 
                 .def("key", &NDArrayElement::key
                      , (bp::arg("key"))
@@ -929,7 +956,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("setDimensions", &karathon::ImageDataWrap::setDimensionsPy, (bp::arg("dims")))
 
-                //.def("setDimensionTypes", &karathon::ImageDataWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
+                .def("setDimensionTypes", &karathon::ImageDataWrap::setDimensionTypesPy, (bp::arg("listOfDimTypes")))
 
                 .def("getDataType", &ImageData::getDataType, bp::return_value_policy<bp::copy_const_reference > ())
 
@@ -951,7 +978,9 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("toLittleEndian", &ImageData::toLittleEndian)
 
-                //.def("getDimensionScales", &karathon::ImageDataWrap::getDimensionScalesPy)
+                .def("getDimensionScales", &karathon::ImageDataWrap::getDimensionScalesPy)
+
+                .def("setDimensionScales", &ImageData::setDimensionScales, (bp::arg("scales")))
 
                 //KARABO_PYTHON_FACTORY_CONFIGURATOR(ImageData)
                 ;
@@ -959,7 +988,7 @@ void exportPyXmsInputOutputChannel() {
 
     {
         bp::implicitly_convertible< Schema &, ImageDataElement >();
-        bp::class_<ImageDataElement /*, bp::bases<DataElement<ImageDataElement, ImageData> >*/ > ("IMAGEDATA", bp::init<Schema & >((bp::arg("expected"))))
+        bp::class_<ImageDataElement > ("IMAGEDATA", bp::init<Schema & >((bp::arg("expected"))))
 
                 .def("key", &ImageDataElement::key
                      , (bp::arg("key"))
