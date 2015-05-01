@@ -25,7 +25,10 @@ namespace karathon {
         DimsWrap(const std::vector<unsigned long long>& vec) : karabo::util::Dims(vec) {
         }
 
-        DimsWrap(bp::list list) : karabo::util::Dims(convertFromListToVector(list)) {
+        DimsWrap(const bp::list& list) : karabo::util::Dims(Wrapper::fromPyListToStdVector<unsigned long long>(list)) {
+        }
+
+        DimsWrap(const bp::tuple& list) : karabo::util::Dims(Wrapper::fromPyTupleToStdVector<unsigned long long>(list)) {
         }
 
         DimsWrap(unsigned long long xSize) : karabo::util::Dims(xSize) {
