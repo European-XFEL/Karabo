@@ -88,7 +88,7 @@ namespace karathon {
             npy_intp* shapes = PyArray_SHAPE(arr);
             std::vector<unsigned long long> tmp(rank);
             for (int i = 0; i < rank; i++) {
-                tmp[i] = shapes[i];
+                tmp[i] = shapes[rank - i - 1];
             }
 
             if (dimensions.size() == 0) {
