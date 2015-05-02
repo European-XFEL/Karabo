@@ -1764,7 +1764,7 @@ namespace karabo {
             if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
             Hash channelConfig = config.get<Hash>(channelName);
             if (channelConfig.has("schema")) channelConfig.erase("schema");
-            InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", config.get<Hash>(channelName));
+            InputChannel::Pointer channel = Configurator<InputChannel>::create("InputChannel", channelConfig);
             channel->setInstanceId(m_instanceId);
             if (onInputAvailableHandler) {
                 channel->registerIOEventHandler(onInputAvailableHandler);
