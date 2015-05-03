@@ -54,44 +54,35 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 };
 
 
-class ValidatorWrap : Validator {
+class ValidatorWrap {
 
 public:
 
-    ValidatorWrap() : Validator() {
+    static bp::object validate(Validator& self, const Schema& schema, const Hash& configuration, const Timestamp& stamp) {
+        Hash::Pointer validated = Hash::Pointer(new Hash);
+        pair<bool, string> result = self.validate(schema, configuration, *validated, stamp);
+        if (result.first)
+            return bp::object(validated);
+        throw KARABO_PYTHON_EXCEPTION(result.second);
     }
 
-    bp::object validate(const bp::object& schemaObj, const bp::object& confObj, const bp::object& stampObj) {
-        Hash validated;
-        if (bp::extract<Schema>(schemaObj).check() && bp::extract<Hash>(confObj).check() && bp::extract<Timestamp>(stampObj).check()) {
-            const Schema& schema = bp::extract<Schema>(schemaObj);
-            const Hash& configuration = bp::extract<Hash>(confObj);
-            const Timestamp& stamp = bp::extract<Timestamp>(stampObj);
-            pair<bool, string> result = Validator::validate(schema, configuration, validated, stamp);
-            if (result.first)
-                return bp::object(validated);
-            throw KARABO_PYTHON_EXCEPTION(result.second);
-        }
-        throw KARABO_PYTHON_EXCEPTION("Python argument's types for 'validate' method are not 'Schema' and 'Hash'.");
-    }
-
-    void setValidationRules(const bp::object& obj) {
+    static void setValidationRules(Validator& self, const bp::object& obj) {
         if (bp::extract<Validator::ValidationRules>(obj).check()) {
             const Validator::ValidationRules& rules = bp::extract<Validator::ValidationRules>(obj);
-            Validator::setValidationRules(rules);
+            self.setValidationRules(rules);
         }
     }
 
-    bp::object getValidationRules() {
-        return bp::object(Validator::getValidationRules());
+    static bp::object getValidationRules(Validator& self) {
+        return bp::object(self.getValidationRules());
     }
 
-    bp::object hasParametersInWarnOrAlarm() {
-        return bp::object(hasParametersInWarnOrAlarm());
+    static bp::object hasParametersInWarnOrAlarm(Validator& self) {
+        return bp::object(self.hasParametersInWarnOrAlarm());
     }
 
-    bp::object getParametersInWarnOrAlarm() {
-        return bp::object(getParametersInWarnOrAlarm());
+    static bp::object getParametersInWarnOrAlarm(Validator& self) {
+        return bp::object(self.getParametersInWarnOrAlarm());
     }
 };
 
@@ -1898,7 +1889,8 @@ void exportPyUtilSchema() {
                 .def_readwrite("injectTimestamps", &Validator::ValidationRules::injectTimestamps)
                 ;
 
-        bp::class_<ValidatorWrap>("Validator", bp::init<>())
+        bp::class_<Validator>("Validator", bp::init<>())
+                .def(bp::init<const Validator::ValidationRules>())
                 .def("validate", &ValidatorWrap::validate, (bp::arg("schema"), bp::arg("configuration"), bp::arg("timestamp") = Timestamp()))
                 .def("setValidationRules", &ValidatorWrap::setValidationRules, (bp::arg("rules")))
                 .def("getValidationRules", &ValidatorWrap::getValidationRules)
