@@ -7,7 +7,7 @@ from functools import wraps
 
 from karabo.eventloop import EventLoop
 from karabo.python_device import Device
-from karabo.device_client import (waitUntilNew, getDevice, waitUntil, set,
+from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
 from karabo import Slot, Integer
 
@@ -138,7 +138,7 @@ class Local(Device):
     @coroutine
     def setwait(self):
         d = yield from getDevice("remote")
-        yield from set(d, value=200, counter=300)
+        yield from setWait(d, value=200, counter=300)
 
     @Slot()
     @coroutine
