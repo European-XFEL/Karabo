@@ -109,7 +109,7 @@ namespace karabo {
 
 
         const std::string& RawImageData::getType() const {
-            return m_hash.get<string>("type");
+            return m_hash.get<string>("dataType");
         }
 
 
