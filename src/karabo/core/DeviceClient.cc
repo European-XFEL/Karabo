@@ -337,13 +337,13 @@ namespace karabo {
         void DeviceClient::initTopology() {
             if (!m_topologyInitialized) {
                 this->checkMaster();
-                this->cacheAvailableInstances();
                 SignalSlotable::Pointer p = m_signalSlotable.lock();
                 p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceNew, this, _1, _2), "slotInstanceNew", SignalSlotable::GLOBAL);
                 p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceUpdated, this, _1, _2), "slotInstanceUpdated", SignalSlotable::GLOBAL);
                 p->registerSlot<string, Hash > (boost::bind(&karabo::core::DeviceClient::slotInstanceGone, this, _1, _2), "slotInstanceGone", SignalSlotable::GLOBAL);
                 p->registerInstanceNotAvailableHandler(boost::bind(&karabo::core::DeviceClient::onInstanceNotAvailable, this, _1, _2));
                 p->registerInstanceAvailableAgainHandler(boost::bind(&karabo::core::DeviceClient::onInstanceAvailableAgain, this, _1, _2));
+                this->cacheAvailableInstances();
                 m_topologyInitialized = true;
             }
         }
