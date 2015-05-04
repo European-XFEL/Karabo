@@ -31,7 +31,7 @@ class DisplayImage(DisplayWidget):
 
 
     def valueChanged(self, box, value, timestamp=None):
-        if value is None or value.type == '0':
+        if value is None or value.dataType == '0':
             return
 
         if self.value is not None or value is self.value:
@@ -41,7 +41,7 @@ class DisplayImage(DisplayWidget):
             return
 
         # Data type information
-        type = value.type
+        type = value.dataType
         try:
             type = hashtypes.Type.fromname[type].numpy
         except KeyError as e:

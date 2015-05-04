@@ -70,7 +70,7 @@ class DisplayImageElement(DisplayWidget):
             return
 
         # Data type information
-        type = value.type
+        type = value.dataType
         try:
             type = hashtypes.Type.fromname[type].numpy
         except KeyError as e:
