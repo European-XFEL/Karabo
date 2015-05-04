@@ -18,6 +18,7 @@
 #include "core/CameraFsm.hh"
 #include "core/NoFsm.hh"
 #include "core/MotorInterface.hh"
+#include "core/CameraInterface.hh"
 #include "core/DeviceServer.hh"
 #include "core/Runner.hh"
 

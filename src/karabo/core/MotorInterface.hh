@@ -30,7 +30,7 @@ namespace karabo {
                 using namespace karabo::util;
                 
                 OVERWRITE_ELEMENT(expected).key("state")
-                        .setNewOptions("Initializing, HardwareError,Safe,Override,Off,Stopped,Idle,Homing,Moving")
+                        .setNewOptions("Initializing,HardwareError,Safe,Override,Off,Stopped,Idle,Homing,Moving")
                         .setNewDefaultValue("Initializing")
                         .commit();
 
@@ -113,7 +113,7 @@ namespace karabo {
                         .expertAccess()
                         .readOnly()
                         .commit();
-
+                
                 FLOAT_ELEMENT(expected).key("targetPosition")
                         .description("Target position in position mode")
                         .displayedName("Target position")
