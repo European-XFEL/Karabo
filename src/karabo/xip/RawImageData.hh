@@ -69,7 +69,7 @@ namespace karabo {
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
                 setIsBigEndian(isBigEndian);
-                m_hash.set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
+                m_hash.set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
             }
 
             /**
@@ -116,7 +116,7 @@ namespace karabo {
                     m_hash.set("data", std::make_pair(reinterpret_cast<const char*> (data), byteSize));
                 }
 
-                m_hash.set("type", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
+                m_hash.set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
             }
