@@ -3,6 +3,7 @@ from ctypes import (CDLL, CFUNCTYPE, POINTER, byref, c_void_p, c_char,
                     c_char_p, c_bool, c_byte, c_short, c_int, c_longlong,
                     c_float, c_double, c_uint, string_at, Structure)
 import collections.abc
+import logging
 import site
 
 dll = CDLL("libopenmqc.so")
@@ -51,6 +52,22 @@ class Wrapper(object):
 
 
 dll = Wrapper(dll)
+
+
+@CFUNCTYPE(c_int, c_int, c_int, c_char_p, c_longlong, c_longlong, c_char_p,
+           c_int, c_char_p)
+def loggingFunc(severity, logCode, logMessage, timeOfMessage, connectionId,
+                filename, fileLineNumber, callbackData):
+    logger.log([logging.ERROR, logging.WARNING, logging.INFO, logging.DEBUG,
+                logging.DEBUG, logging.DEBUG, logging.DEBUG][severity],
+                logMessage.decode("ascii"))
+    return 0
+
+
+logger = logging.getLogger(__name__)
+dll.MQSetLoggingFunc(loggingFunc, 0)
+dll.MQSetStdErrLogLevel(-1)
+
 
 types = [c_bool, c_byte, c_short, c_int, c_longlong,
          c_float, c_double, c_char_p]
