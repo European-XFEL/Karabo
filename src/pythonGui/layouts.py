@@ -544,7 +544,7 @@ class ProxyWidget(QWidget):
 
     def translate(self, pos):
         self.fixed_geometry.translate(pos)
-        self.scene.update()
+        self.parent().layout().update()
 
 
     def set_geometry(self, rect):
