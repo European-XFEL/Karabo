@@ -68,13 +68,21 @@ class DisplayLabel(DisplayWidget):
 
         self.value = value
 
+        if isinstance(value, str):
+            self.widget.setText(value[:30])
+            return
+        elif isinstance(value, bytes):
+            return
+
         try:
             format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
                           )[box.descriptor.displayType[:3]]
         except (TypeError, KeyError):
-            if isinstance(box.descriptor, hashtypes.Float):
+            if isinstance(box.descriptor, (hashtypes.Float,
+                                           hashtypes.VectorFloat)):
                 format = "{:.6g}"
-            elif isinstance(box.descriptor, hashtypes.Double):
+            elif isinstance(box.descriptor, (hashtypes.Double,
+                                             hashtypes.VectorDouble)):
                 format = "{:.10g}"
             else:
                 format = "{}"
@@ -92,14 +100,3 @@ class DisplayLabel(DisplayWidget):
             ret = format.format(value)
 
         self.widget.setText(ret)
-
-
-    def toScientificNotation(self, value):
-        strvalue = str(value)
-        if re.match('^[^\.]*?\d{6,}\.0+$', strvalue):
-            locale = self.widget.locale()
-            strvalue = locale.toString(value, 'e', 6)
-            if abs(value) >= 1000.0:
-                strvalue.remove(locale.groupSeparator())
-            return strvalue
-        else: return strvalue
