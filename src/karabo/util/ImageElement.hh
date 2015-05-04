@@ -69,7 +69,7 @@ namespace karabo {
                         .readOnly()
                         .archivePolicy(Schema::NO_ARCHIVING)
                         .commit();
-                STRING_ELEMENT(inner).key("type")
+                STRING_ELEMENT(inner).key("dataType")
                         .displayedName("Type")
                         .description("Describes the underlying data type")
                         .readOnly()
