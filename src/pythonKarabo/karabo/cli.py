@@ -1,9 +1,13 @@
 # this script is loaded at the beginning of a cli session
+# it has side-effects while importing (like showing a banner)
+# so don't use it for anything else
 
 import karabo
 
 from asyncio import set_event_loop
+import os.path as osp
 import re
+import sys
 
 import IPython
 
@@ -13,6 +17,14 @@ from karabo.device_client import (
     instantiate, connectDevice, shutdown, shutdownNoWait, instantiateNoWait)
 from karabo.eventloop import NoEventLoop
 from karabo.macro import Macro
+
+
+with open(osp.join(osp.dirname(sys.base_prefix), "VERSION"), "r") as fin:
+    version = fin.read()
+
+print("""IKarabo Version {}
+Type karabo? for help
+""".format(version))
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -60,4 +72,4 @@ ip.set_hook("complete_command", class_completer,
 __all__ = ["getDevice", "waitUntil", "waitUntilNew", "setWait", "setNoWait",
            "execute", "executeNoWait", "getDevices", "getClasses",
            "getServers", "instantiate", "connectDevice", "shutdown",
-           "shutdownNoWait", "instantiateNoWait"]
+           "shutdownNoWait", "instantiateNoWait", "karabo"]
