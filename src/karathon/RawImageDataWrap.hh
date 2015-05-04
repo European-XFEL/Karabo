@@ -63,7 +63,7 @@ namespace karathon {
             else setChannelSpace(channelSpace);
 
             // Need to fix the data type here
-            m_hash.set("type", karabo::util::Types::convert<karabo::xip::FromChannelSpace, karabo::util::ToLiteral>(channelSpace));
+            m_hash.set("dataType", karabo::util::Types::convert<karabo::xip::FromChannelSpace, karabo::util::ToLiteral>(channelSpace));
 
             setIsBigEndian(isBigEndian);
         }
@@ -143,7 +143,7 @@ namespace karathon {
             setData(data, size, copy);
 
             // We need to fix the type here
-            m_hash.set("type", karabo::util::Types::convert<FromNumpy, karabo::util::ToLiteral>(dtype->type_num));
+            m_hash.set("dataType", karabo::util::Types::convert<FromNumpy, karabo::util::ToLiteral>(dtype->type_num));
 
             if (_dimensions.size() == 0) {
                 setDimensions(karabo::util::Dims(size));
