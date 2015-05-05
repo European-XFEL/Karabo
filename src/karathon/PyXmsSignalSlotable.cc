@@ -134,6 +134,24 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (void (SignalSlotable::*)(const std::string&))(&SignalSlotable::stopTrackingExistenceOfInstance)
                  , (bp::arg("instanceId"), bp::arg("instanceInfo")))
 
+            .def("registerInstanceNotAvailableHandler", &SignalSlotableWrap::registerInstanceNotAvailableHandlerPy
+                 , (bp::arg("handler")))
+            
+            .def("registerInstanceAvailableAgainHandler", &SignalSlotableWrap::registerInstanceAvailableAgainHandlerPy
+                 , (bp::arg("handler")))
+            
+            .def("registerExceptionHandler", &SignalSlotableWrap::registerExceptionHandlerPy
+                 , (bp::arg("handler")))
+            
+            //.def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy
+            //     , (bp::arg("handler")))
+            
+            .def("registerSlotCallGuardHandler", &SignalSlotableWrap::registerSlotCallGuardHandlerPy
+                 , (bp::arg("handler")))
+             
+            .def("registerPerformanceStatisticsHandler", &SignalSlotableWrap::registerPerformanceStatisticsHandlerPy
+                 , (bp::arg("handler")))
+            
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
@@ -282,7 +300,7 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("connectInputChannels", &SignalSlotable::connectInputChannels)
             
             .def("exists"
-                 , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::exists)
+                 , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy)
                  , (bp::arg("instanceId")))
 
             .def("getAccessLevel"
