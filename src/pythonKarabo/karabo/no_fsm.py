@@ -149,3 +149,6 @@ class NoFsm(object):
         self.func = func
         
     def stopFsm(self): pass
+    
+    def errorFound(self, userFriendly, detail):
+        print("*** ERROR *** : {} -- {}".format(userFriendly, detail))

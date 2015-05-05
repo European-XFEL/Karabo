@@ -32,21 +32,25 @@ class PythonDevice(NoFsm):
         (
             STRING_ELEMENT(expected).key("compatibility")
                     .displayedName("Compatibility").description("The compatibility of this device to the Karabo framework")
-                    .expertAccess().readOnly().initialValue(PythonDevice.__version__).commit()
-                    ,
+                    .expertAccess().readOnly().initialValue(PythonDevice.__version__)
+                    .commit(),
+
             STRING_ELEMENT(expected).key("_serverId_")
                     .displayedName("_ServerID_").description("Do not set this property, it will be set by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
-                    ,
+                    .expertAccess().assignmentInternal().noDefaultValue().init()
+                    .commit(),
+
             STRING_ELEMENT(expected).key("_deviceId_")
                     .displayedName("_DeviceID_").description("Do not set this property, it will be set by the device-server")
-                    .expertAccess().assignmentInternal().noDefaultValue().init().commit()
-                    ,
+                    .expertAccess().assignmentInternal().noDefaultValue().init()
+                    .commit(),
+
             INT32_ELEMENT(expected).key("visibility")
                     .displayedName("Visibility").description("Configures who is allowed to see this device at all")
                     .assignmentOptional().defaultValue(AccessLevel(OBSERVER))
-                    .expertAccess().reconfigurable().commit()
-                    ,
+                    .expertAccess().reconfigurable()
+                    .commit(),
+
             CHOICE_ELEMENT(expected).key("_connection_")
                     .displayedName("Connection")
                     .description("The connection to the communication layer of the distributed system")
@@ -54,50 +58,97 @@ class PythonDevice(NoFsm):
                     .assignmentOptional().defaultValue("Jms")
                     .adminAccess()
                     .init()
-                    .commit()
-                    ,                    
+                    .commit(),
+
             STRING_ELEMENT(expected).key("classId")
                     .displayedName("ClassID").description("The (factory)-name of the class of this device")
-                    .expertAccess().readOnly().initialValue(PythonDevice.__classid__).commit()
-                    ,
+                    .expertAccess().readOnly().initialValue(PythonDevice.__classid__)
+                    .commit(),
+
             STRING_ELEMENT(expected).key("serverId")
                     .displayedName("ServerID").description("The device-server on which this device is running on")
-                    .expertAccess().readOnly().commit()
-                    ,
+                    .expertAccess().readOnly()
+                    .commit(),
+
             STRING_ELEMENT(expected).key("deviceId")
                     .displayedName("DeviceID").description("The device instance ID uniquely identifies a device instance in the distributed system")
-                    .readOnly().commit()
-                    ,
+                    .readOnly()
+                    .commit(),
+
             BOOL_ELEMENT(expected).key("archive")
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
                         .reconfigurable()
                         .assignmentOptional().defaultValue(True)
-                        .commit()
-                        ,
+                        .commit(),
+
             BOOL_ELEMENT(expected).key("useTimeserver")
                         .displayedName("Use Timeserver")
                         .description("Decides whether to use time and train ID from TimeServer device")
                         .init()
                         .expertAccess()
                         .assignmentOptional().defaultValue(False)
-                        .commit()
-                        ,
+                        .commit(),
+                        
             INT32_ELEMENT(expected).key("progress")
                     .displayedName("Progress").description("The progress of the current action")
-                    .readOnly().initialValue(0).commit()
-                    ,
+                    .readOnly().initialValue(0).commit(),
+                    
             STRING_ELEMENT(expected).key("state")
                     .displayedName("State").description("The current state the device is in")
-                    .assignmentOptional().defaultValue("uninitialized").readOnly().commit()
-                    ,
+                    .assignmentOptional().defaultValue("uninitialized").readOnly()
+                    .commit(),
+
+            BOOL_ELEMENT(expected).key("trafficJam")
+                    .displayedName("Traffic jam for messages")
+                    .description("Flag denoting traffic jam for messages traveling via broker")
+                    .readOnly().initialValue(False)
+                    .commit(),
+
+            FLOAT_ELEMENT(expected).key("brokerLatency")
+                    .displayedName("Broker latency (ms)")
+                    .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
+                    .expertAccess()
+                    .readOnly().initialValue(0.0)
+                    #.warnHigh(10000.0)
+                    .commit(),
+
+            FLOAT_ELEMENT(expected).key("processingLatency")
+                    .displayedName("Processing latency (ms)")
+                    .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
+                    .expertAccess()
+                    .readOnly().initialValue(0.0)                        
+                    #.warnHigh(10000.0)
+                    .commit(),
+
+            UINT32_ELEMENT(expected).key("messageQueueSize")
+                    .displayedName("Local message queue size")
+                    .description("Current size of the local message queue.")
+                    .readOnly().initialValue(0)
+                    #.warnHigh(100)
+                    .commit(),
+
+            INT64_ELEMENT(expected).key("latencyUpper")
+                    .displayedName("Latency upper limit")
+                    .description("Message latency above that the \"Traffic jam\" flag will be set.")
+                    .assignmentOptional().defaultValue(10000)
+                    .adminAccess()
+                    .commit(),
+
+            INT64_ELEMENT(expected).key("latencyLower")
+                    .displayedName("Latency lower limit")
+                    .description("Message latency below that the \"Traffic jam\" flag will be unset.")
+                    .assignmentOptional().defaultValue(5000)
+                    .adminAccess()
+                    .commit(),
+
             NODE_ELEMENT(expected).key("Logger")
                     .description("Logging settings")
                     .displayedName("Logger")
                     .appendParametersOfConfigurableClass(Logger,"Logger")
                     .expertAccess()
-                    .commit()
-                    ,
+                    .commit(),
+
         )
         
     def __init__(self, configuration):
@@ -167,6 +218,16 @@ class PythonDevice(NoFsm):
         
         # Initialize regular expression object
         self.errorRegex = re.compile(".*error.*", re.IGNORECASE)
+        
+        # Register guard for slot calls
+        self._ss.registerSlotCallGuardHandler(self.slotCallGuard)
+        
+        # Register exception handler
+        self._ss.registerExceptionHandler(self.errorFound)
+
+        # Register updateLatencies handler
+        self._ss.registerPerformanceStatisticsHandler(self.updateLatencies)
+        
     
     @property
     def signalSlotable(self):
@@ -528,7 +589,19 @@ class PythonDevice(NoFsm):
         else:
             raise AttributeError(
                 "Number of command parameters should not exceed 4")
-          
+    
+    def slotCallGuard(self, slotName):
+        if slotName in self.fullSchema and self.fullSchema.hasAllowedStates(slotName):
+            allowedStates = self.fullSchema.getAllowedStates(slotName)
+            if allowedStates:
+                # print("Validating slot")
+                currentState = self["state"]
+                if currentState not in allowedStates:
+                    msg = "Command \"{}\" is not allowed in current state \"{}\" of device \"{}\"".format(slotName, currentState, self.deviceid)
+                    self._ss.reply(msg)
+                    return (False, msg,)
+            return (True, '',)
+        return (True, '',)
     
     def slotGetConfiguration(self):
         #senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
@@ -627,6 +700,22 @@ class PythonDevice(NoFsm):
    
     def registerSlot(self, slotFunc):
         self._ss.registerSlot(slotFunc)
+        
+    def updateLatencies(self, brokerLatency, processingLatency, messageQueueSize):
+        jamFlag = self["trafficJam"]
+        latencyUpper = self["latencyUpper"]
+        latencyLower = self["latencyLower"]
+        
+        h = Hash("brokerLatency", brokerLatency, "processingLatency", processingLatency, "messageQueueSize", messageQueueSize)
+        
+        if jamFlag:
+            if processingLatency < latencyLower: self["trafficJam"] = False
+        else:
+            if processingLatency > latencyUpper:
+                self["trafficJam"] = True
+                self.log.WARN("Processing latency {} are higher than established limit : {}".format(processingLatency,latencyUpper))
+        self.set(h)
+
         
     '''
     def getCurrentDateTime(self):
