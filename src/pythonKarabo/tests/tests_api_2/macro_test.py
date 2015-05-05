@@ -11,7 +11,7 @@ from karabo.eventloop import EventLoop
 from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
-from karabo.device_client import (waitUntilNew, waitUntil, set, setNoWait,
+from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
                                   getDevice, executeNoWait, updateDevice,
                                   Queue)
 from karabo import Slot, Integer
@@ -119,7 +119,7 @@ class Local(Macro):
     @Slot()
     def setwait(self):
         d = getDevice("remote")
-        set(d, value=200, counter=300)
+        setWait(d, value=200, counter=300)
 
     @Slot()
     def setnowait(self):
