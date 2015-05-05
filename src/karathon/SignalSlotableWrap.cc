@@ -523,7 +523,13 @@ namespace karathon {
                                                        std::string& errorMessage) {
         ScopedGILAcquire gil;
         try {
-            if (handler) return handler(bp::object(slotFunction), bp::object(errorMessage));
+            if (handler) {
+                const bp::tuple& tpl = bp::extract<bp::tuple > (handler(bp::object(slotFunction)));
+                if (!bp::extract<bool>(tpl[0])) {
+                    errorMessage = bp::extract<std::string>(tpl(1));
+                    return false;
+                }
+            }
         } catch (const bp::error_already_set& e) {
             if (PyErr_Occurred()) PyErr_Print();
             throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
