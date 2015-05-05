@@ -1,3 +1,5 @@
+.. _howto-macro:
+
 ********************
 How to write a macro
 ********************
@@ -18,7 +20,7 @@ Hello World!
 
 Let's just start with the classic hello world example: Right-Click onto the
 Macros section in the project and add a macro, calling it for example
-helloWorld (the name must be a python literal, so no spaces are allowed).
+*helloWorld* (the name must be a python literal, so no spaces are allowed).
 An editor opens in the central panel, where you can enter the macro::
 
     from karabo import *  # import everything important for macros
@@ -33,9 +35,7 @@ project tree. Click on it, and you will find that on the right side there is
 button labeled *hello*. Once you click it, ``Hello World!`` will be printed on
 the console, that's just what one expects.
 
-Let's now add a property. Just replace the class by
-
-::
+Let's now add a property. Just replace the class by::
 
     class HelloYou(Macro):
         name = String()
@@ -83,9 +83,16 @@ and execute its commands::
 There is another way of setting and getting properties and executing
 commands::
 
-   set(device, "someProperty", 7)
+   setWait(device, "someProperty", 7)
    execute(device, "start")
    print(get(device, "someProperty")
+
+The command *setWait* has a bit weird name, it is not named *set* because
+that is already existing in python. Most commands, like *execute*, wait
+until their job is done. They all have a *NoWait* counterpart, which does
+not wait for completion, enabling parallelism. We talk about that later.
+So, *setWait* is the waiting counterpart of *setNoWait*, avoiding a name
+clash with python's *set*.
 
 Getting a device into a variable takes some time. It makes a lot of sense
 if you are changing properties or calling slots on that device all the time.
@@ -94,7 +101,7 @@ call one slot, it is simpler to just write
 
 ::
 
-   set("some_device", "someProperty", 7)
+   setWait("some_device", "someProperty", 7)
    execute("some_device", "start")
    print(get("some_device", "someProperty")
     
@@ -165,7 +172,7 @@ this::
     @Slot()
     def some_function(self):
         with getDevice("some_device", timeout=3) as device:
-	    set(device, "someProperty", 7, timeout=4)
+	    setWait(device, "someProperty", 7, timeout=4)
 	    device.start(timeout=5)  # Timeout after 5s
 	print(get(device, "someProperty", timeout=6)
 
@@ -173,7 +180,7 @@ Or if you are using strings for addressing::
 
    @Slot()
    def some_function(self):
-       set("some_device", "someProperty", 7, timeout=3)
+       setWait("some_device", "someProperty", 7, timeout=3)
        execute("some_device", "start", timeout=4)
        print(get("some_device", "someProperty", timeout=5))
 
@@ -182,14 +189,14 @@ Or if you are using strings for addressing::
 Non-blocking operations
 =======================
 
-While most of the time the blocking, sequencing like behaviour of dealing with
-devices is exactly what you want and anyways the safest way to perform the
+While most of the time the blocking behaviour of dealing with
+devices is exactly what you want and the safest way to perform the
 control tasks, you sometimes need exactly the opposite. Imagine you have 3
 devices of the same class with a ``configure()`` command that downloads some
 configuration to the connected hardware and needs 4 minutes each to do the job.
 If execute the ``configure()`` command as described above your macro function
-runs 12 minutes! If you want to trigger downloading of the configuration for
-the 3 devices in parallel you can write like::
+runs 12 minutes. If you want to trigger downloading of the configuration for
+the 3 devices in parallel you can write::
 
    @Slot()
    def some_function(self):
@@ -201,18 +208,7 @@ the 3 devices in parallel you can write like::
 	   executeNoWait('configure')
            executeNoWait('configure')
 
-Or shorter by writing::
-
-   @Slot()
-   def some_function(self):
-       devices = self.getDevices()
-       for device in devices:
-           self.execute(device, "configure", wait=False)
-
-*TODO: Decide about naming: ``Exec.sync`` vs. ``Exec.async`` and
-``executeNoWait`` vs. ``executeAsync``*
-
-Now the macro should finish after about 3 minutes. What has happened? Well,
+Now the macro should finish after about 3 minutes. What has happened?
 Karabo issued the commands with all "operation successful" checking disabled.
 It executed the commands in a "fire and forget" fashion, i.e. did *not* block
 at any time. Understanding this raises new questions: How can I finally be sure
