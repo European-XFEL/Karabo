@@ -77,6 +77,24 @@ namespace karabo {
             }
 
             /**
+             * Set parameters defining the behavior of the worker
+             * @param timeout     timeout for receiving from queue
+             */
+            Worker& setTimeout(int timeout = -1) {
+                m_timeout = timeout;
+                return *this;
+            }
+
+           /**
+             * Set parameters defining the behavior of the worker
+             * @param repetition     repetition counter
+             */
+            Worker& setRepetition(int repetition = -1) {
+                m_repetition = repetition;
+                return *this;
+            }
+
+            /**
              * Starts auxiliary thread that works on far ends of the queues
              * Default settings are "waiting forever" and "repeat forever"
              */
