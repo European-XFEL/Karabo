@@ -21,6 +21,7 @@ namespace karabo {
 
             static void expectedParameters(karabo::util::Schema& expected) {
                 using namespace karabo::xms;
+                using namespace karabo::util;
 
                 OVERWRITE_ELEMENT(expected).key("state")
                         .setNewOptions("Initializing,HardwareError,Acquiring,Ready")
