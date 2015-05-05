@@ -75,10 +75,18 @@ namespace karabo {
             }
 
             template <class T>
-            const T& get(const std::string& key) {
+            const T& get(const std::string& key) const {
                 return m_hash->get<T>(key);
             }
 
+            bool has(const std::string& key) {
+                return m_hash->has(key);
+            }
+            
+            void erase(const std::string& key) {
+                m_hash->erase(key);
+            }
+            
             const karabo::util::Hash::Pointer& hash() const;
 
             friend std::ostream& operator<<(std::ostream& os, const Data& data);
