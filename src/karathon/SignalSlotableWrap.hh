@@ -168,11 +168,11 @@ namespace karathon {
             return bp::object(SignalSlotable::getInstanceId());
         }
 
-        bp::tuple exists(const std::string& instanceId) {
+        bp::tuple existsPy(const std::string& instanceId) {
             std::pair<bool, std::string> result;
             {
                 ScopedGILRelease nogil;
-                result = SignalSlotable::exists(instanceId);
+                result = exists(instanceId);
             }
             return bp::make_tuple(result.first, bp::object(result.second));
         }
@@ -425,6 +425,46 @@ namespace karathon {
             registerReply(reply);
         }
 
+        bp::object getBrokerHost() {
+            return bp::object(getConnection()->getBrokerHostname() + ":" + karabo::util::toString(getConnection()->getBrokerPort()));
+        }
+
+        bp::object getBrokerTopic() {
+            return bp::object(getConnection()->getBrokerTopic());
+        }
+
+        bp::object getBrokerHosts() {
+            return Wrapper::fromStdVectorToPyList<std::string>(getConnection()->getBrokerHosts());
+        }
+
+        void registerInstanceNotAvailableHandlerPy(const bp::object& handler) {
+            registerInstanceNotAvailableHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNotAvailableHandler,
+                                                            this, handler, _1, _2));
+        }
+
+        void registerInstanceAvailableAgainHandlerPy(const bp::object& handler) {
+            registerInstanceAvailableAgainHandler(boost::bind(&SignalSlotableWrap::proxyInstanceAvailableAgainHandler,
+                                                              this, handler, _1, _2));
+        }
+
+        void registerExceptionHandlerPy(const bp::object& handler) {
+            registerExceptionHandler(boost::bind(&SignalSlotableWrap::proxyExceptionHandler, this, handler, _1));
+        }
+
+//        void registerInstanceNewHandlerPy(const bp::object& handler) {
+//            registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewCallback,
+//                                                   this, handler, _1, _2));
+//        }
+
+        void registerSlotCallGuardHandlerPy(const bp::object& handler) {
+            registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1, _2));
+        }
+
+        void registerPerformanceStatisticsHandlerPy(const bp::object& handler) {
+            registerPerformanceStatisticsHandler(boost::bind(&SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler,
+                                                             this, handler, _1, _2, _3));
+        }
+        
         karabo::xms::OutputChannel::Pointer
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
@@ -435,18 +475,6 @@ namespace karathon {
                                                    this, onOutputPossibleHandler, _1));
         }
 
-        void proxyOnOutputPossibleHandler(const bp::object& handler,
-                                          const karabo::xms::OutputChannel::Pointer& channel) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(channel));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
 
         karabo::xms::InputChannel::Pointer
         createInputChannelPy(const std::string& channelName,
@@ -461,43 +489,25 @@ namespace karathon {
                                                   this, onEndOfStreamEventHandler, _1));
         }
 
-        void proxyOnInputAvailableHandler(const bp::object& handler,
-                                          const karabo::xms::InputChannel::Pointer& channel) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(channel));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
+    private:
+        
+        void proxyInstanceNotAvailableHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-        void proxyOnEndOfStreamEventHandler(const bp::object& handler,
-                                            const karabo::xms::InputChannel::Pointer& channel) {
-            ScopedGILAcquire gil;
-            try {
-                if (handler) handler(bp::object(channel));
-            } catch (const bp::error_already_set& e) {
-                if (PyErr_Occurred()) PyErr_Print();
-                throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
-            } catch (...) {
-                KARABO_RETHROW
-            }
-        }
+        void proxyInstanceAvailableAgainHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-        bp::object getBrokerHost() {
-            return bp::object(getConnection()->getBrokerHostname() + ":" + karabo::util::toString(getConnection()->getBrokerPort()));
-        }
+        void proxyExceptionHandler(const bp::object& handler, const karabo::util::Exception& e);
 
-        bp::object getBrokerTopic() {
-            return bp::object(getConnection()->getBrokerTopic());
-        }
+        //void proxyInstanceNewCallback(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
-        bp::object getBrokerHosts() {
-            return Wrapper::fromStdVectorToPyList<std::string>(getConnection()->getBrokerHosts());
-        }
+        bool proxySlotCallGuardHandler(const bp::object&, const std::string&, std::string&);
+
+        void proxyUpdatePerformanceStatisticsHandler(const bp::object&, float, float, unsigned int);
+
+        void proxyOnOutputPossibleHandler(const bp::object& handler, const karabo::xms::OutputChannel::Pointer& channel);
+
+        void proxyOnInputAvailableHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
+
+        void proxyOnEndOfStreamEventHandler(const bp::object& handler, const karabo::xms::InputChannel::Pointer& channel);
 
     private: // members
         boost::thread m_eventLoop;
