@@ -637,7 +637,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             void registerExceptionHandler(const ExceptionHandler& exceptionFoundCallback);
 
-            void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
+            //void registerInstanceNewHandler(const InstanceNewHandler& instanceNewCallback);
 
             void registerSlotCallGuardHandler(const SlotCallGuardHandler& slotCallGuardHandler);
 
