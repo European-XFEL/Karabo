@@ -1,6 +1,7 @@
 #include "SignalSlotableWrap.hh"
 
 namespace bp = boost::python;
+using namespace karabo::xms;
 
 namespace karathon {
 
@@ -457,4 +458,136 @@ namespace karathon {
         }
     }
 
+
+    void SignalSlotableWrap::proxyInstanceNotAvailableHandler(const bp::object& handler,
+                                                              const std::string& instanceId,
+                                                              const karabo::util::Hash& instanceInfo) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    void SignalSlotableWrap::proxyInstanceAvailableAgainHandler(const bp::object& handler,
+                                                                const std::string& instanceId,
+                                                                const karabo::util::Hash& instanceInfo) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    void SignalSlotableWrap::proxyExceptionHandler(const bp::object& handler,
+                                                   const karabo::util::Exception& e) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(e.userFriendlyMsg()), bp::object(e.detailedMsg()));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    //void SignalSlotableWrap::proxyInstanceNewCallback(const bp::object& handler,
+    //                                                  const std::string& instanceId,
+    //                                                  const karabo::util::Hash& instanceInfo) {
+    //    ScopedGILAcquire gil;
+    //    try {
+    //        if (handler) handler(bp::object(instanceId), bp::object(instanceInfo));
+    //    } catch (const bp::error_already_set& e) {
+    //        if (PyErr_Occurred()) PyErr_Print();
+    //        throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+    //    } catch (...) {
+    //        KARABO_RETHROW
+    //    }
+    //}
+
+
+    bool SignalSlotableWrap::proxySlotCallGuardHandler(const bp::object& handler,
+                                                       const std::string& slotFunction,
+                                                       std::string& errorMessage) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) return handler(bp::object(slotFunction), bp::object(errorMessage));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+        return true;
+    }
+
+
+    void SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler(const bp::object& handler,
+                                                                     float brokerLatency,
+                                                                     float processingLatency,
+                                                                     unsigned int queueSize) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(brokerLatency), bp::object(processingLatency), bp::object(queueSize));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    void SignalSlotableWrap::proxyOnOutputPossibleHandler(const bp::object& handler,
+                                                          const karabo::xms::OutputChannel::Pointer& channel) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(channel));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    void SignalSlotableWrap::proxyOnInputAvailableHandler(const bp::object& handler,
+                                                          const karabo::xms::InputChannel::Pointer& channel) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(channel));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
+
+
+    void SignalSlotableWrap::proxyOnEndOfStreamEventHandler(const bp::object& handler,
+                                                            const karabo::xms::InputChannel::Pointer& channel) {
+        ScopedGILAcquire gil;
+        try {
+            if (handler) handler(bp::object(channel));
+        } catch (const bp::error_already_set& e) {
+            if (PyErr_Occurred()) PyErr_Print();
+            throw KARABO_PYTHON_EXCEPTION("Python handler has thrown an exception.");
+        } catch (...) {
+            KARABO_RETHROW
+        }
+    }
 }
