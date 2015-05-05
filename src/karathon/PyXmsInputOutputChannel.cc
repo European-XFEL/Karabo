@@ -29,13 +29,25 @@ namespace karathon {
     struct DataWrap {
 
 
+        static boost::shared_ptr<karabo::xms::Data> make(bp::object& obj) {
+            if (bp::extract<karabo::util::Hash::Pointer>(obj).check()) {
+                return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::util::Hash::Pointer>(obj)));
+            } else if (bp::extract<karabo::xms::Data>(obj).check()) {
+                return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::xms::Data>(obj)));
+            } else if (bp::extract<karabo::util::Hash>(obj).check()) {
+                return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(bp::extract<karabo::util::Hash>(obj)));
+            } else
+                throw KARABO_PYTHON_EXCEPTION("Object type is not \"Hash\", \"HashPointer\" or \"Data\"");
+        }
+
+
         static karabo::util::Hash::Pointer getNode(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
             return self->getNode<karabo::util::Hash::Pointer>(key);
         }
 
 
         static bp::object get(const boost::shared_ptr<karabo::xms::Data>& self, const std::string& key) {
-            return Wrapper::toObject(self->hash()->getNode(key).getValueAsAny());
+            return Wrapper::toObject(self->hash()->getNode(key).getValueAsAny(), true);
         }
 
 
@@ -762,12 +774,8 @@ namespace karathon {
 
 
         static bp::object readPy(const boost::shared_ptr<karabo::xms::InputChannel>& self, size_t idx) {
-            karabo::util::Hash hash;
-            {
-                ScopedGILRelease nogil;
-                self->read(hash, idx);
-            }
-            return Wrapper::toObject(hash);
+            ScopedGILRelease nogil;
+            return Wrapper::toObject(self->read(idx));
         }
 
 
@@ -802,21 +810,35 @@ void exportPyXmsInputOutputChannel() {
     {
         bp::class_<Data, boost::shared_ptr<Data> >("Data", bp::init<>())
 
-                .def(bp::init<const Hash&>())
+                //.def(bp::init<const Hash&>())
 
                 .def(bp::init<const string&, const Hash&>())
 
-                .def(bp::init<const Hash::Pointer&>())
+                //.def(bp::init<const Hash::Pointer&>())
 
-                .def(bp::init<const Data&>())
+                //.def(bp::init<const Data&>())
 
+                .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("obj"))))
+                
                 .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
 
                 .def("getNode", &karathon::DataWrap().getNode, (bp::arg("key")))
 
                 .def("get", &karathon::DataWrap().get, (bp::arg("key")))
 
+                .def("__getitem__", &karathon::DataWrap().get, (bp::arg("key")))
+
                 .def("set", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
+
+                .def("__setitem__", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
+        
+                .def("has", &Data::has, (bp::arg("key")))
+        
+                .def("__contains__", &Data::has, (bp::arg("key")))
+        
+                .def("erase", &Data::erase, (bp::arg("key")))
+        
+                .def("__delitem__", &Data::erase, (bp::arg("key")))
 
                 .def("hash", &karathon::DataWrap().hash)
 
