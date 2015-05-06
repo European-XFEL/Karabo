@@ -579,6 +579,9 @@ class _Manager(QObject):
         self.deviceData[deviceId].getBox(
             property.split(".")).boxvalue.schema.fromHash(data)
 
+    def handle_initReply(self, deviceId, success, message):
+        self.deviceData[deviceId].signalInitReply.emit(success, message)
+
 
 def getDevice(deviceId):
     c = manager.deviceData.get(deviceId)
