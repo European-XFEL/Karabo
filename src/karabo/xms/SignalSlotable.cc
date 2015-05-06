@@ -458,8 +458,7 @@ namespace karabo {
                                         // Place a guard for executing this slot here
 
                                         if (m_slotCallGuardHandler) {
-                                            string errorMessage;
-                                            bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
+                                            bool ok = m_slotCallGuardHandler(slotFunction);
                                             if (!ok) {
                                                 std::cout << "Rejected global slot: " << slotFunction << std::endl;
                                                 //sendErrorHappenedReply(header, errorMessage);
@@ -485,8 +484,7 @@ namespace karabo {
                                         //KARABO_LOG_FRAMEWORK_DEBUG << m_instanceId << ": Going to call local " << slotFunction << " if registered";                                   
 
                                         if (m_slotCallGuardHandler) {
-                                            string errorMessage;
-                                            bool ok = m_slotCallGuardHandler(slotFunction, errorMessage);
+                                            bool ok = m_slotCallGuardHandler(slotFunction);
                                             if (!ok) {
                                                 std::cout << "Rejected local slot: " << slotFunction << std::endl;
                                                 sendPotentialReply(header, false);                                               

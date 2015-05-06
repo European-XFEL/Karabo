@@ -304,7 +304,7 @@ namespace karabo {
                 this->initDeviceSlots();
 
                 // Register guard for slot calls
-                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1, _2));
+                this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
                 
                 // Register exception handler
                 this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
@@ -889,7 +889,7 @@ namespace karabo {
                 SLOT0(slotKillDevice)
             }
 
-            bool slotCallGuard(const std::string& slotName, std::string& errorMessage) {
+            bool slotCallGuard(const std::string& slotName) {
                 if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
                     const std::vector<std::string>& allowedStates = m_fullSchema.getAllowedStates(slotName);
                     if (!allowedStates.empty()) {
@@ -899,7 +899,7 @@ namespace karabo {
                             std::ostringstream msg;
                             msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " 
                                     << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
-                            errorMessage = msg.str();
+                            std::string errorMessage = msg.str();
                             reply(errorMessage);
                             return false;
                         }
