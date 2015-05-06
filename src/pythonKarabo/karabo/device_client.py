@@ -11,6 +11,7 @@ proxy. """
 import asyncio
 from asyncio import get_event_loop
 from collections import defaultdict
+from decimal import Decimal
 from functools import wraps
 from weakref import WeakSet
 
@@ -24,6 +25,7 @@ class DeviceClientBase(Device):
     def __init__(self, configuration):
         self.systemTopology = Hash("device", Hash(), "server", Hash(),
                                    "macro", Hash())
+        self.loggerMap = Hash()
         super().__init__(configuration)
 
     def run(self):
@@ -208,6 +210,55 @@ class waitUntilNew:
         future = OneShotQueue(loop=self.proxy._device._ss.loop)
         self.proxy._queues[None].add(future)
         return (yield from future)
+
+
+class getHistory:
+    """get the history of device properties
+
+    with this function one can get all values of a property in a given
+    timespan::
+
+        getHistory(device, "2009-09-01", "2009-09-02").someProperty
+
+    returns a list of tuples, which contain all changes of *someProperty*
+    between the two given dates. The tuple contains four fields, the
+    seconds since 1970-01-01 UTC, the train ID, a flag whether this is
+    the last row in a set (typically, the device has been switched off
+    afterwards), and the value of the property at that time.
+
+    Another parameter, *maxNumData*, may be given, which gives the maximum
+    number of data points to be returned. The returned data will be
+    reduced appropriately to still span the full timespan."""
+    def __init__(self, proxy, begin, end, maxNumData=0):
+        self.proxy = proxy
+        self.begin = begin
+        self.end = end
+        self.maxNumData = maxNumData
+
+    def __dir__(self):
+        return dir(self.proxy)
+
+    @synchronize
+    def __getattr__(self, attr):
+        assert isinstance(getattr(type(self.proxy), attr), Type)
+        instance = get_instance()
+        id = "DataLogger-{}".format(self.proxy._deviceId)
+        if id not in instance.loggerMap:
+            instance.loggerMap = yield from instance.call(
+                "Karabo_DataLoggerManager_0", "slotGetLoggerMap")
+            if id not in instance.loggerMap:
+                raise KaraboError('no logger for device "{}"'.
+                                  format(self.proxy._deviceId))
+        reader = "DataLogReader-{}".format(instance.loggerMap[id])
+        deviceId, property, data = yield from get_instance().call(
+            reader, "slotGetPropertyHistory", self.proxy._deviceId, attr,
+            Hash("from", self.begin, "to", self.end,
+                 "maxNumData", self.maxNumData))
+        assert deviceId == self.proxy._deviceId
+        assert property == attr
+        return [(Decimal(int(d["v", "frac"])) / 10 ** 18 +
+                 Decimal(int(d["v", "sec"])), d["v", "tid"],
+                 "isLast" in d["v", ...], d["v"]) for d in data]
 
 
 class Queue:
