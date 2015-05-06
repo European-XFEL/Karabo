@@ -79,6 +79,7 @@ class PythonDevice(NoFsm):
                         .displayedName("Archive")
                         .description("Decides whether the properties of this device will be logged or not")
                         .reconfigurable()
+                        .expertAccess()
                         .assignmentOptional().defaultValue(True)
                         .commit(),
 
