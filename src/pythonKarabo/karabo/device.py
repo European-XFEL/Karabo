@@ -599,9 +599,8 @@ class PythonDevice(NoFsm):
                 if currentState not in allowedStates:
                     msg = "Command \"{}\" is not allowed in current state \"{}\" of device \"{}\"".format(slotName, currentState, self.deviceid)
                     self._ss.reply(msg)
-                    return (False, msg,)
-            return (True, '',)
-        return (True, '',)
+                    return False
+        return True
     
     def slotGetConfiguration(self):
         #senderId = self._ss.getSenderInfo("slotGetConfiguration").getInstanceIdOfSender()
