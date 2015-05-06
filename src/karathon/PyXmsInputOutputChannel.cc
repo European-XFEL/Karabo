@@ -16,6 +16,7 @@
 #include "Wrapper.hh"
 #include "DimsWrap.hh"
 #include "FromNumpy.hh"
+#include "ToNumpy.hh"
 
 #define PY_ARRAY_UNIQUE_SYMBOL karabo_ARRAY_API
 #define NO_IMPORT_ARRAY
@@ -69,68 +70,79 @@ namespace karathon {
     };
 
 
-    struct NDArrayWrap : public karabo::xms::NDArray {
+    struct NDArrayWrap {
 
-
-        NDArrayWrap(const bp::object& obj, const bool copy = true,
-                const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                const bool isBigEndian = karabo::util::isBigEndian()) {
-
+        
+        static boost::shared_ptr<karabo::xms::NDArray> make2(const bp::object& obj, const bool copy = true) {
+            using namespace karabo::xms;
             using namespace karabo::util;
+            
+            boost::shared_ptr<NDArray> self(new NDArray());
+            
+            if (obj == bp::object())
+                return self;
+            
+            if (bp::extract<Hash::Pointer>(obj).check()) {
+                self = boost::shared_ptr<NDArray>(new NDArray(bp::extract<Hash::Pointer>(obj)));
+            } else if (bp::extract<Hash>(obj).check()) {
+                self = boost::shared_ptr<NDArray>(new NDArray(bp::extract<Hash>(obj)));
+            } else if (PyArray_Check(obj.ptr())) {
 
-            if (!PyArray_Check(obj.ptr()))
-                throw KARABO_PYTHON_EXCEPTION("The 1st argument python type must be 'numpy array'");
+                // Get a contiguous copy of the array (or just a reference if already contiguous)
+                PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
+                PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
 
-            // Get a contiguous copy of the array (or just a reference if already contiguous)
-            PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
-            PyArrayObject* carr = PyArray_GETCONTIGUOUS(arr);
+                // Data pointer and size
+                char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
+                size_t size = PyArray_NBYTES(arr);
+                PyArray_Descr* dtype = PyArray_DESCR(arr);
 
-            // Data pointer and size
-            char* data = reinterpret_cast<char*> (PyArray_DATA(carr));
-            size_t size = PyArray_NBYTES(arr);
-            PyArray_Descr* dtype = PyArray_DESCR(arr);
-
-            setData(data, size, copy);
-
-            // We need to fix the type here, because setData has set the type based on type of data argument
-            m_hash->set("dataType", Types::convert<FromNumpy, ToLiteral>(dtype->type_num));
-
-            // Dimensions (shape)
-            int rank = PyArray_NDIM(arr);
-            npy_intp* shapes = PyArray_SHAPE(arr);
-            std::vector<unsigned long long> tmp(rank);
-            for (int i = 0; i < rank; i++) {
-                tmp[i] = shapes[rank - i - 1];
-            }
-
-            if (dimensions.size() == 0) {
-                Dims dmsFromShape;
-                dmsFromShape.fromVector(tmp);
-                if (dmsFromShape.size() == 0)
-                    setDimensions(Dims(size));
+                self->setData(data, size, copy);
+                self->set("dataType", Types::convert<FromNumpy, ToLiteral>(dtype->type_num));
+                
+                // Dimensions (shape)
+                int rank = PyArray_NDIM(arr);
+                npy_intp* shapes = PyArray_SHAPE(arr);
+                std::vector<unsigned long long> dimsvec(rank);
+                for (int i = 0; i < rank; i++) {
+                    dimsvec[i] = shapes[i];
+                }
+                
+                Dims dims;
+                dims.fromVector(dimsvec);
+                
+                if (dims.size() == 0)
+                    self->setDimensions(Dims(size));
                 else
-                    setDimensions(dmsFromShape);
+                    self->setDimensions(dims);
+
+                self->setIsBigEndian(::htonl(47) == 47);
+                
             } else {
-                setDimensions(dimensions);
+                throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
             }
-
-            setIsBigEndian(isBigEndian);
+            return self;
         }
-
-
-        static boost::shared_ptr<NDArray> make(bp::object& obj, const bool copy = true,
-                const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                const bool isBigEndian = karabo::util::isBigEndian()) {
-            return boost::shared_ptr<NDArrayWrap>(new NDArrayWrap(obj, copy, dimensions, isBigEndian));
-        }
-
-
+        
+        
         static bp::object getDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
-            return Wrapper::fromStdVectorToPyBytes(self->getData());
+            using namespace karabo::util;
+            
+            std::vector<unsigned long long> dims = self->getDimensions().toVector();
+            
+            npy_intp shape[dims.size()];
+            for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
+            
+            int npyType = karabo::util::Types::convert<FromLiteral, ToNumpy > (self->getDataType());
+            std::vector<char>& v = self->get<std::vector<char> >("data");
+            PyObject* pyobj = PyArray_SimpleNewFromData(dims.size(), shape, npyType, &v[0]);
+            return bp::object(bp::handle<>(pyobj));
         }
 
 
         static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj, const bool copy) {
+            using namespace karabo::util;
+            
             if (PyBytes_Check(obj.ptr())) {
                 size_t size = PyBytes_Size(obj.ptr());
                 char* data = PyBytes_AsString(obj.ptr());
@@ -152,10 +164,15 @@ namespace karathon {
             if (PyArray_Check(obj.ptr())) {
                 PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
                 int nd = PyArray_NDIM(arr);
+                std::vector<unsigned long long> dims(nd);
                 npy_intp* shapes = PyArray_DIMS(arr);
                 int nelems = 1;
-                for (int i = 0; i < nd; i++) nelems *= shapes[i];
+                for (int i = 0; i < nd; i++) {
+                    nelems *= shapes[i];
+                    dims[i] = shapes[i];
+                }
                 PyArray_Descr* dtype = PyArray_DESCR(arr);
+                self->setDimensions(Dims(dims));
                 switch (dtype->type_num) {
                     case NPY_BOOL:
                     {
@@ -857,16 +874,9 @@ void exportPyXmsInputOutputChannel() {
     {
         bp::class_<NDArray, boost::shared_ptr<NDArray>, bp::bases<Data> >("NDArray", bp::init<>())
 
-                .def(bp::init<const Hash&>())
-
-                .def(bp::init<const Hash::Pointer&>())
-
-                .def("__init__", bp::make_constructor(&karathon::NDArrayWrap::make,
+                .def("__init__", bp::make_constructor(&karathon::NDArrayWrap::make2,
                                                       bp::default_call_policies(),
-                                                      (bp::arg("ndarray"),
-                                                      bp::arg("copyFlag"),
-                                                      bp::arg("dims_obj") = karabo::util::Dims(),
-                                                      bp::arg("isBigEndian") = karabo::util::isBigEndian())))
+                                                      (bp::arg("object"), bp::arg("copy") = true)))
 
                 .def("getData", &karathon::NDArrayWrap::getDataPy)
 
