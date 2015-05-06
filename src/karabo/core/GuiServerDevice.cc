@@ -187,7 +187,7 @@ namespace karabo {
                     } else if (type == "getClassSchema") {
                         onGetClassSchema(channel, info);
                     } else if (type == "initDevice") {
-                        onInitDevice(info);
+                        onInitDevice(channel, info);
                     } else if (type == "killServer") {
                         onKillServer(info);
                     } else if (type == "killDevice") {
@@ -274,16 +274,32 @@ namespace karabo {
         }
 
 
-        void GuiServerDevice::onInitDevice(const karabo::util::Hash& hash) {
+        void GuiServerDevice::onInitDevice(Channel::Pointer channel, const karabo::util::Hash& hash) {
             try {
 
                 KARABO_LOG_FRAMEWORK_DEBUG << "onInitDevice";
                 cout << hash << endl;
                 string serverId = hash.get<string > ("serverId");                
                 KARABO_LOG_INFO << "Incoming request to start device instance on server " << serverId;
-                call(serverId, "slotStartDevice", hash);
+                request(serverId, "slotStartDevice", hash)
+                    .receiveAsync<bool, string>(boost::bind(&karabo::core::GuiServerDevice::initReply, this, channel, hash.get<string>("deviceId"), _1, _2));
             } catch (const Exception& e) {
                 KARABO_LOG_ERROR << "Problem in onInitDevice(): " << e.userFriendlyMsg();
+            }
+        }
+
+
+        void GuiServerDevice::initReply(Channel::Pointer channel, const string& deviceId, bool success, const string& message) {
+            try {
+
+                KARABO_LOG_FRAMEWORK_DEBUG << "Unicasting init reply";
+
+                Hash h("type", "initReply", "deviceId", deviceId, "success", success, "message", message);
+
+                boost::mutex::scoped_lock lock(m_channelMutex);
+                channel->write(h);  // send back to requestor
+            } catch (const Exception& e) {
+                KARABO_LOG_ERROR << "Problem in initReply " << e.userFriendlyMsg();
             }
         }
 
