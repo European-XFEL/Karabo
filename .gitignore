@@ -12,6 +12,7 @@ GNU-Linux-x86
 *~
 *.orig
 package/
+run/
 src/karabo/tests/io/resources/*
 build/netbeans/*/*.log
 !.gitignore
