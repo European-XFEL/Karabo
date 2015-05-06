@@ -159,6 +159,10 @@ class Broker:
         if replyFrom is not None:
             f = self.repliers.get(replyFrom.decode("ascii"))
             if f is not None:
+                if len(params) == 1:
+                    params = params[0]
+                else:
+                    params = tuple(params)
                 f.set_result(params)
             return {}, None
 
