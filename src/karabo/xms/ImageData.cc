@@ -94,7 +94,7 @@ namespace karabo {
                 {
                     unsigned short* data = reinterpret_cast<unsigned short*> (const_cast<char*> (getDataPointer()));
                     for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = bswap16(data[i]);
+                        data[i] = byteSwap16(data[i]);
                     }
                     break;
                 }
@@ -104,7 +104,7 @@ namespace karabo {
                 {
                     unsigned int* data = reinterpret_cast<unsigned int*> (const_cast<char*> (getDataPointer()));
                     for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = bswap32(data[i]);
+                        data[i] = byteSwap32(data[i]);
                     }
                     break;
                 }
@@ -114,7 +114,7 @@ namespace karabo {
                 {
                     unsigned long long* data = reinterpret_cast<unsigned long long*> (const_cast<char*> (getDataPointer()));
                     for (size_t i = 0; i < getDimensions().size(); ++i) {
-                        data[i] = bswap64(data[i]);
+                        data[i] = byteSwap64(data[i]);
                     }
                     break;
                 }

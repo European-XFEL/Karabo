@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 // gcc only
-#if defined __GNUC__ && __GNUC__ >= 2 && ! __APPLE__
+#if defined __GNUC__ && __GNUC__ >= 2 && __linux__
 #include <byteswap.h>
 #endif
 
@@ -24,9 +24,9 @@ namespace karabo {
     namespace util {
         
         // Byte swap utility
-        uint16_t bswap16(uint16_t in);
-        uint32_t bswap32(uint32_t in);
-        uint64_t bswap64(uint64_t in);
+        uint16_t byteSwap16(uint16_t in);
+        uint32_t byteSwap32(uint32_t in);
+        uint64_t byteSwap64(uint64_t in);
         
     } // util
 } // karabo

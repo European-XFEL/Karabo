@@ -11,7 +11,7 @@
 namespace karabo {
     namespace util {
 
-        uint16_t bswap16(uint16_t in) {
+        uint16_t byteSwap16(uint16_t in) {
             uint16_t out = 0;
             
 #ifdef _BYTESWAP_H
@@ -26,7 +26,7 @@ namespace karabo {
             return out;
         }
         
-        uint32_t bswap32(uint32_t in) {
+        uint32_t byteSwap32(uint32_t in) {
             uint32_t out = 0;
             
 #ifdef _BYTESWAP_H
@@ -41,7 +41,7 @@ namespace karabo {
             return out;
         }
         
-        uint64_t bswap64(uint64_t in) {
+        uint64_t byteSwap64(uint64_t in) {
             uint64_t out = 0;
             
 #ifdef _BYTESWAP_H
