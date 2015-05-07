@@ -128,6 +128,9 @@ namespace karathon {
         static bp::object getDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
             using namespace karabo::util;
             
+            if (!self->has("data") || !self->has("dataType") || !self->has("dims"))
+                return bp::object();
+            
             std::vector<unsigned long long> dims = self->getDimensions().toVector();
             
             npy_intp shape[dims.size()];
@@ -143,24 +146,6 @@ namespace karathon {
         static void setDataPy(const boost::shared_ptr<karabo::xms::NDArray>& self, const bp::object& obj, const bool copy) {
             using namespace karabo::util;
             
-            if (PyBytes_Check(obj.ptr())) {
-                size_t size = PyBytes_Size(obj.ptr());
-                char* data = PyBytes_AsString(obj.ptr());
-                self->setData(data, size, copy);
-                return;
-            }
-            if (PyByteArray_Check(obj.ptr())) {
-                size_t size = PyByteArray_Size(obj.ptr());
-                char* data = PyByteArray_AsString(obj.ptr());
-                self->setData(data, size, copy);
-                return;
-            }
-            if (PyUnicode_Check(obj.ptr())) {
-                Py_ssize_t size;
-                const char* data = PyUnicode_AsUTF8AndSize(obj.ptr(), &size);
-                self->setData(data, size, copy);
-                return;
-            }
             if (PyArray_Check(obj.ptr())) {
                 PyArrayObject* arr = reinterpret_cast<PyArrayObject*> (obj.ptr());
                 int nd = PyArray_NDIM(arr);
@@ -173,6 +158,8 @@ namespace karathon {
                 }
                 PyArray_Descr* dtype = PyArray_DESCR(arr);
                 self->setDimensions(Dims(dims));
+                if (!self->has("isBigEndian")) self->setIsBigEndian(::htonl(47) == 47);
+            
                 switch (dtype->type_num) {
                     case NPY_BOOL:
                     {
@@ -256,58 +243,7 @@ namespace karathon {
                 }
                 throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type in numpy.ndarray");
             }
-            if (PyList_Check(obj.ptr())) {
-                bp::ssize_t size = bp::len(obj);
-                if (size == 0) {
-                    self->setData((char*) 0, 0);
-                    return;
-                }
-                bp::object list0 = obj[0];
-                if (PyLong_Check(list0.ptr())) {
-                    try {
-                        std::vector<int> v(size);
-                        for (bp::ssize_t i = 0; i < size; ++i) {
-                            v[i] = static_cast<int> (bp::extract<int>(obj[i]));
-                        }
-                        self->setData(v, copy);
-                        return;
-                    } catch (...) {
-                        try {
-                            std::vector<unsigned int> v(size);
-                            for (bp::ssize_t i = 0; i < size; ++i) {
-                                v[i] = static_cast<unsigned int> (bp::extract<unsigned int>(obj[i]));
-                            }
-                            self->setData(v, copy);
-                            return;
-                        } catch (...) {
-                            try {
-                                std::vector<long long> v(size);
-                                for (bp::ssize_t i = 0; i < size; ++i) {
-                                    v[i] = static_cast<long long> (bp::extract<long long>(obj[i]));
-                                }
-                                self->setData(v, copy);
-                                return;
-                            } catch (...) {
-                                std::vector<unsigned long long> v(size);
-                                for (bp::ssize_t i = 0; i < size; ++i) {
-                                    v[i] = static_cast<unsigned long long> (bp::extract<unsigned long long>(obj[i]));
-                                }
-                                self->setData(v, copy);
-                                return;
-                            }
-                        }
-                    }
-                }
-                if (PyFloat_Check(list0.ptr())) {
-                    std::vector<double> v(size);
-                    for (bp::ssize_t i = 0; i < size; ++i) {
-                        v[i] = bp::extract<double>(obj[i]);
-                    }
-                    self->setData(v, copy);
-                    return;
-                }
-            }
-            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type");
+            throw KARABO_PYTHON_EXCEPTION("Unsupported parameter type. The 1st argument must be of 'numpy.ndarray' type.");
         }
 
 
@@ -827,15 +763,9 @@ void exportPyXmsInputOutputChannel() {
     {
         bp::class_<Data, boost::shared_ptr<Data> >("Data", bp::init<>())
 
-                //.def(bp::init<const Hash&>())
+                .def(bp::init<const string&, const Hash&>((bp::arg("channel"), bp::arg("config"))))
 
-                .def(bp::init<const string&, const Hash&>())
-
-                //.def(bp::init<const Hash::Pointer&>())
-
-                //.def(bp::init<const Data&>())
-
-                .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("obj"))))
+                .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("data"))))
                 
                 .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
 
@@ -843,11 +773,11 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("get", &karathon::DataWrap().get, (bp::arg("key")))
 
-                .def("__getitem__", &karathon::DataWrap().get, (bp::arg("key")))
+                .def("__getitem__", &karathon::DataWrap().get)
 
                 .def("set", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
 
-                .def("__setitem__", &karathon::DataWrap().set, (bp::arg("key"), bp::arg("value")))
+                .def("__setitem__", &karathon::DataWrap().set)
         
                 .def("has", &Data::has, (bp::arg("key")))
         
@@ -876,21 +806,21 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("__init__", bp::make_constructor(&karathon::NDArrayWrap::make2,
                                                       bp::default_call_policies(),
-                                                      (bp::arg("object"), bp::arg("copy") = true)))
+                                                      (bp::arg("array") = bp::object(), bp::arg("copy") = true)))
 
                 .def("getData", &karathon::NDArrayWrap::getDataPy)
 
-                .def("setData", &karathon::NDArrayWrap::setDataPy, (bp::arg("data"), bp::arg("copy_flag") = true))
+                .def("setData", &karathon::NDArrayWrap::setDataPy, (bp::arg("array"), bp::arg("copy") = true))
 
                 .def("getDimensions", &karathon::NDArrayWrap::getDimensionsPy)
 
                 .def("setDimensions", &karathon::NDArrayWrap::setDimensionsPy, (bp::arg("dims")))
 
-                .def("setDimensionTypes", &karathon::NDArrayWrap::setDimensionTypesPy, (bp::arg("list_of_dimension_types")))
+                .def("setDimensionTypes", &karathon::NDArrayWrap::setDimensionTypesPy, (bp::arg("types")))
 
                 .def("getDataType", &NDArray::getDataType, bp::return_value_policy<bp::copy_const_reference > ())
 
-                .def("setIsBigEndian", &NDArray::setIsBigEndian, (bp::arg("isBigEndian")))
+                .def("setIsBigEndian", &NDArray::setIsBigEndian, (bp::arg("bigEndian")))
 
                 .def("isBigEndian", &NDArray::isBigEndian)
 
@@ -1037,7 +967,7 @@ void exportPyXmsInputOutputChannel() {
                      , bp::return_internal_reference<> ())
 
                 .def("setDimensions", &ImageDataElement::setDimensions
-                     , (bp::arg("dimensions"))
+                     , (bp::arg("dims"))
                      , bp::return_internal_reference<> ())
 
                 .def("setEncoding", &ImageDataElement::setEncoding
