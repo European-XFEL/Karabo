@@ -136,7 +136,10 @@ namespace karathon {
             npy_intp shape[dims.size()];
             for (size_t i = 0; i < dims.size(); ++i) shape[i] = dims[i];
             
-            int npyType = karabo::util::Types::convert<FromLiteral, ToNumpy > (self->getDataType());
+            // Force to make an ownership of the data (implicitly copying from external source to NDArray object)
+            int npyType = Types::convert<FromLiteral, ToNumpy > (self->getDataType());
+            if (self->hash()->getType("data") == Types::ARRAY_CHAR) self->getData();
+            
             std::vector<char>& v = self->get<std::vector<char> >("data");
             PyObject* pyobj = PyArray_SimpleNewFromData(dims.size(), shape, npyType, &v[0]);
             return bp::object(bp::handle<>(pyobj));
