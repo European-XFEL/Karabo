@@ -36,11 +36,11 @@ namespace karabo {
              * Configuration constructor
              * This constructor should be used for filling in data that is going to be sent
              */
-            NDArray(const karabo::util::Hash& config);                      
-            
-            
-            NDArray(const karabo::util::Hash::Pointer& data);                           
-            
+            NDArray(const karabo::util::Hash& config);
+
+
+            NDArray(const karabo::util::Hash::Pointer& data);
+
 
             template <class T>
             NDArray(const T * const data,
@@ -48,16 +48,16 @@ namespace karabo {
                     const bool copy = true,
                     const karabo::util::Dims& dimensions = karabo::util::Dims(),
                     const bool isBigEndian = karabo::util::isBigEndian());
-                     
-            
+
+
             virtual ~NDArray();
-            
+
 
             const char* getDataPointer() const;
 
             size_t getByteSize() const;
 
-            const std::vector<char>& getData();                        
+            const std::vector<char>& getData();
 
             template <class T>
             inline void setData(const std::vector<T>& data, const bool copy = true) {
@@ -102,7 +102,7 @@ namespace karabo {
             bool isBigEndian() const;
 
             const std::vector<std::vector<std::string> >& getDimensionScales() const;
-            
+
             void setDimensionScales(const std::string& scales);
 
         protected:
@@ -114,22 +114,52 @@ namespace karabo {
 
 
         };
-        
-        
+
+        template<>
+        inline void NDArray::setData(const char* data, const size_t size, const bool copy) {
+            if (copy) {
+                boost::optional<karabo::util::Hash::Node&> node = m_hash->find("data");
+                if (node) {
+                    if (node->getType() == karabo::util::Types::ARRAY_CHAR) {
+                        // replace std::pair<const char*, size_t> value by std::vector<char>
+                        std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
+                        buffer.resize(size);
+                        std::memcpy(&buffer[0], data, size);
+                        // Do not touch "dataType" and other keys
+                        return;
+                    } else {
+                        std::vector<char>& buffer = node->getValue<std::vector<char> >();
+                        buffer.resize(size);
+                        std::memcpy(&buffer[0], reinterpret_cast<const char*> (data), size);
+                    }
+                } else {
+                    std::vector<char>& buffer = m_hash->bindReference<std::vector<char> >("data");
+                    buffer.resize(size);
+                    std::memcpy(&buffer[0], reinterpret_cast<const char*> (data), size);
+                }
+            } else {
+                // We have to be very careful with the exact type here. For the RTTI const T* and T* are different!
+                // The Type system currently knows only about pair<const T*, size_t> NOT pair<T*, size_t>
+                m_hash->set("data", std::make_pair(reinterpret_cast<const char*> (data), size));
+            }
+
+            m_hash->set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<char>()));
+        }
+
         struct NDArrayElement : public DataElement<NDArrayElement, NDArray> {
-            
+
             NDArrayElement(karabo::util::Schema& s) : DataElement<NDArrayElement, NDArray>(s) {
-            }                        
-            
+            }
+
             NDArrayElement& setDimensionScales(const std::string& scales) {
                 return setDefaultValue("dimScales", scales);
             }
-            
+
             NDArrayElement& setDimensions(const std::string& dimensions) {
                 return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
-            }                        
+            }
         };
-        
+
         typedef NDArrayElement NDARRAY_ELEMENT;
     }
 }
