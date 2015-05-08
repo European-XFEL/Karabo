@@ -5,8 +5,10 @@
 import karabo
 
 from asyncio import set_event_loop
+import os
 import os.path as osp
 import re
+import socket
 import sys
 
 import IPython
@@ -42,7 +44,8 @@ class DeviceClient(Macro, DeviceClientBase):
                 raise AttributeError('Unknown device "{}"'.format(name))
 
 
-devices = DeviceClient()
+devices = DeviceClient(_deviceId_="ikarabo-{}-{}".format(socket.gethostname(),
+                                                         os.getpid()))
 set_event_loop(NoEventLoop(devices))
 
 ip = IPython.get_ipython()
