@@ -75,7 +75,7 @@ namespace karabo {
                         .displayedName("Local Image Storage")
                         .commit();
                 
-                 BOOL_ELEMENT(expected).key("imageStorage.enable")
+                BOOL_ELEMENT(expected).key("imageStorage.enable")
                         .displayedName("Enable")
                         .description("Save images while acquiring.")
                         .assignmentOptional().defaultValue(false)
@@ -155,10 +155,12 @@ namespace karabo {
             
             void startFsm() {
                 this->initialize();
-            }                         
+            }
+            
+            void stopFsm() { }
         };
-    }
-}
+    } // namespace core
+} // namespace karabo
 
-#endif	/* CAMERAINTERFACE_HH */
+#endif	/* KARABO_CORE_CAMERAINTERFACE_HH */
 
