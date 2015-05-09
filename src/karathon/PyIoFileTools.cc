@@ -340,6 +340,47 @@ public:
 };
 
 
+template <>
+class BinarySerializerWrap<Hash> {
+
+public:
+
+
+    static bp::object save(karabo::io::BinarySerializer<Hash>& s, const boost::shared_ptr<Hash>& object) {
+        std::vector<char> v;
+        s.save(object, v);
+        return bp::object(bp::handle<>(PyBytes_FromStringAndSize(&v[0], v.size())));
+    }
+
+
+    static bp::object load(karabo::io::BinarySerializer<Hash>& s, const bp::object& obj) {
+        if (PyBytes_Check(obj.ptr())) {
+            PyObject* bytearray = obj.ptr();
+            size_t size = PyBytes_Size(bytearray);
+            char* data = PyBytes_AsString(bytearray);
+            Hash::Pointer object(new Hash);
+            s.load(object, data, size);
+            return bp::object(object);
+            // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
+        } else if (PyByteArray_Check(obj.ptr())) {
+            PyObject* bytearray = obj.ptr();
+            size_t size = PyByteArray_Size(bytearray);
+            char* data = PyByteArray_AsString(bytearray);
+            Hash::Pointer object(new Hash);
+            s.load(object, data, size);
+            return bp::object(object);
+            // TODO: Check whether there is a better way to go from python string to vector<char> or the like...
+        } else if (bp::extract<std::string>(obj).check()) {
+            Hash::Pointer object(new Hash);
+            const string& tmp = bp::extract<std::string>(obj);
+            s.load(object, tmp.c_str(), tmp.size() - 1);
+            return bp::object(object);
+        }
+        throw KARABO_PYTHON_EXCEPTION("Python object type must be either string, bytes or bytearray!");
+    }
+};
+
+
 template <class T>
 void exportPyIoBinarySerializer() {
     bp::docstring_options docs(true, true, false);
