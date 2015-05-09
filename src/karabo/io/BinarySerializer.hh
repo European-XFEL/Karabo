@@ -30,9 +30,21 @@ namespace karabo {
             virtual void save(const T& object, std::vector<char>& archive) = 0;
 
             virtual void load(T& object, const char* archive, const size_t nBytes) = 0;
-
+            
             void load(T& object, const std::vector<char>& archive) {
                 load(object, &archive[0], archive.size());
+            }
+
+            void save(const boost::shared_ptr<T>& object, std::vector<char>& archive) {
+                save(*object, archive);
+            }
+            
+            void load(const boost::shared_ptr<T>& object, const char* archive, const size_t nBytes) {
+                load(*object, archive, nBytes);
+            }
+
+            void load(const boost::shared_ptr<T>& object, const std::vector<char>& archive) {
+                load(*object, &archive[0], archive.size());
             }
 
             std::vector<char> save(const T& object) {
