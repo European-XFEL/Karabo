@@ -12,6 +12,12 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
+# Create a copy of the original if not done yet
+if [ ! -e "allInfo" ]; then
+    cp allInfo.orig allInfo
+fi
+
+
 # check startup
 ./allCheck
 check=$?

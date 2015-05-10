@@ -11,6 +11,9 @@ if [ $? -ne 0 ]; then
     exit 1;
 fi
 
+if [ ! -e "allInfo" ]; then
+    cp allInfo.orig allInfo
+fi
 
 # returns the number of xterms running and cleans up if there are none
 function fclean()
