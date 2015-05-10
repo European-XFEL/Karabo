@@ -267,7 +267,8 @@ namespace karabo {
             loadLogger(config);
 
             m_heartbeatIntervall = config.get<int>("heartbeatInterval");
-            m_nThreads = config.get<int>("nThreads");
+            
+            setNumberOfThreads(config.get<int>("nThreads"));
         }
 
 
@@ -345,7 +346,7 @@ namespace karabo {
 
             KARABO_LOG_INFO << "Starting Karabo DeviceServer on host: " << boost::asio::ip::host_name();
             KARABO_LOG_INFO << "ServerId: " << m_serverId;
-            KARABO_LOG_INFO << "Broker (host/topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << "/"
+            KARABO_LOG_INFO << "Broker (host:port:topic): " << m_connectionConfiguration.get<string>("Jms.hostname") << ":"
                     << m_connectionConfiguration.get<string>("Jms.destinationName");
 
             // Initialize SignalSlotable instance
@@ -359,7 +360,7 @@ namespace karabo {
             instanceInfo.set("version", karabo::util::Version::getVersion());
             instanceInfo.set("host", boost::asio::ip::host_name());
             instanceInfo.set("visibility", m_visibility);
-            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo, m_nThreads));
+            boost::thread t(boost::bind(&karabo::core::DeviceServer::runEventLoop, this, m_heartbeatIntervall, instanceInfo));
             this->startFsm();
             t.join();
 

@@ -71,6 +71,10 @@ namespace karabo {
 
 
         private: // Functions
+            
+            void safeClientWrite(const karabo::net::Channel::Pointer channel, const karabo::util::Hash& message);
+            
+            void safeAllClientsWrite(const karabo::util::Hash& message);
 
             void onError(karabo::net::Channel::Pointer channel, const karabo::net::ErrorCode& errorMessage);
 

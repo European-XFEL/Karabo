@@ -401,7 +401,7 @@ class Schema(hashtypes.Descriptor):
     def parse(cls, key, hash, attrs, parent=None):
         nodes = (Schema.parseLeaf, Schema.parse, ChoiceOfNodes.parse,
                  ListOfNodes.parse)
-        print(attrs.get('displayType'))
+        #print(attrs.get('displayType'))
         self = dict(NDArray=ImageNode, ImageData=ImageNode, Image=ImageNode, Slot=SlotNode, OutputChannel=OutputNode).get(
                 attrs.get('displayType', None), cls)(key)
         self.displayedName = key

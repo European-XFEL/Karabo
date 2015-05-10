@@ -149,7 +149,7 @@ namespace karabo {
             }
 
             void update();
-
+                     
             void signalEndOfStream();
 
         private:

@@ -47,7 +47,11 @@ namespace karabo {
                     const size_t size,
                     const bool copy = true,
                     const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                    const bool isBigEndian = karabo::util::isBigEndian());
+                    const bool isBigEndian = karabo::util::isBigEndian()) {
+                setData(data, size, copy);
+                setDimensions(dimensions);
+                setIsBigEndian(isBigEndian);
+            }
 
 
             virtual ~NDArray();

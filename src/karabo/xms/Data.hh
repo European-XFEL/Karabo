@@ -38,6 +38,9 @@ namespace karabo {
             Data(const Data& other);
             
             Data(const std::string& channelName, const karabo::util::Hash& config);
+            
+            // Think about
+            //Data(const std::string& key, const Data& other);
 
             /**
              * Constructor for receiving

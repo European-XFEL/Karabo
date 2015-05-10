@@ -154,9 +154,9 @@ namespace karathon {
             return boost::shared_ptr<SignalSlotableWrap>(new SignalSlotableWrap(instanceId, connectionType, connectionParameters, autostart, heartbeatInterval));
         }
 
-        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash(), int nThreads = 2) {
+        void runEventLoop(int emitHeartbeat = 10, const karabo::util::Hash& info = karabo::util::Hash()) {
             ScopedGILRelease nogil;
-            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info, nThreads);
+            karabo::xms::SignalSlotable::runEventLoop(emitHeartbeat, info);
         }
 
         void stopEventLoop() {

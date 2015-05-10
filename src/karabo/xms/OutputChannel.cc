@@ -630,8 +630,10 @@ namespace karabo {
                         copyRemote(chunkId, channelInfo);
                     }
                 } else if (onSlowness == "drop") {
+                    unregisterWriterFromChunk(chunkId);
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Dropping (copied) data package for " << instanceId;
                 } else if (onSlowness == "throw") {
+                    unregisterWriterFromChunk(chunkId);
                     throw KARABO_IO_EXCEPTION("Can not write (copied) data because input channel of " + instanceId + " was too late");
                 } else if (onSlowness == "queue") {
                     KARABO_LOG_FRAMEWORK_DEBUG << "OUTPUT Queuing (copied) data package for " << instanceId;
