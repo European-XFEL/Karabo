@@ -16,7 +16,7 @@
 #include <string>
 #include <karabo/util.hpp>
 #include <karabo/util/SignalHandler.hh>
-#include <karabo/xms/SignalSlotable.hh>
+#include <karabo/xms.hpp>
 #include <karabo/log/Logger.hh>
 #include <karabo/xip/CpuImage.hh>
 #include <karabo/xip/RawImageData.hh>
@@ -69,9 +69,7 @@ namespace karabo {
 
             std::string m_classId;
             std::string m_serverId;
-            std::string m_deviceId;
-            
-            int m_nThreads;
+            std::string m_deviceId;                        
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             mutable boost::mutex m_stateDependendSchemaMutex;
@@ -259,9 +257,6 @@ namespace karabo {
 
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase) {
                 
-                // By default every device runs in a single threaded context
-                m_nThreads = 1;
-
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
                 
@@ -335,16 +330,7 @@ namespace karabo {
                     m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
                 }
                 return *(m_deviceClient);
-            }
-            
-            /**
-             * Sets the number of threads that will be used for processing all slots of this device
-             * For every slot that is blocking until it gets unblocked
-             * through a different slot an additional thread is needed.
-             */
-            void setNumberOfThreads(int nThreads) {
-                m_nThreads = nThreads;
-            }
+            }                      
 
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
@@ -384,6 +370,24 @@ namespace karabo {
                 hash.setAttribute(key, "image", 1);
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 emit("signalChanged", hash, getInstanceId());
+            }
+            
+            template <class PixelType>
+            void set(const karabo::xms::OutputChannel::Pointer& channel, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+                using namespace karabo::util;
+                int nDims = image.dimensionality();
+                Dims dims;
+                if (nDims == 1) {
+                    dims = Dims(image.size());
+                } else if (nDims == 2) {
+                    dims = Dims(image.height(), image.width());
+                } else {
+                    dims = Dims(image.depth(), image.height(), image.width());
+                }               
+                karabo::xms::Data data;
+                data.setNode(key, karabo::xms::ImageData(image.pixelPointer(), image.size(), true, dims));
+                channel->write(data);
+                channel->update();                
             }
 
             void set(const std::string& key, const karabo::xip::RawImageData& image) {
@@ -821,10 +825,7 @@ namespace karabo {
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo, m_nThreads));
-
-                // Give the broker communication some time to come up
-                //boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));                
 
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 

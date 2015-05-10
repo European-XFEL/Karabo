@@ -424,10 +424,11 @@ namespace karathon {
 
         karabo::net::BrokerConnection::Pointer connection = karabo::net::BrokerConnection::create(connectionType, connectionParameters);
         this->init(instanceId, connection);
+        this->setNumberOfThreads(2);
 
         if (autostartEventLoop) {
             ScopedGILRelease nogil;
-            m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash(), 2));
+            m_eventLoop = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, this, heartbeatInterval, karabo::util::Hash()));
             boost::this_thread::sleep(boost::posix_time::milliseconds(10)); // give a chance above thread to start up before leaving this constructor
         }
     }

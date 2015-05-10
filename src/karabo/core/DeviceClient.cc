@@ -34,8 +34,9 @@ namespace karabo {
 
             std::string ownInstanceId = generateOwnInstanceId();
             m_internalSignalSlotable = karabo::xms::SignalSlotable::Pointer(new SignalSlotable(ownInstanceId, brokerType, brokerConfiguration));
+            m_internalSignalSlotable->setNumberOfThreads(2);
             m_signalSlotable = m_internalSignalSlotable;
-            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, Hash(), 2));
+            m_eventThread = boost::thread(boost::bind(&karabo::xms::SignalSlotable::runEventLoop, m_internalSignalSlotable, 60, Hash()));
 
             // TODO Comment in to activate aging
             m_ageingThread = boost::thread(boost::bind(&karabo::core::DeviceClient::age, this));
@@ -165,10 +166,7 @@ namespace karabo {
             string path(prepareTopologyPath(instanceId, instanceInfo));
 
             // If this is true, the instance silently died and was restarted so quickly we couldn't recognize
-            if (existsInRuntimeSystemDescription(path)) {
-
-                KARABO_LOG_FRAMEWORK_INFO << "Detected unrecognized dirty shutdown of instance \"" << instanceId
-                        << "\", which got quickly restarted and is now available again";
+            if (existsInRuntimeSystemDescription(path)) {              
 
                 eraseFromRuntimeSystemDescription(path);
                 eraseFromInstanceUsage(instanceId);
