@@ -21,13 +21,13 @@
 ##################
 
 # If you are using Karabo at home and run a local broker you can you use directly
-#export KARABO_BROKER_HOSTS="localhost:7777"
+export KARABO_BROKER_HOSTS="localhost:7777"
 
 # If you are only at the European XFEL GmbH you may use this settings
 #export KARABO_BROKER_HOSTS="exfl-broker:7777"
 
 # This setting is the default, it will try the XFEL broker first and failover to a local if unsuccessful
-export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
+#export KARABO_BROKER_HOSTS="exfl-broker:7777,localhost:7777"
 
 
 #################
@@ -81,7 +81,7 @@ ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serve
 # Device Server C++ #
 #####################
 
-ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer::0:100:yes"
+ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer:DeviceServer.Logger.priority=DEBUG:0:100:yes"
 
 
 ########################
@@ -95,5 +95,5 @@ ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServ
 # User Interfaces #
 ###################
 
-#ALLINFO[30]="./startGui::0:100:no"
+ALLINFO[30]="./startGui::0:100:no"
 #ALLINFO[31]="./startCli::0:100:no"
