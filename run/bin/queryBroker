@@ -10,7 +10,7 @@ if [ -z $KARABO ]; then
 fi
 
 if [ -z $KARABO_BROKER_HOST ]; then
-   $KARABO/extern/bin/imqcmd $@
+   $KARABO/extern/bin/imqcmd "$@"
 else
    host=$KARABO_BROKER_HOST 
    port=`grep port= $KARABO/extern/bin/imqcmd|cut -c 6-`
