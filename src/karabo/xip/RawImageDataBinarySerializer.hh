@@ -37,7 +37,7 @@ namespace karabo {
             }
 
             RawImageBinarySerializer(const karabo::util::Hash& input) {
-                m_hashSerializer = HashSerializer::create("Bin", karabo::util::Hash(), false); // No validation for speed
+                m_hashSerializer = HashSerializer::create("Bin", karabo::util::Hash("nodesAsSharedPtr", false), false); // No validation for speed
             }
 
             void save(const RawImageData& image, std::vector<char>& archive) {

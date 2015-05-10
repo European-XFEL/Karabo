@@ -273,11 +273,11 @@ namespace karabo {
             
             inline const int dimensionality() const {
                 // zero image
-                if ((dimX() <= 1) && (dimY() <= 1) && (dimZ() <= 1)) return 0;
+                if ((width() <= 1) && (height() <= 1) && (depth() <= 1)) return 0;
                 // three dimensional image
-                if ((dimX() > 1) && (dimY() > 1) && (dimZ() > 1)) return 3;
+                if ((width() > 1) && (height() > 1) && (depth() > 1)) return 3;
                 // two dimensional image
-                if (((dimX() > 2) && (dimY() > 1)) || ((dimX() > 1) && (dimZ() > 1)) || ((dimY() > 1) && (dimZ() > 1))) return 2;
+                if (((width() > 2) && (height() > 1)) || ((width() > 1) && (depth() > 1)) || ((height() > 1) && (depth() > 1))) return 2;
                 return 1;
             }
             
@@ -285,20 +285,20 @@ namespace karabo {
                 int nDims = dimensionality();
                 if (nDims == 1) {
                     std::vector<unsigned long long> v(1);
-                    v[0] = dimX();
+                    v[0] = width();
                     return v;
                 } 
                 if (nDims == 2) {
                     std::vector<unsigned long long> v(2);
-                    v[0] = dimX();
-                    v[1] = dimY();
+                    v[0] = width();
+                    v[1] = height();
                     return v;
                 }
                 if (nDims == 3) {
                     std::vector<unsigned long long> v(3);
-                    v[0] = dimX();
-                    v[1] = dimY();
-                    v[2] = dimZ();
+                    v[0] = width();
+                    v[1] = height();
+                    v[2] = depth();
                     return v;
                 }
                 return std::vector<unsigned long long>();
@@ -308,15 +308,27 @@ namespace karabo {
                 return m_cimg.is_empty();
             }
 
-            inline size_t dimX() const {
+            KARABO_DEPRECATED inline size_t dimX() const {
                 return m_cimg.width();
             }
 
-            inline size_t dimY() const {
+            KARABO_DEPRECATED inline size_t dimY() const {
                 return m_cimg.height();
             }
 
-            inline size_t dimZ() const {
+            KARABO_DEPRECATED inline size_t dimZ() const {
+                return m_cimg.depth();
+            }
+            
+            inline size_t width() const {
+                return m_cimg.width();
+            }
+
+            inline size_t height() const {
+                return m_cimg.height();
+            }
+
+            inline size_t depth() const {
                 return m_cimg.depth();
             }
 
@@ -981,11 +993,11 @@ namespace karabo {
             }
 
             void display3dVectors(const std::string& title) {
-                if (dimZ() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
-                if (dimY() != 3 && dimX() == 3) {
+                if (depth() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                if (height() != 3 && width() == 3) {
                     ci::CImg<TPix> tmp = m_cimg.get_permute_axes("yxzc");
                     ci::CImg<unsigned char>().display_object3d(title.c_str(), tmp);
-                } else if (dimY() == 3) {
+                } else if (height() == 3) {
                     ci::CImg<unsigned char>().display_object3d(title.c_str(), m_cimg);
                 } else {
                     throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
@@ -994,11 +1006,11 @@ namespace karabo {
 
             void displayAndKeep3dVectors(const std::string& title) {
                 CImgDisplayPointer d = CImgDisplayPointer(new ci::CImgDisplay());
-                if (dimZ() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
-                if (dimY() != 3 && dimX() == 3) {
+                if (depth() != 1) throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");
+                if (height() != 3 && width() == 3) {
                     ci::CImg<TPix> tmp = m_cimg.get_permute_axes("yxzc");
                     ci::CImg<unsigned char>().display_object3d(*d, tmp);
-                } else if (dimY() == 3) {
+                } else if (height() == 3) {
                     ci::CImg<unsigned char>().display_object3d(*d, m_cimg);
                 } else {
                     throw KARABO_IMAGE_DIMENSION_EXCEPTION("Expecting 3d vector type data");

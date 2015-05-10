@@ -62,9 +62,7 @@ namespace karabo {
             std::string m_serverId;
 
             int m_heartbeatIntervall;
-            int m_nThreads;
-
-
+            
         public:
 
             KARABO_CLASSINFO(DeviceServer, "DeviceServer", karabo::util::Version::getVersion())

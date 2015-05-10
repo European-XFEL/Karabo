@@ -358,7 +358,8 @@ namespace karabo {
             std::string m_instanceId;
             karabo::util::Hash m_instanceInfo;
             std::string m_username;
-
+            int m_nThreads;
+            
             SignalInstances m_signalInstances;
             SlotInstances m_localSlotInstances;
             SlotInstances m_globalSlotInstances;
@@ -600,11 +601,20 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
              * @return string username
              */
             const std::string& getUserName() const;
+            
+            /**
+             * Sets number of threads that will work on the registered slots.
+             * Re-entry of the same slot on a different thread will never happen.
+             * Only different slots may run concurrently (if nThreads > 1)
+             * NOTE: This function takes only affect BEFORE the event loop was started
+             * @param nThreads The number of threads that should be used
+             */
+            void setNumberOfThreads(int nThreads);
 
             /**
              * This function will block the main-thread.
              */
-            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash(), int nThreads = 2);
+            void runEventLoop(int heartbeatIntervall = 10, const karabo::util::Hash& instanceInfo = karabo::util::Hash());
 
             /**
              * This function will stop all consumers and un-block the runEventLoop() function
@@ -753,27 +763,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
 
 
-            bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose = false);
-
-
-
-            /**
-             * This function finds all signal keys within a Hash object (non-recursive) by a regular expression.
-             * It will then automatically establish connections to the corresponding slot values.
-             *
-             * @param config Hash object as obtained by the configure method
-             * @param signalRegularExpression A perl-regular expression for the signal key
-             */
-            KARABO_DEPRECATED void autoConnectAllSignals(const karabo::util::Hash& config, const std::string signalRegularExpression = "^signal.*");
-
-            /**
-             * This function finds all slot keys within a Hash object (non-recursive) by a regular expression.
-             * It will then automatically establish connections to the corresponding signal values.
-             *
-             * @param config Hash object as obtained by the configure method
-             * @param slotRegularExpression A perl-regular expression for the signal key
-             */
-            KARABO_DEPRECATED void autoConnectAllSlots(const karabo::util::Hash& config, const std::string slotRegularExpression = "^slot.*");
+            bool disconnect(std::string signalInstanceId, const std::string& signalFunction, std::string slotInstanceId, const std::string& slotFunction, const bool isVerbose = false);         
 
             /**
              * Emits a void signal.
@@ -1293,8 +1283,6 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             void emitHeartbeat();
 
             void registerDefaultSignalsAndSlots();
-
-            void initReconnectIntervals();
 
             void startTrackingSystem();
 

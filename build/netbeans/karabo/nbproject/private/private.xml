@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <data xmlns="http://www.netbeans.org/ns/make-project-private/1">
+        <activeConfTypeElem>2</activeConfTypeElem>
+        <activeConfIndexElem>0</activeConfIndexElem>
+    </data>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/net/JmsBrokerConnection.cc</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/xms/SignalSlotable.cc</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/net/BrokerConnection.cc</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/net/JmsBrokerChannel.hh</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/xms/SignalSlotable.hh</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/core/GuiServerDevice.cc</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/net/JmsBrokerConnection.hh</file>
+            <file>file:/home/cas/Development/karaboFramework-src-1.3/src/karabo/net/JmsBrokerChannel.cc</file>
+        </group>
+    </open-files>
+</project-private>
