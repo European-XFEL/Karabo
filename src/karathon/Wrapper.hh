@@ -93,7 +93,24 @@ namespace karathon {
             SIMPLE = karabo::util::Types::SIMPLE,
             SEQUENCE = karabo::util::Types::SEQUENCE,
             POINTER = karabo::util::Types::POINTER,
-            LAST_CPP_TYPE = karabo::util::Types::POINTER + 1,
+            RAW_ARRAY = karabo::util::Types::RAW_ARRAY,
+            
+            ARRAY_BOOL = karabo::util::Types::ARRAY_BOOL,
+            ARRAY_CHAR = karabo::util::Types::ARRAY_CHAR,
+            ARRAY_INT8 = karabo::util::Types::ARRAY_INT8,
+            ARRAY_UINT8 = karabo::util::Types::ARRAY_UINT8,
+            ARRAY_INT16 = karabo::util::Types::ARRAY_INT16,
+            ARRAY_UINT16 = karabo::util::Types::ARRAY_UINT16,
+            ARRAY_INT32 = karabo::util::Types::ARRAY_INT32,
+            ARRAY_UINT32 = karabo::util::Types::ARRAY_UINT32,
+            ARRAY_INT64 = karabo::util::Types::ARRAY_INT64,
+            ARRAY_UINT64 = karabo::util::Types::ARRAY_UINT64,
+            ARRAY_FLOAT = karabo::util::Types::ARRAY_FLOAT,
+            ARRAY_DOUBLE = karabo::util::Types::ARRAY_DOUBLE,
+            
+            HASH_POINTER = karabo::util::Types::HASH_POINTER,
+            VECTOR_HASH_POINTER = karabo::util::Types::VECTOR_HASH_POINTER,
+            LAST_CPP_TYPE = karabo::util::Types::VECTOR_HASH_POINTER + 1,
             PYTHON_DEFAULT,                                     // global switch: treat std::vector as bp::list
             NUMPY_DEFAULT,                                      // global switch: treat std::vector as numpy ndarray
             NDARRAY_BOOL,                                       // numpy ndarray of booleans
@@ -166,6 +183,21 @@ namespace karathon {
                 case karabo::util::Types::SIMPLE: return SIMPLE;
                 case karabo::util::Types::SEQUENCE: return SEQUENCE;
                 case karabo::util::Types::POINTER: return POINTER;
+                case karabo::util::Types::RAW_ARRAY: return RAW_ARRAY;
+                case karabo::util::Types::ARRAY_BOOL: return ARRAY_BOOL;
+                case karabo::util::Types::ARRAY_CHAR: return ARRAY_CHAR;
+                case karabo::util::Types::ARRAY_INT8: return ARRAY_INT8;
+                case karabo::util::Types::ARRAY_UINT8: return ARRAY_UINT8;
+                case karabo::util::Types::ARRAY_INT16: return ARRAY_INT16;
+                case karabo::util::Types::ARRAY_UINT16: return ARRAY_UINT16;
+                case karabo::util::Types::ARRAY_INT32: return ARRAY_INT32;
+                case karabo::util::Types::ARRAY_UINT32: return ARRAY_UINT32;
+                case karabo::util::Types::ARRAY_INT64: return ARRAY_INT64;
+                case karabo::util::Types::ARRAY_UINT64: return ARRAY_UINT64;
+                case karabo::util::Types::ARRAY_FLOAT: return ARRAY_FLOAT;
+                case karabo::util::Types::ARRAY_DOUBLE: return ARRAY_DOUBLE;
+                case karabo::util::Types::HASH_POINTER: return HASH_POINTER;
+                case karabo::util::Types::VECTOR_HASH_POINTER: return VECTOR_HASH_POINTER;
                 default:
                     throw KARABO_PYTHON_EXCEPTION("Unknown type encountered while converting from Types to PyTypes.");
             }
@@ -228,6 +260,21 @@ namespace karathon {
                 case SIMPLE: return karabo::util::Types::SIMPLE;
                 case SEQUENCE: return karabo::util::Types::SEQUENCE;
                 case POINTER: return karabo::util::Types::POINTER;
+                case RAW_ARRAY: return karabo::util::Types::RAW_ARRAY;
+                case ARRAY_BOOL: return karabo::util::Types::ARRAY_BOOL;
+                case ARRAY_CHAR: return karabo::util::Types::ARRAY_CHAR;
+                case ARRAY_INT8: return karabo::util::Types::ARRAY_INT8;
+                case ARRAY_UINT8: return karabo::util::Types::ARRAY_UINT8;
+                case ARRAY_INT16: return karabo::util::Types::ARRAY_INT16;
+                case ARRAY_UINT16: return karabo::util::Types::ARRAY_UINT16;
+                case ARRAY_INT32: return karabo::util::Types::ARRAY_INT32;
+                case ARRAY_UINT32: return karabo::util::Types::ARRAY_UINT32;
+                case ARRAY_INT64: return karabo::util::Types::ARRAY_INT64;
+                case ARRAY_UINT64: return karabo::util::Types::ARRAY_UINT64;
+                case ARRAY_FLOAT: return karabo::util::Types::ARRAY_FLOAT;
+                case ARRAY_DOUBLE: return karabo::util::Types::ARRAY_DOUBLE;
+                case HASH_POINTER: return karabo::util::Types::HASH_POINTER;
+                case VECTOR_HASH_POINTER: return karabo::util::Types::VECTOR_HASH_POINTER;
                 default:
                     throw KARABO_PYTHON_EXCEPTION("Unsupported type encountered while converting from PyTypes to Types.");
             }
