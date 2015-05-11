@@ -114,6 +114,17 @@ namespace karabo {
                         .description("The name of the last saved image")
                         .readOnly()
                         .commit();
+
+                INT32_ELEMENT(expected).key("pollInterval")
+                        .displayedName("Poll Interval")
+                        .description("The interval with which the camera should be polled")
+                        .unit(Unit::SECOND)
+                        .minInc(1)
+                        .assignmentOptional().defaultValue(10)
+                        .reconfigurable()
+                        .allowedStates("HardwareError,Acquiring,Ready")
+                        .commit();
+
             }
 
             void initFsmSlots() {
@@ -122,8 +133,7 @@ namespace karabo {
                 KARABO_SLOT(stop);
                 KARABO_SLOT(resetHardware);
             }
-                        
-            
+
             /* Initializing, none, Ready
              * Ready, acquire, Acquiring
              * Acquiring, stop, Ready
