@@ -99,7 +99,14 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("login"
                  , (bool (SignalSlotable::*)(const std::string&, const std::string&, const std::string&)) (&SignalSlotable::login)
                  , (bp::arg("username"), bp::arg("password"), bp::arg("provider")))
+            
             .def("logout", (bool (SignalSlotable::*)())(&SignalSlotable::logout))
+            
+            .def("setNumberOfThreads"
+                 , (void (SignalSlotable::*)(int))(&SignalSlotable::setNumberOfThreads)
+                 , (bp::arg("nthreads"))
+                 ,"\nSets number of threads that will work on the registered slots.\nRe-entry of the same slot on a different thread will never happen.\n"
+                  "Only different slots may run concurrently (if nThreads > 1).\nNOTE: This function has only effect BEFORE the event loop was started.")
 
             .def("runEventLoop", &SignalSlotableWrap::runEventLoop, (bp::arg("heartbeatInterval") = 10, bp::arg("instanceInfo") = karabo::util::Hash()),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
