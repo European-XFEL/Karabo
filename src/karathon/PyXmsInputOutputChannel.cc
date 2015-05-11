@@ -768,6 +768,8 @@ void exportPyXmsInputOutputChannel() {
 
                 .def(bp::init<const string&, const Hash&>((bp::arg("channel"), bp::arg("config"))))
 
+                .def(bp::init<const string&, const Data&>((bp::arg("key"), bp::arg("other"))))
+
                 .def("__init__", bp::make_constructor(&karathon::DataWrap::make, bp::default_call_policies(), (bp::arg("data"))))
                 
                 .def("setNode", &Data::setNode, (bp::arg("key"), bp::arg("data")))
