@@ -11,6 +11,7 @@
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Dims.hh>
 #include <karabo/util/ToLiteral.hh>
+#include <karabo/xip/CpuImage.hh>
 #include "NDArray.hh"
 
 namespace karabo {
@@ -93,19 +94,43 @@ namespace karabo {
             ImageData( const T * const data,
                       const size_t size,
                       const bool copy = true,
-                      const karabo::util::Dims& dimensions = karabo::util::Dims(),
+                      const karabo::util::Dims& dims = karabo::util::Dims(),
                       const EncodingType encoding = Encoding::GRAY,
-                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : NDArray(data, size, copy, dimensions) {
+                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : NDArray(data, size, copy, dims) {
 
-                if (dimensions.size() == 0) {
+                if (dims.size() == 0) {
                     setROIOffsets(karabo::util::Dims(0));
                 } else {
-                    std::vector<unsigned long long> offsets(dimensions.rank(), 0);
+                    std::vector<unsigned long long> offsets(dims.rank(), 0);
                     setROIOffsets(karabo::util::Dims(offsets));
                 }
                 setEncoding(encoding);
                 if (channelSpace == ChannelSpace::UNDEFINED) setChannelSpace(guessChannelSpace<T>());
                 else setChannelSpace(channelSpace);
+            }
+            
+            template <class T>
+            ImageData(const karabo::xip::CpuImage<T>& image) {
+                using namespace karabo::util;
+                int nDims = image.dimensionality();
+                Dims dims;
+                if (nDims == 1) {
+                    dims = Dims(image.size());
+                } else if (nDims == 2) {
+                    dims = Dims(image.height(), image.width());
+                } else {
+                    dims = Dims(image.depth(), image.height(), image.width());
+                }
+                this->setData(image.pixelPointer(), image.size(), true);
+                this->setDimensions(dims);
+                if (dims.size() == 0) {
+                    setROIOffsets(karabo::util::Dims(0));
+                } else {
+                    std::vector<unsigned long long> offsets(dims.rank(), 0);
+                    setROIOffsets(karabo::util::Dims(offsets));
+                }
+                setEncoding(Encoding::GRAY);
+                setChannelSpace(guessChannelSpace<T>());
             }
 
             /**
