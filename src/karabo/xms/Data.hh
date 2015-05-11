@@ -39,8 +39,8 @@ namespace karabo {
             
             Data(const std::string& channelName, const karabo::util::Hash& config);
             
-            // Think about
-            //Data(const std::string& key, const Data& other);
+            // TODO, add to binding...
+            Data(const std::string& key, const Data& other);
 
             /**
              * Constructor for receiving
@@ -51,7 +51,7 @@ namespace karabo {
             virtual ~Data();
             
             void setNode(const std::string& key, const Data& data);
-
+            
             template <class T>
             T getNode(const std::string& key) {
                 if (m_hash->is<karabo::util::Hash>(key)) {
@@ -92,6 +92,8 @@ namespace karabo {
             
             const karabo::util::Hash::Pointer& hash() const;
 
+            void attachTimestamp(const karabo::util::Timestamp& ts);
+            
             friend std::ostream& operator<<(std::ostream& os, const Data& data);
 
         };

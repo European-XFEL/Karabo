@@ -33,12 +33,12 @@ namespace karabo {
     namespace core {
 
         // Convenient logging
-#define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
-#define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
-#define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
-#define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
+        #define KARABO_LOG_DEBUG this->log() << krb_log4cpp::Priority::DEBUG 
+        #define KARABO_LOG_INFO  this->log() << krb_log4cpp::Priority::INFO 
+        #define KARABO_LOG_WARN  this->log() << krb_log4cpp::Priority::WARN 
+        #define KARABO_LOG_ERROR this->log() << krb_log4cpp::Priority::ERROR
 
-#define KARABO_NO_SERVER "__none__"
+        #define KARABO_NO_SERVER "__none__"
 
         class BaseDevice : public virtual karabo::xms::SignalSlotable {
         public:
@@ -55,7 +55,7 @@ namespace karabo {
             // Can be removed, if sending current configuration after instantiation by server is deprecated
             virtual karabo::util::Hash getCurrentConfiguration(const std::string& tags = "") const = 0;
 
-        };               
+        };
 
         /**
          * The Device class.
@@ -69,7 +69,7 @@ namespace karabo {
 
             std::string m_classId;
             std::string m_serverId;
-            std::string m_deviceId;                        
+            std::string m_deviceId;
 
             std::map<std::string, karabo::util::Schema> m_stateDependendSchema;
             mutable boost::mutex m_stateDependendSchemaMutex;
@@ -84,9 +84,9 @@ namespace karabo {
             int m_progressMax;
 
             unsigned long long m_timeId;
-            unsigned long long m_timeSec;           // seconds
-            unsigned long long m_timeFrac;          // attoseconds
-            unsigned long long m_timePeriod;        // microseconds
+            unsigned long long m_timeSec; // seconds
+            unsigned long long m_timeFrac; // attoseconds
+            unsigned long long m_timePeriod; // microseconds
             mutable boost::mutex m_timeChangeMutex;
 
             krb_log4cpp::Category* m_log;
@@ -208,13 +208,13 @@ namespace karabo {
                         .description("The current state the device is in")
                         .readOnly().initialValue("Ok")
                         .commit();
-                
+
                 BOOL_ELEMENT(expected).key("trafficJam")
                         .displayedName("Traffic jam for messages")
                         .description("Flag denoting traffic jam for messages traveling via broker")
                         .readOnly().initialValue(false)
                         .commit();
-                
+
                 FLOAT_ELEMENT(expected).key("brokerLatency")
                         .displayedName("Broker latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and receiving it on the device before queuing.")
@@ -222,49 +222,49 @@ namespace karabo {
                         .readOnly().initialValue(0)
                         //.warnHigh(10000LL)
                         .commit();
-                
+
                 FLOAT_ELEMENT(expected).key("processingLatency")
                         .displayedName("Processing latency (ms)")
                         .description("Time interval (in millis) between message sending to broker and reading it from the queue on the device.")
                         .expertAccess()
-                        .readOnly().initialValue(0)                        
+                        .readOnly().initialValue(0)
                         //.warnHigh(10000LL)
                         .commit();
-                
+
                 UINT32_ELEMENT(expected).key("messageQueueSize")
                         .displayedName("Local message queue size")
                         .description("Current size of the local message queue.")
                         .readOnly().initialValue(0)
                         //.warnHigh(100)
                         .commit();
-                                
+
                 INT64_ELEMENT(expected).key("latencyUpper")
                         .displayedName("Latency upper limit")
                         .description("Message latency above that the \"Traffic jam\" flag will be set.")
                         .assignmentOptional().defaultValue(10000LL)
                         .adminAccess()
                         .commit();
-                        
+
                 INT64_ELEMENT(expected).key("latencyLower")
                         .displayedName("Latency lower limit")
                         .description("Message latency below that the \"Traffic jam\" flag will be unset.")
                         .assignmentOptional().defaultValue(5000LL)
                         .adminAccess()
                         .commit();
-                        
+
                 FSM::expectedParameters(expected);
             }
 
             Device(const karabo::util::Hash& configuration) : m_errorRegex(".*error.*", boost::regex::icase) {
-                
+
                 // Make the configuration the initial state of the device
                 m_parameters = configuration;
-                
+
                 m_timeId = 0;
                 m_timeSec = 0;
                 m_timeFrac = 0;
                 m_timePeriod = 0;
-                
+
                 // Set serverId
                 if (configuration.has("_serverId_")) configuration.get("_serverId_", m_serverId);
                 else m_serverId = KARABO_NO_SERVER;
@@ -300,13 +300,13 @@ namespace karabo {
 
                 // Register guard for slot calls
                 this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
-                
+
                 // Register exception handler
                 this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
-                
+
                 // Register updateLatencies handler
                 this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
-                
+
                 SLOT4(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
 
             }
@@ -330,7 +330,7 @@ namespace karabo {
                     m_deviceClient = boost::shared_ptr<DeviceClient > (new DeviceClient(shared_from_this()));
                 }
                 return *(m_deviceClient);
-            }                      
+            }
 
             /**
              * Updates the state of the device. This function automatically notifies any observers in the distributed system.
@@ -355,10 +355,10 @@ namespace karabo {
             }
 
             template <class PixelType>
-            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
                 this->set<PixelType>(key, image, getActualTimestamp());
             }
-            
+
             template <class PixelType>
             void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
@@ -371,30 +371,30 @@ namespace karabo {
                 m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 emit("signalChanged", hash, getInstanceId());
             }
-            
+
             template <class PixelType>
             void set(const karabo::xms::OutputChannel::Pointer& channel, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
-                using namespace karabo::util;
-                int nDims = image.dimensionality();
-                Dims dims;
-                if (nDims == 1) {
-                    dims = Dims(image.size());
-                } else if (nDims == 2) {
-                    dims = Dims(image.height(), image.width());
-                } else {
-                    dims = Dims(image.depth(), image.height(), image.width());
-                }               
-                karabo::xms::Data data;
-                data.setNode(key, karabo::xms::ImageData(image.pixelPointer(), image.size(), true, dims));
-                channel->write(data);
-                channel->update();                
+                karabo::xms::Data data(key, karabo::xms::ImageData(image));
+                set(channel, data);                
             }
 
-            void set(const std::string& key, const karabo::xip::RawImageData& image) {
+            void set(const karabo::xms::OutputChannel::Pointer& channel, const std::string& key, const karabo::xms::Data& data) {
+                karabo::xms::Data root(key, data);
+                set(channel, root);
+            }
+
+            void set(const karabo::xms::OutputChannel::Pointer& channel, karabo::xms::Data& data) {
+                // TODO think about proper validation and time tagging later
+                data.attachTimestamp(getActualTimestamp());
+                channel->write(data);
+                channel->update();
+            }
+
+            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image) {
                 this->set(key, image, getActualTimestamp());
             }
-            
-            void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp) {
+
+            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
 
                 Hash hash(key, image.hash());
@@ -413,7 +413,7 @@ namespace karabo {
             void set(const karabo::util::Hash& hash) {
                 this->set(hash, getActualTimestamp());
             }
-            
+
             /**
              * Updates the state of the device with all key/value pairs given in the hash
              * NOTE: This function will automatically and efficiently (only one message) inform
@@ -735,7 +735,7 @@ namespace karabo {
             KARABO_DEPRECATED void exceptionFound(const std::string& shortMessage, const std::string& detailedMessage) const {
                 KARABO_LOG_ERROR << detailedMessage;
             }
-            
+
             void exceptionFound(const karabo::util::Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
@@ -744,6 +744,7 @@ namespace karabo {
 
             // This function will polymorphically be called by the FSM template
             // TODO Make it private
+
             virtual void onNoStateTransition(const std::string& typeId, int state) {
                 std::string eventName(typeId);
                 boost::regex re(".*\\d+(.+Event).*");
@@ -759,13 +760,14 @@ namespace karabo {
             }
 
             // Use execute instead to trigger your error event
+
             KARABO_DEPRECATED virtual void triggerError(const std::string& shortMessage, const std::string& detailedMessage) const {
                 KARABO_LOG_ERROR << detailedMessage;
             }
 
             virtual void onTimeUpdate(unsigned long long id, unsigned long long sec, unsigned long long frac, unsigned long long period) {
             }
-            
+
             void execute(const std::string& command) const {
                 call("", command);
             }
@@ -825,7 +827,7 @@ namespace karabo {
                 instanceInfo.set("status", "ok");
                 instanceInfo.set("archive", this->get<bool>("archive"));
 
-                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));                
+                boost::thread t(boost::bind(&karabo::core::Device<FSM>::runEventLoop, this, this->get<int>("heartbeatInterval"), instanceInfo));
 
                 KARABO_LOG_INFO << m_classId << " with deviceId: \"" << this->getInstanceId() << "\" got started";
 
@@ -853,7 +855,7 @@ namespace karabo {
                     KARABO_LOG_FRAMEWORK_DEBUG << "Connecting to time server";
                     connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick");
                 }
-                
+
                 t.join(); // Blocks 
             }
 
@@ -895,10 +897,10 @@ namespace karabo {
                     const std::vector<std::string>& allowedStates = m_fullSchema.getAllowedStates(slotName);
                     if (!allowedStates.empty()) {
                         //std::cout << "Validating slot" << std::endl;
-                        const std::string& currentState = get<std::string > ("state");                        
+                        const std::string& currentState = get<std::string > ("state");
                         if (std::find(allowedStates.begin(), allowedStates.end(), currentState) == allowedStates.end()) {
                             std::ostringstream msg;
-                            msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state " 
+                            msg << "Command " << "\"" << slotName << "\"" << " is not allowed in current state "
                                     << "\"" << currentState << "\" of device " << "\"" << m_deviceId << "\".";
                             std::string errorMessage = msg.str();
                             reply(errorMessage);
@@ -1004,16 +1006,16 @@ namespace karabo {
                 }
                 return it->second;
             }
-            
+
             void updateLatencies(float brokerLatency, float processingLatency, unsigned int messageQueueSize) {
-                
+
                 // TODO Remove jam flag, once notification system is in place
                 bool jamFlag = this->get<bool>("trafficJam");
                 long long latencyUpper = this->get<long long>("latencyUpper");
                 long long latencyLower = this->get<long long>("latencyLower");
-                
+
                 karabo::util::Hash h("brokerLatency", brokerLatency, "processingLatency", processingLatency, "messageQueueSize", messageQueueSize);
-                
+
                 if (jamFlag) {
                     if (processingLatency < latencyLower)
                         h.set("trafficJam", false);
@@ -1033,10 +1035,10 @@ namespace karabo {
                 m_timeFrac = frac;
                 m_timePeriod = period;
                 m_timeChangeMutex.unlock();
-                
+
                 onTimeUpdate(id, sec, frac, period);
             }
-            
+
             karabo::util::Timestamp getActualTimestamp() {
                 karabo::util::Epochstamp epochNow;
                 unsigned long long id = 0;
@@ -1050,7 +1052,7 @@ namespace karabo {
                 m_timeChangeMutex.unlock();
                 return karabo::util::Timestamp(epochNow, karabo::util::Trainstamp(id));
             }
-            
+
         };
     }
 }
