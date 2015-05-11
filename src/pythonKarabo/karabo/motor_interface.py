@@ -131,6 +131,7 @@ class MotorInterface(NoFsm):
         self.registerInitialFunction(self.initialize)
 
     def initFsmSlots(self, sigslot):
+        #sigslot.setNumberOfThreads(1)
         sigslot.registerSlot(self.resetHardware)
         sigslot.registerSlot(self.safe)
         sigslot.registerSlot(self.normal)

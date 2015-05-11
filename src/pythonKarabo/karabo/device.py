@@ -235,6 +235,9 @@ class PythonDevice(NoFsm):
         '''Get SignalSlotable object embedded in PythonDevice instance.'''
         return self._ss
     
+    def setNumberOfThreads(self, nThreads):
+        self._ss.setNumberOfThreads(nThreads)
+    
     def loadLogger(self,input):
         config = input["Logger"]
 
