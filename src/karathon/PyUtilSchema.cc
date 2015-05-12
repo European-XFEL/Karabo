@@ -31,15 +31,19 @@ using namespace std;
 
 struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
+
     SchemaWrapper(Schema const & arg) : Schema(arg), bp::wrapper< Schema >() {
     }
+
 
     SchemaWrapper() : Schema(), bp::wrapper< Schema >() {
     }
 
+
     SchemaWrapper(std::string const & classId, Schema::AssemblyRules const & rules)
     : Schema(classId, boost::ref(rules)), bp::wrapper< Schema >() {
     }
+
 
     virtual ClassInfo getClassInfo() const {
         if (bp::override func_getClassInfo = this->get_override("getClassInfo"))
@@ -48,6 +52,7 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
             return this->Schema::getClassInfo();
     }
 
+
     ClassInfo default_getClassInfo() const {
         return Schema::getClassInfo();
     }
@@ -55,8 +60,8 @@ struct SchemaWrapper : Schema, bp::wrapper< Schema > {
 
 
 class ValidatorWrap {
-
 public:
+
 
     static bp::object validate(Validator& self, const Schema& schema, const Hash& configuration, const Timestamp& stamp) {
         Hash::Pointer validated = Hash::Pointer(new Hash);
@@ -66,6 +71,7 @@ public:
         throw KARABO_PYTHON_EXCEPTION(result.second);
     }
 
+
     static void setValidationRules(Validator& self, const bp::object& obj) {
         if (bp::extract<Validator::ValidationRules>(obj).check()) {
             const Validator::ValidationRules& rules = bp::extract<Validator::ValidationRules>(obj);
@@ -73,13 +79,16 @@ public:
         }
     }
 
+
     static bp::object getValidationRules(Validator& self) {
         return bp::object(self.getValidationRules());
     }
 
+
     static bp::object hasParametersInWarnOrAlarm(Validator& self) {
         return bp::object(self.hasParametersInWarnOrAlarm());
     }
+
 
     static bp::object getParametersInWarnOrAlarm(Validator& self) {
         return bp::object(self.getParametersInWarnOrAlarm());
@@ -88,6 +97,7 @@ public:
 
 
 struct NodeElementWrap {
+
 
     static NodeElement & appendParametersOfConfigurableClass(NodeElement& self, const bp::object& baseobj, const std::string& classId) {
 
@@ -117,6 +127,7 @@ struct NodeElementWrap {
         return self;
     }
 
+
     static NodeElement & appendParametersOf(NodeElement& self, const bp::object& obj) {
 
         if (!PyType_Check(obj.ptr())) {
@@ -141,10 +152,20 @@ struct NodeElementWrap {
         return self;
     }
 
+
+    static NodeElement& appendSchema(NodeElement& self, const bp::object& schemaObj) {
+        if (!bp::extract<Schema>(schemaObj).check())
+            throw KARABO_PYTHON_EXCEPTION("Argument is not a Schema object.");
+        const Schema schemaPy = bp::extract<Schema> (schemaObj);
+        const Hash h = schemaPy.getParameterHash();
+        self.getNode().setValue<Hash>(h);
+        return self;
+    }
 };
 
 
 struct ChoiceElementWrap {
+
 
     static ChoiceElement & appendNodesOfConfigurationBase(ChoiceElement& self, const bp::object& classobj) {
         if (!PyType_Check(classobj.ptr())) {
@@ -183,6 +204,7 @@ struct ChoiceElementWrap {
         return self;
     }
 
+
     static ChoiceElement & appendAsNode(ChoiceElement& self, const bp::object& classobj, const std::string& nodeNameObj) {
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of CHOICE_ELEMENT must be a class in Python");
@@ -213,6 +235,7 @@ struct ChoiceElementWrap {
 
 
 struct ListElementWrap {
+
 
     static ListElement & appendNodesOfConfigurationBase(ListElement& self, const bp::object& classobj) {
         if (!PyType_Check(classobj.ptr())) {
@@ -251,6 +274,7 @@ struct ListElementWrap {
         return self;
     }
 
+
     static ListElement & appendAsNode(ListElement& self, const bp::object& classobj, const std::string& name) {
         if (!PyType_Check(classobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'classobj' given in 'appendAsNode(classobj, nodeName)' of LIST_ELEMENT must be a class in Python");
@@ -280,6 +304,7 @@ struct ListElementWrap {
 
     typedef DefaultValue<ListElement, vector<string> > DefListElement;
 
+
     static ListElement & defaultValueList(DefListElement& self, const bp::object& obj) {
         if (PyList_Check(obj.ptr())) {
             const bp::list& l = bp::extract<bp::list > (obj);
@@ -299,6 +324,7 @@ struct ListElementWrap {
 
 
 struct InputElementWrap {
+
 
     static InputElement & setInputType(InputElement& self, const bp::object& classobj) {
 
@@ -340,6 +366,7 @@ struct InputElementWrap {
 
 
 struct OutputElementWrap {
+
 
     static OutputElement & setOutputType(OutputElement& self, const bp::object& classobj) {
 
@@ -383,11 +410,13 @@ struct OutputElementWrap {
 
 struct OverwriteElementWrap {
 
+
     static OverwriteElement & setNewAlias(OverwriteElement& self, const bp::object& alias) {
         boost::any any;
         karathon::Wrapper::toAny(alias, any);
         return self.setNewAlias(any);
     }
+
 
     static OverwriteElement & setNewTag(OverwriteElement& self, const bp::object& tag) {
         boost::any any;
@@ -395,11 +424,13 @@ struct OverwriteElementWrap {
         return self.setNewTag(any);
     }
 
+
     static OverwriteElement & setNewDefaultValue(OverwriteElement& self, const bp::object& value) {
         boost::any any;
         karathon::Wrapper::toAny(value, any);
         return self.setNewDefaultValue(any);
     }
+
 
     static OverwriteElement & setNewMinInc(OverwriteElement& self, const bp::object& value) {
         boost::any any;
@@ -407,17 +438,20 @@ struct OverwriteElementWrap {
         return self.setNewMinInc(any);
     }
 
+
     static OverwriteElement & setNewMaxInc(OverwriteElement& self, const bp::object& value) {
         boost::any any;
         karathon::Wrapper::toAny(value, any);
         return self.setNewMaxInc(any);
     }
 
+
     static OverwriteElement & setNewMinExc(OverwriteElement& self, const bp::object& value) {
         boost::any any;
         karathon::Wrapper::toAny(value, any);
         return self.setNewMinExc(any);
     }
+
 
     static OverwriteElement & setNewMaxExc(OverwriteElement& self, const bp::object& value) {
         boost::any any;
@@ -429,6 +463,7 @@ struct OverwriteElementWrap {
 
 
 namespace schemawrap {
+
 
     void setAlias(Schema& self, const bp::object& obj, const bp::object& aliasObj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -499,7 +534,7 @@ namespace schemawrap {
                 if (PyUnicode_Check(list0.ptr())) {
                     std::vector<std::string> v(size);
                     for (bp::ssize_t i = 0; i < size; ++i) {
-                        bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(aliasObj[i]).ptr())));
+                        bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object> (aliasObj[i]).ptr())));
                         Py_ssize_t size;
                         const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                         v[i] = string(data, size);
@@ -514,9 +549,11 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setAlias' should be a string");
     }
 
+
     bp::object getParameterHash(const Schema& schema) {
         return bp::object(schema.getParameterHash());
     }
+
 
     karathon::PyTypes::ReferenceType getValueType(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -531,6 +568,7 @@ namespace schemawrap {
     // Wrapper functions for : getMinInc, getMaxInc, getMinExc, getMaxExc *
     //*********************************************************************
 
+
     void setMinInc(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -541,6 +579,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getMinInc(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -549,6 +588,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinInc' must be a string");
     }
+
 
     void setMaxInc(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -560,6 +600,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getMaxInc(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -568,6 +609,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMaxInc' must be a string");
     }
+
 
     void setMinExc(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -579,6 +621,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getMinExc(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -587,6 +630,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getMinExc' must be a string");
     }
+
 
     void setMaxExc(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -597,6 +641,7 @@ namespace schemawrap {
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
+
 
     bp::object getMaxExc(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -610,6 +655,7 @@ namespace schemawrap {
     //*****************************************************************************
     // Wrapper functions for : getMinIncAs, getMaxIncAs, getMinExcAs, getMaxExcAs *
     //*****************************************************************************
+
 
     bp::object getMinIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -637,6 +683,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMinIncAs' must be a string");
     }
 
+
     bp::object getMaxIncAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -663,6 +710,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMaxIncAs' must be a string");
     }
 
+
     bp::object getMinExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -688,6 +736,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getMinExcAs' must be a string");
     }
+
 
     bp::object getMaxExcAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -720,6 +769,7 @@ namespace schemawrap {
     // Wrapper functions for : getWarnLow, getWarnHigh, getAlarmLow, getAlarmHigh *
     //*****************************************************************************
 
+
     void setWarnLow(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -730,6 +780,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getWarnLow(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -738,6 +789,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnLow' must be a string");
     }
+
 
     void setWarnHigh(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -749,6 +801,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getWarnHigh(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -757,6 +810,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getWarnHigh' must be a string");
     }
+
 
     void setAlarmLow(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -768,6 +822,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
 
+
     bp::object getAlarmLow(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -776,6 +831,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAlarmLow' must be a string");
     }
+
 
     void setAlarmHigh(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -786,6 +842,7 @@ namespace schemawrap {
         } else
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'setMinInc' must be a string");
     }
+
 
     bp::object getAlarmHigh(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -800,6 +857,7 @@ namespace schemawrap {
     //*************************************************************************************
     // Wrapper functions for : getWarnLowAs, getWarnHighAs, getAlarmLowAs, getAlarmHighAs *
     //*************************************************************************************
+
 
     bp::object getWarnLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -827,6 +885,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getWarnLowAs' must be a string");
     }
 
+
     bp::object getWarnHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -853,6 +912,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getWarnHighAs' must be a string");
     }
 
+
     bp::object getAlarmLowAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -878,6 +938,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python first argument in 'getAlarmLowAs' must be a string");
     }
+
 
     bp::object getAlarmHighAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -910,6 +971,7 @@ namespace schemawrap {
     // Wrapper functions for : getKeys, getPaths, getTags, getOptions, getAllowedStates *
     //***********************************************************************************
 
+
     bp::object getKeys(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             bp::list listParams;
@@ -921,12 +983,14 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeys' should be a string");
     }
 
+
     bp::object getPaths(const Schema& schema) {
         bp::list listParams;
         const vector<string>& v = schema.getPaths();
         for (size_t i = 0; i < v.size(); i++) listParams.attr("append")(bp::object(v[i]));
         return listParams;
     }
+
 
     bp::object getTags(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -937,6 +1001,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getTags' should be a string");
     }
 
+
     bp::object getOptions(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -945,6 +1010,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getOptions' should be a string");
     }
+
 
     bp::object getAllowedStates(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -960,6 +1026,7 @@ namespace schemawrap {
     // Wrapper functions for : setDefaultValue, getDefaultValue, getDefaultValueAs *
     //*************************************************************
 
+
     void setDefaultValue(Schema& self, const bp::object& obj, const bp::object& value) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -970,6 +1037,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'setDefaultValue' should be a string");
     }
 
+
     bp::object getDefaultValue(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -978,6 +1046,7 @@ namespace schemawrap {
         }
         throw KARABO_PYTHON_EXCEPTION("Python argument defining the key name in 'getDefaultValue' should be a string");
     }
+
 
     bp::object getDefaultValueAs(const Schema& schema, const bp::object& obj, const karathon::PyTypes::ReferenceType& pytype) {
         if (PyUnicode_Check(obj.ptr())) {
@@ -1027,6 +1096,7 @@ namespace schemawrap {
     //************************************************************************
     // Wrapper functions for : aliasHasKey, getAliasFromKey, getKeyFromAlias *
     //************************************************************************
+
 
     bool aliasHasKey(const Schema& schema, const bp::object& obj) {
         if (PyLong_Check(obj.ptr())) {
@@ -1088,7 +1158,7 @@ namespace schemawrap {
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object> (obj[i]).ptr())));
                     Py_ssize_t size;
                     const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = string(data, size);
@@ -1099,6 +1169,7 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'aliasHasKey': type is not supported");
     }
 
+
     bp::object getAliasFromKey(const Schema& schema, const bp::object& obj) {
         if (PyUnicode_Check(obj.ptr())) {
             string path = bp::extract<string>(obj);
@@ -1108,6 +1179,7 @@ namespace schemawrap {
             throw KARABO_PYTHON_EXCEPTION("Python argument in 'getAliasFromKey' should be a string");
         }
     }
+
 
     string getKeyFromAlias(const Schema& schema, const bp::object& obj) {
         if (PyLong_Check(obj.ptr())) {
@@ -1169,7 +1241,7 @@ namespace schemawrap {
             if (PyUnicode_Check(list0.ptr())) {
                 std::vector<std::string> v(size);
                 for (bp::ssize_t i = 0; i < size; ++i) {
-                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object>(obj[i]).ptr())));
+                    bp::object str(bp::handle<>(PyUnicode_AsUTF8String(static_cast<bp::object> (obj[i]).ptr())));
                     Py_ssize_t size;
                     const char* data = PyUnicode_AsUTF8AndSize(str.ptr(), &size);
                     v[i] = string(data, size);
@@ -1180,20 +1252,24 @@ namespace schemawrap {
         throw KARABO_PYTHON_EXCEPTION("Python argument in 'getKeyFromAlias': type is not supported");
     }
 
+
     void help(Schema& schema, const std::string& classId = "") {
         schema.help(classId);
     }
+
 
     bp::object merge(Schema& schema, const Schema& schema2) {
         schema.merge(schema2);
         return bp::object(schema);
     }
 
+
     bp::object copy(Schema& schema, const Schema& schema2) {
         schema = schema2;
         return bp::object(schema);
     }
-    
+
+
     void updateAliasMap(Schema& schema) {
         schema.updateAliasMap();
     }
@@ -1202,12 +1278,14 @@ namespace schemawrap {
 
 struct HashFilterWrap {
 
+
     static boost::shared_ptr<Hash> byTag(const Schema& schema, const Hash& config, const std::string& tags, const std::string& sep = ",") {
         boost::shared_ptr<Hash> result(new Hash);
         HashFilter::byTag(schema, config, *result, tags, sep);
         return result;
     }
 };
+
 
 void exportPyUtilSchema() {
 
@@ -1300,7 +1378,7 @@ void exportPyUtilSchema() {
         bp::scope scopeOfVectorString(exposerOfVectorString);
         exposerOfVectorString.def(bp::vector_indexing_suite<std::vector<std::string>, true>());
     }
-    
+
     {//exposing ::Schema
 
         bp::class_< Schema > s("Schema");
@@ -1610,6 +1688,7 @@ void exportPyUtilSchema() {
     //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
     //and DefaultValue<PathElement, std::string >
 
+
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<int>, int, INT32)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<unsigned int>, unsigned int, UINT32)
     KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(SimpleElement<long long>, long long, INT64)
@@ -1635,25 +1714,25 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(SimpleElement<bool>, bool, BOOL)
     KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(PathElement, std::string, PATH)
 
-//    /////////////////////////////////////////////////////////////
-//    //DefaultValue<BitsetElement< EType >, EType >, where EType:
-//    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-//    //and DefaultValue<PathElement, std::string >
-//
-//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned char>,      unsigned char,      BITSET8)
-//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned short>,     unsigned short,     BITSET16)
-//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned int>,       unsigned int,       BITSET32)
-//    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
-//
-//    ///////////////////////////////////////////////////////////////
-//    //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
-//    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
-//    // and ReadOnlySpecific<PathElement, std::string >
-//
-//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned char>,   unsigned char,      BITSET8)
-//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned short>,  unsigned short,     BITSET16)
-//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned int>,    unsigned int,       BITSET32)
-//    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
+    //    /////////////////////////////////////////////////////////////
+    //    //DefaultValue<BitsetElement< EType >, EType >, where EType:
+    //    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    //    //and DefaultValue<PathElement, std::string >
+    //
+    //    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned char>,      unsigned char,      BITSET8)
+    //    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned short>,     unsigned short,     BITSET16)
+    //    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned int>,       unsigned int,       BITSET32)
+    //    KARABO_PYTHON_ELEMENT_DEFAULT_VALUE(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
+    //
+    //    ///////////////////////////////////////////////////////////////
+    //    //ReadOnlySpecific<SimpleElement< EType >, EType >, where EType:
+    //    //INT32, UINT32, INT64, UINT64, DOUBLE, STRING, BOOL
+    //    // and ReadOnlySpecific<PathElement, std::string >
+    //
+    //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned char>,   unsigned char,      BITSET8)
+    //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned short>,  unsigned short,     BITSET16)
+    //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned int>,    unsigned int,       BITSET32)
+    //    KARABO_PYTHON_ELEMENT_READONLYSPECIFIC(BitsetElement<unsigned long long>, unsigned long long, BITSET64)
 
     ///////////////////////////////////////////////////////////
     //DefaultValue<VectorElement< EType, std::vector >, std::vector< EType > > where EType:
@@ -1698,9 +1777,9 @@ void exportPyUtilSchema() {
     KARABO_PYTHON_SIMPLE(string, STRING)
     KARABO_PYTHON_SIMPLE(bool, BOOL)
 
-    //////////////////////////////////////////////////////////////////////
-    // Binding PathElement       
-    // In Python : PATH_ELEMENT
+            //////////////////////////////////////////////////////////////////////
+            // Binding PathElement       
+            // In Python : PATH_ELEMENT
     {
         bp::implicitly_convertible< Schema &, PathElement >();
         bp::class_<PathElement> ("PATH_ELEMENT", bp::init<Schema & >((bp::arg("expected"))))
@@ -1724,6 +1803,7 @@ void exportPyUtilSchema() {
     // VECTOR_INT64_ELEMENT, VECTOR_UINT64_ELEMENT, VECTOR_DOUBLE_ELEMENT,
     // VECTOR_STRING_ELEMENT, VECTOR_BOOL_ELEMENT, VECTOR_CHAR_ELEMENT
 
+
     KARABO_PYTHON_VECTOR(int, INT32)
     KARABO_PYTHON_VECTOR(unsigned int, UINT32)
     KARABO_PYTHON_VECTOR(long long, INT64)
@@ -1746,6 +1826,9 @@ void exportPyUtilSchema() {
                      , bp::return_internal_reference<> ())
                 .def("appendParametersOfConfigurableClass"
                      , &NodeElementWrap::appendParametersOfConfigurableClass, (bp::arg("python_base_class"), bp::arg("classid"))
+                     , bp::return_internal_reference<> ())
+                .def("appendSchema"
+                     , &NodeElementWrap::appendSchema, (bp::arg("schema"))
                      , bp::return_internal_reference<> ())
                 ;
     }
@@ -1813,10 +1896,10 @@ void exportPyUtilSchema() {
     {
         bp::implicitly_convertible< Schema &, ImageElement >();
         bp::class_<ImageElement>("IMAGE_ELEMENT", bp::init<Schema &>((bp::arg("expected"))))
-            KARABO_PYTHON_IMAGE_ELEMENT(ImageElement)
-        ;
-     }
-    
+                KARABO_PYTHON_IMAGE_ELEMENT(ImageElement)
+                ;
+    }
+
     //////////////////////////////////////////////////////////////////////
     // Binding InputElement       
     // In Python : INPUT_ELEMENT
@@ -1966,23 +2049,23 @@ void exportPyUtilSchema() {
                      , (bp::arg("value"), bp::arg("sep") = ",;")
                      , bp::return_internal_reference<> ())
                 .def("setNewAllowedState"
-                     , (OverwriteElement& (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewAllowedState)
+                     , (OverwriteElement & (OverwriteElement::*)(const std::string&, const std::string&))(&OverwriteElement::setNewAllowedState)
                      , (bp::arg("states"), bp::arg("sep") = " ,;")
                      , bp::return_internal_reference<> ())
                 .def("setNowObserverAccess"
-                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowObserverAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNowUserAccess"
-                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowUserAccess)
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowUserAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNowOperatorAccess"
-                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowOperatorAccess)
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowOperatorAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNowExpertAccess"
-                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowExpertAccess)
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowExpertAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNowAdminAccess"
-                     , (OverwriteElement& (OverwriteElement::*)())(&OverwriteElement::setNowAdminAccess)
+                     , (OverwriteElement & (OverwriteElement::*)())(&OverwriteElement::setNowAdminAccess)
                      , bp::return_internal_reference<> ())
                 .def("setNewUnit"
                      , (OverwriteElement & (OverwriteElement::*)(const UnitType&))(&OverwriteElement::setNewUnit)
