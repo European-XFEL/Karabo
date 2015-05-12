@@ -109,7 +109,7 @@ function getSvnPath() {
             KARABODEPSSVNPATH=$(cat $HOME/.karabo/karaboDepsSvnPath)
         else
           echo "WARNING Could not find $HOME/.karabo/karaboDepsSvnPath. Setting default one."
-          KARABODEPSSVNPATH=https://svnsrv.desy.de/desy/EuXFEL/WP76/karabo/karaboPackages
+          KARABODEPSSVNPATH=https://svnsrv.desy.de/desy/EuXFEL/karaboPackages
           echo $KARABODEPSSVNPATH 
           echo $KARABODEPSSVNPATH > ${HOME}/.karabo/karaboDepsSvnPath
 #          exit 1
