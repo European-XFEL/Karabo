@@ -273,8 +273,7 @@ class PythonDevice(NoFsm):
         # TODO Make configurable
         t = threading.Thread(target = self._ss.runEventLoop, args = (20, info))
         t.start()
-        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM
-        self.startFsm()
+        time.sleep(0.01) # for rescheduling, some garantie that runEventLoop will start before FSM        
         with self._stateChangeLock:
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
@@ -282,6 +281,8 @@ class PythonDevice(NoFsm):
         # Instantiate all channels
         self.initChannels()
         self._ss.connectInputChannels()
+        
+        self.startFsm()
         
         if self.parameters.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
