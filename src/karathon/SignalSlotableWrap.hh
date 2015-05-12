@@ -451,10 +451,10 @@ namespace karathon {
             registerExceptionHandler(boost::bind(&SignalSlotableWrap::proxyExceptionHandler, this, handler, _1));
         }
 
-//        void registerInstanceNewHandlerPy(const bp::object& handler) {
-//            registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewCallback,
-//                                                   this, handler, _1, _2));
-//        }
+        //        void registerInstanceNewHandlerPy(const bp::object& handler) {
+        //            registerInstanceNewHandler(boost::bind(&SignalSlotableWrap::proxyInstanceNewCallback,
+        //                                                   this, handler, _1, _2));
+        //        }
 
         void registerSlotCallGuardHandlerPy(const bp::object& handler) {
             registerSlotCallGuardHandler(boost::bind(&SignalSlotableWrap::proxySlotCallGuardHandler, this, handler, _1));
@@ -464,7 +464,7 @@ namespace karathon {
             registerPerformanceStatisticsHandler(boost::bind(&SignalSlotableWrap::proxyUpdatePerformanceStatisticsHandler,
                                                              this, handler, _1, _2, _3));
         }
-        
+
         karabo::xms::OutputChannel::Pointer
         createOutputChannelPy(const std::string& channelName,
                               const karabo::util::Hash& config,
@@ -474,7 +474,6 @@ namespace karathon {
                                        boost::bind(&SignalSlotableWrap::proxyOnOutputPossibleHandler,
                                                    this, onOutputPossibleHandler, _1));
         }
-
 
         karabo::xms::InputChannel::Pointer
         createInputChannelPy(const std::string& channelName,
@@ -489,8 +488,25 @@ namespace karathon {
                                                   this, onEndOfStreamEventHandler, _1));
         }
 
+        bp::object getOutputChannelPy(const std::string& name) {
+            return bp::object(getOutputChannel(name));
+        }
+
+        bp::object getInputChannelPy(const std::string& name) {
+            return bp::object(getInputChannel(name));
+        }
+
+        void registerDataHandlerPy(const std::string& channelName, const bp::object& handler) {
+            registerDataHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnInputAvailableHandler, this, handler, _1));
+        }
+            
+        void registerEndOfStreamHandlerPy(const std::string& channelName, const bp::object& handler) {
+            registerEndOfStreamHandler(channelName, boost::bind(&SignalSlotableWrap::proxyOnEndOfStreamEventHandler, this, handler, _1));
+        }
+            
+
     private:
-        
+
         void proxyInstanceNotAvailableHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);
 
         void proxyInstanceAvailableAgainHandler(const bp::object& handler, const std::string& instanceId, const karabo::util::Hash& instanceInfo);

@@ -279,6 +279,10 @@ class PythonDevice(NoFsm):
             validated = self.validatorIntern.validate(self.fullSchema, self.parameters, self._getActualTimestamp())
             self.parameters.merge(validated, HashMergePolicy.REPLACE_ATTRIBUTES)
 
+        # Instantiate all channels
+        self.initChannels()
+        self._ss.connectInputChannels()
+        
         if self.parameters.get("useTimeserver"):
             self.log.DEBUG("Connecting to time server")
             self._ss.connect("Karabo_TimeServer", "signalTimeTick", "", "slotTimeTick", ConnectionType.TRACK, False)
@@ -386,6 +390,30 @@ class PythonDevice(NoFsm):
        
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
+        
+    def write(self, *args):
+        pars = tuple(args)
+        if len(pars) < 2 or len(pars) > 3:
+            raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
+        if len(pars) == 3:
+            channelName, key, value = pars
+            if isCpuImage(value):
+                dataval = ImageData(value)
+            elif type(value) is Data:
+                dataval = value
+            else:
+                raise ValueError("The type of value is neither a \"CpuImage\" nor a \"Data\"")
+            data = Data(key, dataval)
+        elif len(pars) == 2:
+            channelName, data = pars
+            
+        data.attachTimestamp(self._getActualTimestamp())
+        channel = self._ss.getOutputChannel(channelName)
+        channel.write(data)
+        channel.update()
+        
+    def signalEndOfStream(self, channelName):
+        self._ss.getOutputChannel(channelName).signalEndOfStream()
         
     def get(self,key):
         with self._stateChangeLock:
@@ -551,6 +579,9 @@ class PythonDevice(NoFsm):
         
     def onTimeUpdate(self, id, sec, frac, period):
         pass
+    
+    def KARABO_SLOT(self, slot):
+        self._ss.registerSlot(slot)
         
     def _initDeviceSlots(self):
         #-------------------------------------------- register intrinsic signals
@@ -571,10 +602,27 @@ class PythonDevice(NoFsm):
         self._ss.registerSlot(self.slotGetConfiguration)
         self._ss.registerSlot(self.slotGetSchema)
         self._ss.registerSlot(self.slotKillDevice)        
-        
         # timeserver related slots
         self._ss.registerSlot(self.slotTimeTick)
 
+    def initChannels(self):
+        keys = self.fullSchema.getKeys()
+        for key in keys:
+            if self.fullSchema.hasDisplayType(key):
+                displayType = self.fullSchema.getDisplayType(key)
+                if displayType == "OutputChannel":
+                    self.log.INFO("Creating output channel \"{}\"".format(key))
+                    self._ss.createOutputChannel(key, self.parameters)
+                elif displayType == "InputChannel":
+                    self.log.INFO("Creating input channel \"{}\"".format(key))
+                    self._ss.createInputChannel(key, self.parameters)
+    
+    def KARABO_ON_DATA(self, channelName, handler):
+        self._ss.registerDataHandler(channelName, handler)
+        
+    def KARABO_ON_EOS(self, channelName, handler):
+        self._ss.registerEndOfStreamHandler(channelName, handler)
+    
     def triggerError(self, s, d):
         print("The triggerError() function is deprecated, use execute() instead")
         self.exceptionFound(s, d)
