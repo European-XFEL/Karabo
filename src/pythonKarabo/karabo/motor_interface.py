@@ -1,6 +1,8 @@
 from abc import (ABCMeta, abstractmethod)
-from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
+from karabo.decorators import (KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS)
 from karabo.no_fsm import NoFsm
+from karabo.karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, FLOAT_ELEMENT, INT32_ELEMENT
+                            , Schema, SignalSlotable, Unit, MetricPrefix)
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"
@@ -89,8 +91,8 @@ class MotorInterface(NoFsm, metaclass=ABCMeta):
          FLOAT_ELEMENT(expected).key("encoderPosition")
                 .description("Encoder position")
                 .displayedName("Encoder position")
-                .unit(METER)
-                .metricPrefix(MILLI)
+                .unit(Unit.METER)
+                .metricPrefix(MetricPrefix.MILLI)
                 .readOnly()
                 .commit(),
 
@@ -107,14 +109,14 @@ class MotorInterface(NoFsm, metaclass=ABCMeta):
          FLOAT_ELEMENT(expected).key("targetPosition")
                 .description("Target position in position mode")
                 .displayedName("Target position")
-                .unit(METER)
-                .metricPrefix(MILLI)
+                .unit(Unit.METER)
+                .metricPrefix(MetricPrefix.MILLI)
                 .assignmentOptional().noDefaultValue()
                 .reconfigurable()
                 .allowedStates("Override Stopped Off Idle Moving")
                 .commit(),
 
-         INT16_ELEMENT(expected).key("targetVelocity")
+         INT32_ELEMENT(expected).key("targetVelocity")
                 .description("Target velocity in velocity mode")
                 .displayedName("Target velocity")
                 .assignmentOptional().noDefaultValue()
