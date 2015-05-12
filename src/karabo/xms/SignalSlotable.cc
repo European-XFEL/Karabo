@@ -1796,7 +1796,7 @@ namespace karabo {
             if (it != m_inputChannels.end()) {
                 return it->second;
             }
-            throw KARABO_PARAMETER_EXCEPTION("InputChannel \"" + name + " \" does not exist");
+            throw KARABO_PARAMETER_EXCEPTION("InputChannel \"" + name + "\" does not exist");
         }
 
 
