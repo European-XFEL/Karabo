@@ -3,7 +3,7 @@ from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.no_fsm import NoFsm
 from karabo.karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA, OUTPUT_CHANNEL
                             , DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT
-                            , STRING_ELEMENT, Schema, SignalSlotable, Unit
+                            , STRING_ELEMENT, INT32_ELEMENT, Schema, SignalSlotable, Unit
                             )
 
 __author__ = "esenov"
@@ -18,7 +18,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
     def expectedParameters(expected):
         (
         OVERWRITE_ELEMENT(expected).key("state")
-                .setNewOptions("Initializing,HardwareError,Acquiring,Ready")
+                .setNewOptions("Initializing,HardwareError,Acquiring,Ready,Changing...")
                 .setNewDefaultValue("Initializing")
                 .commit(),
 
@@ -112,6 +112,17 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
                 .description("The name of the last saved image")
                 .readOnly()
                 .commit(),
+
+        INT32_ELEMENT(expected).key("pollInterval")
+                .displayedName("Poll Interval")
+                .description("The interval with which the camera should be polled")
+                .unit(Unit.SECOND)
+                .minInc(1)
+                .assignmentOptional().defaultValue(10)
+                .reconfigurable()
+                .allowedStates("HardwareError,Acquiring,Ready")
+                .commit(),
+
         )
 
     def __init__(self, configuration):
