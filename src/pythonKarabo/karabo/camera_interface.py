@@ -1,6 +1,10 @@
 from abc import (ABCMeta, abstractmethod)
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.no_fsm import NoFsm
+from karabo.karathon import (OVERWRITE_ELEMENT, SLOT_ELEMENT, IMAGEDATA, OUTPUT_CHANNEL
+                            , DOUBLE_ELEMENT, NODE_ELEMENT, BOOL_ELEMENT, PATH_ELEMENT
+                            , STRING_ELEMENT, Schema, SignalSlotable, Unit
+                            )
 
 __author__ = "esenov"
 __date__ = "$Apr 22, 2015 4:14:47 PM$"
@@ -71,7 +75,7 @@ class CameraInterface(NoFsm, metaclass=ABCMeta):
         BOOL_ELEMENT(expected).key("imageStorage.enable")
                 .displayedName("Enable")
                 .description("Save images while acquiring.")
-                .assignmentOptional().defaultValue(false)
+                .assignmentOptional().defaultValue(False)
                 .reconfigurable()
                 .allowedStates("Ready")
                 .commit(),
