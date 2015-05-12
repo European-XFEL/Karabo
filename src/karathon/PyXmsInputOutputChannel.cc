@@ -63,6 +63,12 @@ namespace karathon {
             return Wrapper::toObject(self->hash());
         }
 
+        static void attachTimestamp(const boost::shared_ptr<karabo::xms::Data>& self, const bp::object& obj) {
+            if (bp::extract<karabo::util::Timestamp>(obj).check()) {
+                const karabo::util::Timestamp& ts = bp::extract<karabo::util::Timestamp>(obj);
+                self->attachTimestamp(ts);
+            }
+        }
 
         static boost::shared_ptr<karabo::xms::Data> copy(const boost::shared_ptr<karabo::xms::Data>& self) {
             return boost::shared_ptr<karabo::xms::Data>(new karabo::xms::Data(*self));
@@ -793,6 +799,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("__delitem__", &Data::erase, (bp::arg("key")))
 
                 .def("hash", &karathon::DataWrap().hash)
+        
+                .def("attachTimestamp", &karathon::DataWrap().attachTimestamp, (bp::arg("timestamp")))
 
                 .def(bp::self_ns::str(bp::self))
 
