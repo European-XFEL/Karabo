@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import (ABCMeta, abstractmethod)
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
 from karabo.no_fsm import NoFsm
 
@@ -8,9 +8,7 @@ __date__ = "$Apr 22, 2015 4:14:47 PM$"
 
 @KARABO_CONFIGURATION_BASE_CLASS
 @KARABO_CLASSINFO("MotorInterface", "1.3")
-class MotorInterface(NoFsm):
-
-    __metaclass__ = ABCMeta
+class MotorInterface(NoFsm, metaclass=ABCMeta):
 
     @staticmethod
     def expectedParameters(expected):
