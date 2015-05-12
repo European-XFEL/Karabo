@@ -296,7 +296,7 @@ namespace karabo {
                 this->initFsmSlots(); // requires template CONCEPT
 
                 // Initialize Device slots
-                this->initDeviceSlots();
+                this->initDeviceSlots();                                
 
                 // Register guard for slot calls
                 this->registerSlotCallGuardHandler(boost::bind(&karabo::core::Device<FSM>::slotCallGuard, this, _1));
@@ -305,9 +305,7 @@ namespace karabo {
                 this->registerExceptionHandler(boost::bind(&karabo::core::Device<FSM>::exceptionFound, this, _1));
 
                 // Register updateLatencies handler
-                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));
-
-                SLOT4(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                this->registerPerformanceStatisticsHandler(boost::bind(&karabo::core::Device<FSM>::updateLatencies, this, _1, _2, _3));                
 
             }
 
@@ -360,7 +358,7 @@ namespace karabo {
             }
 
             template <class PixelType>
-            void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
+            KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::CpuImage<PixelType>& image, const karabo::util::Timestamp& timestamp) {
                 using namespace karabo::util;
 
                 Dims dims(image.dimX(), image.dimY(), image.dimZ());
@@ -372,24 +370,52 @@ namespace karabo {
                 emit("signalChanged", hash, getInstanceId());
             }
 
+            /**
+             * This function allows to write a CpuImage instead of an ImageElement to an output channel.
+             * Data will be timestamped and send immediately (write/update).
+             * @param channelName The output channel name
+             * @param key The image element key
+             * @param image CpuImage object
+             */
             template <class PixelType>
-            void set(const karabo::xms::OutputChannel::Pointer& channel, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {
+            void write(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {                
                 karabo::xms::Data data(key, karabo::xms::ImageData(image));
-                set(channel, data);                
+                write(channelName, data);                
             }
 
-            void set(const karabo::xms::OutputChannel::Pointer& channel, const std::string& key, const karabo::xms::Data& data) {
+            /**
+             * Convenience function for writing data objects that reflect a single element in the data schema.
+             * In this case the root-name must not be included in the data object hierarchy but should be given
+             * as second argument to this function.
+             * Data will be timestamped and send immediately (write/update).             
+             * @param channelName The output channel name
+             * @param key The data element (root-)key
+             * @param data Data object
+             */
+            void write(const std::string& channelName, const std::string& key, const karabo::xms::Data& data) {
                 karabo::xms::Data root(key, data);
-                set(channel, root);
+                write(channelName, root);
             }
 
-            void set(const karabo::xms::OutputChannel::Pointer& channel, karabo::xms::Data& data) {
+            /**
+             * Writes a data object to the specified channel. The data object internally must
+             * follow exactly the data schema as defined in the expected parameters.
+             * @param channelName The output channel name
+             * @param data Data object
+             */
+            void write(const std::string& channelName, karabo::xms::Data& data) {
                 // TODO think about proper validation and time tagging later
                 data.attachTimestamp(getActualTimestamp());
+                karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
                 channel->write(data);
                 channel->update();
             }
-
+                        
+            
+            void signalEndOfStream(const std::string& channelName) {
+                this->getOutputChannel(channelName)->signalEndOfStream();
+            }
+            
             KARABO_DEPRECATED void set(const std::string& key, const karabo::xip::RawImageData& image) {
                 this->set(key, image, getActualTimestamp());
             }
@@ -812,8 +838,8 @@ namespace karabo {
             void run() {
 
                 // This initializations or done here and not in the constructor as they involve virtual function calls
-                initClassId();
-                initSchema();
+                this->initClassId();
+                this->initSchema();                
 
                 // Prepare some info further describing this particular instance
                 // status, visibility, owner, lang 
@@ -847,6 +873,10 @@ namespace karabo {
                 if (result.first == false) KARABO_LOG_WARN << "Bad parameter setting attempted, validation reports: " << result.second;
                 m_parameters.merge(validated, karabo::util::Hash::REPLACE_ATTRIBUTES);
                 m_objectStateChangeMutex.unlock();
+                
+                // Instantiate all channels
+                this->initChannels();
+                this->connectInputChannels();
 
                 // Start the state machine
                 this->startFsm(); // This function must be inherited from the templated base class (it's a concept!)
@@ -886,11 +916,31 @@ namespace karabo {
                 SIGNAL2("signalSchemaUpdated", karabo::util::Schema /*deviceSchema*/, string /*deviceId*/);
                 connect("", "signalSchemaUpdated", "*", "slotSchemaUpdated", NO_TRACK);
 
-                SLOT1(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
-                SLOT0(slotGetConfiguration)
-                SLOT1(slotGetSchema, bool /*onlyCurrentState*/);
-                SLOT0(slotKillDevice)
+                KARABO_SLOT(slotReconfigure, karabo::util::Hash /*reconfiguration*/)
+                KARABO_SLOT(slotGetConfiguration)
+                KARABO_SLOT(slotGetSchema, bool /*onlyCurrentState*/);
+                KARABO_SLOT(slotKillDevice)
+                KARABO_SLOT(slotTimeTick, unsigned long long /*id */, unsigned long long /* sec */, unsigned long long /* frac */, unsigned long long /* period */);
+                
             }
+            
+            void initChannels() {
+                
+                const std::vector<std::string>& keys = m_fullSchema.getKeys();
+                BOOST_FOREACH(std::string key, keys) {
+                    if (m_fullSchema.hasDisplayType(key)) {                        
+                        const std::string& displayType = m_fullSchema.getDisplayType(key);
+                        if (displayType == "OutputChannel") {
+                            KARABO_LOG_INFO << "Creating output channel \"" << key << "\"";
+                            createOutputChannel(key, m_parameters);
+                        } else if (displayType == "InputChannel") {
+                            KARABO_LOG_INFO << "Creating input channel \"" << key << "\"";
+                            createInputChannel(key, m_parameters);
+                        }                        
+                    }                    
+                }
+            }
+                        
 
             bool slotCallGuard(const std::string& slotName) {
                 if (m_fullSchema.has(slotName) && m_fullSchema.hasAllowedStates(slotName)) {
