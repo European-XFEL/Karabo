@@ -1699,7 +1699,7 @@ namespace karabo {
             if (m_trackedComponents.has(instanceId)) {
 
                 bool stopTracking = true;
-                
+
                 const vector<Hash>& connections = m_trackedComponents.get<std::vector<Hash> >(instanceId + ".connections");
                 for (size_t i = 0; i < connections.size(); ++i) {
                     const Hash& connection = connections[i];
@@ -1711,7 +1711,7 @@ namespace karabo {
                     //cout << "\"" << signalFunction << "\" (" << signalInstanceId << ") \t\t <--> \t\t \"" << slotFunction << "\" (" << slotInstanceId << ")" << endl;
                     if (connectionType == RECONNECT) {
                         stopTracking = false;
-                        KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" will be further tracked, for connection \"" 
+                        KARABO_LOG_FRAMEWORK_DEBUG << "Instance \"" << instanceId << "\" will be further tracked, for connection \""
                                 << signalFunction << "\" (" << signalInstanceId << ") <--> \"" << slotFunction << "\" (" << slotInstanceId << ")";
                     } else if (signalInstanceId == m_instanceId) {
 
@@ -1770,9 +1770,43 @@ namespace karabo {
         }
 
 
-        Data SignalSlotable::createDataObject(const std::string& channelName, const karabo::util::Hash& config) {
-            if (!config.has(channelName)) throw KARABO_PARAMETER_EXCEPTION("The provided configuration must contain the channel name as key in the configuration");
-            return Data(config.get<Hash>(channelName + ".schema"));
+        const SignalSlotable::InputChannels& SignalSlotable::getInputChannels() const {
+            return m_inputChannels;
+        }
+
+
+        const SignalSlotable::OutputChannels& SignalSlotable::getOutputChannels() const {
+            return m_outputChannels;
+        }
+
+
+        const OutputChannel::Pointer& SignalSlotable::getOutputChannel(const std::string& name) {
+
+            OutputChannels::const_iterator it = m_outputChannels.find(name);
+            if (it != m_outputChannels.end()) {
+                return it->second;
+            }
+            throw KARABO_PARAMETER_EXCEPTION("OutputChannel \"" + name + " \" does not exist");
+        }
+
+
+        const InputChannel::Pointer& SignalSlotable::getInputChannel(const std::string& name) {
+
+            InputChannels::const_iterator it = m_inputChannels.find(name);
+            if (it != m_inputChannels.end()) {
+                return it->second;
+            }
+            throw KARABO_PARAMETER_EXCEPTION("InputChannel \"" + name + " \" does not exist");
+        }
+
+
+        void SignalSlotable::registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
+            getInputChannel(channelName)->registerIOEventHandler(handler);
+        }
+
+
+        void SignalSlotable::registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&)>& handler) {
+            getInputChannel(channelName)->registerEndOfStreamEventHandler(handler);
         }
 
 
@@ -1874,12 +1908,11 @@ namespace karabo {
         const std::string& SignalSlotable::getUserName() const {
             return m_username;
         }
-        
-        
+
+
         void SignalSlotable::setNumberOfThreads(int nThreads) {
             m_nThreads = nThreads;
         }
-
 
 
         bool SignalSlotable::hasReceivedReply(const std::string& replyId) const {

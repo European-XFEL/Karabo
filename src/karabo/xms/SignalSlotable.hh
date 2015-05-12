@@ -514,6 +514,10 @@ namespace karabo {
             #define KARABO_GLOBAL_SLOT2(slotName, a1, a2) this->registerSlot<a1,a2>(boost::bind(&Self::slotName,this,_1,_2),#slotName, GLOBAL);
             #define KARABO_GLOBAL_SLOT3(slotName, a1, a2, a3) this->registerSlot<a1,a2,a3>(boost::bind(&Self::slotName,this,_1,_2,_3),#slotName, GLOBAL);
             #define KARABO_GLOBAL_SLOT4(slotName, a1, a2, a3, a4) this->registerSlot<a1,a2,a3,a4>(boost::bind(&Self::slotName,this,_1,_2,_3,_4),#slotName, GLOBAL);
+            
+            #define KARABO_ON_DATA(channelName, funcName) this->registerDataHandler(channelName, boost::bind(&Self::funcName,this,_1));
+            #define KARABO_ON_EOS(channelName, funcName) this->registerEndOfStreamHandler(channelName, boost::bind(&Self::funcName,this,_1));
+            
 
             #define _KARABO_SIGNAL_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
             #define _KARABO_SLOT_N(x0,x1,x2,x3,x4,x5,FUNC, ...) FUNC
@@ -1171,15 +1175,17 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
             
-            virtual Data createDataObject(const std::string& channelName, const karabo::util::Hash& config);
+            const InputChannels& getInputChannels() const;
 
-            const InputChannels& getInputChannels() const {
-                return m_inputChannels;
-            }
-
-            const OutputChannels& getOutputChannels() const {
-                return m_outputChannels;
-            }
+            const OutputChannels& getOutputChannels() const;
+            
+            const OutputChannel::Pointer& getOutputChannel(const std::string& name);
+                        
+            const InputChannel::Pointer& getInputChannel(const std::string& name);
+            
+            void registerDataHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
+            
+            void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
             
             void connectInputChannel(const InputChannel::Pointer& channel);
 
