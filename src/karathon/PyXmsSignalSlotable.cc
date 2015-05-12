@@ -99,14 +99,14 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
             .def("login"
                  , (bool (SignalSlotable::*)(const std::string&, const std::string&, const std::string&)) (&SignalSlotable::login)
                  , (bp::arg("username"), bp::arg("password"), bp::arg("provider")))
-            
+
             .def("logout", (bool (SignalSlotable::*)())(&SignalSlotable::logout))
-            
+
             .def("setNumberOfThreads"
                  , (void (SignalSlotable::*)(int))(&SignalSlotable::setNumberOfThreads)
                  , (bp::arg("nthreads"))
-                 ,"\nSets number of threads that will work on the registered slots.\nRe-entry of the same slot on a different thread will never happen.\n"
-                  "Only different slots may run concurrently (if nThreads > 1).\nNOTE: This function has only effect BEFORE the event loop was started.")
+                 , "\nSets number of threads that will work on the registered slots.\nRe-entry of the same slot on a different thread will never happen.\n"
+                 "Only different slots may run concurrently (if nThreads > 1).\nNOTE: This function has only effect BEFORE the event loop was started.")
 
             .def("runEventLoop", &SignalSlotableWrap::runEventLoop, (bp::arg("heartbeatInterval") = 10, bp::arg("instanceInfo") = karabo::util::Hash()),
                  "\nUse this method if you have created a SignalSlotable instance with autostart = False and you need to provide info for event loop.\n"
@@ -143,22 +143,22 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
 
             .def("registerInstanceNotAvailableHandler", &SignalSlotableWrap::registerInstanceNotAvailableHandlerPy
                  , (bp::arg("handler")))
-            
+
             .def("registerInstanceAvailableAgainHandler", &SignalSlotableWrap::registerInstanceAvailableAgainHandlerPy
                  , (bp::arg("handler")))
-            
+
             .def("registerExceptionHandler", &SignalSlotableWrap::registerExceptionHandlerPy
                  , (bp::arg("handler")))
-            
+
             //.def("registerInstanceNewHandler", &SignalSlotableWrap::registerInstanceNewHandlerPy
             //     , (bp::arg("handler")))
-            
+
             .def("registerSlotCallGuardHandler", &SignalSlotableWrap::registerSlotCallGuardHandlerPy
                  , (bp::arg("handler")))
-             
+
             .def("registerPerformanceStatisticsHandler", &SignalSlotableWrap::registerPerformanceStatisticsHandlerPy
                  , (bp::arg("handler")))
-            
+
             .def("connect",
                  (bool (SignalSlotable::*)(const string, const string&, const string, const string&, SignalSlotable::ConnectionType, const bool))(&SignalSlotable::connect),
                  (bp::arg("signalInstanceId"),
@@ -305,7 +305,17 @@ void exportPyXmsSignalSlotable() {//exposing karabo::xms::SignalSlotable
                  , (bp::arg("channelName"), bp::arg("configuration"), bp::arg("onData") = bp::object(), bp::arg("onEndOfStream") = bp::object()))
 
             .def("connectInputChannels", &SignalSlotable::connectInputChannels)
-            
+
+            .def("getOutputChannel", &SignalSlotableWrap::getOutputChannelPy, (bp::arg("channelName")))
+
+            .def("getInputChannel", &SignalSlotableWrap::getOutputChannelPy, (bp::arg("channelName")))
+
+            .def("registerDataHandler", &SignalSlotableWrap::registerDataHandlerPy
+                 , (bp::arg("channelName"), bp::arg("handler") = bp::object()))
+
+            .def("registerEndOfStreamHandler", &SignalSlotableWrap::registerEndOfStreamHandlerPy
+                 , (bp::arg("channelName"), bp::arg("handler") = bp::object()))
+
             .def("exists"
                  , (bp::tuple(SignalSlotableWrap::*)(const std::string&))(&SignalSlotableWrap::existsPy)
                  , (bp::arg("instanceId")))

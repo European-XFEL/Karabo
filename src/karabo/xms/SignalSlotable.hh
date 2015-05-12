@@ -1175,8 +1175,10 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
 
             virtual OutputChannel::Pointer createOutputChannel(const std::string& channelName, const karabo::util::Hash& config, const boost::function<void (const OutputChannel::Pointer&) >& onOutputPossibleHandler = boost::function<void (const OutputChannel::Pointer&) >());
             
+            //TODO: make this function private: it is for internal use
             const InputChannels& getInputChannels() const;
 
+            //TODO: make this function private: it is for internal use
             const OutputChannels& getOutputChannels() const;
             
             const OutputChannel::Pointer& getOutputChannel(const std::string& name);
