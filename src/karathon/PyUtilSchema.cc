@@ -89,13 +89,13 @@ public:
 
 struct NodeElementWrap {
 
-    static NodeElement & appendParametersOfConfigurableClass(NodeElement& self, const bp::object& baseobj, const std::string& classid) {
+    static NodeElement & appendParametersOfConfigurableClass(NodeElement& self, const bp::object& baseobj, const std::string& classId) {
 
         if (!PyType_Check(baseobj.ptr())) {
             throw KARABO_PYTHON_EXCEPTION("Argument 'arg1' given in 'appendParametersOfConfigurableClass(arg1, arg2)' of NODE_ELEMENT must be a class in Python registered as base class in Configurator");
         }
         if (!PyObject_HasAttrString(baseobj.ptr(), "getSchema")) {
-            throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classid + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
+            throw KARABO_PYTHON_EXCEPTION("Class with classid = '" + classId + "' given in 'appendParametersOfConfigurableClass(base, classid)' of NODE_ELELEMT has no 'getSchema' method.");
         }
         std::string baseClassId;
         if (PyObject_HasAttrString(baseobj.ptr(), "__karabo_cpp_classid__")) {
@@ -105,10 +105,10 @@ struct NodeElementWrap {
             baseClassId = bp::extract<std::string>(baseobj.attr("__classid__"));
         }
         if (self.getNode().getType() != Types::HASH) self.getNode().setValue(Hash());
-        self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classid);
+        self.getNode().setAttribute(KARABO_SCHEMA_CLASS_ID, classId);
         self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, baseClassId);
 
-        bp::object schemaObj = baseobj.attr("getSchema")(classid);
+        bp::object schemaObj = baseobj.attr("getSchema")(classId);
 
         const Schema schema = bp::extract<Schema> (schemaObj);
         const Hash h = schema.getParameterHash();
@@ -125,17 +125,18 @@ struct NodeElementWrap {
         if (!PyObject_HasAttrString(obj.ptr(), "getSchema")) {
             throw KARABO_PYTHON_EXCEPTION("Class given in 'appendParametersOf' of NODE_ELELEMT has no 'getSchema' method");
         }
-        std::string classid;
+        std::string classId;
         if (PyObject_HasAttrString(obj.ptr(), "__karabo_cpp_classid__")) {
-            classid = bp::extract<std::string>(obj.attr("__karabo_cpp_classid__"));
+            classId = bp::extract<std::string>(obj.attr("__karabo_cpp_classid__"));
         } else {
-            classid = bp::extract<std::string>(obj.attr("__classid__"));
+            classId = bp::extract<std::string>(obj.attr("__classid__"));
         }
-        bp::object schemaObj = obj.attr("getSchema")(classid);
+        bp::object schemaObj = obj.attr("getSchema")(classId);
         const Schema schemaPy = bp::extract<Schema> (schemaObj);
 
         const Hash h = schemaPy.getParameterHash();
         self.getNode().setValue<Hash>(h);
+        self.getNode().setAttribute(KARABO_SCHEMA_DISPLAY_TYPE, classId);
 
         return self;
     }
