@@ -238,18 +238,23 @@ class EventLoop(SelectorEventLoop):
 
     def getBroker(self, deviceId, classId):
         if self.connection is None:
-            p = openmq.Properties()
-            p["MQBrokerHostName"] = os.environ.get("KARABO_BROKER_HOST",
-                                                   "exfl-broker.desy.de")
-            p["MQBrokerHostPort"] = int(os.environ.get("KARABO_BROKER_PORT",
-                                        7777))
-            p["MQConnectionType"] = "TCP"
-            p["MQPingInterval"] = 20
-            p["MQSSLIsHostTrusted"] = True
-            p["MQAckOnProduce"] = False
-            p["MQAckTimeout"] = 0
-
-            self.connection = openmq.Connection(p, "guest", "guest")
+            hosts = os.environ.get("KARABO_BROKER_HOSTS",
+                                   "exfl-broker.desy.de:7777").split(',')
+            for hp in hosts:
+                host, port = hp.split(':')
+                p = openmq.Properties()
+                p["MQBrokerHostName"] = host.strip()
+                p["MQBrokerHostPort"] = int(port)
+                p["MQConnectionType"] = "TCP"
+                p["MQPingInterval"] = 20
+                p["MQSSLIsHostTrusted"] = True
+                p["MQAckOnProduce"] = False
+                p["MQAckTimeout"] = 0
+                try:
+                    self.connection = openmq.Connection(p, "guest", "guest")
+                    break;
+                except:
+                    self.connection = None
             self.connection.start()
 
         return Broker(self, deviceId, classId)
