@@ -23,10 +23,12 @@ namespace karabo {
          *  Methods        push(...) --> request  --> receive(...)
          */
         template <typename T>
-        class Worker {
+        class BaseWorker {
         public:
+            
+            KARABO_CLASSINFO(BaseWorker, "BaseWorker", "1.0")
 
-            Worker()
+            BaseWorker()
             : m_callback()
             , m_timeout(-1)
             , m_repetition(-1)
@@ -46,7 +48,7 @@ namespace karabo {
              * @param timeout time in milliseconds auxiliary thread is waiting on the <b>request</b> queue; 0 means <i>nowait</i> mode; <0 means <i>waiting forever</i>
              * @param repetition <0 means <i>cycling forever</i>; 0 makes no sense; >0 means number of cycles.
              */
-            Worker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
+            BaseWorker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
             : m_callback(callback)
             , m_timeout(timeout)
             , m_repetition(repetition)
@@ -60,7 +62,7 @@ namespace karabo {
             , m_mutexPrint() {
             }
 
-            virtual ~Worker() {
+            virtual ~BaseWorker() {
             }
 
             /**
@@ -69,7 +71,7 @@ namespace karabo {
              * @param timeout     timeout for receiving from queue
              * @param repetition  repetition counter
              */
-            Worker& set(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1) {
+            BaseWorker& set(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1) {
                 m_callback = callback;
                 m_timeout = timeout;
                 m_repetition = repetition;
@@ -80,7 +82,7 @@ namespace karabo {
              * Set parameters defining the behavior of the worker
              * @param timeout     timeout for receiving from queue
              */
-            Worker& setTimeout(int timeout = -1) {
+            BaseWorker& setTimeout(int timeout = -1) {
                 m_timeout = timeout;
                 return *this;
             }
@@ -89,7 +91,7 @@ namespace karabo {
              * Set parameters defining the behavior of the worker
              * @param repetition     repetition counter
              */
-            Worker& setRepetition(int repetition = -1) {
+            BaseWorker& setRepetition(int repetition = -1) {
                 m_repetition = repetition;
                 return *this;
             }
@@ -98,12 +100,12 @@ namespace karabo {
              * Starts auxiliary thread that works on far ends of the queues
              * Default settings are "waiting forever" and "repeat forever"
              */
-            Worker& start() {
+            BaseWorker& start() {
                 if (m_thread == 0) {
                     m_running = true;
                     m_abort = false;
                     m_suspended = false;
-                    m_thread = new boost::thread(&Worker::run, this);
+                    m_thread = new boost::thread(&BaseWorker::run, this);
                 }
                 if (m_suspended) {
                     m_suspended = false;
@@ -116,7 +118,7 @@ namespace karabo {
              * Stop thread activity.  If "request" queue still has some entries they will be received before thread exits.
              * After requesting a stop the new entries can not be put (just ignored) into <b>request</b> queue.
              */
-            Worker& stop() {
+            BaseWorker& stop() {
                 if (m_running) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_running = false;
@@ -129,7 +131,7 @@ namespace karabo {
             /**
              * This function stops thread immediately despite the fact like nonempty queue.
              */
-            Worker& abort() {
+            BaseWorker& abort() {
                 if (!m_abort) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_abort = true;
@@ -139,7 +141,7 @@ namespace karabo {
                 return *this;
             }
 
-            Worker& pause() {
+            BaseWorker& pause() {
                 if (!m_suspended) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_suspended = true;
@@ -249,16 +251,18 @@ namespace karabo {
             int m_count; // current repetition counter
         };
 
-        struct FsmWorker : public Worker<bool> {
+        struct Worker : public BaseWorker<bool> {
+            
+            KARABO_CLASSINFO(Worker, "Worker", "1.0")
 
-            FsmWorker() : Worker<bool>() {
+            Worker() : BaseWorker<bool>() {
             }
 
-            FsmWorker(const boost::function<void(bool)>& callback, int timeout = -1, int repetition = -1)
-            : Worker<bool>(callback, timeout, repetition) {
+            Worker(const boost::function<void(bool)>& callback, int delay = -1, int repetitions = -1)
+            : BaseWorker<bool>(callback, delay, repetitions) {
             }
 
-            virtual ~FsmWorker() {
+            virtual ~Worker() {
                 abort().join();
             }
 
