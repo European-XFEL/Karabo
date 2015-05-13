@@ -46,7 +46,7 @@ namespace karabo {
             template <class T>
             void visitState(T* state, bool stopWorker=false) {
                 if (stopWorker) {
-                    FsmWorker* worker = state->getWorker();
+                    Worker* worker = state->getWorker();
                     if (worker && worker->is_running()) worker->abort().join();
                 } else {
                     std::string stateName(state->getStateName());
@@ -132,7 +132,7 @@ namespace karabo {
                 return m_repetition;
             }
 
-            virtual FsmWorker* getWorker() const {
+            virtual Worker* getWorker() const {
                 return NULL;
             }
 
