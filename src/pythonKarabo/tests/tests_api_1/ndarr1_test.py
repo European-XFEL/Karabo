@@ -17,7 +17,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
     #    self.foo = None
 
     def test_ndarr1_ndarray_copy(self):
-        a = np.arange(30).reshape(2,5,3)
+        a = np.arange(30, dtype='int64').reshape(2,5,3)
         nd = NDArray(a)
         try:
             assert nd.has('data')
@@ -26,7 +26,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
             assert nd.has('dimTypes')
             assert nd.has('isBigEndian')
             self.assertEqual(a.shape, tuple(nd.getDimensions()))
-            self.assertEqual(len(nd.hash().get("data")), 240)
+            self.assertEqual(len(nd.hash().get("data")), a.nbytes)
             self.assertEqual(nd.getDataType(), "INT64")
             self.assertEqual(str(nd.hash().getType("data")), "VECTOR_CHAR")
             b = nd.getData()
@@ -37,7 +37,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
             self.fail("test_ndarr1_ndarray_copy: " + str(e))
         
     def test_ndarr1_ndarray_nocopy(self):
-        a = np.arange(30).reshape(2,5,3)
+        a = np.arange(30, dtype='int64').reshape(2,5,3)
         nd = NDArray()
         nd.setData(a, copy=False)
         try:
@@ -51,7 +51,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
             self.assertEqual(str(nd.hash().getType("data")), "ARRAY_CHAR")
             b = nd.getData()     # it takes implicitly an ownership over ndarray (copying) 
             self.assertEqual(str(nd.hash().getType("data")), "VECTOR_CHAR")
-            self.assertEqual(len(nd.hash().get("data")), 240)
+            self.assertEqual(len(nd.hash().get("data")), a.nbytes)
             c = (a == b).flatten().tolist()
             assert len(c) == 30
             assert len(c) == c.count(True)
@@ -59,7 +59,7 @@ class  Ndarr1_TestCase(unittest.TestCase):
             self.fail("test_ndarr1_ndarray_nocopy: " + str(e))
         
     def test_ndarr1_ndarray_archive(self):
-        a = np.arange(30).reshape(2,5,3)
+        a = np.arange(30, dtype='int64').reshape(2,5,3)
         nd = NDArray()
         nd.setData(a, copy=False)
         ser = BinarySerializerHash.create("Bin")
