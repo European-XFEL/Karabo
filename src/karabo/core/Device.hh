@@ -378,9 +378,9 @@ namespace karabo {
              * @param image CpuImage object
              */
             template <class PixelType>
-            void write(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {                
+            void writeChannel(const std::string& channelName, const std::string& key, const karabo::xip::CpuImage<PixelType>& image) {                
                 karabo::xms::Data data(key, karabo::xms::ImageData(image));
-                write(channelName, data);                
+                writeChannel(channelName, data);                
             }
 
             /**
@@ -392,9 +392,9 @@ namespace karabo {
              * @param key The data element (root-)key
              * @param data Data object
              */
-            void write(const std::string& channelName, const std::string& key, const karabo::xms::Data& data) {
+            void writeChannel(const std::string& channelName, const std::string& key, const karabo::xms::Data& data) {
                 karabo::xms::Data root(key, data);
-                write(channelName, root);
+                writeChannel(channelName, root);
             }
 
             /**
@@ -403,7 +403,7 @@ namespace karabo {
              * @param channelName The output channel name
              * @param data Data object
              */
-            void write(const std::string& channelName, karabo::xms::Data& data) {
+            void writeChannel(const std::string& channelName, karabo::xms::Data& data) {
                 // TODO think about proper validation and time tagging later
                 data.attachTimestamp(getActualTimestamp());
                 karabo::xms::OutputChannel::Pointer channel = this->getOutputChannel(channelName);
