@@ -31,6 +31,12 @@ class Worker(threading.Thread):
         self.timeout  = timeout
         self.repetition = repetition
 
+    def setTimeout(self, timeout = -1):
+        self.timeout = timeout
+
+    def setRepetition(self, repetition = -1):
+        self.repetition = repetition
+
     def is_running(self):
         return self.running
     
