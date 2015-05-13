@@ -81,7 +81,7 @@ class Tests(TestCase):
         config = Hash("project", "test", "module", "test", "code", self.code)
         hash = Hash("classId", "MetaMacro", "configuration", config,
                     "deviceId", "bla")
-        yield from server.call("macroServer", "slotStartDevice", hash)
+        yield from server.call("Karabo_MacroServer", "slotStartDevice", hash)
         yield from sleep(4)
         proxy = yield from getDevice("bla-TestMacro")
         with proxy:
@@ -91,7 +91,7 @@ class Tests(TestCase):
 
     def test_macroserver(self):
         loop = setEventLoop()
-        server = DeviceServer(dict(serverId="macroServer"))
+        server = DeviceServer(dict(serverId="Karabo_MacroServer"))
         task = loop.create_task(self.init_macroserver(server), server)
         proxy = loop.run_until_complete(task)
         self.assertEqual(proxy.s, "done")
