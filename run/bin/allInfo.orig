@@ -1,6 +1,6 @@
-##########################################################################################
-# allInfo contains configuration definitions used to manage master, single or multi device
-# server, gui and other applications used in a localhost device test system.
+############################################################
+# allInfo contains configuration definitions to manage 
+# servers and applications used in a localhost device setup
 #
 # management scripts: 
 #   1. allStart - to start karabo processes defined by the ALLINFO environmental
@@ -45,6 +45,8 @@ export KARABO_BROKER_HOSTS="exfl-broker:7777"
 # Kill Signal (used by allStop)  #
 ##################################
 
+# Better don't touch
+
 KARABO_KILL_SIGNAL=9
 
 
@@ -64,36 +66,44 @@ KARABO_KILL_SIGNAL=9
 # Note: additional servers can be added by duplicating a server line and performing
 # the necessary directory [definition 2] renaming (servers have unique directories)
 # and providing a unique ALLINFO array index
-
 KARABO_SERVERS="../servers"
 
 ###################
 # Service Servers #
 ###################
 
-ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer::0:100:yes"
-ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer::0:100:yes"
-ALLINFO[2]="$KARABO_SERVERS/projectServer/startCppServer::0:100:yes"
-ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=macroServer:0:100:yes"
+# Better don't touch
+
+logLevel=INFO
+
+ALLINFO[0]="$KARABO_SERVERS/guiServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[1]="$KARABO_SERVERS/dataLoggerServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[2]="$KARABO_SERVERS/projectServer/startCppServer:DeviceServer.Logger.priority=$logLevel:0:1000:yes"
+ALLINFO[3]="$KARABO_SERVERS/macroServer/startPythonServerApi2:DeviceServer.serverId=macroServer:0:1000:yes"
 
 
 #####################
 # Device Server C++ #
 #####################
 
-ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer::0:100:yes"
+serverId=Karabo_CppServer
+logLevel=INFO
+
+ALLINFO[10]="$KARABO_SERVERS/cppDeviceServer/startCppServer:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
 
 ########################
 # Device Server Python #
 ########################
 
-ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer:0:100:yes"
+serverId=Karabo_PythonServer
+logLevel=INFO
+
+ALLINFO[20]="$KARABO_SERVERS/pythonDeviceServer/startPythonServerApi1:DeviceServer.serverId=$serverId DeviceServer.Logger.priority=$logLevel:0:1000:yes"
 
 
 ###################
 # User Interfaces #
 ###################
 
-ALLINFO[30]="./startGui::0:100:no"
-#ALLINFO[31]="./startCli::0:100:no"
+ALLINFO[30]="./startGui::0:1000:no"
