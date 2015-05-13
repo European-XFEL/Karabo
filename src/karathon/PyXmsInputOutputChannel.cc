@@ -287,20 +287,11 @@ namespace karathon {
             } else
                 throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
         }
-
-
-        static bp::object getDimensionScalesPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
-            const std::vector<std::vector<std::string> >& scales = self->getDimensionScales();
-            bp::list pylist;
-            for (size_t i = 0; i < scales.size(); i++) {
-                bp::list pyraw;
-                for (size_t j = 0; j < scales[i].size(); j++) {
-                    pyraw.append(bp::str(scales[i][j]));
-                }
-                pylist.append(pyraw);
-            }
-            return pylist;
+        
+        static bp::object getDimensionTypesPy(const boost::shared_ptr<karabo::xms::NDArray>& self) {
+            return Wrapper::fromStdVectorToPyList(self->getDimensionTypes());
         }
+   
     };
 
 
@@ -620,22 +611,7 @@ namespace karathon {
                 self->setDimensionTypes(dimTypes);
             } else
                 throw KARABO_PYTHON_EXCEPTION("Unsupported argument type");
-        }
-
-
-        static bp::object getDimensionScalesPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
-            const std::vector<std::vector<std::string> >& scales = self->getDimensionScales();
-            bp::list pylist;
-            for (size_t i = 0; i < scales.size(); i++) {
-                bp::list pyraw;
-                for (size_t j = 0; j < scales[i].size(); j++) {
-                    pyraw.append(bp::str(scales[i][j]));
-                }
-                pylist.append(pyraw);
-            }
-            return pylist;
-        }
-
+        }      
 
         static bp::object getROIOffsetsPy(const boost::shared_ptr<karabo::xms::ImageData>& self) {
             karabo::util::Dims offsets = self->getROIOffsets();
@@ -830,6 +806,8 @@ void exportPyXmsInputOutputChannel() {
                 .def("setDimensions", &karathon::NDArrayWrap::setDimensionsPy, (bp::arg("dims")))
 
                 .def("setDimensionTypes", &karathon::NDArrayWrap::setDimensionTypesPy, (bp::arg("types")))
+                
+                .def("getDimensionTypes", &karathon::NDArrayWrap::getDimensionTypesPy)
 
                 .def("getDataType", &NDArray::getDataType, bp::return_value_policy<bp::copy_const_reference > ())
 
@@ -837,7 +815,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("isBigEndian", &NDArray::isBigEndian)
 
-                .def("getDimensionScales", &karathon::NDArrayWrap::getDimensionScalesPy)
+                .def("getDimensionScales", &NDArray::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
 
                 .def("setDimensionScales", &NDArray::setDimensionScales, (bp::arg("scales")))
 
@@ -953,7 +931,7 @@ void exportPyXmsInputOutputChannel() {
 
                 .def("toLittleEndian", &ImageData::toLittleEndian)
 
-                .def("getDimensionScales", &karathon::ImageDataWrap::getDimensionScalesPy)
+                .def("getDimensionScales", &ImageData::getDimensionScales, bp::return_value_policy< bp::copy_const_reference >())
 
                 .def("setDimensionScales", &ImageData::setDimensionScales, (bp::arg("scales")))
 

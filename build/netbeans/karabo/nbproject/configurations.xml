@@ -27,6 +27,7 @@
         <itemPath>../../../src/karabo/core/NoFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/OkErrorFsm.hh</itemPath>
         <itemPath>../../../src/karabo/core/StartStopFsm.hh</itemPath>
+        <itemPath>../../../src/karabo/core/StartStopInterface.hh</itemPath>
       </logicalFolder>
       <itemPath>../../../src/karabo/core/DeviceClient.cc</itemPath>
       <itemPath>../../../src/karabo/core/DeviceClient.hh</itemPath>
@@ -624,6 +625,11 @@
       <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/StartStopFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/StartStopInterface.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -2436,6 +2442,11 @@
       <item path="../../../src/karabo/core/Runner.hh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../../../src/karabo/core/StartStopFsm.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/core/StartStopInterface.hh"
             ex="false"
             tool="3"
             flavor2="0">
