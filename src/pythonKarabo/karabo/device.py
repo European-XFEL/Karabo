@@ -8,6 +8,8 @@ import datetime
 import sys
 import socket
 import re
+from PIL import Image
+import numpy as np
 from abc import ABCMeta, abstractmethod
 from karabo.karathon import *
 from karabo.decorators import KARABO_CLASSINFO, KARABO_CONFIGURATION_BASE_CLASS
@@ -392,7 +394,7 @@ class PythonDevice(NoFsm):
     def __setitem__(self, key, value):
         self.set(key, value, self._getActualTimestamp())
         
-    def write(self, *args):
+    def writeChannel(self, *args):
         pars = tuple(args)
         if len(pars) < 2 or len(pars) > 3:
             raise SyntaxError("Number of parameters is wrong: only 2 to 3 arguments are allowed.")
@@ -400,14 +402,23 @@ class PythonDevice(NoFsm):
             channelName, key, value = pars
             if isCpuImage(value):
                 dataval = ImageData(value)
-            elif type(value) is Data:
+            elif type(value) is Data or type(value) is ImageData or type(value) is NDArray:
                 dataval = value
+            elif type(value) is Image.Image:
+                dataval = ImageData(np.array(value)) 
             else:
-                raise ValueError("The type of value is neither a \"CpuImage\" nor a \"Data\"")
+                raise ValueError('The type of value is neither a "CpuImage" nor a "Data"')
             data = Data(key, dataval)
         elif len(pars) == 2:
             channelName, data = pars
-            
+            if type(data) is ImageData or type(data) is NDArray:
+                data = Data(data.hash())
+            elif type(data) is Image.Image:
+                img = data
+                imgdata = ImageData(np.array(img))
+                data = Data(imgdata.hash())
+            else:
+                raise ValueError('Unsupported type of value: {}'.format(type(data)))
         data.attachTimestamp(self._getActualTimestamp())
         channel = self._ss.getOutputChannel(channelName)
         channel.write(data)
