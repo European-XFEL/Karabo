@@ -158,6 +158,17 @@ namespace karabo {
             void toBigEndian();
 
             void toLittleEndian();
+            
+            /**
+             * Say x = fasted changing, y = medium fast and z = slowest changing index
+             * then set the dimension like 
+             * @code setDimensions(Dims(x,y,z))
+             * Or in other words, if you think about width, height and depth use:
+             * @code setDimensions(Dims(width, height, depth);
+             * For 2D single images, leave away the depth
+             * @param dims Dimensionality
+             */
+            void setDimensions(const karabo::util::Dims& dims);                        
 
             //const ImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
 
@@ -212,7 +223,9 @@ namespace karabo {
             }
 
             ImageDataElement& setDimensions(const std::string& dimensions) {
-                return setDefaultValue("dims", karabo::util::fromString<unsigned long long, std::vector>(dimensions));
+                std::vector<unsigned long long> tmp = karabo::util::fromString<unsigned long long, std::vector>(dimensions);
+                std::reverse(tmp.begin(), tmp.end());
+                return setDefaultValue("dims", tmp);
             }
 
             ImageDataElement& setEncoding(const EncodingType& encoding) {

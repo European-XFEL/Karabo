@@ -127,6 +127,10 @@ namespace karabo {
                 if (m_rank >= 4) return m_vec[3];
                 return 1;
             }
+             
+             void reverse() {
+                 std::reverse(m_vec.begin(), m_vec.end());
+             }
 
 
 
