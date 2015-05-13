@@ -406,4 +406,9 @@ class MainWindow(QMainWindow):
             if hasattr(divWidget.dockableWidget, "scene"):
                 scene = divWidget.dockableWidget.scene
                 if scene.isVisible():
+                    # FIXME: This is a HACK which is necessary to make
+                    # FIXME: OutputChannel connections reconnect. See bug #5260
+                    scene.setTabVisible(False)
+                    scene.setTabVisible(True)
+                    # FIXME: End of HACK
                     scene.update()
