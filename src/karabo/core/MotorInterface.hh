@@ -33,7 +33,7 @@ namespace karabo {
                         .setNewOptions("Initializing,HardwareError,Safe,Override,Off,Stopped,Idle,Homing,Moving")
                         .setNewDefaultValue("Initializing")
                         .commit();
-
+                
                 SLOT_ELEMENT(expected).key("resetHardware")                      
                         .description("Resets the hardware")
                         .displayedName("Reset hardware")
@@ -41,20 +41,20 @@ namespace karabo {
                         .commit();
 
                 SLOT_ELEMENT(expected).key("safe")                        
-                        .description("Brings device into a safe state (as defined on h/w)")
+                        .description("Brings device into a safe operation mode (as defined on h/w)")
                         .displayedName("Safe")
                         .commit();
 
                 SLOT_ELEMENT(expected).key("normal")                       
                         .displayedName("Normal")
-                        .description("Brings device into normal mode")
+                        .description("Brings device into normal operation mode")
                         .expertAccess()
                         .commit();
 
                 SLOT_ELEMENT(expected).key("override")                        
                         .displayedName("Override")
-                        .description("Brings device into override mode (be careful, hardware may be broken)")
-                        .expertAccess()
+                        .description("Brings device into override operation mode (be careful, hardware may be broken)")
+                        .adminAccess()
                         .commit();
 
                 SLOT_ELEMENT(expected).key("off")
