@@ -805,7 +805,7 @@ class Macro(object):
         h = Hash("code", code,
                  "project", self.project.name,
                  "module", self.name)
-        network.onInitDevice("macroServer", "MetaMacro", self.instanceId, h)
+        network.onInitDevice("Karabo_MacroServer", "MetaMacro", self.instanceId, h)
 
 
     def load(self):

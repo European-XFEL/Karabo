@@ -1,10 +1,13 @@
 from asyncio import coroutine, gather
 
-from karabo.enums import AccessMode
+from karabo.enums import *
+from karabo import Slot, Integer, Float, Bool
 from karabo.python_device import Device
 from karabo.hashtypes import String
 from karabo.macro import Macro
-
+from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
+                                  getDevice, executeNoWait, updateDevice,
+                                  Queue)
 
 class MetaMacro(Device):
     """This is the device that starts macros.
