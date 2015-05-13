@@ -417,6 +417,8 @@ class PythonDevice(NoFsm):
                 img = data
                 imgdata = ImageData(np.array(img))
                 data = Data(imgdata.hash())
+            elif type(data) is Data:
+                pass
             else:
                 raise ValueError('Unsupported type of value: {}'.format(type(data)))
         data.attachTimestamp(self._getActualTimestamp())
