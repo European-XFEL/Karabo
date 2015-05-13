@@ -126,10 +126,15 @@ namespace karabo {
 
 
         void NDArray::setDimensionTypes(const std::vector<int>& dimTypes) {
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
+            m_hash->set("dimTypes", dimTypes);
         }
-
-
+        
+        
+        const std::vector<int>& NDArray::getDimensionTypes() {
+            m_hash->get<vector<int > >("dimTypes");
+        }
+        
+        
         const std::string& NDArray::getDataType() const {
             return m_hash->get<string>("dataType");
         }
@@ -145,27 +150,14 @@ namespace karabo {
         }
 
 
-        const std::vector<std::vector<std::string> >& NDArray::getDimensionScales() const {
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
+        const std::string& NDArray::getDimensionScales() const {
+            m_hash->get<string>("dimScales");
         }
 
-
-        void NDArray::setDimensionScales(const std::string& scales) {
-            throw KARABO_NOT_IMPLEMENTED_EXCEPTION("No implementation yet, under construction.");
-        }
         
-        //        void NDArray::setDimensionScales(const std::map<int, std::vector<std::string> >& scales) {
-        //            string serialized;
-        //            for (map<int, vector<string> >::const_iterator it = scales.begin(); it != scales.end(); ++it) {
-        //                serialized += karabo::util::toString(it->first);
-        //                serialized += ":[";
-        //                const vector<string>& tmp = it->second;
-        //                for (size_t j = 0; j < tmp.size(); ++j) {
-        //                    if (j > 0 ) serialized += "," + tmp[j];
-        //                }
-        //                serialized += "]";
-        //            }
-        //            m_hash->set("dimScales", serialized);
-        //        }
+        void NDArray::setDimensionScales(const std::string& scales) {
+            m_hash->set("dimScales", scales);
+        }
+             
     }
 }

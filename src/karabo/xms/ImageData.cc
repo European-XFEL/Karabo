@@ -138,6 +138,14 @@ namespace karabo {
                 setIsBigEndian(true);
             }
         }
+        
+        
+        void ImageData::setDimensions(const karabo::util::Dims& dims) {
+            Dims tmp(dims);
+            tmp.reverse();
+            NDArray::setDimensions(tmp);                    
+        }
+
 
         //        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
         //            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);
