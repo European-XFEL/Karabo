@@ -94,7 +94,7 @@ class _Manager(QObject):
         if platform.startswith("win"):
             # TODO: hardcoded version needs to be updated - find better solution
             # for Windows
-            globals.GUI_VERSION = "1.2.7"
+            globals.GUI_VERSION = "1.3"
             return
         
         filePath = os.path.join(globals.HIDDEN_KARABO_FOLDER, "karaboFramework")
