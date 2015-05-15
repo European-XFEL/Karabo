@@ -23,16 +23,16 @@ using namespace boost::signals2;
 
 namespace karabo {
     namespace net {
-
+        
+        static const MQSessionHandle invalidSession = MQ_INVALID_HANDLE;
+        static const MQDestinationHandle invalidDestination = MQ_INVALID_HANDLE;
+        static const MQConsumerHandle invalidConsumer = MQ_INVALID_HANDLE;
+        static const MQProducerHandle invalidProducer = MQ_INVALID_HANDLE;
 
         JmsBrokerChannel::JmsBrokerChannel(BrokerConnection::Pointer connection, const std::string& subDestination)
         : BrokerChannel()
         , m_jmsConnection(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection))
         , m_serializationType(boost::dynamic_pointer_cast<JmsBrokerConnection>(connection)->m_serializationType)
-        , m_sessionHandle(MQ_INVALID_HANDLE)
-        , m_destinationHandle(MQ_INVALID_HANDLE)
-        , m_consumerHandle(MQ_INVALID_HANDLE)
-        , m_producerHandle(MQ_INVALID_HANDLE)
         , m_filterCondition("")
         , m_isStopped(false)
         , m_hasAsyncHandler(false)
@@ -42,6 +42,11 @@ namespace karabo {
         , m_subDestination(subDestination)
         , m_hasSession(false) {
 
+            m_sessionHandle.handle     = invalidSession.handle;
+            m_destinationHandle.handle = invalidDestination.handle;
+            m_consumerHandle.handle    = invalidConsumer.handle;
+            m_producerHandle.handle    = invalidProducer.handle;
+            
             //cout << "JmsBrokerChannel::JmsBrokerChannel: connection.use_count()=" << connection.use_count() << endl << StackTrace() << endl;
             boost::shared_ptr<JmsBrokerConnection> jbc = m_jmsConnection.lock();
             if (!jbc)
@@ -58,7 +63,7 @@ namespace karabo {
             // Create the serializers
             m_textSerializer = TextSerializer<Hash>::create("Xml", Hash("indentation", -1));
             m_binarySerializer = BinarySerializer<Hash>::create("Bin");
-            
+
             ensureSessionAvailable();
         }
 
@@ -1027,9 +1032,9 @@ namespace karabo {
                     MQStatus status;
                     {
                         boost::mutex::scoped_lock lock(m_openMQMutex);
-                        MQStatus status = MQSendMessageExt(m_producerHandle, messageHandle,
-                                                           MQ_NON_PERSISTENT_DELIVERY,
-                                                           priority, messageTimeToLive);
+                        status = MQSendMessageExt(m_producerHandle, messageHandle,
+                                                  MQ_NON_PERSISTENT_DELIVERY,
+                                                  priority, messageTimeToLive);
                     }
                     if (MQStatusIsError(status) == MQ_FALSE) break;
                     switch (MQGetStatusCode(status)) {
@@ -1225,18 +1230,18 @@ namespace karabo {
             m_isStopped = true;
 
             MQCloseMessageProducer(m_producerHandle);
-            m_producerHandle = MQ_INVALID_HANDLE;
+            m_producerHandle.handle = invalidProducer.handle;
             m_hasProducer = false;
 
             MQCloseMessageConsumer(m_consumerHandle);
-            m_consumerHandle = MQ_INVALID_HANDLE;
+            m_consumerHandle.handle = invalidConsumer.handle;
             m_hasConsumer = false;
 
             MQFreeDestination(m_destinationHandle);
-            m_destinationHandle = MQ_INVALID_HANDLE;
+            m_destinationHandle.handle = invalidDestination.handle;
 
             MQCloseSession(m_sessionHandle);
-            m_sessionHandle = MQ_INVALID_HANDLE;
+            m_sessionHandle.handle = invalidSession.handle;
 
             m_hasAsyncHandler = false;
         }

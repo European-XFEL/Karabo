@@ -131,7 +131,7 @@ namespace karabo {
         
         
         const std::vector<int>& NDArray::getDimensionTypes() {
-            m_hash->get<vector<int > >("dimTypes");
+            return m_hash->get<vector<int > >("dimTypes");
         }
         
         
@@ -151,7 +151,7 @@ namespace karabo {
 
 
         const std::string& NDArray::getDimensionScales() const {
-            m_hash->get<string>("dimScales");
+            return m_hash->get<string>("dimScales");
         }
 
         

@@ -231,7 +231,7 @@ namespace karabo {
                         hid_t space = H5Aget_space(m_attribute);
                         KARABO_CHECK_HDF5_STATUS(space);
                         hsize_t dims[1];
-                        int ndims = H5Sget_simple_extent_dims(space, dims, NULL);                        
+                        /*int ndims = NOT USED */ H5Sget_simple_extent_dims(space, dims, NULL);                        
                         char** rdata = (char **) malloc(dims[0] * sizeof (char *));
 
                         hid_t tid = getNativeTypeId();
