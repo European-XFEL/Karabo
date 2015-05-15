@@ -378,7 +378,7 @@ namespace karabo {
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << Memory<T>::size(m_channelId, m_activeChunk);
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
                 //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
-                if ((this->getMinimumNumberOfData() == -1)) {
+                if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
                     if (m_isEndOfStream && m_respondToEndOfStream) {
                         return false;
                     }
