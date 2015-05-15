@@ -577,7 +577,8 @@ namespace karabo {
         unsigned int OutputChannel::getNextSharedInputIdx() {
             // TODO Check modulo 0
             boost::mutex::scoped_lock lock(m_nextInputMutex);
-            m_sharedInputIndex = (++m_sharedInputIndex) % m_registeredSharedInputs.size();
+            ++m_sharedInputIndex;
+            m_sharedInputIndex %= m_registeredSharedInputs.size();
             return m_sharedInputIndex;
         }
 

@@ -23,6 +23,7 @@ namespace karabo {
 
         KARABO_REGISTER_FOR_CONFIGURATION(BrokerConnection, JmsBrokerConnection)
 
+        static const MQConnectionHandle invalidConnection = MQ_INVALID_HANDLE;
 
         JmsBrokerConnection::~JmsBrokerConnection() {
             //cout << "****** " << BOOST_CURRENT_FUNCTION << " ENTRY ******" << endl;
@@ -36,7 +37,7 @@ namespace karabo {
             m_channels.clear();
             MQCloseConnection(m_connectionHandle);
             MQFreeConnection(m_connectionHandle);
-            m_connectionHandle = MQ_INVALID_HANDLE;
+            m_connectionHandle.handle = invalidConnection.handle;
             //cout << "****** " << BOOST_CURRENT_FUNCTION << " EXIT  ******" << endl;
         }
 
@@ -220,8 +221,8 @@ namespace karabo {
         : BrokerConnection(input)
         , m_hasConnection(false)
         , m_closeOldConnection(false)
-        , m_connectionHandle(MQ_INVALID_HANDLE) {
-
+        {
+            m_connectionHandle.handle = invalidConnection.handle;
             this->setIOServiceType("Jms"); // Defines the type of the composed IO service within abstract IO service
 
             input.get("brokerHosts", m_brokerHosts);
@@ -315,7 +316,7 @@ namespace karabo {
                 setConnectionProperties(propertiesHandle);
                 // Initiate connection
                 // Check if onException is a good idea
-                m_connectionHandle = MQ_INVALID_HANDLE;
+                m_connectionHandle.handle = invalidConnection.handle;
                 MQ_SAFE_CALL(MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, this, &m_connectionHandle));
             } catch (...) {
                 throw KARABO_SYSTEM_EXCEPTION("Cannot connect to the broker with given parameters. Exit...");
@@ -346,7 +347,7 @@ namespace karabo {
                     {
                         MQStatus status;
                         boost::mutex::scoped_lock lock(m_openMQMutex);
-                        m_connectionHandle = MQ_INVALID_HANDLE;
+                        m_connectionHandle.handle = invalidConnection.handle;
                         status = MQCreateConnection(propertiesHandle, m_username.c_str(), m_password.c_str(), NULL, &onException, this, &m_connectionHandle);
                         if (MQStatusIsError(status) == MQ_TRUE) {
                             MQString tmp = MQGetStatusString(status);

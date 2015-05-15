@@ -56,7 +56,7 @@ namespace karabo {
 
             UINT32_ELEMENT(expected).key("minData")
                     .displayedName("Minimum number input packets")
-                    .description("The number of elements to be read before any computation is started (0 = all, -1 = none/any)")
+                    .description("The number of elements to be read before any computation is started (0 = all, 0xFFFFFFFF = none/any)")
                     .assignmentOptional().defaultValue(1)
                     .init()
                     .commit();
@@ -359,7 +359,7 @@ namespace karabo {
             //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Current size of async read data cache: " << MemoryType::size(m_channelId, m_activeChunk);
             //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: Is end of stream? " << m_isEndOfStream;
             //KARABO_LOG_FRAMEWORK_DEBUG << "INPUT: MinData " << this->getMinimumNumberOfData();
-            if ((this->getMinimumNumberOfData() == -1)) {
+            if ((this->getMinimumNumberOfData() == 0xFFFFFFFF)) {
                 if (m_isEndOfStream && m_respondToEndOfStream) {
                     return false;
                 }

@@ -36,7 +36,7 @@ namespace karabo {
             }
 
             File::File(const hid_t & h5file) : m_h5file(h5file), m_managed(true){
-                size_t nameSize = H5Fget_name(h5file, NULL, NULL);
+                size_t nameSize = H5Fget_name(h5file, NULL, 0);
                 char filename[nameSize+1];
                 H5Fget_name(h5file, filename, nameSize+1);
                 m_filename = std::string(filename);

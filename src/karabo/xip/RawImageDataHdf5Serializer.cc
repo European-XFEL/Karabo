@@ -38,7 +38,7 @@ namespace karabo {
         RawImageDataHdf5Serializer::RawImageDataHdf5Serializer(const karabo::util::Hash& input) : 
             karabo::io::Hdf5Serializer<karabo::xip::RawImageData>(input), m_basePath(""), m_datasetId(0), m_hashSerializer(input),
             m_hashXmlSerializer(karabo::util::Hash("indentation", -1, "writeDataTypes", true, "readDataTypes", true, "insertXmlNamespace", false, "xmlns", "http://xfel.eu/config", "prefix", "KRB_")),
-            m_h5structureRead(false), m_structureRead(false){
+            m_structureRead(false), m_h5structureRead(false) {
                
                 
         }
@@ -85,7 +85,7 @@ namespace karabo {
                    
                     //check if a path structure already exists:
                     openTables = true;
-                    int status = H5Eset_auto(NULL, NULL, NULL);
+                    int status = H5Eset_auto(0, NULL, NULL);
                     status = H5Gget_objinfo(h5fileId, basePath.c_str(), 0, NULL);
                     if(status != 0) openTables = false;
                   
@@ -169,7 +169,7 @@ namespace karabo {
 
                 } else if(openTables){
 
-                    unsigned long long currentImages = getTableSize(h5fileId, path+"/images/image");
+                    /*unsigned long long currentImages = NOT USED */ getTableSize(h5fileId, path+"/images/image");
 
                     m_imageTable =  m_h5file->getTable(path+"/images", imageFormat(dims, image.getChannelSpace()), 0);
                     m_identifiersTable = m_h5file->getTable(path+"/identifiers");//, generateFormatFromHash(identifiers[i], "identifiers"));
@@ -423,7 +423,7 @@ namespace karabo {
             m_identifiersTable->read(lowerImageIndex+1, upperImageIndex- lowerImageIndex);
             std::vector<long long> tilesInData = identH.get<std::vector<long long> >("tileIds");
 
-            unsigned long long nInserts = 0;
+            //unsigned long long nInserts = 0;  NOT USED
 
 
 
@@ -496,7 +496,7 @@ namespace karabo {
             
             if(!m_h5structureRead) {
     
-                int status = H5Eset_auto(NULL, NULL, NULL);
+                int status = H5Eset_auto(0, NULL, NULL);
                 status = H5Gget_objinfo(h5fileId, basePath.c_str(), 0, NULL);
                 if(status < 0) return 0;
                 m_h5structureRead = true;
