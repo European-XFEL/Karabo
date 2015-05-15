@@ -122,7 +122,7 @@ namespace karathon {
                 else
                     self->setDimensions(dims);
 
-                self->setIsBigEndian(::htonl(47) == 47);
+                self->setIsBigEndian(false);
                 
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
@@ -167,7 +167,7 @@ namespace karathon {
                 }
                 PyArray_Descr* dtype = PyArray_DESCR(arr);
                 self->setDimensions(Dims(dims));
-                if (!self->has("isBigEndian")) self->setIsBigEndian(::htonl(47) == 47);
+                if (!self->has("isBigEndian")) self->setIsBigEndian(false);
             
                 switch (dtype->type_num) {
                     case NPY_BOOL:
@@ -410,7 +410,7 @@ namespace karathon {
                 else
                     self->setChannelSpace(channelSpace);
 
-                self->setIsBigEndian(::htonl(47) == 47);
+                self->setIsBigEndian(false);
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
             }
@@ -461,7 +461,7 @@ namespace karathon {
                 else
                     self->setDimensions(dims);
 
-                self->setIsBigEndian(::htonl(47) == 47);
+                self->setIsBigEndian(false);
                 
             } else {
                 throw KARABO_PARAMETER_EXCEPTION("Object type expected to be ndarray or Hash");
