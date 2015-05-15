@@ -56,12 +56,12 @@ namespace karabo {
         }
 
         timeval Epochstamp::getTimeOfDay() const {
-            timeval result = {m_seconds, m_fractionalSeconds / 1000000000000ULL};  // std::pow(10, MICROSEC)
+            timeval result = {long(m_seconds), long(m_fractionalSeconds / 1000000000000ULL)};  // std::pow(10, MICROSEC)
             return result;
         }
 
         timespec Epochstamp::getClockTime() const {
-            timespec result = {m_seconds, m_fractionalSeconds / 1000000000ULL};    // std::pow(10, NANOSEC)
+            timespec result = {long(m_seconds), long(m_fractionalSeconds / 1000000000ULL)};    // std::pow(10, NANOSEC)
             return result;
         }
 
