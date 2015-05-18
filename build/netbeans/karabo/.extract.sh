@@ -108,17 +108,21 @@ echo $installDir/karabo-$VERSION > $HOME/.karabo/karaboFramework
 #
 # find site-packages directory using installed python
 sitePackagesDir=`$installDir/karabo-$VERSION/extern/bin/python -c "import site; print(site.getsitepackages()[0])"`
+includeDir=`$installDir/karabo-$VERSION/extern/bin/python3-config --includes`
+configDir=`$installDir/karabo-$VERSION/extern/bin/python3-config --configdir`
 cd $sitePackagesDir
-#cd $installDir/karabo-$VERSION/extern/lib/python2.7/site-packages
+sitePackagesDir=${sitePackagesDir##*/extern/}
+includeDir=${includeDir##*/extern/}
+configDir=${configDir##*/extern/}
 sed -i "/'default_bin_dir'/c\    'default_bin_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/bin'," sipconfig.py
-sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/site-packages'," sipconfig.py
+sed -i "/'default_mod_dir'/c\    'default_mod_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/$sitePackagesDir'," sipconfig.py
 sed -i "/'default_sip_dir'/c\    'default_sip_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/share/sip'," sipconfig.py
-sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
-sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
-sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/config'," sipconfig.py
+sed -i "/'py_conf_inc_dir'/c\    'py_conf_inc_dir':    '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
+sed -i "/'py_inc_dir'/c\    'py_inc_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
+sed -i "/'py_lib_dir'/c\    'py_lib_dir':         '`cat $HOME/.karabo/karaboFramework`/extern/$configDir'," sipconfig.py
 sed -i "/'sip_bin'/c\    'sip_bin':            '`cat $HOME/.karabo/karaboFramework`/extern/bin/sip'," sipconfig.py
-sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/include/python2.7'," sipconfig.py
-sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/lib/python2.7/site-packages'," sipconfig.py
+sed -i "/'sip_inc_dir'/c\    'sip_inc_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/$includeDir'," sipconfig.py
+sed -i "/'sip_mod_dir'/c\    'sip_mod_dir':        '`cat $HOME/.karabo/karaboFramework`/extern/$sitePackagesDir'," sipconfig.py
 cd -
 echo " done."
 echo
