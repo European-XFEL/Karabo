@@ -1150,6 +1150,7 @@ function rebuildInstalled() {
 	    cd $categoryPath
 	    
 	done
+        cd $scriptDir/packages
     done
 	    
 }
