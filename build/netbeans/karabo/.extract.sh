@@ -20,6 +20,7 @@ install_prefix_dir=""
 for a in $@; do
   if echo $a | grep "^--prefix=" > /dev/null 2> /dev/null; then
      install_prefix_dir=`echo $a | sed "s/^--prefix=//"`
+     install_prefix_dir=${install_prefix_dir/#\~/$HOME}
      if [ ! -d ${install_prefix_dir} ]; then
        mkdir -p  ${install_prefix_dir} ||  echo_exit "Cannot create directory ${install_prefix_dir}"
      fi
@@ -63,6 +64,7 @@ fi
 echo " This is a self-extracting archive."
 if [ "x${interactive}x" = "xTRUEx" ]; then
     read -e -p " Framework installation path [$HOME]: " dir
+    dir=${dir/#\~/$HOME}
     # Always resolve to absolute path
     #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
     #mkdir -p $installDir
@@ -73,6 +75,7 @@ if [ "x${interactive}x" = "xTRUEx" ]; then
 	installDir=`cd "${dir}"; pwd`
     fi
     read -e -p " Run environment installation path (type 0 to skip) [$HOME]: " dir
+    dir=${dir/#\~/$HOME}
     # Always resolve to absolute path
     #dir=$(dirname `[[ $dir = /* ]] && echo "$dir" || echo "$PWD/${dir#./}"`)
     if [ "$dir" = "0" ]; then 
