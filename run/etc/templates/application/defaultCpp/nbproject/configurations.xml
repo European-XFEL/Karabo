@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="94">
+<configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -50,19 +50,7 @@
           <stripSymbols>true</stripSymbols>
           <linkerLibItems>
             <linkerLibLibItem>karabo</linkerLibLibItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -105,19 +93,7 @@
           </linkerDynSerch>
           <linkerLibItems>
             <linkerLibLibItem>karabo</linkerLibLibItem>
-            <linkerLibLibItem>boost_chrono</linkerLibLibItem>
-            <linkerLibLibItem>boost_date_time</linkerLibLibItem>
-            <linkerLibLibItem>boost_filesystem</linkerLibLibItem>
-            <linkerLibLibItem>boost_python</linkerLibLibItem>
-            <linkerLibLibItem>boost_regex</linkerLibLibItem>
-            <linkerLibLibItem>boost_signals</linkerLibLibItem>
-            <linkerLibLibItem>boost_system</linkerLibLibItem>
-            <linkerLibLibItem>boost_thread</linkerLibLibItem>
-            <linkerLibLibItem>cppunit</linkerLibLibItem>
-            <linkerLibLibItem>hdf5</linkerLibLibItem>
-            <linkerLibLibItem>log4cpp</linkerLibLibItem>
-            <linkerLibLibItem>openmqc</linkerLibLibItem>
-            <linkerLibLibItem>python2.7</linkerLibLibItem>
+            <linkerOptionItem>`pkg-config --libs karaboDependencies`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
