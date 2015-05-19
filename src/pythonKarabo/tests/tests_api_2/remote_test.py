@@ -3,13 +3,11 @@ import karabo
 from asyncio import (async, coroutine, gather, set_event_loop, sleep, wait_for,
                      TimeoutError)
 from unittest import TestCase, main
-from functools import wraps
 
-from karabo.eventloop import EventLoop
+from karabo.api import Slot, Integer
 from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
-from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, async_tst
 
