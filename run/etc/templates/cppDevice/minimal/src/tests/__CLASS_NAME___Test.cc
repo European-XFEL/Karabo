@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
             Hash config;
 
             // This starts the GuiServer
-            config.set("autoStart[0]", Hash("GuiServerDevice"));
+            //config.set("autoStart[0]", Hash("GuiServerDevice"));
 
             // Set the logger priority (other options INFO, WARN, ERROR)
             config.set("Logger.priority", "DEBUG");
