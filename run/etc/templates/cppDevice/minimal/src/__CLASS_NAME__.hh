@@ -23,7 +23,7 @@ namespace karabo {
     public:
 
         // Add reflection information and Karabo framework compatibility to this class
-        KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__", "1.2")
+        KARABO_CLASSINFO(__CLASS_NAME__, "__CLASS_NAME__", "1.3")
 
         /**
          * Necessary method as part of the factory/configuration system
