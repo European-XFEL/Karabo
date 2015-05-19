@@ -1957,7 +1957,7 @@ Valid options:
              
 Examples:
 
-(1) Installation of pnccd packages with build type Release.
+(1) Installation of karabo-demo packages with build type Release.
   $0 install-s karabo-demo -type Release
 
 End-of-help
