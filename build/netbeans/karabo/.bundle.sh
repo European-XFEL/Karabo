@@ -135,46 +135,52 @@ else
     [ -f $PACKAGEDIR/extern/bin/ipython3.4-config ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipython3.4-config
     [ -f $PACKAGEDIR/extern/bin/2to3 ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/2to3
     [ -f $PACKAGEDIR/extern/bin/2to3-3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/2to3-3.4
-    [ -f $PACKAGEDIR/extern/bin/easy_install ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install
-    [ -f $PACKAGEDIR/extern/bin/easy_install-3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install-3.4
-    [ -f $PACKAGEDIR/extern/bin/f2py3 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/f2py3
-    [ -f $PACKAGEDIR/extern/bin/idle3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/idle3.4
+    [ -f $PACKAGEDIR/extern/bin/easy_install ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install
+    [ -f $PACKAGEDIR/extern/bin/easy_install-3.4 ]  && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/easy_install-3.4
+    [ -f $PACKAGEDIR/extern/bin/f2py3 ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/f2py3
+    [ -f $PACKAGEDIR/extern/bin/idle3.4 ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/idle3.4
     [ -f $PACKAGEDIR/extern/bin/cygdb ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/cygdb
     [ -f $PACKAGEDIR/extern/bin/cython ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/cython
     [ -f $PACKAGEDIR/extern/bin/guidata-tests ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/guidata-tests
     [ -f $PACKAGEDIR/extern/bin/guiqwt-tests ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/guiqwt-tests
     [ -f $PACKAGEDIR/extern/bin/idle ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/idle
     [ -f $PACKAGEDIR/extern/bin/ipcluster ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcluster
-    [ -f $PACKAGEDIR/extern/bin/ipcluster3 ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcluster3
+    [ -f $PACKAGEDIR/extern/bin/ipcluster3 ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcluster3
     [ -f $PACKAGEDIR/extern/bin/ipcontroller ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcontroller
-    [ -f $PACKAGEDIR/extern/bin/ipcontroller3 ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcontroller3
+    [ -f $PACKAGEDIR/extern/bin/ipcontroller3 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipcontroller3
     [ -f $PACKAGEDIR/extern/bin/ipengine ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipengine
-    [ -f $PACKAGEDIR/extern/bin/ipengine3 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipengine3
-   # [ -f $PACKAGEDIR/extern/bin/iplogger ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iplogger
+    [ -f $PACKAGEDIR/extern/bin/ipengine3 ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/ipengine3
+    [ -f $PACKAGEDIR/extern/bin/iplogger ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iplogger
     [ -f $PACKAGEDIR/extern/bin/iptest ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest
-    [ -f $PACKAGEDIR/extern/bin/iptest3 ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest3
-   # [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/irunner
+    [ -f $PACKAGEDIR/extern/bin/iptest3 ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/iptest3
+    [ -f $PACKAGEDIR/extern/bin/irunner ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/irunner
     [ -f $PACKAGEDIR/extern/bin/nosetests ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests
     [ -f $PACKAGEDIR/extern/bin/nosetests-3.4 ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/nosetests-3.4
+    [ -f $PACKAGEDIR/extern/bin/pnuke ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pnuke
+    [ -f $PACKAGEDIR/extern/bin/prsync ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/prsync
+    [ -f $PACKAGEDIR/extern/bin/pscp ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pscp
+    [ -f $PACKAGEDIR/extern/bin/pslurp ]            && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pslurp
+    [ -f $PACKAGEDIR/extern/bin/pssh ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pssh
+    [ -f $PACKAGEDIR/extern/bin/pssh-askpass ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pssh-askpass
     [ -f $PACKAGEDIR/extern/bin/pycolor ]           && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pycolor
-   # [ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc
-    [ -f $PACKAGEDIR/extern/bin/pydoc3.4 ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc3.4
-    [ -f $PACKAGEDIR/extern/bin/pygmentize ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pygmentize
-    [ -f $PACKAGEDIR/extern/bin/pyvenv-3.4 ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pyvenv-3.4
-    [ -f $PACKAGEDIR/extern/bin/rst2html.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2html.py
-    [ -f $PACKAGEDIR/extern/bin/rst2latex.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2latex.py
-    [ -f $PACKAGEDIR/extern/bin/rst2man.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2man.py
-    [ -f $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py
-    [ -f $PACKAGEDIR/extern/bin/rst2odt.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt.py
-    [ -f $PACKAGEDIR/extern/bin/rst2pseudoxml.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2pseudoxml.py
-    [ -f $PACKAGEDIR/extern/bin/rst2s5.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2s5.py
-    [ -f $PACKAGEDIR/extern/bin/rst2xetex.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xetex.py
-    [ -f $PACKAGEDIR/extern/bin/rst2xml.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xml.py
-    [ -f $PACKAGEDIR/extern/bin/rstpep2html.py ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rstpep2html.py
-    [ -f $PACKAGEDIR/extern/bin/sphinx-apidoc ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-apidoc
-    [ -f $PACKAGEDIR/extern/bin/sphinx-autogen ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-autogen
-    [ -f $PACKAGEDIR/extern/bin/sphinx-build ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-build
-    [ -f $PACKAGEDIR/extern/bin/sphinx-quickstart ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-quickstart
+    [ -f $PACKAGEDIR/extern/bin/pydoc ]             && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc
+    [ -f $PACKAGEDIR/extern/bin/pydoc3.4 ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pydoc3.4
+    [ -f $PACKAGEDIR/extern/bin/pygmentize ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pygmentize
+    [ -f $PACKAGEDIR/extern/bin/pyvenv-3.4 ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/pyvenv-3.4
+    [ -f $PACKAGEDIR/extern/bin/rst2html.py ]       && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2html.py
+    [ -f $PACKAGEDIR/extern/bin/rst2latex.py ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2latex.py
+    [ -f $PACKAGEDIR/extern/bin/rst2man.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2man.py
+    [ -f $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt_prepstyles.py
+    [ -f $PACKAGEDIR/extern/bin/rst2odt.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2odt.py
+    [ -f $PACKAGEDIR/extern/bin/rst2pseudoxml.py ]  && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2pseudoxml.py
+    [ -f $PACKAGEDIR/extern/bin/rst2s5.py ]         && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2s5.py
+    [ -f $PACKAGEDIR/extern/bin/rst2xetex.py ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xetex.py
+    [ -f $PACKAGEDIR/extern/bin/rst2xml.py ]        && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rst2xml.py
+    [ -f $PACKAGEDIR/extern/bin/rstpep2html.py ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/rstpep2html.py
+    [ -f $PACKAGEDIR/extern/bin/sphinx-apidoc ]     && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-apidoc
+    [ -f $PACKAGEDIR/extern/bin/sphinx-autogen ]    && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-autogen
+    [ -f $PACKAGEDIR/extern/bin/sphinx-build ]      && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-build
+    [ -f $PACKAGEDIR/extern/bin/sphinx-quickstart ] && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sphinx-quickstart
     [ -f $PACKAGEDIR/extern/bin/sift ]              && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/sift
     [ -f $PACKAGEDIR/extern/bin/smtpd.py ]          && sed -i '1 s%^.*$%#!/usr/bin/env python3%g' $PACKAGEDIR/extern/bin/smtpd.py
     # TODO: Some files from 'bin' are still not converted: pyuic4
