@@ -4,13 +4,11 @@ karabo.api_version = 2
 from asyncio import (async, coroutine, gather, set_event_loop, sleep,
                      TimeoutError)
 from unittest import TestCase, main
-from functools import wraps
 import time
 
-from karabo.eventloop import EventLoop
+from karabo.api import Slot, Integer
 from karabo.macro import Macro, Monitor, RemoteDevice
 from karabo.python_device import Device
-from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, sync_tst
 
