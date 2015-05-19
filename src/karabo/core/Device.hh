@@ -759,7 +759,7 @@ namespace karabo {
                 KARABO_LOG_ERROR << detailedMessage;
             }
 
-            void exceptionFound(const karabo::util::Exception& e) {
+            virtual void exceptionFound(const karabo::util::Exception& e) {
                 KARABO_LOG_ERROR << e;
             }
 
