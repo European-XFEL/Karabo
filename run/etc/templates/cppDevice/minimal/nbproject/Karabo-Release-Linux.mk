@@ -71,22 +71,22 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libminimal.${CND_DLIB_EXT}: ${OBJECTF
 ${OBJECTDIR}/src/__CLASS_NAME__.o: src/__CLASS_NAME__.cc 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I${KARABO}/extern/include -I${KARABO}/include `pkg-config --cflags karaboDependencies`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME__.o src/__CLASS_NAME__.cc
+	$(COMPILE.cc) -O2 -I${KARABO}/extern/include -I${KARABO}/include `pkg-config --cflags karaboDependencies`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME__.o src/__CLASS_NAME__.cc
 
 # Subprojects
 .build-subprojects:
 
 # Build Test Targets
 .build-tests-conf: .build-conf ${TESTFILES}
-${TESTDIR}/__CLASS_NAME__: ${TESTDIR}/src/tests/__CLASS_NAME___App.o ${OBJECTFILES:%.o=%_nomain.o}
+${TESTDIR}/__CLASS_NAME__: ${TESTDIR}/src/tests/__CLASS_NAME___Test.o ${OBJECTFILES:%.o=%_nomain.o}
 	${MKDIR} -p ${TESTDIR}
 	${LINK.cc}   -o ${TESTDIR}/__CLASS_NAME__ $^ ${LDLIBSOPTIONS} -L${KARABO}/lib -L${KARABO}/extern/lib -Wl,-rpath,${KARABO}/lib -Wl,-rpath,${KARABO}/extern/lib 
 
 
-${TESTDIR}/src/tests/__CLASS_NAME___App.o: src/tests/__CLASS_NAME___App.cc 
+${TESTDIR}/src/tests/__CLASS_NAME___Test.o: src/tests/__CLASS_NAME___Test.cc 
 	${MKDIR} -p ${TESTDIR}/src/tests
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Wall -I${KARABO}/extern/include -I${KARABO}/include -I. `pkg-config --cflags karaboDependencies`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/src/tests/__CLASS_NAME___App.o src/tests/__CLASS_NAME___App.cc
+	$(COMPILE.cc) -O2 -I${KARABO}/extern/include -I${KARABO}/include -I. `pkg-config --cflags karaboDependencies`   -MMD -MP -MF "$@.d" -o ${TESTDIR}/src/tests/__CLASS_NAME___Test.o src/tests/__CLASS_NAME___Test.cc
 
 
 ${OBJECTDIR}/src/__CLASS_NAME___nomain.o: ${OBJECTDIR}/src/__CLASS_NAME__.o src/__CLASS_NAME__.cc 
@@ -97,7 +97,7 @@ ${OBJECTDIR}/src/__CLASS_NAME___nomain.o: ${OBJECTDIR}/src/__CLASS_NAME__.o src/
 	   (echo "$$NMOUTPUT" | ${GREP} 'T _main$$'); \
 	then  \
 	    ${RM} "$@.d";\
-	    $(COMPILE.cc) -O2 -Wall -I${KARABO}/extern/include -I${KARABO}/include `pkg-config --cflags karaboDependencies`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME___nomain.o src/__CLASS_NAME__.cc;\
+	    $(COMPILE.cc) -O2 -I${KARABO}/extern/include -I${KARABO}/include `pkg-config --cflags karaboDependencies`   -fPIC  -Dmain=__nomain -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME___nomain.o src/__CLASS_NAME__.cc;\
 	else  \
 	    ${CP} ${OBJECTDIR}/src/__CLASS_NAME__.o ${OBJECTDIR}/src/__CLASS_NAME___nomain.o;\
 	fi
