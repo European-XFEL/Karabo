@@ -43,7 +43,7 @@ class BaseFsm(NoFsm):
         with self.processEventLock:
             fsm = self.getFsm()
             if fsm is not None:
-                self.updateState("Changing...")
+                #self.updateState("Changing...")
                 try:
                     fsm.process_event(event)
                 except Exception as e:
