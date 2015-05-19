@@ -64,7 +64,7 @@ class Tests(TestCase):
             sys.argv = save
 
     code = """if True:
-        from karabo import *
+        from karabo.api import *
 
         class TestMacro(Macro):
             s = String()
