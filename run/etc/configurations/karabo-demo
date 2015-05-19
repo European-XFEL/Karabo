@@ -1,10 +1,13 @@
-# PACKAGE CONFIGURATION: karabo-self-test
+# PACKAGE CONFIGURATION: karabo-demo
 # type             category              package                 version
-device             testDevices           helloWorld              tags/0.1.0-1.2
-device             testDevices           conveyor                tags/0.1.0-1.2
-device             testDevices           conveyorPy              tags/0.1.0-1.2
-device             testDevices           simulatedCamera         tags/0.1.0-1.2
-device             testDevices           simulatedCameraPy       tags/0.1.0-1.2
-device             testDevices           dataGenerator           tags/0.1.0-1.2
-device             testDevices           parameterInjector       tags/0.1.0-1.2
-device             testDevices           parameterInjectorPy     tags/0.1.0-1.2
+device             testDevices           conveyor                trunk
+device             testDevices           conveyorPy              trunk
+device             testDevices           simulatedCamera         trunk
+device             testDevices           simulatedCameraPy       trunk
+device             testDevices           dataGenerator           trunk
+device		   testDevices		 dataGeneratorPy         trunk
+device             testDevices           parameterInjector       trunk
+device             testDevices           parameterInjectorPy     trunk
+device		   testDevices		 p2pTest		 trunk
+device		   testDevices		 p2pTestPy		 trunk
+
