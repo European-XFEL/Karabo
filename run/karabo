@@ -2330,7 +2330,7 @@ until [ -z "$1" ]; do
     # Rebuild suite
     elif [ $1 = "rebuild" ]; then
         rebuild=1
-        if [ $2 = "help" ]; then
+        if [ "$2" = "help" ]; then
             detailedHelp $1
         fi
         until [ -z "$2" ]; do
