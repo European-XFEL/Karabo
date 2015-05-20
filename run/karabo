@@ -1864,8 +1864,8 @@ Possible templates can be listed using: $0 list templates
 CLASS_NAME, in case of device, is the name of the class which will be initially generated. Use the convention for class capitalization, 
 for example: TestMessageReader, LinkedList, LinearMotor. Do not use Device in device class name, like LinearMotorDevice. 
 In case af application it is the name of the source file containing main function. Use camel case names for instance: tcpClientAsync, brokerMonitor. 
-In case of dependency, with template configureMakeInstall, it should the base name of tarball, for instance you have tarball fftw-3.3.2.tar.gz then 
-use fftw-3.3.2 as CLASS_NAME. With custom template CLASS_NAME can be set simply the same as PACKAGE_NAME
+In case of dependency, with template cppDep it similar as for device.  
+With custom template CLASS_NAME can be set simply the same as PACKAGE_NAME
 
 Valid options:
   -f               : forces creation of package, i.e. will overwrite in case of (locally) pre-existing packages
@@ -1873,14 +1873,14 @@ Valid options:
 
 Examples:
 
-(1) Create a package for a new CPP device with custom FSM. The name of device is set to simulatedCamera.
-$0 new simulatedCamera testDevices cppDevice customFsm SimulatedCamera
+(1) Create a package for a new CPP device. The name of device is set to simulatedCamera.
+$0 new simulatedCamera testDevices cppDevice minimal SimulatedCamera
 
-(2) Create package for a new python device with minimal FSM (AllOK and Error states). The name of the device is set to simulatedCamera.
+(2) Create package for a new python device with minimal FSM. The name of the device is set to simulatedCamera.
 $0 new simulatedCamera testDevices pythonDevice minimal SimulatedCamera
 
-(3) Create a package dependency, (e.g. for fftw) which must be build using a regular configure/make/install (gnu autotools) commands. 
-$0 new fftw dependencies dependency configureMakeInstall fftw-3.3.2
+(3) Create a package dependency myDep, which is in form of a netbeans project. 
+$0 new myDep dependencies dependency cppDep MyDep 
 
 (4) Create a package dependency, (e.g. matplotlib) which must be build using custom commands.
 $0 new matplotlib dependencies dependency custom matplotlib

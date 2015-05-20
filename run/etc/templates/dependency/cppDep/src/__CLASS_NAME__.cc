@@ -10,32 +10,12 @@
 
 #include "__CLASS_NAME__.hh"
 
-using namespace std;
 
-USING_KARABO_NAMESPACES
+__CLASS_NAME__::__CLASS_NAME__() {
+}
 
-namespace karabo {
+__CLASS_NAME__::__CLASS_NAME__(const __CLASS_NAME__& orig) {
+}
 
-
-    KARABO_REGISTER_FOR_CONFIGURATION(BaseDevice, Device<>, __CLASS_NAME__)
-
-    void __CLASS_NAME__::expectedParameters(Schema& expected) {
-    }
-
-
-    __CLASS_NAME__::__CLASS_NAME__(const karabo::util::Hash& config) : Device<>(config) {
-    }
-
-
-    __CLASS_NAME__::~__CLASS_NAME__() {
-    }
-
-
-    void __CLASS_NAME__::preReconfigure(karabo::util::Hash& incomingReconfiguration) {
-    }
-
-
-    void __CLASS_NAME__::postReconfigure() {
-    }
-  
+__CLASS_NAME__::~__CLASS_NAME__() {
 }
