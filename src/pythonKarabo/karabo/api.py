@@ -1,7 +1,6 @@
 from karabo.enums import (AccessLevel, AccessMode, Assignment, MetricPrefix,
                           Unit)
-from karabo.hashtypes import (String, Int32 as Integer, Slot, Double as Float,
-                              Bool)
+from karabo.hashtypes import String, Int32 as Int, Slot, Double as Float, Bool
 from karabo.macro import Macro
 from karabo.device_client import (
     waitUntilNew, waitUntil, setWait, setNoWait, getDevice, executeNoWait,
