@@ -492,7 +492,7 @@ namespace karabo {
                     karabo::util::Hash tmp(hash);
                     std::vector<std::string> paths;
                     tmp.getPaths(paths);
-                    BOOST_FOREACH(string path, paths) {
+                    BOOST_FOREACH(std::string path, paths) {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
                     m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
