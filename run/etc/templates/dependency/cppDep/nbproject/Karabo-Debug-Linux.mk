@@ -65,7 +65,7 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libcppDep.${CND_DLIB_EXT}: ${OBJECTFI
 ${OBJECTDIR}/src/__CLASS_NAME__.o: src/__CLASS_NAME__.cc 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I${KARABO}/extern/include -I${KARABO}/include `pkg-config --cflags karaboDependencies`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME__.o src/__CLASS_NAME__.cc
+	$(COMPILE.cc) -g -I${KARABO}/extern/include -I${KARABO}/include -I. `pkg-config --cflags karaboDependencies`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/__CLASS_NAME__.o src/__CLASS_NAME__.cc
 
 # Subprojects
 .build-subprojects:
