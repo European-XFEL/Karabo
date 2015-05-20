@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux-x86
-CND_ARTIFACT_NAME_Debug=libminimal.so
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/libminimal.so
+CND_ARTIFACT_NAME_Debug=libcppDep.so
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux-x86/libcppDep.so
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Debug=libminimal.so.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/libminimal.so.tar
+CND_PACKAGE_NAME_Debug=libcppDep.so.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/libcppDep.so.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=libminimal.so
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/libminimal.so
+CND_ARTIFACT_NAME_Release=libcppDep.so
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/libcppDep.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
-CND_PACKAGE_NAME_Release=libminimal.so.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libminimal.so.tar
+CND_PACKAGE_NAME_Release=libcppDep.so.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/libcppDep.so.tar
 #
 # include compiler specific variables
 #
