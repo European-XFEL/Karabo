@@ -7,7 +7,9 @@
             <sources>
                 <root id="src.dir"/>
             </sources>
-            <tests/>
+            <tests>
+                <root id="test.dir"/>
+            </tests>
         </data>
     </configuration>
 </project>
