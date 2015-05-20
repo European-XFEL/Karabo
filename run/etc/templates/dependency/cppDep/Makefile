@@ -145,7 +145,7 @@ help: .help-post
 
 # create binary package
 package: build
-	@.install.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF))
+	@./.install.sh $(CND_DISTDIR) $(CONF) $(CND_PLATFORM_$(CONF))
 
 # include project implementation makefile
 include nbproject/Makefile-impl.mk
