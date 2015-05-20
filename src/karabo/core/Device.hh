@@ -495,8 +495,8 @@ namespace karabo {
                     BOOST_FOREACH(std::string path, paths) {
                         timestamp.toHashAttributes(tmp.getAttributes(path));
                     }
-                    m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
-                    emit("signalChanged", hash, getInstanceId());
+                    m_parameters.merge(tmp, karabo::util::Hash::REPLACE_ATTRIBUTES);
+                    emit("signalChanged", tmp, getInstanceId());
                 }
             }
 
