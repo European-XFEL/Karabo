@@ -6,7 +6,7 @@ from unittest import TestCase, main
 import sys
 import time
 
-from karabo.api import Slot, Integer
+from karabo.api import Slot, Int
 from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
@@ -24,10 +24,10 @@ class Superslot(Slot):
 
 
 class Remote(Device):
-    value = Integer(defaultValue=7)
-    counter = Integer(defaultValue=-1)
+    value = Int(defaultValue=7)
+    counter = Int(defaultValue=-1)
 
-    @Integer()
+    @Int()
     def other(self, value):
         self.value = value
 

@@ -7,7 +7,7 @@ import sys
 import time
 import weakref
 
-from karabo.api import Integer, Slot
+from karabo.api import Int, Slot
 from karabo.macro import Macro, EventThread
 from karabo.hash import Hash
 from karabo.python_server import DeviceServer
@@ -19,7 +19,7 @@ from .eventloop import setEventLoop
 
 
 class Remote(Macro):
-    counter = Integer(defaultValue=-1)
+    counter = Int(defaultValue=-1)
 
     @Slot()
     def count(self):
@@ -33,7 +33,7 @@ class Remote(Macro):
 
 
 class Other(Device):
-    something = Integer(defaultValue=333)
+    something = Int(defaultValue=333)
 
 
 class DeviceClient(Macro, DeviceClientBase):
