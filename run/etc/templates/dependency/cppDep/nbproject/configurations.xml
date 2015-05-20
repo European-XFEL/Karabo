@@ -31,10 +31,16 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
         <ccTool>
           <incDir>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/include</pElem>
+            <pElem>.</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
@@ -65,21 +71,6 @@
           </linkerDynSerch>
         </linkerTool>
       </folder>
-      <folder path="TestFiles/f1">
-        <cTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </cTool>
-        <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/__CLASS_NAME__</output>
-        </linkerTool>
-      </folder>
       <item path="src/__CLASS_NAME__.cc" ex="false" tool="1" flavor2="0">
       </item>
       <item path="src/__CLASS_NAME__.hh" ex="false" tool="3" flavor2="0">
@@ -94,12 +85,16 @@
       <compileType>
         <cTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>${KARABO}/extern/include</pElem>
             <pElem>${KARABO}/include</pElem>
+            <pElem>.</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -114,6 +109,8 @@
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerAddLib>
           <linkerDynSerch>
+            <pElem>\$$ORIGIN/../lib</pElem>
+            <pElem>\$$ORIGIN/../../lib</pElem>
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
@@ -133,21 +130,6 @@
             <pElem>${KARABO}/lib</pElem>
             <pElem>${KARABO}/extern/lib</pElem>
           </linkerDynSerch>
-        </linkerTool>
-      </folder>
-      <folder path="TestFiles/f1">
-        <cTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </cTool>
-        <ccTool>
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
-        <linkerTool>
-          <output>${TESTDIR}/__CLASS_NAME__</output>
         </linkerTool>
       </folder>
       <item path="src/__CLASS_NAME__.cc" ex="false" tool="1" flavor2="0">
