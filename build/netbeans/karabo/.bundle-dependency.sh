@@ -100,6 +100,8 @@ EXTRACT_SCRIPT=$KARABO/bin/.extract-dependency.sh
 INSTALLSCRIPT=${PACKAGENAME}-${DISTRO_ID}-${DISTRO_RELEASE}-${MACHINE}.sh
 DISTDIR=$originalPwd/localdist
 PACKAGEDIR=$originalPwd/package
+SITE_PACKAGES_DIR=`$PYTHON -c "import site; print(site.getsitepackages()[0])"`
+LOCAL_SITE_PACKAGES_DIR=$DISTDIR/${SITE_PACKAGES_DIR##*/extern/}
 
 # Always clean the bundle
 rm -rf $DISTDIR
