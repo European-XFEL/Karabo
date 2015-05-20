@@ -6,14 +6,14 @@ from asyncio import (async, coroutine, gather, set_event_loop, sleep,
 from unittest import TestCase, main
 import time
 
-from karabo.api import Slot, Integer
+from karabo.api import Slot, Int
 from karabo.macro import Macro, Monitor, RemoteDevice
 from karabo.python_device import Device
 
 from .eventloop import startDevices, stopDevices, sync_tst
 
 class Remote(Device):
-    counter = Integer(defaultValue=-1)
+    counter = Int(defaultValue=-1)
 
     @Slot()
     @coroutine
@@ -28,7 +28,7 @@ class Local(Macro):
     remoteB = RemoteDevice("remB")
 
     @Monitor()
-    @Integer()
+    @Int()
     def sum(self):
         return self.remoteA.counter + self.remoteB.counter
 

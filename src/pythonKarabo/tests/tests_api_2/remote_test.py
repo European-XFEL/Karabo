@@ -4,7 +4,7 @@ from asyncio import (async, coroutine, gather, set_event_loop, sleep, wait_for,
                      TimeoutError)
 from unittest import TestCase, main
 
-from karabo.api import Slot, Integer
+from karabo.api import Slot, Int
 from karabo.python_device import Device
 from karabo.device_client import (waitUntilNew, getDevice, waitUntil, setWait,
                                   setNoWait, Queue)
@@ -18,25 +18,25 @@ class Superslot(Slot):
         device.value = 22
 
 
-class SuperInteger(Integer):
+class SuperInteger(Int):
     def setter(self, device, value):
         device.value = 2 * value
 
 
 class Remote(Device):
-    value = Integer(defaultValue=7)
-    counter = Integer(defaultValue=-1)
+    value = Int(defaultValue=7)
+    counter = Int(defaultValue=-1)
 
-    @Integer()
+    @Int()
     def other(self, value):
         self.value = value
 
-    @Integer()
+    @Int()
     def once(self, value):
         if self.once_value is None:
             self.once_value = value
 
-    @Integer(allowedStates=["Other state"])
+    @Int(allowedStates=["Other state"])
     def disallowed_int(self, value):
         self.value = value
 

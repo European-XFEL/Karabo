@@ -117,11 +117,11 @@ class SignalSlotable(Configurable):
 
     ::
 
-        from karabo import String, Integer
+        from karabo import String, Int
         from karabo.signalslotable import SignalSlotable, Signal
 
         class Spam(SignalSlotable):
-            signalHam = Signal(String(), Integer())"""
+            signalHam = Signal(String(), Int())"""
     signalHeartbeat = Signal(hashtypes.String(), hashtypes.Int32(),
                              hashtypes.Hash())
     signalChanged = Signal(hashtypes.Hash(), hashtypes.String())
