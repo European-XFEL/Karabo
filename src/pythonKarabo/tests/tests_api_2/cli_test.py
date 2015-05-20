@@ -64,8 +64,7 @@ class Tests(TestCase):
             sys.argv = save
 
     code = """if True:
-        from karabo.macro import Macro
-        from karabo.hashtypes import Slot, String
+        from karabo import *
 
         class TestMacro(Macro):
             s = String()
