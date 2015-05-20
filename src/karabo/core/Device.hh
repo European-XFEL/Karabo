@@ -487,8 +487,14 @@ namespace karabo {
             }
 
             void setNoValidate(const karabo::util::Hash& hash, const karabo::util::Timestamp& timestamp) {
-                // TODO Care about timestamps!!
+                // TODO Think about attaching timestamps only to top level nodes (must check all other depending code)
                 if (!hash.empty()) {
+                    karabo::util::Hash tmp(hash);
+                    std::vector<std::string> paths;
+                    tmp.getPaths(paths);
+                    BOOST_FOREACH(string path, paths) {
+                        timestamp.toHashAttributes(tmp.getAttributes(path));
+                    }
                     m_parameters.merge(hash, karabo::util::Hash::REPLACE_ATTRIBUTES);
                     emit("signalChanged", hash, getInstanceId());
                 }
