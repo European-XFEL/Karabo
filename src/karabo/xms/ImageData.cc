@@ -56,12 +56,16 @@ namespace karabo {
 
 
         karabo::util::Dims ImageData::getROIOffsets() const {
-            return karabo::util::Dims(m_hash->get<std::vector<unsigned long long> >("roiOffsets"));
+            Dims offsets(m_hash->get<std::vector<unsigned long long> >("roiOffsets"));
+            offsets.reverse();
+            return offsets;
         }
 
 
         void ImageData::setROIOffsets(const karabo::util::Dims& offsets) {
-            m_hash->set<std::vector<unsigned long long> >("roiOffsets", offsets.toVector());
+            Dims tmp(offsets);
+            tmp.reverse();
+            m_hash->set<std::vector<unsigned long long> >("roiOffsets", tmp.toVector());
         }
 
 
@@ -139,6 +143,11 @@ namespace karabo {
             }
         }
         
+        karabo::util::Dims ImageData::getDimensions() const {
+            Dims dims(NDArray::getDimensions());
+            dims.reverse();
+            return dims;
+        }
         
         void ImageData::setDimensions(const karabo::util::Dims& dims) {
             Dims tmp(dims);
@@ -146,6 +155,17 @@ namespace karabo {
             NDArray::setDimensions(tmp);                    
         }
 
+        const std::vector<int> ImageData::getDimensionTypes() {
+            std::vector<int> dimTypes(NDArray::getDimensionTypes());
+            std::reverse(dimTypes.begin(), dimTypes.end());
+            return dimTypes;
+        }
+
+        void ImageData::setDimensionTypes(const std::vector<int>& dimTypes) {
+            std::vector<int> tmp = dimTypes;
+            std::reverse(tmp.begin(), tmp.end());
+            NDArray::setDimensionTypes(tmp);
+        }
 
         //        const ImageData& ImageData::write(const std::string& filename, const bool enableAppendMode) const {
         //            karabo::util::Hash h("RawImageFile.filename", filename, "RawImageFile.enableAppendMode", enableAppendMode);

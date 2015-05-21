@@ -123,15 +123,15 @@ namespace karabo {
                 m_hash->set("dimTypes", vector<int>(dimensions.rank(), Dimension::UNDEFINED));
             }
         }
-
-
-        void NDArray::setDimensionTypes(const std::vector<int>& dimTypes) {
-            m_hash->set("dimTypes", dimTypes);
+        
+        
+        const std::vector<int> NDArray::getDimensionTypes() {
+            return m_hash->get<vector<int > >("dimTypes");
         }
         
         
-        const std::vector<int>& NDArray::getDimensionTypes() {
-            return m_hash->get<vector<int > >("dimTypes");
+        void NDArray::setDimensionTypes(const std::vector<int>& dimTypes) {
+            m_hash->set("dimTypes", dimTypes);
         }
         
         

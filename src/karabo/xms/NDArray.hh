@@ -93,13 +93,13 @@ namespace karabo {
                 m_hash->set("dataType", karabo::util::Types::to<karabo::util::ToLiteral>(karabo::util::Types::from<T>()));
             }
 
-            karabo::util::Dims getDimensions() const;
+            virtual karabo::util::Dims getDimensions() const;
 
             virtual void setDimensions(const karabo::util::Dims& dims);
 
-            void setDimensionTypes(const std::vector<int>& dimTypes);
-            
-            const std::vector<int>& getDimensionTypes();
+            virtual const std::vector<int> getDimensionTypes();
+
+            virtual void setDimensionTypes(const std::vector<int>& dimTypes);
 
             const std::string& getDataType() const;
 
