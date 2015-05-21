@@ -203,12 +203,15 @@ class DeviceServer(SignalSlotable):
         try:
             cls = Device.subclasses[classId]
             obj = cls(config)
-            self.deviceInstanceMap[deviceId] = obj.startInstance()
+            obj.startInstance(self)
             return True, '"{}" started'.format(deviceId)
         except Exception as e:
             self.logger.exception('could not start device "{}" of class "{}"'.
                                   format(deviceId, classId))
             return False, traceback.format_exc()
+
+    def addChild(self, deviceId, child):
+        self.deviceInstanceMap[deviceId] = child
 
     def parseNew(self, hash):
         classid = hash['classId']
@@ -261,27 +264,19 @@ class DeviceServer(SignalSlotable):
 
     @coslot
     def slotKillServer(self):
-        if self.deviceInstanceMap:
-            self._ss.emit("call", {k: ["slotKillDevice"]
-                                   for k in self.deviceInstanceMap})
-            done, pending = yield from wait(self.deviceInstanceMap.values(),
-                                            timeout=10)
-            if pending:
-                print("some devices could not be killed")
+        done, pending = yield from wait(
+            [d.slotKillDevice() for d in self.deviceInstanceMap.values()],
+            timeout=10)
+
+        if pending:
+            print("some devices could not be killed")
         self.stopEventLoop()
         self._ss.emit("call", {"*": ["slotDeviceServerInstanceGone"]},
                       self.serverId)
 
-
-    @coslot
+    @slot
     def slotDeviceGone(self, id):
-        gone = self.deviceInstanceMap.pop(id, None)
-        if gone is not None:
-            try:
-                yield from wait_for(gone, 10)
-            except TimeoutError:
-                print('device "{}" claimed to have gone but did not'.
-                      format(id))
+        self.deviceInstanceMap.pop(id, None)
 
     @coslot
     def slotGetClassSchema(self, classid):

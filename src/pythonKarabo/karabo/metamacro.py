@@ -34,8 +34,7 @@ class MetaMacro(Device):
         finally:
             Macro.subclasses = []
 
-    @coroutine
-    def run_async(self):
+    def startInstance(self, server=None):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
         p = dict(_serverId_=self.serverId, project=self.project,
@@ -44,4 +43,4 @@ class MetaMacro(Device):
         for c in self.classes:
             p["_deviceId_"] = "{}-{}".format(self.deviceId, c.__name__)
             objs.append(c(p))
-        yield from gather(*[o.startInstance() for o in objs])
+        return gather(*(o.startInstance(server) for o in objs))
