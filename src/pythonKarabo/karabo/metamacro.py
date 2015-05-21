@@ -1,13 +1,10 @@
 from asyncio import coroutine, gather
 
-from karabo.enums import *
-from karabo import Slot, Integer, Float, Bool
+from karabo.enums import AccessMode
 from karabo.python_device import Device
 from karabo.hashtypes import String
 from karabo.macro import Macro
-from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
-                                  getDevice, executeNoWait, updateDevice,
-                                  Queue)
+
 
 class MetaMacro(Device):
     """This is the device that starts macros.
@@ -32,13 +29,12 @@ class MetaMacro(Device):
         Macro.subclasses = []
         try:
             code = compile(self.code, self.module, "exec")
-            exec(code, globals())
+            exec(code, {})
             self.classes = Macro.subclasses
         finally:
             Macro.subclasses = []
 
-    @coroutine
-    def run_async(self):
+    def startInstance(self, server=None):
         # this does not call super, as we don't want to run MetaMacro itself,
         # but only the macros in the supplied code
         p = dict(_serverId_=self.serverId, project=self.project,
@@ -47,4 +43,4 @@ class MetaMacro(Device):
         for c in self.classes:
             p["_deviceId_"] = "{}-{}".format(self.deviceId, c.__name__)
             objs.append(c(p))
-        yield from gather(*[o.startInstance() for o in objs])
+        return gather(*(o.startInstance(server) for o in objs))
