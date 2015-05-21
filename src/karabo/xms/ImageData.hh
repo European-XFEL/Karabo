@@ -5,8 +5,8 @@
  * Created on April 20, 2015, 19:35 PM
  */
 
-#ifndef KARABO_XIP_IMAGEDATA_HH
-#define	KARABO_XIP_IMAGEDATA_HH
+#ifndef KARABO_XMS_IMAGEDATA_HH
+#define	KARABO_XMS_IMAGEDATA_HH
 
 #include <karabo/util/Hash.hh>
 #include <karabo/util/Dims.hh>
@@ -96,8 +96,9 @@ namespace karabo {
                       const bool copy = true,
                       const karabo::util::Dims& dims = karabo::util::Dims(),
                       const EncodingType encoding = Encoding::GRAY,
-                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : NDArray(data, size, copy, dims) {
+                      const ChannelSpaceType channelSpace = ChannelSpace::UNDEFINED) : NDArray(data, size, copy) {
 
+                setDimensions(dims);
                 if (dims.size() == 0) {
                     setROIOffsets(karabo::util::Dims(0));
                 } else {
@@ -117,9 +118,9 @@ namespace karabo {
                 if (nDims == 1) {
                     dims = Dims(image.size());
                 } else if (nDims == 2) {
-                    dims = Dims(image.height(), image.width());
+                    dims = Dims(image.width(), image.height());
                 } else {
-                    dims = Dims(image.depth(), image.height(), image.width());
+                  dims = Dims(image.width(), image.height(), image.depth());
                 }
                 this->setData(image.pixelPointer(), image.size(), true);
                 this->setDimensions(dims);
@@ -159,6 +160,8 @@ namespace karabo {
 
             void toLittleEndian();
             
+            karabo::util::Dims getDimensions() const;
+
             /**
              * Say x = fasted changing, y = medium fast and z = slowest changing index
              * then set the dimension like 
@@ -168,7 +171,11 @@ namespace karabo {
              * For 2D single images, leave away the depth
              * @param dims Dimensionality
              */
-            void setDimensions(const karabo::util::Dims& dims);                        
+            void setDimensions(const karabo::util::Dims& dims);
+
+            const std::vector<int> getDimensionTypes();
+
+            void setDimensionTypes(const std::vector<int>& dimTypes);
 
             //const ImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
 
@@ -269,5 +276,5 @@ namespace karabo {
 
 
 
-#endif	/* RAWIMAGEDATA_HH */
+#endif	/* KARABO_XMS_IMAGEDATA_HH */
 
