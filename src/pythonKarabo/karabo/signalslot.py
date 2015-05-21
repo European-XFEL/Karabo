@@ -158,11 +158,13 @@ class SignalSlotable(Configurable):
         self.__randPing = random.randint(2, 0x7fffffff)
         self._tasks = set()
 
-    def startInstance(self, loop=None):
+    def startInstance(self, server=None, *, loop=None):
         if loop is None:
             loop = get_event_loop()
         self._ss = loop.getBroker(self.deviceId, type(self).__name__)
         self._sethash = {}
+        if server is not None:
+            server.addChild(self.deviceId, self)
         return loop.create_task(self.run_async(), self)
 
     def slotPing(self, instanceId, rand, track=None):
