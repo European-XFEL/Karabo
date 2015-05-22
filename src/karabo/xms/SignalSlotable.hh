@@ -1189,7 +1189,7 @@ KARABO_GLOBAL_SLOT0(__VA_ARGS__) \
             
             void registerEndOfStreamHandler(const std::string& channelName, const boost::function<void (const karabo::xms::InputChannel::Pointer&) >& handler);
             
-            void connectInputChannel(const InputChannel::Pointer& channel);
+            void connectInputChannel(const InputChannel::Pointer& channel, int trails = 8, int sleep = 1);
 
             void connectInputChannels();
 
