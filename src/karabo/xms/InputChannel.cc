@@ -182,11 +182,11 @@ namespace karabo {
                     // Get IO service and save for later sharing
                     m_tcpIoService = tcpConnection->getIOService();
                     // Establish connection (and define sub-type of server)
-                    startConnection(tcpConnection, outputChannelInfo);
+                    startConnectionAsync(tcpConnection, outputChannelInfo);
                     m_tcpIoServiceThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_tcpIoService));
                 } else {
                     tcpConnection->setIOService(m_tcpIoService);
-                    startConnection(tcpConnection, outputChannelInfo);
+                    startConnectionAsync(tcpConnection, outputChannelInfo);
                 }
             }
         }
@@ -215,26 +215,41 @@ namespace karabo {
         }
 
 
-        void InputChannel::startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
+//        void InputChannel::startConnection(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
+//
+//            const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
+//            const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
+//            const std::string& port = outputChannelInfo.getAs<std::string>("port");
+//
+//            karabo::net::Channel::Pointer channel;
+//            bool connected = false;
+//            int sleep = 1;
+//            while (!connected) {
+//                try {
+//                    channel = connection->start();
+//                } catch (karabo::util::NetworkException& e) {
+//                    KARABO_LOG_FRAMEWORK_INFO << "Could not connect to desired output channel, retrying in " << sleep << " s.";
+//                    boost::this_thread::sleep(boost::posix_time::seconds(sleep));
+//                    sleep += 2;
+//                    continue;
+//                }
+//                connected = true;
+//            }
+//            channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
+//            channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
+//            channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
+//
+//            m_tcpConnections.insert(connection); // TODO check whether really needed
+//            m_tcpChannels.insert(std::make_pair(hostname + port, channel));
+//        }
+
+        
+        void InputChannel::onConnect(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo, karabo::net::Channel::Pointer channel) {
 
             const std::string& memoryLocation = outputChannelInfo.get<std::string > ("memoryLocation");
             const std::string& hostname = outputChannelInfo.get<std::string > ("hostname");
             const std::string& port = outputChannelInfo.getAs<std::string>("port");
 
-            karabo::net::Channel::Pointer channel;
-            bool connected = false;
-            int sleep = 1;
-            while (!connected) {
-                try {
-                    channel = connection->start();
-                } catch (karabo::util::NetworkException& e) {
-                    KARABO_LOG_FRAMEWORK_INFO << "Could not connect to desired output channel, retrying in " << sleep << " s.";
-                    boost::this_thread::sleep(boost::posix_time::seconds(sleep));
-                    sleep += 2;
-                    continue;
-                }
-                connected = true;
-            }
             channel->setErrorHandler(boost::bind(&karabo::xms::InputChannel::onTcpChannelError, this, channel, _1));
             channel->write(karabo::util::Hash("reason", "hello", "instanceId", this->getInstanceId(), "memoryLocation", memoryLocation, "dataDistribution", m_dataDistribution, "onSlowness", m_onSlowness)); // Say hello!
             channel->readAsyncHashVector(boost::bind(&karabo::xms::InputChannel::onTcpChannelRead, this, channel, _1, _2));
@@ -243,6 +258,10 @@ namespace karabo {
             m_tcpChannels.insert(std::make_pair(hostname + port, channel));
         }
 
+        
+        void InputChannel::startConnectionAsync(karabo::net::Connection::Pointer connection, const karabo::util::Hash& outputChannelInfo) {
+            connection->startAsync(boost::bind(&InputChannel::onConnect, this, connection, outputChannelInfo, _1));
+        }
 
         void InputChannel::onTcpConnectionError(karabo::net::Channel::Pointer, const karabo::net::ErrorCode& error) {
             KARABO_LOG_FRAMEWORK_ERROR << error.value() << ": " << error.message();

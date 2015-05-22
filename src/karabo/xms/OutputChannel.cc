@@ -79,12 +79,12 @@ namespace karabo {
             int tryAgain = 50; // Try maximum 50 times to start a server
             while (tryAgain > 0) {
                 try {
-                    m_ownPort = Statics::generateServerPort();
-                    karabo::util::Hash h("type", "server", "port", m_ownPort, "compressionUsageThreshold", m_compression * 10E06);
+                    //m_ownPort = Statics::generateServerPort();
+                    karabo::util::Hash h("type", "server", "port", 0, "compressionUsageThreshold", m_compression * 10E06);
                     m_dataConnection = karabo::net::Connection::create("Tcp", h);
                     m_dataConnection->setErrorHandler(boost::bind(&karabo::xms::OutputChannel::onTcpConnectionError, this, m_dataConnection, _1));
                     m_dataIOService = m_dataConnection->getIOService();
-                    m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
+                    m_ownPort = m_dataConnection->startAsync(boost::bind(&karabo::xms::OutputChannel::onTcpConnect, this, _1));
 
                     // Start data thread
                     m_dataThread = boost::thread(boost::bind(&karabo::net::IOService::run, m_dataIOService));
