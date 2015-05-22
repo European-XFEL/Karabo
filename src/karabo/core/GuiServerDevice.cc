@@ -810,7 +810,10 @@ namespace karabo {
                     boost::mutex::scoped_lock lock(m_networkMutex);
 
                     for (iter = m_networkConnections.begin(); iter != m_networkConnections.end(); ++iter) {
-                        if (iter->first->getInstanceId() == instanceId) {
+                        std::vector<std::string> tmp;
+                        boost::split(tmp, iter->second.name, boost::is_any_of("@:"));
+                        if (tmp[0] == instanceId) {
+                            KARABO_LOG_FRAMEWORK_DEBUG << "instanceId : " << instanceId << ", channelName : " << iter->second.name;
                             m_networkConnections.erase(iter);
                         }
                     }
