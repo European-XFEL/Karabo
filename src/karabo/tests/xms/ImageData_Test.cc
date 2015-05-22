@@ -85,5 +85,41 @@ void ImageData_Test::testConstructor() {
         CPPUNIT_ASSERT(image.getDataType() == "UINT8");
     }
     
-    // TODO
+}
+
+void ImageData_Test::testSetAndGetMethods() {
+    
+    Dims dims(200, 100);
+    Dims offsets(10, 50);
+    std::vector<int> dimTypes(1, 2);
+    std::vector<int> someData(dims.size(), 2);
+    
+    {
+        ImageData image;
+        
+        // Set
+        image.setData(&someData[0], someData.size(), true);
+        image.setDimensions(dims);
+        image.setROIOffsets(offsets);
+        image.setDimensionTypes(dimTypes);
+        
+        // Get
+        Dims imageDims(image.getDimensions());
+        Dims imageOffsets(image.getROIOffsets());
+        std::vector<int> imageDimTypes = image.getDimensionTypes();
+        
+        CPPUNIT_ASSERT(imageDims.rank() == 2);
+        CPPUNIT_ASSERT(imageDims.x1() == 200);
+        CPPUNIT_ASSERT(imageDims.x2() == 100);
+        
+        CPPUNIT_ASSERT(imageOffsets.rank() == 2);
+        CPPUNIT_ASSERT(imageOffsets.x1() == 10);
+        CPPUNIT_ASSERT(imageOffsets.x2() == 50);
+        
+        CPPUNIT_ASSERT(imageDimTypes.size() == 2);
+        CPPUNIT_ASSERT(imageDimTypes[0] == 1);
+        CPPUNIT_ASSERT(imageDimTypes[1] == 2);
+         
+    }
+    
 }
