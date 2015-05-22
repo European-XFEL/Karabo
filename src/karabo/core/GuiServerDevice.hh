@@ -27,12 +27,12 @@ namespace karabo {
 
         class GuiServerDevice : public karabo::core::Device<OkErrorFsm> {
 
-        struct NetworkConnection {
-            std::string name;
-            karabo::net::Channel::Pointer channel;
+            struct NetworkConnection {
+                std::string name;
+                karabo::net::Channel::Pointer channel;
 	    };
 
-        typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
+            typedef std::multimap<karabo::xms::InputChannel::Pointer, NetworkConnection> NetworkMap;
 
             karabo::net::IOService::Pointer m_ioService;
             karabo::net::Connection::Pointer m_dataConnection;
