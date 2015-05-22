@@ -1833,7 +1833,7 @@ namespace karabo {
         }
 
 
-        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel) {
+        void SignalSlotable::connectInputChannel(const InputChannel::Pointer& channel, int trials, int sleep) {
             // Loop connected outputs
             std::vector<karabo::util::Hash> outputChannels = channel->getConnectedOutputChannels();
             for (size_t j = 0; j < outputChannels.size(); ++j) {
@@ -1841,8 +1841,6 @@ namespace karabo {
                 const std::string& channelId = outputChannels[j].get<string > ("channelId");
                 bool channelExists = false;
                 karabo::util::Hash reply;
-                int sleep = 1;
-                int trials = 8;
                 while ((trials--) > 0) {
                     try {
                         this->request(instanceId, "slotGetOutputChannelInformation", channelId, static_cast<int> (getpid())).timeout(1000).receive(channelExists, reply);
