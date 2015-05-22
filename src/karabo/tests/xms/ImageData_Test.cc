@@ -35,7 +35,7 @@ void ImageData_Test::tearDown() {
 
 void ImageData_Test::testConstructor() {
     
-    Dims dims(200, 100);
+    Dims dims(200, 100); // width, height
     std::vector<int> someData(dims.size(), 2);
     
     {
@@ -61,7 +61,7 @@ void ImageData_Test::testConstructor() {
     }
     
     {
-        karabo::xip::CpuImage<unsigned char> cpuImage(200, 100, 5);
+        karabo::xip::CpuImage<unsigned char> cpuImage(200, 100, 5);  // width, height, depth
         ImageData image(cpuImage);
         
         Dims imageDims(image.getDimensions());
@@ -89,9 +89,10 @@ void ImageData_Test::testConstructor() {
 
 void ImageData_Test::testSetAndGetMethods() {
     
-    Dims dims(200, 100);
+    Dims dims(200, 100); // width, height
     Dims offsets(10, 50);
-    std::vector<int> dimTypes(1, 2);
+    int tmp[] = {Dimension::DATA, Dimension::STACK};
+    std::vector<int> dimTypes(tmp, tmp+2);
     std::vector<int> someData(dims.size(), 2);
     
     {
@@ -117,8 +118,8 @@ void ImageData_Test::testSetAndGetMethods() {
         CPPUNIT_ASSERT(imageOffsets.x2() == 50);
         
         CPPUNIT_ASSERT(imageDimTypes.size() == 2);
-        CPPUNIT_ASSERT(imageDimTypes[0] == 1);
-        CPPUNIT_ASSERT(imageDimTypes[1] == 2);
+        CPPUNIT_ASSERT(imageDimTypes[0] == Dimension::DATA);
+        CPPUNIT_ASSERT(imageDimTypes[1] == Dimension::STACK);
          
     }
     
