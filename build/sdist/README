@@ -1,3 +1,6 @@
+This is source distribution of karaboGui.
+
+
 To install karaboGui run:
   python setup.py install
 or
@@ -6,7 +9,7 @@ if you want to put all modules included in KaraboGui in user space.
 
 After succesfull installation, run karaboGui python script in scripts folder.
 
-You can add option "--record files.txt", like:
+During installation you can add option "--record files.txt", like:
   python setup.py install --user --record files.txt
 then in the file files.txt you can find full list of installed files.
 Afterwards, you can uninstall KaraboGui with:
@@ -21,9 +24,8 @@ I. Linux
 Use the full karaboFramework installer instead. Otherwise install OS packages (rpms or debs) - not tested.
 
 II. Windows
-You need "Python(x,y)" installed on the Windows machine (https://code.google.com/p/pythonxy/wiki/Downloads)
-You can also use WinPython (http://winpython.sourceforge.net)
-Recommended way is to use dedicated windows installer for KaraboGui
+You need "Python(x,y)" installed on the Windows machine (https://code.google.com/p/pythonxy/wiki/Downloads) or WinPython (http://winpython.sourceforge.net).
+Recommended way is to use dedicated windows installer for KaraboGui.
 
 III. MacOS
 1. Install Xcode
@@ -39,18 +41,19 @@ III. MacOS
 
 sudo port install gcc48
 sudo port select --set gcc mp-gcc48
-sudo port install sqlite3 qt4-mac-sqlite3-plugin python27
-sudo port select --set python python27
-sudo port install py27-pyqt4
-sudo port install py27-numpy py27-scipy
-sudo port install py27-matplotlib +qt4
-sudo port install py27-pyqwt
-sudo port install py27-cython
-sudo port select --set cython cython27
-sudo port install py27-ipython -scientific +notebook +pyqt4
-sudo port select --set sphinx py27-sphinx
-sudo port select --set ipython ipython27
-sudo port select --set nosetests nosetests27
+sudo port install sqlite3 qt4-mac-sqlite3-plugin python34
+sudo port select --set python python34
+sudo port install py34-pyqt4
+sudo port install py34-numpy py34-scipy
+sudo port install py34-matplotlib +qt4
+sudo port install py34-pyqwt
+sudo port install py34-cython
+sudo port select --set cython cython34
+sudo port install py34-ipython -scientific +notebook +pyqt4
+sudo port select --set sphinx py34-sphinx
+sudo port select --set ipython ipython34
+sudo port select --set nosetests nosetests34
+sudo port install py34-suds-jurko
 
 8. Install guidata and guiqwt
 
@@ -68,7 +71,6 @@ python setup.py install --user
 
 
 
-Remark: suds is included in KaraboGui package
 
 None of the known python packages (anaconda, canopy express, etc) contains pyqwt, guidata, guiqwt, so macport is recommended. 
 

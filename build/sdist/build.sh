@@ -13,8 +13,6 @@ fi
 echo $VERSION > VERSION
 ln -s ../../src/pythonGui
 ln -s ../../src/pythonKarabo
-( cd ../../extern/resources/suds; unzip -q -o suds-jurko-0.5.zip )
-ln -s ../../extern/resources/suds/suds-jurko-0.5/suds
 
 python setup.py  sdist
 
