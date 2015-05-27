@@ -12,6 +12,7 @@
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
+#include <karabo/util.hpp>
 
 namespace karabo {
     namespace core {
@@ -26,7 +27,7 @@ namespace karabo {
         class BaseWorker {
         public:
             
-            KARABO_CLASSINFO(BaseWorker, "BaseWorker", "1.0")
+            KARABO_CLASSINFO(BaseWorker<T>, "BaseWorker", "1.0")
 
             BaseWorker()
             : m_callback()
@@ -38,8 +39,7 @@ namespace karabo {
             , m_request()
             , m_thread(0)
             , m_mutexRequest()
-            , m_condRequest()
-            , m_mutexPrint() {
+            , m_condRequest() {
             }
 
             /**
@@ -58,10 +58,22 @@ namespace karabo {
             , m_request()
             , m_thread(0)
             , m_mutexRequest()
-            , m_condRequest()
-            , m_mutexPrint() {
+            , m_condRequest() {
             }
 
+            BaseWorker(const BaseWorker& other)
+            : m_callback(other.getCallback())
+            , m_timeout(other.getTimeout())
+            , m_repetition(other.getRepetition())
+            , m_running(false)
+            , m_abort(false)
+            , m_suspended(false)
+            , m_request()
+            , m_thread(0)
+            , m_mutexRequest()
+            , m_condRequest() {
+            }
+            
             virtual ~BaseWorker() {
             }
 
@@ -78,6 +90,10 @@ namespace karabo {
                 return *this;
             }
 
+            const boost::function<void(bool)>& getCallback() const {
+                return m_callback;
+            }
+            
             /**
              * Set parameters defining the behavior of the worker
              * @param timeout     timeout for receiving from queue
@@ -87,6 +103,11 @@ namespace karabo {
                 return *this;
             }
 
+            const int& getTimeout() const {
+                return m_timeout;
+            }
+            
+            
            /**
              * Set parameters defining the behavior of the worker
              * @param repetition     repetition counter
@@ -96,6 +117,10 @@ namespace karabo {
                 return *this;
             }
 
+            const int& getRepetition() const {
+                return m_repetition;
+            }
+            
             /**
              * Starts auxiliary thread that works on far ends of the queues
              * Default settings are "waiting forever" and "repeat forever"
@@ -235,7 +260,7 @@ namespace karabo {
                     m_running = false;
                 }
             }
-
+            
         private:
             boost::function<void (bool) > m_callback; // this callback defined once in constructor
             int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
@@ -247,7 +272,6 @@ namespace karabo {
             boost::thread* m_thread; // auxiliary thread
             boost::mutex m_mutexRequest; // mutex of request queue
             boost::condition_variable m_condRequest; // condition variable of the request queue
-            boost::mutex m_mutexPrint; // mutex guarding the cout stream
             int m_count; // current repetition counter
         };
 
