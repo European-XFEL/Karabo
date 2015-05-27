@@ -313,7 +313,7 @@ namespace karathon {
 
         static boost::shared_ptr<karabo::xms::ImageData> make5(const bp::object& obj, const bool copy = true,
                 const karabo::util::Dims& dimensions = karabo::util::Dims(),
-                const karabo::xms::EncodingType encoding = karabo::xms::Encoding::GRAY,
+                const karabo::xms::EncodingType encoding = karabo::xms::Encoding::UNDEFINED,
                 const karabo::xms::ChannelSpaceType channelSpace = karabo::xms::ChannelSpace::UNDEFINED) {
 
             using namespace karabo::util;
@@ -342,7 +342,7 @@ namespace karathon {
                 EncodingType _encoding = encoding;
                 if (encoding == Encoding::UNDEFINED) {
                     // No encoding info -> try to guess it from ndarray shape
-                    if (rank == 2)
+                    if (rank == 2 || (rank == 3 && shapes[2] == 1) )
                         _encoding = Encoding::GRAY;
                     else if (rank == 3 && shapes[2] == 3)
                         _encoding = Encoding::RGB;
@@ -351,7 +351,6 @@ namespace karathon {
                 }
 
                 // Dimensions (shape)
-                std::vector<unsigned long long> tmp(rank);
                 Dims _dimensions;
 
                 if (_encoding == Encoding::RGB || _encoding == Encoding::RGBA ||
@@ -361,6 +360,7 @@ namespace karathon {
 
                     if (rank != 3) throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
 
+                    std::vector<unsigned long long> tmp(3);
                     tmp[2] = shapes[2]; // Number of channels
                     tmp[1] = shapes[0]; // Image height
                     tmp[0] = shapes[1]; // Image width
@@ -369,10 +369,12 @@ namespace karathon {
                 } else if (_encoding == Encoding::GRAY) {
                     // Gray-scale images -> use ndarray dimensions
 
-                    if ((rank != 2) && !((rank == 3) && (tmp[2] == 1)))
+                    if ((rank != 2) && !((rank == 3) && (shapes[2] == 1)))
                         throw KARABO_PYTHON_EXCEPTION("The 'numpy array' has the wrong number of dimensions");
 
-                    for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
+                    std::vector<unsigned long long> tmp(2);
+                    tmp[1] = shapes[0]; // Image height
+                    tmp[0] = shapes[1]; // Image width
 
                     _dimensions.fromVector(tmp);
                 } else if (_encoding == Encoding::JPEG || _encoding == Encoding::PNG ||
@@ -382,7 +384,9 @@ namespace karathon {
                     _dimensions = dimensions;
                 } else {
                     // Other encodings. Likely it will need to be fixed!
-                    // getDataPy(RawImageData&) will need to be changed accordingly!!!
+                    // getDataPy(ImageData&) will need to be changed accordingly!!!
+
+                    std::vector<unsigned long long> tmp(rank);
                     for (int i = 0; i < rank; ++i) tmp[rank - i - 1] = shapes[i];
 
                     _dimensions.fromVector(tmp);
@@ -951,7 +955,7 @@ void exportPyXmsInputOutputChannel() {
                                                       (bp::arg("array"),
                                                       bp::arg("copy") = True,
                                                       bp::arg("dims") = karabo::util::Dims(),
-                                                      bp::arg("encoding") = karabo::xms::Encoding::GRAY,
+                                                      bp::arg("encoding") = karabo::xms::Encoding::UNDEFINED,
                                                       bp::arg("channelSpace") = karabo::xms::ChannelSpace::UNDEFINED)))
                 
 //                .def("__init__", bp::make_constructor(&karathon::ImageDataWrap::make2,
