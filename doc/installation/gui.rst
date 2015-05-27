@@ -68,6 +68,9 @@ Here is a list of all python packages included in karaboFramework, not all are r
 
 In case your installed python distribution includes slightly different version of these packages, pythonGUI should nevertheless work.
 
+Installation instructions
+=========================
+
 Get and install WinPython
 -------------------------
 
@@ -88,7 +91,15 @@ Get and install karaboGUI
 
 Download karaboGUI Windows installation binary `here <ftp://karabo:framework@ftp.desy.de/karaboGui/>`_ and run it. You should get Start Menu entry as well as karaboGUI shortcut on Desktop.
 
-Due to `this issue <http://bugs.python.org/issue21354>`_ (resolved in Python 3.4.4rc1, not yet released), the installer gives an error at the end ('python not found'), the menu entry and shortcut are not created. To start karaboGUI you need to navigate to [WinPython_Installation_Dir]\\python-3.4.3.amd64\\Lib\\site-packages\\karaboGui, right-click on karabo-gui.py and  select Send to Desktop. In this way, you have a shortcut on your Desktop and now you can easily start karaboGui with double click.
+To uninstall karaboGui, open Control Panel -> Uninstall a program, find karaboGUI entry and uninstall it.
 
+
+**IMPORTANT**
+
+Due to `this issue <http://bugs.python.org/issue21354>`_ (resolved in Python 3.4.4rc1, not yet released), the installer gives an error at the end ('python not found'), the menu entry and shortcut are not created. To start karaboGUI you need to navigate to::
+
+ [WinPython_Installation_Dir]\python-3.4.3.amd64\Lib\site-packages\karaboGui 
+
+right-click on karabo-gui.py and  select Send to Desktop. In this way, you have a shortcut on your Desktop and now you can easily start karaboGui with double click. To remove karaboGui, you need to use WinPython package manager: select karabo and karaboGui and press Uninstall packages.
 
  
