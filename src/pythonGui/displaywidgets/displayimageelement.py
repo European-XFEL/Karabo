@@ -89,8 +89,8 @@ class DisplayImageElement(DisplayWidget):
         npy = npy.astype(np.uint8)
 
         # Shape
-        dimX = value.dims[0]
-        dimY = value.dims[1]
+        dimX = value.dims[1]
+        dimY = value.dims[0]
 
         try:
             npy.shape = dimY, dimX
