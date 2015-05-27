@@ -86,6 +86,9 @@ class Worker(threading.Thread):
                             t = self.dq.popleft()
                 if self.suspended:
                     continue
+                if t is not None:
+                    if stopCondition(t):
+                        break
             except RuntimeError as e:
                 t = None
             if self.counter > 0:
@@ -95,6 +98,9 @@ class Worker(threading.Thread):
         if self.running:
             self.running = False
             
+    def stopCondition(self, obj):
+        return False
+    
     def start(self):
         if not self.running:
             self.suspended = False
