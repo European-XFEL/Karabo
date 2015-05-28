@@ -26,7 +26,7 @@ namespace karabo {
         template <typename T>
         class BaseWorker {
         public:
-            
+
             KARABO_CLASSINFO(BaseWorker<T>, "BaseWorker", "1.0")
 
             BaseWorker()
@@ -73,7 +73,7 @@ namespace karabo {
             , m_mutexRequest()
             , m_condRequest() {
             }
-            
+
             virtual ~BaseWorker() {
             }
 
@@ -93,7 +93,7 @@ namespace karabo {
             const boost::function<void(bool)>& getCallback() const {
                 return m_callback;
             }
-            
+
             /**
              * Set parameters defining the behavior of the worker
              * @param timeout     timeout for receiving from queue
@@ -106,9 +106,8 @@ namespace karabo {
             const int& getTimeout() const {
                 return m_timeout;
             }
-            
-            
-           /**
+
+            /**
              * Set parameters defining the behavior of the worker
              * @param repetition     repetition counter
              */
@@ -120,7 +119,7 @@ namespace karabo {
             const int& getRepetition() const {
                 return m_repetition;
             }
-            
+
             /**
              * Starts auxiliary thread that works on far ends of the queues
              * Default settings are "waiting forever" and "repeat forever"
@@ -203,6 +202,10 @@ namespace karabo {
             }
 
             virtual bool stopCondition(const T& t) = 0;
+            
+            void setErrorHandler(const boost::function<void(const karabo::util::Exception&)>& handler) {
+                m_error = handler;
+            }
 
             bool isRepetitionCounterExpired() const {
                 return m_count == 0;
@@ -216,51 +219,59 @@ namespace karabo {
              */
             void run() {
                 m_count = m_repetition;
-                while (!m_abort) {
-                    T t;
-                    if (!m_count)
-                        break;
-                    {
-                        boost::mutex::scoped_lock lock(m_mutexRequest);
-                        while (m_suspended) {
-                            m_condRequest.wait(lock); // use the same condition variable for "suspended" case
-                        }
-                        if (!m_running && m_request.empty())
+                try {
+                    while (!m_abort) {
+                        T t;
+                        if (!m_count)
                             break;
-                        if (m_timeout < 0) {
-                            while (m_request.empty() && !m_abort && m_running && !m_suspended) {
-                                m_condRequest.wait(lock);
+                        {
+                            boost::mutex::scoped_lock lock(m_mutexRequest);
+                            while (m_suspended) {
+                                m_condRequest.wait(lock); // use the same condition variable for "suspended" case
                             }
-                        } else if (m_timeout > 0) {
-                            boost::system_time const expired = boost::get_system_time() + boost::posix_time::milliseconds(m_timeout);
-                            while (m_request.empty() && !m_abort && m_running && !m_suspended) {
-                                if (!m_condRequest.timed_wait(lock, expired))
+                            if (!m_running && m_request.empty())
+                                break;
+                            if (m_timeout < 0) {
+                                while (m_request.empty() && !m_abort && m_running && !m_suspended) {
+                                    m_condRequest.wait(lock);
+                                }
+                            } else if (m_timeout > 0) {
+                                boost::system_time const expired = boost::get_system_time() + boost::posix_time::milliseconds(m_timeout);
+                                while (m_request.empty() && !m_abort && m_running && !m_suspended) {
+                                    if (!m_condRequest.timed_wait(lock, expired))
+                                        break;
+                                }
+                            }
+                            if (m_suspended)
+                                continue;
+                            // get next request from queue if not suspended and queue is not empty
+                            if (!m_request.empty()) {
+                                t = m_request.front();
+                                m_request.pop();
+                                if (stopCondition(t))
                                     break;
                             }
                         }
-                        if (m_suspended)
-                            continue;
-                        // get next request from queue if not suspended and queue is not empty
-                        if (!m_request.empty()) {
-                            t = m_request.front();
-                            m_request.pop();
-                            if (stopCondition(t))
-                                break;
+                        // decrement counter and call callback if not suspended
+                        if (m_count > 0)
+                            m_count--;
+                        if (m_running) {
+                            m_callback(m_count == 0);
                         }
                     }
-                    // decrement counter and call callback if not suspended
-                    if (m_count > 0)
-                        m_count--;
-                    if (m_running) {
-                        m_callback(m_count == 0);
-                    }
+                } catch (const karabo::util::Exception& e) {
+                    if (m_error) m_error(e);
+                } catch (...) {
+                    // Uncaught exception
+                    if (m_error) m_error(karabo::util::Exception("Exception in worker callback", "Uncaught exception",
+                                                                 __FILE__, BOOST_CURRENT_FUNCTION, __LINE__));
                 }
                 if (m_running) {
                     boost::mutex::scoped_lock lock(m_mutexRequest);
                     m_running = false;
                 }
             }
-            
+
         private:
             boost::function<void (bool) > m_callback; // this callback defined once in constructor
             int m_timeout; // timeout (milliseconds), 0 = nowait, -1 = wait forever
@@ -273,10 +284,11 @@ namespace karabo {
             boost::mutex m_mutexRequest; // mutex of request queue
             boost::condition_variable m_condRequest; // condition variable of the request queue
             int m_count; // current repetition counter
+            boost::function<void(const karabo::util::Exception&)> m_error;
         };
 
         struct Worker : public BaseWorker<bool> {
-            
+
             KARABO_CLASSINFO(Worker, "Worker", "1.0")
 
             Worker() : BaseWorker<bool>() {
@@ -291,8 +303,38 @@ namespace karabo {
             }
 
             bool stopCondition(const bool& data) {
+                return data;
+            }
+        };
+
+        struct QueueWorker : public BaseWorker<karabo::util::Hash::Pointer> {
+
+            KARABO_CLASSINFO(QueueWorker, "QueueWorker", "1.0")
+
+            QueueWorker(const boost::function<void(bool, const karabo::util::Hash::Pointer&)>& callback)
+            : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this, _1))
+            , m_callback(callback) {
+            }
+
+            virtual ~QueueWorker() {
+                abort().join();
+            }
+
+            void onWork(bool last) {
+                m_callback(last, m_hash);
+                m_hash->clear();
+            }
+            
+            bool stopCondition(const karabo::util::Hash::Pointer& hash) {
+                if (hash->has("stop")) return true;
+                m_hash = hash;
                 return false;
             }
+
+        private:
+
+            karabo::util::Hash::Pointer m_hash;
+            boost::function<void(bool, const karabo::util::Hash::Pointer&)> m_callback;
         };
     }
 }
