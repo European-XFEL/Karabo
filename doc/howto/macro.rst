@@ -23,7 +23,7 @@ Macros section in the project and add a macro, calling it for example
 *helloWorld* (the name must be a python literal, so no spaces are allowed).
 An editor opens in the central panel, where you can enter the macro::
 
-    from karabo import *  # import everything important for macros
+    from karabo.api import *  # import everything important for macros
 
     class HelloWorld(Macro):
         @Slot()
@@ -122,7 +122,7 @@ like unit conversions. This is what monitors are for.
 At the beginning of the macro, we need to define which devices we want
 to monitor. This is done with a ``RemoteDevice`` declaration::
 
-    from karabo import RemoteDevice, Monitor
+    from karabo.macro import RemoteDevice, Monitor
 
     class MyMonitor(Macro):
         someDevice = RemoteDevice("some_interesting_device")
