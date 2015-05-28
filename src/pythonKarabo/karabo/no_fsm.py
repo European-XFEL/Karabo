@@ -17,6 +17,8 @@ class Worker(threading.Thread):
     def __init__(self, callback = None, timeout = -1, repetition = -1):
         threading.Thread.__init__(self)
         self.callback = callback
+        self.onError = None
+        self.onExit  = None
         self.timeout  = timeout
         self.repetition = repetition
         self.running = False
@@ -36,6 +38,12 @@ class Worker(threading.Thread):
 
     def setRepetition(self, repetition = -1):
         self.repetition = repetition
+        
+    def setErrorHandler(self, handler):
+        self.onError = handler
+        
+    def setExitHandler(self, handler):
+        self.onExit = handler
 
     def is_running(self):
         return self.running
@@ -54,13 +62,17 @@ class Worker(threading.Thread):
         self.aborted = False
         self.suspended = False
         self.counter = self.repetition
-        while not self.aborted:
-            t = None
-            if self.counter == 0:
-                break
-            if not self.running:
-                break
-            try:
+        try:
+            if not callable(self.callback):
+                raise ValueError("No callback is registered in Worker")
+            while not self.aborted:
+                t = None
+                if self.counter == 0:
+                    if callable(self.onExit):
+                        self.onExit()
+                    break
+                if not self.running:
+                    break
                 if self.suspended:
                     with self.cv:
                         while self.suspended:
@@ -88,13 +100,20 @@ class Worker(threading.Thread):
                     continue
                 if t is not None:
                     if stopCondition(t):
+                        if callable(self.onExit):
+                            self.onExit()
                         break
-            except RuntimeError as e:
-                t = None
-            if self.counter > 0:
-                self.counter -= 1
-            if self.running:
-                self.callback(self.counter == 0)      # self.callback(self.counter == 0)
+                if self.counter > 0:
+                    self.counter -= 1
+                if self.running:
+                    self.callback()
+        except RuntimeError as e:
+            if callable(self.onError):
+                self.onError(e)
+        except:
+            if callable(self.onError):
+                self.onError(sys.exc_info()[0])
+            
         if self.running:
             self.running = False
             
