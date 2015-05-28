@@ -37,7 +37,27 @@ class DisplayImage(DisplayWidget):
         if self.value is not None or value is self.value:
             return
 
-        if len(value.dims) < 2:
+        if len(value.dims) == 2:
+            # Shape
+            dimX = value.dims[1]
+            dimY = value.dims[0]
+
+            # Format: Grayscale
+            format = 'QImage.Format_Indexed8'
+
+        elif len(value.dims) == 3:
+            # Shape
+            dimX = value.dims[2]
+            dimY = value.dims[1]
+            dimZ = value.dims[0]                
+
+            if dimZ == 3:
+                # Format: RGB
+                format = 'QImage.Format_RGB888'
+
+            else:
+                return
+        else:
             return
 
         # Data type information
@@ -52,16 +72,24 @@ class DisplayImage(DisplayWidget):
         data = value.data
         npy = np.frombuffer(data, type)
 
-        # Shape
-        dimX = value.dims[1]
-        dimY = value.dims[0]
-        
-        try:
-            npy.shape = dimY, dimX
-        except ValueError as e:
-            e.message = 'Image has improper shape ({}, {}) for size {}'. \
-                format(dimX, dimY, len(npy))
-            raise
+        if format == 'QImage.Format_Indexed8':
+            try:
+                npy.shape = dimY, dimX
+            except ValueError as e:
+                e.message = 'Image has improper shape ({}, {}) for size {}'. \
+                    format(dimX, dimY, len(npy))
+                raise
+
+        elif 'format == QImage.Format_RGB888':
+            try:
+                npy.shape = dimY, dimX, dimZ
+            except ValueError as e:
+                e.message = 'Image has improper shape ({}, {}, {}) for size\
+                    {}'.format(dimX, dimY, dimZ, len(npy))
+                raise
+
+        else:
+            return
 
         # Safety
         if dimX < 1 or dimY < 1:
