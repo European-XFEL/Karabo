@@ -1,4 +1,5 @@
 import karabo
+
 from asyncio import async, coroutine, sleep
 import gc
 from unittest import TestCase, main
@@ -6,9 +7,8 @@ import sys
 import time
 import weakref
 
+from karabo.api import Int, Slot
 from karabo.macro import Macro, EventThread
-from karabo import Integer, Slot
-from karabo.eventloop import EventLoop
 from karabo.hash import Hash
 from karabo.python_server import DeviceServer
 from karabo.device_client import (
@@ -19,7 +19,7 @@ from .eventloop import setEventLoop
 
 
 class Remote(Macro):
-    counter = Integer(defaultValue=-1)
+    counter = Int(defaultValue=-1)
 
     @Slot()
     def count(self):
@@ -33,7 +33,7 @@ class Remote(Macro):
 
 
 class Other(Device):
-    something = Integer(defaultValue=333)
+    something = Int(defaultValue=333)
 
 
 class DeviceClient(Macro, DeviceClientBase):
@@ -64,7 +64,7 @@ class Tests(TestCase):
             sys.argv = save
 
     code = """if True:
-        from karabo import *
+        from karabo.api import *
 
         class TestMacro(Macro):
             s = String()
@@ -78,9 +78,9 @@ class Tests(TestCase):
     def init_macroserver(self, server):
         yield from server.startInstance()
         config = Hash("project", "test", "module", "test", "code", self.code)
-        hash = Hash("classId", "MetaMacro", "configuration", config,
-                    "deviceId", "bla")
-        yield from server.call("Karabo_MacroServer", "slotStartDevice", hash)
+        h = Hash("classId", "MetaMacro", "configuration", config,
+                 "deviceId", "bla")
+        yield from server.call("Karabo_MacroServer", "slotStartDevice", h)
         yield from sleep(4)
         proxy = yield from getDevice("bla-TestMacro")
         with proxy:

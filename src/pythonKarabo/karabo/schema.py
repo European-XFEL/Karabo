@@ -25,10 +25,10 @@ class Configurable(Registry, metaclass=MetaConfigurable):
     The attributes are then defined as follows:
 
     ::
-        from karabo import Configurable, Integer, String
+        from karabo import Configurable, Int, String
 
         class Spam(Configurable):
-            ham = Integer()
+            ham = Int()
             eggs = String()
     """
     _subclasses = { }

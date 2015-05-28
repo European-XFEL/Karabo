@@ -3,18 +3,16 @@ import karabo
 from asyncio import (async, coroutine, gather, set_event_loop, sleep,
                      TimeoutError)
 from unittest import TestCase, main
-from functools import wraps
 import sys
 import time
 
-from karabo.eventloop import EventLoop
+from karabo.api import Slot, Int
 from karabo.macro import Macro
 from karabo.python_device import Device
 from karabo.python_server import KaraboStream
 from karabo.device_client import (waitUntilNew, waitUntil, setWait, setNoWait,
                                   getDevice, executeNoWait, updateDevice,
                                   Queue)
-from karabo import Slot, Integer
 
 from .eventloop import startDevices, stopDevices, sync_tst, async_tst
 
@@ -26,10 +24,10 @@ class Superslot(Slot):
 
 
 class Remote(Device):
-    value = Integer(defaultValue=7)
-    counter = Integer(defaultValue=-1)
+    value = Int(defaultValue=7)
+    counter = Int(defaultValue=-1)
 
-    @Integer()
+    @Int()
     def other(self, value):
         self.value = value
 

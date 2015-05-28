@@ -5,7 +5,7 @@ from asyncio import (async, coroutine, start_server, get_event_loop,
 from functools import wraps
 
 from karabo.device_client import DeviceClientBase
-from karabo import Integer, Assignment, openmq
+from karabo import Int, Assignment, openmq
 from karabo.hash import Hash
 from karabo.p2p import Channel
 from karabo.signalslot import slot
@@ -20,9 +20,9 @@ def parallel(f):
 
 
 class GuiServer(DeviceClientBase):
-    port = Integer(displayedName="Hostport",
-                   description="Local port for this server",
-                   assignment=Assignment.OPTIONAL, defaultValue=44444)
+    port = Int(displayedName="Hostport",
+               description="Local port for this server",
+               assignment=Assignment.OPTIONAL, defaultValue=44444)
 
     def __init__(self, configuration):
         super().__init__(configuration)
