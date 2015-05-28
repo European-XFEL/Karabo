@@ -30,7 +30,7 @@ import re
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QLabel
 
-from numpy import ndarray
+from numpy import ndarray, log10
 
 
 class DisplayLabel(DisplayWidget):
@@ -75,7 +75,16 @@ class DisplayLabel(DisplayWidget):
             format = dict(bin='b{:b}', oct='o{:o}', hex='0x{:X}'
                           )[box.descriptor.displayType[:3]]
         except (TypeError, KeyError):
-            if isinstance(box.descriptor, (Float, VectorFloat)):
+            if box.descriptor.relativeError is not None:
+                format = "{{:.{}g}}".format(
+                            int(-log10(box.descriptor.relativeError)))
+            elif box.descriptor.absoluteError is not None:
+                ae = box.descriptor.absoluteError
+                if ae > 1:
+                    format = "{:.0f}"
+                else:
+                    format = "{{:.{}f}}".format(int(-log10(ae)))
+            elif isinstance(box.descriptor, (Float, VectorFloat)):
                 format = "{:.6g}"
             elif isinstance(box.descriptor, (Double, VectorDouble)):
                 format = "{:.10g}"
