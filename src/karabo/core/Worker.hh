@@ -62,16 +62,29 @@ namespace karabo {
             }
 
             BaseWorker(const BaseWorker& other)
-            : m_callback(other.getCallback())
-            , m_timeout(other.getTimeout())
-            , m_repetition(other.getRepetition())
+            : m_callback(other.m_callback)
+            , m_timeout(other.m_timeout)
+            , m_repetition(other.m_repetition)
             , m_running(false)
             , m_abort(false)
             , m_suspended(false)
             , m_request()
             , m_thread(0)
             , m_mutexRequest()
-            , m_condRequest() {
+            , m_condRequest()
+            , m_error(other.m_error)
+            , m_exit(other.m_exit) {
+            }
+
+            BaseWorker& operator=(const BaseWorker& other) {
+                if (this != &other) {
+                    m_callback = other.m_callback;
+                    m_timeout = other.m_timeout;
+                    m_repetition = other.m_repetition;
+                    m_error = other.m_error;
+                    m_exit = other.m_exit;
+                }
+                return *this;
             }
 
             virtual ~BaseWorker() {
@@ -90,10 +103,6 @@ namespace karabo {
                 return *this;
             }
 
-            const boost::function<void()>& getCallback() const {
-                return m_callback;
-            }
-
             /**
              * Set parameters defining the behavior of the worker
              * @param timeout     timeout for receiving from queue
@@ -103,10 +112,6 @@ namespace karabo {
                 return *this;
             }
 
-            const int& getTimeout() const {
-                return m_timeout;
-            }
-
             /**
              * Set parameters defining the behavior of the worker
              * @param repetition     repetition counter
@@ -114,10 +119,6 @@ namespace karabo {
             BaseWorker& setRepetition(int repetition = -1) {
                 m_repetition = repetition;
                 return *this;
-            }
-
-            const int& getRepetition() const {
-                return m_repetition;
             }
 
             /**
@@ -202,11 +203,11 @@ namespace karabo {
             }
 
             virtual bool stopCondition(const T& t) = 0;
-            
+
             void setErrorHandler(const boost::function<void(const karabo::util::Exception&)>& handler) {
                 m_error = handler;
             }
-            
+
             void setExitHandler(const boost::function<void()>& handler) {
                 m_exit = handler;
             }
@@ -226,7 +227,7 @@ namespace karabo {
                 try {
                     while (!m_abort) {
                         T t;
-                        if (!m_count) {   
+                        if (!m_count) {
                             if (m_exit) m_exit();
                             break;
                         }
@@ -292,7 +293,7 @@ namespace karabo {
             boost::mutex m_mutexRequest; // mutex of request queue
             boost::condition_variable m_condRequest; // condition variable of the request queue
             int m_count; // current repetition counter
-            boost::function<void(const karabo::util::Exception&)> m_error;
+            boost::function<void(const karabo::util::Exception&) > m_error;
             boost::function<void () > m_exit; // this callback defined once in constructor
         };
 
@@ -320,9 +321,30 @@ namespace karabo {
 
             KARABO_CLASSINFO(QueueWorker, "QueueWorker", "1.0")
 
+            QueueWorker()
+            : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this))
+            , m_hash(new karabo::util::Hash)
+            , m_callback() {
+            }
+            
             QueueWorker(const boost::function<void(const karabo::util::Hash::Pointer&)>& callback)
             : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this))
+            , m_hash(new karabo::util::Hash)
             , m_callback(callback) {
+            }
+
+            QueueWorker(const QueueWorker& other)
+            : BaseWorker<karabo::util::Hash::Pointer>(boost::bind(&QueueWorker::onWork, this))
+            , m_hash(new karabo::util::Hash)
+            , m_callback(other.m_callback) {
+            }
+
+            QueueWorker& operator=(const QueueWorker& rhs) {
+                if (this != &rhs) {
+                    *m_hash = *rhs.m_hash;
+                    m_callback = rhs.m_callback;
+                }
+                return *this;
             }
 
             virtual ~QueueWorker() {
@@ -333,7 +355,7 @@ namespace karabo {
                 m_callback(m_hash);
                 m_hash->clear();
             }
-            
+
             bool stopCondition(const karabo::util::Hash::Pointer& hash) {
                 if (hash->has("stop")) return true;
                 m_hash = hash;
@@ -343,7 +365,7 @@ namespace karabo {
         private:
 
             karabo::util::Hash::Pointer m_hash;
-            boost::function<void(const karabo::util::Hash::Pointer&)> m_callback;
+            boost::function<void(const karabo::util::Hash::Pointer&) > m_callback;
         };
     }
 }
