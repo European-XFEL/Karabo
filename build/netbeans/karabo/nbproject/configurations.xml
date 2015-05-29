@@ -348,6 +348,8 @@
       <itemPath>../../../src/karabo/xms/Data.hh</itemPath>
       <itemPath>../../../src/karabo/xms/ImageData.cc</itemPath>
       <itemPath>../../../src/karabo/xms/ImageData.hh</itemPath>
+      <itemPath>../../../src/karabo/xms/ImageDataFileWriter.cc</itemPath>
+      <itemPath>../../../src/karabo/xms/ImageDataFileWriter.hh</itemPath>
       <itemPath>../../../src/karabo/xms/InputChannel.cc</itemPath>
       <itemPath>../../../src/karabo/xms/InputChannel.hh</itemPath>
       <itemPath>../../../src/karabo/xms/Memory.cc</itemPath>
@@ -2113,6 +2115,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/ImageDataFileWriter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/ImageDataFileWriter.hh"
             ex="false"
             tool="3"
             flavor2="0">
@@ -3972,6 +3984,16 @@
             flavor2="0">
       </item>
       <item path="../../../src/karabo/xms/ImageData.hh"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/ImageDataFileWriter.cc"
+            ex="false"
+            tool="1"
+            flavor2="0">
+      </item>
+      <item path="../../../src/karabo/xms/ImageDataFileWriter.hh"
             ex="false"
             tool="3"
             flavor2="0">
