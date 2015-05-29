@@ -66,11 +66,11 @@ namespace karabo {
 
         typedef ChannelSpace::ChannelSpaceType ChannelSpaceType;
 
-        //class RawImageFileWriter;
+        class ImageDataFileWriter;
 
         class ImageData : public NDArray {
             
-            friend class RawImageFileWriter;
+            friend class ImageDataFileWriter;
 
         public:
 
@@ -177,7 +177,7 @@ namespace karabo {
 
             void setDimensionTypes(const std::vector<int>& dimTypes);
 
-            //const ImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
+            const ImageData& write(const std::string& filename, const bool enableAppendMode = false) const;
 
             friend std::ostream& operator<<(std::ostream& os, const ImageData& image) {
                 os << *image.hash();
